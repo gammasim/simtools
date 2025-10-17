@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -53,11 +53,11 @@
         </script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="simtools-docs-produce-array-element-report" href="simtools-docs-produce-array-element-report.html" />
+    <link rel="next" title="simtools-derive-trigger-rates" href="simtools-derive-trigger-rates.html" />
     <link rel="prev" title="simtools-derive-photon-electron-spectrum" href="simtools-derive-photon-electron-spectrum.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -397,6 +397,7 @@
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="../simulate_calibration_data.html">Simulate Calibration Data</a></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../applications.html">Applications</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="simtools-calculate-incident-angles.html">simtools-calculate-incident-angles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-convert-all-model-parameters-from-simtel.html">simtools-convert-all-model-parameters-from-simtel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
@@ -408,10 +409,12 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-generate-compound-indexes.html">simtools-db-generate-compound-indexes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-upload-model-repository.html">simtools-db-upload-model-repository</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-derive-psf-parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-trigger-rates.html">simtools-derive-trigger-rates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-calibration-reports.html">simtools-docs-produce-calibration-reports</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
@@ -421,7 +424,7 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-add-production-table.html">simtools-maintain-simulation-model-add-production-table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-add-production.html">simtools-maintain-simulation-model-add-production</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-compare-productions.html">simtools-maintain-simulation-model-compare-productions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-verify-production-tables.html">simtools-maintain-simulation-model-verify-production-tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-merge-tables.html">simtools-merge-tables</a></li>
@@ -435,9 +438,9 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-merge-corsika-limits.html">simtools-production-merge-corsika-limits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-calibration-events.html">simtools-simulate-calibration-events</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-flasher.html">simtools-simulate-flasher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-illuminator.html">simtools-simulate-illuminator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-pedestals.html">simtools-simulate-pedestals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-submit-array-layouts.html">simtools-submit-array-layouts</a></li>
@@ -517,17 +520,16 @@
 <span id="simtools-derive-psf-parameters"></span><h1>simtools-derive-psf-parameters<a class="headerlink" href="#module-derive_psf_parameters" title="Link to this heading">#</a></h1>
 <p>Derives the mirror alignment parameters using cumulative PSF measurement.</p>
 <p>This includes parameters mirror_reflection_random_angle, mirror_align_random_horizontal and mirror_align_random_vertical.</p>
-<p>The telescope zenith angle and the source distance can be set by command line arguments.</p>
 <p>The measured cumulative PSF should be provided by using the command line argument data. A file name is expected, in which the file should contain 3 columns: radial distance in mm, differential value of photon intensity and its integral value.</p>
-<p>The derivation is performed through a random search. A number of random combination of the parameters are tested and the best ones are selected based on the minimum value of the Root Mean Squared Deviation between data and simulations. The range in which the parameter are drawn uniformly are defined based on the previous value on the telescope model.</p>
+<p>The derivation is performed through gradient descent optimization that minimizes either the Root Mean Squared Deviation (RMSD) between measured and simulated PSF curves (default) or the Kolmogorov-Smirnov (KS) statistic when the –ks_statistic flag is used.</p>
 <p>The optimization workflow includes:</p>
 <ul class="simple">
 <li><p>Loading and preprocessing PSF data from measurement files</p></li>
-<li><p>Generating random parameter combinations for optimization</p></li>
-<li><p>Running ray-tracing simulations for each parameter set</p></li>
-<li><p>Calculating RMSD between measured and simulated PSF curves</p></li>
-<li><p>Identifying the best-fit parameters with minimum RMSD</p></li>
-<li><p>Creating comprehensive plots and D80 vs off-axis angle analysis</p></li>
+<li><p>Running gradient descent optimization to minimize RMSD</p></li>
+<li><p>Generating cumulative PSF plots for each iteration showing optimization progression</p></li>
+<li><p>Logging parameter evolution through gradient descent steps</p></li>
+<li><p>Creating convergence plots showing RMSD and D80 evolution</p></li>
+<li><p>Automatically generating D80 vs off-axis angle analysis for best parameters</p></li>
 <li><p>Optionally exporting optimized parameters as simulation model files</p></li>
 </ul>
 <p>The assumption are:</p>
@@ -536,7 +538,7 @@
 <li><p>mirror_align_random_horizontal/vertical have no dependence on the zenith angle.</p></li>
 </ol>
 <p>One example of the plot generated by this applications are shown below.</p>
-<a class="reference internal image-reference" href="../../_images/derive_psf_parameters.png" id="derive-psf-parameters-plot"><img alt="../../_images/derive_psf_parameters.png" id="derive-psf-parameters-plot" src="../../_images/derive_psf_parameters.png" style="width: 49%;" />
+<a class="reference internal image-reference" href="../../_images/gradient_descent.png" id="derive-psf-parameters-plot"><img alt="../../_images/gradient_descent.png" id="derive-psf-parameters-plot" src="../../_images/gradient_descent.png" style="width: 49%;" />
 </a>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
@@ -563,41 +565,52 @@
 </dd>
 <dt>write_psf_parameters (activation mode, optional)</dt><dd><p>Write the optimized PSF parameters as simulation model parameter files.</p>
 </dd>
-<dt>random_seed (int, optional)</dt><dd><p>Random seed for parameter generation.</p>
+<dt>rmsd_threshold (float, optional)</dt><dd><p>RMSD threshold for gradient descent convergence (default: 0.007).</p>
 </dd>
-<dt>n_runs (int, optional)</dt><dd><p>Number of parameter combinations to test.</p>
+<dt>learning_rate (float, optional)</dt><dd><p>Learning rate for gradient descent optimization (default: 0.01).</p>
+</dd>
+<dt>monte_carlo_analysis (activation mode, optional)</dt><dd><p>Run Monte Carlo analysis to find statistical uncertainties.</p>
 </dd>
 </dl>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>LSTN-01 5.0.0</p>
-<p>Runtime &lt; 3 min.</p>
-<p>Get PSF data from the DB:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-db-get-file-from-db --file_name PSFcurve_data_v2.txt</span>
-</pre></div>
-</div>
+<p>–telescope LSTN-01 –model_version 6.0.0</p>
 <p>Run the application:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-psf-parameters --site North --telescope LSTN-01 \\</span>
-<span class="go">    --model_version 6.0.0 --data tests/resources/PSFcurve_data_v2.txt --plot_all --test</span>
+<span class="go">    --model_version 6.0.0 --data tests/resources/PSFcurve_data_v2.ecsv --plot_all --test</span>
 </pre></div>
 </div>
 <p>Run with parameter export:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-psf-parameters --site North --telescope LSTN-01 \\</span>
-<span class="go">    --model_version 6.0.0 \\</span>
-<span class="go">    --data tests/resources/PSFcurve_data_v2.txt --write_psf_parameters</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-psf-parameters --site North --telescope LSTN-01 --model_version 6.0.0 \\</span>
+<span class="go">    --plot_all --test --rmsd_threshold 0.01 --learning_rate 0.001 \\</span>
+<span class="go">    --data tests/resources/PSFcurve_data_v2.ecsv \\</span>
+<span class="go">    --write_psf_parameters</span>
 </pre></div>
 </div>
-<p>The output is saved in simtools-output/tune_psf.</p>
+<p>Run monte carlo analysis:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-psf-parameters --site North --telescope LSTN-01 --model_version 6.0.0 \\</span>
+<span class="go">    --plot_all --test --monte_carlo_analysis \\</span>
+<span class="go">    --data tests/resources/PSFcurve_data_v2.ecsv \\</span>
+<span class="go">    --write_psf_parameters</span>
+</pre></div>
+</div>
+<p>The output is saved in simtools-output/derive_psf_parameters.</p>
 <p>Output files include:</p>
 <ul class="simple">
-<li><p>Parameter optimization results in tested_psf_parameters.txt</p></li>
-<li><p>PSF comparison plots in tune_psf_[telescope].pdf</p></li>
+<li><p>Gradient descent progression log in psf_gradient_descent_[telescope].log</p></li>
+<li><p>Gradient descent convergence plots in gradient_descent_convergence_[telescope].png</p></li>
+<li><p>PSF progression plots showing evolution through iterations (if –plot_all is specified)</p></li>
 <li><p>D80 vs off-axis angle plots (d80_vs_offaxis_cm.png, d80_vs_offaxis_deg.png)</p></li>
 <li><p>Optimized simulation model parameter files (if –write_psf_parameters is specified)</p></li>
-<li><p>Cumulative PSF plots for all tested combinations (if –plot_all is specified)</p></li>
 </ul>
 </section>
+<dl class="py function">
+<dt class="sig sig-object py" id="derive_psf_parameters.main">
+<span class="sig-prename descclassname"><span class="pre">derive_psf_parameters.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/derive_psf_parameters.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#derive_psf_parameters.main" title="Link to this definition">#</a></dt>
+<dd><p>Derive PSF parameters.</p>
+</dd></dl>
+
 </section>
 
 
@@ -620,11 +633,11 @@
       </div>
     </a>
     <a class="right-next"
-       href="simtools-docs-produce-array-element-report.html"
+       href="simtools-derive-trigger-rates.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools-docs-produce-array-element-report</p>
+        <p class="prev-next-title">simtools-derive-trigger-rates</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -649,6 +662,7 @@
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#derive_psf_parameters.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>
 

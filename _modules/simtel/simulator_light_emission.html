@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -433,7 +433,7 @@
                 <article class="bd-article">
                   
   <h1>Source code for simtel.simulator_light_emission</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Simulation using the light emission package for calibration devices.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Light emission simulation (e.g. illuminators or flashers).&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
@@ -445,271 +445,208 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">initialize_simulation_models</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.simtel_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelRunner</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="kn">import</span> <span class="n">clear_default_sim_telarray_cfg_directories</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimulatorLightEmission&quot;</span><span class="p">]</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">fiducial_radius_from_shape</span>
 
 
 <div class="viewcode-block" id="SimulatorLightEmission">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SimulatorLightEmission</span><span class="p">(</span><span class="n">SimtelRunner</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Interface with sim_telarray to perform light emission package simulations.</span>
+<span class="sd">    Light emission simulation (e.g. illuminators or flashers).</span>
 
-<span class="sd">    The light emission package is used to simulate an artificial light source, used for calibration.</span>
+<span class="sd">    Uses the sim_telarray LightEmission package to simulate the light emission.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    light_emission_config : dict, optional</span>
+<span class="sd">        Configuration for the light emission (e.g. number of events, model names)</span>
+<span class="sd">    label : str, optional</span>
+<span class="sd">        Label for the simulation</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="o">*</span><span class="p">,</span>
-        <span class="n">telescope_model</span><span class="p">,</span>
-        <span class="n">calibration_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">flasher_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">site_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">light_emission_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">light_source_setup</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">simtel_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">light_source_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelRunner.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        telescope_model : TelescopeModel</span>
-<span class="sd">            Model of the telescope to be simulated</span>
-<span class="sd">        calibration_model : CalibrationModel, optional</span>
-<span class="sd">            Model of the calibration device to be simulated</span>
-<span class="sd">        flasher_model : FlasherModel, optional</span>
-<span class="sd">            Model of the flasher device to be simulated</span>
-<span class="sd">        site_model : SiteModel, optional</span>
-<span class="sd">            Model of the site</span>
-<span class="sd">        light_emission_config : dict, optional</span>
-<span class="sd">            Configuration for the light emission</span>
-<span class="sd">        light_source_setup : str, optional</span>
-<span class="sd">            Setup for light source positioning (&quot;variable&quot; or &quot;layout&quot;)</span>
-<span class="sd">        simtel_path : Path, optional</span>
-<span class="sd">            Path to the sim_telarray installation</span>
-<span class="sd">        light_source_type : str, optional</span>
-<span class="sd">            Type of light source: &#39;illuminator&#39;, or &#39;flasher&#39;</span>
-<span class="sd">        label : str, optional</span>
-<span class="sd">            Label for the simulation</span>
-<span class="sd">        test : bool, optional</span>
-<span class="sd">            Whether this is a test run</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">simtel_path</span><span class="o">=</span><span class="n">simtel_path</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">corsika_config</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">light_emission_config</span><span class="p">,</span> <span class="n">db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimulatorLightEmission.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span> <span class="o">=</span> <span class="n">telescope_model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_model</span> <span class="o">=</span> <span class="n">calibration_model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_flasher_model</span> <span class="o">=</span> <span class="n">flasher_model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span> <span class="o">=</span> <span class="n">site_model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span> <span class="o">=</span> <span class="n">light_emission_config</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">light_source_setup</span> <span class="o">=</span> <span class="n">light_source_setup</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">light_source_type</span> <span class="o">=</span> <span class="n">light_source_type</span> <span class="ow">or</span> <span class="s2">&quot;illuminator&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">test</span> <span class="o">=</span> <span class="n">test</span>
-
-        <span class="c1"># IO</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">number_events</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;number_events&quot;</span><span class="p">]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">simtel_path</span><span class="o">=</span><span class="n">light_emission_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simtel_path&quot;</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">corsika_config</span><span class="o">=</span><span class="kc">None</span>
+        <span class="p">)</span>
 
-        <span class="c1"># photons per run</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">photons_per_run</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;photons_per_run&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">test</span>
-                <span class="k">else</span> <span class="mf">1e8</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">initialize_simulation_models</span><span class="p">(</span>
+                <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+                <span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
+                <span class="n">site</span><span class="o">=</span><span class="n">light_emission_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">),</span>
+                <span class="n">telescope_name</span><span class="o">=</span><span class="n">light_emission_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;telescope&quot;</span><span class="p">),</span>
+                <span class="n">calibration_device_name</span><span class="o">=</span><span class="n">light_emission_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;light_source&quot;</span><span class="p">),</span>
+                <span class="n">model_version</span><span class="o">=</span><span class="n">light_emission_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">),</span>
             <span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flasher_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">photons_per_run</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_flasher_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;photons_per_flasher&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">test</span>
-                <span class="k">else</span> <span class="mf">1e8</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">write_sim_telarray_config_file</span><span class="p">(</span><span class="n">additional_models</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_light_emission_configuration</span><span class="p">(</span>
+            <span class="n">light_emission_config</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_light_emission_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize light emission configuration.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;flasher_type&quot;</span><span class="p">):</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;light_source_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span>
+                <span class="s2">&quot;flasher_type&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;flasher_photons&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;flasher_photons&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="k">else</span> <span class="mf">1e8</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;light_source_position&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;light_source_position&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;light_source_position&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">photons_per_run</span> <span class="o">=</span> <span class="mf">1e8</span>
 
-        <span class="c1"># Ensure sim_telarray config exists on disk</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="p">,</span> <span class="s2">&quot;write_sim_telarray_config_file&quot;</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">write_sim_telarray_config_file</span><span class="p">(</span><span class="n">additional_model</span><span class="o">=</span><span class="n">site_model</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">config</span>
 
-        <span class="c1"># Runtime variables</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="o">=</span> <span class="kc">None</span>
+<div class="viewcode-block" id="SimulatorLightEmission.simulate">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.simulate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simulate light emission.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Path</span>
+<span class="sd">            The output simtel file path.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">run_script</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_script</span><span class="p">()</span>
+        <span class="n">log_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;logfile.log&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="n">run_script</span><span class="p">,</span>
+                <span class="n">shell</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">stdout</span><span class="o">=</span><span class="n">fh</span><span class="p">,</span>
+                <span class="n">stderr</span><span class="o">=</span><span class="n">fh</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_simulation_output_filename</span><span class="p">())</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected sim_telarray output not found: </span><span class="si">{</span><span class="n">out</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="SimulatorLightEmission.prepare_script">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.prepare_script">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build and return bash run script containing the light-emission command.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Path</span>
+<span class="sd">            Full path of the run script.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">script_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;scripts&quot;</span><span class="p">)</span>
+        <span class="n">script_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">app_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_light_emission_application_name</span><span class="p">()</span>
+        <span class="n">script_file</span> <span class="o">=</span> <span class="n">script_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">-light_emission.sh&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Run bash script - </span><span class="si">{</span><span class="n">script_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">target_out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_simulation_output_filename</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">target_out</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;sim_telarray output file exists, cancelling simulation: </span><span class="si">{</span><span class="n">target_out</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;#!/usr/bin/env bash</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_light_emission_script</span><span class="p">()</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;[ -s &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">.iact.gz&#39; ] || &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="s2"> echo &#39;LightEmission did not produce IACT file&#39; &gt;&amp;2; exit 1; </span><span class="se">}}\n\n</span><span class="s2">&quot;</span>
+            <span class="p">),</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_simtel_script</span><span class="p">()</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;rm -f &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">.iact.gz&#39;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="n">script_file</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">script_file</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">script_file</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mode</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IXUSR</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IXGRP</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">script_file</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_prefix&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_infer_application</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Infer the LightEmission application and mode from type/setup.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_light_emission_application_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the LightEmission application and mode from type.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        tuple[str, str]</span>
-<span class="sd">            (app_name, mode)</span>
+<span class="sd">        str</span>
+<span class="sd">            app_name</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_type</span> <span class="o">==</span> <span class="s2">&quot;flasher&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;ff-1m&quot;</span><span class="p">,</span> <span class="s2">&quot;flasher&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;light_source_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;flat_fielding&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;ff-1m&quot;</span>
         <span class="c1"># default to illuminator xyzls, mode from setup</span>
-        <span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_setup</span> <span class="ow">or</span> <span class="s2">&quot;layout&quot;</span>
-        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;xyzls&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;xyzls&quot;</span>
 
-<div class="viewcode-block" id="SimulatorLightEmission.light_emission_default_configuration">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.light_emission_default_configuration">[docs]</a>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">light_emission_default_configuration</span><span class="p">():</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_telescope_pointing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get default light emission configuration.</span>
+<span class="sd">        Return telescope pointing based on light source type.</span>
+
+<span class="sd">        For flat_fielding sims, avoid calibration pointing entirely; default angles to (0,0).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        dict</span>
-<span class="sd">            Default configuration light emission.</span>
+<span class="sd">        tuple</span>
+<span class="sd">            The telescope pointing angles (theta, phi).</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;zenith&quot;</span><span class="p">,</span> <span class="s2">&quot;theta&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;azimuth_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">,</span> <span class="s2">&quot;phi&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;source_distance&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sourcedist&quot;</span><span class="p">,</span> <span class="s2">&quot;srcdist&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;off_axis_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;off_axis&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;fadc_bins&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">128</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;fadc_bins&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-        <span class="p">}</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;light_source_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;flat_fielding&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;light_source_position&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Using fixed (vertical up) telescope pointing.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">angles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_pointing_direction</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">angles</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">angles</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-
-<div class="viewcode-block" id="SimulatorLightEmission.flasher_default_configuration">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.flasher_default_configuration">[docs]</a>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">flasher_default_configuration</span><span class="p">():</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get default flasher configuration.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        dict</span>
-<span class="sd">            Default configuration for flasher devices.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;number_events&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;number_events&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;photons_per_flasher&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">2.5e6</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;photons&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;bunch_size&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;bunchsize&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;flasher_position&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;cm&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;xy&quot;</span><span class="p">,</span> <span class="s2">&quot;position&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;flasher_depth&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;cm&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="s2">&quot;distance&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;flasher_inclination&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;inclination&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;spectrum&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;nm&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">400</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">nm</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;wavelength&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;lightpulse&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;Simple:0&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;pulse&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;angular_distribution&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;isotropic&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;angular&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;flasher_pattern&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;fire&quot;</span><span class="p">,</span> <span class="s2">&quot;pattern&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-        <span class="p">}</span></div>
-
-
-<div class="viewcode-block" id="SimulatorLightEmission.calibration_pointing_direction">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.calibration_pointing_direction">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">calibration_pointing_direction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calibration_pointing_direction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_cal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y_cal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">z_cal</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the pointing of the calibration device towards the telescope.</span>
+
+<span class="sd">        This is for calibration devices not installed on telescopes (e.g. illuminators).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        list</span>
 <span class="sd">            The pointing vector from the calibration device to the telescope.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
-            <span class="s2">&quot;array_element_position_ground&quot;</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">x_cal</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">y_cal</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">z_cal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
+                <span class="s2">&quot;array_element_position_ground&quot;</span>
+            <span class="p">)</span>
         <span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span> <span class="o">=</span> <span class="p">[</span><span class="n">coord</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span><span class="p">)]</span>
         <span class="n">cal_vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span><span class="p">])</span>
-        <span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
+        <span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
             <span class="s2">&quot;array_element_position_ground&quot;</span>
         <span class="p">)</span>
         <span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span> <span class="o">=</span> <span class="p">[</span><span class="n">coord</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span><span class="p">)]</span>
-
         <span class="n">tel_vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span><span class="p">])</span>
 
         <span class="n">direction_vector</span> <span class="o">=</span> <span class="n">tel_vect</span> <span class="o">-</span> <span class="n">cal_vect</span>
         <span class="c1"># pointing vector from calibration device to telescope</span>
-
         <span class="n">pointing_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">direction_vector</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">direction_vector</span><span class="p">),</span> <span class="mi">6</span><span class="p">)</span>
 
         <span class="c1"># Calculate telescope theta and phi angles</span>
@@ -728,56 +665,54 @@
         <span class="n">source_phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">direction_vector_inv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">direction_vector_inv</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span> <span class="mi">6</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">pointing_vector</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="p">[</span><span class="n">tel_theta</span><span class="p">,</span> <span class="n">tel_phi</span><span class="p">,</span> <span class="n">source_theta</span><span class="p">,</span> <span class="n">source_phi</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="n">pointing_vector</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="p">[</span><span class="n">tel_theta</span><span class="p">,</span> <span class="n">tel_phi</span><span class="p">,</span> <span class="n">source_theta</span><span class="p">,</span> <span class="n">source_phi</span><span class="p">]</span>
 
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_write_telpos_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_telescope_position_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Write the telescope positions to a telpos file.</span>
+<span class="sd">        Write the telescope positions to a telescope_position file.</span>
 
 <span class="sd">        The file will contain lines in the format: x y z r in cm</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Path</span>
-<span class="sd">            The path to the generated telpos file.</span>
+<span class="sd">            The path to the generated telescope_position file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">telpos_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;telpos.dat&quot;</span><span class="p">)</span>
-        <span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
+        <span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
             <span class="s2">&quot;array_element_position_ground&quot;</span>
         <span class="p">)</span>
         <span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span> <span class="o">=</span> <span class="p">[</span><span class="n">coord</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span><span class="p">)]</span>
 
-        <span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;telescope_sphere_radius&quot;</span><span class="p">)</span>
+        <span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;telescope_sphere_radius&quot;</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">radius</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># Convert radius to cm</span>
-        <span class="k">with</span> <span class="n">telpos_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x_tel</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">y_tel</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">z_tel</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">radius</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">telpos_file</span>
+        <span class="n">telescope_position_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;telescope_position.dat&quot;</span><span class="p">)</span>
+        <span class="n">telescope_position_file</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x_tel</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">y_tel</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">z_tel</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">radius</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">telescope_position_file</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_flasher_atmosphere_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare canonical atmosphere aliases for ff-1m and return model id 1.&quot;&quot;&quot;</span>
-        <span class="n">atmo_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;atmospheric_profile&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using atmosphere profile: </span><span class="si">{</span><span class="n">atmo_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_flasher_atmosphere_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_directory</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare canonical atmosphere aliases for ff-1m and return model id.</span>
 
-        <span class="n">src_path</span> <span class="o">=</span> <span class="n">config_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">atmo_name</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">canonical</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;atmprof1.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;atm_profile_model_1.dat&quot;</span><span class="p">):</span>
-            <span class="n">dst</span> <span class="o">=</span> <span class="n">config_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">canonical</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">dst</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">or</span> <span class="n">dst</span><span class="o">.</span><span class="n">is_symlink</span><span class="p">():</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">dst</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
-                <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-                    <span class="k">pass</span>
+<span class="sd">        The ff-1m tool requires atmosphere files atmprof1.dat or atm_profile_model_1.dat and</span>
+<span class="sd">        as configuration parameter the atmosphere id (&#39;--atmosphere id&#39;).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">src_path</span> <span class="o">=</span> <span class="n">config_directory</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;atmospheric_profile&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using atmosphere profile: </span><span class="si">{</span><span class="n">src_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;atmprof</span><span class="si">{</span><span class="n">model_id</span><span class="si">}</span><span class="s2">.dat&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;atm_profile_model_</span><span class="si">{</span><span class="n">model_id</span><span class="si">}</span><span class="s2">.dat&quot;</span><span class="p">):</span>
+            <span class="n">dst</span> <span class="o">=</span> <span class="n">config_directory</span> <span class="o">/</span> <span class="n">name</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">dst</span><span class="o">.</span><span class="n">symlink_to</span><span class="p">(</span><span class="n">src_path</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">dst</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">or</span> <span class="n">dst</span><span class="o">.</span><span class="n">is_symlink</span><span class="p">():</span>
+                    <span class="n">dst</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
                 <span class="k">try</span><span class="p">:</span>
+                    <span class="n">dst</span><span class="o">.</span><span class="n">symlink_to</span><span class="p">(</span><span class="n">src_path</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
                     <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">src_path</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">copy_err</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Failed to create atmosphere alias </span><span class="si">{</span><span class="n">dst</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">copy_err</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="p">)</span>
-        <span class="k">return</span> <span class="mi">1</span>
+            <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">copy_err</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to create atmosphere alias </span><span class="si">{</span><span class="n">dst</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">copy_err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model_id</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_make_light_emission_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -791,153 +726,109 @@
 <span class="sd">        str</span>
 <span class="sd">            The commands to run the Light Emission package</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
-            <span class="s2">&quot;array_element_position_ground&quot;</span>
-        <span class="p">)</span>
-
         <span class="n">config_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_model_configuration_directory</span><span class="p">(</span>
-            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">model_version</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">model_version</span>
         <span class="p">)</span>
-        <span class="n">telpos_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_telpos_file</span><span class="p">()</span>
-
-        <span class="n">app_name</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_infer_application</span><span class="p">()</span>
-
-        <span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="c1"># application path</span>
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/LightEmission/&quot;</span><span class="p">)))</span>
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="n">corsika_observation_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
+        <span class="n">app_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_light_emission_application_name</span><span class="p">()</span>
+        <span class="n">corsika_observation_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
             <span class="s2">&quot;corsika_observation_level&quot;</span>
         <span class="p">)</span>
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_build_altitude_atmo_block</span><span class="p">(</span>
-                <span class="n">app_name</span><span class="p">,</span> <span class="n">config_directory</span><span class="p">,</span> <span class="n">corsika_observation_level</span><span class="p">,</span> <span class="n">telpos_file</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
 
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_build_source_specific_block</span><span class="p">(</span><span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span><span class="p">,</span> <span class="n">config_directory</span><span class="p">))</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span> <span class="o">/</span> <span class="s2">&quot;sim_telarray/LightEmission&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_site_command</span><span class="p">(</span><span class="n">app_name</span><span class="p">,</span> <span class="n">config_directory</span><span class="p">,</span> <span class="n">corsika_observation_level</span><span class="p">))</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_light_source_command</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;light_source_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;illuminator&quot;</span><span class="p">:</span>
+            <span class="n">parts</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="s2">&quot;-A&quot;</span><span class="p">,</span>
+                <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config_directory</span><span class="si">}</span><span class="s2">/&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;atmospheric_profile&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">),</span>
+            <span class="p">]</span>
+        <span class="n">parts</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;-o </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">.iact.gz&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_type</span> <span class="o">==</span> <span class="s2">&quot;illuminator&quot;</span><span class="p">:</span>
-            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; -A </span><span class="si">{</span><span class="n">config_directory</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">)</span>
-            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;atmospheric_profile&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; -o </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">.iact.gz&quot;</span><span class="p">)</span>
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_build_altitude_atmo_block</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">app_name</span><span class="p">,</span> <span class="n">config_directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">corsika_observation_level</span><span class="p">,</span> <span class="n">telpos_file</span><span class="p">:</span> <span class="n">Path</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return CLI segment for altitude/atmosphere and telpos handling.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_site_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_name</span><span class="p">,</span> <span class="n">config_directory</span><span class="p">,</span> <span class="n">corsika_observation_level</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return site command with altitude, atmosphere and telescope_position handling.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">app_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;ff-1m&quot;</span><span class="p">,):</span>
-            <span class="n">seg</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">seg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot; -I.&quot;</span><span class="p">)</span>
-            <span class="n">seg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; -I</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;sim_telarray/cfg&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">seg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; -I</span><span class="si">{</span><span class="n">config_directory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">seg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; --altitude </span><span class="si">{</span><span class="n">corsika_observation_level</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">atmo_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_flasher_atmosphere_files</span><span class="p">(</span><span class="n">config_directory</span><span class="p">)</span>
-            <span class="n">seg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; --atmosphere </span><span class="si">{</span><span class="n">atmo_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="s2">&quot;-I.&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;-I</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="s1">&#39;sim_telarray/cfg&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;-I</span><span class="si">{</span><span class="n">config_directory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;--altitude </span><span class="si">{</span><span class="n">corsika_observation_level</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;--atmosphere </span><span class="si">{</span><span class="n">atmo_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
         <span class="c1"># default path (not used for flasher now, but kept for completeness)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot; -h  </span><span class="si">{</span><span class="n">corsika_observation_level</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> --telpos-file </span><span class="si">{</span><span class="n">telpos_file</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;-h  </span><span class="si">{</span><span class="n">corsika_observation_level</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;--telpos-file </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_write_telescope_position_file</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_build_source_specific_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_x_tel</span><span class="p">,</span> <span class="n">_y_tel</span><span class="p">,</span> <span class="n">_z_tel</span><span class="p">,</span> <span class="n">_config_directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return CLI segment for light-source specific flags.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_type</span> <span class="o">==</span> <span class="s2">&quot;flasher&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_flasher_command_options</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_type</span> <span class="o">==</span> <span class="s2">&quot;illuminator&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_illuminator_command_options</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unknown light_source_type &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_type</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_add_flasher_command_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add flasher-specific options to the script (uniform ff-1m).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_flasher_options</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_add_flasher_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add flasher options for all telescope types (ff-1m style).&quot;&quot;&quot;</span>
-        <span class="c1"># For MST/LST we used to use ff-1m; now apply same for all telescopes</span>
-        <span class="n">flasher_xy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flasher_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;flasher_position&quot;</span><span class="p">)</span>
-        <span class="n">flasher_distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flasher_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;flasher_depth&quot;</span><span class="p">)</span>
-        <span class="c1"># Camera radius required for application, Radius of fiducial sphere enclosing camera</span>
-        <span class="n">camera_radius</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;camera_body_diameter&quot;</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">value</span>
-            <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_light_source_command</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return light-source specific command options.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;light_source_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;flat_fielding&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_flasher_command_options</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;light_source_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;illuminator&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_illuminator_command_options</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unknown light_source_type &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;light_source_type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
         <span class="p">)</span>
-        <span class="n">spectrum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flasher_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;spectrum&quot;</span><span class="p">)</span>
-        <span class="n">pulse</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flasher_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;lightpulse&quot;</span><span class="p">)</span>
-        <span class="n">angular</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flasher_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;angular_distribution&quot;</span><span class="p">)</span>
-        <span class="n">bunch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flasher_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;bunch_size&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Convert to plain numbers for CLI</span>
-        <span class="n">fx</span> <span class="o">=</span> <span class="n">flasher_xy</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
-        <span class="n">fy</span> <span class="o">=</span> <span class="n">flasher_xy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
-        <span class="n">dist_cm</span> <span class="o">=</span> <span class="n">flasher_distance</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
-        <span class="n">spec_nm</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">spectrum</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">nm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_flasher_command_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add flasher options for all telescope types (ff-1m style).&quot;&quot;&quot;</span>
+        <span class="n">flasher_xyz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;flasher_position&quot;</span><span class="p">)</span>
+        <span class="n">camera_radius</span> <span class="o">=</span> <span class="n">fiducial_radius_from_shape</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;camera_body_diameter&quot;</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;camera_body_shape&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">flasher_wavelength</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
+            <span class="s2">&quot;flasher_wavelength&quot;</span>
+        <span class="p">)</span>
+        <span class="n">dist_cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_distance_focal_plane_calibration_device</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">angular_distribution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_angular_distribution_string_for_sim_telarray</span><span class="p">()</span>
 
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --events </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">number_events</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --photons </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">photons_per_run</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --bunchsize </span><span class="si">{</span><span class="n">bunch_size</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --xy </span><span class="si">{</span><span class="n">fx</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">fy</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --distance </span><span class="si">{</span><span class="n">dist_cm</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --camera-radius </span><span class="si">{</span><span class="n">camera_radius</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --spectrum </span><span class="si">{</span><span class="n">spec_nm</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --lightpulse </span><span class="si">{</span><span class="n">pulse</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --angular-distribution </span><span class="si">{</span><span class="n">angular</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">return</span> <span class="n">command</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;--events </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;number_of_events&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;--photons </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;flasher_photons&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;--bunchsize </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;flasher_bunch_size&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;--xy </span><span class="si">{</span><span class="n">flasher_xyz</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">flasher_xyz</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;--distance </span><span class="si">{</span><span class="n">dist_cm</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;--camera-radius </span><span class="si">{</span><span class="n">camera_radius</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;--spectrum </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">flasher_wavelength</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">nm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;--lightpulse </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_pulse_shape_string_for_sim_telarray</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;--angular-distribution </span><span class="si">{</span><span class="n">angular_distribution</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_add_illuminator_command_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add illuminator-specific command options to the light emission script.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        command : str</span>
-<span class="sd">            The command string to add options to</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        str</span>
-<span class="sd">            The updated command string</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_setup</span> <span class="o">==</span> <span class="s2">&quot;variable&quot;</span><span class="p">:</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -x </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;x_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -y </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;y_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -z </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;z_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot; -d </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;direction&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]))</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -n </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">photons_per_run</span><span class="si">}</span><span class="s2">&quot;</span>
-
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_setup</span> <span class="o">==</span> <span class="s2">&quot;layout&quot;</span><span class="p">:</span>
-            <span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_illuminator_command_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get illuminator-specific command options for light emission script.&quot;&quot;&quot;</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;light_source_position&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
                 <span class="s2">&quot;array_element_position_ground&quot;</span>
             <span class="p">)</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -x </span><span class="si">{</span><span class="n">x_cal</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -y </span><span class="si">{</span><span class="n">y_cal</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -z </span><span class="si">{</span><span class="n">z_cal</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">pointing_vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_pointing_direction</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -d </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="n">pointing_vector</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span> <span class="o">=</span> <span class="n">pos</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;light_source_pointing&quot;</span><span class="p">):</span>
+            <span class="n">pointing_vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;light_source_pointing&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pointing_vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_pointing_direction</span><span class="p">(</span><span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">flasher_wavelength</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
+            <span class="s2">&quot;flasher_wavelength&quot;</span>
+        <span class="p">)</span>
+        <span class="n">angular_distribution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_angular_distribution_string_for_sim_telarray</span><span class="p">()</span>
 
-            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -n </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">photons_per_run</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Photons per run: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">photons_per_run</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">)</span>
-
-            <span class="n">laser_wavelength</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
-                <span class="s2">&quot;laser_wavelength&quot;</span>
-            <span class="p">)</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -s </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">laser_wavelength</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">nm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-
-            <span class="n">led_pulse_sigtime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
-                <span class="s2">&quot;led_pulse_sigtime&quot;</span>
-            <span class="p">)</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -p Gauss:</span><span class="si">{</span><span class="n">led_pulse_sigtime</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">ns</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; -a isotropic&quot;</span>
-
-        <span class="k">return</span> <span class="n">command</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;-x </span><span class="si">{</span><span class="n">x_cal</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;-y </span><span class="si">{</span><span class="n">y_cal</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;-z </span><span class="si">{</span><span class="n">z_cal</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;-d </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="n">pointing_vector</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;-n </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;flasher_photons&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;-s </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">flasher_wavelength</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">nm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;-p </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_pulse_shape_string_for_sim_telarray</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;-a </span><span class="si">{</span><span class="n">angular_distribution</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_make_simtel_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -948,315 +839,108 @@
 <span class="sd">        str</span>
 <span class="sd">            The command to run sim_telarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># For flasher sims, avoid calibration pointing entirely; default angles to (0,0)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_type</span> <span class="o">==</span> <span class="s2">&quot;flasher&quot;</span><span class="p">:</span>
-            <span class="n">angles</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">angles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_pointing_direction</span><span class="p">()</span>
+        <span class="n">theta</span><span class="p">,</span> <span class="n">phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_telescope_pointing</span><span class="p">()</span>
 
         <span class="n">simtel_bin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/bin/sim_telarray/&quot;</span><span class="p">)</span>
-        <span class="c1"># Build command without prefix; caller will add SIM_TELARRAY_CONFIG_PATH once</span>
-        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">simtel_bin</span><span class="si">}</span><span class="s2"> &quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;-I</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">config_file_directory</span><span class="si">}</span><span class="s2"> &quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;-I</span><span class="si">{</span><span class="n">simtel_bin</span><span class="si">}</span><span class="s2"> &quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;-c </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">config_file_path</span><span class="si">}</span><span class="s2"> &quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_line_from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">config_file_path</span><span class="p">,</span> <span class="s2">&quot;array_triggers&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_line_from_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">config_file_path</span><span class="p">,</span> <span class="s2">&quot;axes_offsets&quot;</span><span class="p">)</span>
 
-        <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot;-DNUM_TELESCOPES=1 &quot;</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">simtel_bin</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;-I</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">config_file_directory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;-I</span><span class="si">{</span><span class="n">simtel_bin</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;-c </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">config_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-DNUM_TELESCOPES=1&quot;</span><span class="p">,</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+                <span class="s2">&quot;altitude&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;corsika_observation_level&quot;</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+                <span class="s2">&quot;atmospheric_transmission&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;atmospheric_transmission&quot;</span><span class="p">),</span>
+            <span class="p">),</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;TRIGGER_TELESCOPES&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">),</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;TELTRIG_MIN_SIGSUM&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">),</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;PULSE_ANALYSIS&quot;</span><span class="p">,</span> <span class="s2">&quot;-30&quot;</span><span class="p">),</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;MAXIMUM_TELESCOPES&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;telescope_theta&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">theta</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">),</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;telescope_phi&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">phi</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
 
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
-            <span class="s2">&quot;altitude&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;corsika_observation_level&quot;</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">value</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
-            <span class="s2">&quot;atmospheric_transmission&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;atmospheric_transmission&quot;</span><span class="p">),</span>
-        <span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;TRIGGER_TELESCOPES&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;light_source_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;flat_fielding&quot;</span><span class="p">:</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;Bypass_Optics&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">))</span>
 
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;TELTRIG_MIN_SIGSUM&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;PULSE_ANALYSIS&quot;</span><span class="p">,</span> <span class="s2">&quot;-30&quot;</span><span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;MAXIMUM_TELESCOPES&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_type</span> <span class="o">==</span> <span class="s2">&quot;variable&quot;</span><span class="p">:</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;telescope_theta&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;telescope_phi&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;telescope_theta&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">angles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;telescope_phi&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">angles</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="c1"># For flasher runs, bypass reflections on primary mirror</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_type</span> <span class="o">==</span> <span class="s2">&quot;flasher&quot;</span><span class="p">:</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;Bypass_Optics&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
-
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;power_law&quot;</span><span class="p">,</span> <span class="s2">&quot;2.68&quot;</span><span class="p">)</span>
-        <span class="n">app_name</span><span class="p">,</span> <span class="n">app_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_infer_application</span><span class="p">()</span>
+        <span class="n">app_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_light_emission_application_name</span><span class="p">()</span>
         <span class="n">pref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_prefix</span><span class="p">()</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
-            <span class="s2">&quot;input_file&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">.iact.gz&quot;</span>
-        <span class="p">)</span>
-        <span class="n">dist_suffix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_setup</span> <span class="o">==</span> <span class="s2">&quot;variable&quot;</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">dist_val</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_distance_for_plotting</span><span class="p">()</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">))</span>
-                <span class="n">dist_suffix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_d_</span><span class="si">{</span><span class="n">dist_val</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint:disable=broad-except</span>
-                <span class="n">dist_suffix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">parts</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;power_law&quot;</span><span class="p">,</span> <span class="s2">&quot;2.68&quot;</span><span class="p">),</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;input_file&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">.iact.gz&quot;</span><span class="p">),</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+                <span class="s2">&quot;output_file&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">pref</span><span class="si">}{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">.simtel.zst&quot;</span>
+            <span class="p">),</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+                <span class="s2">&quot;histogram_file&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">pref</span><span class="si">}{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">.ctsim.hdata</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="p">),</span>
+        <span class="p">]</span>
 
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
-            <span class="s2">&quot;output_file&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">pref</span><span class="si">}{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">app_mode</span><span class="si">}{</span><span class="n">dist_suffix</span><span class="si">}</span><span class="s2">.simtel.zst&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
-            <span class="s2">&quot;histogram_file&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">pref</span><span class="si">}{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">app_mode</span><span class="si">}{</span><span class="n">dist_suffix</span><span class="si">}</span><span class="s2">.ctsim.hdata</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="c1"># Remove the default sim_telarray configuration directories</span>
-        <span class="k">return</span> <span class="n">clear_default_sim_telarray_cfg_directories</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_remove_line_from_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">line_prefix</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Remove lines starting with a specific prefix from the config.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        file_path : Path</span>
-<span class="sd">            The path to the configuration file.</span>
-<span class="sd">        line_prefix : str</span>
-<span class="sd">            The prefix of lines to be removed.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
-        <span class="k">with</span> <span class="n">file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-
-        <span class="k">with</span> <span class="n">file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">line_prefix</span><span class="p">):</span>
-                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-
-<div class="viewcode-block" id="SimulatorLightEmission.prepare_script">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.prepare_script">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">prepare_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Build and return bash run script containing the light-emission command.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        Path</span>
-<span class="sd">            Full path of the run script.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Creating run bash script&quot;</span><span class="p">)</span>
-
-        <span class="n">_script_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;scripts&quot;</span><span class="p">)</span>
-        <span class="n">_script_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">_script_file</span> <span class="o">=</span> <span class="n">_script_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_infer_application</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">-lightemission.sh&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Run bash script - </span><span class="si">{</span><span class="n">_script_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="n">target_out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_simulation_output_filename</span><span class="p">())</span>
-        <span class="k">if</span> <span class="n">target_out</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Simtel output file exists already, cancelling simulation: </span><span class="si">{</span><span class="n">target_out</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="n">command_le</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_light_emission_script</span><span class="p">()</span>
-        <span class="n">command_simtel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_simtel_script</span><span class="p">()</span>
-
-        <span class="k">with</span> <span class="n">_script_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#!/usr/bin/env bash</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">command_le</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">app_name</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_infer_application</span><span class="p">()</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;[ -s &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">.iact.gz&#39; ] || &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="s2"> echo &#39;LightEmission did not produce IACT file&#39; &gt;&amp;2; exit 1; </span><span class="se">}}\n\n</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">command_simtel</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-            <span class="c1"># Cleanup intermediate IACT file at the end of the run</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;rm -f &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">.iact.gz&#39;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="n">_script_file</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">_script_file</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mode</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IXUSR</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IXGRP</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_script_file</span></div>
-
+        <span class="k">return</span> <span class="n">clear_default_sim_telarray_cfg_directories</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_simulation_output_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the filename of the simulation output.&quot;&quot;&quot;</span>
-        <span class="n">dist_suffix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_setup</span> <span class="o">==</span> <span class="s2">&quot;variable&quot;</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">dist_val</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_distance_for_plotting</span><span class="p">()</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">))</span>
-                <span class="n">dist_suffix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_d_</span><span class="si">{</span><span class="n">dist_val</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint:disable=broad-except</span>
-                <span class="n">dist_suffix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="n">app_name</span><span class="p">,</span> <span class="n">app_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_infer_application</span><span class="p">()</span>
+        <span class="n">app_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_light_emission_application_name</span><span class="p">()</span>
         <span class="n">pref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_prefix</span><span class="p">()</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">pref</span><span class="si">}{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">app_mode</span><span class="si">}{</span><span class="n">dist_suffix</span><span class="si">}</span><span class="s2">.simtel.zst&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">pref</span><span class="si">}{</span><span class="n">app_name</span><span class="si">}</span><span class="s2">.simtel.zst&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_distance_for_plotting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the distance to be used for plotting as an astropy Quantity.</span>
-
-<span class="sd">        For flasher runs, use the flasher_depth (cm) from the flasher model.</span>
-<span class="sd">        For illuminator runs, use the configured z_pos quantity.</span>
-<span class="sd">        Otherwise, fall back to self.distance if set, or 0 m.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_type</span> <span class="o">==</span> <span class="s2">&quot;flasher&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flasher_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flasher_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;flasher_depth&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">_as_meters</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">val</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
-            <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-                <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;z_pos&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="n">z_def</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
-            <span class="n">z_val</span> <span class="o">=</span> <span class="n">z_def</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z_def</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="n">z_def</span> <span class="k">else</span> <span class="n">z_def</span>
-            <span class="n">z_q</span> <span class="o">=</span> <span class="n">_as_meters</span><span class="p">(</span><span class="n">z_val</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">z_q</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">z_q</span>
-
-        <span class="n">d_q</span> <span class="o">=</span> <span class="n">_as_meters</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;distance&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">d_q</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">d_q</span>
-
-        <span class="k">return</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
-
-<div class="viewcode-block" id="SimulatorLightEmission.run_simulation">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.run_simulation">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">run_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the light emission simulation and return the output simtel file path.&quot;&quot;&quot;</span>
-        <span class="n">run_script</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_script</span><span class="p">()</span>
-        <span class="n">log_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;logfile.log&quot;</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
-            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="n">run_script</span><span class="p">,</span>
-                <span class="n">shell</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">stdout</span><span class="o">=</span><span class="n">fh</span><span class="p">,</span>
-                <span class="n">stderr</span><span class="o">=</span><span class="n">fh</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_simulation_output_filename</span><span class="p">())</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected simtel output not found: </span><span class="si">{</span><span class="n">out</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">out</span></div>
-
-
-<div class="viewcode-block" id="SimulatorLightEmission.distance_list">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.distance_list">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">distance_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+<div class="viewcode-block" id="SimulatorLightEmission.calculate_distance_focal_plane_calibration_device">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.calculate_distance_focal_plane_calibration_device">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_distance_focal_plane_calibration_device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Convert distance list to astropy quantities.</span>
+<span class="sd">        Calculate distance between focal plane and calibration device.</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        arg: list</span>
-<span class="sd">            List of distances.</span>
+<span class="sd">        For flasher-type light sources. Flasher position is given in mirror coordinates,</span>
+<span class="sd">        with positive z pointing towards the camera, so the distance is focal_length - flasher_z.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        values: list</span>
-<span class="sd">            List of distances as astropy quantities.</span>
+<span class="sd">        astropy.units.Quantity</span>
+<span class="sd">            Distance between calibration device and focal plane.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Distances must be numeric values&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
-
-
-<div class="viewcode-block" id="SimulatorLightEmission.update_light_emission_config">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.update_light_emission_config">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">update_light_emission_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Update the light emission configuration.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        key : str</span>
-<span class="sd">            The key in the configuration to update.</span>
-<span class="sd">        value : Any</span>
-<span class="sd">            The new value to set for the key.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Key &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; not found in light emission configuration.&quot;</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="SimulatorLightEmission.calculate_distance_telescope_calibration_device">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.calculate_distance_telescope_calibration_device">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_distance_telescope_calibration_device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate distance(s) between telescope and calibration device.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_setup</span> <span class="o">==</span> <span class="s2">&quot;layout&quot;</span><span class="p">:</span>
-            <span class="c1"># Layout positions: Use DB coordinates</span>
-            <span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
-                <span class="s2">&quot;array_element_position_ground&quot;</span>
-            <span class="p">)</span>
-            <span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span> <span class="o">=</span> <span class="p">[</span><span class="n">coord</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span><span class="p">)]</span>
-            <span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
-                <span class="s2">&quot;array_element_position_ground&quot;</span>
-            <span class="p">)</span>
-            <span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span> <span class="o">=</span> <span class="p">[</span><span class="n">coord</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span><span class="p">)]</span>
-            <span class="n">tel_vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span><span class="p">])</span>
-            <span class="n">cal_vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span><span class="p">])</span>
-            <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cal_vect</span> <span class="o">-</span> <span class="n">tel_vect</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Distance between telescope and calibration device: </span><span class="si">{</span><span class="n">distance</span><span class="si">}</span><span class="s2"> m&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="p">[</span><span class="n">distance</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">]</span>
-
-        <span class="c1"># Variable positions: Calculate distances for all positions</span>
-        <span class="n">x_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;x_pos&quot;</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
-        <span class="n">y_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;y_pos&quot;</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
-        <span class="n">z_positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;z_pos&quot;</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
-
-        <span class="n">distances</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">z_positions</span><span class="p">:</span>
-            <span class="n">tel_vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">])</span>
-            <span class="n">cal_vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>  <span class="c1"># Calibration device at origin</span>
-            <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cal_vect</span> <span class="o">-</span> <span class="n">tel_vect</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">distances</span></div>
-
-
-<div class="viewcode-block" id="SimulatorLightEmission.simulate_variable_distances">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.simulate_variable_distances">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">simulate_variable_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Simulate light emission for variable distances and return output files list.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;distances_ls&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">update_light_emission_config</span><span class="p">(</span>
-                <span class="s2">&quot;z_pos&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">distance_list</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;distances_ls&quot;</span><span class="p">])</span>
-            <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Simulating for distances: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;z_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">focal_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;focal_length&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        <span class="n">flasher_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;flasher_position&quot;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+            <span class="n">u</span><span class="o">.</span><span class="n">m</span>
         <span class="p">)</span>
-        <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">distances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_distance_telescope_calibration_device</span><span class="p">()</span>
-
-        <span class="k">for</span> <span class="n">current_distance</span><span class="p">,</span> <span class="n">z_pos</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-            <span class="n">distances</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;z_pos&quot;</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
-        <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">update_light_emission_config</span><span class="p">(</span><span class="s2">&quot;z_pos&quot;</span><span class="p">,</span> <span class="n">z_pos</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="o">=</span> <span class="n">current_distance</span>
-            <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_simulation</span><span class="p">())</span>
-        <span class="k">return</span> <span class="n">outputs</span></div>
+        <span class="k">return</span> <span class="n">focal_length</span> <span class="o">-</span> <span class="n">flasher_z</span></div>
 
 
-<div class="viewcode-block" id="SimulatorLightEmission.simulate_layout_positions">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.simulate_layout_positions">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">simulate_layout_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>  <span class="c1"># pylint: disable=unused-argument</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Simulate light emission for layout positions and return output files list.&quot;&quot;&quot;</span>
-        <span class="c1"># args_dict kept for API symmetry; explicitly mark as unused</span>
-        <span class="k">del</span> <span class="n">args_dict</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_distance_telescope_calibration_device</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="c1"># Single distance for layout</span>
-        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">run_simulation</span><span class="p">()]</span></div>
-</div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_angular_distribution_string_for_sim_telarray</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the angular distribution string for sim_telarray.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            The angular distribution string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">option_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span>
+            <span class="s2">&quot;flasher_angular_distribution&quot;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
+            <span class="s2">&quot;flasher_angular_distribution_width&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">option_string</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">width</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">width</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">option_string</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_pulse_shape_string_for_sim_telarray</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the pulse shape string for sim_telarray.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            The pulse shape string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">option_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_shape&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_width&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">option_string</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">width</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">ns</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">width</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">option_string</span></div>
 
 </pre></div>
 

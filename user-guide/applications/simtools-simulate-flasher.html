@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,10 +54,10 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="simtools-simulate-illuminator" href="simtools-simulate-illuminator.html" />
-    <link rel="prev" title="simtools-simulate-calibration-events" href="simtools-simulate-calibration-events.html" />
+    <link rel="prev" title="simtools-run-application" href="simtools-run-application.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -397,6 +397,7 @@
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="../simulate_calibration_data.html">Simulate Calibration Data</a></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../applications.html">Applications</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="simtools-calculate-incident-angles.html">simtools-calculate-incident-angles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-convert-all-model-parameters-from-simtel.html">simtools-convert-all-model-parameters-from-simtel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
@@ -408,10 +409,12 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-generate-compound-indexes.html">simtools-db-generate-compound-indexes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-upload-model-repository.html">simtools-db-upload-model-repository</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-trigger-rates.html">simtools-derive-trigger-rates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-calibration-reports.html">simtools-docs-produce-calibration-reports</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
@@ -421,7 +424,7 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-add-production-table.html">simtools-maintain-simulation-model-add-production-table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-add-production.html">simtools-maintain-simulation-model-add-production</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-compare-productions.html">simtools-maintain-simulation-model-compare-productions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-verify-production-tables.html">simtools-maintain-simulation-model-verify-production-tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-merge-tables.html">simtools-merge-tables</a></li>
@@ -435,9 +438,9 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-merge-corsika-limits.html">simtools-production-merge-corsika-limits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-calibration-events.html">simtools-simulate-calibration-events</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-simulate-flasher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-illuminator.html">simtools-simulate-illuminator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-pedestals.html">simtools-simulate-pedestals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-submit-array-layouts.html">simtools-submit-array-layouts</a></li>
@@ -515,15 +518,33 @@
                   
   <section id="module-simulate_flasher">
 <span id="simtools-simulate-flasher"></span><h1>simtools-simulate-flasher<a class="headerlink" href="#module-simulate_flasher" title="Link to this heading">#</a></h1>
-<p>Simulate flasher devices using the light emission package.</p>
-<p>Run the application in the command line.</p>
+<p>Simulate flasher devices used e.g. for camera flat fielding.</p>
+<p>The flasher simulation allows for two different run modes:</p>
+<ol class="arabic simple">
+<li><p>Direct injection of light into the camera (bypassing the telescope optics).</p></li>
+<li><p>Simulation of the full light path (using the light-emission package from sim_telarray).</p></li>
+</ol>
+<p>The direct injection mode uses a simplified model for the flasher light source. Both run modes
+provide events in sim_telarray format that can be processed by standard analysis steps or
+visualized using e.g. the ‘simtools-plot-simtel-events’ application.</p>
 <section id="example-usage">
 <h2>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">#</a></h2>
 <ol class="arabic">
-<li><p>Simulate flashers for a telescope:</p>
+<li><p>Simulate flashers for a telescope (direct injection):</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-flasher --telescope MSTN-04 --site North \</span>
-<span class="go">--flasher FLSN-01 --model_version 6.0.0</span>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-flasher --run_mode direct_injection \</span>
+<span class="go">--light_source MSFx-FlashCam --model_version 6.0.0 \</span>
+<span class="go">--array_layout_name subsystem_msts --site South \</span>
+<span class="go">--run_number 3</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Simulate flashers for a telescope (detailed simulation):</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-flasher --run_mode full_simulation \</span>
+<span class="go">--light_source MSFx-FlashCam --model_version 6.0.0 \</span>
+<span class="go">--telescope MSTS-04 --site South</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -533,11 +554,13 @@
 <section id="command-line-arguments">
 <h2>Command Line Arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
+<dt>run_mode (str, required)</dt><dd><p>Run mode, either “direct_injection” or “full_simulation”.</p>
+</dd>
 <dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LSTN-01, MSTN-04, SSTS-04, …)</p>
 </dd>
 <dt>site (str, required)</dt><dd><p>Site name (North or South).</p>
 </dd>
-<dt>flasher (str, required)</dt><dd><p>Flasher device in array, e.g., FLSN-01.</p>
+<dt>light_source (str, required)</dt><dd><p>Calibration light source, e.g., MSFx-FlashCam</p>
 </dd>
 <dt>number_of_events (int, optional):</dt><dd><p>Number of events to simulate (default: 1).</p>
 </dd>
@@ -545,31 +568,18 @@
 </dd>
 <dt>model_version (str, optional)</dt><dd><p>Version of the simulation model.</p>
 </dd>
-</dl>
-</section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Simulate flashers for MSTN-04:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-flasher --telescope MSTN-04 --site North \</span>
-<span class="go">--flasher FLSN-01 --model_version 6.0.0</span>
-</pre></div>
-</div>
-<dl class="simple">
-<dt>Expected Output:</dt><dd><p>The simulation will run the light emission package for the flasher
-devices and produce the output files.</p>
+<dt>array_layout_name (str, optional)</dt><dd><p>Name of the array layout to use (required for direct injection mode).</p>
+</dd>
+<dt>run_number (int, optional)</dt><dd><p>Run number to use (default: 1, required for direct injection mode).</p>
+</dd>
+<dt>telescope (str, optional)</dt><dd><p>Telescope name (required for full simulation mode).</p>
 </dd>
 </dl>
 </section>
 <dl class="py function">
-<dt class="sig sig-object py" id="simulate_flasher.flasher_configs">
-<span class="sig-prename descclassname"><span class="pre">simulate_flasher.</span></span><span class="sig-name descname"><span class="pre">flasher_configs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/simulate_flasher.html#flasher_configs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulate_flasher.flasher_configs" title="Link to this definition">#</a></dt>
-<dd><p>Return default setup for flasher runs (no distances).</p>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="simulate_flasher.main">
 <span class="sig-prename descclassname"><span class="pre">simulate_flasher.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/simulate_flasher.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulate_flasher.main" title="Link to this definition">#</a></dt>
-<dd><p>Run the application.</p>
+<dd><p>Simulate flasher devices.</p>
 </dd></dl>
 
 </section>
@@ -585,12 +595,12 @@ devices and produce the output files.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simtools-simulate-calibration-events.html"
+       href="simtools-run-application.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools-simulate-calibration-events</p>
+        <p class="prev-next-title">simtools-run-application</p>
       </div>
     </a>
     <a class="right-next"
@@ -623,8 +633,6 @@ devices and produce the output files.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command Line Arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_flasher.flasher_configs"><code class="docutils literal notranslate"><span class="pre">flasher_configs()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_flasher.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>

@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Runners for simulation software" href="runners.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -392,7 +392,7 @@
 <li class="toctree-l1"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Application, dependency and version management.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="db_handler.html">Database support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="io.html">I/O</a></li>
 <li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
@@ -405,6 +405,7 @@
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">sim_telarray</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
 </ul>
@@ -559,13 +560,33 @@ Check for differences in ‘default’ and ‘limits’ entries.</p>
 
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="simtel.simtel_config_reader.get_list_of_simtel_parameters">
+<span class="sig-prename descclassname"><span class="pre">simtel.simtel_config_reader.</span></span><span class="sig-name descname"><span class="pre">get_list_of_simtel_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_config_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_reader.html#get_list_of_simtel_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_reader.get_list_of_simtel_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Return list of sim_telarray parameters found in sim_telarray configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>simtel_config_file: str</strong></dt><dd><p>File name for sim_telarray configuration</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of parameters found in sim_telarray configuration file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="simtel-config-writer">
 <h2>simtel_config_writer<a class="headerlink" href="#simtel-config-writer" title="Link to this heading">#</a></h2>
 <p id="module-simtel.simtel_config_writer"><span id="simtel-config-writer-1"></span>Configuration file writer for sim_telarray.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simtel_config_writer.SimtelConfigWriter">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_config_writer.</span></span><span class="sig-name descname"><span class="pre">SimtelConfigWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_writer.html#SimtelConfigWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_writer.SimtelConfigWriter" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_config_writer.</span></span><span class="sig-name descname"><span class="pre">SimtelConfigWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_design_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_writer.html#SimtelConfigWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_writer.SimtelConfigWriter" title="Link to this definition">#</a></dt>
 <dd><p>SimtelConfigWriter writes sim_telarray configuration files.</p>
 <p>It is designed to be used by model classes (TelescopeModel and ArrayModel) only.</p>
 <dl class="field-list simple">
@@ -647,7 +668,7 @@ Check for differences in ‘default’ and ‘limits’ entries.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simtel.simtel_config_writer.SimtelConfigWriter.write_telescope_config_file">
-<span class="sig-name descname"><span class="pre">write_telescope_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_writer.html#SimtelConfigWriter.write_telescope_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_telescope_config_file" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">write_telescope_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_design_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_writer.html#SimtelConfigWriter.write_telescope_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_telescope_config_file" title="Link to this definition">#</a></dt>
 <dd><p>Write the sim_telarray config file for a single telescope.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -658,11 +679,35 @@ Check for differences in ‘default’ and ‘limits’ entries.</p>
 </dd>
 <dt><strong>telescope_name: str</strong></dt><dd><p>Name of the telescope (use self._telescope_model_name if None)</p>
 </dd>
+<dt><strong>telescope_design_model: str</strong></dt><dd><p>Telescope design model.</p>
+</dd>
 </dl>
 </dd>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtel.simtel_config_writer.sim_telarray_random_seeds">
+<span class="sig-prename descclassname"><span class="pre">simtel.simtel_config_writer.</span></span><span class="sig-name descname"><span class="pre">sim_telarray_random_seeds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_writer.html#sim_telarray_random_seeds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_writer.sim_telarray_random_seeds" title="Link to this definition">#</a></dt>
+<dd><p>Generate random seeds to be used in sim_telarray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>seed: int</strong></dt><dd><p>Seed for the random number generator.</p>
+</dd>
+<dt><strong>number: int</strong></dt><dd><p>Number of random seeds to generate.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of random seeds.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -697,7 +742,7 @@ Check for differences in ‘default’ and ‘limits’ entries.</p>
 <p id="module-simtel.simtel_io_event_reader"><span id="simtel-io-event-reader-1"></span>Read reduced datasets in form of astropy tables from file.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simtel_io_event_reader.ShowerEventData">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_event_reader.</span></span><span class="sig-name descname"><span class="pre">ShowerEventData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shower_id:</span> <span class="pre">list[~numpy.uint32]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_id:</span> <span class="pre">list[~numpy.uint32]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_id:</span> <span class="pre">list[~numpy.uint32]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulated_energy:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_core:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_core:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shower_azimuth:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shower_altitude:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_weight:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_core_shower:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_core_shower:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_distance_shower:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_reader.html#ShowerEventData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_reader.ShowerEventData" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_event_reader.</span></span><span class="sig-name descname"><span class="pre">ShowerEventData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shower_id:</span> <span class="pre">list[~numpy.uint32]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_id:</span> <span class="pre">list[~numpy.uint32]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_id:</span> <span class="pre">list[~numpy.uint32]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulated_energy:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_core:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_core:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shower_azimuth:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shower_altitude:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_weight:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_core_shower:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_core_shower:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_distance_shower:</span> <span class="pre">list[~numpy.float64]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angular_distance:</span> <span class="pre">list[float]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_reader.html#ShowerEventData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_reader.ShowerEventData" title="Link to this definition">#</a></dt>
 <dd><p>Container for shower event data.</p>
 </dd></dl>
 
@@ -772,6 +817,28 @@ under the assumption that the file contains the tables “SHOWERS”,
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>list</dt><dd><p>List of dictionaries containing the data from the tables.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simtel_io_event_reader.SimtelIOEventDataReader.scatter_area">
+<span class="sig-name descname"><span class="pre">scatter_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">core_scatter_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_scatter_max</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_reader.html#SimtelIOEventDataReader.scatter_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.scatter_area" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the scatter area of the core.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>core_scatter_min</strong><span class="classifier">astropy.units.Quantity</span></dt><dd><p>Minimum core scatter radius.</p>
+</dd>
+<dt><strong>core_scatter_max</strong><span class="classifier">astropy.units.Quantity</span></dt><dd><p>Maximum core scatter radius.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.units.Quantity</dt><dd><p>Scatter area.</p>
 </dd>
 </dl>
 </dd>
@@ -867,7 +934,8 @@ under the assumption that the file contains the tables “SHOWERS”,
 <dt class="sig sig-object py" id="simtel.simtel_io_event_histograms.SimtelIOEventHistograms">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_event_histograms.</span></span><span class="sig-name descname"><span class="pre">SimtelIOEventHistograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_histograms.html#SimtelIOEventHistograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms" title="Link to this definition">#</a></dt>
 <dd><p>Generate and fill histograms for shower and triggered events.</p>
-<p>Event data is read from the reduced MC event data file.</p>
+<p>Event data is read from the reduced MC event data file.
+Calculate cumulative and relative (efficiency) distributions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -880,6 +948,36 @@ under the assumption that the file contains the tables “SHOWERS”,
 </dl>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simtel_io_event_histograms.SimtelIOEventHistograms.calculate_cumulative_data">
+<span class="sig-name descname"><span class="pre">calculate_cumulative_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_histograms.html#SimtelIOEventHistograms.calculate_cumulative_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.calculate_cumulative_data" title="Link to this definition">#</a></dt>
+<dd><p>Calculate cumulative distributions for triggered histograms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary containing the cumulative histograms.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simtel_io_event_histograms.SimtelIOEventHistograms.calculate_efficiency_data">
+<span class="sig-name descname"><span class="pre">calculate_efficiency_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_histograms.html#SimtelIOEventHistograms.calculate_efficiency_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.calculate_efficiency_data" title="Link to this definition">#</a></dt>
+<dd><p>Calculate efficiency histograms (triggered divided by simulated).</p>
+<p>Assumes that for each histogram with simulated events, there is a
+corresponding histogram with triggered events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary containing the efficiency histograms.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="simtel.simtel_io_event_histograms.SimtelIOEventHistograms.core_distance_bins">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">core_distance_bins</span></span><a class="headerlink" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.core_distance_bins" title="Link to this definition">#</a></dt>
@@ -897,27 +995,45 @@ under the assumption that the file contains the tables “SHOWERS”,
 <span class="sig-name descname"><span class="pre">fill</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_histograms.html#SimtelIOEventHistograms.fill"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.fill" title="Link to this definition">#</a></dt>
 <dd><p>Fill histograms with event data.</p>
 <p>Involves looping over all event data, and therefore is the slowest part of the
-limit calculation. Adds the histograms to the histogram dictionary.</p>
+histogram module. Adds the histograms to the histogram dictionary.</p>
 <p>Assume that all event data files are generated with similar configurations
-(self.file_info contains the latest file info).</p>
+(self.file_info contains the file info of the last file).</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_event_histograms.SimtelIOEventHistograms.plot_data">
-<span class="sig-name descname"><span class="pre">plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rebin_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_histograms.html#SimtelIOEventHistograms.plot_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.plot_data" title="Link to this definition">#</a></dt>
-<dd><p>Histogram plotting.</p>
+<dt class="sig sig-object py" id="simtel.simtel_io_event_histograms.SimtelIOEventHistograms.get_histogram_definition">
+<span class="sig-name descname"><span class="pre">get_histogram_definition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_data_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">histogram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_titles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_1d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_scales</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_histograms.html#SimtelIOEventHistograms.get_histogram_definition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.get_histogram_definition" title="Link to this definition">#</a></dt>
+<dd><p>Return a single histogram definition.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simtel_io_event_histograms.SimtelIOEventHistograms.print_summary">
+<span class="sig-name descname"><span class="pre">print_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_histograms.html#SimtelIOEventHistograms.print_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.print_summary" title="Link to this definition">#</a></dt>
+<dd><p>Print a summary of the histogram statistics.</p>
+<p>Total number of events is retrieved from the ‘energy’ histograms.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simtel_io_event_histograms.SimtelIOEventHistograms.rebin_2d_histogram">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rebin_2d_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_bins</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_bins</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rebin_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_histograms.html#SimtelIOEventHistograms.rebin_2d_histogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.rebin_2d_histogram" title="Link to this definition">#</a></dt>
+<dd><p>Rebin a 2D histogram by merging neighboring bins along the energy dimension (y-axis) only.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>output_path: Path or str, optional</strong></dt><dd><p>Directory to save plots. If None, plots will be displayed.</p>
+<dt><strong>hist</strong><span class="classifier">np.ndarray</span></dt><dd><p>Original 2D histogram data</p>
 </dd>
-<dt><strong>limits: dict, optional</strong></dt><dd><p>Dictionary containing limits for plotting. Keys can include:
-- “upper_radius_limit”: Upper limit for core distance
-- “lower_energy_limit”: Lower limit for energy
-- “viewcone_radius”: Radius for the viewcone</p>
+<dt><strong>x_bins</strong><span class="classifier">np.ndarray</span></dt><dd><p>Original x-axis bin edges (preserved)</p>
 </dd>
-<dt><strong>rebin_factor: int, optional</strong></dt><dd><p>Factor by which to reduce the number of bins in 2D histograms for rebinned plots.
-Default is 2 (merge every 2 bins). Set to 0 or 1 to disable rebinning.</p>
+<dt><strong>y_bins</strong><span class="classifier">np.ndarray</span></dt><dd><p>Original y-axis (energy) bin edges</p>
+</dd>
+<dt><strong>rebin_factor</strong><span class="classifier">int, optional</span></dt><dd><p>Factor by which to reduce the number of bins in the energy dimension
+Default is 2 (merge every 2 bins)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple</dt><dd><p>(re-binned_hist, x_bins, re-binned_y_bins)</p>
 </dd>
 </dl>
 </dd>
@@ -1056,7 +1172,7 @@ returns a merged dictionary. Adds primary id from the first event.</p>
 <p id="module-simtel.simulator_array"><span id="simulate-array-1"></span>Simulation runner for array simulations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simulator_array.SimulatorArray">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_array.</span></span><span class="sig-name descname"><span class="pre">SimulatorArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_telarray_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_array.html#SimulatorArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_array.SimulatorArray" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_array.</span></span><span class="sig-name descname"><span class="pre">SimulatorArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_telarray_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_array.html#SimulatorArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_array.SimulatorArray" title="Link to this definition">#</a></dt>
 <dd><p>SimulatorArray is the interface with sim_telarray to perform array simulations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1120,30 +1236,6 @@ the difference between this exponent and the one used for the shower simulations
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simulator_array.SimulatorArray.make_run_command_for_calibration_simulations">
-<span class="sig-name descname"><span class="pre">make_run_command_for_calibration_simulations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_runner_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_array.html#SimulatorArray.make_run_command_for_calibration_simulations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_array.SimulatorArray.make_run_command_for_calibration_simulations" title="Link to this definition">#</a></dt>
-<dd><p>Build and return the command to run sim_telarray for calibration simulations.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>calibration_runner_args: dict</strong></dt><dd><p>Dictionary with calibration runner arguments.</p>
-</dd>
-<dt><strong>input_file: str</strong></dt><dd><p>Full path of the input CORSIKA file</p>
-</dd>
-<dt><strong>run_number: int (optional)</strong></dt><dd><p>run number</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>str</dt><dd><p>Command to run sim_telarray for pedestal simulations.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </section>
@@ -1187,74 +1279,32 @@ the difference between this exponent and the one used for the shower simulations
 </section>
 <section id="simulator-light-emission">
 <h2>simulator_light_emission<a class="headerlink" href="#simulator-light-emission" title="Link to this heading">#</a></h2>
-<p id="module-simtel.simulator_light_emission"><span id="simulate-light-1"></span>Simulation using the light emission package for calibration devices.</p>
+<p id="module-simtel.simulator_light_emission"><span id="simulate-light-1"></span>Light emission simulation (e.g. illuminators or flashers).</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_light_emission.</span></span><span class="sig-name descname"><span class="pre">SimulatorLightEmission</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flasher_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">light_emission_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">light_source_setup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">light_source_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission" title="Link to this definition">#</a></dt>
-<dd><p>Interface with sim_telarray to perform light emission package simulations.</p>
-<p>The light emission package is used to simulate an artificial light source, used for calibration.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.calculate_distance_telescope_calibration_device">
-<span class="sig-name descname"><span class="pre">calculate_distance_telescope_calibration_device</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.calculate_distance_telescope_calibration_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.calculate_distance_telescope_calibration_device" title="Link to this definition">#</a></dt>
-<dd><p>Calculate distance(s) between telescope and calibration device.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.calibration_pointing_direction">
-<span class="sig-name descname"><span class="pre">calibration_pointing_direction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.calibration_pointing_direction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.calibration_pointing_direction" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the pointing of the calibration device towards the telescope.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>list</dt><dd><p>The pointing vector from the calibration device to the telescope.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.distance_list">
-<span class="sig-name descname"><span class="pre">distance_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.distance_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.distance_list" title="Link to this definition">#</a></dt>
-<dd><p>Convert distance list to astropy quantities.</p>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_light_emission.</span></span><span class="sig-name descname"><span class="pre">SimulatorLightEmission</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">light_emission_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission" title="Link to this definition">#</a></dt>
+<dd><p>Light emission simulation (e.g. illuminators or flashers).</p>
+<p>Uses the sim_telarray LightEmission package to simulate the light emission.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>arg: list</strong></dt><dd><p>List of distances.</p>
+<dt><strong>light_emission_config</strong><span class="classifier">dict, optional</span></dt><dd><p>Configuration for the light emission (e.g. number of events, model names)</p>
 </dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>values: list</dt><dd><p>List of distances as astropy quantities.</p>
+<dt><strong>label</strong><span class="classifier">str, optional</span></dt><dd><p>Label for the simulation</p>
 </dd>
 </dl>
 </dd>
 </dl>
-</dd></dl>
-
 <dl class="py method">
-<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.flasher_default_configuration">
-<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flasher_default_configuration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.flasher_default_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.flasher_default_configuration" title="Link to this definition">#</a></dt>
-<dd><p>Get default flasher configuration.</p>
+<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.calculate_distance_focal_plane_calibration_device">
+<span class="sig-name descname"><span class="pre">calculate_distance_focal_plane_calibration_device</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.calculate_distance_focal_plane_calibration_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.calculate_distance_focal_plane_calibration_device" title="Link to this definition">#</a></dt>
+<dd><p>Calculate distance between focal plane and calibration device.</p>
+<p>For flasher-type light sources. Flasher position is given in mirror coordinates,
+with positive z pointing towards the camera, so the distance is focal_length - flasher_z.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>dict</dt><dd><p>Default configuration for flasher devices.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.light_emission_default_configuration">
-<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">light_emission_default_configuration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.light_emission_default_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.light_emission_default_configuration" title="Link to this definition">#</a></dt>
-<dd><p>Get default light emission configuration.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>dict</dt><dd><p>Default configuration light emission.</p>
+<dt>astropy.units.Quantity</dt><dd><p>Distance between calibration device and focal plane.</p>
 </dd>
 </dl>
 </dd>
@@ -1276,33 +1326,13 @@ the difference between this exponent and the one used for the shower simulations
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.run_simulation">
-<span class="sig-name descname"><span class="pre">run_simulation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/pathlib.html#pathlib.Path" title="(in Python v3.11)"><span class="pre">Path</span></a></span></span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.run_simulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.run_simulation" title="Link to this definition">#</a></dt>
-<dd><p>Run the light emission simulation and return the output simtel file path.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.simulate_layout_positions">
-<span class="sig-name descname"><span class="pre">simulate_layout_positions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.simulate_layout_positions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.simulate_layout_positions" title="Link to this definition">#</a></dt>
-<dd><p>Simulate light emission for layout positions and return output files list.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.simulate_variable_distances">
-<span class="sig-name descname"><span class="pre">simulate_variable_distances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.simulate_variable_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.simulate_variable_distances" title="Link to this definition">#</a></dt>
-<dd><p>Simulate light emission for variable distances and return output files list.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.update_light_emission_config">
-<span class="sig-name descname"><span class="pre">update_light_emission_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.update_light_emission_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.update_light_emission_config" title="Link to this definition">#</a></dt>
-<dd><p>Update the light emission configuration.</p>
+<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.simulate">
+<span class="sig-name descname"><span class="pre">simulate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.simulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.simulate" title="Link to this definition">#</a></dt>
+<dd><p>Simulate light emission.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>key</strong><span class="classifier">str</span></dt><dd><p>The key in the configuration to update.</p>
-</dd>
-<dt><strong>value</strong><span class="classifier">Any</span></dt><dd><p>The new value to set for the key.</p>
+<dt>Path</dt><dd><p>The output simtel file path.</p>
 </dd>
 </dl>
 </dd>
@@ -1399,6 +1429,7 @@ mirror_numbers.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.read_simtel_config_file"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.read_simtel_config_file()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.get_list_of_simtel_parameters"><code class="docutils literal notranslate"><span class="pre">get_list_of_simtel_parameters()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-config-writer">simtel_config_writer</a><ul class="nav section-nav flex-column">
@@ -1409,6 +1440,7 @@ mirror_numbers.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_telescope_config_file"><code class="docutils literal notranslate"><span class="pre">SimtelConfigWriter.write_telescope_config_file()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_writer.sim_telarray_random_seeds"><code class="docutils literal notranslate"><span class="pre">sim_telarray_random_seeds()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-table-reader">simtel_table_reader</a><ul class="nav section-nav flex-column">
@@ -1421,6 +1453,7 @@ mirror_numbers.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.get_reduced_simulation_file_info"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataReader.get_reduced_simulation_file_info()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.read_event_data"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataReader.read_event_data()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.read_table_list"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataReader.read_table_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.scatter_area"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataReader.scatter_area()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_reader.TriggeredEventData"><code class="docutils literal notranslate"><span class="pre">TriggeredEventData</span></code></a></li>
@@ -1438,10 +1471,14 @@ mirror_numbers.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simtel.simtel_io_event_histograms">simtel_io_event_histograms</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventHistograms</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.calculate_cumulative_data"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventHistograms.calculate_cumulative_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.calculate_efficiency_data"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventHistograms.calculate_efficiency_data()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.core_distance_bins"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventHistograms.core_distance_bins</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.energy_bins"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventHistograms.energy_bins</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.fill"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventHistograms.fill()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.plot_data"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventHistograms.plot_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.get_histogram_definition"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventHistograms.get_histogram_definition()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.print_summary"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventHistograms.print_summary()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.rebin_2d_histogram"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventHistograms.rebin_2d_histogram()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.view_cone_bins"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventHistograms.view_cone_bins</span></code></a></li>
 </ul>
 </li>
@@ -1462,7 +1499,6 @@ mirror_numbers.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray"><code class="docutils literal notranslate"><span class="pre">SimulatorArray</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray.get_power_law_for_sim_telarray_histograms"><code class="docutils literal notranslate"><span class="pre">SimulatorArray.get_power_law_for_sim_telarray_histograms()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray.make_run_command"><code class="docutils literal notranslate"><span class="pre">SimulatorArray.make_run_command()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray.make_run_command_for_calibration_simulations"><code class="docutils literal notranslate"><span class="pre">SimulatorArray.make_run_command_for_calibration_simulations()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1476,16 +1512,9 @@ mirror_numbers.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-light-emission">simulator_light_emission</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.calculate_distance_telescope_calibration_device"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.calculate_distance_telescope_calibration_device()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.calibration_pointing_direction"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.calibration_pointing_direction()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.distance_list"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.distance_list()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.flasher_default_configuration"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.flasher_default_configuration()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.light_emission_default_configuration"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.light_emission_default_configuration()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.calculate_distance_focal_plane_calibration_device"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.calculate_distance_focal_plane_calibration_device()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.prepare_script"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.prepare_script()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.run_simulation"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.run_simulation()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.simulate_layout_positions"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.simulate_layout_positions()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.simulate_variable_distances"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.simulate_variable_distances()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.update_light_emission_config"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.update_light_emission_config()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.simulate"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.simulate()</span></code></a></li>
 </ul>
 </li>
 </ul>

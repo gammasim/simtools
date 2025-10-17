@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -53,11 +53,11 @@
         </script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="simtools-simulate-prod" href="simtools-simulate-prod.html" />
+    <link rel="next" title="simtools-simulate-pedestals" href="simtools-simulate-pedestals.html" />
     <link rel="prev" title="simtools-simulate-flasher" href="simtools-simulate-flasher.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -397,6 +397,7 @@
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="../simulate_calibration_data.html">Simulate Calibration Data</a></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../applications.html">Applications</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="simtools-calculate-incident-angles.html">simtools-calculate-incident-angles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-convert-all-model-parameters-from-simtel.html">simtools-convert-all-model-parameters-from-simtel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
@@ -408,10 +409,12 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-generate-compound-indexes.html">simtools-db-generate-compound-indexes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-upload-model-repository.html">simtools-db-upload-model-repository</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-trigger-rates.html">simtools-derive-trigger-rates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-calibration-reports.html">simtools-docs-produce-calibration-reports</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
@@ -421,7 +424,7 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-add-production-table.html">simtools-maintain-simulation-model-add-production-table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-add-production.html">simtools-maintain-simulation-model-add-production</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-compare-productions.html">simtools-maintain-simulation-model-compare-productions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-verify-production-tables.html">simtools-maintain-simulation-model-verify-production-tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-merge-tables.html">simtools-merge-tables</a></li>
@@ -435,9 +438,9 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-production-merge-corsika-limits.html">simtools-production-merge-corsika-limits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-calibration-events.html">simtools-simulate-calibration-events</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-flasher.html">simtools-simulate-flasher</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-simulate-illuminator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-pedestals.html">simtools-simulate-pedestals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-submit-array-layouts.html">simtools-submit-array-layouts</a></li>
@@ -515,29 +518,33 @@
                   
   <section id="module-simulate_illuminator">
 <span id="simtools-simulate-illuminator"></span><h1>simtools-simulate-illuminator<a class="headerlink" href="#module-simulate_illuminator" title="Link to this heading">#</a></h1>
-<p>Simulate calibration devices using the light emission package.</p>
-<p>Run the application in the command line.
-There are two ways this application can be executed:</p>
+<p>Simulate illuminator (distant calibration light source).</p>
+<p>Illuminators are calibration light sources not attached to a particular telescope.
+Two types of illuminators are supported:</p>
 <ol class="arabic simple">
-<li><p>Illuminator at varying distances.</p></li>
-<li><p>Illuminator and telescopes at fixed positions as defined in the layout.</p></li>
+<li><p>Illuminator as foreseen at CTAO with fixed positions as defined in the simulation models
+database.</p></li>
+<li><p>Illuminator at a configurable position relative to the array center. Note that in this case
+the telescope pointing is fixed towards zenith.</p></li>
 </ol>
 <section id="example-usage">
 <h2>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">#</a></h2>
 <ol class="arabic">
-<li><p>Simulate light emission with varying distances:</p>
+<li><p>Simulate illuminator with positions as defined in the simulation models database:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-illuminator --telescope MSTN-04 --site North \</span>
-<span class="go">--illuminator ILLN-01 --light_source_setup variable \</span>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-illuminator --light_source ILLN-01 \</span>
+<span class="go">--telescope MSTN-04 --site North \</span>
 <span class="go">--model_version 6.0.0</span>
 </pre></div>
 </div>
 </div></blockquote>
 </li>
-<li><p>Simulate light emission with telescopes at fixed positions according to the layout:</p>
+<li><p>Simulate at a configurable position (1km above array center) and pointing downwards:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-illuminator --telescope MSTN-04 --site North \</span>
-<span class="go">--illuminator ILLN-01 --light_source_setup layout \</span>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-illuminator --light_source ILLN-01 \</span>
+<span class="go">--light_source_position 0. 0. 1000. \</span>
+<span class="go">--light_source_pointing 0. 0. -1. \</span>
+<span class="go">--telescope MSTN-15 --site North \</span>
 <span class="go">--model_version 6.0.0</span>
 </pre></div>
 </div>
@@ -548,104 +555,29 @@ There are two ways this application can be executed:</p>
 <section id="command-line-arguments">
 <h2>Command Line Arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
+<dt>light_source (str, optional)</dt><dd><p>Illuminator in array, e.g., ILLN-01.</p>
+</dd>
+<dt>number_of_events (int, optional)</dt><dd><p>Number of events to simulate.</p>
+</dd>
 <dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, …)</p>
 </dd>
 <dt>site (str, required)</dt><dd><p>Site name (North or South).</p>
 </dd>
-<dt>illuminator (str, optional)</dt><dd><p>Illuminator in array, e.g., ILLN-01.</p>
-</dd>
-<dt>light_source_setup (str, optional)</dt><dd><p>Select calibration light source positioning/setup:
-- “variable” for varying distances.
-- “layout” for actual telescope positions.</p>
-</dd>
 <dt>model_version (str, optional)</dt><dd><p>Version of the simulation model.</p>
 </dd>
-<dt>off_axis_angle (float, optional)</dt><dd><p>Off axis angle for light source direction.</p>
+<dt>light_source_position (float, float, float, optional)</dt><dd><p>Light source position (x,y,z) relative to the array center (ground coordinates) in
+m. If not set, the position from the simulation model is used.</p>
 </dd>
-<dt>number_events (int, optional)</dt><dd><p>Number of events to simulate.</p>
+<dt>light_source_pointing (float, float, float, optional)</dt><dd><p>Light source pointing direction. If not set, the pointing from the simulation model is used.</p>
+</dd>
+<dt>output_prefix (str, optional)</dt><dd><p>Prefix for output files (default: empty).</p>
 </dd>
 </dl>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Simulate isotropic light source at different distances for the MSTN-04:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-illuminator --telescope MSTN-04 --site North \</span>
-<span class="go">--illuminator ILLN-01 --light_source_setup variable \</span>
-<span class="go">--model_version 6.0.0    ```</span>
-</pre></div>
-</div>
-<p>Expected Output:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">light-emission package stage:</span>
-<span class="go">File &#39;/workdir/external/simtools/simtools-output/light_emission/model/</span>
-<span class="go">    atmprof_ecmwf_north_winter_fixed.dat&#39; registered for atmospheric profile 99.</span>
-<span class="go">Atmospheric profile 99 to be read from file &#39;/workdir/external/simtools/</span>
-<span class="go">    simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat&#39;.</span>
-<span class="go">Atmospheric profile 99 with 55 levels read from file /workdir/external/</span>
-<span class="go">    simtools/simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat</span>
-<span class="go">Initialize atmosphere ranging from 0.000 to 120.000 km a.s.l.</span>
-<span class="go">IACT control parameter line: print_events 999 10 100 1000 0</span>
-<span class="go">Case 1: 1 event with 1e+10 photons.</span>
-<span class="go">Using IACT/ATMO package version 1.67 (2023-11-10) for CORSIKA 6.999</span>
-<span class="go">Output file /workdir/external/simtools/simtools-output/light_emission/xyzls.iact.gz</span>
-<span class="go">    not yet created.</span>
-<span class="go">Telescope output file: &#39;/workdir/external/simtools/simtools-output/</span>
-<span class="go">    light_emission/xyzls.iact.gz&#39;</span>
-<span class="go">....</span>
-<span class="go">....</span>
-<span class="go">Sim_telarray stage:</span>
-<span class="go">Telescope 1 triggered (1/0/0/0, mask 1), summation from 36 to 95 of 105</span>
-<span class="go">Event end data has been found.</span>
-<span class="go">Shower of 0.0000 TeV energy was seen in 1 of 1 cases.</span>
-<span class="go">Photon statistics:</span>
-<span class="go">All photons:               928518</span>
-<span class="go">Used photons:              928518</span>
-<span class="go">Not absorbed/max. Q.E.:    189560</span>
-<span class="go">Reflected on mirror:        26815</span>
-<span class="go">Camera hit:                 25574</span>
-<span class="go">Pixel hit:                  25574</span>
-<span class="go">Detected:                   20998</span>
-<span class="go">Trigger statistics:</span>
-<span class="go">Tel. triggered:             1</span>
-<span class="go">Tel. + array:               1</span>
-<span class="go">Early readout:              0</span>
-<span class="go">Late readout:               0</span>
-<span class="go">Finish data conversion ...</span>
-<span class="go">Writing 13 histograms to output file.</span>
-</pre></div>
-</div>
-</section>
-<dl class="py function">
-<dt class="sig sig-object py" id="simulate_illuminator.light_emission_configs">
-<span class="sig-prename descclassname"><span class="pre">simulate_illuminator.</span></span><span class="sig-name descname"><span class="pre">light_emission_configs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/simulate_illuminator.html#light_emission_configs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulate_illuminator.light_emission_configs" title="Link to this definition">#</a></dt>
-<dd><p>Define default light emission configurations.</p>
-<p>Predefined angular distribution names not requiring to read any table are
-“Isotropic”, “Gauss:&lt;rms&gt;”, “Rayleigh”, “Cone:&lt;angle&gt;”, and “FilledCone:&lt;angle&gt;”, “Parallel”,
-with all angles given in degrees, all with respect to the given direction vector
-(vertically downwards if missing). If the light source has a non-zero length and velocity
-(in units of the vacuum speed of light), it is handled as a moving source,
-in the given direction.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>args_dict: dict</strong></dt><dd><p>Dictionary with command line arguments.</p>
-</dd>
-<dt><strong>args_dict: dict</strong></dt><dd><p>Dictionary with command line arguments.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>default_config: dict</dt><dd><p>Default light emission configuration.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py function">
 <dt class="sig sig-object py" id="simulate_illuminator.main">
 <span class="sig-prename descclassname"><span class="pre">simulate_illuminator.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/simulate_illuminator.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulate_illuminator.main" title="Link to this definition">#</a></dt>
-<dd><p>Simulate light emission.</p>
+<dd><p>Simulate light emission from illuminator.</p>
 </dd></dl>
 
 </section>
@@ -670,11 +602,11 @@ in the given direction.</p>
       </div>
     </a>
     <a class="right-next"
-       href="simtools-simulate-prod.html"
+       href="simtools-simulate-pedestals.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools-simulate-prod</p>
+        <p class="prev-next-title">simtools-simulate-pedestals</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -699,8 +631,6 @@ in the given direction.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command Line Arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_illuminator.light_emission_configs"><code class="docutils literal notranslate"><span class="pre">light_emission_configs()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_illuminator.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>

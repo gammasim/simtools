@@ -30,6 +30,7 @@
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -37,14 +38,15 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=d94b7da8"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/generate_simtel_event_data';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/doc-preparation/docs/_static/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
         </script>
@@ -52,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gac809a8" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -90,9 +92,6 @@
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
 </div>
-<aside class="bd-header-announcement" aria-label="Announcement">
-  <div class="bd-header-announcement__content">simtools is under rapid development with continuous changes. Please contact the developers before using it.</div>
-</aside>
 
   
     <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
@@ -116,30 +115,16 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
   
-    <p class="title logo__title">simtools</p>
   
 </a></div>
-    
-      <div class="navbar-item">
-<div class="version-switcher__container dropdown pst-js-only">
-  <button id="pst-version-switcher-button-2"
-    type="button"
-    class="version-switcher__button btn btn-sm dropdown-toggle"
-    data-bs-toggle="dropdown"
-    aria-haspopup="listbox"
-    aria-controls="pst-version-switcher-list-2"
-    aria-label="Version switcher list"
-  >
-    Choose version  <!-- this text may get changed later by javascript -->
-    <span class="caret"></span>
-  </button>
-  <div id="pst-version-switcher-list-2"
-    class="version-switcher__menu dropdown-menu list-group-flush py-0"
-    role="listbox" aria-labelledby="pst-version-switcher-button-2">
-    <!-- dropdown will be populated by javascript on page load -->
-  </div>
-</div></div>
     
   </div>
   
@@ -159,8 +144,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api-reference/index.html">
-    API Docs
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
   </a>
 </li>
 
@@ -171,6 +163,30 @@
   </a>
 </li>
 
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -191,12 +207,24 @@
       
       
         <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
       
         <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -211,17 +239,6 @@
           
           <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
             <span class="sr-only">GitHub</span></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
         </li>
 </ul></div>
       
@@ -277,8 +294,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api-reference/index.html">
-    API Docs
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
   </a>
 </li>
 
@@ -286,6 +310,20 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../developer-guide/index.html">
     Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
   </a>
 </li>
 
@@ -300,12 +338,24 @@
       <div class="sidebar-header-items__end">
         
           <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
         
           <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -320,17 +370,6 @@
           
           <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
             <span class="sr-only">GitHub</span></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/gammasimtools/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://badge.fury.io/py/gammasimtools.svg" class="icon-link-image" alt="PyPI"/></a>
         </li>
 </ul></div>
         
@@ -396,18 +435,99 @@
   <h1>Source code for generate_simtel_event_data</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/python3</span>
 
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Reduces and compiles event data from multiple input files into a structured dataset with event info.</span>
+<span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a reduced dataset of event data from output of telescope simulations.</span>
+
+<span class="sd">Processes sim_telarray output files (typically of type &#39;.simtel.zst&#39;) and creates</span>
+<span class="sd">reduced datasets containing shower information, array-level parameters, and data about</span>
+<span class="sd">triggered telescopes.</span>
+
+<span class="sd">The output consists of an HDF5 or FITS file containing the following tables:</span>
+
+<span class="sd">**FILE_INFO**</span>
+
+<span class="sd">+-------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| Field             | Type    | Description                                   |</span>
+<span class="sd">+===================+=========+===============================================+</span>
+<span class="sd">| file_name         | string  | Name of the file                              |</span>
+<span class="sd">+-------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| file_id           | int64   | Internal unique identifier for the file       |</span>
+<span class="sd">+-------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| particle_id       | int64   | PDG particle ID (e.g., 14 for proton)         |</span>
+<span class="sd">+-------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| energy_min        | float32 | Minimum simulated energy (TeV)                |</span>
+<span class="sd">+-------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| energy_max        | float32 | Maximum simulated energy (TeV)                |</span>
+<span class="sd">+-------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| viewcone_min      | float32 | Min viewcone angle (deg)                      |</span>
+<span class="sd">+-------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| viewcone_max      | float32 | Max viewcone angle (deg)                      |</span>
+<span class="sd">+-------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| core_scatter_min  | float32 | Min core scatter radius (m)                   |</span>
+<span class="sd">+-------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| core_scatter_max  | float32 | Max core scatter radius (m)                   |</span>
+<span class="sd">+-------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| zenith            | float32 | Zenith angle (deg)                            |</span>
+<span class="sd">+-------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| azimuth           | float32 | Azimuth angle (deg)                           |</span>
+<span class="sd">+-------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| nsb_level         | float64 | Night sky background level (factor to dark)   |</span>
+<span class="sd">+-------------------+---------+-----------------------------------------------+</span>
+
+<span class="sd">**SHOWERS**</span>
+
+<span class="sd">+------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| Field            | Type    | Description                                   |</span>
+<span class="sd">+==================+=========+===============================================+</span>
+<span class="sd">| shower_id        | int64   | Shower identifier                             |</span>
+<span class="sd">+------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| event_id         | int64   | Event identifier (depends on reuse of showers)|</span>
+<span class="sd">+------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| file_id          | int64   | Internal unique identifier for the file       |</span>
+<span class="sd">+------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| simulated_energy | float64 | Simulated primary energy (TeV)                |</span>
+<span class="sd">+------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| x_core           | float64 | Shower core X position on ground (m)          |</span>
+<span class="sd">+------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| y_core           | float64 | Shower core Y position on ground (m)          |</span>
+<span class="sd">+------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| shower_azimuth   | float64 | Direction of shower azimuth (deg)             |</span>
+<span class="sd">+------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| shower_altitude  | float64 | Direction of shower altitude (deg)            |</span>
+<span class="sd">+------------------+---------+-----------------------------------------------+</span>
+<span class="sd">| area_weight      | float64 | Weighting factor for sampling area            |</span>
+<span class="sd">+------------------+---------+-----------------------------------------------+</span>
+
+<span class="sd">**TRIGGERS**</span>
+
+<span class="sd">+-----------------+---------+-----------------------------------------------+</span>
+<span class="sd">| Field           | Type    | Description                                   |</span>
+<span class="sd">+=================+=========+===============================================+</span>
+<span class="sd">| shower_id       | int64   | Shower identifier                             |</span>
+<span class="sd">+-----------------+---------+-----------------------------------------------+</span>
+<span class="sd">| event_id        | int64   | Event identifier (depends on reuse of showers)|</span>
+<span class="sd">+-----------------+---------+-----------------------------------------------+</span>
+<span class="sd">| file_id         | int64   | Internal unique identifier for the file       |</span>
+<span class="sd">+-----------------+---------+-----------------------------------------------+</span>
+<span class="sd">| array_altitude  | float64 | Altitude of array pointing direction (deg)    |</span>
+<span class="sd">+-----------------+---------+-----------------------------------------------+</span>
+<span class="sd">| array_azimuth   | float64 | Azimuth of array pointing direction (deg)     |</span>
+<span class="sd">+-----------------+---------+-----------------------------------------------+</span>
+<span class="sd">| telescope_list  | string  | Comma-separated list of triggered telescopes  |</span>
+<span class="sd">+-----------------+---------+-----------------------------------------------+</span>
+
+<span class="sd">Several files generated with this application can be combined into a single</span>
+<span class="sd">dataset using the &#39;simtools-merge-tables&#39; command.</span>
 
 <span class="sd">Command line arguments</span>
 <span class="sd">----------------------</span>
 <span class="sd">prefix (str, required)</span>
 <span class="sd">    Path prefix for the input files.</span>
 <span class="sd">output_file (str, required)</span>
-<span class="sd">    Path to save the output file.</span>
+<span class="sd">    Output file path.</span>
 <span class="sd">max_files (int, optional, default=100)</span>
-<span class="sd">    Maximum number of files to process.</span>
-<span class="sd">print_dataset_information (flag)</span>
+<span class="sd">    Maximum number of input files to process.</span>
+<span class="sd">print_dataset_information (int, optional, default=0)</span>
 <span class="sd">    Print information about the datasets in the generated reduced event dataset.</span>
 
 <span class="sd">Example</span>
@@ -416,99 +536,90 @@
 
 <span class="sd">.. code-block:: console</span>
 
-<span class="sd">    simtools-production-extract-mc-event-data \</span>
-<span class="sd">    simtools-generate-simtel-event-data \</span>
-<span class="sd">        --prefix path/to/input_files/ \</span>
-<span class="sd">        --wildcard &#39;gamma_*dark*.simtel.zst&#39; \</span>
-<span class="sd">        --output_file output_file.hdf5 \</span>
-<span class="sd">        --max_files 50 \</span>
-<span class="sd">        --print_dataset_information</span>
+<span class="sd">    simtools-production-extract-mc-event-data \\</span>
+<span class="sd">    simtools-generate-simtel-event-data \\</span>
+<span class="sd">        --input &#39;path/to/input_files/gamma_*dark*.simtel.zst&#39; \\</span>
+<span class="sd">        --output_file output_file.hdf5 \\</span>
+<span class="sd">        --max_files 50 \\</span>
+<span class="sd">        --print_dataset_information 10</span>
+
+
+<span class="sd">To read a reduced event data file, use the following command reading on of the test files:</span>
+
+<span class="sd">.. code-block:: console</span>
+
+<span class="sd">    import h5py</span>
+
+<span class="sd">    test_file = &quot;tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5&quot;</span>
+
+<span class="sd">    with h5py.File(test_file, &quot;r&quot;) as f:</span>
+<span class="sd">        triggers = f[&quot;/TRIGGERS&quot;]</span>
+<span class="sd">        for row in triggers:</span>
+<span class="sd">            print({name: row[name] for name in row.dtype.names})</span>
+
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.application_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_application_label</span><span class="p">,</span> <span class="n">startup_application</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_event_reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelIOEventDataReader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span><span class="p">,</span> <span class="n">table_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_event_writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelIOEventDataWriter</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parse command line arguments.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        Parsed command-line arguments.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
-
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--prefix&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Prefix path for input files.&quot;</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--wildcard&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Wildcard for querying the files in the directory (e.g., &#39;gamma_*dark*.simtel.zst&#39;)&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--output_file&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output filename.&quot;</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--max_files&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Maximum number of files to process.&quot;</span>
-    <span class="p">)</span>
-
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--print_dataset_information&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Print given number of rows of the dataset.&quot;</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="main">
-<a class="viewcode-back" href="../user-guide/applications/simtools-generate-simtel-event-data.html#generate_simtel_event_data.main">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Process event data files and store data in reduced dataset.</span>
-
-<span class="sd">    The reduced dataset contains shower information, array information and triggered telescopes.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
-
-    <span class="n">args_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span>
-        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse command line arguments.&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">get_application_label</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">&quot;Process files and store reduced dataset with event information, &quot;</span>
             <span class="s2">&quot;array information and triggered telescopes.&quot;</span>
         <span class="p">),</span>
     <span class="p">)</span>
 
-    <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
-    <span class="n">_logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
-    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading input files with prefix: </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;prefix&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--input&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Input file path (wildcards allowed; e.g., &#39;/data_path/gamma_*dark*.simtel.zst&#39;)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--max_files&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Maximum number of input files to process.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--print_dataset_information&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Print data set information for the given number of events.&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;prefix&quot;</span><span class="p">])</span>
-    <span class="n">files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">input_path</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;wildcard&quot;</span><span class="p">]))</span>
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../user-guide/applications/simtools-generate-simtel-event-data.html#generate_simtel_event_data.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a reduced dataset of event data from output of telescope simulations.&quot;&quot;&quot;</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">,</span> <span class="n">setup_io_handler</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading input files from: </span><span class="si">{</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">input_pattern</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">])</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">input_pattern</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">input_pattern</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
-        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No matching input files found.&quot;</span><span class="p">)</span>
+        <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No matching input files found.&quot;</span><span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="n">output_path</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-    <span class="n">output_filepath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;output_file&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">output_filepath</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_file</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">])</span>
+    <span class="n">generator</span> <span class="o">=</span> <span class="n">SimtelIOEventDataWriter</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;max_files&quot;</span><span class="p">])</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">process_files</span><span class="p">()</span>
+    <span class="n">table_handler</span><span class="o">.</span><span class="n">write_tables</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">output_filepath</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">MetadataCollector</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
+        <span class="n">args_dict</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="n">output_filepath</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.yml&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
 
-    <span class="n">output_filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">generator</span> <span class="o">=</span> <span class="n">SimtelIOEventDataWriter</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">output_filepath</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;max_files&quot;</span><span class="p">])</span>
-    <span class="n">generator</span><span class="o">.</span><span class="n">process_files</span><span class="p">()</span>
-    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;reduced dataset saved to: </span><span class="si">{</span><span class="n">output_filepath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;print_dataset_information&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">reader</span> <span class="o">=</span> <span class="n">SimtelIOEventDataReader</span><span class="p">(</span><span class="n">output_filepath</span><span class="p">)</span>
-        <span class="n">reader</span><span class="o">.</span><span class="n">print_dataset_information</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;print_dataset_information&quot;</span><span class="p">))</span></div>
+    <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;print_dataset_information&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
+            <span class="n">table</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">max_lines</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;print_dataset_information&quot;</span><span class="p">],</span> <span class="n">max_width</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div>
 
 
 
@@ -555,7 +666,7 @@
 
   <p class="copyright">
     
-      © Copyright 2024, gammasim-tools, simtools developers.
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
       <br/>
     
   </p>

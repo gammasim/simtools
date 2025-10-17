@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -433,17 +433,10 @@
                 <article class="bd-article">
                   
   <h1>Source code for simtools.io.io_handler</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Handle input and output paths.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Handle input and output directories and file paths.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;IOHandler&quot;</span><span class="p">,</span> <span class="s2">&quot;IOHandlerSingleton&quot;</span><span class="p">]</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">IncompleteIOHandlerInitError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception raised when IOHandler is not initialized.&quot;&quot;&quot;</span>
 
 
 <div class="viewcode-block" id="IOHandlerSingleton">
@@ -454,11 +447,7 @@
     <span class="n">_instances</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Ensure a single instance of the IOHandlerSingleton class.</span>
-
-<span class="sd">        Creates a new instance if it doesn&#39;t exist, otherwise returns the existing instance.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new instance if it doesn&#39;t exist, otherwise returns the existing instance.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">cls</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_instances</span><span class="p">:</span>
             <span class="bp">cls</span><span class="o">.</span><span class="n">_instances</span><span class="p">[</span><span class="bp">cls</span><span class="p">]</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_instances</span><span class="p">[</span><span class="bp">cls</span><span class="p">]</span></div>
@@ -468,23 +457,19 @@
 <div class="viewcode-block" id="IOHandler">
 <a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.io_handler.IOHandler">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">IOHandler</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">IOHandlerSingleton</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle input and output paths.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle input and output directories and file paths.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize IOHandler.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init IOHandler&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init IOHandler&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">use_plain_output_path</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_path</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="IOHandler.set_paths">
 <a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.io_handler.IOHandler.set_paths">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_paths</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_plain_output_path</span><span class="o">=</span><span class="kc">False</span>
-    <span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set paths for input and output.</span>
 
@@ -492,31 +477,22 @@
 <span class="sd">        ----------</span>
 <span class="sd">        output_path: str or Path</span>
 <span class="sd">            Path pointing to the output directory.</span>
-<span class="sd">        data_path: str or Path</span>
-<span class="sd">            Path pointing to the data files (e.g., CORSIKA or sim_telarray output).</span>
 <span class="sd">        model_path: str or Path</span>
 <span class="sd">            Path pointing to the model file directory.</span>
-<span class="sd">        use_plain_output_path: bool</span>
-<span class="sd">            Use plain output path without adding tool name and date</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span> <span class="o">=</span> <span class="n">output_path</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">use_plain_output_path</span> <span class="o">=</span> <span class="n">use_plain_output_path</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="n">data_path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_path</span> <span class="o">=</span> <span class="n">model_path</span></div>
 
 
 <div class="viewcode-block" id="IOHandler.get_output_directory">
 <a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.io_handler.IOHandler.get_output_directory">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return path to output directory.</span>
+<span class="sd">        Create and get path of an output directory.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        label: str</span>
-<span class="sd">            Instance label.</span>
-<span class="sd">        sub_dir: str</span>
+<span class="sd">        sub_dir: str or list of str, optional</span>
 <span class="sd">            Name of the subdirectory (ray_tracing, model etc)</span>
 
 <span class="sd">        Returns</span>
@@ -526,37 +502,27 @@
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        FileNotFoundError</span>
-<span class="sd">            if error creating directory</span>
-<span class="sd">        TypeError</span>
-<span class="sd">            raised for errors while creating directory name</span>
+<span class="sd">            if the directory cannot be created</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_plain_output_path</span><span class="p">:</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">path</span>
-                <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;-output&quot;</span><span class="p">)</span>
-                <span class="k">else</span> <span class="n">path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;simtools-output&quot;</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">label_dir</span> <span class="o">=</span> <span class="n">label</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;d-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">())</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">label_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">sub_dir</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">label_dir</span><span class="p">,</span> <span class="n">sub_dir</span><span class="p">)</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">sub_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sub_dir</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">sub_dir</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">sub_dir</span><span class="p">]</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mkdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
-
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_mkdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a directory and return path.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error creating directory </span><span class="si">{</span><span class="n">path</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
-        <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span></div>
+
 
 <div class="viewcode-block" id="IOHandler.get_output_file">
 <a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.io_handler.IOHandler.get_output_file">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_output_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_output_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get path of an output file.</span>
 
@@ -564,57 +530,37 @@
 <span class="sd">        ----------</span>
 <span class="sd">        files_name: str</span>
 <span class="sd">            File name.</span>
-<span class="sd">        label: str</span>
-<span class="sd">            Instance label.</span>
-<span class="sd">        sub_dir: str</span>
+<span class="sd">        sub_dir: sub_dir: str or list of str, optional</span>
 <span class="sd">            Name of the subdirectory (ray_tracing, model etc)</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Path</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="n">sub_dir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
-        <span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">sub_dir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="IOHandler.get_input_data_file">
-<a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.io_handler.IOHandler.get_input_data_file">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_input_data_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="IOHandler.get_test_data_file">
+<a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.io_handler.IOHandler.get_test_data_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_test_data_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get path of a data file, using data_path.</span>
+<span class="sd">        Get path of a data file in the test resources directory.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        parent_dir: str</span>
-<span class="sd">            Parent directory of the file.</span>
 <span class="sd">        files_name: str</span>
 <span class="sd">            File name.</span>
-<span class="sd">        test: bool</span>
-<span class="sd">            If true, return test resources location</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Path</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        IncompleteIOHandlerInitError</span>
-<span class="sd">            if data_path is not set</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">test</span><span class="p">:</span>
-            <span class="n">file_prefix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;tests/resources/&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">file_prefix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">parent_dir</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">IncompleteIOHandlerInitError</span>
-        <span class="k">return</span> <span class="n">file_prefix</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;tests/resources&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="IOHandler.get_model_configuration_directory">
 <a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.io_handler.IOHandler.get_model_configuration_directory">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_configuration_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_configuration_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get path of the simulation model configuration directory.</span>
 
@@ -622,16 +568,18 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        label: str</span>
-<span class="sd">            Instance label.</span>
 <span class="sd">        model_version: str</span>
 <span class="sd">            Model version.</span>
+<span class="sd">        sub_dir: str</span>
+<span class="sd">            subdirectory</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Path</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="n">model_version</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span>
+            <span class="n">sub_dir</span><span class="o">=</span><span class="p">[</span><span class="n">sub_dir</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="n">model_version</span><span class="p">]</span> <span class="k">if</span> <span class="n">sub_dir</span> <span class="k">else</span> <span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="n">model_version</span><span class="p">]</span>
+        <span class="p">)</span></div>
 </div>
 
 </pre></div>

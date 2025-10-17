@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -489,33 +489,19 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.data_model.model_data_writer</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">writer</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.application_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_application_label</span><span class="p">,</span> <span class="n">startup_application</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.layout</span><span class="w"> </span><span class="kn">import</span> <span class="n">array_layout</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parse command line configuration.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    label: str</span>
-<span class="sd">        Label describing application.</span>
-<span class="sd">    description: str</span>
-<span class="sd">        Description of application.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    CommandLineParser</span>
-<span class="sd">        Command line parser object</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse command line configuration.&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">get_application_label</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Print a list of array element positions&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--input&quot;</span><span class="p">,</span>
@@ -576,52 +562,47 @@
 <a class="viewcode-back" href="../user-guide/applications/simtools-convert-geo-coordinates-of-array-elements.html#convert_geo_coordinates_of_array_elements.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Print a list of array elements.&quot;&quot;&quot;</span>
-    <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
-    <span class="n">model_parameter_name</span> <span class="o">=</span> <span class="s2">&quot;array_coordinates&quot;</span>
-    <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span>
-        <span class="n">label</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Print a list of array element positions (</span><span class="si">{</span><span class="n">model_parameter_name</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">)</span>
 
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
-
-    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">):</span>
-        <span class="n">site</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">):</span>
+        <span class="n">site</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">metadata</span><span class="p">,</span> <span class="n">validate_schema_file</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">metadata</span> <span class="o">=</span> <span class="n">MetadataCollector</span><span class="p">(</span><span class="n">args_dict</span><span class="o">=</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">model_parameter_name</span><span class="o">=</span><span class="n">model_parameter_name</span><span class="p">)</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">MetadataCollector</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">model_parameter_name</span><span class="o">=</span><span class="s2">&quot;array_coordinates&quot;</span>
+        <span class="p">)</span>
         <span class="n">site</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get_site</span><span class="p">(</span><span class="n">from_input_meta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">validate_schema_file</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get_data_model_schema_file_name</span><span class="p">()</span>
 
     <span class="n">layout</span> <span class="o">=</span> <span class="n">array_layout</span><span class="o">.</span><span class="n">ArrayLayout</span><span class="p">(</span>
-        <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+        <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
         <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span>
-        <span class="n">telescope_list_file</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">],</span>
-        <span class="n">telescope_list_metadata_file</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_meta&quot;</span><span class="p">],</span>
-        <span class="n">validate</span><span class="o">=</span><span class="ow">not</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;skip_input_validation&quot;</span><span class="p">],</span>
+        <span class="n">telescope_list_file</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">],</span>
+        <span class="n">telescope_list_metadata_file</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;input_meta&quot;</span><span class="p">],</span>
+        <span class="n">validate</span><span class="o">=</span><span class="ow">not</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;skip_input_validation&quot;</span><span class="p">],</span>
     <span class="p">)</span>
-    <span class="n">layout</span><span class="o">.</span><span class="n">select_assets</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;select_assets&quot;</span><span class="p">])</span>
+    <span class="n">layout</span><span class="o">.</span><span class="n">select_assets</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;select_assets&quot;</span><span class="p">])</span>
     <span class="n">layout</span><span class="o">.</span><span class="n">convert_coordinates</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;export&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;export&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">product_data</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">layout</span><span class="o">.</span><span class="n">export_one_telescope_as_json</span><span class="p">(</span>
-                <span class="n">crs_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;export&quot;</span><span class="p">],</span> <span class="n">parameter_version</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">)</span>
+                <span class="n">crs_name</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;export&quot;</span><span class="p">],</span>
+                <span class="n">parameter_version</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">),</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">)</span>
-            <span class="k">else</span> <span class="n">layout</span><span class="o">.</span><span class="n">export_telescope_list_table</span><span class="p">(</span><span class="n">crs_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;export&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">layout</span><span class="o">.</span><span class="n">export_telescope_list_table</span><span class="p">(</span><span class="n">crs_name</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;export&quot;</span><span class="p">])</span>
         <span class="p">)</span>
         <span class="n">writer</span><span class="o">.</span><span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
-            <span class="n">args_dict</span><span class="o">=</span><span class="n">args_dict</span><span class="p">,</span>
+            <span class="n">args_dict</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">,</span>
             <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
             <span class="n">product_data</span><span class="o">=</span><span class="n">product_data</span><span class="p">,</span>
             <span class="n">validate_schema_file</span><span class="o">=</span><span class="n">validate_schema_file</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">layout</span><span class="o">.</span><span class="n">print_telescope_list</span><span class="p">(</span>
-            <span class="n">crs_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;print&quot;</span><span class="p">],</span>
+            <span class="n">crs_name</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;print&quot;</span><span class="p">],</span>
         <span class="p">)</span></div>
 
 

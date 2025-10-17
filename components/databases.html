@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Simulation Models" href="simulation_models.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -463,7 +463,7 @@ Updates to the simulation models should be done via merge requests to the <a cla
 </div>
 <section id="simulation-models-database">
 <h2>Simulation Models Database<a class="headerlink" href="#simulation-models-database" title="Link to this heading">#</a></h2>
-<p>The name of the model parameter database needs to be indicated by <code class="docutils literal notranslate"><span class="pre">$SIMTOOLS_DB_SIMULATION_MODEL</span></code> environmental variable and defined e.g., in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file. Use <code class="docutils literal notranslate"><span class="pre">CTAO-Simulation-ModelParameters-LATEST</span></code> to use the latest version of the CTAO simulation model database (simtools will replace <code class="docutils literal notranslate"><span class="pre">LATEST</span></code> with the latest version number).</p>
+<p>The name and version of the model parameter database needs to be indicated by <code class="docutils literal notranslate"><span class="pre">$SIMTOOLS_DB_SIMULATION_MODEL</span></code> and <code class="docutils literal notranslate"><span class="pre">$DB_SIMULATION_MODEL_VERSION</span></code> environmental variables and defined e.g., in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p>
 <p>Collections:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">telescopes</span></code> with the model parameters for each telescope plus the reference design model</p></li>
@@ -480,10 +480,6 @@ Updates to the simulation models should be done via merge requests to the <a cla
 To update the database, release a new version of the simulation models repository and the CI will automatically update the database with the new model parameters.</p>
 </section>
 </section>
-<section id="other-databases">
-<h2>Other Databases<a class="headerlink" href="#other-databases" title="Link to this heading">#</a></h2>
-<p>All other currently available databases are not in use and kept for historical reasons.</p>
-</section>
 <section id="using-the-simulation-models-database-located-at-desy">
 <h2>Using the Simulation Models Database located at DESY<a class="headerlink" href="#using-the-simulation-models-database-located-at-desy" title="Link to this heading">#</a></h2>
 <p>A simulation models database is located at DESY. Access to the database is restricted, please contact the developers in order to obtain access.</p>
@@ -493,28 +489,33 @@ To update the database, release a new version of the simulation models repositor
 <span class="go">SIMTOOLS_DB_API_USER=YOUR_USERNAME # username for database: ask the responsible person</span>
 <span class="go">SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for database: ask the responsible person</span>
 <span class="go">SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=&#39;admin&#39;</span>
-<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;CTAO-Simulation-ModelParameters-LATEST&#39;</span>
+<span class="go">SIMTOOLS_DB_SIMULATION_MODEL_VERSION=&#39;v0.9.0&#39; # Version of the simulation model database (adjust accordingly)</span>
+<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;CTAO-Simulation-Model&#39;</span>
 <span class="go">SIMTOOLS_SIMTEL_PATH=&#39;/workdir/sim_telarray&#39;</span>
 </pre></div>
 </div>
 </section>
 <section id="browse-the-database">
 <h2>Browse the database<a class="headerlink" href="#browse-the-database" title="Link to this heading">#</a></h2>
-<p>The mongoDB database can be accessed via the command-line interface <code class="docutils literal notranslate"><span class="pre">mongo</span></code> or via a GUI tool like <code class="docutils literal notranslate"><span class="pre">Robo</span> <span class="pre">3T</span></code> or <code class="docutils literal notranslate"><span class="pre">Studio</span> <span class="pre">3T</span></code>.</p>
+<p>The MongoDB database can be accessed via the command-line interface <code class="docutils literal notranslate"><span class="pre">mongo</span></code> or via a GUI tool like <code class="docutils literal notranslate"><span class="pre">Robo</span> <span class="pre">3T</span></code> or <code class="docutils literal notranslate"><span class="pre">Studio</span> <span class="pre">3T</span></code>.</p>
 </section>
 <section id="setup-a-local-copy-of-the-model-parameter-database">
 <h2>Setup a local copy of the model parameter database<a class="headerlink" href="#setup-a-local-copy-of-the-model-parameter-database" title="Link to this heading">#</a></h2>
-<p>The production version of model-parameter database is a mongoDB instance running on a server at DESY.
+<p>The production version of model-parameter database is a MongoDB instance running on a server at DESY.
 For testing and development, it is recommend to work with a local copy of the database.
 The following scripts allow to setup and fill a local database running in a container.</p>
 <p>All scripts to setup and fill a local database instance are located in the <a class="reference internal" href="#../../database_scripts/"><span class="xref myst">database_scripts</span></a> directory.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Be careful of the settings described below to avoid accidental overwriting of the remote database.</p>
+</div>
 <section id="startup-and-configure-local-database-instance">
 <h3>Startup and configure local database instance<a class="headerlink" href="#startup-and-configure-local-database-instance" title="Link to this heading">#</a></h3>
 <p>The script <a class="reference internal" href="#../../database_scripts/setup_local_db.sh"><span class="xref myst">setup_local_db.sh</span></a> generates a local database instance in a container:</p>
 <ul class="simple">
-<li><p>downloads a mongoDB docker image</p></li>
+<li><p>downloads a MongoDB container image</p></li>
 <li><p>starts a container with the image and initialize a new database</p></li>
-<li><p>add a user with ‘readWrite’ role</p></li>
+<li><p>add a user with <code class="docutils literal notranslate"><span class="pre">readWrite</span></code> role</p></li>
 <li><p>defines a container network called <code class="docutils literal notranslate"><span class="pre">simtools-mongo-network</span></code> (check with <code class="docutils literal notranslate"><span class="pre">podman</span> <span class="pre">network</span> <span class="pre">ls</span></code>)</p></li>
 </ul>
 </section>
@@ -522,49 +523,39 @@ The following scripts allow to setup and fill a local database running in a cont
 <h3>Fill the local database instance<a class="headerlink" href="#fill-the-local-database-instance" title="Link to this heading">#</a></h3>
 <section id="option-1-preferred-fill-local-database-from-model-parameter-repository">
 <h4>Option 1 (preferred): Fill local database from model parameter repository<a class="headerlink" href="#option-1-preferred-fill-local-database-from-model-parameter-repository" title="Link to this heading">#</a></h4>
-<p>The script <code class="docutils literal notranslate"><span class="pre">upload_from_model_repository_to_db.sh</span></code> uses the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models">model repository</a> from the CTAO gitlab and
-uploads its contents to the local database instance.</p>
-<p>Note that repository branches are hardcoded in the scripts and need to be adjusted accordingly.</p>
+<p>The simtools package includes the application <code class="docutils literal notranslate"><span class="pre">simtools-db-upload-model-repository</span></code> to upload the model parameters from a
+local clone of the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models">model repository</a> to a local database instance.</p>
 </section>
 <section id="option-2-fill-local-database-from-remote-db-dump">
 <h4>Option 2: Fill local database from remote DB dump<a class="headerlink" href="#option-2-fill-local-database-from-remote-db-dump" title="Link to this heading">#</a></h4>
 <p>Access to a database dump of the production database is required. It is assumed that the dumps
 are located in the directory <code class="docutils literal notranslate"><span class="pre">database_scripts/dumps</span></code>.</p>
 <p>The script <code class="docutils literal notranslate"><span class="pre">./dump_remote_db.sh</span></code> can be used to create a dump of the production database (requires access to this DB and the <code class="docutils literal notranslate"><span class="pre">mongodump</span></code> tool).</p>
-<p>Use then the <code class="docutils literal notranslate"><span class="pre">upload_dump_to_local_db.sh</span></code> to upload this dump to the local database instance.</p>
+<p>Use then the <code class="docutils literal notranslate"><span class="pre">upload_dump_to_local_db.sh</span></code> to upload this dump to the local database instance. Take care to use the correct environments for dumping and uploading.</p>
 <p>Note that database names are hardcoded in the scripts and need to be adjusted accordingly.</p>
 </section>
 </section>
-<section id="use-the-local-database-instance">
-<h3>Use the local database instance<a class="headerlink" href="#use-the-local-database-instance" title="Link to this heading">#</a></h3>
-<p>This requires the following changes to the settings of the environmental variables in <code class="docutils literal notranslate"><span class="pre">.evn</span></code>:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>Environmental<span class="w"> </span>variables
-<span class="go">SIMTOOLS_DB_API_PORT=27017 # Port on the database server</span>
-<span class="go">SIMTOOLS_DB_SERVER=&#39;localhost&#39;</span>
-<span class="go">SIMTOOLS_DB_API_USER=&#39;api&#39; # username for database</span>
-<span class="go">SIMTOOLS_DB_API_PW=&#39;password&#39; # Password for database</span>
-<span class="go">SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=&#39;admin&#39;</span>
-<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;STAGING-CTA-Simulation-Model-LATEST&#39;</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SIMULATION_MODEL</span></code> is set as an example here to <code class="docutils literal notranslate"><span class="pre">STAGING-CTAO-Simulation-ModelParameters-LATEST</span></code> and should be changed accordingly.</p>
-<p>For using simtools inside a container:</p>
-<ul class="simple">
-<li><p>set the <code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SERVER</span></code> in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file to SIMTOOLS_DB_SERVER=’simtools-mongodb’.</p></li>
-<li><p>connect to the local network adding <code class="docutils literal notranslate"><span class="pre">--network</span> <span class="pre">simtools-mongo-network</span></code> to the <code class="docutils literal notranslate"><span class="pre">docker/podman</span> <span class="pre">run</span></code> command, e.g,:</p></li>
-</ul>
+<section id="upload-to-and-download-from-the-local-database-instance">
+<h3>Upload to and download from the local database instance<a class="headerlink" href="#upload-to-and-download-from-the-local-database-instance" title="Link to this heading">#</a></h3>
+<p>Startup a container and connect to the local network adding <code class="docutils literal notranslate"><span class="pre">--network</span> <span class="pre">simtools-mongo-network</span></code> to the <code class="docutils literal notranslate"><span class="pre">podman</span> <span class="pre">run</span></code> command, e.g,:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/:/workdir/external&quot;</span><span class="w"> </span>--network<span class="w"> </span>simtools-mongo-network<span class="w"> </span>ghcr.io/gammasim/simtools-dev:latest<span class="w"> </span>bash
 </pre></div>
 </div>
-<p>For completeness, here the full <code class="docutils literal notranslate"><span class="pre">.env</span></code> file to be used with a container:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>Environmental<span class="w"> </span>variables
+<p>Modify the environment file <code class="docutils literal notranslate"><span class="pre">.env</span></code> to be used with a container:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>Environment<span class="w"> </span>variables
 <span class="go">SIMTOOLS_DB_API_PORT=27017 # Port on the database server</span>
-<span class="go">SIMTOOLS_DB_SERVER=&#39;simtools-mongodb&#39;</span>
+<span class="go">SIMTOOLS_DB_SERVER=&#39;simtools-MongoDB&#39;</span>
 <span class="go">SIMTOOLS_DB_API_USER=&#39;api&#39; # username for database</span>
 <span class="go">SIMTOOLS_DB_API_PW=&#39;password&#39; # Password for database</span>
 <span class="go">SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=&#39;admin&#39;</span>
-<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;CTAO-Simulation-ModelParameters-LATEST&#39;</span>
+<span class="go">SIMTOOLS_DB_SIMULATION_MODEL_VERSION=&#39;v0.9.0&#39; # Version of the simulation model database (adjust accordingly)</span>
+<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;CTAO-Simulation-Model&#39;</span>
 <span class="go">SIMTOOLS_SIMTEL_PATH=&#39;/workdir/sim_telarray&#39;</span>
+</pre></div>
+</div>
+<p>Fill the model parameter database from the model repository (parameters must match the version defined in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">cd /workdir/external/database_scripts</span>
+<span class="go">./upload_from_model_repository_to_db.sh CTAO-Simulation-Model v20.9.0</span>
 </pre></div>
 </div>
 </section>
@@ -573,7 +564,7 @@ are located in the directory <code class="docutils literal notranslate"><span cl
 <p>The script <code class="docutils literal notranslate"><span class="pre">purge_local_db.sh</span></code> stops and removes the container and deletes all networks, images, and containers.</p>
 <div class="admonition danger">
 <p class="admonition-title">Danger</p>
-<p>Attention: this script removes all local docker containers, images, and networks without awaiting confirmation.</p>
+<p>Attention: this script removes all local containers, images, and networks without awaiting confirmation.</p>
 </div>
 </section>
 </section>
@@ -630,7 +621,6 @@ are located in the directory <code class="docutils literal notranslate"><span cl
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#update-the-simulation-models-database">Update the Simulation Models Database</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-databases">Other Databases</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-simulation-models-database-located-at-desy">Using the Simulation Models Database located at DESY</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#browse-the-database">Browse the database</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup-a-local-copy-of-the-model-parameter-database">Setup a local copy of the model parameter database</a><ul class="nav section-nav flex-column">
@@ -640,7 +630,7 @@ are located in the directory <code class="docutils literal notranslate"><span cl
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#option-2-fill-local-database-from-remote-db-dump">Option 2: Fill local database from remote DB dump</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-the-local-database-instance">Use the local database instance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#upload-to-and-download-from-the-local-database-instance">Upload to and download from the local database instance</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#purge-the-local-database-instance">Purge the local database instance</a></li>
 </ul>
 </li>

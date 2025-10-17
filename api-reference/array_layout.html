@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Job execution and submission" href="job_execution.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -392,7 +392,7 @@
 <li class="toctree-l1"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Application, dependency and version management.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="db_handler.html">Database support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="io.html">I/O</a></li>
 <li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
@@ -405,6 +405,7 @@
 <li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
 </ul>
@@ -623,6 +624,12 @@ If none, telescope type + “-design” is used.</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="layout.array_layout.InvalidCoordinateDataTypeError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">layout.array_layout.</span></span><span class="sig-name descname"><span class="pre">InvalidCoordinateDataTypeError</span></span><a class="reference internal" href="../_modules/layout/array_layout.html#InvalidCoordinateDataTypeError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout.InvalidCoordinateDataTypeError" title="Link to this definition">#</a></dt>
+<dd><p>Exception for low-precision coordinate data type.</p>
 </dd></dl>
 
 <dl class="py exception">
@@ -1025,6 +1032,40 @@ X-axis points towards geographic North, y-axis towards geographic West.</p>
 <span id="array-layout-utils"></span><span id="array-layout-utils-module"></span><h2>array_layout_utils<a class="headerlink" href="#module-layout.array_layout_utils" title="Link to this heading">#</a></h2>
 <p>Retrieve, merge, and write layout dictionaries.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="layout.array_layout_utils.get_array_elements_from_db_for_layouts">
+<span class="sig-prename descclassname"><span class="pre">layout.array_layout_utils.</span></span><span class="sig-name descname"><span class="pre">get_array_elements_from_db_for_layouts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layouts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/array_layout_utils.html#get_array_elements_from_db_for_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout_utils.get_array_elements_from_db_for_layouts" title="Link to this definition">#</a></dt>
+<dd><p>Get list of array elements from the database for given list of layout names.</p>
+<p>Structure of the returned dictionary:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;layout_name_1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">telescope_id_1</span><span class="p">,</span> <span class="n">telescope_id_2</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="s2">&quot;layout_name_2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">telescope_id_3</span><span class="p">,</span> <span class="n">telescope_id_4</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="o">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>layouts</strong><span class="classifier">list[str]</span></dt><dd><p>List of layout names to read. If “all”, read all available layouts.</p>
+</dd>
+<dt><strong>site</strong><span class="classifier">str</span></dt><dd><p>Site name for the array layouts.</p>
+</dd>
+<dt><strong>model_version</strong><span class="classifier">str</span></dt><dd><p>Model version for the array layouts.</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict</span></dt><dd><p>Database configuration dictionary.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary mapping layout names to telescope IDs.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="layout.array_layout_utils.get_array_layouts_from_db">
 <span class="sig-prename descclassname"><span class="pre">layout.array_layout_utils.</span></span><span class="sig-name descname"><span class="pre">get_array_layouts_from_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_system</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ground'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/array_layout_utils.html#get_array_layouts_from_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.array_layout_utils.get_array_layouts_from_db" title="Link to this definition">#</a></dt>
 <dd><p>Retrieve all array layouts from the database and return as list of astropy tables.</p>
@@ -1275,6 +1316,7 @@ production table.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.ArrayLayout.select_assets"><code class="docutils literal notranslate"><span class="pre">ArrayLayout.select_assets()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.InvalidCoordinateDataTypeError"><code class="docutils literal notranslate"><span class="pre">InvalidCoordinateDataTypeError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout.InvalidTelescopeListFileError"><code class="docutils literal notranslate"><span class="pre">InvalidTelescopeListFileError</span></code></a></li>
 </ul>
 </li>
@@ -1309,6 +1351,7 @@ production table.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-layout.array_layout_utils">array_layout_utils</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.get_array_elements_from_db_for_layouts"><code class="docutils literal notranslate"><span class="pre">get_array_elements_from_db_for_layouts()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.get_array_layouts_from_db"><code class="docutils literal notranslate"><span class="pre">get_array_layouts_from_db()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.get_array_layouts_from_file"><code class="docutils literal notranslate"><span class="pre">get_array_layouts_from_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.array_layout_utils.get_array_layouts_from_parameter_file"><code class="docutils literal notranslate"><span class="pre">get_array_layouts_from_parameter_file()</span></code></a></li>

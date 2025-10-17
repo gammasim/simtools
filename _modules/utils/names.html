@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -463,18 +463,6 @@
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;generate_file_name&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;get_array_element_type_from_name&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;get_site_from_array_element_name&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;sanitize_name&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;simtel_config_file_name&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;simtel_single_mirror_list_file_name&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;validate_array_element_id_name&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;validate_array_element_name&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;validate_site_name&quot;</span><span class="p">,</span>
-<span class="p">]</span>
-
 <span class="c1"># Mapping of db collection names to class keys</span>
 <span class="n">db_collections_to_class_keys</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;sites&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Site&quot;</span><span class="p">],</span>
@@ -485,6 +473,8 @@
 <span class="p">}</span>
 
 
+<div class="viewcode-block" id="array_elements">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.array_elements">[docs]</a>
 <span class="nd">@cache</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">array_elements</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -497,9 +487,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># for efficiency reason, no functions from simtools.utils.general are used here</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">RESOURCE_PATH</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;array_elements.yml&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span></div>
 
 
+
+<div class="viewcode-block" id="array_element_common_identifiers">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.array_element_common_identifiers">[docs]</a>
 <span class="nd">@cache</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">array_element_common_identifiers</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -516,9 +509,12 @@
         <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
     <span class="n">id_to_name</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]:</span> <span class="n">e</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;array_elements&quot;</span><span class="p">]}</span>
     <span class="n">name_to_id</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]:</span> <span class="n">e</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;array_elements&quot;</span><span class="p">]}</span>
-    <span class="k">return</span> <span class="n">id_to_name</span><span class="p">,</span> <span class="n">name_to_id</span>
+    <span class="k">return</span> <span class="n">id_to_name</span><span class="p">,</span> <span class="n">name_to_id</span></div>
 
 
+
+<div class="viewcode-block" id="simulation_software">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.simulation_software">[docs]</a>
 <span class="nd">@cache</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">simulation_software</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -531,9 +527,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">MODEL_PARAMETER_DESCRIPTION_METASCHEMA</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
         <span class="n">schema</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">schema</span><span class="p">[</span><span class="s2">&quot;definitions&quot;</span><span class="p">][</span><span class="s2">&quot;SimulationSoftwareName&quot;</span><span class="p">][</span><span class="s2">&quot;enum&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">schema</span><span class="p">[</span><span class="s2">&quot;definitions&quot;</span><span class="p">][</span><span class="s2">&quot;SimulationSoftwareName&quot;</span><span class="p">][</span><span class="s2">&quot;enum&quot;</span><span class="p">]</span></div>
 
 
+
+<div class="viewcode-block" id="site_names">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.site_names">[docs]</a>
 <span class="nd">@cache</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">site_names</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -551,13 +550,16 @@
         <span class="n">site</span><span class="p">:</span> <span class="p">[</span><span class="n">site</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
         <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]])</span>
-    <span class="p">}</span>
+    <span class="p">}</span></div>
 
 
+
+<div class="viewcode-block" id="array_element_design_types">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.array_element_design_types">[docs]</a>
 <span class="nd">@cache</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">array_element_design_types</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get array element site types (e.g., &#39;design&#39; or &#39;flashcam&#39;).</span>
+<span class="sd">    Get array element design type (e.g., &#39;design&#39; or &#39;flashcam&#39;).</span>
 
 <span class="sd">    Default values are [&#39;design&#39;, &#39;test&#39;].</span>
 
@@ -577,9 +579,12 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">array_element_type</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;design_types&quot;</span><span class="p">,</span> <span class="n">default_types</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid name </span><span class="si">{</span><span class="n">array_element_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid name </span><span class="si">{</span><span class="n">array_element_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
 
 
+
+<div class="viewcode-block" id="is_design_type">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.is_design_type">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_design_type</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Check if array element is a design type (e.g., &quot;MSTS-FlashCam&quot; or &quot;LSTN-design&quot;).</span>
@@ -596,7 +601,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">get_array_element_id_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">array_element_design_types</span><span class="p">(</span>
         <span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)</span>
-    <span class="p">)</span>
+    <span class="p">)</span></div>
+
 
 
 <span class="nd">@cache</span>
@@ -620,6 +626,8 @@
     <span class="k">return</span> <span class="n">_parameters</span>
 
 
+<div class="viewcode-block" id="model_parameters">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.model_parameters">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get model parameters and their properties for a given instrument class key.</span>
@@ -642,33 +650,46 @@
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_load_model_parameters</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;instrument&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">class_key_list</span><span class="p">:</span>
             <span class="n">_parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-    <span class="k">return</span> <span class="n">_parameters</span>
+    <span class="k">return</span> <span class="n">_parameters</span></div>
 
 
+
+<div class="viewcode-block" id="site_parameters">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.site_parameters">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">site_parameters</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return site model parameters.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">db_collections_to_class_keys</span><span class="p">[</span><span class="s2">&quot;sites&quot;</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">db_collections_to_class_keys</span><span class="p">[</span><span class="s2">&quot;sites&quot;</span><span class="p">]))</span></div>
 
 
+
+<div class="viewcode-block" id="telescope_parameters">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.telescope_parameters">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">telescope_parameters</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return telescope model parameters.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">db_collections_to_class_keys</span><span class="p">[</span><span class="s2">&quot;telescopes&quot;</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">db_collections_to_class_keys</span><span class="p">[</span><span class="s2">&quot;telescopes&quot;</span><span class="p">]))</span></div>
 
 
+
+<div class="viewcode-block" id="instrument_class_key_to_db_collection">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.instrument_class_key_to_db_collection">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">instrument_class_key_to_db_collection</span><span class="p">(</span><span class="n">class_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert instrument class key to collection name.&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">collection</span><span class="p">,</span> <span class="n">classes</span> <span class="ow">in</span> <span class="n">db_collections_to_class_keys</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">class_name</span> <span class="ow">in</span> <span class="n">classes</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">collection</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class </span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class </span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span></div>
 
 
+
+<div class="viewcode-block" id="db_collection_to_instrument_class_key">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.db_collection_to_instrument_class_key">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">db_collection_to_instrument_class_key</span><span class="p">(</span><span class="n">collection_name</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return list of instrument classes for a given collection.&quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">db_collections_to_class_keys</span><span class="p">[</span><span class="n">collection_name</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid collection name </span><span class="si">{</span><span class="n">collection_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid collection name </span><span class="si">{</span><span class="n">collection_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
 
 
 <div class="viewcode-block" id="validate_array_element_id_name">
@@ -763,6 +784,8 @@
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
+<div class="viewcode-block" id="validate_array_element_type">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.validate_array_element_type">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_array_element_type</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate array element type (e.g., LSTN, MSTN).</span>
@@ -777,7 +800,8 @@
 <span class="sd">    str</span>
 <span class="sd">        Validated name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">())</span></div>
+
 
 
 <div class="viewcode-block" id="validate_array_element_name">
@@ -813,6 +837,8 @@
 
 
 
+<div class="viewcode-block" id="generate_array_element_name_from_type_site_id">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.generate_array_element_name_from_type_site_id">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">generate_array_element_name_from_type_site_id</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">array_element_id</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate a new array element name from array element type, site, and array element ID.</span>
@@ -833,7 +859,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_short_site</span> <span class="o">=</span> <span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">_val_id</span> <span class="o">=</span> <span class="n">validate_array_element_id_name</span><span class="p">(</span><span class="n">array_element_id</span><span class="p">,</span> <span class="n">array_element_type</span><span class="p">)</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">array_element_type</span><span class="si">}{</span><span class="n">_short_site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">_val_id</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">array_element_type</span><span class="si">}{</span><span class="n">_short_site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">_val_id</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
 
 
 <div class="viewcode-block" id="get_array_element_type_from_name">
@@ -861,6 +888,8 @@
 
 
 
+<div class="viewcode-block" id="get_array_element_id_from_name">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.get_array_element_id_from_name">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_array_element_id_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get array element ID from array element name, (e.g. &quot;01&quot; from &quot;MSTN-01&quot;).</span>
@@ -880,9 +909,12 @@
             <span class="n">array_element_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">array_element_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="p">)</span>
     <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid name </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid name </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
 
 
+
+<div class="viewcode-block" id="get_common_identifier_from_array_element_name">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.get_common_identifier_from_array_element_name">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_common_identifier_from_array_element_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">,</span> <span class="n">default_return</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get numerical common identifier from array element name as used by CTAO.</span>
@@ -905,9 +937,12 @@
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">default_return</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">default_return</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown array element name </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown array element name </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
 
 
+
+<div class="viewcode-block" id="get_array_element_name_from_common_identifier">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.get_array_element_name_from_common_identifier">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_array_element_name_from_common_identifier</span><span class="p">(</span><span class="n">common_identifier</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get array element name from common identifier as used by CTAO.</span>
@@ -928,9 +963,12 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">id_to_name</span><span class="p">[</span><span class="n">common_identifier</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown common identifier </span><span class="si">{</span><span class="n">common_identifier</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown common identifier </span><span class="si">{</span><span class="n">common_identifier</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
 
 
+
+<div class="viewcode-block" id="get_list_of_array_element_types">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.get_list_of_array_element_types">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_list_of_array_element_types</span><span class="p">(</span>
     <span class="n">array_element_class</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">observatory</span><span class="o">=</span><span class="s2">&quot;CTAO&quot;</span>
 <span class="p">):</span>
@@ -957,7 +995,8 @@
             <span class="ow">and</span> <span class="p">(</span><span class="n">site</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">site</span><span class="p">)</span>
             <span class="ow">and</span> <span class="p">(</span><span class="n">observatory</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;observatory&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">observatory</span><span class="p">)</span>
         <span class="p">]</span>
-    <span class="p">)</span>
+    <span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="get_site_from_array_element_name">
@@ -983,6 +1022,8 @@
 
 
 
+<div class="viewcode-block" id="get_collection_name_from_array_element_name">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.get_collection_name_from_array_element_name">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">,</span> <span class="n">array_elements_only</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get collection name (e.g., telescopes, calibration_devices) of an array element from its name.</span>
@@ -1021,9 +1062,12 @@
         <span class="s2">&quot;Dummy-Telescope&quot;</span><span class="p">,</span>
     <span class="p">}:</span>
         <span class="k">return</span> <span class="n">array_element_name</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid array element name </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid array element name </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
+
+<div class="viewcode-block" id="get_collection_name_from_parameter_name">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.get_collection_name_from_parameter_name">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_collection_name_from_parameter_name</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the db collection name for a given parameter.</span>
@@ -1048,9 +1092,12 @@
         <span class="n">class_key</span> <span class="o">=</span> <span class="n">_parameter_names</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;instrument&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;class&quot;</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2"> without schema definition&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-    <span class="k">return</span> <span class="n">instrument_class_key_to_db_collection</span><span class="p">(</span><span class="n">class_key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">instrument_class_key_to_db_collection</span><span class="p">(</span><span class="n">class_key</span><span class="p">)</span></div>
 
 
+
+<div class="viewcode-block" id="get_simulation_software_name_from_parameter_name">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.get_simulation_software_name_from_parameter_name">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
     <span class="n">parameter_name</span><span class="p">,</span>
     <span class="n">software_name</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
@@ -1087,7 +1134,8 @@
         <span class="p">):</span>
             <span class="k">return</span> <span class="n">software</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;internal_parameter_name&quot;</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
 
 
 <div class="viewcode-block" id="simtel_config_file_name">
@@ -1270,6 +1318,8 @@
 
 
 
+<div class="viewcode-block" id="file_name_with_version">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.file_name_with_version">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">file_name_with_version</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">suffix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return a file name including a semantic version with the correct suffix.</span>
@@ -1293,7 +1343,8 @@
     <span class="n">file_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\d{1,8}\.\d{1,8}\.\d{1,8}\Z&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="n">suffix</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="n">suffix</span><span class="p">)</span></div>
+
 </pre></div>
 
                 </article>

@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -545,8 +545,8 @@
     <span class="n">_</span><span class="p">,</span> <span class="n">telescope_meta</span> <span class="o">=</span> <span class="n">read_sim_telarray_metadata</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
     <span class="n">telescope_name_to_sim_telarray_id</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">tel_id</span> <span class="ow">in</span> <span class="n">telescope_meta</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">_optics_name</span> <span class="o">=</span> <span class="n">telescope_meta</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optics_config_name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">_camera_name</span> <span class="o">=</span> <span class="n">telescope_meta</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;camera_config_name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">_optics_name</span> <span class="o">=</span> <span class="n">telescope_meta</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optics_config_variant&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">_camera_name</span> <span class="o">=</span> <span class="n">telescope_meta</span><span class="p">[</span><span class="n">tel_id</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;camera_config_variant&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">_optics_name</span> <span class="o">==</span> <span class="n">_camera_name</span> <span class="ow">and</span> <span class="n">_optics_name</span> <span class="o">==</span> <span class="n">telescope_name</span><span class="p">:</span>
             <span class="n">telescope_name_to_sim_telarray_id</span><span class="p">[</span><span class="n">telescope_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tel_id</span>
 
@@ -575,7 +575,7 @@
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">tel_id</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">telescope_meta</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">telescope_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_array_element_name</span><span class="p">(</span>
-                <span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optics_config_name&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Unknown-</span><span class="si">{</span><span class="n">tel_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optics_config_variant&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Unknown-</span><span class="si">{</span><span class="n">tel_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
             <span class="n">telescope_name</span> <span class="o">=</span> <span class="n">_guess_telescope_name_for_legacy_files</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>

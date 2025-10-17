@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -448,8 +448,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_config_writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelConfigWriter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;InvalidModelParameterError&quot;</span><span class="p">,</span> <span class="s2">&quot;ModelParameter&quot;</span><span class="p">]</span>
-
 
 <div class="viewcode-block" id="InvalidModelParameterError">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.InvalidModelParameterError">[docs]</a>
@@ -641,6 +639,31 @@
         <span class="k">return</span> <span class="n">_parameter</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_quantity_for_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an astropy quantity for a single value and unit.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value: numeric or str</span>
+<span class="sd">            The value to create a quantity for.</span>
+<span class="sd">        unit: str or None</span>
+<span class="sd">            The unit string or None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.Quantity or original value</span>
+<span class="sd">            Astropy quantity for numeric values with units,</span>
+<span class="sd">            original value for non-numeric values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span>
+
+        <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;null&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
+
+        <span class="k">return</span> <span class="n">value</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+
 <div class="viewcode-block" id="ModelParameter.get_parameter_value_with_unit">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.get_parameter_value_with_unit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_parameter_value_with_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
@@ -671,15 +694,16 @@
             <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)))</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">_unit</span><span class="p">)):</span>
                 <span class="k">return</span> <span class="n">_value</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">_unit</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
-            <span class="c1"># entries with &#39;null&#39; units should be returned as dimensionless</span>
-            <span class="n">_astropy_units</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">if</span> <span class="n">item</span> <span class="o">!=</span> <span class="s2">&quot;null&quot;</span> <span class="k">else</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">_unit</span>
+            <span class="c1"># Create list of quantities for multiple values with different units</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_create_quantity_for_value</span><span class="p">(</span><span class="n">_value</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">_unit</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">_unit</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_value</span><span class="p">))</span>
             <span class="p">]</span>
 
-            <span class="k">return</span> <span class="p">[</span><span class="n">_value</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">_astropy_units</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_value</span><span class="p">))]</span>
-
         <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2"> encountered, returning only value without units.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2"> encountered for parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">, returning only value without units.&quot;</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="n">_value</span>  <span class="c1"># if unit is NoneType</span></div>
 
 
@@ -766,7 +790,7 @@
             <span class="k">return</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_model_configuration_directory</span><span class="p">(</span>
-            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span>
         <span class="p">)</span>
 
         <span class="c1"># Setting file name and the location</span>
@@ -973,23 +997,19 @@
 
 <div class="viewcode-block" id="ModelParameter.write_sim_telarray_config_file">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.write_sim_telarray_config_file">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">write_sim_telarray_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">additional_model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_sim_telarray_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">additional_models</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write the sim_telarray configuration file.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        additional_model: TelescopeModel or SiteModel</span>
+<span class="sd">        additional_models: TelescopeModel or SiteModel</span>
 <span class="sd">            Model object for additional parameter to be written to the config file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span> <span class="p">{}))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span><span class="n">update_if_necessary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">additional_model</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">additional_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
-            <span class="n">additional_model</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="p">,</span> <span class="n">update_if_necessary</span><span class="o">=</span><span class="kc">True</span>
-            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_additional_models</span><span class="p">(</span><span class="n">additional_models</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_simtel_config_writer</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">simtel_config_writer</span><span class="o">.</span><span class="n">write_telescope_config_file</span><span class="p">(</span>
@@ -997,6 +1017,19 @@
             <span class="n">parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
         <span class="p">)</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_additional_models</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">additional_models</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add additional models to the current model parameters.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">additional_models</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">additional_models</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">additional_model</span> <span class="ow">in</span> <span class="n">additional_models</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_additional_models</span><span class="p">(</span><span class="n">additional_model</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">additional_models</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="n">additional_models</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="p">,</span> <span class="n">update_if_necessary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">config_file_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1018,6 +1051,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">simtel_config_writer</span> <span class="o">=</span> <span class="n">SimtelConfigWriter</span><span class="p">(</span>
                 <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
                 <span class="n">telescope_model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">telescope_design_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">design_model</span><span class="p">,</span>
                 <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
                 <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
             <span class="p">)</span>

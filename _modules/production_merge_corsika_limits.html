@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -512,22 +512,20 @@
 <span class="sd">          --output_file merged_limits.ecsv</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.application_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_application_label</span><span class="p">,</span> <span class="n">startup_application</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_reader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.merge_corsika_limits</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorsikaMergeLimits</span>
 
-<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse command line configuration.&quot;&quot;&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Merge CORSIKA limit tables and check grid completeness.&quot;</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">get_application_label</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Merge CORSIKA limit tables and check grid completeness.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--input_files&quot;</span><span class="p">,</span>
@@ -579,29 +577,27 @@
 <a class="viewcode-back" href="../user-guide/applications/simtools-production-merge-corsika-limits.html#production_merge_corsika_limits.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Merge CORSIKA limit tables and check grid completeness.&quot;&quot;&quot;</span>
-    <span class="n">args_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">()</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;log_level&quot;</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">)))</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">)</span>
 
     <span class="n">merger</span> <span class="o">=</span> <span class="n">CorsikaMergeLimits</span><span class="p">()</span>
     <span class="n">grid_definition</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;grid_definition&quot;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;grid_definition&quot;</span><span class="p">)</span>
+        <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;grid_definition&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;grid_definition&quot;</span><span class="p">)</span>
         <span class="k">else</span> <span class="kc">None</span>
     <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;merged_table&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;merged_table&quot;</span><span class="p">):</span>
         <span class="c1"># Case 3: Check coverage on an existing merged table</span>
-        <span class="n">merged_table_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;merged_table&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+        <span class="n">merged_table_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;merged_table&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
         <span class="n">merged_table</span> <span class="o">=</span> <span class="n">data_reader</span><span class="o">.</span><span class="n">read_table_from_file</span><span class="p">(</span><span class="n">merged_table_path</span><span class="p">)</span>
         <span class="n">input_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">merged_table_path</span><span class="p">]</span>
-    <span class="k">elif</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_files&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_files_list&quot;</span><span class="p">):</span>
+    <span class="k">elif</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_files&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_files_list&quot;</span><span class="p">):</span>
         <span class="c1"># Case 1 &amp; 2: Merge files</span>
         <span class="n">input_files</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># Process input_files argument</span>
-        <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_files&quot;</span><span class="p">):</span>
-            <span class="n">raw_paths</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_files&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_files&quot;</span><span class="p">):</span>
+            <span class="n">raw_paths</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_files&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">raw_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
                 <span class="n">input_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">raw_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
                 <span class="n">input_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">input_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.ecsv&quot;</span><span class="p">))</span>
@@ -609,8 +605,8 @@
                 <span class="n">input_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">raw_paths</span><span class="p">)</span>
 
         <span class="c1"># Process input_files_list argument</span>
-        <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_files_list&quot;</span><span class="p">):</span>
-            <span class="n">files_from_list</span> <span class="o">=</span> <span class="n">merger</span><span class="o">.</span><span class="n">read_file_list</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_files_list&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_files_list&quot;</span><span class="p">):</span>
+            <span class="n">files_from_list</span> <span class="o">=</span> <span class="n">merger</span><span class="o">.</span><span class="n">read_file_list</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;input_files_list&quot;</span><span class="p">])</span>
             <span class="n">input_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">files_from_list</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">input_files</span><span class="p">:</span>
@@ -625,15 +621,15 @@
 
     <span class="n">is_complete</span><span class="p">,</span> <span class="n">grid_completeness</span> <span class="o">=</span> <span class="n">merger</span><span class="o">.</span><span class="n">check_grid_completeness</span><span class="p">(</span><span class="n">merged_table</span><span class="p">,</span> <span class="n">grid_definition</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_grid_coverage&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_grid_coverage&quot;</span><span class="p">):</span>
         <span class="n">merger</span><span class="o">.</span><span class="n">plot_grid_coverage</span><span class="p">(</span><span class="n">merged_table</span><span class="p">,</span> <span class="n">grid_definition</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_limits&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_limits&quot;</span><span class="p">):</span>
         <span class="n">merger</span><span class="o">.</span><span class="n">plot_limits</span><span class="p">(</span><span class="n">merged_table</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;merged_table&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;merged_table&quot;</span><span class="p">):</span>
         <span class="c1"># Write output file only when merging</span>
-        <span class="n">output_file</span> <span class="o">=</span> <span class="n">merger</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">/</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">]</span>
+        <span class="n">output_file</span> <span class="o">=</span> <span class="n">merger</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">/</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">]</span>
         <span class="n">merger</span><span class="o">.</span><span class="n">write_merged_table</span><span class="p">(</span>
             <span class="n">merged_table</span><span class="p">,</span>
             <span class="n">output_file</span><span class="p">,</span>

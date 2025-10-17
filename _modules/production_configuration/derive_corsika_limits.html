@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -444,8 +444,9 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span><span class="p">,</span> <span class="n">io_handler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.site_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">SiteModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.layout.array_layout_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_array_elements_from_db_for_layouts</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_event_histograms</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelIOEventHistograms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_simtel_event_histograms</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -464,7 +465,7 @@
 <span class="sd">        Database configuration dictionary.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">):</span>
-        <span class="n">telescope_configs</span> <span class="o">=</span> <span class="n">_read_array_layouts_from_db</span><span class="p">(</span>
+        <span class="n">telescope_configs</span> <span class="o">=</span> <span class="n">get_array_elements_from_db_for_layouts</span><span class="p">(</span>
             <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">],</span>
             <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">),</span>
             <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">),</span>
@@ -530,9 +531,11 @@
     <span class="p">}</span>
 
     <span class="k">if</span> <span class="n">plot_histograms</span><span class="p">:</span>
-        <span class="n">histograms</span><span class="o">.</span><span class="n">plot_data</span><span class="p">(</span>
+        <span class="n">plot_simtel_event_histograms</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">,</span>
             <span class="n">output_path</span><span class="o">=</span><span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span>
             <span class="n">limits</span><span class="o">=</span><span class="n">limits</span><span class="p">,</span>
+            <span class="n">array_name</span><span class="o">=</span><span class="n">array_name</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">limits</span>
@@ -553,7 +556,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">table</span> <span class="o">=</span> <span class="n">_create_results_table</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;loss_fraction&quot;</span><span class="p">])</span>
 
-    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="s2">&quot;corsika_limits&quot;</span><span class="p">)</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span>
     <span class="n">output_file</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">]</span>
 
     <span class="n">table</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -654,34 +657,6 @@
     <span class="k">return</span> <span class="n">table_cols</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_read_array_layouts_from_db</span><span class="p">(</span><span class="n">layouts</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Read array layouts from the database.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    layouts : list[str]</span>
-<span class="sd">        List of layout names to read. If &quot;all&quot;, read all available layouts.</span>
-<span class="sd">    site : str</span>
-<span class="sd">        Site name for the array layouts.</span>
-<span class="sd">    model_version : str</span>
-<span class="sd">        Model version for the array layouts.</span>
-<span class="sd">    db_config : dict</span>
-<span class="sd">        Database configuration dictionary.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        Dictionary mapping layout names to telescope IDs.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">site_model</span> <span class="o">=</span> <span class="n">SiteModel</span><span class="p">(</span><span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">)</span>
-    <span class="n">layout_names</span> <span class="o">=</span> <span class="n">site_model</span><span class="o">.</span><span class="n">get_list_of_array_layouts</span><span class="p">()</span> <span class="k">if</span> <span class="n">layouts</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="n">layouts</span>
-    <span class="n">layout_dict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">layout_name</span> <span class="ow">in</span> <span class="n">layout_names</span><span class="p">:</span>
-        <span class="n">layout_dict</span><span class="p">[</span><span class="n">layout_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">site_model</span><span class="o">.</span><span class="n">get_array_elements_for_layout</span><span class="p">(</span><span class="n">layout_name</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">layout_dict</span>
-
-
 <span class="k">def</span><span class="w"> </span><span class="nf">_compute_limits</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">bin_edges</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute the limits based on the loss fraction.</span>
@@ -737,7 +712,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">energy_min</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">_compute_limits</span><span class="p">(</span>
-            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy&quot;</span><span class="p">),</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">][</span><span class="s2">&quot;histogram&quot;</span><span class="p">],</span>
             <span class="n">histograms</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">,</span>
             <span class="n">loss_fraction</span><span class="p">,</span>
             <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span>
@@ -782,7 +757,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">radius_limit</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">_compute_limits</span><span class="p">(</span>
-            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_distance&quot;</span><span class="p">),</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="s2">&quot;core_distance&quot;</span><span class="p">][</span><span class="s2">&quot;histogram&quot;</span><span class="p">],</span>
             <span class="n">histograms</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">,</span>
             <span class="n">loss_fraction</span><span class="p">,</span>
             <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span><span class="p">,</span>
@@ -823,7 +798,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">viewcone_limit</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">_compute_limits</span><span class="p">(</span>
-            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">),</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">][</span><span class="s2">&quot;histogram&quot;</span><span class="p">],</span>
             <span class="n">histograms</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">,</span>
             <span class="n">loss_fraction</span><span class="p">,</span>
             <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span><span class="p">,</span>

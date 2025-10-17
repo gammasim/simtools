@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Camera" href="camera.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -392,7 +392,7 @@
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Application, dependency and version management.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="db_handler.html">Database support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="io.html">I/O</a></li>
 <li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
@@ -405,6 +405,7 @@
 <li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
 </ul>
@@ -577,7 +578,7 @@
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">configuration.commandline_parser.</span></span><span class="sig-name descname"><span class="pre">CommandLineParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prog=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usage=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epilog=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formatter_class=&lt;class</span> <span class="pre">'argparse.HelpFormatter'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix_chars='-'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fromfile_prefix_chars=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">argument_default=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflict_handler='error'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_help=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_abbrev=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_on_error=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/configuration/commandline_parser.html#CommandLineParser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser" title="Link to this definition">#</a></dt>
 <dd><p>Command line parser for applications.</p>
 <p>Wrapper around standard python argparse.ArgumentParser.</p>
-<p>Command line arguments should be given in snake_case, e.g.  input_meta.</p>
+<p>Command line arguments should be given in snake_case, e.g. ‘input_meta’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -775,6 +776,33 @@ a tuple converted to string (e.g., “(5, &lt;Quantity 1500 m&gt;)”).</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.scientific_int">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scientific_int</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/configuration/commandline_parser.html#CommandLineParser.scientific_int"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.scientific_int" title="Link to this definition">#</a></dt>
+<dd><p>Convert string (including scientific notation) to integer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>value: str or int or float</strong></dt><dd><p>Value to convert to integer. Can be a regular integer,
+float, or string in scientific notation (e.g., ‘1e7’).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>int</dt><dd><p>Converted integer value</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>argparse.ArgumentTypeError</dt><dd><p>If the value cannot be converted to an integer</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="configuration.commandline_parser.CommandLineParser.site">
 <em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">site</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/configuration/commandline_parser.html#CommandLineParser.site"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#configuration.commandline_parser.CommandLineParser.site" title="Link to this definition">#</a></dt>
 <dd><p>Argument parser type to check that a valid site name is given.</p>
@@ -931,6 +959,7 @@ supports such angles!.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.initialize_user_arguments"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.initialize_user_arguments()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.parse_integer_and_quantity"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.parse_integer_and_quantity()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.parse_quantity_pair"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.parse_quantity_pair()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.scientific_int"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.scientific_int()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.site"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.site()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.telescope"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.telescope()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration.commandline_parser.CommandLineParser.zenith_angle"><code class="docutils literal notranslate"><span class="pre">CommandLineParser.zenith_angle()</span></code></a></li>

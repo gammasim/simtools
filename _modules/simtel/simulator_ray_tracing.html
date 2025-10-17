@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -445,8 +445,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="kn">import</span> <span class="n">clear_default_sim_telarray_cfg_directories</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimulatorRayTracing&quot;</span><span class="p">]</span>
-
 <span class="c1"># pylint: disable=no-member</span>
 <span class="c1"># The line above is needed because there are members which are created</span>
 <span class="c1"># by adding them to the __dict__ of the class rather than directly.</span>
@@ -498,7 +496,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">label</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_base_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;ray_tracing&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_base_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_config_to_namedtuple</span><span class="p">(</span><span class="n">config_data</span><span class="p">)</span>
@@ -583,7 +581,7 @@
 
 <span class="sd">        The run_number and input_file parameters are not relevant for the ray tracing simulation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">write_sim_telarray_config_file</span><span class="p">(</span><span class="n">additional_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">write_sim_telarray_config_file</span><span class="p">(</span><span class="n">additional_models</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">:</span>
             <span class="c1"># Note: no mirror length defined for dual-mirror telescopes</span>

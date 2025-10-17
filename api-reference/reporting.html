@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Ray Tracing" href="ray_tracing.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -392,7 +392,7 @@
 <li class="toctree-l1"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Application, dependency and version management.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="db_handler.html">Database support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="io.html">I/O</a></li>
 <li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
@@ -405,6 +405,7 @@
 <li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
 </ul>
@@ -477,6 +478,12 @@
 <dt class="sig sig-object py" id="reporting.docs_read_parameters.ReadParameters">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">reporting.docs_read_parameters.</span></span><span class="sig-name descname"><span class="pre">ReadParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reporting/docs_read_parameters.html#ReadParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reporting.docs_read_parameters.ReadParameters" title="Link to this definition">#</a></dt>
 <dd><p>Read and manage model parameter data for report generation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="reporting.docs_read_parameters.ReadParameters.generate_model_parameter_reports_for_devices">
+<span class="sig-name descname"><span class="pre">generate_model_parameter_reports_for_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_elements</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reporting/docs_read_parameters.html#ReadParameters.generate_model_parameter_reports_for_devices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reporting.docs_read_parameters.ReadParameters.generate_model_parameter_reports_for_devices" title="Link to this definition">#</a></dt>
+<dd><p>Create model-parameter comparison reports for calibration devices.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="reporting.docs_read_parameters.ReadParameters.get_all_parameter_descriptions">
 <span class="sig-name descname"><span class="pre">get_all_parameter_descriptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reporting/docs_read_parameters.html#ReadParameters.get_all_parameter_descriptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reporting.docs_read_parameters.ReadParameters.get_all_parameter_descriptions" title="Link to this definition">#</a></dt>
@@ -605,6 +612,15 @@ values across model versions.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="reporting.docs_auto_report_generator.ReportGenerator.auto_generate_calibration_reports">
+<span class="sig-name descname"><span class="pre">auto_generate_calibration_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reporting/docs_auto_report_generator.html#ReportGenerator.auto_generate_calibration_reports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_calibration_reports" title="Link to this definition">#</a></dt>
+<dd><p>Generate calibration reports for one or all model versions.</p>
+<p>Mirrors the pattern used by other auto_generate_* methods: if
+–all_model_versions is set, produce reports for every model version in
+the DB; otherwise produce reports only for the configured model_version.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="reporting.docs_auto_report_generator.ReportGenerator.auto_generate_observatory_reports">
 <span class="sig-name descname"><span class="pre">auto_generate_observatory_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reporting/docs_auto_report_generator.html#ReportGenerator.auto_generate_observatory_reports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_observatory_reports" title="Link to this definition">#</a></dt>
 <dd><p>Generate all observatory reports based on which –all_* flags are passed.</p>
@@ -614,6 +630,14 @@ values across model versions.</p>
 <dt class="sig sig-object py" id="reporting.docs_auto_report_generator.ReportGenerator.auto_generate_parameter_reports">
 <span class="sig-name descname"><span class="pre">auto_generate_parameter_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reporting/docs_auto_report_generator.html#ReportGenerator.auto_generate_parameter_reports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_parameter_reports" title="Link to this definition">#</a></dt>
 <dd><p>Generate parameter reports for all telescope-site combinations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reporting.docs_auto_report_generator.ReportGenerator.auto_generate_simulation_configuration_reports">
+<span class="sig-name descname"><span class="pre">auto_generate_simulation_configuration_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reporting/docs_auto_report_generator.html#ReportGenerator.auto_generate_simulation_configuration_reports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_simulation_configuration_reports" title="Link to this definition">#</a></dt>
+<dd><p>Generate simulation configuration reports for one or all model versions.</p>
+<p>If –all_model_versions is set, produce reports for every model version in
+the DB; otherwise produce reports only for the configured model_version.</p>
 </dd></dl>
 
 </dd></dl>
@@ -670,6 +694,7 @@ values across model versions.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-reporting.docs_read_parameters">docs_read_parameters</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters"><code class="docutils literal notranslate"><span class="pre">ReadParameters</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.generate_model_parameter_reports_for_devices"><code class="docutils literal notranslate"><span class="pre">ReadParameters.generate_model_parameter_reports_for_devices()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.get_all_parameter_descriptions"><code class="docutils literal notranslate"><span class="pre">ReadParameters.get_all_parameter_descriptions()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.get_array_element_parameter_data"><code class="docutils literal notranslate"><span class="pre">ReadParameters.get_array_element_parameter_data()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.get_calibration_data"><code class="docutils literal notranslate"><span class="pre">ReadParameters.get_calibration_data()</span></code></a></li>
@@ -688,8 +713,10 @@ values across model versions.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-reporting.docs_auto_report_generator">docs_auto_report_generator</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator"><code class="docutils literal notranslate"><span class="pre">ReportGenerator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_array_element_reports"><code class="docutils literal notranslate"><span class="pre">ReportGenerator.auto_generate_array_element_reports()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_calibration_reports"><code class="docutils literal notranslate"><span class="pre">ReportGenerator.auto_generate_calibration_reports()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_observatory_reports"><code class="docutils literal notranslate"><span class="pre">ReportGenerator.auto_generate_observatory_reports()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_parameter_reports"><code class="docutils literal notranslate"><span class="pre">ReportGenerator.auto_generate_parameter_reports()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_simulation_configuration_reports"><code class="docutils literal notranslate"><span class="pre">ReportGenerator.auto_generate_simulation_configuration_reports()</span></code></a></li>
 </ul>
 </li>
 </ul>

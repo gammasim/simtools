@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -436,15 +436,11 @@
 <span></span><span class="sd">&quot;&quot;&quot;A collection of functions related to geometrical transformations.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">UnitsError</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;convert_2d_to_radial_distr&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;rotate&quot;</span><span class="p">,</span>
-<span class="p">]</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -604,6 +600,8 @@
 
 
 
+<div class="viewcode-block" id="calculate_circular_mean">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.geometry.calculate_circular_mean">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calculate_circular_mean</span><span class="p">(</span><span class="n">angles</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculate circular mean of angles in radians.</span>
@@ -620,9 +618,35 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">sin_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angles</span><span class="p">))</span>
     <span class="n">cos_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angles</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">sin_sum</span><span class="p">,</span> <span class="n">cos_sum</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">sin_sum</span><span class="p">,</span> <span class="n">cos_sum</span><span class="p">)</span></div>
 
 
+
+<div class="viewcode-block" id="solid_angle">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.geometry.solid_angle">[docs]</a>
+<span class="nd">@u</span><span class="o">.</span><span class="n">quantity_input</span><span class="p">(</span><span class="n">angle_max</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">,</span> <span class="n">angle_min</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">solid_angle</span><span class="p">(</span><span class="n">angle_max</span><span class="p">,</span> <span class="n">angle_min</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the solid angle subtended by a given range of angles.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    angle_max: astropy.units.Quantity</span>
+<span class="sd">        The maximum angle for which to calculate the solid angle.</span>
+<span class="sd">    angle_min: astropy.units.Quantity</span>
+<span class="sd">        The minimum angle for which to calculate the solid angle (default is 0 rad).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.units.Quantity</span>
+<span class="sd">        The solid angle subtended by the given range of angles (in steradians).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle_min</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;rad&quot;</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle_max</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;rad&quot;</span><span class="p">)))</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">sr</span></div>
+
+
+
+<div class="viewcode-block" id="transform_ground_to_shower_coordinates">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.geometry.transform_ground_to_shower_coordinates">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">transform_ground_to_shower_coordinates</span><span class="p">(</span><span class="n">x_ground</span><span class="p">,</span> <span class="n">y_ground</span><span class="p">,</span> <span class="n">z_ground</span><span class="p">,</span> <span class="n">azimuth</span><span class="p">,</span> <span class="n">altitude</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Transform ground to shower coordinates.</span>
@@ -656,7 +680,44 @@
     <span class="n">y_s</span> <span class="o">=</span> <span class="n">sa</span> <span class="o">*</span> <span class="n">cz</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">ca</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="n">sa</span> <span class="o">*</span> <span class="n">sz</span> <span class="o">*</span> <span class="n">z</span>
     <span class="n">z_s</span> <span class="o">=</span> <span class="o">-</span><span class="n">sz</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">cz</span> <span class="o">*</span> <span class="n">z</span>
 
-    <span class="k">return</span> <span class="n">x_s</span><span class="p">,</span> <span class="n">y_s</span><span class="p">,</span> <span class="n">z_s</span>
+    <span class="k">return</span> <span class="n">x_s</span><span class="p">,</span> <span class="n">y_s</span><span class="p">,</span> <span class="n">z_s</span></div>
+
+
+
+<div class="viewcode-block" id="fiducial_radius_from_shape">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.geometry.fiducial_radius_from_shape">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fiducial_radius_from_shape</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate minimum radius including different geometrical shapes.</span>
+
+<span class="sd">    Assumes definition of shapes as in &#39;camera_body_shape&#39; model parameter:</span>
+
+<span class="sd">    - circle: shape = 0, width is diameter</span>
+<span class="sd">    - hexagon: shape = 1 or 3, width is flat-to-flat distance</span>
+<span class="sd">    - square: shape = 2, width is side length</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    width : float</span>
+<span class="sd">        Characteristic width</span>
+<span class="sd">    shape : int</span>
+<span class="sd">        Geometrical shape parameter</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Minimum fiducial radius</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">width</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">width</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">shape</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">width</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Unknown shape value </span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">. Valid values are: 0 (circle), 1 or 3 (hexagon), 2 (square).&quot;</span>
+    <span class="p">)</span></div>
+
 </pre></div>
 
                 </article>

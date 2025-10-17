@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Database support" href="db_handler.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -392,7 +392,7 @@
 <li class="toctree-l1"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Application, dependency and version management.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="db_handler.html">Database support</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">I/O</a></li>
 <li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
@@ -405,6 +405,7 @@
 <li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
 </ul>
@@ -472,51 +473,22 @@
 <p>This module include I/O related functionality.</p>
 <section id="module-simtools.io.io_handler">
 <span id="io-handler"></span><span id="iomodule"></span><h2>io_handler<a class="headerlink" href="#module-simtools.io.io_handler" title="Link to this heading">#</a></h2>
-<p>Handle input and output paths.</p>
+<p>Handle input and output directories and file paths.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtools.io.io_handler.IOHandler">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtools.io.io_handler.</span></span><span class="sig-name descname"><span class="pre">IOHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler" title="Link to this definition">#</a></dt>
-<dd><p>Handle input and output paths.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="simtools.io.io_handler.IOHandler.get_input_data_file">
-<span class="sig-name descname"><span class="pre">get_input_data_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.get_input_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.get_input_data_file" title="Link to this definition">#</a></dt>
-<dd><p>Get path of a data file, using data_path.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>parent_dir: str</strong></dt><dd><p>Parent directory of the file.</p>
-</dd>
-<dt><strong>files_name: str</strong></dt><dd><p>File name.</p>
-</dd>
-<dt><strong>test: bool</strong></dt><dd><p>If true, return test resources location</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>Path</dt><dd></dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>IncompleteIOHandlerInitError</dt><dd><p>if data_path is not set</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
+<dd><p>Handle input and output directories and file paths.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="simtools.io.io_handler.IOHandler.get_model_configuration_directory">
-<span class="sig-name descname"><span class="pre">get_model_configuration_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.get_model_configuration_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.get_model_configuration_directory" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_model_configuration_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.get_model_configuration_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.get_model_configuration_directory" title="Link to this definition">#</a></dt>
 <dd><p>Get path of the simulation model configuration directory.</p>
 <p>This is the directory where the sim_telarray configuration files will be stored.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
-</dd>
 <dt><strong>model_version: str</strong></dt><dd><p>Model version.</p>
+</dd>
+<dt><strong>sub_dir: str</strong></dt><dd><p>subdirectory</p>
 </dd>
 </dl>
 </dd>
@@ -530,14 +502,12 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simtools.io.io_handler.IOHandler.get_output_directory">
-<span class="sig-name descname"><span class="pre">get_output_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.get_output_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.get_output_directory" title="Link to this definition">#</a></dt>
-<dd><p>Return path to output directory.</p>
+<span class="sig-name descname"><span class="pre">get_output_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.get_output_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.get_output_directory" title="Link to this definition">#</a></dt>
+<dd><p>Create and get path of an output directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
-</dd>
-<dt><strong>sub_dir: str</strong></dt><dd><p>Name of the subdirectory (ray_tracing, model etc)</p>
+<dt><strong>sub_dir: str or list of str, optional</strong></dt><dd><p>Name of the subdirectory (ray_tracing, model etc)</p>
 </dd>
 </dl>
 </dd>
@@ -548,9 +518,7 @@
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>FileNotFoundError</dt><dd><p>if error creating directory</p>
-</dd>
-<dt>TypeError</dt><dd><p>raised for errors while creating directory name</p>
+<dt>FileNotFoundError</dt><dd><p>if the directory cannot be created</p>
 </dd>
 </dl>
 </dd>
@@ -559,16 +527,33 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simtools.io.io_handler.IOHandler.get_output_file">
-<span class="sig-name descname"><span class="pre">get_output_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.get_output_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.get_output_file" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_output_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.get_output_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.get_output_file" title="Link to this definition">#</a></dt>
 <dd><p>Get path of an output file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>files_name: str</strong></dt><dd><p>File name.</p>
 </dd>
-<dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
+<dt><strong>sub_dir: sub_dir: str or list of str, optional</strong></dt><dd><p>Name of the subdirectory (ray_tracing, model etc)</p>
 </dd>
-<dt><strong>sub_dir: str</strong></dt><dd><p>Name of the subdirectory (ray_tracing, model etc)</p>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtools.io.io_handler.IOHandler.get_test_data_file">
+<span class="sig-name descname"><span class="pre">get_test_data_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.get_test_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.get_test_data_file" title="Link to this definition">#</a></dt>
+<dd><p>Get path of a data file in the test resources directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>files_name: str</strong></dt><dd><p>File name.</p>
 </dd>
 </dl>
 </dd>
@@ -582,18 +567,14 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simtools.io.io_handler.IOHandler.set_paths">
-<span class="sig-name descname"><span class="pre">set_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_plain_output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.set_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.set_paths" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.set_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.set_paths" title="Link to this definition">#</a></dt>
 <dd><p>Set paths for input and output.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>output_path: str or Path</strong></dt><dd><p>Path pointing to the output directory.</p>
 </dd>
-<dt><strong>data_path: str or Path</strong></dt><dd><p>Path pointing to the data files (e.g., CORSIKA or sim_telarray output).</p>
-</dd>
 <dt><strong>model_path: str or Path</strong></dt><dd><p>Path pointing to the model file directory.</p>
-</dd>
-<dt><strong>use_plain_output_path: bool</strong></dt><dd><p>Use plain output path without adding tool name and date</p>
 </dd>
 </dl>
 </dd>
@@ -965,6 +946,25 @@ in the hdf5 file.</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.hdf5_handler.validate_histogram">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.hdf5_handler.</span></span><span class="sig-name descname"><span class="pre">validate_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_bin_edges</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/hdf5_handler.html#validate_histogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.hdf5_handler.validate_histogram" title="Link to this definition">#</a></dt>
+<dd><p>Validate histogram dimensions and y_bin_edges consistency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>hist (np.ndarray): The histogram array, expected to be 1D or 2D.</strong></dt><dd></dd>
+<dt><strong>y_bin_edges (array-like or None): Bin edges for the second dimension (if applicable).</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError: If histogram dimensions are invalid or inconsistent with y_bin_edges.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-simtools.io.legacy_data_handler">
 <span id="id1"></span><span id="legacy-data-handler"></span><h2>legacy_data_handler<a class="headerlink" href="#module-simtools.io.legacy_data_handler" title="Link to this heading">#</a></h2>
@@ -1070,10 +1070,10 @@ in the hdf5 file.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simtools.io.io_handler">io_handler</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandler"><code class="docutils literal notranslate"><span class="pre">IOHandler</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandler.get_input_data_file"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_input_data_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandler.get_model_configuration_directory"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_model_configuration_directory()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandler.get_output_directory"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_output_directory()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandler.get_output_file"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_output_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandler.get_test_data_file"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_test_data_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandler.set_paths"><code class="docutils literal notranslate"><span class="pre">IOHandler.set_paths()</span></code></a></li>
 </ul>
 </li>
@@ -1106,6 +1106,7 @@ in the hdf5 file.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simtools.io.hdf5_handler">hdf5_handler</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.hdf5_handler.fill_hdf5_table"><code class="docutils literal notranslate"><span class="pre">fill_hdf5_table()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.hdf5_handler.read_hdf5"><code class="docutils literal notranslate"><span class="pre">read_hdf5()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.hdf5_handler.validate_histogram"><code class="docutils literal notranslate"><span class="pre">validate_histogram()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simtools.io.legacy_data_handler">legacy_data_handler</a><ul class="nav section-nav flex-column">

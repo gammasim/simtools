@@ -19,7 +19,7 @@ These images eliminate all manual installation steps and allow direct execution 
 
 ### Pre-built Images
 
-- **Production images** (`simtools-prod`): Include CORSIKA, sim_telarray, and simtools applications. Variants are available with:
+- **Production images** (`simtools`): Include CORSIKA, sim_telarray, and simtools applications. Variants are available with:
   - Different CORSIKA/sim_telarray versions
   - Compile options (e.g., `prod5`, `prod6`)
   - CPU optimizations (e.g., `avx2`, `avx512`, `no_opt`)
@@ -34,10 +34,10 @@ Pre-built images are hosted on the [simtools package registry](https://github.co
 Start an Interactive Container:
 
 ```bash
-docker run --rm -it \
+podman run --rm -it \
     --env-file .env \
     -v "$(pwd):/workdir/external" \
-    ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest \
+    ghcr.io/gammasim/simtools-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest \
     bash
 ```
 
@@ -46,10 +46,10 @@ Any simtools application can be run inside the container.
 Run a simtools application:
 
 ```bash
-docker run --rm -it \
+podman run --rm -it \
     --env-file .env \
     -v "$(pwd):/workdir/external" \
-    ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest \
+    ghcr.io/gammasim/simtools-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest \
     simtools-convert-geo-coordinates-of-array-elements \
     --input ./simtools/tests/resources/telescope_positions-North-utm.ecsv \
     --export ground \
@@ -63,7 +63,7 @@ simtools is available as a Python package from [PypPi](https://pypi.org/project/
 To install, prepare a python environment, e.g.:
 
 ```console
-mamba create --name simtools-prod python=3.11
+mamba create --name simtools-prod python=3.12
 mamba activate simtools-prod
 ```
 
@@ -129,7 +129,7 @@ SIMTOOLS_DB_API_USER=<username>
 SIMTOOLS_DB_API_PW=<password>
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
 # Name of the simulation model database
-SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters-v0-7-0'
+SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model-v0-7-0'
 # Path to the sim_telarray installation
 SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
 # User name of the user running the application

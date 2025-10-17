@@ -41,6 +41,15 @@ the visualization module.
    :members:
 ```
 
+## plot_corsika_histograms
+
+(corsika-histograms-visualize-1)=
+
+```{eval-rst}
+.. automodule:: visualization.plot_corsika_histograms
+   :members:
+```
+
 (plot-tables)=
 
 ## plot_tables
@@ -63,5 +72,31 @@ the visualization module.
 
 ```{eval-rst}
 .. automodule:: visualization.plot_simtel_events
+   :members:
+```
+
+(visualization-plot-simtel_event_histograms)=
+
+## plot_simtel_event_histograms
+
+```{eval-rst}
+.. automodule:: visualization.plot_simtel_event_histograms
+   :members:
+```
+
+## plot_psf
+
+```{eval-rst}
+.. automodule:: visualization.plot_psf
+   :members:
+```
+
+(plot-incident-angles)=
+
+## plot_incident_angles
+
+```{eval-rst}
+.. automodule:: visualization.plot_incident_angles
+
    :members:
 ```

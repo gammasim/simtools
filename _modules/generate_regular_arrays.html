@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -459,14 +459,13 @@
 <span class="sd">    simtools-generate-regular-arrays --site=North</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">QTable</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.data_model.model_data_writer</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">writer</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.application_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_application_label</span><span class="p">,</span> <span class="n">startup_application</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 
@@ -477,7 +476,7 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">():</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
-        <span class="n">label</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">get_application_label</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">&quot;Generate a regular array of telescope and save as astropy table.</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="s2">&quot;Default telescope distances for 4 telescope square arrays are: </span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -495,18 +494,15 @@
 <a class="viewcode-back" href="../user-guide/applications/simtools-generate-regular-arrays.html#generate_regular_arrays.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create layout array files (ecsv) of regular arrays.&quot;&quot;&quot;</span>
-    <span class="n">args_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">()</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">)</span>
 
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
-
-    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;South&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;South&quot;</span><span class="p">:</span>
         <span class="n">array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;1SST&quot;</span><span class="p">,</span> <span class="s2">&quot;4SST&quot;</span><span class="p">,</span> <span class="s2">&quot;1MST&quot;</span><span class="p">,</span> <span class="s2">&quot;4MST&quot;</span><span class="p">,</span> <span class="s2">&quot;1LST&quot;</span><span class="p">,</span> <span class="s2">&quot;4LST&quot;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;1MST&quot;</span><span class="p">,</span> <span class="s2">&quot;4MST&quot;</span><span class="p">,</span> <span class="s2">&quot;1LST&quot;</span><span class="p">,</span> <span class="s2">&quot;4LST&quot;</span><span class="p">]</span>
 
     <span class="k">for</span> <span class="n">array_name</span> <span class="ow">in</span> <span class="n">array_list</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing array </span><span class="si">{</span><span class="n">array_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing array </span><span class="si">{</span><span class="n">array_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">tel_name</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">pos_z</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="n">tel_size</span> <span class="o">=</span> <span class="n">array_name</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
@@ -515,7 +511,7 @@
         <span class="k">if</span> <span class="n">array_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span>
             <span class="n">tel_name</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">names</span><span class="o">.</span><span class="n">generate_array_element_name_from_type_site_id</span><span class="p">(</span>
-                    <span class="n">tel_size</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span> <span class="s2">&quot;01&quot;</span>
+                    <span class="n">tel_size</span><span class="p">,</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span> <span class="s2">&quot;01&quot;</span>
                 <span class="p">)</span>
             <span class="p">)</span>
             <span class="n">pos_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
@@ -526,14 +522,14 @@
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
                 <span class="n">tel_name</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">names</span><span class="o">.</span><span class="n">generate_array_element_name_from_type_site_id</span><span class="p">(</span>
-                        <span class="n">tel_size</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;0</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="n">tel_size</span><span class="p">,</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;0</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
                 <span class="n">pos_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">telescope_distance</span><span class="p">[</span><span class="n">tel_size</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">//</span> <span class="mi">2</span><span class="p">))</span>
                 <span class="n">pos_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">telescope_distance</span><span class="p">[</span><span class="n">tel_size</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">))</span>
                 <span class="n">pos_z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
 
-        <span class="n">table</span> <span class="o">=</span> <span class="n">QTable</span><span class="p">(</span><span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;array_name&quot;</span><span class="p">:</span> <span class="n">array_name</span><span class="p">,</span> <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]})</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">QTable</span><span class="p">(</span><span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;array_name&quot;</span><span class="p">:</span> <span class="n">array_name</span><span class="p">,</span> <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]})</span>
         <span class="n">table</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tel_name</span>
         <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_x</span>
         <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_y</span>
@@ -541,14 +537,14 @@
         <span class="n">table</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">)</span>
         <span class="n">table</span><span class="o">.</span><span class="n">pprint</span><span class="p">()</span>
 
-        <span class="n">output_file</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_file&quot;</span><span class="p">)</span>
+        <span class="n">output_file</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_file&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">output_file</span><span class="p">:</span>
             <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
             <span class="n">output_file</span> <span class="o">=</span> <span class="n">output_path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">array_name</span><span class="si">}{</span><span class="n">output_path</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_path</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">array_name</span><span class="si">}{</span><span class="n">output_path</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
         <span class="n">writer</span><span class="o">.</span><span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
-            <span class="n">args_dict</span><span class="o">=</span><span class="n">args_dict</span><span class="p">,</span>
+            <span class="n">args_dict</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">,</span>
             <span class="n">output_file</span><span class="o">=</span><span class="n">output_file</span><span class="p">,</span>
             <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">product_data</span><span class="o">=</span><span class="n">table</span><span class="p">,</span>

@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Reporting" href="reporting.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -392,7 +392,7 @@
 <li class="toctree-l1"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Application, dependency and version management.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="db_handler.html">Database support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="io.html">I/O</a></li>
 <li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
@@ -405,6 +405,7 @@
 <li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
 </ul>
@@ -778,7 +779,7 @@ multiple array models are simulated.</p>
 <p id="module-runners.corsika_simtel_runner"><span id="corsika-simtel-runner-1"></span>Run simulations with CORSIKA and pipe it to sim_telarray using the multipipe functionality.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="runners.corsika_simtel_runner.CorsikaSimtelRunner">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">runners.corsika_simtel_runner.</span></span><span class="sig-name descname"><span class="pre">CorsikaSimtelRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_telarray_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequential</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_runner_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/corsika_simtel_runner.html#CorsikaSimtelRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.corsika_simtel_runner.CorsikaSimtelRunner" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">runners.corsika_simtel_runner.</span></span><span class="sig-name descname"><span class="pre">CorsikaSimtelRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_telarray_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequential</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/corsika_simtel_runner.html#CorsikaSimtelRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.corsika_simtel_runner.CorsikaSimtelRunner" title="Link to this definition">#</a></dt>
 <dd><p>Run simulations with CORSIKA and pipe it to sim_telarray using the multipipe functionality.</p>
 <p>Uses CorsikaConfig to manage the CORSIKA configuration and SimulatorArray
 for the sim_telarray configuration.</p>
@@ -797,6 +798,8 @@ contain the CORSIKA configuration parameters.</p>
 <dt><strong>use_multipipe</strong><span class="classifier">bool</span></dt><dd><p>Use multipipe to run CORSIKA and sim_telarray.</p>
 </dd>
 <dt><strong>sim_telarray_seeds</strong><span class="classifier">dict</span></dt><dd><p>Dictionary with configuration for sim_telarray random instrument setup.</p>
+</dd>
+<dt><strong>calibration_config</strong><span class="classifier">dict</span></dt><dd><p>Configuration for the calibration of the sim_telarray data.</p>
 </dd>
 </dl>
 </dd>

@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -517,9 +517,7 @@
 <span class="sd">        --output_file corsika_simulation_limits_lookup.ecsv</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.application_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_application_label</span><span class="p">,</span> <span class="n">startup_application</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.derive_corsika_limits</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">generate_corsika_limits_grid</span><span class="p">,</span>
@@ -529,7 +527,8 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse command line configuration.&quot;&quot;&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Derive limits for energy, radial distance, and viewcone.&quot;</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">get_application_label</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Derive limits for energy, radial distance, and viewcone.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--event_data_file&quot;</span><span class="p">,</span>
@@ -570,12 +569,9 @@
 <a class="viewcode-back" href="../user-guide/applications/simtools-production-derive-corsika-limits.html#production_derive_corsika_limits.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Derive limits for energy, radial distance, and viewcone.&quot;&quot;&quot;</span>
-    <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">()</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">)</span>
 
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;log_level&quot;</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">)))</span>
-
-    <span class="n">generate_corsika_limits_grid</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="p">)</span></div>
+    <span class="n">generate_corsika_limits_grid</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">app_context</span><span class="o">.</span><span class="n">db_config</span><span class="p">)</span></div>
 
 
 

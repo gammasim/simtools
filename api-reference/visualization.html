@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Utilities" href="utils.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -392,7 +392,7 @@
 <li class="toctree-l1"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Application, dependency and version management.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="db_handler.html">Database support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="io.html">I/O</a></li>
 <li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
@@ -405,6 +405,7 @@
 <li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Visualization</a></li>
 </ul>
@@ -475,6 +476,12 @@ the visualization module.</p>
 <span id="visualize"></span><span id="visualizationvisualize"></span><h2>visualize<a class="headerlink" href="#module-visualization.visualize" title="Link to this heading">#</a></h2>
 <p>Module for visualization.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="visualization.visualize.filter_plot_kwargs">
+<span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">filter_plot_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#filter_plot_kwargs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.filter_plot_kwargs" title="Link to this definition">#</a></dt>
+<dd><p>Filter out kwargs that are not valid for plt.plot.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="visualization.visualize.get_colors">
 <span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">get_colors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">palette</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#get_colors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.get_colors" title="Link to this definition">#</a></dt>
 <dd><p>Get the colour list of the palette requested.</p>
@@ -527,6 +534,12 @@ the visualization module.</p>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.visualize.handle_kwargs">
+<span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">handle_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#handle_kwargs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.handle_kwargs" title="Link to this definition">#</a></dt>
+<dd><p>Extract and handle keyword arguments.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -614,6 +627,18 @@ should be done using the returned plt instance.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="visualization.visualize.plot_main_data">
+<span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">plot_main_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#plot_main_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.plot_main_data" title="Link to this definition">#</a></dt>
+<dd><p>Plot the main data.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.visualize.plot_ratio_difference">
+<span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">plot_ratio_difference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_ratio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#plot_ratio_difference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.plot_ratio_difference" title="Link to this definition">#</a></dt>
+<dd><p>Plot the ratio or difference plot.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="visualization.visualize.plot_table">
 <span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">plot_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_title</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#plot_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.plot_table" title="Link to this definition">#</a></dt>
 <dd><p>Produce a high contrast one dimensional plot from the data in an astropy.Table.</p>
@@ -656,6 +681,12 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.visualize.prepare_data">
+<span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#prepare_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.prepare_data" title="Link to this definition">#</a></dt>
+<dd><p>Prepare data for plotting.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -707,6 +738,12 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.visualize.setup_plot">
+<span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">setup_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_ratio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_difference</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#setup_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.setup_plot" title="Link to this definition">#</a></dt>
+<dd><p>Set up the plot style, figure, and gridspec.</p>
 </dd></dl>
 
 </section>
@@ -943,12 +980,145 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 <span id="id2"></span><span id="plot-array-layout"></span><h2>plot_array_layout<a class="headerlink" href="#module-visualization.plot_array_layout" title="Link to this heading">#</a></h2>
 <p>Plot array elements for a layout.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="visualization.plot_array_layout.get_telescope_patch">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">get_telescope_patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#get_telescope_patch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.get_telescope_patch" title="Link to this definition">#</a></dt>
-<dd><p>Create patch for a telescope.</p>
+<dt class="sig sig-object py" id="visualization.plot_array_layout.create_patches">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">create_patches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescopes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayed_out_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlighted_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#create_patches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.create_patches" title="Link to this definition">#</a></dt>
+<dd><p>Create telescope patches and labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescopes</strong><span class="classifier">Table</span></dt><dd><p>Telescope data table.</p>
+</dd>
+<dt><strong>scale</strong><span class="classifier">float</span></dt><dd><p>Marker size scale factor.</p>
+</dd>
+<dt><strong>show_label</strong><span class="classifier">bool</span></dt><dd><p>Show telescope labels.</p>
+</dd>
+<dt><strong>ax</strong><span class="classifier">Axes</span></dt><dd><p>Matplotlib axes object.</p>
+</dd>
+<dt><strong>grayed_out_elements</strong><span class="classifier">list or None</span></dt><dd><p>List of telescope names to plot as gray circles.</p>
+</dd>
+<dt><strong>highlighted_elements</strong><span class="classifier">list or None</span></dt><dd><p>List of telescope names to plot with red circles around them.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>patches</strong><span class="classifier">list</span></dt><dd><p>Shape patches.</p>
+</dd>
+<dt><strong>radii</strong><span class="classifier">list</span></dt><dd><p>Telescope radii.</p>
+</dd>
+<dt><strong>highlighted_patches</strong><span class="classifier">list</span></dt><dd><p>List of highlighted telescope patches.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_array_layout.finalize_plot">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">finalize_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patches</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlighted_patches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#finalize_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.finalize_plot" title="Link to this definition">#</a></dt>
+<dd><p>Finalize plot appearance and limits.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_array_layout.get_patches">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">get_patches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescopes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_tel_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker_scaling</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayed_out_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlighted_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#get_patches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.get_patches" title="Link to this definition">#</a></dt>
+<dd><p>Get plot patches and axis range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ax</strong><span class="classifier">Axes</span></dt><dd><p>Matplotlib axes object.</p>
+</dd>
+<dt><strong>telescopes</strong><span class="classifier">Table</span></dt><dd><p>Telescope data table.</p>
+</dd>
+<dt><strong>show_tel_label</strong><span class="classifier">bool</span></dt><dd><p>Show telescope labels.</p>
+</dd>
+<dt><strong>axes_range</strong><span class="classifier">float or None</span></dt><dd><p>Axis range, auto if None.</p>
+</dd>
+<dt><strong>marker_scaling</strong><span class="classifier">float</span></dt><dd><p>Marker size scale factor.</p>
+</dd>
+<dt><strong>grayed_out_elements</strong><span class="classifier">list or None</span></dt><dd><p>List of telescope names to plot as gray circles.</p>
+</dd>
+<dt><strong>highlighted_elements</strong><span class="classifier">list or None</span></dt><dd><p>List of telescope names to plot with red circles around them.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>patches</strong><span class="classifier">list</span></dt><dd><p>List of telescope patches.</p>
+</dd>
+<dt><strong>axes_range</strong><span class="classifier">float</span></dt><dd><p>Calculated or input axis range.</p>
+</dd>
+<dt><strong>highlighted_patches</strong><span class="classifier">list</span></dt><dd><p>List of highlighted telescope patches.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_array_layout.get_positions">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">get_positions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescopes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#get_positions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.get_positions" title="Link to this definition">#</a></dt>
+<dd><p>Get X/Y positions depending on coordinate system.</p>
+<p>For ground coordinates, rotates the positions by 90 degrees.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
+<dt><strong>x_rot, y_rot</strong><span class="classifier">Quantity</span></dt><dd><p>Position coordinates.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_array_layout.get_sphere_radius">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">get_sphere_radius</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#get_sphere_radius"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.get_sphere_radius" title="Link to this definition">#</a></dt>
+<dd><p>Get telescope sphere radius.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius</strong><span class="classifier">Quantity</span></dt><dd><p>Radius with units.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_array_layout.get_telescope_name">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">get_telescope_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#get_telescope_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.get_telescope_name" title="Link to this definition">#</a></dt>
+<dd><p>Get telescope name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>name</strong><span class="classifier">str</span></dt><dd><p>Telescope name or fallback identifier.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_array_layout.get_telescope_patch">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">get_telescope_patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_grayed_out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#get_telescope_patch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.get_telescope_patch" title="Link to this definition">#</a></dt>
+<dd><p>Create patch for a telescope.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>name</strong><span class="classifier">str</span></dt><dd><p>Telescope name.</p>
+</dd>
+<dt><strong>x</strong><span class="classifier">Quantity</span></dt><dd><p>X position.</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">Quantity</span></dt><dd><p>Y position.</p>
+</dd>
+<dt><strong>radius</strong><span class="classifier">Quantity</span></dt><dd><p>Telescope radius.</p>
+</dd>
+<dt><strong>is_grayed_out</strong><span class="classifier">bool</span></dt><dd><p>Whether to plot telescope in gray.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
 <dt><strong>patch</strong><span class="classifier">Patch</span></dt><dd><p>Circle or rectangle patch.</p>
 </dd>
 </dl>
@@ -958,7 +1128,7 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_array_layout.plot_array_layout">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">plot_array_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescopes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_tel_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background_telescopes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#plot_array_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.plot_array_layout" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">plot_array_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescopes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_tel_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background_telescopes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayed_out_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlighted_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'best'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#plot_array_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.plot_array_layout" title="Link to this definition">#</a></dt>
 <dd><p>Plot telescope array layout.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -973,6 +1143,12 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 </dd>
 <dt><strong>background_telescopes</strong><span class="classifier">Table or None</span></dt><dd><p>Optional background telescope table.</p>
 </dd>
+<dt><strong>grayed_out_elements</strong><span class="classifier">list or None</span></dt><dd><p>List of telescope names to plot as gray circles.</p>
+</dd>
+<dt><strong>highlighted_elements</strong><span class="classifier">list or None</span></dt><dd><p>List of telescope names to plot with red circles around them.</p>
+</dd>
+<dt><strong>legend_location</strong><span class="classifier">str</span></dt><dd><p>Location of the legend (default “best”).</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -982,6 +1158,12 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_array_layout.update_legend">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">update_legend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescopes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayed_out_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'best'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#update_legend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.update_legend" title="Link to this definition">#</a></dt>
+<dd><p>Add legend for telescope types and counts.</p>
 </dd></dl>
 
 </section>
@@ -1008,6 +1190,375 @@ coordinate systems, FOV, focal length and the average edge radius.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt><strong>fig</strong><span class="classifier">plt.Figure</span></dt><dd><p>Figure with the pixel layout.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="plot-corsika-histograms">
+<h2>plot_corsika_histograms<a class="headerlink" href="#plot-corsika-histograms" title="Link to this heading">#</a></h2>
+<p id="module-visualization.plot_corsika_histograms"><span id="corsika-histograms-visualize-1"></span>Visualize Cherenkov photon distributions from CORSIKA.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.build_all_photon_figures">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">build_all_photon_figures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#build_all_photon_figures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.build_all_photon_figures" title="Link to this definition">#</a></dt>
+<dd><p>Return list of all photon histogram figures for the given instance.</p>
+<p>When test is True, only generate the first two figure groups to reduce runtime.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.derive_event_1d_histograms">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">derive_event_1d_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_1d_header_keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdf5</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#derive_event_1d_histograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.derive_event_1d_histograms" title="Link to this definition">#</a></dt>
+<dd><p>Create 1D event header histograms; optionally save to PDF and/or HDF5.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.derive_event_2d_histograms">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">derive_event_2d_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_2d_header_keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdf5</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#derive_event_2d_histograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.derive_event_2d_histograms" title="Link to this definition">#</a></dt>
+<dd><p>Create 2D event header histograms in pairs; optionally save PDF and/or HDF5.</p>
+<p>If an odd number of keys is provided, the last one is ignored (with a warning).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.export_all_photon_figures_pdf">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">export_all_photon_figures_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#export_all_photon_figures_pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.export_all_photon_figures_pdf" title="Link to this definition">#</a></dt>
+<dd><p>Build and save all photon histogram figures into a single PDF.</p>
+<p>The PDF name is derived from the HDF5 file name core and written under output_path.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_1d_event_header_distribution">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_1d_event_header_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_header_element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_1d_event_header_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_1d_event_header_distribution" title="Link to this definition">#</a></dt>
+<dd><p>Plot the distribution of the quantity given by .</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>event_header_element: str</strong></dt><dd><p>The key to the CORSIKA event header element.</p>
+</dd>
+<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
+</dd>
+<dt><strong>bins: float</strong></dt><dd><p>Number of bins for the histogram.</p>
+</dd>
+<dt><strong>hist_range: 2-tuple</strong></dt><dd><p>Tuple to define the range of the histogram.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_2d_counts">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_2d_counts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_2d_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_2d_counts" title="Link to this definition">#</a></dt>
+<dd><p>Plot the 2D histogram of the photon positions on the ground.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>log_z: bool</strong></dt><dd><p>if True, the intensity of the color bar is given in logarithmic scale.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_2d_density">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_2d_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_2d_density"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_2d_density" title="Link to this definition">#</a></dt>
+<dd><p>Plot the 2D histogram of the photon density distribution on the ground.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>log_z: bool</strong></dt><dd><p>if True, the intensity of the color bar is given in logarithmic scale.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_2d_direction">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_2d_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_2d_direction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_2d_direction" title="Link to this definition">#</a></dt>
+<dd><p>Plot the 2D histogram of the incoming direction of photons.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>log_z: bool</strong></dt><dd><p>if True, the intensity of the color bar is given in logarithmic scale.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_2d_event_header_distribution">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_2d_event_header_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_header_element_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_header_element_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_2d_event_header_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_2d_event_header_distribution" title="Link to this definition">#</a></dt>
+<dd><p>Plot the distribution of the quantity given by CorsikaHistograms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>event_header_element_1: str</strong></dt><dd><p>The first key to the CORSIKA event header element</p>
+</dd>
+<dt><strong>event_header_element_2: str</strong></dt><dd><p>The second key to the CORSIKA event header element.</p>
+</dd>
+<dt><strong>log_z: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
+</dd>
+<dt><strong>bins: float</strong></dt><dd><p>Number of bins for the histogram.</p>
+</dd>
+<dt><strong>hist_range: 2-tuple</strong></dt><dd><p>Tuple to define the range of the histogram.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_2d_num_photons_per_telescope">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_2d_num_photons_per_telescope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_2d_num_photons_per_telescope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_2d_num_photons_per_telescope" title="Link to this definition">#</a></dt>
+<dd><p>Plot the 2D histogram of the number of photons per event and per telescope.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>log_z: bool</strong></dt><dd><p>if True, the intensity of the color bar is given in logarithmic scale.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_2d_time_altitude">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_2d_time_altitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_2d_time_altitude"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_2d_time_altitude" title="Link to this definition">#</a></dt>
+<dd><p>Plot the 2D histogram of the time and altitude where the photon was produced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>log_z: bool</strong></dt><dd><p>if True, the intensity of the color bar is given in logarithmic scale.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_altitude_distr">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_altitude_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_altitude_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_altitude_distr" title="Link to this definition">#</a></dt>
+<dd><p>Plot the distribution of altitude in which the photons were generated in km.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_counts_distr">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_counts_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_counts_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_counts_distr" title="Link to this definition">#</a></dt>
+<dd><p>Plot the 1D distribution, i.e. the radial distribution, of the photons on the ground.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_density_distr">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_density_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_density_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_density_distr" title="Link to this definition">#</a></dt>
+<dd><p>Plot the photon density distribution on the ground.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_photon_per_event_distr">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_photon_per_event_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_photon_per_event_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_photon_per_event_distr" title="Link to this definition">#</a></dt>
+<dd><p>Plot the distribution of the number of Cherenkov photons per event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_photon_per_telescope_distr">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_photon_per_telescope_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_photon_per_telescope_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_photon_per_telescope_distr" title="Link to this definition">#</a></dt>
+<dd><p>Plot the distribution of the number of Cherenkov photons per telescope.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_time_distr">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_time_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_time_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_time_distr" title="Link to this definition">#</a></dt>
+<dd><p>Plot the distribution times in which the photons were generated in ns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.plot_wavelength_distr">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">plot_wavelength_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#plot_wavelength_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.plot_wavelength_distr" title="Link to this definition">#</a></dt>
+<dd><p>Plot the 1D distribution of the photon wavelengths.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
+</dd>
+<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_corsika_histograms.save_figs_to_pdf">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">save_figs_to_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">figs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf_file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_corsika_histograms.html#save_figs_to_pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_corsika_histograms.save_figs_to_pdf" title="Link to this definition">#</a></dt>
+<dd><p>Save figures from corsika histograms to an output pdf file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>figs: list or numpy.array</strong></dt><dd><p>List with the figures output by corsika_output_visualize.py.</p>
+</dd>
+<dt><strong>pdf_file_name: str or Path</strong></dt><dd><p>Name of the pdf file.</p>
 </dd>
 </dl>
 </dd>
@@ -1168,6 +1719,13 @@ generates a plot of the pixel layout for the given telescope model.</p>
 <span id="plot-simtel-events"></span><span id="visualization-plot-simtel-events"></span><h2>plot_simtel_events<a class="headerlink" href="#module-visualization.plot_simtel_events" title="Link to this heading">#</a></h2>
 <p>Plots for light emission (flasher/calibration) sim_telarray events.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_simtel_events.generate_and_save_plots">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">generate_and_save_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plots</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ioh</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#generate_and_save_plots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.generate_and_save_plots" title="Link to this definition">#</a></dt>
+<dd><p>Generate plots for files and save a multi-page PDF per input.</p>
+<p>Also writes metadata JSON next to the PDF.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_simtel_events.plot_simtel_event_image">
 <span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_event_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#plot_simtel_event_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.plot_simtel_event_image" title="Link to this definition">#</a></dt>
 <dd><p>Read a sim_telarray file and plot the DL1 image for one event via ctapipe.</p>
@@ -1194,19 +1752,19 @@ If not provided, no unit conversion is attempted.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_simtel_events.plot_simtel_integrated_pedestal_image">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_integrated_pedestal_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#plot_simtel_integrated_pedestal_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.plot_simtel_integrated_pedestal_image" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_integrated_pedestal_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#plot_simtel_integrated_pedestal_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.plot_simtel_integrated_pedestal_image" title="Link to this definition">#</a></dt>
 <dd><p>Plot camera image of integrated pedestal per pixel away from the flasher peak.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_simtel_events.plot_simtel_integrated_signal_image">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_integrated_signal_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#plot_simtel_integrated_signal_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.plot_simtel_integrated_signal_image" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_integrated_signal_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#plot_simtel_integrated_signal_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.plot_simtel_integrated_signal_image" title="Link to this definition">#</a></dt>
 <dd><p>Plot camera image of integrated signal per pixel around the flasher peak.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_simtel_events.plot_simtel_peak_timing">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_peak_timing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">examples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timing_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_stats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#plot_simtel_peak_timing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.plot_simtel_peak_timing" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_peak_timing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">examples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timing_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#plot_simtel_peak_timing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.plot_simtel_peak_timing" title="Link to this definition">#</a></dt>
 <dd><p>Peak finding per pixel; report mean/std of peak sample and plot a histogram.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1242,7 +1800,7 @@ If not provided, no unit conversion is attempted.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_simtel_events.plot_simtel_step_traces">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_step_traces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_pixels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#plot_simtel_step_traces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.plot_simtel_step_traces" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_step_traces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_pixels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#plot_simtel_step_traces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.plot_simtel_step_traces" title="Link to this definition">#</a></dt>
 <dd><p>Plot step-style R1 traces for regularly sampled pixels (0, N, 2N, …).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1270,7 +1828,7 @@ If not provided, no unit conversion is attempted.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_simtel_events.plot_simtel_time_traces">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_time_traces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_pixels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#plot_simtel_time_traces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.plot_simtel_time_traces" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_time_traces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_pixels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#plot_simtel_time_traces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.plot_simtel_time_traces" title="Link to this definition">#</a></dt>
 <dd><p>Plot R1 time traces for a few pixels of one event.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1296,7 +1854,7 @@ If not provided, no unit conversion is attempted.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_simtel_events.plot_simtel_waveform_matrix">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_waveform_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#plot_simtel_waveform_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.plot_simtel_waveform_matrix" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_events.</span></span><span class="sig-name descname"><span class="pre">plot_simtel_waveform_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_events.html#plot_simtel_waveform_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_events.plot_simtel_waveform_matrix" title="Link to this definition">#</a></dt>
 <dd><p>Create a pseudocolor image of R1 waveforms (sample index vs. pixel id).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1322,6 +1880,281 @@ If not provided, no unit conversion is attempted.</p>
 </dl>
 </dd></dl>
 
+</section>
+<section id="module-visualization.plot_simtel_event_histograms">
+<span id="plot-simtel-event-histograms"></span><span id="visualization-plot-simtel-event-histograms"></span><h2>plot_simtel_event_histograms<a class="headerlink" href="#module-visualization.plot_simtel_event_histograms" title="Link to this heading">#</a></h2>
+<p>Plot simtel event histograms filled with SimtelIOEventHistograms.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_simtel_event_histograms.plot">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_simtel_event_histograms.</span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rebin_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_simtel_event_histograms.html#plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_simtel_event_histograms.plot" title="Link to this definition">#</a></dt>
+<dd><p>Plot simtel event histograms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>histograms: SimtelIOEventHistograms</strong></dt><dd><p>Instance containing the histograms to plot.</p>
+</dd>
+<dt><strong>output_path: Path or str, optional</strong></dt><dd><p>Directory to save plots. If None, plots will be displayed.</p>
+</dd>
+<dt><strong>limits: dict, optional</strong></dt><dd><p>Dictionary containing limits for plotting. Keys can include:
+- “upper_radius_limit”: Upper limit for core distance
+- “lower_energy_limit”: Lower limit for energy
+- “viewcone_radius”: Radius for the viewcone</p>
+</dd>
+<dt><strong>rebin_factor: int, optional</strong></dt><dd><p>Factor by which to reduce the number of bins in 2D histograms for re-binned plots.
+Default is 2 (merge every 2 bins). Set to 0 or 1 to disable re-binning.</p>
+</dd>
+<dt><strong>array_name: str, optional</strong></dt><dd><p>Name of the telescope array configuration.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-visualization.plot_psf">
+<span id="plot-psf"></span><h2>plot_psf<a class="headerlink" href="#module-visualization.plot_psf" title="Link to this heading">#</a></h2>
+<p>Optical PSF plotting functions for parameter optimization visualization.</p>
+<p>This module provides plotting functionality for PSF parameter optimization,
+including parameter comparison plots, convergence plots, and PSF diameter vs off-axis plots.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_psf.create_detailed_parameter_plot">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_psf.</span></span><span class="sig-name descname"><span class="pre">create_detailed_parameter_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ks_statistic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf_diameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulated_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_to_plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_best</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf_pages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_psf.html#create_detailed_parameter_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_psf.create_detailed_parameter_plot" title="Link to this definition">#</a></dt>
+<dd><p>Create a detailed plot for a parameter set showing all parameter values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pars</strong><span class="classifier">dict</span></dt><dd><p>Parameter set dictionary</p>
+</dd>
+<dt><strong>ks_statistic</strong><span class="classifier">float</span></dt><dd><p>KS statistic value for this parameter set</p>
+</dd>
+<dt><strong>psf_diameter</strong><span class="classifier">float</span></dt><dd><p>PSF diameter value for this parameter set</p>
+</dd>
+<dt><strong>simulated_data</strong><span class="classifier">array</span></dt><dd><p>Simulated data for plotting</p>
+</dd>
+<dt><strong>data_to_plot</strong><span class="classifier">dict</span></dt><dd><p>Data dictionary for plotting</p>
+</dd>
+<dt><strong>is_best</strong><span class="classifier">bool</span></dt><dd><p>Whether this is the best parameter set</p>
+</dd>
+<dt><strong>pdf_pages</strong><span class="classifier">PdfPages</span></dt><dd><p>PDF pages object to save the plot</p>
+</dd>
+<dt><strong>fraction</strong><span class="classifier">float, optional</span></dt><dd><p>PSF containment fraction (default: 0.8)</p>
+</dd>
+<dt><strong>p_value</strong><span class="classifier">float, optional</span></dt><dd><p>P-value from KS test for statistical significance</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_psf.create_gradient_descent_convergence_plot">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_psf.</span></span><span class="sig-name descname"><span class="pre">create_gradient_descent_convergence_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gd_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_ks_statistic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_psf.html#create_gradient_descent_convergence_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_psf.create_gradient_descent_convergence_plot" title="Link to this definition">#</a></dt>
+<dd><p>Create convergence plot during gradient descent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>gd_results</strong><span class="classifier">list</span></dt><dd><p>List of (params, metric, p_value, psf_diameter, simulated_data) tuples from gradient descent</p>
+</dd>
+<dt><strong>threshold</strong><span class="classifier">float</span></dt><dd><p>Optimization metric threshold used for convergence</p>
+</dd>
+<dt><strong>output_file</strong><span class="classifier">Path</span></dt><dd><p>Output file path for saving the plot</p>
+</dd>
+<dt><strong>fraction</strong><span class="classifier">float, optional</span></dt><dd><p>PSF containment fraction for labeling (default: 0.8)</p>
+</dd>
+<dt><strong>use_ks_statistic</strong><span class="classifier">bool</span></dt><dd><p>Whether to use KS statistic or RMSD labels and titles</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_psf.create_monte_carlo_uncertainty_plot">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_psf.</span></span><span class="sig-name descname"><span class="pre">create_monte_carlo_uncertainty_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mc_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_ks_statistic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_psf.html#create_monte_carlo_uncertainty_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_psf.create_monte_carlo_uncertainty_plot" title="Link to this definition">#</a></dt>
+<dd><p>Create uncertainty analysis plots showing optimization metric and p-value distributions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mc_results</strong><span class="classifier">tuple</span></dt><dd><p>Results from Monte Carlo analysis: (mean_metric, std_metric, metric_values,
+mean_p, std_p, p_values, mean_psf_diameter, std_psf_diameter, psf_diameter_values)</p>
+</dd>
+<dt><strong>output_file</strong><span class="classifier">Path</span></dt><dd><p>Output file path for saving the plot</p>
+</dd>
+<dt><strong>fraction</strong><span class="classifier">float, optional</span></dt><dd><p>PSF containment fraction for labeling (default: 0.8)</p>
+</dd>
+<dt><strong>use_ks_statistic</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether KS statistic mode is being used (affects filename suffix)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_psf.create_optimization_plots">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_psf.</span></span><span class="sig-name descname"><span class="pre">create_optimization_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gd_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_to_plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_psf.html#create_optimization_plots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_psf.create_optimization_plots" title="Link to this definition">#</a></dt>
+<dd><p>Create optimization plots for all iterations if requested.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing command-line arguments with save_plots flag.</p>
+</dd>
+<dt><strong>gd_results</strong><span class="classifier">list</span></dt><dd><p>List of (params, rmsd, _, psf_diameter, _) tuples from gradient descent optimization.</p>
+</dd>
+<dt><strong>tel_model</strong><span class="classifier">TelescopeModel</span></dt><dd><p>Telescope model object for naming files.</p>
+</dd>
+<dt><strong>data_to_plot</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing measured PSF data.</p>
+</dd>
+<dt><strong>output_dir</strong><span class="classifier">Path</span></dt><dd><p>Directory where the PDF file will be saved.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Creates a PDF file with plots for optimization iterations. Only creates plots
+every 5 iterations plus the final iteration to avoid excessively large files.
+Returns early if save_plots flag is not set.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_psf.create_parameter_progression_plots">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_psf.</span></span><span class="sig-name descname"><span class="pre">create_parameter_progression_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_to_plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf_pages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_psf.html#create_parameter_progression_plots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_psf.create_parameter_progression_plots" title="Link to this definition">#</a></dt>
+<dd><p>Create plots for all parameter sets showing optimization progression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>results</strong><span class="classifier">list</span></dt><dd><p>List of (pars, ks_statistic, p_value, psf_diameter, simulated_data) tuples</p>
+</dd>
+<dt><strong>best_pars</strong><span class="classifier">dict</span></dt><dd><p>Best parameter set for highlighting</p>
+</dd>
+<dt><strong>data_to_plot</strong><span class="classifier">dict</span></dt><dd><p>Data dictionary for plotting</p>
+</dd>
+<dt><strong>pdf_pages</strong><span class="classifier">PdfPages</span></dt><dd><p>PDF pages object to save plots</p>
+</dd>
+<dt><strong>fraction</strong><span class="classifier">float, optional</span></dt><dd><p>PSF containment fraction (default: 0.8)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_psf.create_psf_parameter_plot">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_psf.</span></span><span class="sig-name descname"><span class="pre">create_psf_parameter_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_to_plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf_diameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_best</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf_pages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_ks_statistic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_psf.html#create_psf_parameter_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_psf.create_psf_parameter_plot" title="Link to this definition">#</a></dt>
+<dd><p>Create a plot for PSF simulation results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data_to_plot</strong><span class="classifier">dict</span></dt><dd><p>Data dictionary for plotting.</p>
+</dd>
+<dt><strong>pars</strong><span class="classifier">dict</span></dt><dd><p>Parameter set dictionary.</p>
+</dd>
+<dt><strong>psf_diameter</strong><span class="classifier">float</span></dt><dd><p>PSF diameter value.</p>
+</dd>
+<dt><strong>metric</strong><span class="classifier">float</span></dt><dd><p>RMSD value (if use_ks_statistic=False) or KS statistic (if use_ks_statistic=True).</p>
+</dd>
+<dt><strong>is_best</strong><span class="classifier">bool</span></dt><dd><p>Whether this is the best parameter set.</p>
+</dd>
+<dt><strong>pdf_pages</strong><span class="classifier">PdfPages</span></dt><dd><p>PDF pages object for saving plots.</p>
+</dd>
+<dt><strong>fraction</strong><span class="classifier">float, optional</span></dt><dd><p>PSF containment fraction (default: 0.8).</p>
+</dd>
+<dt><strong>p_value</strong><span class="classifier">float, optional</span></dt><dd><p>P-value from KS test (only used when use_ks_statistic=True).</p>
+</dd>
+<dt><strong>use_ks_statistic</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, metric is KS statistic; if False, metric is RMSD.</p>
+</dd>
+<dt><strong>second_metric</strong><span class="classifier">float, optional</span></dt><dd><p>Second metric value to display alongside the primary metric (for final best plot).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_psf.create_psf_vs_offaxis_plot">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_psf.</span></span><span class="sig-name descname"><span class="pre">create_psf_vs_offaxis_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_psf.html#create_psf_vs_offaxis_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_psf.create_psf_vs_offaxis_plot" title="Link to this definition">#</a></dt>
+<dd><p>Create PSF diameter vs off-axis angle plot using the best parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tel_model</strong><span class="classifier">TelescopeModel</span></dt><dd><p>Telescope model object.</p>
+</dd>
+<dt><strong>site_model</strong><span class="classifier">SiteModel</span></dt><dd><p>Site model object.</p>
+</dd>
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing parsed command-line arguments.</p>
+</dd>
+<dt><strong>best_pars</strong><span class="classifier">dict</span></dt><dd><p>Best parameter set.</p>
+</dd>
+<dt><strong>output_dir</strong><span class="classifier">Path</span></dt><dd><p>Output directory for saving plots.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_psf.get_psf_diameter_label">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_psf.</span></span><span class="sig-name descname"><span class="pre">get_psf_diameter_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fraction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cm'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_psf.html#get_psf_diameter_label"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_psf.get_psf_diameter_label" title="Link to this definition">#</a></dt>
+<dd><p>Generate PSF diameter label based on containment fraction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fraction</strong><span class="classifier">float</span></dt><dd><p>PSF containment fraction (e.g., 0.8 for D80, 0.95 for D95)</p>
+</dd>
+<dt><strong>unit</strong><span class="classifier">str, optional</span></dt><dd><p>Unit for the label (default: “cm”)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Formatted PSF diameter label (e.g., “D80 (cm)”, “D95 (cm)”, “D95”)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_psf.get_significance_label">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_psf.</span></span><span class="sig-name descname"><span class="pre">get_significance_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_psf.html#get_significance_label"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_psf.get_significance_label" title="Link to this definition">#</a></dt>
+<dd><p>Get significance label for p-value.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_psf.setup_pdf_plotting">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_psf.</span></span><span class="sig-name descname"><span class="pre">setup_pdf_plotting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_model_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_psf.html#setup_pdf_plotting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_psf.setup_pdf_plotting" title="Link to this definition">#</a></dt>
+<dd><p>Set up PDF plotting for gradient descent optimization if requested.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing command-line arguments with plot_all flag.</p>
+</dd>
+<dt><strong>output_dir</strong><span class="classifier">Path</span></dt><dd><p>Directory where the PDF file will be saved.</p>
+</dd>
+<dt><strong>tel_model_name</strong><span class="classifier">str</span></dt><dd><p>Name of the telescope model for filename generation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>PdfPages or None</dt><dd><p>PdfPages object for saving plots if plotting is requested, None otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Creates a PDF file for saving cumulative PSF plots during gradient descent
+optimization. Returns None if plotting is not requested via the plot_all flag.</p>
+</dd></dl>
+
+</section>
+<section id="module-visualization.plot_incident_angles">
+<span id="id5"></span><span id="plot-incident-angles"></span><h2>plot_incident_angles<a class="headerlink" href="#module-visualization.plot_incident_angles" title="Link to this heading">#</a></h2>
+<p>Plot incident angle histograms for focal, primary, and secondary mirrors.</p>
+<p>Plots the primary-mirror hit radius if available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">members<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
 </section>
 </section>
 
@@ -1373,14 +2206,20 @@ If not provided, no unit conversion is attempted.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.visualize">visualize</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.filter_plot_kwargs"><code class="docutils literal notranslate"><span class="pre">filter_plot_kwargs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.get_colors"><code class="docutils literal notranslate"><span class="pre">get_colors()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.get_lines"><code class="docutils literal notranslate"><span class="pre">get_lines()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.get_markers"><code class="docutils literal notranslate"><span class="pre">get_markers()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.handle_kwargs"><code class="docutils literal notranslate"><span class="pre">handle_kwargs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_1d"><code class="docutils literal notranslate"><span class="pre">plot_1d()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_hist_2d"><code class="docutils literal notranslate"><span class="pre">plot_hist_2d()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_main_data"><code class="docutils literal notranslate"><span class="pre">plot_main_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_ratio_difference"><code class="docutils literal notranslate"><span class="pre">plot_ratio_difference()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_table"><code class="docutils literal notranslate"><span class="pre">plot_table()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.prepare_data"><code class="docutils literal notranslate"><span class="pre">prepare_data()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.save_figure"><code class="docutils literal notranslate"><span class="pre">save_figure()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.set_style"><code class="docutils literal notranslate"><span class="pre">set_style()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.setup_plot"><code class="docutils literal notranslate"><span class="pre">setup_plot()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.legend_handlers">legend_handlers</a><ul class="nav section-nav flex-column">
@@ -1436,12 +2275,41 @@ If not provided, no unit conversion is attempted.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_array_layout">plot_array_layout</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.create_patches"><code class="docutils literal notranslate"><span class="pre">create_patches()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.finalize_plot"><code class="docutils literal notranslate"><span class="pre">finalize_plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.get_patches"><code class="docutils literal notranslate"><span class="pre">get_patches()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.get_positions"><code class="docutils literal notranslate"><span class="pre">get_positions()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.get_sphere_radius"><code class="docutils literal notranslate"><span class="pre">get_sphere_radius()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.get_telescope_name"><code class="docutils literal notranslate"><span class="pre">get_telescope_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.get_telescope_patch"><code class="docutils literal notranslate"><span class="pre">get_telescope_patch()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.plot_array_layout"><code class="docutils literal notranslate"><span class="pre">plot_array_layout()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.update_legend"><code class="docutils literal notranslate"><span class="pre">update_legend()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_camera">plot_camera</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_camera.plot_pixel_layout"><code class="docutils literal notranslate"><span class="pre">plot_pixel_layout()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot-corsika-histograms">plot_corsika_histograms</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.build_all_photon_figures"><code class="docutils literal notranslate"><span class="pre">build_all_photon_figures()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.derive_event_1d_histograms"><code class="docutils literal notranslate"><span class="pre">derive_event_1d_histograms()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.derive_event_2d_histograms"><code class="docutils literal notranslate"><span class="pre">derive_event_2d_histograms()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.export_all_photon_figures_pdf"><code class="docutils literal notranslate"><span class="pre">export_all_photon_figures_pdf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_1d_event_header_distribution"><code class="docutils literal notranslate"><span class="pre">plot_1d_event_header_distribution()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_2d_counts"><code class="docutils literal notranslate"><span class="pre">plot_2d_counts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_2d_density"><code class="docutils literal notranslate"><span class="pre">plot_2d_density()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_2d_direction"><code class="docutils literal notranslate"><span class="pre">plot_2d_direction()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_2d_event_header_distribution"><code class="docutils literal notranslate"><span class="pre">plot_2d_event_header_distribution()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_2d_num_photons_per_telescope"><code class="docutils literal notranslate"><span class="pre">plot_2d_num_photons_per_telescope()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_2d_time_altitude"><code class="docutils literal notranslate"><span class="pre">plot_2d_time_altitude()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_altitude_distr"><code class="docutils literal notranslate"><span class="pre">plot_altitude_distr()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_counts_distr"><code class="docutils literal notranslate"><span class="pre">plot_counts_distr()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_density_distr"><code class="docutils literal notranslate"><span class="pre">plot_density_distr()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_photon_per_event_distr"><code class="docutils literal notranslate"><span class="pre">plot_photon_per_event_distr()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_photon_per_telescope_distr"><code class="docutils literal notranslate"><span class="pre">plot_photon_per_telescope_distr()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_time_distr"><code class="docutils literal notranslate"><span class="pre">plot_time_distr()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.plot_wavelength_distr"><code class="docutils literal notranslate"><span class="pre">plot_wavelength_distr()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_corsika_histograms.save_figs_to_pdf"><code class="docutils literal notranslate"><span class="pre">save_figs_to_pdf()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_tables">plot_tables</a><ul class="nav section-nav flex-column">
@@ -1456,6 +2324,7 @@ If not provided, no unit conversion is attempted.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_simtel_events">plot_simtel_events</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_simtel_events.generate_and_save_plots"><code class="docutils literal notranslate"><span class="pre">generate_and_save_plots()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_simtel_events.plot_simtel_event_image"><code class="docutils literal notranslate"><span class="pre">plot_simtel_event_image()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_simtel_events.plot_simtel_integrated_pedestal_image"><code class="docutils literal notranslate"><span class="pre">plot_simtel_integrated_pedestal_image()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_simtel_events.plot_simtel_integrated_signal_image"><code class="docutils literal notranslate"><span class="pre">plot_simtel_integrated_signal_image()</span></code></a></li>
@@ -1465,6 +2334,24 @@ If not provided, no unit conversion is attempted.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_simtel_events.plot_simtel_waveform_matrix"><code class="docutils literal notranslate"><span class="pre">plot_simtel_waveform_matrix()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_simtel_event_histograms">plot_simtel_event_histograms</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_simtel_event_histograms.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_psf">plot_psf</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_psf.create_detailed_parameter_plot"><code class="docutils literal notranslate"><span class="pre">create_detailed_parameter_plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_psf.create_gradient_descent_convergence_plot"><code class="docutils literal notranslate"><span class="pre">create_gradient_descent_convergence_plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_psf.create_monte_carlo_uncertainty_plot"><code class="docutils literal notranslate"><span class="pre">create_monte_carlo_uncertainty_plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_psf.create_optimization_plots"><code class="docutils literal notranslate"><span class="pre">create_optimization_plots()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_psf.create_parameter_progression_plots"><code class="docutils literal notranslate"><span class="pre">create_parameter_progression_plots()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_psf.create_psf_parameter_plot"><code class="docutils literal notranslate"><span class="pre">create_psf_parameter_plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_psf.create_psf_vs_offaxis_plot"><code class="docutils literal notranslate"><span class="pre">create_psf_vs_offaxis_plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_psf.get_psf_diameter_label"><code class="docutils literal notranslate"><span class="pre">get_psf_diameter_label()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_psf.get_significance_label"><code class="docutils literal notranslate"><span class="pre">get_significance_label()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_psf.setup_pdf_plotting"><code class="docutils literal notranslate"><span class="pre">setup_pdf_plotting()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_incident_angles">plot_incident_angles</a></li>
 </ul>
   </nav></div>
 

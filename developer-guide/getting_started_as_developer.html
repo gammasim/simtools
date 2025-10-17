@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Developer Guide" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -460,11 +460,11 @@
   <section id="getting-started-as-developer">
 <h1>Getting Started as Developer<a class="headerlink" href="#getting-started-as-developer" title="Link to this heading">#</a></h1>
 <p>The developer environment for simtools consists of the simtools packages, the CORSIKA/sim_telarray packages, and the model database.
-The usage of the docker container for developers is strongly recommended and assumed to be the default environment for developers.
+The usage of the container for developers is strongly recommended and assumed to be the default environment for developers.
 Note the correct setting of environment variables to connect to the model database (see also the <a class="reference internal" href="../user-guide/getting_started.html"><span class="std std-doc">user’s guide</span></a>)
 and to point to the simulation software paths.</p>
-<section id="docker-environment-for-developers">
-<h2>Docker Environment for Developers<a class="headerlink" href="#docker-environment-for-developers" title="Link to this heading">#</a></h2>
+<section id="container-environment-for-developers">
+<h2>Container Environment for Developers<a class="headerlink" href="#container-environment-for-developers" title="Link to this heading">#</a></h2>
 <p>Container images for developers are available from the <a class="reference external" href="https://github.com/gammasim/simtools/pkgs/container/simtools-dev">GitHub container registry</a>.
 The images contain:</p>
 <ul class="simple">
@@ -472,9 +472,9 @@ The images contain:</p>
 <li><p>a python environment with all simtools dependencies (including the <code class="docutils literal notranslate"><span class="pre">dev</span></code> options of the project)</p></li>
 <li><p>g++ compiler and other build tools</p></li>
 </ul>
-<p>The corresponding docker file is <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-dev">./docker/Dockerfile-dev</a>.</p>
+<p>The corresponding Docker file is <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-dev">./docker/Dockerfile-dev</a>.</p>
 <p>The simtools package is not installed in the container, but should be installed from source. This allows to develop using your editor of choice.</p>
-<p>The following steps outline how to set up the development environment using Docker:</p>
+<p>The following steps outline how to set up the development environment using containers</p>
 <ol class="arabic">
 <li><p>Clone simtools from GitHub into a directory <code class="docutils literal notranslate"><span class="pre">external/simtools</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a working directory</span>
@@ -485,7 +485,7 @@ git<span class="w"> </span>clone<span class="w"> </span>https://github.com/gamma
 </div>
 </li>
 <li><p>Start up a container (the image will be downloaded, if it is not available in your environment):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/external:/workdir/external&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/external:/workdir/external&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>ghcr.io/gammasim/simtools-dev:latest<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;source /workdir/env/bin/activate &amp;&amp; cd /workdir/external/simtools &amp;&amp; pip install -e . &amp;&amp; bash&quot;</span>
 </pre></div>
@@ -496,8 +496,8 @@ the environmental variable <code class="docutils literal notranslate"><span clas
 </li>
 </ol>
 </section>
-<section id="installation-without-docker">
-<h2>Installation without Docker<a class="headerlink" href="#installation-without-docker" title="Link to this heading">#</a></h2>
+<section id="installation-without-containers">
+<h2>Installation without Containers<a class="headerlink" href="#installation-without-containers" title="Link to this heading">#</a></h2>
 <p>Developers can install simtools directly from the <a class="reference external" href="https://github.com/gammasim/simtools">simtools GitHub repository</a>:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/gammasim/simtools.git</span>
 <span class="go">cd simtools</span>
@@ -509,7 +509,7 @@ the environmental variable <code class="docutils literal notranslate"><span clas
 <span class="go">pip install -e .</span>
 </pre></div>
 </div>
-<p>To install the CORSIKA/sim_telarray packages, follow the installation instructions in the relevant manuals. A good guideline is also the step-by-step instructions outlined in the <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtelarray">CORSIKA/sim_telarray docker file</a>.</p>
+<p>To install the CORSIKA/sim_telarray packages, follow the installation instructions in the relevant manuals. A good guideline is also the step-by-step instructions outlined in the <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-corsika-simtel">CORSIKA/sim_telarray Docker file</a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The installation of CORSIKA/sim_telarray from source requires access to the
@@ -576,8 +576,8 @@ sim_telarray packages at MPIK (password applies).</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-environment-for-developers">Docker Environment for Developers</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-without-docker">Installation without Docker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-environment-for-developers">Container Environment for Developers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-without-containers">Installation without Containers</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-your-installation">Testing your installation</a></li>
 </ul>
   </nav></div>

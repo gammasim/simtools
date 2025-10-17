@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Testing" href="testing.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -460,6 +460,101 @@
   <section id="continuous-integration">
 <h1>Continuous Integration<a class="headerlink" href="#continuous-integration" title="Link to this heading">#</a></h1>
 <p>The simtools continuous integration tests, lints, and builds code, documentation and binaries. The CI is based on GitHub Actions and defined in the <code class="docutils literal notranslate"><span class="pre">.github/workflows</span></code> directory. This page documents the simtools CI workflows.</p>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Workflow</p></th>
+<th class="head text-right"><p>PR</p></th>
+<th class="head text-right"><p>PR (path filter)</p></th>
+<th class="head text-right"><p>PR (types)</p></th>
+<th class="head text-right"><p>release</p></th>
+<th class="head text-right"><p>schedule</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CI-docs</span></code></p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>opened, ready_for_review</p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CI-linter</span></code></p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>opened, synchronize</p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>nightly</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CI-unittests</span></code></p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">docs/**</span></code>, <code class="docutils literal notranslate"><span class="pre">tests/integration_tests/**</span></code></p></td>
+<td class="text-right"><p>opened, synchronize</p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p>nightly</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CI-integrationtests</span></code></p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">docs/**</span></code>, <code class="docutils literal notranslate"><span class="pre">tests/unit_tests/**</span></code></p></td>
+<td class="text-right"><p>opened, synchronize</p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p>nightly</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CI-schema-validation</span></code></p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">src/simtools/schemas/model_parameters</span></code>, <code class="docutils literal notranslate"><span class="pre">src/simtools/schemas/test_config</span></code></p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CI-software-update</span></code></p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>monthly</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">build-corsika-simtel</span></code></p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">docker/Dockerfile-corsika-simtel</span></code></p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p>weekly (no deploy)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">build-simtools</span></code></p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">docker/Dockerfile-prod-opt</span></code></p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p>weekly (no deploy)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">build-simtools-dev</span></code></p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">docker/Dockerfile-dev</span></code></p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p>weekly (no deploy)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">changelog</span></code></p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>opened, labeled, unlabeled, ready_for_review</p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pypi</span></code></p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>x</p></td>
+<td class="text-right"><p>-</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>All workflows can be triggered manually (<code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code>).</p>
+</section>
 <section id="units-tests">
 <h2>Units tests<a class="headerlink" href="#units-tests" title="Link to this heading">#</a></h2>
 <p>Unit tests are testing the code on a module and function level, see the <a class="reference internal" href="testing.html#unit-tests"><span class="std std-ref">unit tests</span></a> documentation for more details.</p>
@@ -506,10 +601,11 @@ The documentation is built into the <a class="reference internal" href="#.github
 <h2>Binary builds<a class="headerlink" href="#binary-builds" title="Link to this heading">#</a></h2>
 <p>Binary builds are done in two ways:</p>
 <ul class="simple">
-<li><p>containers for CORSIKA and sim_telarray, see <a class="reference internal" href="#.github/workflows/build-docker-corsika-simtelarray-image.yml"><span class="xref myst">build-docker-corsika-simtelarray-image.yml</span></a></p></li>
-<li><p>containers for simtools, see <a class="reference internal" href="#.github/workflows/build-docker-images.yml"><span class="xref myst">build-docker-images.yml</span></a></p></li>
+<li><p>containers for CORSIKA and sim_telarray, see <a class="reference internal" href="#.github/workflows/build-corsika-simtel.yml"><span class="xref myst">build-corsika-simtel.yml</span></a></p></li>
+<li><p>containers for simtools, see <a class="reference internal" href="#.github/workflows/build-simtools.yml"><span class="xref myst">build-simtools.yml</span></a></p></li>
+<li><p>containers for simtools development, see <a class="reference internal" href="#.github/workflows/build-simtools-dev.yml"><span class="xref myst">build-simtools-dev.yml</span></a></p></li>
 </ul>
-<p>Builds are done for the platforms: linux/amd64,linux/arm64/v8.</p>
+<p>Builds are done for the platforms: linux/amd64,linux/arm64/v8 (the latter only for non-vector-optimized builds).</p>
 </section>
 <section id="deployment">
 <h2>Deployment<a class="headerlink" href="#deployment" title="Link to this heading">#</a></h2>
@@ -564,6 +660,7 @@ The documentation is built into the <a class="reference internal" href="#.github
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#units-tests">Units tests</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-tests">Integration tests</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linting">Linting</a></li>

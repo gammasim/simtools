@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -502,9 +502,9 @@
 
     <span class="n">simulated_energies</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">simulation_config</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">with</span> <span class="n">SimTelFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">SimTelFile</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">skip_non_triggered</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">simulation_config</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mc_run_headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">iter_mc_events</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">simulated_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">&quot;mc_shower&quot;</span><span class="p">][</span><span class="s2">&quot;energy&quot;</span><span class="p">])</span>
 
     <span class="c1"># The relative tolerance is set to 1% because ~0.5% shower simulations do not</span>

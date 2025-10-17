@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -491,6 +491,12 @@
 <span class="sd">    Range of the both axes in meters.</span>
 <span class="sd">marker_scaling : float, optional.</span>
 <span class="sd">    Scaling factor for plotting of array elements, optional.</span>
+<span class="sd">grayed_out_array_elements : list, optional</span>
+<span class="sd">    List of array elements to plot as gray circles.</span>
+<span class="sd">highlighted_array_elements : list, optional</span>
+<span class="sd">    List of array elements to plot with red circles around them.</span>
+<span class="sd">legend_location : str, optional</span>
+<span class="sd">    Location of the legend (default &quot;best&quot;).</span>
 
 <span class="sd">Examples</span>
 <span class="sd">--------</span>
@@ -532,41 +538,39 @@
 <span class="sd">.. code-block:: console</span>
 
 <span class="sd">    simtools-plot-array-layout --site North --plot_all_layouts --model_version=6.0.0</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="sd">Plot layout with some telescopes grayed out and others highlighted:</span>
+
+<span class="sd">.. code-block:: console</span>
+
+<span class="sd">    simtools-plot-array-layout --site North</span>
+<span class="sd">                               --array_layout_name alpha</span>
+<span class="sd">                               --model_version=6.0.0</span>
+<span class="sd">                               --grayed_out_array_elements LSTN-01 LSTN-02</span>
+<span class="sd">                               --highlighted_array_elements MSTN-01 MSTN-02</span>
+<span class="sd">                               --legend_location &quot;upper right&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpl</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.layout.array_layout_utils</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">layout_utils</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.application_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_application_label</span><span class="p">,</span> <span class="n">startup_application</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">visualize</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization.plot_array_layout</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_array_layout</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">usage</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parse command line configuration.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    label : str</span>
-<span class="sd">        Label describing the application.</span>
-<span class="sd">    description : str</span>
-<span class="sd">        Description of the application.</span>
-<span class="sd">    usage : str</span>
-<span class="sd">        Example on how to use the application.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    CommandLineParser</span>
-<span class="sd">        Command line parser object.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span> <span class="n">usage</span><span class="o">=</span><span class="n">usage</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse command line configuration.&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">get_application_label</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Plots array layout.&quot;</span><span class="p">,</span>
+        <span class="n">usage</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Use &#39;--array_layout_name plot_all&#39; to plot all layouts for the given site &quot;</span>
+            <span class="s2">&quot;and model version.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
 
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--figure_name&quot;</span><span class="p">,</span>
@@ -611,6 +615,33 @@
         <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--grayed_out_array_elements&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of array elements to plot as gray circles.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--highlighted_array_elements&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of array elements to plot with red circles around them.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--legend_location&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Location of the legend (e.g., &#39;best&#39;, &#39;upper right&#39;, &#39;upper left&#39;, &quot;</span>
+            <span class="s2">&quot;&#39;lower left&#39;, &#39;lower right&#39;, &#39;right&#39;, &#39;center left&#39;, &#39;center right&#39;, &quot;</span>
+            <span class="s2">&quot;&#39;lower center&#39;, &#39;upper center&#39;, &#39;center&#39;).&quot;</span>
+        <span class="p">),</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
         <span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">simulation_model</span><span class="o">=</span><span class="p">[</span>
@@ -636,8 +667,8 @@
 <span class="sd">        Dictionary with command line arguments.</span>
 <span class="sd">    db_config : dict</span>
 <span class="sd">        Database configuration.</span>
-<span class="sd">    logger : logging.Logger</span>
-<span class="sd">        Logger instance.</span>
+<span class="sd">    logger : logging.app_context.logger</span>
+<span class="sd">        app_context.logger instance.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -688,28 +719,17 @@
 <a class="viewcode-back" href="../user-guide/applications/simtools-plot-array-layout.html#plot_array_layout.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot array layout application.&quot;&quot;&quot;</span>
-    <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
-    <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span>
-        <span class="n">label</span><span class="p">,</span>
-        <span class="p">(</span>
-            <span class="s2">&quot;Plots array layout.&quot;</span>
-            <span class="s2">&quot;Use &#39;--array_layout_name plot_all&#39; to plot all layouts for the given site &quot;</span>
-            <span class="s2">&quot;and model version.&quot;</span>
-        <span class="p">),</span>
-    <span class="p">)</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
-    <span class="n">io_handler_instance</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">)</span>
 
-    <span class="n">layouts</span> <span class="o">=</span> <span class="n">read_layouts</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="n">layouts</span> <span class="o">=</span> <span class="n">read_layouts</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">app_context</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span> <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name_background&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name_background&quot;</span><span class="p">):</span>
         <span class="n">background_layout</span> <span class="o">=</span> <span class="n">layout_utils</span><span class="o">.</span><span class="n">get_array_layouts_from_db</span><span class="p">(</span>
-            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name_background&quot;</span><span class="p">],</span>
-            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
-            <span class="n">db_config</span><span class="p">,</span>
-            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">],</span>
+            <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;array_layout_name_background&quot;</span><span class="p">],</span>
+            <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+            <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+            <span class="n">app_context</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span>
+            <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">],</span>
         <span class="p">)[</span><span class="s2">&quot;array_elements&quot;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">background_layout</span> <span class="o">=</span> <span class="kc">None</span>
@@ -718,29 +738,31 @@
     <span class="k">for</span> <span class="n">layout</span> <span class="ow">in</span> <span class="n">layouts</span><span class="p">:</span>
         <span class="n">fig_out</span> <span class="o">=</span> <span class="n">plot_array_layout</span><span class="p">(</span>
             <span class="n">telescopes</span><span class="o">=</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;array_elements&quot;</span><span class="p">],</span>
-            <span class="n">show_tel_label</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;show_labels&quot;</span><span class="p">],</span>
-            <span class="n">axes_range</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;axes_range&quot;</span><span class="p">],</span>
-            <span class="n">marker_scaling</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;marker_scaling&quot;</span><span class="p">],</span>
+            <span class="n">show_tel_label</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;show_labels&quot;</span><span class="p">],</span>
+            <span class="n">axes_range</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;axes_range&quot;</span><span class="p">],</span>
+            <span class="n">marker_scaling</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;marker_scaling&quot;</span><span class="p">],</span>
             <span class="n">background_telescopes</span><span class="o">=</span><span class="n">background_layout</span><span class="p">,</span>
+            <span class="n">grayed_out_elements</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;grayed_out_array_elements&quot;</span><span class="p">],</span>
+            <span class="n">highlighted_elements</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;highlighted_array_elements&quot;</span><span class="p">],</span>
+            <span class="n">legend_location</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;legend_location&quot;</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="n">site_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">if</span> <span class="n">layout</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">site_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">layout</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">elif</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">site_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">elif</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">site_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">coordinate_system_string</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;coordinate_system&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">layout</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;coordinate_system&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">layout</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
             <span class="k">else</span> <span class="s2">&quot;&quot;</span>
         <span class="p">)</span>
-        <span class="n">plot_file_name</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;figure_name&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="p">(</span>
+        <span class="n">plot_file_name</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;figure_name&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;array_layout_</span><span class="si">{</span><span class="n">layout</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}{</span><span class="n">site_string</span><span class="si">}{</span><span class="n">coordinate_system_string</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
         <span class="n">visualize</span><span class="o">.</span><span class="n">save_figure</span><span class="p">(</span>
             <span class="n">fig_out</span><span class="p">,</span>
-            <span class="n">io_handler_instance</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s2">&quot;application-plots&quot;</span><span class="p">)</span>
-            <span class="o">/</span> <span class="n">plot_file_name</span><span class="p">,</span>
+            <span class="n">app_context</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span> <span class="o">/</span> <span class="n">plot_file_name</span><span class="p">,</span>
             <span class="n">dpi</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>

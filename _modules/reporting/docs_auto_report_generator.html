@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -615,7 +615,11 @@
 
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Markdown report generated for </span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2"> Telescope </span><span class="si">{</span><span class="n">telescope</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span></div>
+            <span class="p">)</span>
+
+        <span class="c1"># Also generate calibration device parameter comparison reports when using --all_telescopes</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;all_telescopes&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_generate_calibration_device_parameter_reports</span><span class="p">()</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_generate_observatory_report_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
@@ -660,7 +664,117 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate all observatory reports based on which --all_* flags are passed.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">params</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_observatory_report_combinations</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_generate_single_observatory_report</span><span class="p">(</span><span class="o">*</span><span class="n">params</span><span class="p">)</span></div>
-</div>
+
+
+<div class="viewcode-block" id="ReportGenerator.auto_generate_simulation_configuration_reports">
+<a class="viewcode-back" href="../../api-reference/reporting.html#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_simulation_configuration_reports">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">auto_generate_simulation_configuration_reports</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate simulation configuration reports for one or all model versions.</span>
+
+<span class="sd">        If --all_model_versions is set, produce reports for every model version in</span>
+<span class="sd">        the DB; otherwise produce reports only for the configured model_version.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">model_versions</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_versions</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;all_model_versions&quot;</span><span class="p">)</span>
+            <span class="k">else</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]]</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">model_versions</span><span class="p">:</span>
+            <span class="c1"># update args and create a per-version output directory</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;model_version&quot;</span><span class="p">:</span> <span class="n">version</span><span class="p">})</span>
+            <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span> <span class="o">/</span> <span class="nb">str</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+
+            <span class="n">ReadParameters</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">output_path</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">produce_simulation_configuration_report</span><span class="p">()</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Configuration reports for (v</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">) produced: </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ReportGenerator.auto_generate_calibration_reports">
+<a class="viewcode-back" href="../../api-reference/reporting.html#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_calibration_reports">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">auto_generate_calibration_reports</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate calibration reports for one or all model versions.</span>
+
+<span class="sd">        Mirrors the pattern used by other auto_generate_* methods: if</span>
+<span class="sd">        --all_model_versions is set, produce reports for every model version in</span>
+<span class="sd">        the DB; otherwise produce reports only for the configured model_version.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">model_versions</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_versions</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;all_model_versions&quot;</span><span class="p">)</span>
+            <span class="k">else</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]]</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">model_versions</span><span class="p">:</span>
+            <span class="c1"># update args and create a per-version output directory</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;model_version&quot;</span><span class="p">:</span> <span class="n">version</span><span class="p">})</span>
+            <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span> <span class="o">/</span> <span class="nb">str</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ReadParameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">produce_calibration_reports</span><span class="p">()</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Calibration reports for (v</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">) produced: </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="c1"># Some model versions do not have calibration_devices in the DB;</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s2">&quot;calibration_devices&quot;</span> <span class="ow">in</span> <span class="n">msg</span> <span class="ow">and</span> <span class="s2">&quot;zero results&quot;</span> <span class="ow">in</span> <span class="n">msg</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Skipping model version </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">: no calibration devices defined (</span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">)&quot;</span>
+                    <span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="c1"># re-raise unexpected ValueErrors</span>
+                <span class="k">raise</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_calibration_device_parameter_reports</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate parameter comparison reports for calibration devices for all model versions.&quot;&quot;&quot;</span>
+        <span class="c1"># Get all model versions since no specific version is provided when using --all_telescopes</span>
+        <span class="n">model_versions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_versions</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">model_versions</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process_calibration_devices_for_version</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_calibration_devices_for_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process calibration devices for a specific model version.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Get all calibration devices for this version</span>
+            <span class="n">calibration_array_elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_array_elements</span><span class="p">(</span>
+                <span class="n">version</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;calibration_devices&quot;</span>
+            <span class="p">)</span>
+            <span class="n">array_elements</span> <span class="o">=</span> <span class="n">calibration_array_elements</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+            <span class="c1"># Add design models</span>
+            <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">calibration_array_elements</span><span class="p">:</span>
+                <span class="n">design_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_design_model</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">design_model</span> <span class="ow">and</span> <span class="n">design_model</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="p">:</span>
+                    <span class="n">array_elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">design_model</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">array_elements</span><span class="p">:</span>
+                <span class="c1"># Create a copy of args with the current version for this iteration</span>
+                <span class="n">version_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">version_args</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span>
+
+                <span class="c1"># Generate parameter comparison reports for calibration devices</span>
+                <span class="n">ReadParameters</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span> <span class="n">version_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">generate_model_parameter_reports_for_devices</span><span class="p">(</span><span class="n">array_elements</span><span class="p">)</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;Calibration device parameter reports generated for&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; v</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="c1"># Some model versions may not have calibration_devices</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;calibration_devices&quot;</span> <span class="ow">in</span> <span class="n">msg</span> <span class="ow">and</span> <span class="s2">&quot;zero results&quot;</span> <span class="ow">in</span> <span class="n">msg</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Skipping model version </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">: no calibration devices defined (</span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span>
+            <span class="c1"># re-raise unexpected ValueErrors</span>
+            <span class="k">raise</span></div>
 
 </pre></div>
 

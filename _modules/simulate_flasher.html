@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -436,145 +436,140 @@
 <span></span><span class="ch">#!/usr/bin/python3</span>
 
 <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Simulate flasher devices using the light emission package.</span>
+<span class="sd">Simulate flasher devices used e.g. for camera flat fielding.</span>
 
-<span class="sd">Run the application in the command line.</span>
+<span class="sd">The flasher simulation allows for two different run modes:</span>
+
+<span class="sd">1. Direct injection of light into the camera (bypassing the telescope optics).</span>
+<span class="sd">2. Simulation of the full light path (using the light-emission package from sim_telarray).</span>
+
+<span class="sd">The direct injection mode uses a simplified model for the flasher light source. Both run modes</span>
+<span class="sd">provide events in sim_telarray format that can be processed by standard analysis steps or</span>
+<span class="sd">visualized using e.g. the &#39;simtools-plot-simtel-events&#39; application.</span>
 
 <span class="sd">Example Usage</span>
 <span class="sd">-------------</span>
 
-<span class="sd">1. Simulate flashers for a telescope:</span>
+<span class="sd">1. Simulate flashers for a telescope (direct injection):</span>
 
 <span class="sd">    .. code-block:: console</span>
 
-<span class="sd">        simtools-simulate-flasher --telescope MSTN-04 --site North \</span>
-<span class="sd">        --flasher FLSN-01 --model_version 6.0.0</span>
+<span class="sd">        simtools-simulate-flasher --run_mode direct_injection \</span>
+<span class="sd">        --light_source MSFx-FlashCam --model_version 6.0.0 \</span>
+<span class="sd">        --array_layout_name subsystem_msts --site South \</span>
+<span class="sd">        --run_number 3</span>
+
+<span class="sd">2. Simulate flashers for a telescope (detailed simulation):</span>
+
+<span class="sd">    .. code-block:: console</span>
+
+<span class="sd">        simtools-simulate-flasher --run_mode full_simulation \</span>
+<span class="sd">        --light_source MSFx-FlashCam --model_version 6.0.0 \</span>
+<span class="sd">        --telescope MSTS-04 --site South</span>
 
 <span class="sd">Command Line Arguments</span>
 <span class="sd">----------------------</span>
+<span class="sd">run_mode (str, required)</span>
+<span class="sd">    Run mode, either &quot;direct_injection&quot; or &quot;full_simulation&quot;.</span>
 <span class="sd">telescope (str, required)</span>
 <span class="sd">    Telescope model name (e.g. LSTN-01, MSTN-04, SSTS-04, ...)</span>
 <span class="sd">site (str, required)</span>
 <span class="sd">    Site name (North or South).</span>
-<span class="sd">flasher (str, required)</span>
-<span class="sd">    Flasher device in array, e.g., FLSN-01.</span>
+<span class="sd">light_source (str, required)</span>
+<span class="sd">    Calibration light source, e.g., MSFx-FlashCam</span>
 <span class="sd">number_of_events (int, optional):</span>
 <span class="sd">    Number of events to simulate (default: 1).</span>
 <span class="sd">output_prefix (str, optional):</span>
 <span class="sd">    Prefix for output files (default: empty).</span>
 <span class="sd">model_version (str, optional)</span>
 <span class="sd">    Version of the simulation model.</span>
-
-<span class="sd">Example</span>
-<span class="sd">-------</span>
-
-<span class="sd">Simulate flashers for MSTN-04:</span>
-
-<span class="sd">.. code-block:: console</span>
-
-<span class="sd">    simtools-simulate-flasher --telescope MSTN-04 --site North \</span>
-<span class="sd">    --flasher FLSN-01 --model_version 6.0.0</span>
-
-<span class="sd">Expected Output:</span>
-<span class="sd">    The simulation will run the light emission package for the flasher</span>
-<span class="sd">    devices and produce the output files.</span>
+<span class="sd">array_layout_name (str, optional)</span>
+<span class="sd">    Name of the array layout to use (required for direct injection mode).</span>
+<span class="sd">run_number (int, optional)</span>
+<span class="sd">    Run number to use (default: 1, required for direct injection mode).</span>
+<span class="sd">telescope (str, optional)</span>
+<span class="sd">    Telescope name (required for full simulation mode).</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.application_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_application_label</span><span class="p">,</span> <span class="n">startup_application</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.flasher_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlasherModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">initialize_simulation_models</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simulator_light_emission</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulatorLightEmission</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simulator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Simulator</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse command line configuration.&quot;&quot;&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
-        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Simulate flasher devices using the light emission package.&quot;</span><span class="p">),</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">get_application_label</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Simulate flasher devices.&quot;</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--flasher&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Flasher device in array associated with a specific telescope, i.e. FLSN-01&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--run_mode&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Flasher simulation run mode&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;direct_injection&quot;</span><span class="p">,</span> <span class="s2">&quot;full_simulation&quot;</span><span class="p">],</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;direct_injection&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--light_source&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Flasher device associated with a specific telescope, i.e. MSFx-FlashCam&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--number_events&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of number_events to simulate (default: 1)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--number_of_events&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of flasher events to simulate&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--output_prefix&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Prefix for output files (default: empty)&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Prefix for output files&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
-
     <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
         <span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">simulation_model</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">,</span> <span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
-        <span class="n">require_command_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">simulation_model</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;layout&quot;</span><span class="p">,</span> <span class="s2">&quot;telescope&quot;</span><span class="p">,</span> <span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+        <span class="n">simulation_configuration</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;corsika_configuration&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;run_number&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;sim_telarray_configuration&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
     <span class="p">)</span>
-
-
-<div class="viewcode-block" id="flasher_configs">
-<a class="viewcode-back" href="../user-guide/applications/simtools-simulate-flasher.html#simulate_flasher.flasher_configs">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">flasher_configs</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return default setup for flasher runs (no distances).&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;light_source_setup&quot;</span><span class="p">:</span> <span class="s2">&quot;layout&quot;</span><span class="p">}</span></div>
-
 
 
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../user-guide/applications/simtools-simulate-flasher.html#simulate_flasher.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the application.&quot;&quot;&quot;</span>
-    <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simulate flasher devices.&quot;&quot;&quot;</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">)</span>
 
-    <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
-
-    <span class="n">telescope_model</span><span class="p">,</span> <span class="n">site_model</span> <span class="o">=</span> <span class="n">initialize_simulation_models</span><span class="p">(</span>
-        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-        <span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
-        <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-        <span class="n">telescope_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">],</span>
-        <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+    <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Flasher simulation for telescope </span><span class="si">{</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;telescope&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot; with light source </span><span class="si">{</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;light_source&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;number_of_events&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> events, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;run mode: </span><span class="si">{</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;run_mode&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span>
     <span class="p">)</span>
 
-    <span class="n">flasher_model</span> <span class="o">=</span> <span class="n">FlasherModel</span><span class="p">(</span>
-        <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-        <span class="n">flasher_device_model_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;flasher&quot;</span><span class="p">],</span>
-        <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
-        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;run_mode&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;full_simulation&quot;</span><span class="p">:</span>
+        <span class="n">light_source</span> <span class="o">=</span> <span class="n">SimulatorLightEmission</span><span class="p">(</span>
+            <span class="n">light_emission_config</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">,</span>
+            <span class="n">db_config</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;run_mode&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;direct_injection&quot;</span><span class="p">:</span>
+        <span class="n">light_source</span> <span class="o">=</span> <span class="n">Simulator</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">,</span>
+            <span class="n">db_config</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported run_mode: </span><span class="si">{</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;run_mode&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="n">flasher_cfg</span> <span class="o">=</span> <span class="n">flasher_configs</span><span class="p">()</span>
-
-    <span class="n">sim_runner</span> <span class="o">=</span> <span class="n">SimulatorLightEmission</span><span class="p">(</span>
-        <span class="n">telescope_model</span><span class="o">=</span><span class="n">telescope_model</span><span class="p">,</span>
-        <span class="n">flasher_model</span><span class="o">=</span><span class="n">flasher_model</span><span class="p">,</span>
-        <span class="n">site_model</span><span class="o">=</span><span class="n">site_model</span><span class="p">,</span>
-        <span class="n">light_emission_config</span><span class="o">=</span><span class="n">args_dict</span><span class="p">,</span>
-        <span class="n">light_source_setup</span><span class="o">=</span><span class="n">flasher_cfg</span><span class="p">[</span><span class="s2">&quot;light_source_setup&quot;</span><span class="p">],</span>
-        <span class="n">simtel_path</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;simtel_path&quot;</span><span class="p">],</span>
-        <span class="n">light_source_type</span><span class="o">=</span><span class="s2">&quot;flasher&quot;</span><span class="p">,</span>
-        <span class="n">label</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span>
-        <span class="n">test</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-    <span class="p">)</span>
-
-    <span class="n">sim_runner</span><span class="o">.</span><span class="n">run_simulation</span><span class="p">()</span>
-
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Flasher simulation completed. Use simtools-plot-simtel-number_events for plots.&quot;</span><span class="p">)</span></div>
+    <span class="n">light_source</span><span class="o">.</span><span class="n">simulate</span><span class="p">()</span>
+    <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Flasher simulation completed.&quot;</span><span class="p">)</span></div>
 
 
 

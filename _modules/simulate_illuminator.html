@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -436,159 +436,100 @@
 <span></span><span class="ch">#!/usr/bin/python3</span>
 
 <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Simulate calibration devices using the light emission package.</span>
+<span class="sd">Simulate illuminator (distant calibration light source).</span>
 
-<span class="sd">Run the application in the command line.</span>
-<span class="sd">There are two ways this application can be executed:</span>
+<span class="sd">Illuminators are calibration light sources not attached to a particular telescope.</span>
+<span class="sd">Two types of illuminators are supported:</span>
 
-<span class="sd">1. Illuminator at varying distances.</span>
-<span class="sd">2. Illuminator and telescopes at fixed positions as defined in the layout.</span>
+<span class="sd">1. Illuminator as foreseen at CTAO with fixed positions as defined in the simulation models</span>
+<span class="sd">   database.</span>
+<span class="sd">2. Illuminator at a configurable position relative to the array center. Note that in this case</span>
+<span class="sd">   the telescope pointing is fixed towards zenith.</span>
 
 <span class="sd">Example Usage</span>
 <span class="sd">-------------</span>
 
-<span class="sd">1. Simulate light emission with varying distances:</span>
+<span class="sd">1. Simulate illuminator with positions as defined in the simulation models database:</span>
 
 <span class="sd">    .. code-block:: console</span>
 
-<span class="sd">        simtools-simulate-illuminator --telescope MSTN-04 --site North \</span>
-<span class="sd">        --illuminator ILLN-01 --light_source_setup variable \</span>
+<span class="sd">        simtools-simulate-illuminator --light_source ILLN-01 \</span>
+<span class="sd">        --telescope MSTN-04 --site North \</span>
 <span class="sd">        --model_version 6.0.0</span>
 
-<span class="sd">2. Simulate light emission with telescopes at fixed positions according to the layout:</span>
+<span class="sd">2. Simulate at a configurable position (1km above array center) and pointing downwards:</span>
 
 <span class="sd">    .. code-block:: console</span>
 
-<span class="sd">        simtools-simulate-illuminator --telescope MSTN-04 --site North \</span>
-<span class="sd">        --illuminator ILLN-01 --light_source_setup layout \</span>
+<span class="sd">        simtools-simulate-illuminator --light_source ILLN-01 \</span>
+<span class="sd">        --light_source_position 0. 0. 1000. \</span>
+<span class="sd">        --light_source_pointing 0. 0. -1. \</span>
+<span class="sd">        --telescope MSTN-15 --site North \</span>
 <span class="sd">        --model_version 6.0.0</span>
 
 <span class="sd">Command Line Arguments</span>
 <span class="sd">----------------------</span>
+<span class="sd">light_source (str, optional)</span>
+<span class="sd">    Illuminator in array, e.g., ILLN-01.</span>
+<span class="sd">number_of_events (int, optional)</span>
+<span class="sd">    Number of events to simulate.</span>
 <span class="sd">telescope (str, required)</span>
 <span class="sd">    Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, ...)</span>
 <span class="sd">site (str, required)</span>
 <span class="sd">    Site name (North or South).</span>
-<span class="sd">illuminator (str, optional)</span>
-<span class="sd">    Illuminator in array, e.g., ILLN-01.</span>
-<span class="sd">light_source_setup (str, optional)</span>
-<span class="sd">    Select calibration light source positioning/setup:</span>
-<span class="sd">    - &quot;variable&quot; for varying distances.</span>
-<span class="sd">    - &quot;layout&quot; for actual telescope positions.</span>
 <span class="sd">model_version (str, optional)</span>
 <span class="sd">    Version of the simulation model.</span>
-<span class="sd">off_axis_angle (float, optional)</span>
-<span class="sd">    Off axis angle for light source direction.</span>
-<span class="sd">number_events (int, optional)</span>
-<span class="sd">    Number of events to simulate.</span>
-
-
-<span class="sd">Example</span>
-<span class="sd">-------</span>
-
-<span class="sd">Simulate isotropic light source at different distances for the MSTN-04:</span>
-
-<span class="sd">.. code-block:: console</span>
-
-<span class="sd">    simtools-simulate-illuminator --telescope MSTN-04 --site North \</span>
-<span class="sd">    --illuminator ILLN-01 --light_source_setup variable \</span>
-<span class="sd">    --model_version 6.0.0    ```</span>
-
-<span class="sd">Expected Output:</span>
-
-<span class="sd">.. code-block:: console</span>
-
-<span class="sd">    light-emission package stage:</span>
-<span class="sd">    File &#39;/workdir/external/simtools/simtools-output/light_emission/model/</span>
-<span class="sd">        atmprof_ecmwf_north_winter_fixed.dat&#39; registered for atmospheric profile 99.</span>
-<span class="sd">    Atmospheric profile 99 to be read from file &#39;/workdir/external/simtools/</span>
-<span class="sd">        simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat&#39;.</span>
-<span class="sd">    Atmospheric profile 99 with 55 levels read from file /workdir/external/</span>
-<span class="sd">        simtools/simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat</span>
-<span class="sd">    Initialize atmosphere ranging from 0.000 to 120.000 km a.s.l.</span>
-<span class="sd">    IACT control parameter line: print_events 999 10 100 1000 0</span>
-<span class="sd">    Case 1: 1 event with 1e+10 photons.</span>
-<span class="sd">    Using IACT/ATMO package version 1.67 (2023-11-10) for CORSIKA 6.999</span>
-<span class="sd">    Output file /workdir/external/simtools/simtools-output/light_emission/xyzls.iact.gz</span>
-<span class="sd">        not yet created.</span>
-<span class="sd">    Telescope output file: &#39;/workdir/external/simtools/simtools-output/</span>
-<span class="sd">        light_emission/xyzls.iact.gz&#39;</span>
-<span class="sd">    ....</span>
-<span class="sd">    ....</span>
-<span class="sd">    Sim_telarray stage:</span>
-<span class="sd">    Telescope 1 triggered (1/0/0/0, mask 1), summation from 36 to 95 of 105</span>
-<span class="sd">    Event end data has been found.</span>
-<span class="sd">    Shower of 0.0000 TeV energy was seen in 1 of 1 cases.</span>
-<span class="sd">    Photon statistics:</span>
-<span class="sd">    All photons:               928518</span>
-<span class="sd">    Used photons:              928518</span>
-<span class="sd">    Not absorbed/max. Q.E.:    189560</span>
-<span class="sd">    Reflected on mirror:        26815</span>
-<span class="sd">    Camera hit:                 25574</span>
-<span class="sd">    Pixel hit:                  25574</span>
-<span class="sd">    Detected:                   20998</span>
-<span class="sd">    Trigger statistics:</span>
-<span class="sd">    Tel. triggered:             1</span>
-<span class="sd">    Tel. + array:               1</span>
-<span class="sd">    Early readout:              0</span>
-<span class="sd">    Late readout:               0</span>
-<span class="sd">    Finish data conversion ...</span>
-<span class="sd">    Writing 13 histograms to output file.</span>
-
+<span class="sd">light_source_position (float, float, float, optional)</span>
+<span class="sd">    Light source position (x,y,z) relative to the array center (ground coordinates) in</span>
+<span class="sd">    m. If not set, the position from the simulation model is used.</span>
+<span class="sd">light_source_pointing (float, float, float, optional)</span>
+<span class="sd">    Light source pointing direction. If not set, the pointing from the simulation model is used.</span>
+<span class="sd">output_prefix (str, optional)</span>
+<span class="sd">    Prefix for output files (default: empty).</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.application_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_application_label</span><span class="p">,</span> <span class="n">startup_application</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.calibration_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalibrationModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">initialize_simulation_models</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simulator_light_emission</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulatorLightEmission</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse command line configuration.&quot;&quot;&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
-        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">get_application_label</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">&quot;Simulate the light emission by an artificial light source for calibration purposes.&quot;</span>
+            <span class="s2">&quot;Simulate light emission by a calibration light source (not attached to a telescope).&quot;</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--off_axis_angle&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Off axis angle for light source direction&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--light_source_setup&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Select calibration light source positioning/setup: </span><span class="se">\</span>
-<span class="s2">              varying distances (variable), layout positions (layout)&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;layout&quot;</span><span class="p">,</span> <span class="s2">&quot;variable&quot;</span><span class="p">],</span>
-        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--distances_ls&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Light source distance in m (Example --distances_ls 800 1200)&quot;</span><span class="p">,</span>
-        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--illuminator&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Illuminator in array, i.e. ILLN-design&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--light_source&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Illuminator name, i.e. ILLN-design&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">configurable_light_source_args</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span>
+        <span class="s2">&quot;Configurable light source position and pointing (override simulation model values)&quot;</span>
+    <span class="p">)</span>
+    <span class="n">configurable_light_source_args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--light_source_position&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Light source position (x,y,z) relative to the array center (ground coordinates) in m&quot;</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="s2">&quot;Z&quot;</span><span class="p">),</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">configurable_light_source_args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--light_source_pointing&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Light source pointing direction &quot;</span>
+            <span class="s2">&quot;(Example for pointing downwards: --light_source_pointing 0 0 -1)&quot;</span>
+        <span class="p">),</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="s2">&quot;Z&quot;</span><span class="p">),</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--number_events&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--number_of_events&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of events to simulate&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -608,103 +549,18 @@
     <span class="p">)</span>
 
 
-<div class="viewcode-block" id="light_emission_configs">
-<a class="viewcode-back" href="../user-guide/applications/simtools-simulate-illuminator.html#simulate_illuminator.light_emission_configs">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">light_emission_configs</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Define default light emission configurations.</span>
-
-<span class="sd">    Predefined angular distribution names not requiring to read any table are</span>
-<span class="sd">    &quot;Isotropic&quot;, &quot;Gauss:&lt;rms&gt;&quot;, &quot;Rayleigh&quot;, &quot;Cone:&lt;angle&gt;&quot;, and &quot;FilledCone:&lt;angle&gt;&quot;, &quot;Parallel&quot;,</span>
-<span class="sd">    with all angles given in degrees, all with respect to the given direction vector</span>
-<span class="sd">    (vertically downwards if missing). If the light source has a non-zero length and velocity</span>
-<span class="sd">    (in units of the vacuum speed of light), it is handled as a moving source,</span>
-<span class="sd">    in the given direction.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    args_dict: dict</span>
-<span class="sd">        Dictionary with command line arguments.</span>
-
-<span class="sd">    args_dict: dict</span>
-<span class="sd">        Dictionary with command line arguments.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    default_config: dict</span>
-<span class="sd">        Default light emission configuration.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;light_source_setup&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;variable&quot;</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;x_pos&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;cm&quot;</span><span class="p">),</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span> <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;x_position&quot;</span><span class="p">]},</span>
-            <span class="s2">&quot;y_pos&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;cm&quot;</span><span class="p">),</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span> <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;y_position&quot;</span><span class="p">]},</span>
-            <span class="s2">&quot;z_pos&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;cm&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">600</span><span class="p">,</span> <span class="mi">800</span><span class="p">,</span> <span class="mi">1200</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="mi">4000</span><span class="p">]]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;z_position&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;direction&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;direction&quot;</span><span class="p">,</span> <span class="s2">&quot;cx,cy,cz&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-        <span class="p">}</span>
-        <span class="n">args_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">args_dict</span>
-    <span class="k">return</span> <span class="n">args_dict</span></div>
-
-
-
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../user-guide/applications/simtools-simulate-illuminator.html#simulate_illuminator.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simulate light emission.&quot;&quot;&quot;</span>
-    <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
-    <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-    <span class="n">light_emission_config</span> <span class="o">=</span> <span class="n">light_emission_configs</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">light_emission_config</span><span class="p">)</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
-
-    <span class="n">telescope_model</span><span class="p">,</span> <span class="n">site_model</span> <span class="o">=</span> <span class="n">initialize_simulation_models</span><span class="p">(</span>
-        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-        <span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
-        <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-        <span class="n">telescope_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">],</span>
-        <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
-    <span class="p">)</span>
-
-    <span class="n">calibration_model</span> <span class="o">=</span> <span class="n">CalibrationModel</span><span class="p">(</span>
-        <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-        <span class="n">calibration_device_model_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;illuminator&quot;</span><span class="p">],</span>
-        <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
-        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-    <span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simulate light emission from illuminator.&quot;&quot;&quot;</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">)</span>
 
     <span class="n">light_source</span> <span class="o">=</span> <span class="n">SimulatorLightEmission</span><span class="p">(</span>
-        <span class="n">telescope_model</span><span class="o">=</span><span class="n">telescope_model</span><span class="p">,</span>
-        <span class="n">calibration_model</span><span class="o">=</span><span class="n">calibration_model</span><span class="p">,</span>
-        <span class="n">site_model</span><span class="o">=</span><span class="n">site_model</span><span class="p">,</span>
-        <span class="n">light_emission_config</span><span class="o">=</span><span class="n">light_emission_config</span><span class="p">,</span>
-        <span class="n">light_source_setup</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;light_source_setup&quot;</span><span class="p">],</span>
-        <span class="n">simtel_path</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;simtel_path&quot;</span><span class="p">],</span>
-        <span class="n">light_source_type</span><span class="o">=</span><span class="s2">&quot;illuminator&quot;</span><span class="p">,</span>
-        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-        <span class="n">test</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">],</span>
+        <span class="n">light_emission_config</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">db_config</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;light_source_setup&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;variable&quot;</span><span class="p">:</span>
-        <span class="n">outputs</span> <span class="o">=</span> <span class="n">light_source</span><span class="o">.</span><span class="n">simulate_variable_distances</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;light_source_setup&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;layout&quot;</span><span class="p">:</span>
-        <span class="n">outputs</span> <span class="o">=</span> <span class="n">light_source</span><span class="o">.</span><span class="n">simulate_layout_positions</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">if</span> <span class="n">outputs</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Simulation outputs:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">))</span></div>
+    <span class="n">light_source</span><span class="o">.</span><span class="n">simulate</span><span class="p">()</span></div>
 
 
 

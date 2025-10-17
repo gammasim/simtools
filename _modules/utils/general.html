@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -448,20 +448,11 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;change_dict_keys_case&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;clear_default_sim_telarray_cfg_directories&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;collect_final_lines&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;collect_kwargs&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;get_log_excerpt&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;get_log_level_from_user&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;remove_substring_recursively_from_dict&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;set_default_kwargs&quot;</span><span class="p">,</span>
-<span class="p">]</span>
-
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
+<div class="viewcode-block" id="is_url">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.is_url">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_url</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Check if a string is a valid URL.</span>
@@ -481,9 +472,12 @@
         <span class="n">result</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="n">result</span><span class="o">.</span><span class="n">scheme</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">netloc</span><span class="p">])</span>
     <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
 
 
+
+<div class="viewcode-block" id="url_exists">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.url_exists">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">url_exists</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Check if a URL exists.</span>
@@ -503,7 +497,8 @@
             <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">200</span>
     <span class="k">except</span> <span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">URLError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;URL </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> does not exist: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
 
 
 <div class="viewcode-block" id="collect_kwargs">
@@ -654,6 +649,8 @@
 
 
 
+<div class="viewcode-block" id="ensure_iterable">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.ensure_iterable">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ensure_iterable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return input value as iterable.</span>
@@ -674,9 +671,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
-    <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span></div>
 
 
+
+<div class="viewcode-block" id="program_is_executable">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.program_is_executable">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">program_is_executable</span><span class="p">(</span><span class="n">program</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Check if program exists and is executable.</span>
@@ -703,7 +703,8 @@
             <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;PATH environment variable is not set.&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_search_directory</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">rec</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -725,6 +726,8 @@
     <span class="k">return</span> <span class="kc">None</span>
 
 
+<div class="viewcode-block" id="find_file">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.find_file">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_file</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">loc</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Search for files inside of given directories, recursively, and return its full path.</span>
@@ -761,9 +764,12 @@
 
     <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> could not be found in </span><span class="si">{</span><span class="n">all_locations</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 
+
+<div class="viewcode-block" id="resolve_file_patterns">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.resolve_file_patterns">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">resolve_file_patterns</span><span class="p">(</span><span class="n">file_names</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return a list of files names from string, list, or wildcard pattern.</span>
@@ -789,10 +795,13 @@
         <span class="n">_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file_name</span><span class="p">),</span> <span class="n">recursive</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>  <span class="c1"># noqa: PTH207</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_files</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No files found: </span><span class="si">{</span><span class="n">file_names</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_files</span>
+    <span class="k">return</span> <span class="n">_files</span></div>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">pack_tar_file</span><span class="p">(</span><span class="n">tar_file_name</span><span class="p">,</span> <span class="n">file_list</span><span class="p">):</span>
+
+<div class="viewcode-block" id="pack_tar_file">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.pack_tar_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pack_tar_file</span><span class="p">(</span><span class="n">tar_file_name</span><span class="p">,</span> <span class="n">file_list</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Pack files into a tar.gz archive.</span>
 
@@ -802,6 +811,8 @@
 <span class="sd">        Name of the output tar.gz file.</span>
 <span class="sd">    file_list: list</span>
 <span class="sd">        List of files to include in the archive.</span>
+<span class="sd">    sub_dir: str, optional</span>
+<span class="sd">        Subdirectory within the archive to place the files.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">file_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">file_list</span><span class="p">]</span>
     <span class="n">base</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">commonpath</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">file_list</span><span class="p">]))</span>
@@ -812,7 +823,9 @@
 
     <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tar_file_name</span><span class="p">,</span> <span class="s2">&quot;w:gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">file_list</span><span class="p">:</span>
-            <span class="n">tar</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">arcname</span><span class="o">=</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">arc_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">sub_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">sub_dir</span> <span class="k">else</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">tar</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">arcname</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">arc_name</span><span class="p">))</span></div>
+
 
 
 <div class="viewcode-block" id="get_log_excerpt">
@@ -843,6 +856,8 @@
 
 
 
+<div class="viewcode-block" id="get_file_age">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.get_file_age">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_file_age</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the age of a file in seconds since the last modification.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
@@ -852,7 +867,8 @@
     <span class="n">modification_time</span> <span class="o">=</span> <span class="n">file_stats</span><span class="o">.</span><span class="n">st_mtime</span>
     <span class="n">current_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
-    <span class="k">return</span> <span class="p">(</span><span class="n">current_time</span> <span class="o">-</span> <span class="n">modification_time</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">current_time</span> <span class="o">-</span> <span class="n">modification_time</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_process_dict_keys</span><span class="p">(</span><span class="n">input_dict</span><span class="p">,</span> <span class="n">case_func</span><span class="p">):</span>
@@ -962,6 +978,8 @@
 
 
 
+<div class="viewcode-block" id="user_confirm">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.user_confirm">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">user_confirm</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Ask the user to enter y or n (case-insensitive) on the command line.</span>
@@ -978,7 +996,8 @@
             <span class="k">return</span> <span class="n">answer</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span>
         <span class="k">except</span> <span class="ne">EOFError</span><span class="p">:</span>
             <span class="k">break</span>
-    <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_value_dtype</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
@@ -1001,6 +1020,8 @@
     <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
 
+<div class="viewcode-block" id="validate_data_type">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.validate_data_type">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_data_type</span><span class="p">(</span><span class="n">reference_dtype</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_subtypes</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate data type of value or type object against a reference data type.</span>
@@ -1045,7 +1066,8 @@
     <span class="k">if</span> <span class="n">reference_dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;boolean&quot;</span><span class="p">,</span> <span class="s2">&quot;bool&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_is_valid_boolean_type</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">_is_valid_numeric_type</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">reference_dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_is_valid_numeric_type</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">reference_dtype</span><span class="p">)</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_is_valid_boolean_type</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
@@ -1068,6 +1090,8 @@
     <span class="k">return</span> <span class="kc">False</span>
 
 
+<div class="viewcode-block" id="convert_list_to_string">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.convert_list_to_string">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">convert_list_to_string</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">comma_separated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shorten_list</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">collapse_list</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert arrays to string (if required).</span>
@@ -1099,9 +1123,12 @@
         <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
     <span class="k">if</span> <span class="n">comma_separated</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
-    <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span></div>
 
 
+
+<div class="viewcode-block" id="convert_string_to_list">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.convert_string_to_list">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">convert_string_to_list</span><span class="p">(</span><span class="n">data_string</span><span class="p">,</span> <span class="n">is_float</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force_comma_separation</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert string (as used e.g. in sim_telarray) to list.</span>
@@ -1135,9 +1162,12 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]</span>
     <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">data_string</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_comma_separation</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">data_string</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">data_string</span>
+    <span class="k">return</span> <span class="n">data_string</span></div>
 
 
+
+<div class="viewcode-block" id="get_structure_array_from_table">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.get_structure_array_from_table">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_structure_array_from_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">column_names</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get a structured array from an astropy table for a selected list of columns.</span>
@@ -1157,9 +1187,12 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
         <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">col</span><span class="p">])</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">column_names</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="p">])),</span>
         <span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="n">col</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">col</span><span class="p">])</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">column_names</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="p">],</span>
-    <span class="p">)</span>
+    <span class="p">)</span></div>
 
 
+
+<div class="viewcode-block" id="convert_keys_in_dict_to_lowercase">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.convert_keys_in_dict_to_lowercase">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">convert_keys_in_dict_to_lowercase</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Recursively convert all dictionary keys to lowercase.</span>
@@ -1178,9 +1211,12 @@
         <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="n">convert_keys_in_dict_to_lowercase</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">convert_keys_in_dict_to_lowercase</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">data</span>
+    <span class="k">return</span> <span class="n">data</span></div>
 
 
+
+<div class="viewcode-block" id="remove_key_from_dict">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.remove_key_from_dict">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">remove_key_from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">key_to_remove</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Remove a specific key from a dictionary recursively.</span>
@@ -1203,7 +1239,8 @@
         <span class="p">}</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">remove_key_from_dict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">key_to_remove</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">data</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_find_differences_dict</span><span class="p">(</span><span class="n">obj1</span><span class="p">,</span> <span class="n">obj2</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">diffs</span><span class="p">):</span>
@@ -1218,6 +1255,8 @@
             <span class="n">diffs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">find_differences_in_json_objects</span><span class="p">(</span><span class="n">obj1</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">obj2</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">subpath</span><span class="p">))</span>
 
 
+<div class="viewcode-block" id="find_differences_in_json_objects">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.find_differences_in_json_objects">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_differences_in_json_objects</span><span class="p">(</span><span class="n">obj1</span><span class="p">,</span> <span class="n">obj2</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Recursively find differences between two JSON-like objects.</span>
@@ -1256,7 +1295,8 @@
     <span class="k">elif</span> <span class="n">obj1</span> <span class="o">!=</span> <span class="n">obj2</span><span class="p">:</span>
         <span class="n">diffs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: value changed from </span><span class="si">{</span><span class="n">obj1</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">obj2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">diffs</span>
+    <span class="k">return</span> <span class="n">diffs</span></div>
+
 
 
 <div class="viewcode-block" id="clear_default_sim_telarray_cfg_directories">
@@ -1279,6 +1319,8 @@
 
 
 
+<div class="viewcode-block" id="get_list_of_files_from_command_line">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.get_list_of_files_from_command_line">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_list_of_files_from_command_line</span><span class="p">(</span><span class="n">file_names</span><span class="p">,</span> <span class="n">suffix_list</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get a list of files from the command line.</span>
@@ -1311,12 +1353,16 @@
         <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">one_file</span><span class="si">}</span><span class="s2"> is not a file.&quot;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-    <span class="k">return</span> <span class="n">_files</span>
+    <span class="k">return</span> <span class="n">_files</span></div>
 
 
+
+<div class="viewcode-block" id="now_date_time_in_isoformat">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.now_date_time_in_isoformat">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">now_date_time_in_isoformat</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return date and time in isoformat and second accuracy.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">UTC</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">UTC</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">)</span></div>
+
 </pre></div>
 
                 </article>

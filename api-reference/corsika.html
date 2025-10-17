@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Configuration" href="configuration_module.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -392,7 +392,7 @@
 <li class="toctree-l1"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">CORSIKA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Application, dependency and version management.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="db_handler.html">Database support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="io.html">I/O</a></li>
 <li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
@@ -405,6 +405,7 @@
 <li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
 </ul>
@@ -1446,11 +1447,25 @@ even after creating the class instance.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.parse_telescope_indices">
+<span class="sig-name descname"><span class="pre">parse_telescope_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices_arg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.parse_telescope_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.parse_telescope_indices" title="Link to this definition">#</a></dt>
+<dd><p>Return telescope indices as ndarray[int] or None.</p>
+<p>Accepts None, a sequence of strings/ints. Raises ValueError on invalid input.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.read_event_information">
 <span class="sig-name descname"><span class="pre">read_event_information</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.read_event_information"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.read_event_information" title="Link to this definition">#</a></dt>
 <dd><p>Read the information about the events from their headers and save as a class instance.</p>
 <p>The main information can also be fetched individually through the functions below.
 For the remaining information (such as px, py, pz), use this function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.run_export_pipeline">
+<span class="sig-name descname"><span class="pre">run_export_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">individual_telescopes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices_arg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_pdf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_hdf5</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">event1d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">event2d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.run_export_pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.run_export_pipeline" title="Link to this definition">#</a></dt>
+<dd><p>Run the full histogram export pipeline and return output artifact paths.</p>
+<p>Returns a dict with optional keys: pdf_photons, pdf_event1d, pdf_event2d.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1484,6 +1499,12 @@ the histograms.</p>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_histograms.CorsikaHistograms.should_overwrite">
+<span class="sig-name descname"><span class="pre">should_overwrite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">write_hdf5</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">event1d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">event2d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#CorsikaHistograms.should_overwrite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.CorsikaHistograms.should_overwrite" title="Link to this definition">#</a></dt>
+<dd><p>Return True if output HDF5 exists and any writing flag is requested.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1536,348 +1557,6 @@ spherical representation of the telescopes.</p>
 <dt class="sig sig-object py" id="corsika.corsika_histograms.HistogramNotCreatedError">
 <em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms.</span></span><span class="sig-name descname"><span class="pre">HistogramNotCreatedError</span></span><a class="reference internal" href="../_modules/corsika/corsika_histograms.html#HistogramNotCreatedError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms.HistogramNotCreatedError" title="Link to this definition">#</a></dt>
 <dd><p>Exception for histogram not created.</p>
-</dd></dl>
-
-</section>
-<section id="corsika-histograms-visualize">
-<h2>corsika_histograms_visualize<a class="headerlink" href="#corsika-histograms-visualize" title="Link to this heading">#</a></h2>
-<p id="module-corsika.corsika_histograms_visualize"><span id="corsika-histograms-visualize-1"></span>Visualize Cherenkov photon distributions from CORSIKA.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_1d_event_header_distribution">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_1d_event_header_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_header_element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_1d_event_header_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_1d_event_header_distribution" title="Link to this definition">#</a></dt>
-<dd><p>Plot the distribution of the quantity given by .</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>event_header_element: str</strong></dt><dd><p>The key to the CORSIKA event header element.</p>
-</dd>
-<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
-</dd>
-<dt><strong>bins: float</strong></dt><dd><p>Number of bins for the histogram.</p>
-</dd>
-<dt><strong>hist_range: 2-tuple</strong></dt><dd><p>Tuple to define the range of the histogram.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_2d_counts">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_2d_counts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_2d_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_2d_counts" title="Link to this definition">#</a></dt>
-<dd><p>Plot the 2D histogram of the photon positions on the ground.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>log_z: bool</strong></dt><dd><p>if True, the intensity of the color bar is given in logarithmic scale.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_2d_density">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_2d_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_2d_density"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_2d_density" title="Link to this definition">#</a></dt>
-<dd><p>Plot the 2D histogram of the photon density distribution on the ground.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>log_z: bool</strong></dt><dd><p>if True, the intensity of the color bar is given in logarithmic scale.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_2d_direction">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_2d_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_2d_direction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_2d_direction" title="Link to this definition">#</a></dt>
-<dd><p>Plot the 2D histogram of the incoming direction of photons.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>log_z: bool</strong></dt><dd><p>if True, the intensity of the color bar is given in logarithmic scale.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_2d_event_header_distribution">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_2d_event_header_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_header_element_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_header_element_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_2d_event_header_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_2d_event_header_distribution" title="Link to this definition">#</a></dt>
-<dd><p>Plot the distribution of the quantity given by CorsikaHistograms.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>event_header_element_1: str</strong></dt><dd><p>The first key to the CORSIKA event header element</p>
-</dd>
-<dt><strong>event_header_element_2: str</strong></dt><dd><p>The second key to the CORSIKA event header element.</p>
-</dd>
-<dt><strong>log_z: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
-</dd>
-<dt><strong>bins: float</strong></dt><dd><p>Number of bins for the histogram.</p>
-</dd>
-<dt><strong>hist_range: 2-tuple</strong></dt><dd><p>Tuple to define the range of the histogram.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_2d_num_photons_per_telescope">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_2d_num_photons_per_telescope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_2d_num_photons_per_telescope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_2d_num_photons_per_telescope" title="Link to this definition">#</a></dt>
-<dd><p>Plot the 2D histogram of the number of photons per event and per telescope.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>log_z: bool</strong></dt><dd><p>if True, the intensity of the color bar is given in logarithmic scale.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_2d_time_altitude">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_2d_time_altitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_2d_time_altitude"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_2d_time_altitude" title="Link to this definition">#</a></dt>
-<dd><p>Plot the 2D histogram of the time and altitude where the photon was produced.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>log_z: bool</strong></dt><dd><p>if True, the intensity of the color bar is given in logarithmic scale.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_altitude_distr">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_altitude_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_altitude_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_altitude_distr" title="Link to this definition">#</a></dt>
-<dd><p>Plot the distribution of altitude in which the photons were generated in km.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_counts_distr">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_counts_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_counts_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_counts_distr" title="Link to this definition">#</a></dt>
-<dd><p>Plot the 1D distribution, i.e. the radial distribution, of the photons on the ground.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_density_distr">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_density_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_density_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_density_distr" title="Link to this definition">#</a></dt>
-<dd><p>Plot the photon density distribution on the ground.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_photon_per_event_distr">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_photon_per_event_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_photon_per_event_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_photon_per_event_distr" title="Link to this definition">#</a></dt>
-<dd><p>Plot the distribution of the number of Cherenkov photons per event.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_photon_per_telescope_distr">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_photon_per_telescope_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_photon_per_telescope_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_photon_per_telescope_distr" title="Link to this definition">#</a></dt>
-<dd><p>Plot the distribution of the number of Cherenkov photons per telescope.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_time_distr">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_time_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_time_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_time_distr" title="Link to this definition">#</a></dt>
-<dd><p>Plot the distribution times in which the photons were generated in ns.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.plot_wavelength_distr">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">plot_wavelength_distr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histograms_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#plot_wavelength_distr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.plot_wavelength_distr" title="Link to this definition">#</a></dt>
-<dd><p>Plot the 1D distribution of the photon wavelengths.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histograms_instance: corsika.corsika_histograms.CorsikaHistograms</strong></dt><dd><p>instance of corsika.corsika_histograms.CorsikaHistograms.</p>
-</dd>
-<dt><strong>log_y: bool</strong></dt><dd><p>if True, the intensity of the Y axis is given in logarithmic scale.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of figures for the given telescopes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="corsika.corsika_histograms_visualize.save_figs_to_pdf">
-<span class="sig-prename descclassname"><span class="pre">corsika.corsika_histograms_visualize.</span></span><span class="sig-name descname"><span class="pre">save_figs_to_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">figs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf_file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_histograms_visualize.html#save_figs_to_pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_histograms_visualize.save_figs_to_pdf" title="Link to this definition">#</a></dt>
-<dd><p>Save figures from corsika histograms to an output pdf file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>figs: list or numpy.array</strong></dt><dd><p>List with the figures output by corsika_output_visualize.py.</p>
-</dd>
-<dt><strong>pdf_file_name: str or Path</strong></dt><dd><p>Name of the pdf file.</p>
-</dd>
-</dl>
-</dd>
-</dl>
 </dd></dl>
 
 </section>
@@ -1997,32 +1676,17 @@ spherical representation of the telescopes.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.num_photons_per_event"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.num_photons_per_event</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.num_photons_per_event_per_telescope"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.num_photons_per_event_per_telescope</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.num_photons_per_telescope"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.num_photons_per_telescope</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.parse_telescope_indices"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.parse_telescope_indices()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.read_event_information"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.read_event_information()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.run_export_pipeline"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.run_export_pipeline()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.set_histograms"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.set_histograms()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.should_overwrite"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.should_overwrite()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.telescope_indices"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.telescope_indices</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.telescope_positions"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.telescope_positions</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.CorsikaHistograms.total_num_photons"><code class="docutils literal notranslate"><span class="pre">CorsikaHistograms.total_num_photons</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms.HistogramNotCreatedError"><code class="docutils literal notranslate"><span class="pre">HistogramNotCreatedError</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-histograms-visualize">corsika_histograms_visualize</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_1d_event_header_distribution"><code class="docutils literal notranslate"><span class="pre">plot_1d_event_header_distribution()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_2d_counts"><code class="docutils literal notranslate"><span class="pre">plot_2d_counts()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_2d_density"><code class="docutils literal notranslate"><span class="pre">plot_2d_density()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_2d_direction"><code class="docutils literal notranslate"><span class="pre">plot_2d_direction()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_2d_event_header_distribution"><code class="docutils literal notranslate"><span class="pre">plot_2d_event_header_distribution()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_2d_num_photons_per_telescope"><code class="docutils literal notranslate"><span class="pre">plot_2d_num_photons_per_telescope()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_2d_time_altitude"><code class="docutils literal notranslate"><span class="pre">plot_2d_time_altitude()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_altitude_distr"><code class="docutils literal notranslate"><span class="pre">plot_altitude_distr()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_counts_distr"><code class="docutils literal notranslate"><span class="pre">plot_counts_distr()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_density_distr"><code class="docutils literal notranslate"><span class="pre">plot_density_distr()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_photon_per_event_distr"><code class="docutils literal notranslate"><span class="pre">plot_photon_per_event_distr()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_photon_per_telescope_distr"><code class="docutils literal notranslate"><span class="pre">plot_photon_per_telescope_distr()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_time_distr"><code class="docutils literal notranslate"><span class="pre">plot_time_distr()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.plot_wavelength_distr"><code class="docutils literal notranslate"><span class="pre">plot_wavelength_distr()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_histograms_visualize.save_figs_to_pdf"><code class="docutils literal notranslate"><span class="pre">save_figs_to_pdf()</span></code></a></li>
 </ul>
 </li>
 </ul>

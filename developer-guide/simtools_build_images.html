@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Continuous Integration" href="continuous_integration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -460,25 +460,30 @@
   <section id="build-images">
 <h1>Build Images<a class="headerlink" href="#build-images" title="Link to this heading">#</a></h1>
 <p>Pre-built images are available from the <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=simtools">simtools package registry</a>.
-Replace the docker command by the container run engine of your choice (e.g., podman).</p>
+Replace the command by the container run engine of your choice (e.g., Docker).</p>
 <section id="build-a-simulation-production-container">
 <h2>Build a simulation production container<a class="headerlink" href="#build-a-simulation-production-container" title="Link to this heading">#</a></h2>
-<p>To build an image locally run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile-prod-opt<span class="w"> </span>-t<span class="w"> </span>simtools<span class="w"> </span>.
+<p>First build the CORSIKA/sim_telarray container locally (or use the pre-built image from the package registry):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>podman<span class="w"> </span>buildx<span class="w"> </span>build<span class="w"> </span>--platform<span class="o">=</span>linux/arm64<span class="w"> </span>--secret<span class="w"> </span><span class="nv">id</span><span class="o">=</span>gitlab_token,src<span class="o">=</span>./my_secret<span class="w"> </span>--build-arg<span class="w"> </span><span class="nv">AVX_FLAG</span><span class="o">=</span>no_opt<span class="w">  </span>-f<span class="w"> </span>Dockerfile-corsika-simtel<span class="w"> </span>-t<span class="w"> </span>corsika-simtelarray<span class="w"> </span>.
+</pre></div>
+</div>
+<p>(requires a secret token to access the CTAO GitLab repository).</p>
+<p>Then build the simtools production container:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>podman<span class="w"> </span>buildx<span class="w"> </span>build<span class="w"> </span>--platform<span class="o">=</span>linux/arm64<span class="w"> </span>--build-arg<span class="w"> </span><span class="nv">BASE_IMAGE</span><span class="o">=</span>localhost/corsika-simtelarray<span class="w"> </span>--build-arg<span class="w"> </span><span class="nv">BUILD_BRANCH</span><span class="o">=</span>main<span class="w"> </span>--build-arg<span class="w"> </span><span class="nv">PYTHON_VERSION</span><span class="o">=</span><span class="m">3</span>.12<span class="w"> </span>-f<span class="w"> </span>Dockerfile-simtools<span class="w"> </span>-t<span class="w"> </span>simtools<span class="w">  </span>.
 </pre></div>
 </div>
 <p>The build process requires a tarball of corsika/sim_telarray (named <code class="docutils literal notranslate"><span class="pre">corsika_simtelarray.tar.gz</span></code>) to be present in the build directory.
 This package is available from MPIK (password protected).
 Build arguments can be configured as specified at the top of the Dockerfile.</p>
 <p>Run the newly built container:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/external:/workdir/external&quot;</span><span class="w"> </span>simtools<span class="w"> </span>bash
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/external:/workdir/external&quot;</span><span class="w"> </span>simtools<span class="w"> </span>bash
 </pre></div>
 </div>
 </section>
 <section id="build-a-developers-container-locally">
 <h2>Build a developers container locally<a class="headerlink" href="#build-a-developers-container-locally" title="Link to this heading">#</a></h2>
-<p>To build an image locally run in the <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docker">docker</a> directory:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile-dev<span class="w"> </span>-t<span class="w"> </span>simtools-dev<span class="w"> </span>.
+<p>To build an image locally run in the <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docker"><code class="docutils literal notranslate"><span class="pre">./docker</span></code></a> directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>podman<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile-dev<span class="w"> </span>-t<span class="w"> </span>simtools-dev<span class="w"> </span>.
 </pre></div>
 </div>
 </section>

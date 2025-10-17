@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../_static/documentation_options.js?v=71eff813"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,10 +54,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="I/O" href="io.html" />
-    <link rel="prev" title="Dependency and version management." href="dependencies.html" />
+    <link rel="prev" title="Application, dependency and version management." href="dependencies.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -392,7 +392,7 @@
 <li class="toctree-l1"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Application, dependency and version management.</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Database support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="io.html">I/O</a></li>
 <li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
@@ -405,6 +405,7 @@
 <li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
 </ul>
@@ -477,6 +478,11 @@
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">db.db_handler.</span></span><span class="sig-name descname"><span class="pre">DatabaseHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler" title="Link to this definition">#</a></dt>
 <dd><p>DatabaseHandler provides the interface to the DB.</p>
+<p>Note the two types of version variables used in this class:</p>
+<ul class="simple">
+<li><p>db_simulation_model_version (from mongo_db_config): version of the simulation model database</p></li>
+<li><p>model_version (from production_tables): version of the model contained in the database</p></li>
+</ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -589,6 +595,30 @@ using the parameters dictionary.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.generate_compound_indexes_for_databases">
+<span class="sig-name descname"><span class="pre">generate_compound_indexes_for_databases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.generate_compound_indexes_for_databases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.generate_compound_indexes_for_databases" title="Link to this definition">#</a></dt>
+<dd><p>Generate compound indexes for several databases.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>Name of the database.</p>
+</dd>
+<dt><strong>db_simulation_model: str</strong></dt><dd><p>Name of the simulation model.</p>
+</dd>
+<dt><strong>db_simulation_model_version: str</strong></dt><dd><p>Version of the simulation model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the requested database is not found.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_array_elements">
 <span class="sig-name descname"><span class="pre">get_array_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_array_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_array_elements" title="Link to this definition">#</a></dt>
 <dd><p>Get list array elements for a given model version and collection from the DB.</p>
@@ -683,7 +713,7 @@ i.e. telescopes, calibration_devices.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_db_name">
-<span class="sig-name descname"><span class="pre">get_db_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_db_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_db_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_db_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_db_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_db_name" title="Link to this definition">#</a></dt>
 <dd><p>Build DB name from configuration.</p>
 </dd></dl>
 
@@ -816,7 +846,7 @@ as it each call queries the database.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_model_versions">
 <span class="sig-name descname"><span class="pre">get_model_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_model_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_versions" title="Link to this definition">#</a></dt>
-<dd><p>Get list of model versions from the DB.</p>
+<dd><p>Get list of model versions from the DB with caching.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -891,6 +921,27 @@ mostly these are unnecessary though.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.is_remote_database">
+<span class="sig-name descname"><span class="pre">is_remote_database</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.is_remote_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.is_remote_database" title="Link to this definition">#</a></dt>
+<dd><p>Check if the database is remote.</p>
+<p>Check for domain pattern like “cta-simpipe-protodb.zeuthen.desy.de”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>bool</dt><dd><p>True if the database is remote, False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.print_connection_info">
+<span class="sig-name descname"><span class="pre">print_connection_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.print_connection_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.print_connection_info" title="Link to this definition">#</a></dt>
+<dd><p>Print the connection information.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.read_production_table_from_mongo_db">
 <span class="sig-name descname"><span class="pre">read_production_table_from_mongo_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.read_production_table_from_mongo_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.read_production_table_from_mongo_db" title="Link to this definition">#</a></dt>
 <dd><p>Read production table for the given collection from MongoDB.</p>
@@ -918,6 +969,37 @@ mostly these are unnecessary though.</p>
 <section id="db-model-upload">
 <h2>db_model_upload<a class="headerlink" href="#db-model-upload" title="Link to this heading">#</a></h2>
 <p id="module-db.db_model_upload"><span id="db-module-upload"></span>Upload a simulation model (parameters and production tables) to the database.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="db.db_model_upload.add_complete_model">
+<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_complete_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmp_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository_branch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_complete_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_complete_model" title="Link to this definition">#</a></dt>
+<dd><p>Upload a complete model including model parameters and production tables to the database.</p>
+<p>Generate compound indexes for the new database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tmp_dir</strong><span class="classifier">Path or str</span></dt><dd><p>Temporary directory to use for cloning the repository.</p>
+</dd>
+<dt><strong>db</strong><span class="classifier">DatabaseHandler</span></dt><dd><p>Database handler object.</p>
+</dd>
+<dt><strong>db_simulation_model</strong><span class="classifier">str</span></dt><dd><p>Name of the simulation model in the database.</p>
+</dd>
+<dt><strong>db_simulation_model_version</strong><span class="classifier">str</span></dt><dd><p>Version of the simulation model in the database.</p>
+</dd>
+<dt><strong>repository_url</strong><span class="classifier">str</span></dt><dd><p>URL of the simulation model repository to clone.</p>
+</dd>
+<dt><strong>repository_branch</strong><span class="classifier">str, optional</span></dt><dd><p>Branch of the repository to use. If None, the default branch is used.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd><p>This function does not return a value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="db.db_model_upload.add_model_parameters_to_db">
 <span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_model_parameters_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_model_parameters_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_model_parameters_to_db" title="Link to this definition">#</a></dt>
@@ -972,6 +1054,32 @@ tables of all array elements, sites, and configuration parameters.</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="db.db_model_upload.clone_simulation_model_repository">
+<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">clone_simulation_model_repository</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository_branch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#clone_simulation_model_repository"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.clone_simulation_model_repository" title="Link to this definition">#</a></dt>
+<dd><p>Clone a git repository containing simulation model parameters and production tables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>target_dir</strong><span class="classifier">Path or str</span></dt><dd><p>Target directory to clone the repository into.</p>
+</dd>
+<dt><strong>repository_url</strong><span class="classifier">str</span></dt><dd><p>URL of the git repository to clone.</p>
+</dd>
+<dt><strong>db_simulation_model_version</strong><span class="classifier">str</span></dt><dd><p>Version tag of the simulation model to checkout.</p>
+</dd>
+<dt><strong>repository_branch</strong><span class="classifier">str, optional</span></dt><dd><p>Branch of the repository to use. If None, the version tag is used.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path</dt><dd><p>Path to the cloned repository.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 
@@ -991,7 +1099,7 @@ tables of all array elements, sites, and configuration parameters.</p>
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Dependency and version management.</p>
+        <p class="prev-next-title">Application, dependency and version management.</p>
       </div>
     </a>
     <a class="right-next"
@@ -1029,6 +1137,7 @@ tables of all array elements, sites, and configuration parameters.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_file"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_files"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.generate_compound_indexes"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.generate_compound_indexes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.generate_compound_indexes_for_databases"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.generate_compound_indexes_for_databases()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_elements"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_elements()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_elements_of_type()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_collection"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_collection()</span></code></a></li>
@@ -1042,15 +1151,19 @@ tables of all array elements, sites, and configuration parameters.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_versions"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_versions()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_simulation_configuration_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_simulation_configuration_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.insert_file_to_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.insert_file_to_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.is_remote_database"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.is_remote_database()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.print_connection_info"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.print_connection_info()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.read_production_table_from_mongo_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.read_production_table_from_mongo_db()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-model-upload">db_model_upload</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_complete_model"><code class="docutils literal notranslate"><span class="pre">add_complete_model()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_model_parameters_to_db"><code class="docutils literal notranslate"><span class="pre">add_model_parameters_to_db()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_production_tables_to_db"><code class="docutils literal notranslate"><span class="pre">add_production_tables_to_db()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_values_from_json_to_db"><code class="docutils literal notranslate"><span class="pre">add_values_from_json_to_db()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.clone_simulation_model_repository"><code class="docutils literal notranslate"><span class="pre">clone_simulation_model_repository()</span></code></a></li>
 </ul>
 </li>
 </ul>

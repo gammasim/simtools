@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -435,12 +435,11 @@
   <h1>Source code for simtel.simtel_io_event_histograms</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Histograms for shower and triggered events.&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogNorm</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_event_reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelIOEventDataReader</span>
 
@@ -452,6 +451,7 @@
 <span class="sd">    Generate and fill histograms for shower and triggered events.</span>
 
 <span class="sd">    Event data is read from the reduced MC event data file.</span>
+<span class="sd">    Calculate cumulative and relative (efficiency) distributions.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -468,40 +468,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">event_data_file</span> <span class="o">=</span> <span class="n">event_data_file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">array_name</span> <span class="o">=</span> <span class="n">array_name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_list</span> <span class="o">=</span> <span class="n">telescope_list</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">file_info</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">reader</span> <span class="o">=</span> <span class="n">SimtelIOEventDataReader</span><span class="p">(</span><span class="n">event_data_file</span><span class="p">,</span> <span class="n">telescope_list</span><span class="o">=</span><span class="n">telescope_list</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_fill_histogram_and_bin_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">hist1d</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fill histogram and bin edges and it both to histogram dictionary.</span>
-
-<span class="sd">        Adds histogram to existing histogram if it exists, otherwise initializes it.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">hist1d</span><span class="p">:</span>
-                <span class="n">bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_bin_edges&quot;</span><span class="p">]</span>
-                <span class="n">hist</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="n">hist</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">x_bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_bin_x_edges&quot;</span><span class="p">]</span>
-                <span class="n">y_bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_bin_y_edges&quot;</span><span class="p">]</span>
-                <span class="n">hist</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram2d</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="p">[</span><span class="n">x_bins</span><span class="p">,</span> <span class="n">y_bins</span><span class="p">])</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="n">hist</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">hist1d</span><span class="p">:</span>
-                <span class="n">hist</span><span class="p">,</span> <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">hist</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_bin_edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bin_edges</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">hist</span><span class="p">,</span> <span class="n">x_edges</span><span class="p">,</span> <span class="n">y_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram2d</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">hist</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_bin_x_edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_edges</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_bin_y_edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_edges</span>
 
 <div class="viewcode-block" id="SimtelIOEventHistograms.fill">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.fill">[docs]</a>
@@ -510,14 +481,14 @@
 <span class="sd">        Fill histograms with event data.</span>
 
 <span class="sd">        Involves looping over all event data, and therefore is the slowest part of the</span>
-<span class="sd">        limit calculation. Adds the histograms to the histogram dictionary.</span>
+<span class="sd">        histogram module. Adds the histograms to the histogram dictionary.</span>
 
 <span class="sd">        Assume that all event data files are generated with similar configurations</span>
-<span class="sd">        (self.file_info contains the latest file info).</span>
+<span class="sd">        (self.file_info contains the file info of the last file).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">data_set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">data_sets</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading event data from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data_file</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">data_set</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">_file_info_table</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">event_data</span><span class="p">,</span> <span class="n">triggered_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">read_event_data</span><span class="p">(</span>
+            <span class="n">_file_info_table</span><span class="p">,</span> <span class="n">shower_data</span><span class="p">,</span> <span class="n">event_data</span><span class="p">,</span> <span class="n">triggered_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">read_event_data</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">event_data_file</span><span class="p">,</span> <span class="n">table_name_map</span><span class="o">=</span><span class="n">data_set</span>
             <span class="p">)</span>
             <span class="n">_file_info_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">get_reduced_simulation_file_info</span><span class="p">(</span><span class="n">_file_info_table</span><span class="p">)</span>
@@ -525,41 +496,222 @@
                 <span class="s2">&quot;energy_min&quot;</span><span class="p">:</span> <span class="n">_file_info_table</span><span class="p">[</span><span class="s2">&quot;energy_min&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;TeV&quot;</span><span class="p">),</span>
                 <span class="s2">&quot;core_scatter_max&quot;</span><span class="p">:</span> <span class="n">_file_info_table</span><span class="p">[</span><span class="s2">&quot;core_scatter_max&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">),</span>
                 <span class="s2">&quot;viewcone_max&quot;</span><span class="p">:</span> <span class="n">_file_info_table</span><span class="p">[</span><span class="s2">&quot;viewcone_max&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;solid_angle&quot;</span><span class="p">:</span> <span class="n">_file_info_table</span><span class="p">[</span><span class="s2">&quot;solid_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;sr&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;scatter_area&quot;</span><span class="p">:</span> <span class="n">_file_info_table</span><span class="p">[</span><span class="s2">&quot;scatter_area&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;cm2&quot;</span><span class="p">),</span>
             <span class="p">}</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_histogram_and_bin_edges</span><span class="p">(</span>
-                <span class="s2">&quot;energy&quot;</span><span class="p">,</span> <span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_bins</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_histogram_and_bin_edges</span><span class="p">(</span>
-                <span class="s2">&quot;core_distance&quot;</span><span class="p">,</span> <span class="n">event_data</span><span class="o">.</span><span class="n">core_distance_shower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_histogram_and_bin_edges</span><span class="p">(</span>
-                <span class="s2">&quot;angular_distance&quot;</span><span class="p">,</span> <span class="n">triggered_data</span><span class="o">.</span><span class="n">angular_distance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">view_cone_bins</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_define_histograms</span><span class="p">(</span><span class="n">event_data</span><span class="p">,</span> <span class="n">triggered_data</span><span class="p">,</span> <span class="n">shower_data</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Filling histogram </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_fill_histogram_and_bin_edges</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_summary</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">calculate_efficiency_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calculate_cumulative_data</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_define_histograms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_data</span><span class="p">,</span> <span class="n">triggered_data</span><span class="p">,</span> <span class="n">shower_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Define histograms including event data, binning, naming, and labels.</span>
+
+<span class="sd">        All histograms are defined for simulated and triggered events (note</span>
+<span class="sd">        the subtlety of triggered events being read from event_data and triggered_data).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        event_data : EventData</span>
+<span class="sd">            The event data to use for filling the histograms.</span>
+<span class="sd">        triggered_data : TriggeredData</span>
+<span class="sd">            The triggered data to use for filling the histograms.</span>
+<span class="sd">        shower_data : ShowerData</span>
+<span class="sd">            The shower data to use for filling the histograms.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary with histogram definitions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xy_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+            <span class="o">-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">hists</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">energy_axis_title</span> <span class="o">=</span> <span class="s2">&quot;Energy (TeV)&quot;</span>
+        <span class="n">event_count_axis_title</span> <span class="o">=</span> <span class="s2">&quot;Event Count&quot;</span>
+
+        <span class="n">definitions</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;event_data_column&quot;</span><span class="p">:</span> <span class="s2">&quot;simulated_energy&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;event_data&quot;</span><span class="p">:</span> <span class="n">event_data</span><span class="p">,</span>
+                <span class="s2">&quot;bin_edges&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">,</span>
+                <span class="s2">&quot;axis_titles&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">energy_axis_title</span><span class="p">,</span> <span class="n">event_count_axis_title</span><span class="p">],</span>
+                <span class="s2">&quot;plot_scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;core_distance&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;event_data_column&quot;</span><span class="p">:</span> <span class="s2">&quot;core_distance_shower&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;event_data&quot;</span><span class="p">:</span> <span class="n">event_data</span><span class="p">,</span>
+                <span class="s2">&quot;bin_edges&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">,</span>
+                <span class="s2">&quot;axis_titles&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Core Distance (m)&quot;</span><span class="p">,</span> <span class="n">event_count_axis_title</span><span class="p">],</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;angular_distance&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;event_data_column&quot;</span><span class="p">:</span> <span class="s2">&quot;angular_distance&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;event_data&quot;</span><span class="p">:</span> <span class="n">triggered_data</span><span class="p">,</span>
+                <span class="s2">&quot;bin_edges&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">,</span>
+                <span class="s2">&quot;axis_titles&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Angular Distance (deg)&quot;</span><span class="p">,</span> <span class="n">event_count_axis_title</span><span class="p">],</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;x_core_shower_vs_y_core_shower&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;event_data_column&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;x_core_shower&quot;</span><span class="p">,</span> <span class="s2">&quot;y_core_shower&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;event_data&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">event_data</span><span class="p">,</span> <span class="n">event_data</span><span class="p">),</span>
+                <span class="s2">&quot;bin_edges&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">xy_bins</span><span class="p">,</span> <span class="n">xy_bins</span><span class="p">),</span>
+                <span class="s2">&quot;is_1d&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;axis_titles&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Core X (m)&quot;</span><span class="p">,</span> <span class="s2">&quot;Core Y (m)&quot;</span><span class="p">,</span> <span class="n">event_count_axis_title</span><span class="p">],</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;core_vs_energy&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;event_data_column&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;core_distance_shower&quot;</span><span class="p">,</span> <span class="s2">&quot;simulated_energy&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;event_data&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">event_data</span><span class="p">,</span> <span class="n">event_data</span><span class="p">),</span>
+                <span class="s2">&quot;bin_edges&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">),</span>
+                <span class="s2">&quot;is_1d&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;axis_titles&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Core Distance (m)&quot;</span><span class="p">,</span> <span class="n">energy_axis_title</span><span class="p">,</span> <span class="n">event_count_axis_title</span><span class="p">],</span>
+                <span class="s2">&quot;plot_scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;angular_distance_vs_energy&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;event_data_column&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">,</span> <span class="s2">&quot;simulated_energy&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;event_data&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">triggered_data</span><span class="p">,</span> <span class="n">event_data</span><span class="p">),</span>
+                <span class="s2">&quot;bin_edges&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">),</span>
+                <span class="s2">&quot;is_1d&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;axis_titles&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="s2">&quot;Angular Distance (deg)&quot;</span><span class="p">,</span>
+                    <span class="n">energy_axis_title</span><span class="p">,</span>
+                    <span class="n">event_count_axis_title</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="s2">&quot;plot_scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+        <span class="n">hists</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_histogram_definition</span><span class="p">(</span><span class="o">**</span><span class="n">cfg</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="s2">&quot;suffix&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered Events&quot;</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">cfg</span> <span class="ow">in</span> <span class="n">definitions</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+        <span class="n">hists_mc</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">hist</span> <span class="ow">in</span> <span class="n">hists</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">key_mc</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_mc&quot;</span>
+            <span class="n">hists_mc</span><span class="p">[</span><span class="n">key_mc</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+            <span class="n">hists_mc</span><span class="p">[</span><span class="n">key_mc</span><span class="p">][</span><span class="s2">&quot;suffix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;_mc&quot;</span>
+            <span class="n">hists_mc</span><span class="p">[</span><span class="n">key_mc</span><span class="p">][</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Simulated Events&quot;</span>
+            <span class="n">hists_mc</span><span class="p">[</span><span class="n">key_mc</span><span class="p">][</span><span class="s2">&quot;event_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">shower_data</span> <span class="k">if</span> <span class="n">hist</span><span class="p">[</span><span class="s2">&quot;1d&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="p">(</span><span class="n">shower_data</span><span class="p">,</span> <span class="n">shower_data</span><span class="p">)</span>
             <span class="p">)</span>
 
-            <span class="n">xy_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
-                <span class="o">-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
-                <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">),</span>
+        <span class="n">hists</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">hists_mc</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hists</span>
+
+<div class="viewcode-block" id="SimtelIOEventHistograms.get_histogram_definition">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.get_histogram_definition">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_histogram_definition</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">event_data_column</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">event_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">histogram</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">bin_edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">axis_titles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">suffix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">is_1d</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">plot_scales</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a single histogram definition.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;histogram&quot;</span><span class="p">:</span> <span class="n">histogram</span><span class="p">,</span>
+            <span class="s2">&quot;event_data_column&quot;</span><span class="p">:</span> <span class="n">event_data_column</span><span class="p">,</span>
+            <span class="s2">&quot;event_data&quot;</span><span class="p">:</span> <span class="n">event_data</span><span class="p">,</span>
+            <span class="s2">&quot;1d&quot;</span><span class="p">:</span> <span class="n">is_1d</span><span class="p">,</span>
+            <span class="s2">&quot;bin_edges&quot;</span><span class="p">:</span> <span class="n">bin_edges</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span>
+            <span class="s2">&quot;axis_titles&quot;</span><span class="p">:</span> <span class="n">axis_titles</span><span class="p">,</span>
+            <span class="s2">&quot;suffix&quot;</span><span class="p">:</span> <span class="n">suffix</span><span class="p">,</span>
+            <span class="s2">&quot;plot_scales&quot;</span><span class="p">:</span> <span class="n">plot_scales</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fill_histogram_and_bin_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fill histogram and bin edges into the histogram dictionary.</span>
+
+<span class="sd">        Adds to existing histogram if present, otherwise initializes it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;1d&quot;</span><span class="p">]:</span>
+            <span class="n">hist</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;event_data&quot;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;event_data_column&quot;</span><span class="p">]),</span>
+                <span class="n">bins</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;bin_edges&quot;</span><span class="p">],</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_histogram_and_bin_edges</span><span class="p">(</span>
-                <span class="s2">&quot;shower_cores&quot;</span><span class="p">,</span>
-                <span class="p">(</span><span class="n">event_data</span><span class="o">.</span><span class="n">x_core_shower</span><span class="p">,</span> <span class="n">event_data</span><span class="o">.</span><span class="n">y_core_shower</span><span class="p">),</span>
-                <span class="p">[</span><span class="n">xy_bins</span><span class="p">,</span> <span class="n">xy_bins</span><span class="p">],</span>
-                <span class="n">hist1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">hist</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram2d</span><span class="p">(</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;event_data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;event_data_column&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;event_data&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;event_data_column&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="n">bins</span><span class="o">=</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;bin_edges&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;bin_edges&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]],</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_histogram_and_bin_edges</span><span class="p">(</span>
-                <span class="s2">&quot;core_vs_energy&quot;</span><span class="p">,</span>
-                <span class="p">(</span><span class="n">event_data</span><span class="o">.</span><span class="n">core_distance_shower</span><span class="p">,</span> <span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="p">),</span>
-                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">],</span>
-                <span class="n">hist1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;histogram&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hist</span> <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;histogram&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;histogram&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">hist</span>
+
+<div class="viewcode-block" id="SimtelIOEventHistograms.calculate_efficiency_data">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.calculate_efficiency_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_efficiency_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate efficiency histograms (triggered divided by simulated).</span>
+
+<span class="sd">        Assumes that for each histogram with simulated events, there is a</span>
+<span class="sd">        corresponding histogram with triggered events.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary containing the efficiency histograms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">calculate_efficiency</span><span class="p">(</span><span class="n">trig_hist</span><span class="p">,</span> <span class="n">mc_hist</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+                    <span class="n">trig_hist</span><span class="p">,</span>
+                    <span class="n">mc_hist</span><span class="p">,</span>
+                    <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">trig_hist</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+                    <span class="n">where</span><span class="o">=</span><span class="n">mc_hist</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="n">eff_histograms</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">mc_hist</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_mc&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="n">base_name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">trig_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">base_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">trig_hist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">mc_hist</span><span class="p">[</span><span class="s2">&quot;histogram&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">trig_hist</span><span class="p">[</span><span class="s2">&quot;histogram&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Shape mismatch for </span><span class="si">{</span><span class="n">base_name</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">, skipping efficiency calculation.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">eff</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">mc_hist</span><span class="p">)</span>
+            <span class="n">eff</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;histogram&quot;</span><span class="p">:</span> <span class="n">calculate_efficiency</span><span class="p">(</span><span class="n">trig_hist</span><span class="p">[</span><span class="s2">&quot;histogram&quot;</span><span class="p">],</span> <span class="n">mc_hist</span><span class="p">[</span><span class="s2">&quot;histogram&quot;</span><span class="p">]),</span>
+                    <span class="s2">&quot;suffix&quot;</span><span class="p">:</span> <span class="s2">&quot;_eff&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Efficiency&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fill_histogram_and_bin_edges</span><span class="p">(</span>
-                <span class="s2">&quot;angular_distance_vs_energy&quot;</span><span class="p">,</span>
-                <span class="p">(</span><span class="n">triggered_data</span><span class="o">.</span><span class="n">angular_distance</span><span class="p">,</span> <span class="n">event_data</span><span class="o">.</span><span class="n">simulated_energy</span><span class="p">),</span>
-                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">],</span>
-                <span class="n">hist1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="p">)</span></div>
+            <span class="n">eff</span><span class="p">[</span><span class="s2">&quot;axis_titles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">mc_hist</span><span class="p">[</span><span class="s2">&quot;axis_titles&quot;</span><span class="p">])</span>
+            <span class="n">eff</span><span class="p">[</span><span class="s2">&quot;axis_titles&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Efficiency&quot;</span>
+            <span class="n">eff_histograms</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_name</span><span class="si">}</span><span class="s2">_eff&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eff</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">eff_histograms</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">eff_histograms</span></div>
 
 
     <span class="nd">@property</span>
@@ -595,467 +747,46 @@
             <span class="mi">100</span><span class="p">,</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="SimtelIOEventHistograms.plot_data">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.plot_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">plot_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rebin_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelIOEventHistograms.calculate_cumulative_data">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.calculate_cumulative_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_cumulative_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Histogram plotting.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        output_path: Path or str, optional</span>
-<span class="sd">            Directory to save plots. If None, plots will be displayed.</span>
-<span class="sd">        limits: dict, optional</span>
-<span class="sd">            Dictionary containing limits for plotting. Keys can include:</span>
-<span class="sd">            - &quot;upper_radius_limit&quot;: Upper limit for core distance</span>
-<span class="sd">            - &quot;lower_energy_limit&quot;: Lower limit for energy</span>
-<span class="sd">            - &quot;viewcone_radius&quot;: Radius for the viewcone</span>
-<span class="sd">        rebin_factor: int, optional</span>
-<span class="sd">            Factor by which to reduce the number of bins in 2D histograms for rebinned plots.</span>
-<span class="sd">            Default is 2 (merge every 2 bins). Set to 0 or 1 to disable rebinning.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Plot label constants</span>
-        <span class="n">core_distance_label</span> <span class="o">=</span> <span class="s2">&quot;Core Distance [m]&quot;</span>
-        <span class="n">energy_label</span> <span class="o">=</span> <span class="s2">&quot;Energy [TeV]&quot;</span>
-        <span class="n">pointing_direction_label</span> <span class="o">=</span> <span class="s2">&quot;Distance to pointing direction [deg]&quot;</span>
-        <span class="n">cumulative_prefix</span> <span class="o">=</span> <span class="s2">&quot;Cumulative &quot;</span>
-        <span class="n">event_count_label</span> <span class="o">=</span> <span class="s2">&quot;Event Count&quot;</span>
-        <span class="n">core_x_label</span> <span class="o">=</span> <span class="s2">&quot;Core X [m]&quot;</span>
-        <span class="n">core_y_label</span> <span class="o">=</span> <span class="s2">&quot;Core Y [m]&quot;</span>
-
-        <span class="c1"># Plot parameter constants</span>
-        <span class="n">hist_1d_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:green&quot;</span><span class="p">,</span> <span class="s2">&quot;edgecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:green&quot;</span><span class="p">,</span> <span class="s2">&quot;lw&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
-        <span class="n">hist_1d_cumulative_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:blue&quot;</span><span class="p">,</span> <span class="s2">&quot;edgecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:blue&quot;</span><span class="p">,</span> <span class="s2">&quot;lw&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
-        <span class="n">hist_2d_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;norm&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;cmap&quot;</span><span class="p">:</span> <span class="s2">&quot;viridis&quot;</span><span class="p">,</span> <span class="s2">&quot;show_contour&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
-        <span class="n">hist_2d_equal_params</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;norm&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;cmap&quot;</span><span class="p">:</span> <span class="s2">&quot;viridis&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;aspect&quot;</span><span class="p">:</span> <span class="s2">&quot;equal&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;show_contour&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="p">}</span>
-        <span class="n">hist_2d_normalized_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;norm&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;cmap&quot;</span><span class="p">:</span> <span class="s2">&quot;viridis&quot;</span><span class="p">,</span> <span class="s2">&quot;show_contour&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plotting histograms written to </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="n">angular_dist_vs_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_vs_energy&quot;</span><span class="p">)</span>
-        <span class="n">normalized_cumulative_angular_vs_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cumulative_histogram</span><span class="p">(</span>
-            <span class="n">angular_dist_vs_energy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span>
-
-        <span class="n">core_vs_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_vs_energy&quot;</span><span class="p">)</span>
-        <span class="n">normalized_cumulative_core_vs_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cumulative_histogram</span><span class="p">(</span>
-            <span class="n">core_vs_energy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span>
-
-        <span class="n">energy_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy&quot;</span><span class="p">)</span>
-        <span class="n">cumulative_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cumulative_histogram</span><span class="p">(</span><span class="n">energy_hist</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="n">core_distance_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_distance&quot;</span><span class="p">)</span>
-        <span class="n">cumulative_core_distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cumulative_histogram</span><span class="p">(</span><span class="n">core_distance_hist</span><span class="p">)</span>
-
-        <span class="n">angular_distance_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">)</span>
-        <span class="n">cumulative_angular_distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cumulative_histogram</span><span class="p">(</span><span class="n">angular_distance_hist</span><span class="p">)</span>
-
-        <span class="n">upper_radius_limit</span><span class="p">,</span> <span class="n">lower_energy_limit</span><span class="p">,</span> <span class="n">viewcone_radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_limits</span><span class="p">(</span><span class="n">limits</span><span class="p">)</span>
-
-        <span class="n">plots</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;core_vs_energy&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_vs_energy&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="p">[</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_vs_energy_bin_x_edges&quot;</span><span class="p">),</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_vs_energy_bin_y_edges&quot;</span><span class="p">),</span>
-                <span class="p">],</span>
-                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_2d_params</span><span class="p">,</span>
-                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">core_distance_label</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">energy_label</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: core distance vs energy&quot;</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">upper_radius_limit</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">lower_energy_limit</span><span class="p">},</span>
-                <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
-                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="n">event_count_label</span><span class="p">,</span>
-                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;core_vs_energy_distribution&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;energy_distribution&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy_bin_edges&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_1d_params</span><span class="p">,</span>
-                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">energy_label</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">event_count_label</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: energy distribution&quot;</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
-                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">lower_energy_limit</span><span class="p">},</span>
-                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;energy_distribution&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;energy_distribution_cumulative&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">cumulative_energy</span><span class="p">,</span>
-                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy_bin_edges&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_1d_cumulative_params</span><span class="p">,</span>
-                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">energy_label</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">cumulative_prefix</span> <span class="o">+</span> <span class="n">event_count_label</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: cumulative energy distribution&quot;</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
-                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">lower_energy_limit</span><span class="p">},</span>
-                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;energy_distribution_cumulative&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;core_distance&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_distance&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_distance_bin_edges&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_1d_params</span><span class="p">,</span>
-                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">core_distance_label</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">event_count_label</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: core distance distribution&quot;</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">upper_radius_limit</span><span class="p">},</span>
-                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;core_distance_distribution&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;core_distance_cumulative&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">cumulative_core_distance</span><span class="p">,</span>
-                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_distance_bin_edges&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_1d_cumulative_params</span><span class="p">,</span>
-                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">core_distance_label</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">cumulative_prefix</span> <span class="o">+</span> <span class="n">event_count_label</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: cumulative core distance distribution&quot;</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">upper_radius_limit</span><span class="p">},</span>
-                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;core_distance_cumulative_distribution&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;core_xy&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;shower_cores&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="p">[</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;shower_cores_bin_x_edges&quot;</span><span class="p">),</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;shower_cores_bin_y_edges&quot;</span><span class="p">),</span>
-                <span class="p">],</span>
-                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_2d_equal_params</span><span class="p">,</span>
-                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">core_x_label</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">core_y_label</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: core x vs core y&quot;</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="n">event_count_label</span><span class="p">,</span>
-                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;r&quot;</span><span class="p">:</span> <span class="n">upper_radius_limit</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;core_xy_distribution&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;angular_distance&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_bin_edges&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_1d_params</span><span class="p">,</span>
-                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">pointing_direction_label</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">event_count_label</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: angular distance distribution&quot;</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">viewcone_radius</span><span class="p">},</span>
-                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;angular_distance_distribution&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;angular_distance_cumulative&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">cumulative_angular_distance</span><span class="p">,</span>
-                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_bin_edges&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_1d_cumulative_params</span><span class="p">,</span>
-                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">pointing_direction_label</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">cumulative_prefix</span> <span class="o">+</span> <span class="n">event_count_label</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: cumulative angular distance distribution&quot;</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">viewcone_radius</span><span class="p">},</span>
-                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;angular_distance_cumulative_distribution&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;angular_distance_vs_energy&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_vs_energy&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="p">[</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_vs_energy_bin_x_edges&quot;</span><span class="p">),</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_vs_energy_bin_y_edges&quot;</span><span class="p">),</span>
-                <span class="p">],</span>
-                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_2d_params</span><span class="p">,</span>
-                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">pointing_direction_label</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">energy_label</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: angular distance distance vs energy&quot;</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">viewcone_radius</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">lower_energy_limit</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
-                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="n">event_count_label</span><span class="p">,</span>
-                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;angular_distance_vs_energy_distribution&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;angular_distance_vs_energy_cumulative&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">normalized_cumulative_angular_vs_energy</span><span class="p">,</span>
-                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="p">[</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_vs_energy_bin_x_edges&quot;</span><span class="p">),</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;angular_distance_vs_energy_bin_y_edges&quot;</span><span class="p">),</span>
-                <span class="p">],</span>
-                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_2d_normalized_params</span><span class="p">,</span>  <span class="c1"># Includes contour line at value=1</span>
-                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">pointing_direction_label</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">energy_label</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: fraction of events by angular distance vs energy&quot;</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">viewcone_radius</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">lower_energy_limit</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
-                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="s2">&quot;Fraction of events&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;angular_distance_vs_energy_cumulative_distribution&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;core_vs_energy_cumulative&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">normalized_cumulative_core_vs_energy</span><span class="p">,</span>
-                <span class="s2">&quot;bins&quot;</span><span class="p">:</span> <span class="p">[</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_vs_energy_bin_x_edges&quot;</span><span class="p">),</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_vs_energy_bin_y_edges&quot;</span><span class="p">),</span>
-                <span class="p">],</span>
-                <span class="s2">&quot;plot_type&quot;</span><span class="p">:</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plot_params&quot;</span><span class="p">:</span> <span class="n">hist_2d_normalized_params</span><span class="p">,</span>
-                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">core_distance_label</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">energy_label</span><span class="p">,</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Triggered events: fraction of events by core distance vs energy&quot;</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">upper_radius_limit</span><span class="p">,</span>
-                    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">lower_energy_limit</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">},</span>
-                <span class="s2">&quot;colorbar_label&quot;</span><span class="p">:</span> <span class="s2">&quot;Fraction of events&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;core_vs_energy_cumulative_distribution&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">}</span>
-
-        <span class="k">for</span> <span class="n">plot_key</span><span class="p">,</span> <span class="n">plot_args</span> <span class="ow">in</span> <span class="n">plots</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">plot_filename</span> <span class="o">=</span> <span class="n">plot_args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;filename&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_name</span> <span class="ow">and</span> <span class="n">plot_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">):</span>
-                <span class="n">plot_args</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">][</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_name</span><span class="si">}</span><span class="s2"> array)&quot;</span>
-
-            <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_plot_filename</span><span class="p">(</span><span class="n">plot_filename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_name</span><span class="p">)</span>
-            <span class="n">output_file</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="n">filename</span> <span class="k">if</span> <span class="n">output_path</span> <span class="k">else</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_create_plot</span><span class="p">(</span><span class="o">**</span><span class="n">plot_args</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="n">output_file</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_create_rebinned_plot</span><span class="p">(</span><span class="n">rebin_factor</span><span class="p">,</span> <span class="n">plot_args</span><span class="p">,</span> <span class="n">plot_key</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_create_rebinned_plot</span><span class="p">(</span><span class="n">plot_args</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">rebin_factor</span><span class="p">)</span></div>
-
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limits</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract limits from the provided dictionary for plotting.&quot;&quot;&quot;</span>
-        <span class="n">upper_radius_limit</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">lower_energy_limit</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">viewcone_radius</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">limits</span><span class="p">:</span>
-            <span class="n">upper_radius_limit</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">limits</span><span class="p">[</span><span class="s2">&quot;upper_radius_limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="s2">&quot;upper_radius_limit&quot;</span> <span class="ow">in</span> <span class="n">limits</span> <span class="k">else</span> <span class="kc">None</span>
-            <span class="p">)</span>
-            <span class="n">lower_energy_limit</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">limits</span><span class="p">[</span><span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="s2">&quot;lower_energy_limit&quot;</span> <span class="ow">in</span> <span class="n">limits</span> <span class="k">else</span> <span class="kc">None</span>
-            <span class="p">)</span>
-            <span class="n">viewcone_radius</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">limits</span><span class="p">[</span><span class="s2">&quot;viewcone_radius&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="s2">&quot;viewcone_radius&quot;</span> <span class="ow">in</span> <span class="n">limits</span> <span class="k">else</span> <span class="kc">None</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="n">upper_radius_limit</span><span class="p">,</span> <span class="n">lower_energy_limit</span><span class="p">,</span> <span class="n">viewcone_radius</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_build_plot_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_filename</span><span class="p">,</span> <span class="n">array_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Build the full plot filename with appropriate extensions.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        base_filename : str</span>
-<span class="sd">            The base filename without extension</span>
-<span class="sd">        array_name : str, optional</span>
-<span class="sd">            Name of the array to append to filename</span>
+<span class="sd">        Calculate cumulative distributions for triggered histograms.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        str</span>
-<span class="sd">            Complete filename with extension</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary containing the cumulative histograms.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">array_name</span><span class="p">:</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_filename</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">array_name</span><span class="si">}</span><span class="s2">.png&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_filename</span><span class="si">}</span><span class="s2">.png&quot;</span>
+        <span class="n">cumulative_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;_cumulative&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_should_create_rebinned_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rebin_factor</span><span class="p">,</span> <span class="n">plot_args</span><span class="p">,</span> <span class="n">plot_key</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if a rebinned version of the plot should be created.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        rebin_factor : int</span>
-<span class="sd">            Factor by which to rebin the energy axis</span>
-<span class="sd">        plot_args : dict</span>
-<span class="sd">            Plot arguments</span>
-<span class="sd">        plot_key : str</span>
-<span class="sd">            Key identifying the plot type</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        bool</span>
-<span class="sd">            True if a rebinned plot should be created, False otherwise</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">rebin_factor</span> <span class="o">&gt;</span> <span class="mi">1</span>
-            <span class="ow">and</span> <span class="n">plot_args</span><span class="p">[</span><span class="s2">&quot;plot_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;histogram2d&quot;</span>
-            <span class="ow">and</span> <span class="n">plot_key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_cumulative&quot;</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="n">plot_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_params&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;norm&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span>
-        <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_create_rebinned_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plot_args</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">rebin_factor</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a rebinned version of a 2D histogram plot.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        plot_args : dict</span>
-<span class="sd">            Plot arguments for the original plot</span>
-<span class="sd">        filename : str</span>
-<span class="sd">            Filename of the original plot</span>
-<span class="sd">        output_path : Path or None</span>
-<span class="sd">            Path to save the plot to, or None</span>
-<span class="sd">        rebin_factor : int</span>
-<span class="sd">            Factor by which to rebin the energy axis</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">plot_args</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
-        <span class="n">bins</span> <span class="o">=</span> <span class="n">plot_args</span><span class="p">[</span><span class="s2">&quot;bins&quot;</span><span class="p">]</span>
-
-        <span class="n">rebinned_data</span><span class="p">,</span> <span class="n">rebinned_x_bins</span><span class="p">,</span> <span class="n">rebinned_y_bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rebin_2d_histogram</span><span class="p">(</span>
-            <span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">rebin_factor</span>
-        <span class="p">)</span>
-
-        <span class="n">rebinned_plot_args</span> <span class="o">=</span> <span class="n">plot_args</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">rebinned_plot_args</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rebinned_data</span>
-        <span class="n">rebinned_plot_args</span><span class="p">[</span><span class="s2">&quot;bins&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">rebinned_x_bins</span><span class="p">,</span> <span class="n">rebinned_y_bins</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">rebinned_plot_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">):</span>
-            <span class="n">rebinned_plot_args</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">][</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (Energy rebinned </span><span class="si">{</span><span class="n">rebin_factor</span><span class="si">}</span><span class="s2">x)&quot;</span>
-
-        <span class="n">rebinned_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.png&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">_rebinned.png&quot;</span>
-        <span class="n">rebinned_output_file</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="n">rebinned_filename</span> <span class="k">if</span> <span class="n">output_path</span> <span class="k">else</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_create_plot</span><span class="p">(</span><span class="o">**</span><span class="n">rebinned_plot_args</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="n">rebinned_output_file</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_create_plot</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">data</span><span class="p">,</span>
-        <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">plot_type</span><span class="o">=</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-        <span class="n">plot_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">scales</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">colorbar_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">output_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">lines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create and save a plot with the given parameters.</span>
-
-<span class="sd">        For normalized 2D histograms, a contour line is drawn at the value of 1.0</span>
-<span class="sd">        to indicate the boundary where each energy bin reaches complete containment.</span>
-<span class="sd">        This can be controlled with the &#39;show_contour&#39; parameter in plot_params.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">plot_params</span> <span class="o">=</span> <span class="n">plot_params</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="n">scales</span> <span class="o">=</span> <span class="n">scales</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="n">lines</span> <span class="o">=</span> <span class="n">lines</span> <span class="ow">or</span> <span class="p">{}</span>
-
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;histogram&quot;</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">bins</span><span class="p">),</span> <span class="o">**</span><span class="n">plot_params</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;histogram2d&quot;</span><span class="p">:</span>
-            <span class="n">pcm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_2d_histogram_plot</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">plot_params</span><span class="p">)</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">pcm</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">colorbar_label</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="s2">&quot;x&quot;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s2">&quot;y&quot;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s2">&quot;r&quot;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-            <span class="n">circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
-                <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">lines</span><span class="p">[</span><span class="s2">&quot;r&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_cumulative</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">new</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+            <span class="n">new</span><span class="p">[</span><span class="s2">&quot;histogram&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_cumulative_histogram</span><span class="p">(</span><span class="n">hist</span><span class="p">[</span><span class="s2">&quot;histogram&quot;</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">new</span><span class="p">[</span><span class="s2">&quot;axis_titles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">hist</span><span class="p">[</span><span class="s2">&quot;axis_titles&quot;</span><span class="p">])</span>
+            <span class="n">new</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;suffix&quot;</span><span class="p">:</span> <span class="n">suffix</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Cumulative triggered events&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
             <span class="p">)</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">circle</span><span class="p">)</span>
+            <span class="n">new</span><span class="p">[</span><span class="s2">&quot;axis_titles&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Fraction of Events&quot;</span>
+            <span class="n">cumulative_data</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new</span>
 
-        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
-            <span class="n">xlabel</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
-            <span class="n">ylabel</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
-            <span class="n">title</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
-            <span class="n">xscale</span><span class="o">=</span><span class="n">scales</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;linear&quot;</span><span class="p">),</span>
-            <span class="n">yscale</span><span class="o">=</span><span class="n">scales</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;linear&quot;</span><span class="p">),</span>
-        <span class="p">)</span>
+        <span class="c1"># 2D histograms vs energy</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">hist</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_vs_energy&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_mc&quot;</span><span class="p">):</span>
+                <span class="n">add_cumulative</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">output_file</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving plot to </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="c1"># 1D histograms</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span> <span class="s2">&quot;core_distance&quot;</span><span class="p">,</span> <span class="s2">&quot;angular_distance&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">hist</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">add_cumulative</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;energy&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">fig</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cumulative_data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cumulative_data</span></div>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_create_2d_histogram_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">plot_params</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a 2D histogram plot with the given parameters.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        data : np.ndarray</span>
-<span class="sd">            2D histogram data</span>
-<span class="sd">        bins : tuple of np.ndarray</span>
-<span class="sd">            Bin edges for x and y axes</span>
-<span class="sd">        plot_params : dict</span>
-<span class="sd">            Plot parameters including norm, cmap, and show_contour</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        matplotlib.collections.QuadMesh</span>
-<span class="sd">            The created pcolormesh object for colorbar attachment</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">plot_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;norm&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
-            <span class="n">pcm</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span>
-                <span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                <span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
-                <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">cmap</span><span class="o">=</span><span class="n">plot_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cmap&quot;</span><span class="p">,</span> <span class="s2">&quot;viridis&quot;</span><span class="p">),</span>
-            <span class="p">)</span>
-            <span class="c1"># Add contour line at value=1.0 for normalized histograms</span>
-            <span class="k">if</span> <span class="n">plot_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;show_contour&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
-                <span class="n">x_centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
-                <span class="n">y_centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
-                <span class="n">x_mesh</span><span class="p">,</span> <span class="n">y_mesh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x_centers</span><span class="p">,</span> <span class="n">y_centers</span><span class="p">)</span>
-                <span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span>
-                    <span class="n">x_mesh</span><span class="p">,</span>
-                    <span class="n">y_mesh</span><span class="p">,</span>
-                    <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
-                    <span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="mf">0.999999</span><span class="p">],</span>  <span class="c1"># very close to 1 for floating point precision</span>
-                    <span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tab:red&quot;</span><span class="p">],</span>
-                    <span class="n">linestyles</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;--&quot;</span><span class="p">],</span>
-                    <span class="n">linewidths</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">],</span>
-                <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">pcm</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span>
-                <span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">LogNorm</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span>
-            <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">pcm</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_cumulative_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1090,12 +821,13 @@
                 <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">result</span>
 
-        <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span>
-
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span> <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">1</span>
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_cumsum_along_axis</span><span class="p">(</span><span class="n">hist</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">reverse</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
+            <span class="c1"># Ensure floating dtype to allow in-place normalization without casting errors</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_along_axis</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">result</span>
@@ -1136,9 +868,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_cumulative_2d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">reverse</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate cumulative distribution for 2D histogram.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span>
-
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span> <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_cumsum_along_axis</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">reverse</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_apply_cumsum_along_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">reverse</span><span class="p">):</span>
@@ -1149,7 +879,10 @@
 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="n">cumsum_func</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">hist</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_rebin_2d_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">x_bins</span><span class="p">,</span> <span class="n">y_bins</span><span class="p">,</span> <span class="n">rebin_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelIOEventHistograms.rebin_2d_histogram">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.rebin_2d_histogram">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rebin_2d_histogram</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">x_bins</span><span class="p">,</span> <span class="n">y_bins</span><span class="p">,</span> <span class="n">rebin_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Rebin a 2D histogram by merging neighboring bins along the energy dimension (y-axis) only.</span>
 
@@ -1168,7 +901,7 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        tuple</span>
-<span class="sd">            (rebinned_hist, x_bins, rebinned_y_bins)</span>
+<span class="sd">            (re-binned_hist, x_bins, re-binned_y_bins)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">rebin_factor</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">hist</span><span class="p">,</span> <span class="n">x_bins</span><span class="p">,</span> <span class="n">y_bins</span>
@@ -1187,6 +920,22 @@
         <span class="n">new_y_bins</span> <span class="o">=</span> <span class="n">y_bins</span><span class="p">[::</span><span class="n">rebin_factor</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">new_hist</span><span class="p">,</span> <span class="n">x_bins</span><span class="p">,</span> <span class="n">new_y_bins</span></div>
+
+
+<div class="viewcode-block" id="SimtelIOEventHistograms.print_summary">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_event_histograms.SimtelIOEventHistograms.print_summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print a summary of the histogram statistics.</span>
+
+<span class="sd">        Total number of events is retrieved from the &#39;energy&#39; histograms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">total_simulated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy_mc&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+        <span class="n">total_triggered</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total simulated events: </span><span class="si">{</span><span class="n">total_simulated</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total triggered events: </span><span class="si">{</span><span class="n">total_triggered</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+</div>
 
 </pre></div>
 

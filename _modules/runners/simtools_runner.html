@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0b84842a"></script>
+    <script src="../../_static/documentation_options.js?v=71eff813"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g423f126ba" />
+  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
   </head>
   
   
@@ -563,7 +563,6 @@
 <span class="sd">    - output files will be written out to &#39;./output/&lt;workflow directory&gt;/&#39;</span>
 
 <span class="sd">    Replaces the placeholders in the configuration file with the actual values.</span>
-<span class="sd">    Sets &#39;USE_PLAIN_OUTPUT_PATH&#39; to True for all applications.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -636,7 +635,6 @@
                 <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span>
             <span class="p">]</span>
     <span class="k">if</span> <span class="n">output_path</span><span class="p">:</span>
-        <span class="n">configuration</span><span class="p">[</span><span class="s2">&quot;use_plain_output_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">configuration</span><span class="p">[</span><span class="s2">&quot;output_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">configuration</span>
