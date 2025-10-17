@@ -115,8 +115,8 @@ jobs:
           # release candidates (e.g., v1.2.3-rc or v1.2.3-rc3) should be tested against released versions of the
           # simulation model database)
           if [[ "$CURRENT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]*$ ]]; then
-            echo "Detected RC version branch: $CURRENT_REF - setting branch to ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}"
-            BRANCH="${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}"
+            echo "Detected RC version branch: $CURRENT_REF - setting branch to $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
+            BRANCH="$SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
           fi
           echo "SIMTOOLS_DB_SIMULATION_MODEL_BRANCH=$BRANCH" >> "$GITHUB_ENV"
 
