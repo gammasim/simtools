@@ -109,9 +109,22 @@ jobs:
           echo "Simulation model set to: $SIMTOOLS_DB_SIMULATION_MODEL version $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
 
       - name: Determine simulation model branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_BRANCH: ${{ github.event.inputs.simulation_model_branch }}
         run: |
-          BRANCH="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.simulation_model_branch || 'main' }}"
-          CURRENT_REF="${{ github.ref_name }}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_BRANCH" ]; then
+            BRANCH="$INPUT_BRANCH"
+          else
+            BRANCH="main"
+          fi
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            CURRENT_REF="$HEAD_REF"
+          else
+            CURRENT_REF="$REF_NAME"
+          fi
           # release candidates (e.g., v1.2.3-rc or v1.2.3-rc3) should be tested against released versions of the
           # simulation model database)
           if [[ "$CURRENT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]*$ ]]; then
