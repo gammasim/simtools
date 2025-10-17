@@ -4,6 +4,12 @@ name: CI-unittests
 
 on:
   workflow_dispatch:
+    inputs:
+      simulation_model_branch:
+        description: 'Simulation model branch'
+        required: false
+        type: string
+        default: 'main'
   pull_request:
     types: [opened, synchronize]
     paths-ignore:
@@ -113,9 +119,25 @@ jobs:
 
       - name: Upload data to MongoDB
         run: |
-          simtools-db-upload-model-repository \
-            --db_simulation_model ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} \
-            --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
+          BRANCH="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.simulation_model_branch || 'main' }}"
+          CURRENT_REF="${{ github.ref_name }}"
+          # release candidates (e.g., v1.2.3-rc or v1.2.3-rc3) should be tested against released versions of the
+          # simulation model database)
+          if [[ "$CURRENT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]*$ ]]; then
+            echo "Detected RC version branch: $CURRENT_REF - setting branch to empty string"
+            BRANCH=""
+          fi
+
+          if [ -n "$BRANCH" ]; then
+            simtools-db-upload-model-repository \
+              --db_simulation_model ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} \
+              --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }} \
+              --branch "$BRANCH"
+          else
+            simtools-db-upload-model-repository \
+              --db_simulation_model ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} \
+              --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
+          fi
 
       - name: Unit tests
         shell: bash -l {0}
