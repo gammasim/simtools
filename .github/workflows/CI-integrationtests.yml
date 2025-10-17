@@ -54,8 +54,6 @@ jobs:
         env:
           MONGO_INITDB_ROOT_USERNAME: api
           MONGO_INITDB_ROOT_PASSWORD: password
-        ports:
-          - 27017:27017
         options: >-
           --health-cmd "mongosh --host localhost --port 27017 -u api -p password --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })'"
           --health-interval 10s
@@ -132,7 +130,7 @@ jobs:
             CURRENT_REF="$REF_NAME"
           fi
           # release candidates (e.g., v1.2.3-rc or v1.2.3-rc3) should be tested against released versions of the
-          # simulation model database)
+          # simulation model database
           if [[ "$CURRENT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]*$ ]]; then
             echo "Detected RC version branch: $CURRENT_REF - setting branch to $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
             BRANCH="$SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
