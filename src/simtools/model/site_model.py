@@ -12,47 +12,50 @@ from simtools.model.model_parameter import ModelParameter
 
 class SiteModel(ModelParameter):
     """
-    SiteModel represents the MC model of an observatory site.
+    Representation of an observatory site model.
+
+    The site model includes (among others):
+
+    - Reference point coordinates
+    - Array elements
+    - Geomagnetic field parameters
+    - Atmospheric parameters
+    - NSB parameters
 
     Parameters
     ----------
     site: str
         Site name (e.g., South or North).
-    mongo_db_config: dict
-        MongoDB configuration.
+    db_config: dict
+        Database configuration.
     model_version: str or list
         Model version or list of model versions (in which case only the first one is used).
     label: str, optional
-        Instance label. Important for output file naming.
+        Instance label.
     """
 
-    def __init__(
-        self,
-        site: str,
-        mongo_db_config: dict,
-        model_version: str,
-        label: str | None = None,
-    ):
+    def __init__(self, site, db_config, model_version, label=None):
         """Initialize SiteModel."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SiteModel for site %s", site)
         super().__init__(
             site=site,
-            mongo_db_config=mongo_db_config,
+            db_config=db_config,
             model_version=model_version,
-            db=None,
             label=label,
             collection="sites",
         )
 
-    def get_reference_point(self) -> dict:
+    def get_reference_point(self):
         """
-        Get reference point coordinates as dict.
+        Get reference point coordinates.
+
+        Ground coordinates are calculated relative to this point.
 
         Returns
         -------
         dict
-            Reference point coordinates as dict
+            Reference point coordinates.
         """
         return {
             "center_altitude": self.get_parameter_value_with_unit("reference_point_altitude"),
@@ -61,13 +64,12 @@ class SiteModel(ModelParameter):
             "epsg_code": self.get_parameter_value("epsg_code"),
         }
 
-    def get_corsika_site_parameters(
-        self, config_file_style: bool = False, model_directory: Path | None = None
-    ) -> dict:
+    def get_corsika_site_parameters(self, config_file_style=False, model_directory=None):
         """
-        Get site-related CORSIKA parameters as dict.
+        Get site-related CORSIKA parameters.
 
-        Parameters are returned with units wherever possible.
+        Parameters are returned with units wherever possible ('config_file_style=False')
+        or in CORSIKA-expected coordinates.
 
         Parameters
         ----------
@@ -79,7 +81,7 @@ class SiteModel(ModelParameter):
         Returns
         -------
         dict
-            Site-related CORSIKA parameters as dict
+            Site-related CORSIKA parameters.
         """
         if config_file_style:
             model_directory = model_directory or Path()
@@ -108,7 +110,7 @@ class SiteModel(ModelParameter):
             "geomag_rotation": self.get_parameter_value_with_unit("geomag_rotation"),
         }
 
-    def get_array_elements_for_layout(self, layout_name: str) -> list:
+    def get_array_elements_for_layout(self, layout_name):
         """
         Return list of array elements for a given array layout.
 
@@ -128,7 +130,27 @@ class SiteModel(ModelParameter):
                 return layout["elements"]
         raise ValueError(f"Array layout '{layout_name}' not found in '{self.site}' site model.")
 
-    def get_list_of_array_layouts(self) -> list:
+    def get_array_elements_of_type(self, array_element_type):
+        """
+        Get all array elements of a given type.
+
+        Parameters
+        ----------
+        array_element_type : str
+            Type of the array element (e.g. LSTN, MSTS)
+
+        Returns
+        -------
+        dict
+            Dict with array elements.
+        """
+        return self.db.get_array_elements_of_type(
+            array_element_type=array_element_type,
+            model_version=self.model_version,
+            collection="telescopes",
+        )
+
+    def get_list_of_array_layouts(self):
         """
         Get list of available array layouts.
 
@@ -139,13 +161,9 @@ class SiteModel(ModelParameter):
         """
         return [layout["name"] for layout in self.get_parameter_value("array_layouts")]
 
-    def export_atmospheric_transmission_file(self, model_directory: Path):
+    def export_atmospheric_transmission_file(self, model_directory):
         """
-        Export atmospheric transmission file.
-
-        This method is needed because when CORSIKA is not piped to sim_telarray,
-        the atmospheric transmission file is not written out to the model directory.
-        This method allows to export it explicitly.
+        Export atmospheric transmission file from database to the given directory.
 
         Parameters
         ----------

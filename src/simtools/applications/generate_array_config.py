@@ -46,7 +46,7 @@ def main():
     array_model = ArrayModel(
         label=app_context.args["label"],
         model_version=app_context.args["model_version"],
-        mongo_db_config=app_context.db_config,
+        db_config=app_context.db_config,
         site=app_context.args.get("site"),
         layout_name=app_context.args.get("array_layout_name"),
         array_elements=app_context.args.get("array_elements"),

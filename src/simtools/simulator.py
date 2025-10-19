@@ -125,7 +125,7 @@ class Simulator:
                 label=self.label,
                 site=self.args_dict.get("site"),
                 layout_name=self.args_dict.get("array_layout_name"),
-                mongo_db_config=self.db_config,
+                db_config=self.db_config,
                 model_version=version,
                 sim_telarray_seeds={
                     "seed": self._get_seed_for_random_instrument_instances(
