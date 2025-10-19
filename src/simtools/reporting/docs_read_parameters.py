@@ -543,7 +543,7 @@ class ReadParameters:
             telescope_name=self.array_element,
             model_version=self.model_version,
             label="reports",
-            mongo_db_config=self.db_config,
+            db_config=self.db_config,
         )
 
         output_filename = Path(self.output_path / (telescope_model.name + ".md"))

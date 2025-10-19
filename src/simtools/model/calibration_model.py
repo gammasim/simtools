@@ -17,8 +17,8 @@ class CalibrationModel(ModelParameter):
         Site name (e.g., South or North).
     calibration_device_model_name: str
         Calibration device model name (ex. ILLS-01, ILLN-01, ...).
-    mongo_db_config: dict
-        MongoDB configuration.
+    db_config: dict
+        Database configuration.
     model_version: str
         Model version.
     label: str, optional
@@ -29,7 +29,7 @@ class CalibrationModel(ModelParameter):
         self,
         site: str,
         calibration_device_model_name: str,
-        mongo_db_config: dict,
+        db_config: dict,
         model_version: str,
         label: str | None = None,
     ):
@@ -38,9 +38,8 @@ class CalibrationModel(ModelParameter):
             site=site,
             array_element_name=calibration_device_model_name,
             collection="calibration_devices",
-            mongo_db_config=mongo_db_config,
+            db_config=db_config,
             model_version=model_version,
-            db=None,
             label=label,
         )
 

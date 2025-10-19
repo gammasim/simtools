@@ -102,7 +102,7 @@ def _layout_from_db(args_dict, db_config):
         Table with array element positions.
     """
     array_model = ArrayModel(
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=args_dict["model_version"],
         site=args_dict["site"],
         layout_name=args_dict.get("array_layout_name", None),
@@ -121,7 +121,7 @@ def main():
         if app_context.args.get("site", None) is None:
             raise ValueError("Site must be provided to list available layouts.")
         site_model = SiteModel(
-            mongo_db_config=app_context.db_config,
+            db_config=app_context.db_config,
             model_version=app_context.args["model_version"],
             site=app_context.args["site"],
         )

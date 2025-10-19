@@ -119,9 +119,9 @@ class DatabaseHandler:
             return db_name
         if db_simulation_model_version and model_name:
             return f"{model_name}-{db_simulation_model_version.replace('.', '-')}"
-        if db_simulation_model_version or model_name:
-            return None
-        return None if (db_simulation_model_version or model_name) else self.db_name
+        if not (db_simulation_model_version or model_name):
+            return self.db_name
+        return None
 
     def print_connection_info(self):
         """Print the connection information."""

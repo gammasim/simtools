@@ -168,7 +168,7 @@ def test_fill_corsika_configuration_model_version(corsika_config_mock_array_mode
         config = corsika_config_mock_array_model.fill_corsika_configuration(args_dict, db_config={})
 
         # Verify ModelParameter was instantiated with the correct model (the first one)
-        mock_model_parameter.assert_called_with(mongo_db_config={}, model_version="5.0.0")
+        mock_model_parameter.assert_called_with(db_config={}, model_version="5.0.0")
         mock_params.get_simulation_software_parameters.assert_called_with("corsika")
 
         assert isinstance(config, dict)
@@ -606,8 +606,8 @@ def test_assert_corsika_configurations_match_success(corsika_config_mock_array_m
             model_versions=["5.0.0", "6.0.0"], db_config={}
         )
 
-        mock_model_parameter.assert_any_call(mongo_db_config={}, model_version="5.0.0")
-        mock_model_parameter.assert_any_call(mongo_db_config={}, model_version="6.0.0")
+        mock_model_parameter.assert_any_call(db_config={}, model_version="5.0.0")
+        mock_model_parameter.assert_any_call(db_config={}, model_version="6.0.0")
         assert mock_model_parameter.call_count == 2
 
 
@@ -652,8 +652,8 @@ def test_assert_corsika_configurations_match_skip_parameters(corsika_config_mock
             model_versions=["5.0.0", "6.0.0"], db_config={}
         )
 
-        mock_model_parameter.assert_any_call(mongo_db_config={}, model_version="5.0.0")
-        mock_model_parameter.assert_any_call(mongo_db_config={}, model_version="6.0.0")
+        mock_model_parameter.assert_any_call(db_config={}, model_version="5.0.0")
+        mock_model_parameter.assert_any_call(db_config={}, model_version="6.0.0")
         assert mock_model_parameter.call_count == 2
 
 

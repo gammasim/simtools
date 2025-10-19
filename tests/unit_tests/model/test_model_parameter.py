@@ -9,7 +9,7 @@ from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.db.db_handler import DatabaseHandler
-from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
+from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
@@ -18,7 +18,7 @@ logger = logging.getLogger()
 def test_get_parameter_type(telescope_model_lst, caplog):
     assert telescope_model_lst.get_parameter_type("num_gains") == "int64"
     telescope_model_copy = copy.deepcopy(telescope_model_lst)
-    telescope_model_copy._parameters["num_gains"].pop("type")
+    telescope_model_copy.parameters["num_gains"].pop("type")
     with caplog.at_level(logging.DEBUG):
         assert telescope_model_copy.get_parameter_type("num_gains") is None
     assert "Parameter num_gains does not have a type." in caplog.text
@@ -27,7 +27,7 @@ def test_get_parameter_type(telescope_model_lst, caplog):
 def test_get_parameter_file_flag(telescope_model_lst, caplog):
     assert telescope_model_lst.get_parameter_file_flag("num_gains") is False
     telescope_model_copy = copy.deepcopy(telescope_model_lst)
-    telescope_model_copy._parameters["num_gains"].pop("file")
+    telescope_model_copy.parameters["num_gains"].pop("file")
     with caplog.at_level(logging.DEBUG):
         assert telescope_model_copy.get_parameter_file_flag("num_gains") is False
     assert "Parameter num_gains does not have a file associated with it." in caplog.text
@@ -48,11 +48,10 @@ def test_get_parameter_value(telescope_model_lst):
     tel_model = copy.deepcopy(telescope_model_lst)
     assert isinstance(tel_model.get_parameter_value("num_gains"), int)
 
-    _par_dict_value_missing = {"unit": "m", "type": "float"}
-    with pytest.raises(KeyError):
-        tel_model.get_parameter_value("num_gains", parameter_dict=_par_dict_value_missing)
+    with pytest.raises(InvalidModelParameterError):
+        tel_model.get_parameter_value("not_num_gains")
 
-    tel_model._parameters["num_gains"]["value"] = "2 3 4"
+    tel_model.parameters["num_gains"]["value"] = "2 3 4"
     t_int = tel_model.get_parameter_value("num_gains")
     assert len(t_int) == 3
     assert isinstance(t_int, list)
@@ -67,17 +66,20 @@ def test_get_parameter_value(telescope_model_lst):
         "value": "0.8",
         "type": "float64",
     }
-    t_2 = tel_model.get_parameter_value("t_2", _tmp_dict)
+    tel_model.parameters["t_2"] = _tmp_dict
+    t_2 = tel_model.get_parameter_value("t_2")
     assert t_2 == pytest.approx(0.8)
     # string-type lists
     _tmp_dict["value"] = "0.8 0.9"
-    t_2 = tel_model.get_parameter_value("t_2", _tmp_dict)
+    tel_model.parameters["t_2"] = _tmp_dict
+    t_2 = tel_model.get_parameter_value("t_2")
     assert len(t_2) == 2
     assert t_2[0] == pytest.approx(0.8)
     assert t_2[1] == pytest.approx(0.9)
     # mixed strings should become list of strings
     _tmp_dict["value"] = "0.8 abc"
-    t_2 = tel_model.get_parameter_value("t_2", _tmp_dict)
+    tel_model.parameters["t_2"] = _tmp_dict
+    t_2 = tel_model.get_parameter_value("t_2")
     assert t_2 == ["0.8", "abc"]
 
 
@@ -127,12 +129,6 @@ def test_handling_parameters(telescope_model_lst):
 
     with pytest.raises(InvalidModelParameterError):
         tel_model._get_parameter_dict("bla_bla")
-
-
-def test_print_parameters(telescope_model_lst, capsys):
-    tel_model = telescope_model_lst
-    tel_model.print_parameters()
-    assert "quantum_efficiency" in capsys.readouterr().out
 
 
 def test_set_config_file_directory_and_name(telescope_model_lst, caplog):
@@ -232,7 +228,7 @@ def test_updating_export_model_files(db_config, model_version):
         telescope_name="LSTN-01",
         model_version=model_version,
         label="test-telescope-model-2",
-        mongo_db_config=db_config,
+        db_config=db_config,
     )
 
     logger.debug(
@@ -328,38 +324,6 @@ def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_mod
     )
 
 
-def test_model_version_setter(mocker):
-    """Test the model_version setter property."""
-    model_version = "5.0.0"
-    mock_db = mocker.MagicMock()
-    mock_db.get_design_model.return_value = None
-
-    # Create minimal required parameters for ModelParameter initialization
-    mongo_db_config = {"test": "config"}
-
-    # Mock the DatabaseHandler constructor instead of trying to patch the db attribute
-    mocker.patch("simtools.db.db_handler.DatabaseHandler", return_value=mock_db)
-
-    # Create ModelParameter instance with required parameters
-    model_param = ModelParameter(mongo_db_config=mongo_db_config, model_version=model_version)
-
-    assert model_param.model_version == "5.0.0"
-
-    # Test setting a invalid single-element list model version
-    # It is invalid because a list with one element will always be converted to a string
-    # in the configurator
-    with pytest.raises(
-        ValueError, match=r"Only one model version can be passed to ModelParameter, not a list."
-    ):
-        model_param.model_version = ["6.0.0"]
-
-    # Test setting an invalid multi-element list model version
-    with pytest.raises(
-        ValueError, match=r"Only one model version can be passed to ModelParameter, not a list."
-    ):
-        model_param.model_version = ["7.0.0", "8.0.0"]
-
-
 def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
     """Test writing sim_telarray config file with and without additional model."""
     telescope_copy = copy.deepcopy(telescope_model_lst)
@@ -384,7 +348,7 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
     mock_writer.write_telescope_config_file.reset_mock()
 
     add_model = copy.deepcopy(telescope_model_lst)
-    add_model._parameters = {"test_param": "test_value"}
+    add_model.parameters = {"test_param": "test_value"}
 
     telescope_copy.write_sim_telarray_config_file(additional_models=add_model)
     assert mock_export.call_count == 2  # Called for both models
@@ -421,9 +385,3 @@ def test_add_additional_models(telescope_model_lst, mocker):
     models_dict = {"model1": mock_model, "model2": mock_model2}
     telescope_copy._add_additional_models(models_dict)
     assert telescope_copy.parameters["param2"] == "value2"
-
-
-def test__create_quantity_for_value(telescope_model_lst):
-    assert telescope_model_lst._create_quantity_for_value("abc", "m") == "abc"
-    assert telescope_model_lst._create_quantity_for_value(5, "m") == 5 * u.m
-    assert telescope_model_lst._create_quantity_for_value(5, None) == 5
