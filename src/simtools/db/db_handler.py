@@ -1,69 +1,15 @@
 """Module to handle interaction with DB."""
 
-import io
 import logging
-import re
 from collections import defaultdict
 from pathlib import Path
-from threading import Lock
-
-import gridfs
-import jsonschema
-from astropy.table import Table
-from bson.objectid import ObjectId
-from pymongo import MongoClient
 
 from simtools.data_model import validate_data
-from simtools.io import ascii_handler, io_handler
+from simtools.db.mongo_db import MongoDBHandler
+from simtools.io import io_handler
 from simtools.simtel import simtel_table_reader
 from simtools.utils import names, value_conversion
 from simtools.version import resolve_version_to_latest_patch
-
-logging.getLogger("pymongo").setLevel(logging.WARNING)
-
-
-# pylint: disable=unsubscriptable-object
-# The above comment is because pylint does not know that DatabaseHandler.db_client is subscriptable
-
-
-jsonschema_db_dict = {
-    "$schema": "https://json-schema.org/draft/2020-12/schema#",
-    "type": "object",
-    "description": "MongoDB configuration",
-    "properties": {
-        "db_server": {"type": "string", "description": "DB server address"},
-        "db_api_port": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 65535,
-            "default": 27017,
-            "description": "Port to use",
-        },
-        "db_api_user": {"type": "string", "description": "API username"},
-        "db_api_pw": {"type": "string", "description": "Password for the API user"},
-        "db_api_authentication_database": {
-            "type": ["string", "null"],
-            "default": "admin",
-            "description": "DB with user info (optional)",
-        },
-        "db_simulation_model": {
-            "type": "string",
-            "description": "Name of simulation model database",
-        },
-        "db_simulation_model_version": {
-            "type": "string",
-            "description": "Version of simulation model database",
-        },
-    },
-    "required": [
-        "db_server",
-        "db_api_port",
-        "db_api_user",
-        "db_api_pw",
-        "db_simulation_model",
-        "db_simulation_model_version",
-    ],
-}
 
 
 class DatabaseHandler:
@@ -78,12 +24,11 @@ class DatabaseHandler:
     Parameters
     ----------
     mongo_db_config: dict
-        Dictionary with the MongoDB configuration (see jsonschema_db_dict for details).
+        Dictionary with the MongoDB configuration.
     """
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
 
-    db_client = None
     production_table_cached = {}
     model_parameters_cached = {}
     model_versions_cached = {}
@@ -92,13 +37,12 @@ class DatabaseHandler:
         """Initialize the DatabaseHandler class."""
         self._logger = logging.getLogger(__name__)
 
-        self.mongo_db_config = self._validate_mongo_db_config(mongo_db_config)
+        self.mongo_db_config = MongoDBHandler.validate_mongo_db_config(mongo_db_config)
         self.io_handler = io_handler.IOHandler()
-        self.list_of_collections = {}
+        self.mongo_db_handler = MongoDBHandler(mongo_db_config) if self.mongo_db_config else None
 
-        self._set_up_connection()
         self.db_name = (
-            self.get_db_name(
+            MongoDBHandler.get_db_name(
                 db_simulation_model_version=self.mongo_db_config.get("db_simulation_model_version"),
                 model_name=self.mongo_db_config.get("db_simulation_model"),
             )
@@ -106,31 +50,23 @@ class DatabaseHandler:
             else None
         )
 
-    def _set_up_connection(self):
-        """Open the connection to MongoDB."""
-        if self.mongo_db_config and DatabaseHandler.db_client is None:
-            lock = Lock()
-            with lock:
-                DatabaseHandler.db_client = self._open_mongo_db()
-
     def get_db_name(self, db_name=None, db_simulation_model_version=None, model_name=None):
         """Build DB name from configuration."""
         if db_name:
             return db_name
         if db_simulation_model_version and model_name:
-            return f"{model_name}-{db_simulation_model_version.replace('.', '-')}"
+            return MongoDBHandler.get_db_name(
+                db_simulation_model_version=db_simulation_model_version,
+                model_name=model_name,
+            )
         if not (db_simulation_model_version or model_name):
             return self.db_name
         return None
 
     def print_connection_info(self):
         """Print the connection information."""
-        if self.mongo_db_config:
-            self._logger.info(
-                f"Connected to MongoDB at {self.mongo_db_config['db_server']}:"
-                f"{self.mongo_db_config['db_api_port']} "
-                f"using database: {self.db_name}"
-            )
+        if self.mongo_db_handler:
+            self.mongo_db_handler.print_connection_info(self.db_name)
         else:
             self._logger.info("No MongoDB configuration provided.")
 
@@ -145,55 +81,7 @@ class DatabaseHandler:
         bool
             True if the database is remote, False otherwise.
         """
-        if self.mongo_db_config:
-            db_server = self.mongo_db_config["db_server"]
-            domain_pattern = r"^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$"
-            return bool(re.match(domain_pattern, db_server))
-        return False
-
-    def _validate_mongo_db_config(self, mongo_db_config):
-        """Validate the MongoDB configuration."""
-        if mongo_db_config is None or all(value is None for value in mongo_db_config.values()):
-            return None
-        try:
-            jsonschema.validate(instance=mongo_db_config, schema=jsonschema_db_dict)
-            return mongo_db_config
-        except jsonschema.exceptions.ValidationError as err:
-            raise ValueError("Invalid MongoDB configuration") from err
-
-    def _open_mongo_db(self):
-        """
-        Open a connection to MongoDB and return the client to read/write to the DB with.
-
-        Returns
-        -------
-        A PyMongo DB client
-
-        Raises
-        ------
-        KeyError
-            If the DB configuration is invalid
-        """
-        direct_connection = self.mongo_db_config["db_server"] in (
-            "localhost",
-            "simtools-mongodb",
-            "mongodb",
-        )
-        return MongoClient(
-            self.mongo_db_config["db_server"],
-            port=self.mongo_db_config["db_api_port"],
-            username=self.mongo_db_config["db_api_user"],
-            password=self.mongo_db_config["db_api_pw"],
-            authSource=(
-                self.mongo_db_config.get("db_api_authentication_database")
-                if self.mongo_db_config.get("db_api_authentication_database")
-                else "admin"
-            ),
-            directConnection=direct_connection,
-            ssl=not direct_connection,
-            tlsallowinvalidhostnames=True,
-            tlsallowinvalidcertificates=True,
-        )
+        return bool(self.mongo_db_handler and self.mongo_db_handler.is_remote_database())
 
     def generate_compound_indexes_for_databases(
         self, db_name, db_simulation_model, db_simulation_model_version
@@ -209,53 +97,10 @@ class DatabaseHandler:
             Name of the simulation model.
         db_simulation_model_version: str
             Version of the simulation model.
-
-        Raises
-        ------
-        ValueError
-            If the requested database is not found.
-
         """
-        databases = [
-            d for d in self.db_client.list_database_names() if d not in ("config", "admin", "local")
-        ]
-        requested = self.get_db_name(
-            db_name=db_name,
-            db_simulation_model_version=db_simulation_model_version,
-            model_name=db_simulation_model,
+        self.mongo_db_handler.generate_compound_indexes_for_databases(
+            db_name, db_simulation_model, db_simulation_model_version
         )
-        if requested != "all" and requested not in databases:
-            raise ValueError(
-                f"Requested database '{requested}' not found. "
-                f"Following databases are available: {', '.join(databases)}"
-            )
-
-        databases = databases if requested == "all" else [requested]
-        for dbs in databases:
-            self._logger.info(f"Generating compound indexes for database: {dbs}")
-            self.generate_compound_indexes(db_name=dbs)
-
-    def generate_compound_indexes(self, db_name=None):
-        """
-        Generate compound indexes for the MongoDB collections.
-
-        Indexes based on the typical query patterns.
-        """
-        db_name = db_name or self.db_name
-        collection_names = [
-            "telescopes",
-            "sites",
-            "configuration_sim_telarray",
-            "configuration_corsika",
-            "calibration_devices",
-        ]
-        for collection_name in collection_names:
-            db_collection = self.get_collection(collection_name, db_name=db_name)
-            db_collection.create_index(
-                [("instrument", 1), ("site", 1), ("parameter", 1), ("parameter_version", 1)]
-            )
-        db_collection = self.get_collection("production_tables", db_name=db_name)
-        db_collection.create_index([("collection", 1), ("model_version", 1)])
 
     def get_model_parameter(
         self,
@@ -439,7 +284,7 @@ class DatabaseHandler:
             The collection from the DB.
         """
         db_name = db_name or self.db_name
-        return DatabaseHandler.db_client[db_name][collection_name]
+        return self.mongo_db_handler.get_collection(collection_name, db_name)
 
     def get_collections(self, db_name=None, model_collections_only=False):
         """
@@ -456,17 +301,9 @@ class DatabaseHandler:
         -------
         list
             List of collection names
-
         """
         db_name = db_name or self.db_name
-        if db_name not in self.list_of_collections:
-            self.list_of_collections[db_name] = DatabaseHandler.db_client[
-                db_name
-            ].list_collection_names()
-        collections = self.list_of_collections[db_name]
-        if model_collections_only:
-            return [collection for collection in collections if not collection.startswith("fs.")]
-        return collections
+        return self.mongo_db_handler.get_collections(db_name, model_collections_only)
 
     def export_model_file(
         self,
@@ -555,7 +392,9 @@ class DatabaseHandler:
             if Path(dest).joinpath(file_name).exists():
                 instance_ids[file_name] = "file exists"
             else:
-                file_path_instance = self._get_file_mongo_db(db_name, file_name)
+                file_path_instance = self.mongo_db_handler.get_file_from_mongo_db(
+                    db_name, file_name
+                )
                 self._write_file_from_mongo_to_disk(db_name, dest, file_path_instance)
                 instance_ids[file_name] = file_path_instance._id  # pylint: disable=protected-access
         return instance_ids
@@ -597,17 +436,14 @@ class DatabaseHandler:
         ValueError
             if query returned no results.
         """
-        collection = self.get_collection(collection_name, db_name=self.db_name)
-        posts = list(collection.find(query))
-        if not posts:
-            raise ValueError(
-                f"The following query for {collection_name} returned zero results: {query} "
-            )
+        posts = self.mongo_db_handler.query_mongo_db(query, collection_name, self.db_name)
         parameters = {}
         for post in posts:
             par_now = post["parameter"]
             parameters[par_now] = post
-            parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
+            parameters[par_now]["entry_date"] = self.mongo_db_handler.get_entry_date_from_document(
+                post
+            )
         return {k: parameters[k] for k in sorted(parameters)}
 
     def read_production_table_from_mongo_db(self, collection_name, model_version):
@@ -637,8 +473,7 @@ class DatabaseHandler:
             pass
 
         query = {"model_version": model_version, "collection": collection_name}
-        collection = self.get_collection("production_tables", db_name=self.db_name)
-        post = collection.find_one(query)
+        post = self.mongo_db_handler.find_one(query, "production_tables", self.db_name)
         if not post:
             raise ValueError(f"The following query returned zero results: {query}")
 
@@ -647,7 +482,7 @@ class DatabaseHandler:
             "model_version": post["model_version"],
             "parameters": post["parameters"],
             "design_model": post.get("design_model", {}),
-            "entry_date": ObjectId(post["_id"]).generation_time,
+            "entry_date": self.mongo_db_handler.get_entry_date_from_document(post),
         }
 
     def get_model_versions(self, collection_name="telescopes"):
@@ -803,38 +638,7 @@ class DatabaseHandler:
             )
         raise ValueError(f"Unknown simulation software: {simulation_software}")
 
-    @staticmethod
-    def _get_file_mongo_db(db_name, file_name):
-        """
-        Extract a file from MongoDB and return GridFS file instance.
-
-        Parameters
-        ----------
-        db_name: str
-            the name of the DB with files of tabulated data
-        file_name: str
-            The name of the file requested
-
-        Returns
-        -------
-        GridOut
-            A file instance returned by GridFS find_one
-
-        Raises
-        ------
-        FileNotFoundError
-            If the desired file is not found.
-
-        """
-        db = DatabaseHandler.db_client[db_name]
-        file_system = gridfs.GridFS(db)
-        if file_system.exists({"filename": file_name}):
-            return file_system.find_one({"filename": file_name})
-
-        raise FileNotFoundError(f"The file {file_name} does not exist in the database {db_name}")
-
-    @staticmethod
-    def _write_file_from_mongo_to_disk(db_name, path, file):
+    def _write_file_from_mongo_to_disk(self, db_name, path, file):
         """
         Extract a file from MongoDB and write it to disk.
 
@@ -847,10 +651,7 @@ class DatabaseHandler:
         file: GridOut
             A file instance returned by GridFS find_one
         """
-        db = DatabaseHandler.db_client[db_name]
-        fs_output = gridfs.GridFSBucket(db)
-        with open(Path(path).joinpath(file.filename), "wb") as output_file:
-            fs_output.download_to_stream_by_name(file.filename, output_file)
+        self.mongo_db_handler.write_file_from_mongo_to_disk(db_name, path, file)
 
     def get_ecsv_file_as_astropy_table(self, file_name, db_name=None):
         """
@@ -870,16 +671,9 @@ class DatabaseHandler:
         astropy.table.Table
             The contents of the ECSV file as an Astropy Table.
         """
-        db = DatabaseHandler.db_client[db_name or self.db_name]
-        fs = gridfs.GridFSBucket(db)
-
-        buf = io.BytesIO()
-        try:
-            fs.download_to_stream_by_name(file_name, buf)
-        except gridfs.errors.NoFile as exc:
-            raise FileNotFoundError(f"ECSV file '{file_name}' not found in DB.") from exc
-        buf.seek(0)
-        return Table.read(buf.getvalue().decode("utf-8"), format="ascii.ecsv")
+        return self.mongo_db_handler.get_ecsv_file_as_astropy_table(
+            file_name, db_name or self.db_name
+        )
 
     def add_production_table(self, production_table, db_name=None):
         """
@@ -893,9 +687,8 @@ class DatabaseHandler:
             the name of the DB.
         """
         db_name = db_name or self.db_name
-        collection = self.get_collection("production_tables", db_name=db_name or self.db_name)
         self._logger.debug(f"Adding production for {production_table.get('collection')} to the DB")
-        collection.insert_one(production_table)
+        self.mongo_db_handler.insert_one(production_table, "production_tables", db_name)
         DatabaseHandler.production_table_cached.clear()
         DatabaseHandler.model_versions_cached.clear()
 
@@ -926,7 +719,6 @@ class DatabaseHandler:
         par_dict = validate_data.DataValidator.validate_model_parameter(par_dict)
 
         db_name = db_name or self.db_name
-        collection = self.get_collection(collection_name, db_name=db_name)
 
         par_dict["value"], _base_unit, _ = value_conversion.get_value_unit_type(
             value=par_dict["value"], unit_str=par_dict.get("unit", None)
@@ -941,14 +733,12 @@ class DatabaseHandler:
                     f"corresponding to the {par_dict['parameter']} parameter, must be provided."
                 )
             file_path = Path(file_prefix).joinpath(par_dict["value"])
-            if not ascii_handler.is_utf8_file(file_path):
-                raise ValueError(f"File is not UTF-8 encoded: {file_path}")
             files_to_add_to_db.add(f"{file_path}")
 
         self._logger.debug(
             f"Adding a new entry to DB {db_name} and collection {collection_name}:\n{par_dict}"
         )
-        collection.insert_one(par_dict)
+        self.mongo_db_handler.insert_one(par_dict, collection_name, db_name)
 
         for file_to_insert_now in files_to_add_to_db:
             self._logger.debug(f"Will also add the file {file_to_insert_now} to the DB")
@@ -967,34 +757,17 @@ class DatabaseHandler:
         db_name: str
             the name of the DB
         **kwargs (optional): keyword arguments for file creation.
-            The full list of arguments can be found in, \
+            The full list of arguments can be found in
             https://www.mongodb.com/docs/manual/core/gridfs/
-            mostly these are unnecessary though.
 
         Returns
         -------
-        file_iD: GridOut._id
-            If the file exists, return its GridOut._id, otherwise insert the file and return its"
-            "newly created DB GridOut._id.
-
+        file_id: GridOut._id
+            If the file exists, return its GridOut._id, otherwise insert the file and return
+            its newly created DB GridOut._id.
         """
         db_name = db_name or self.db_name
-        db = DatabaseHandler.db_client[db_name]
-        file_system = gridfs.GridFS(db)
-
-        kwargs.setdefault("content_type", "ascii/dat")
-        kwargs.setdefault("filename", Path(file_name).name)
-
-        if file_system.exists({"filename": kwargs["filename"]}):
-            self._logger.warning(
-                f"The file {kwargs['filename']} exists in the DB. Returning its ID"
-            )
-            return file_system.find_one(  # pylint: disable=protected-access
-                {"filename": kwargs["filename"]}
-            )._id
-        self._logger.debug(f"Writing file to DB: {file_name}")
-        with open(file_name, "rb") as data_file:
-            return file_system.put(data_file, **kwargs)
+        return self.mongo_db_handler.insert_file_to_db(file_name, db_name, **kwargs)
 
     def _cache_key(self, site=None, array_element_name=None, model_version=None, collection=None):
         """
