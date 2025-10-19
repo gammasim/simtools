@@ -56,7 +56,6 @@ class ModelParameter:
         label=None,
     ):
         self._logger = logging.getLogger(__name__)
-        self._extra_label = None
         self.io_handler = io_handler.IOHandler()
         self.db = (
             db if db is not None else db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
@@ -341,7 +340,6 @@ class ModelParameter:
             self.model_version,
             telescope_model_name=self.name,
             label=self.label,
-            extra_label=self._extra_label,
         )
         self._config_file_path = self.config_file_directory.joinpath(config_file_name)
 
@@ -389,11 +387,6 @@ class ModelParameter:
             )
 
         self._load_simulation_software_parameter()
-
-    @property
-    def extra_label(self):
-        """Return the extra label if defined, if not return ''."""
-        return self._extra_label if self._extra_label is not None else ""
 
     def change_parameter(self, par_name, value):
         """
