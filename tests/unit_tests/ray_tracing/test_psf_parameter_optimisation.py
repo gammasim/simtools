@@ -245,7 +245,7 @@ def test__run_ray_tracing_simulation(
             mock_telescope_model, mock_site_model, mock_args_dict, pars
         )
         assert psf_diameter == pytest.approx(expected_psf_diameter)
-        mock_telescope_model.overwrite_parameters.assert_called_once_with(**pars)
+        mock_telescope_model.overwrite_parameters.assert_called_once_with(pars)
 
 
 @pytest.mark.parametrize(
