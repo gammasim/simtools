@@ -68,7 +68,7 @@ class DatabaseHandler:
         if self.mongo_db_handler:
             self.mongo_db_handler.print_connection_info(self.db_name)
         else:
-            self._logger.info("No MongoDB configuration provided.")
+            self._logger.info("No database defined.")
 
     def is_remote_database(self):
         """

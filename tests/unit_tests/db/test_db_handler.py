@@ -1361,3 +1361,21 @@ def test_add_parameter_with_file(db, mocker, tmp_test_directory):
     mock_insert_one.assert_called_once()
     mock_insert_file.assert_called_once()
     mock_reset_cache.assert_called_once()
+
+
+def test_print_connection_info_with_mongo_handler(db, mocker):
+    """Test print_connection_info with mongo_db_handler."""
+    mock_print_connection_info = mocker.patch.object(db.mongo_db_handler, "print_connection_info")
+
+    db.print_connection_info()
+
+    mock_print_connection_info.assert_called_once_with(db.db_name)
+
+
+def test_print_connection_info_without_mongo_handler(db_no_config_file, mocker):
+    """Test print_connection_info without mongo_db_handler."""
+    mock_logger = mocker.patch.object(db_no_config_file._logger, "info")
+
+    db_no_config_file.print_connection_info()
+
+    mock_logger.assert_called_once_with("No database defined.")
