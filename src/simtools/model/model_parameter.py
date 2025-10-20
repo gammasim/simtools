@@ -142,7 +142,11 @@ class ModelParameter:
         if isinstance(value, str):
             try:
                 _is_float = self.get_parameter_type(par_name).startswith("float")
-            except (InvalidModelParameterError, TypeError):  # float - in case we don't know
+            except (
+                InvalidModelParameterError,
+                TypeError,
+                AttributeError,
+            ):  # float - in case we don't know
                 _is_float = True
             value = gen.convert_string_to_list(value, is_float=_is_float)
             if len(value) == 1:
@@ -458,7 +462,7 @@ class ModelParameter:
         self._logger.debug(f"Overwriting parameters: {changes}")
         for par_name, par_value in changes.items():
             if par_name in self.parameters:
-                if "value" in par_value or "version" in par_value:
+                if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
                     self.overwrite_model_parameter(
                         par_name, par_value.get("value"), par_value.get("version")
                     )
