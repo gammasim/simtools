@@ -1233,3 +1233,131 @@ def test_get_db_name(db):
         )
         == "test_db"
     )
+
+
+def test_print_connection_info_with_handler(db, mocker, caplog):
+    """Test print_connection_info when mongo_db_handler exists."""
+    import logging
+
+    mock_print = mocker.patch.object(db.mongo_db_handler, "print_connection_info")
+    with caplog.at_level(logging.INFO):
+        db.print_connection_info()
+    mock_print.assert_called_once_with(db.db_name)
+
+
+def test_is_remote_database_with_handler(db, mocker):
+    """Test is_remote_database when mongo_db_handler exists."""
+    mocker.patch.object(db.mongo_db_handler, "is_remote_database", return_value=True)
+    assert db.is_remote_database() is True
+
+    mocker.patch.object(db.mongo_db_handler, "is_remote_database", return_value=False)
+    assert db.is_remote_database() is False
+
+
+def test_generate_compound_indexes_for_databases_delegation(db, mocker):
+    """Test generate_compound_indexes_for_databases delegates to mongo_db_handler."""
+    mock_generate = mocker.patch.object(
+        db.mongo_db_handler, "generate_compound_indexes_for_databases"
+    )
+    db.generate_compound_indexes_for_databases(
+        db_name="test_db", db_simulation_model="model", db_simulation_model_version="1.0.0"
+    )
+    mock_generate.assert_called_once_with("test_db", "model", "1.0.0")
+
+
+def test_get_collections_delegation(db, mocker):
+    """Test get_collections delegates to mongo_db_handler."""
+    mock_get_collections = mocker.patch.object(
+        db.mongo_db_handler, "get_collections", return_value=["coll1", "coll2"]
+    )
+    result = db.get_collections(db_name="test_db", model_collections_only=True)
+    assert result == ["coll1", "coll2"]
+    mock_get_collections.assert_called_once_with("test_db", True)
+
+
+def test_write_file_from_db_to_disk_delegation(db, mocker, tmp_test_directory):
+    """Test _write_file_from_db_to_disk delegates to mongo_db_handler."""
+    mock_write = mocker.patch.object(db.mongo_db_handler, "write_file_from_db_to_disk")
+    mock_file = mocker.Mock()
+    db._write_file_from_db_to_disk("test_db", tmp_test_directory, mock_file)
+    mock_write.assert_called_once_with("test_db", tmp_test_directory, mock_file)
+
+
+def test_get_ecsv_file_as_astropy_table_delegation(db, mocker):
+    """Test get_ecsv_file_as_astropy_table delegates to mongo_db_handler."""
+    mock_table = mocker.Mock()
+    mock_get_ecsv = mocker.patch.object(
+        db.mongo_db_handler, "get_ecsv_file_as_astropy_table", return_value=mock_table
+    )
+    result = db.get_ecsv_file_as_astropy_table("test.ecsv", db_name="test_db")
+    assert result == mock_table
+    mock_get_ecsv.assert_called_once_with("test.ecsv", "test_db")
+
+
+def test_insert_file_to_db_delegation(db, mocker):
+    """Test insert_file_to_db delegates to mongo_db_handler."""
+    mock_insert = mocker.patch.object(
+        db.mongo_db_handler, "insert_file_to_db", return_value="file_id_123"
+    )
+    result = db.insert_file_to_db("test_file.dat", db_name="test_db")
+    assert result == "file_id_123"
+    mock_insert.assert_called_once_with("test_file.dat", "test_db")
+
+
+def test_add_parameter_error_no_file_prefix(db, mocker):
+    """Test add_new_parameter raises error when file is needed but no prefix provided."""
+    mocker.patch(
+        "simtools.db.db_handler.validate_data.DataValidator.validate_model_parameter",
+        return_value={
+            "parameter": "test_param",
+            "value": "test_file.dat",
+            "file": True,
+            "unit": None,
+        },
+    )
+    mocker.patch(
+        "simtools.db.db_handler.value_conversion.get_value_unit_type",
+        return_value=("test_file.dat", None, None),
+    )
+
+    with pytest.raises(FileNotFoundError, match=r"The location of the file to upload"):
+        db.add_new_parameter(
+            par_dict={"parameter": "test_param", "value": "test_file.dat", "file": True},
+            collection_name="test_collection",
+            db_name="test_db",
+            file_prefix=None,
+        )
+
+
+def test_add_parameter_with_file(db, mocker, tmp_test_directory):
+    """Test add_new_parameter with file parameter."""
+    test_file = tmp_test_directory / "test_file.dat"
+    test_file.write_text("test content", encoding="utf-8")
+
+    mocker.patch(
+        "simtools.db.db_handler.validate_data.DataValidator.validate_model_parameter",
+        return_value={
+            "parameter": "test_param",
+            "value": "test_file.dat",
+            "file": True,
+            "unit": None,
+        },
+    )
+    mocker.patch(
+        "simtools.db.db_handler.value_conversion.get_value_unit_type",
+        return_value=("test_file.dat", None, None),
+    )
+    mock_insert_one = mocker.patch.object(db.mongo_db_handler, "insert_one")
+    mock_insert_file = mocker.patch.object(db, "insert_file_to_db", return_value="file_id")
+    mock_reset_cache = mocker.patch.object(db, "_reset_parameter_cache")
+
+    db.add_new_parameter(
+        par_dict={"parameter": "test_param", "value": "test_file.dat", "file": True},
+        collection_name="test_collection",
+        db_name="test_db",
+        file_prefix=tmp_test_directory,
+    )
+
+    mock_insert_one.assert_called_once()
+    mock_insert_file.assert_called_once()
+    mock_reset_cache.assert_called_once()

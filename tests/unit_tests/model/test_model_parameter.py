@@ -208,7 +208,8 @@ def test_overwrite_parameters_from_file(telescope_model_lst, caplog, mocker):
     )
     with caplog.at_level(logging.WARNING):
         telescope_copy.overwrite_parameters_from_file(file_name="test_file")
-    assert "Changing multiple parameters from file is a feature for developers." in caplog.text
+    assert "Changing multiple parameters from file" in caplog.text
+    assert "Insufficient validation of model parameters" in caplog.text
 
 
 def test_overwrite_parameters(telescope_model_lst, mocker):

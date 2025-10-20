@@ -418,6 +418,12 @@ class ModelParameter:
 
         This function does not modify the DB, it affects only the current instance.
 
+        Allows for two types of 'changes' dictionary:
+
+        - simple: '{parameter_name: new_value, ...}'
+        - model repository style:
+          '{parameter_name: {"value": new_value, "version": new_version}, ...}'
+
         Parameters
         ----------
         changes: dict
@@ -425,11 +431,14 @@ class ModelParameter:
 
         """
         self._logger.debug(f"Overwriting parameters: {changes}")
-        for par_name, par_dict in changes.items():
+        for par_name, par_value in changes.items():
             if par_name in self.parameters:
-                self.overwrite_model_parameter(
-                    par_name, par_dict.get("value"), par_dict.get("version")
-                )
+                if "value" in par_value or "version" in par_value:
+                    self.overwrite_model_parameter(
+                        par_name, par_value.get("value"), par_value.get("version")
+                    )
+                else:
+                    self.overwrite_model_parameter(par_name, par_value)
 
     def overwrite_model_file(self, par_name, file_path):
         """
