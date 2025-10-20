@@ -300,8 +300,9 @@ class DatabaseHandler:
         list
             List of collection names
         """
-        db_name = db_name or self.db_name
-        return self.mongo_db_handler.get_collections(db_name, model_collections_only)
+        return self.mongo_db_handler.get_collections(
+            db_name or self.db_name, model_collections_only
+        )
 
     def export_model_file(
         self,
