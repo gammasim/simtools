@@ -113,14 +113,14 @@ def test_get_db_name_incomplete():
 def test_init_with_valid_config(valid_db_config):
     """Test initialization with valid configuration."""
     handler = mongo_db.MongoDBHandler(valid_db_config)
-    assert handler.mongo_db_config == valid_db_config
+    assert handler.db_config == valid_db_config
     assert handler.list_of_collections == {}
 
 
 def test_init_with_none_config():
     """Test initialization with None configuration."""
     handler = mongo_db.MongoDBHandler(None)
-    assert handler.mongo_db_config is None
+    assert handler.db_config is None
 
 
 def test_open_db_direct_connection(mocker, valid_db_config):

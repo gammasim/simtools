@@ -53,7 +53,7 @@ class ModelParameter:
     ):
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
-        self.db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+        self.db = db_handler.DatabaseHandler(db_config=db_config)
 
         self.parameters = {}
         self._simulation_config_parameters = {sw: {} for sw in names.simulation_software()}

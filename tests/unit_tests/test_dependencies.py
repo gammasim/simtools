@@ -10,16 +10,13 @@ from simtools.db.db_handler import DatabaseHandler
 
 
 @pytest.fixture
-def mongo_db_config():
+def db_config():
     return {
         "db_simulation_model": "sim_model_db",
         "db_simulation_model_version": "v1.0.0",
+        "host": "localhost",
+        "port": 27017,
     }
-
-
-@pytest.fixture
-def db_config():
-    return {"host": "localhost", "port": 27017}
 
 
 @pytest.fixture
@@ -64,7 +61,6 @@ def get_build_options_literal():
 
 def test_get_version_string_success(
     monkeypatch,
-    mongo_db_config,
     db_config,
     db_handler_function,
     fake_path,
@@ -75,7 +71,7 @@ def test_get_version_string_success(
     get_build_options_literal,
 ):
     mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
-    mock_db_handler.mongo_db_config = mongo_db_config
+    mock_db_handler.db_config = db_config
 
     with mock.patch(db_handler_function, return_value=mock_db_handler):
         monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
@@ -107,7 +103,6 @@ def test_get_version_string_success(
 
 def test_get_version_string_no_env_var(
     monkeypatch,
-    mongo_db_config,
     db_config,
     db_handler_function,
     env_not_set_error,
@@ -115,7 +110,7 @@ def test_get_version_string_no_env_var(
     get_build_options_literal,
 ):
     mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
-    mock_db_handler.mongo_db_config = mongo_db_config
+    mock_db_handler.db_config = db_config
 
     with mock.patch(db_handler_function, return_value=mock_db_handler):
         monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
@@ -135,9 +130,9 @@ def test_get_version_string_no_env_var(
         assert env_not_set_error in caplog.text
 
 
-def test_get_database_version_or_name_success(mongo_db_config, db_config, db_handler_function):
+def test_get_database_version_or_name_success(db_config, db_handler_function):
     mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
-    mock_db_handler.mongo_db_config = mongo_db_config
+    mock_db_handler.db_config = db_config
 
     with mock.patch(db_handler_function, return_value=mock_db_handler):
         assert dependencies.get_database_version_or_name(db_config) == "v1.0.0"
@@ -147,7 +142,7 @@ def test_get_database_version_or_name_success(mongo_db_config, db_config, db_han
 
 def test_get_database_version_or_name_no_version(db_config, db_handler_function):
     mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
-    mock_db_handler.mongo_db_config = {}
+    mock_db_handler.db_config = {}
 
     with mock.patch(db_handler_function, return_value=mock_db_handler):
         assert dependencies.get_database_version_or_name(db_config) is None

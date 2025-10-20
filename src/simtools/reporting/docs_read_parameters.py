@@ -29,7 +29,7 @@ class ReadParameters:
     def __init__(self, db_config, args, output_path):
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
-        self.db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+        self.db = db_handler.DatabaseHandler(db_config=db_config)
         self.db_config = db_config
         self.array_element = args.get("telescope", None)
         self.site = args.get("site", None)

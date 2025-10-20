@@ -18,13 +18,13 @@ class DatabaseHandler:
 
     Note the two types of version variables used in this class:
 
-    - db_simulation_model_version (from mongo_db_config): version of the simulation model database
+    - db_simulation_model_version (from db_config): version of the simulation model database
     - model_version (from production_tables): version of the model contained in the database
 
     Parameters
     ----------
-    mongo_db_config: dict
-        Dictionary with the MongoDB configuration.
+    db_config: dict
+        Dictionary with the DB configuration.
     """
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
@@ -33,20 +33,20 @@ class DatabaseHandler:
     model_parameters_cached = {}
     model_versions_cached = {}
 
-    def __init__(self, mongo_db_config=None):
+    def __init__(self, db_config=None):
         """Initialize the DatabaseHandler class."""
         self._logger = logging.getLogger(__name__)
 
-        self.mongo_db_config = MongoDBHandler.validate_db_config(mongo_db_config)
+        self.db_config = MongoDBHandler.validate_db_config(db_config)
         self.io_handler = io_handler.IOHandler()
-        self.mongo_db_handler = MongoDBHandler(mongo_db_config) if self.mongo_db_config else None
+        self.mongo_db_handler = MongoDBHandler(db_config) if self.db_config else None
 
         self.db_name = (
             MongoDBHandler.get_db_name(
-                db_simulation_model_version=self.mongo_db_config.get("db_simulation_model_version"),
-                model_name=self.mongo_db_config.get("db_simulation_model"),
+                db_simulation_model_version=self.db_config.get("db_simulation_model_version"),
+                model_name=self.db_config.get("db_simulation_model"),
             )
-            if self.mongo_db_config
+            if self.db_config
             else None
         )
 
@@ -143,9 +143,7 @@ class DatabaseHandler:
             model_version = resolve_version_to_latest_patch(
                 model_version, self.get_model_versions(collection_name)
             )
-            production_table = self.read_production_table_from_mongo_db(
-                collection_name, model_version
-            )
+            production_table = self.read_production_table_from_db(collection_name, model_version)
             array_element_list = self._get_array_element_list(
                 array_element_name, site, production_table, collection_name
             )
@@ -165,7 +163,7 @@ class DatabaseHandler:
             query["instrument"] = array_element_name
         if site:
             query["site"] = site
-        return self._read_mongo_db(query=query, collection_name=collection_name)
+        return self._read_db(query=query, collection_name=collection_name)
 
     def get_model_parameters(self, site, array_element_name, collection, model_version):
         """
@@ -192,7 +190,7 @@ class DatabaseHandler:
         model_version = resolve_version_to_latest_patch(
             model_version, self.get_model_versions(collection)
         )
-        production_table = self.read_production_table_from_mongo_db(collection, model_version)
+        production_table = self.read_production_table_from_db(collection, model_version)
         array_element_list = self._get_array_element_list(
             array_element_name, site, production_table, collection
         )
@@ -259,7 +257,7 @@ class DatabaseHandler:
             parameter_version_table = production_table["parameters"][array_element]
         except KeyError:  # allow missing array elements (parameter dict is checked later)
             return {}
-        DatabaseHandler.model_parameters_cached[cache_key] = self._read_mongo_db(
+        DatabaseHandler.model_parameters_cached[cache_key] = self._read_db(
             query=self._get_query_from_parameter_version_table(
                 parameter_version_table, array_element, site
             ),
@@ -414,7 +412,7 @@ class DatabaseHandler:
             query_dict["site"] = site
         return query_dict
 
-    def _read_mongo_db(self, query, collection_name):
+    def _read_db(self, query, collection_name):
         """
         Query MongoDB.
 
@@ -444,7 +442,7 @@ class DatabaseHandler:
             )
         return {k: parameters[k] for k in sorted(parameters)}
 
-    def read_production_table_from_mongo_db(self, collection_name, model_version):
+    def read_production_table_from_db(self, collection_name, model_version):
         """
         Read production table for the given collection from MongoDB.
 
@@ -524,7 +522,7 @@ class DatabaseHandler:
         model_version = resolve_version_to_latest_patch(
             model_version, self.get_model_versions(collection)
         )
-        production_table = self.read_production_table_from_mongo_db(collection, model_version)
+        production_table = self.read_production_table_from_db(collection, model_version)
         return sorted([entry for entry in production_table["parameters"] if "-design" not in entry])
 
     def get_design_model(self, model_version, array_element_name, collection="telescopes"):
@@ -549,7 +547,7 @@ class DatabaseHandler:
         model_version = resolve_version_to_latest_patch(
             model_version, self.get_model_versions(collection)
         )
-        production_table = self.read_production_table_from_mongo_db(collection, model_version)
+        production_table = self.read_production_table_from_db(collection, model_version)
         try:
             return production_table["design_model"][array_element_name]
         except KeyError:
@@ -580,7 +578,7 @@ class DatabaseHandler:
         model_version = resolve_version_to_latest_patch(
             model_version, self.get_model_versions(collection)
         )
-        production_table = self.read_production_table_from_mongo_db(collection, model_version)
+        production_table = self.read_production_table_from_db(collection, model_version)
         all_array_elements = production_table["parameters"]
         return sorted(
             [
@@ -684,9 +682,10 @@ class DatabaseHandler:
         db_name: str
             the name of the DB.
         """
-        db_name = db_name or self.db_name
         self._logger.debug(f"Adding production for {production_table.get('collection')} to the DB")
-        self.mongo_db_handler.insert_one(production_table, "production_tables", db_name)
+        self.mongo_db_handler.insert_one(
+            production_table, "production_tables", db_name or self.db_name
+        )
         DatabaseHandler.production_table_cached.clear()
         DatabaseHandler.model_versions_cached.clear()
 
@@ -744,7 +743,7 @@ class DatabaseHandler:
 
         self._reset_parameter_cache()
 
-    def insert_file_to_db(self, file_name, db_name=None, **kwargs):
+    def insert_file_to_db(self, file_name, db_name=None):
         """
         Insert a file to the DB.
 
@@ -754,9 +753,6 @@ class DatabaseHandler:
             The name of the file to insert (full path).
         db_name: str
             the name of the DB
-        **kwargs (optional): keyword arguments for file creation.
-            The full list of arguments can be found in
-            https://www.mongodb.com/docs/manual/core/gridfs/
 
         Returns
         -------
@@ -764,8 +760,7 @@ class DatabaseHandler:
             If the file exists, return its GridOut._id, otherwise insert the file and return
             its newly created DB GridOut._id.
         """
-        db_name = db_name or self.db_name
-        return self.mongo_db_handler.insert_file_to_db(file_name, db_name, **kwargs)
+        return self.mongo_db_handler.insert_file_to_db(file_name, db_name or self.db_name)
 
     def _cache_key(self, site=None, array_element_name=None, model_version=None, collection=None):
         """
@@ -856,7 +851,7 @@ class DatabaseHandler:
             return [array_element_name]
         if collection == "configuration_sim_telarray":
             # get design model from 'telescope' or 'calibration_device' production tables
-            production_table = self.read_production_table_from_mongo_db(
+            production_table = self.read_production_table_from_db(
                 names.get_collection_name_from_array_element_name(array_element_name),
                 production_table["model_version"],
             )
