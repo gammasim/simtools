@@ -134,7 +134,7 @@ def args_dict_site(tmp_test_directory, simtel_path, data_path):
 def db_config():
     """DB configuration from .env file."""
 
-    mongo_db_config = {
+    db_config = {
         key.lower().replace("simtools_", ""): value
         for key, value in dict(dotenv_values(".env")).items()
     }
@@ -148,17 +148,17 @@ def db_config():
         "db_simulation_model_version",
     )
     for _para in _db_para:
-        if _para not in mongo_db_config:
-            mongo_db_config[_para] = os.environ.get(f"SIMTOOLS_{_para.upper()}")
-    if mongo_db_config["db_api_port"] is not None:
-        mongo_db_config["db_api_port"] = int(mongo_db_config["db_api_port"])
-    return mongo_db_config
+        if _para not in db_config:
+            db_config[_para] = os.environ.get(f"SIMTOOLS_{_para.upper()}")
+    if db_config["db_api_port"] is not None:
+        db_config["db_api_port"] = int(db_config["db_api_port"])
+    return db_config
 
 
 @pytest.fixture
 def db(db_config):
     """Database object with configuration from .env file."""
-    return db_handler.DatabaseHandler(mongo_db_config=db_config)
+    return db_handler.DatabaseHandler(db_config=db_config)
 
 
 def pytest_addoption(parser):

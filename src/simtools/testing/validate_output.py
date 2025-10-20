@@ -139,7 +139,7 @@ def _validate_model_parameter_json_file(config, model_parameter_validation, db_c
 
     """
     _logger.info(f"Checking model parameter json file: {model_parameter_validation}")
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(db_config=db_config)
 
     reference_parameter_name = model_parameter_validation.get("reference_parameter_name")
 

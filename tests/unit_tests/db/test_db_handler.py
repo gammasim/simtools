@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-import copy
 import logging
-from pathlib import Path
 from unittest.mock import call
 
 import pytest
@@ -31,7 +29,7 @@ def reset_db_client():
 @pytest.fixture
 def db_no_config_file():
     """Database object (without configuration)."""
-    return db_handler.DatabaseHandler(mongo_db_config=None)
+    return db_handler.DatabaseHandler(db_config=None)
 
 
 @pytest.fixture
@@ -141,10 +139,10 @@ def export_files_setup(db, mocker):
 
 @pytest.fixture
 def common_mock_read_production_table(mocker, db):
-    """Common fixture for mocking read_production_table_from_mongo_db."""
+    """Common fixture for mocking read_production_table_from_db."""
     return mocker.patch.object(
         db,
-        "read_production_table_from_mongo_db",
+        "read_production_table_from_db",
         return_value={"parameters": {"LSTN-01": {"param1": "v1"}}},
     )
 
@@ -164,14 +162,14 @@ def common_mock_read_cache(mocker, db):
 
 
 @pytest.fixture
-def common_mock_read_mongo_db(mocker, db):
-    """Common fixture for mocking _read_mongo_db."""
-    return mocker.patch.object(db, "_read_mongo_db", return_value={"param1": {"value": "value1"}})
+def common_mock_read_db(mocker, db):
+    """Common fixture for mocking _read_db."""
+    return mocker.patch.object(db, "_read_db", return_value={"param1": {"value": "value1"}})
 
 
 def assert_model_parameter_calls(
     mock_get_collection_name,
-    mock_read_mongo_db,
+    mock_read_db,
     test_param,
     site,
     array_element_name,
@@ -180,7 +178,7 @@ def assert_model_parameter_calls(
 ):
     """Helper function to verify common model parameter assertions."""
     mock_get_collection_name.assert_called_once_with(test_param)
-    mock_read_mongo_db.assert_called_once_with(
+    mock_read_db.assert_called_once_with(
         query={
             "parameter_version": parameter_version,
             "parameter": test_param,
@@ -195,7 +193,7 @@ def test_set_up_connection_no_config():
     """Test connection setup with no configuration."""
     from simtools.db.mongo_db import MongoDBHandler
 
-    _ = db_handler.DatabaseHandler(mongo_db_config=None)
+    _ = db_handler.DatabaseHandler(db_config=None)
     assert MongoDBHandler.db_client is None
 
 
@@ -206,51 +204,12 @@ def test_set_up_connection_with_config(db):
     assert MongoDBHandler.db_client is not None
 
 
-def test_valid_db_config(db, db_config):
-    from simtools.db.mongo_db import MongoDBHandler
-
-    assert db.mongo_db_config == MongoDBHandler.validate_db_config(db_config)
-    assert MongoDBHandler.validate_db_config(None) is None
-    none_db_dict = copy.deepcopy(db_config)
-    for key in none_db_dict.keys():
-        none_db_dict[key] = None
-    assert MongoDBHandler.validate_db_config(none_db_dict) is None
-    assert MongoDBHandler.validate_db_config({}) is None
-    with pytest.raises(ValueError, match=r"Invalid MongoDB configuration"):
-        MongoDBHandler.validate_db_config({"wrong_config": "wrong"})
-
-
-def test_open_db_direct_connection(mocker, db, db_config):
-    """Test _open_db with direct connection configuration."""
-    db_config["db_server"] = "localhost"
-    mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient", return_value="mock_client")
-    db.mongo_db_config = db_config
-    db.mongo_db_handler.mongo_db_config = db_config
-    client = db.mongo_db_handler._open_db()
-    assert client == "mock_client"
-    mock_mongo_client.assert_called_once_with(
-        db_config["db_server"],
-        port=db_config["db_api_port"],
-        username=db_config["db_api_user"],
-        password=db_config["db_api_pw"],
-        authSource=(
-            db_config.get("db_api_authentication_database")
-            if db_config.get("db_api_authentication_database")
-            else "admin"
-        ),
-        directConnection=True,
-        ssl=False,
-        tlsallowinvalidhostnames=True,
-        tlsallowinvalidcertificates=True,
-    )
-
-
 def test_get_model_parameters(
     db,
     common_mock_read_production_table,
     common_mock_get_array_element_list,
     common_mock_read_cache,
-    common_mock_read_mongo_db,
+    common_mock_read_db,
     standard_test_params,
 ):
     """Test get_model_parameters method."""
@@ -283,7 +242,7 @@ def test_get_model_parameters(
             ),
         ]
     )
-    common_mock_read_mongo_db.assert_called_once_with(
+    common_mock_read_db.assert_called_once_with(
         query={
             "$or": [{"parameter": "param1", "parameter_version": "v1"}],
             "instrument": "LSTN-01",
@@ -404,7 +363,7 @@ def test_get_model_parameters_with_cache(db, mocker, standard_test_params):
 
     mock_get_production_table = mocker.patch.object(
         db,
-        "read_production_table_from_mongo_db",
+        "read_production_table_from_db",
         return_value={"parameters": {"LSTN-01": {"param1": "v1"}}},
     )
     mock_get_array_element_list = mocker.patch.object(
@@ -438,7 +397,7 @@ def test_get_model_parameters_no_parameters(db, mocker, standard_test_params):
     collection = standard_test_params["collection"]
 
     mock_get_production_table = mocker.patch.object(
-        db, "read_production_table_from_mongo_db", return_value={"parameters": {}}
+        db, "read_production_table_from_db", return_value={"parameters": {}}
     )
     mock_get_array_element_list = mocker.patch.object(
         db, "_get_array_element_list", return_value=["LSTN-01"]
@@ -462,7 +421,7 @@ def test_get_model_parameters_no_parameters(db, mocker, standard_test_params):
 
 
 def test_get_model_parameter_with_model_version_list(
-    db, mock_get_collection_name, common_mock_read_mongo_db, mocker, standard_test_params
+    db, mock_get_collection_name, common_mock_read_db, mocker, standard_test_params
 ):
     """Test get_model_parameter method with model_version as list."""
     site = standard_test_params["site"]
@@ -472,7 +431,7 @@ def test_get_model_parameter_with_model_version_list(
     # Mock the production table reading
     mock_read_production_table = mocker.patch.object(
         db,
-        "read_production_table_from_mongo_db",
+        "read_production_table_from_db",
         return_value={
             "parameters": {
                 "LSTN-design": {"test_param": "2.0.0"},
@@ -486,8 +445,8 @@ def test_get_model_parameter_with_model_version_list(
         db, "_get_array_element_list", return_value=["LSTN-design", "LSTN-01"]
     )
 
-    # Update common_mock_read_mongo_db to return the expected format
-    common_mock_read_mongo_db.return_value = {"test_param": {"value": "test_value"}}
+    # Update common_mock_read_db to return the expected format
+    common_mock_read_db.return_value = {"test_param": {"value": "test_value"}}
 
     # Test with single version as string - should work
     db.get_model_parameter(
@@ -509,7 +468,7 @@ def test_get_model_parameter_with_model_version_list(
         },
         collection,
     )
-    common_mock_read_mongo_db.assert_called_once_with(
+    common_mock_read_db.assert_called_once_with(
         query={
             "parameter_version": "1.0.0",
             "parameter": "test_param",
@@ -540,41 +499,6 @@ def test_get_model_parameter_with_model_version_list(
             array_element_name=array_element_name,
             model_version=["5.0.0"],
         )
-
-
-def test_get_collection(db, test_db, mocker):
-    """Test get_collection method."""
-    from simtools.db.mongo_db import MongoDBHandler
-
-    mocker.patch.object(
-        MongoDBHandler, "db_client", {test_db: {"test_collection": "mock_collection"}}
-    )
-    collection_name = "test_collection"
-
-    result = db.get_collection(collection_name, db_name=test_db)
-
-    assert result == "mock_collection"
-
-
-def test_get_collections(db, db_config, fs_files):
-    collections = db.get_collections()
-    assert isinstance(collections, list)
-    assert "telescopes" in collections
-
-    db_name = db.get_db_name(
-        db_simulation_model_version=db_config["db_simulation_model_version"],
-        model_name=db_config["db_simulation_model"],
-    )
-    collections_from_name = db.get_collections(db_name)
-    assert isinstance(collections_from_name, list)
-    assert "telescopes" in collections_from_name
-    assert fs_files in collections_from_name
-
-    collections_no_model = db.get_collections(db_name, True)
-    assert isinstance(collections_no_model, list)
-    assert "telescopes" in collections_no_model
-    assert fs_files not in collections_no_model
-    assert "metadata" not in collections_no_model
 
 
 def test_export_model_files_with_file_names(
@@ -680,7 +604,7 @@ def test_get_query_from_parameter_version_table(db):
         assert result == expected
 
 
-def test_read_mongo_db(db, mocker, test_db):
+def test_read_db(db, mocker, test_db):
     """Test read_mongo_db method."""
     doc1_id = ObjectId()
     doc2_id = ObjectId()
@@ -696,7 +620,7 @@ def test_read_mongo_db(db, mocker, test_db):
     query = {"parameter_version": "1.0.0"}
     collection_name = "test_collection"
 
-    result = db._read_mongo_db(query, collection_name)
+    result = db._read_db(query, collection_name)
 
     mock_query_db.assert_called_once_with(query, collection_name, db.db_name)
     assert result == {
@@ -727,7 +651,7 @@ def test_read_mongo_db(db, mocker, test_db):
         match=r"The following query for test_collection returned zero results: "
         r"{'parameter_version': '1.0.0'}",
     ):
-        db._read_mongo_db(query, collection_name)
+        db._read_db(query, collection_name)
 
 
 def setup_production_table_cached(cache_key, model_version, param):
@@ -742,8 +666,8 @@ def setup_production_table_cached(cache_key, model_version, param):
     return db_handler.DatabaseHandler.production_table_cached[cache_key]
 
 
-def test_read_production_table_from_mongo_db_with_cache(db, mocker, test_db):
-    """Test read_production_table_from_mongo_db method with cache."""
+def test_read_production_table_from_db_with_cache(db, mocker, test_db):
+    """Test read_production_table_from_db method with cache."""
     collection_name = "telescopes"
     model_version = "1.0.0"
     param = {"param1": "value1"}
@@ -755,7 +679,7 @@ def test_read_production_table_from_mongo_db_with_cache(db, mocker, test_db):
     mock_cache_key = mocker.patch.object(db, "_cache_key", return_value="cache_key")
     cached_result = setup_production_table_cached("cache_key", model_version, param)
 
-    result = db.read_production_table_from_mongo_db(collection_name, model_version)
+    result = db.read_production_table_from_db(collection_name, model_version)
 
     mock_cache_key.assert_called_once_with(None, None, model_version, collection_name)
     assert result == cached_result
@@ -777,7 +701,7 @@ def test_read_production_table_from_mongo_db_with_cache(db, mocker, test_db):
         },
     )
 
-    result = db.read_production_table_from_mongo_db(collection_name, model_version)
+    result = db.read_production_table_from_db(collection_name, model_version)
 
     mock_cache_key.assert_called_once_with(None, None, model_version, collection_name)
     mock_find_one.assert_called_once_with(
@@ -798,7 +722,7 @@ def test_read_production_table_from_mongo_db_with_cache(db, mocker, test_db):
         match=r"The following query returned zero results: "
         r"{'model_version': '1.0.0', 'collection': 'telescopes'}",
     ):
-        db.read_production_table_from_mongo_db(collection_name, model_version)
+        db.read_production_table_from_db(collection_name, model_version)
 
 
 def test_get_array_elements_of_type(db, mocker):
@@ -819,7 +743,7 @@ def test_get_array_elements_of_type(db, mocker):
 
     for prod_table, expected in test_cases:
         mock_get_production_table = mocker.patch.object(
-            db, "read_production_table_from_mongo_db", return_value=prod_table
+            db, "read_production_table_from_db", return_value=prod_table
         )
         result = db.get_array_elements_of_type(array_element_type, model_version, collection)
         mock_get_production_table.assert_called_once_with(collection, model_version)
@@ -829,7 +753,7 @@ def test_get_array_elements_of_type(db, mocker):
     array_element_type = "MSTS"
     mocker.patch.object(
         db,
-        "read_production_table_from_mongo_db",
+        "read_production_table_from_db",
         return_value={
             "parameters": {"LSTN-01": "value1", "MSTS-01": "value3", "MSTS-02": "value4"}
         },
@@ -865,43 +789,6 @@ def test_get_simulation_configuration_parameters(db, mocker):
 
     with pytest.raises(ValueError, match=r"Unknown simulation software: wrong"):
         db.get_simulation_configuration_parameters("wrong", "North", "LSTN-design", "6.0.0")
-
-
-def test_get_file_mongo_db_file(db, test_db, test_file, mock_file_system, mock_db_client):
-    """Test get_file_from_db method when file exists."""
-    mock_file_system["fs"].exists.return_value = True
-
-    result = db.mongo_db_handler.get_file_from_db(test_db, test_file)
-
-    mock_file_system["fs"].exists.assert_called_once_with({"filename": test_file})
-    mock_file_system["fs"].find_one.assert_called_once_with({"filename": test_file})
-    assert result == mock_file_system["instance"]
-
-    # Test when file does not exist
-    mock_file_system["fs"].exists.return_value = False
-    with pytest.raises(
-        FileNotFoundError, match=f"The file {test_file} does not exist in the database {test_db}"
-    ):
-        db.mongo_db_handler.get_file_from_db(test_db, test_file)
-
-
-def test_write_file_from_db_to_disk(db, mocker, tmp_test_directory, mock_open, test_db, test_file):
-    """Test _write_file_from_db_to_disk method."""
-    from simtools.db.mongo_db import MongoDBHandler
-
-    mock_db_client = mocker.patch.object(MongoDBHandler, "db_client", {"test_db": mocker.Mock()})
-    mock_gridfs_bucket = mocker.patch("simtools.db.mongo_db.gridfs.GridFSBucket")
-    mock_fs_output = mock_gridfs_bucket.return_value
-
-    mock_file = mocker.Mock()
-    mock_file.filename = test_file
-
-    db._write_file_from_db_to_disk(test_db, tmp_test_directory, mock_file)
-
-    mock_gridfs_bucket.assert_called_once_with(mock_db_client[test_db])
-    mock_open.assert_called_once_with(Path(tmp_test_directory).joinpath(mock_file.filename), "wb")
-    filename = mock_file.filename
-    mock_fs_output.download_to_stream_by_name.assert_called_once_with(filename, mock_open())
 
 
 def test_add_production_table(db, mocker, test_db):
@@ -1155,16 +1042,16 @@ def test_get_design_model(db):
 def test_get_model_parameter_variants(db, mocker, mock_get_collection_name, test_case):
     """Test get_model_parameter variations."""
     params = test_case["params"]
-    mock_read_mongo_db = mocker.patch.object(
+    mock_read_db = mocker.patch.object(
         db,
-        "_read_mongo_db",
+        "_read_db",
         return_value={"test_param": {"value": "test_value"}},
     )
 
     if "setup" in test_case:
         mocker.patch.object(
             db,
-            "read_production_table_from_mongo_db",
+            "read_production_table_from_db",
             return_value=test_case["setup"]["prod_table"],
         )
         mocker.patch.object(
@@ -1177,7 +1064,7 @@ def test_get_model_parameter_variants(db, mocker, mock_get_collection_name, test
 
     assert_model_parameter_calls(
         mock_get_collection_name,
-        mock_read_mongo_db,
+        mock_read_db,
         "test_param",
         params["site"],
         params["array_element_name"],
@@ -1275,7 +1162,7 @@ def test_get_array_element_list_configuration_sim_telarray(db, mocker):
 
     mock_read_production_table = mocker.patch.object(
         db,
-        "read_production_table_from_mongo_db",
+        "read_production_table_from_db",
         return_value={"design_model": {"LSTN-01": "LSTN-design"}},
     )
 
@@ -1288,39 +1175,6 @@ def test_get_array_element_list_configuration_sim_telarray(db, mocker):
         KeyError, match=r"Failed generated array element list for db query for LSTN-01"
     ):
         db._get_array_element_list(array_element_name, site, production_table, collection)
-
-
-def test_get_ecsv_file_as_astropy_table(mocker, db):
-    # Prevent any real DB calls by providing a fake db_client and mocking GridFSBucket
-    from simtools.db.mongo_db import MongoDBHandler
-
-    mocker.patch.object(MongoDBHandler, "db_client", {db.db_name: mocker.Mock()})
-
-    mock_gridfs_bucket = mocker.patch("simtools.db.mongo_db.gridfs.GridFSBucket")
-    fs_instance = mock_gridfs_bucket.return_value
-
-    # Minimal valid ECSV content so astropy.Table.read can parse it
-    ecsv_content = (
-        b"# %ECSV 0.9\n# ---\n# datatype:\n# - {name: x, datatype: float64}\n# schema: {}\nx\n1.0\n"
-    )
-
-    def download_side_effect(filename, buf):
-        if filename == "nsb_spectrum_halfmoon.ecsv":
-            buf.write(ecsv_content)
-        else:
-            # Raise the same error the real GridFS would raise
-            import gridfs
-
-            raise gridfs.errors.NoFile("no such file")
-
-    fs_instance.download_to_stream_by_name.side_effect = download_side_effect
-
-    # Positive case: file exists (simulated)
-    assert db.get_ecsv_file_as_astropy_table("nsb_spectrum_halfmoon.ecsv") is not None
-
-    # Negative case: simulate missing file
-    with pytest.raises(FileNotFoundError, match=r"ECSV file 'test_file.ecsv' not found in DB."):
-        db.get_ecsv_file_as_astropy_table("test_file.ecsv")
 
 
 def test_get_db_name(db):
@@ -1339,142 +1193,3 @@ def test_get_db_name(db):
         )
         == "test_db"
     )
-
-
-def test_is_remote_database():
-    from simtools.db.mongo_db import MongoDBHandler
-
-    test_db = db_handler.DatabaseHandler(None)
-
-    assert test_db.is_remote_database() is False
-
-    # Valid config with remote server
-    remote_config = {
-        "db_server": "remote.server.com",
-        "db_api_port": 27017,
-        "db_api_user": "test_user",
-        "db_api_pw": "test_password",
-        "db_api_authentication_database": "admin",
-        "db_simulation_model": "test_model",
-        "db_simulation_model_version": "1.0.0",
-    }
-    test_db.mongo_db_config = remote_config
-    test_db.mongo_db_handler = MongoDBHandler(remote_config)
-    assert test_db.is_remote_database() is True
-
-    # Valid config with localhost
-    localhost_config = remote_config.copy()
-    localhost_config["db_server"] = "localhost"
-    test_db.mongo_db_config = localhost_config
-    test_db.mongo_db_handler.mongo_db_config = localhost_config
-    assert test_db.is_remote_database() is False
-
-    # Valid config with empty server
-    empty_config = remote_config.copy()
-    empty_config["db_server"] = ""
-    test_db.mongo_db_config = empty_config
-    test_db.mongo_db_handler.mongo_db_config = empty_config
-    assert test_db.is_remote_database() is False
-
-
-def test_print_connection_info(db, mocker, caplog):
-    """Test print_connection_info method."""
-    with caplog.at_level(logging.INFO):
-        db.print_connection_info()
-
-    expected_message = (
-        f"Connected to MongoDB at {db.mongo_db_config['db_server']}:"
-        f"{db.mongo_db_config['db_api_port']} "
-        f"using database: {db.db_name}"
-    )
-    assert expected_message in caplog.text
-
-
-def test_print_connection_info_no_config(db_no_config_file, caplog):
-    """Test print_connection_info method with no configuration."""
-    with caplog.at_level(logging.INFO):
-        db_no_config_file.print_connection_info()
-
-    assert "No MongoDB configuration provided." in caplog.text
-
-
-def test_generate_compound_indexes_for_databases_specific_db(db, mocker, test_db):
-    """Test generate_compound_indexes_for_databases with specific database."""
-    from simtools.db.mongo_db import MongoDBHandler
-
-    mock_client = mocker.MagicMock()
-    mock_client.list_database_names.return_value = ["config", "admin", "local", test_db]
-    mocker.patch.object(MongoDBHandler, "db_client", mock_client)
-
-    mock_generate_compound_indexes = mocker.patch.object(
-        db.mongo_db_handler, "generate_compound_indexes"
-    )
-
-    db.generate_compound_indexes_for_databases(
-        db_name=test_db, db_simulation_model="test_model", db_simulation_model_version="1.0.0"
-    )
-
-    mock_client.list_database_names.assert_called_once()
-    mock_generate_compound_indexes.assert_called_once_with(db_name=test_db)
-
-
-def test_generate_compound_indexes_for_databases_all_databases(db, mocker):
-    """Test generate_compound_indexes_for_databases with all databases."""
-    from simtools.db.mongo_db import MongoDBHandler
-
-    test_dbs = ["db1", "db2", "db3"]
-    mock_client = mocker.MagicMock()
-    mock_client.list_database_names.return_value = ["config", "admin", "local", *test_dbs]
-    mocker.patch.object(MongoDBHandler, "db_client", mock_client)
-
-    mock_generate_compound_indexes = mocker.patch.object(
-        db.mongo_db_handler, "generate_compound_indexes"
-    )
-
-    db.generate_compound_indexes_for_databases(
-        db_name="all", db_simulation_model="test_model", db_simulation_model_version="1.0.0"
-    )
-
-    mock_client.list_database_names.assert_called_once()
-    assert mock_generate_compound_indexes.call_count == 3
-    for test_db in test_dbs:
-        mock_generate_compound_indexes.assert_any_call(db_name=test_db)
-
-
-def test_generate_compound_indexes_for_databases_db_not_found(db, mocker):
-    """Test generate_compound_indexes_for_databases with non-existent database."""
-    from simtools.db.mongo_db import MongoDBHandler
-
-    mock_client = mocker.MagicMock()
-    mock_client.list_database_names.return_value = ["config", "admin", "local", "existing_db"]
-    mocker.patch.object(MongoDBHandler, "db_client", mock_client)
-
-    with pytest.raises(ValueError, match=r"Requested database 'non_existent' not found"):
-        db.generate_compound_indexes_for_databases(
-            db_name="non_existent",
-            db_simulation_model="test_model",
-            db_simulation_model_version="1.0.0",
-        )
-
-    mock_client.list_database_names.assert_called_once()
-
-
-def test_generate_compound_indexes_for_databases_with_get_db_name(db, mocker):
-    """Test generate_compound_indexes_for_databases using get_db_name."""
-    from simtools.db.mongo_db import MongoDBHandler
-
-    expected_db = "test_model-1-0-0"
-    mock_client = mocker.MagicMock()
-    mock_client.list_database_names.return_value = ["config", "admin", "local", expected_db]
-    mocker.patch.object(MongoDBHandler, "db_client", mock_client)
-
-    mock_generate_compound_indexes = mocker.patch.object(
-        db.mongo_db_handler, "generate_compound_indexes"
-    )
-
-    db.generate_compound_indexes_for_databases(
-        db_name=None, db_simulation_model="test_model", db_simulation_model_version="1.0.0"
-    )
-
-    mock_client.list_database_names.assert_called_once()
-    mock_generate_compound_indexes.assert_called_once_with(db_name=expected_db)

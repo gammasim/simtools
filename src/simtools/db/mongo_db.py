@@ -66,32 +66,32 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
 
     Parameters
     ----------
-    mongo_db_config: dict
+    db_config: dict
         Dictionary with the MongoDB configuration (see jsonschema_db_dict for details).
     """
 
     db_client: MongoClient | None = None
     _lock = Lock()
 
-    def __init__(self, mongo_db_config=None):
+    def __init__(self, db_config=None):
         """Initialize the MongoDBHandler class."""
         self._logger = logging.getLogger(__name__)
-        self.mongo_db_config = self._validate_db_config(mongo_db_config)
+        self.db_config = self._validate_db_config(db_config)
         self.list_of_collections = {}
 
-        if self.mongo_db_config and MongoDBHandler.db_client is None:
+        if self.db_config and MongoDBHandler.db_client is None:
             with MongoDBHandler._lock:
                 if MongoDBHandler.db_client is None:
                     MongoDBHandler.db_client = self._open_db()
 
     @staticmethod
-    def validate_db_config(mongo_db_config):
+    def validate_db_config(db_config):
         """
         Validate the MongoDB configuration.
 
         Parameters
         ----------
-        mongo_db_config: dict
+        db_config: dict
             Dictionary with the MongoDB configuration.
 
         Returns
@@ -104,17 +104,17 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         ValueError
             If the MongoDB configuration is invalid.
         """
-        if mongo_db_config is None or all(value is None for value in mongo_db_config.values()):
+        if db_config is None or all(value is None for value in db_config.values()):
             return None
         try:
-            jsonschema.validate(instance=mongo_db_config, schema=jsonschema_db_dict)
-            return mongo_db_config
+            jsonschema.validate(instance=db_config, schema=jsonschema_db_dict)
+            return db_config
         except jsonschema.exceptions.ValidationError as err:
             raise ValueError("Invalid MongoDB configuration") from err
 
-    def _validate_db_config(self, mongo_db_config):
+    def _validate_db_config(self, db_config):
         """Validate the MongoDB configuration (instance method wrapper)."""
-        return MongoDBHandler.validate_db_config(mongo_db_config)
+        return MongoDBHandler.validate_db_config(db_config)
 
     def _open_db(self):
         """
@@ -130,19 +130,19 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         KeyError
             If the DB configuration is invalid
         """
-        direct_connection = self.mongo_db_config["db_server"] in (
+        direct_connection = self.db_config["db_server"] in (
             "localhost",
             "simtools-mongodb",
             "mongodb",
         )
         return MongoClient(
-            self.mongo_db_config["db_server"],
-            port=self.mongo_db_config["db_api_port"],
-            username=self.mongo_db_config["db_api_user"],
-            password=self.mongo_db_config["db_api_pw"],
+            self.db_config["db_server"],
+            port=self.db_config["db_api_port"],
+            username=self.db_config["db_api_user"],
+            password=self.db_config["db_api_pw"],
             authSource=(
-                self.mongo_db_config.get("db_api_authentication_database")
-                if self.mongo_db_config.get("db_api_authentication_database")
+                self.db_config.get("db_api_authentication_database")
+                if self.db_config.get("db_api_authentication_database")
                 else "admin"
             ),
             directConnection=direct_connection,
@@ -185,10 +185,10 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         db_name: str
             Name of the database.
         """
-        if self.mongo_db_config:
+        if self.db_config:
             self._logger.info(
-                f"Connected to MongoDB at {self.mongo_db_config['db_server']}:"
-                f"{self.mongo_db_config['db_api_port']} "
+                f"Connected to MongoDB at {self.db_config['db_server']}:"
+                f"{self.db_config['db_api_port']} "
                 f"using database: {db_name}"
             )
         else:
@@ -205,8 +205,8 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         bool
             True if the database is remote, False otherwise.
         """
-        if self.mongo_db_config:
-            db_server = self.mongo_db_config["db_server"]
+        if self.db_config:
+            db_server = self.db_config["db_server"]
             domain_pattern = r"^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$"
             return bool(re.match(domain_pattern, db_server))
         return False

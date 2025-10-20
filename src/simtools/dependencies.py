@@ -69,9 +69,7 @@ def get_database_version_or_name(db_config, version=True):
     if db_config is None:
         return None
     db = DatabaseHandler(db_config)
-    return db.mongo_db_config.get(
-        "db_simulation_model_version" if version else "db_simulation_model"
-    )
+    return db.db_config.get("db_simulation_model_version" if version else "db_simulation_model")
 
 
 def get_sim_telarray_version(run_time):

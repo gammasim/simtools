@@ -608,7 +608,7 @@ def test_validate_model_parameter_json_file(mocker, output_path):
         config, model_parameter_validation, db_config=None
     )
 
-    mock_db_handler.assert_called_once_with(mongo_db_config=None)
+    mock_db_handler.assert_called_once_with(db_config=None)
     mock_db_instance.get_model_parameter.assert_called_once_with(
         parameter="reference_param",
         site="test_site",
@@ -653,7 +653,7 @@ def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
             config, model_parameter_validation, db_config=None
         )
 
-    mock_db_handler.assert_called_once_with(mongo_db_config=None)
+    mock_db_handler.assert_called_once_with(db_config=None)
     mock_db_instance.get_model_parameter.assert_called_once_with(
         parameter="reference_param",
         site="test_site",

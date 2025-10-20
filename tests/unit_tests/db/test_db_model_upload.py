@@ -367,7 +367,7 @@ def test_confirm_remote_database_upload_remote_db_confirmed(mock_input):
     """Test confirmation for remote database with user confirming both prompts."""
     mock_db = Mock()
     mock_db.is_remote_database.return_value = True
-    mock_db.mongo_db_config = {"db_server": "test-server"}
+    mock_db.db_config = {"db_server": "test-server"}
     mock_input.side_effect = ["yes", "yes"]
 
     result = db_model_upload._confirm_remote_database_upload(mock_db)
@@ -381,7 +381,7 @@ def test_confirm_remote_database_upload_remote_db_first_prompt_denied(mock_input
     """Test confirmation for remote database with user denying first prompt."""
     mock_db = Mock()
     mock_db.is_remote_database.return_value = True
-    mock_db.mongo_db_config = {"db_server": "test-server"}
+    mock_db.db_config = {"db_server": "test-server"}
     mock_input.return_value = "no"
 
     with caplog.at_level("INFO"):
@@ -397,7 +397,7 @@ def test_confirm_remote_database_upload_remote_db_second_prompt_denied(mock_inpu
     """Test confirmation for remote database with user denying second prompt."""
     mock_db = Mock()
     mock_db.is_remote_database.return_value = True
-    mock_db.mongo_db_config = {"db_server": "test-server"}
+    mock_db.db_config = {"db_server": "test-server"}
     mock_input.side_effect = ["yes", "no"]
 
     with caplog.at_level("INFO"):
@@ -413,7 +413,7 @@ def test_confirm_remote_database_upload_keyboard_interrupt(mock_input, caplog):
     """Test confirmation for remote database with keyboard interrupt."""
     mock_db = Mock()
     mock_db.is_remote_database.return_value = True
-    mock_db.mongo_db_config = {"db_server": "test-server"}
+    mock_db.db_config = {"db_server": "test-server"}
     mock_input.side_effect = KeyboardInterrupt()
 
     with caplog.at_level("INFO"):
@@ -428,7 +428,7 @@ def test_confirm_remote_database_upload_eof_error(mock_input, caplog):
     """Test confirmation for remote database with EOF error."""
     mock_db = Mock()
     mock_db.is_remote_database.return_value = True
-    mock_db.mongo_db_config = {"db_server": "test-server"}
+    mock_db.db_config = {"db_server": "test-server"}
     mock_input.side_effect = EOFError()
 
     with caplog.at_level("INFO"):
@@ -440,10 +440,10 @@ def test_confirm_remote_database_upload_eof_error(mock_input, caplog):
 
 @patch("builtins.input")
 def test_confirm_remote_database_upload_no_db_config(mock_input):
-    """Test confirmation for remote database with no mongo_db_config."""
+    """Test confirmation for remote database with no db_config."""
     mock_db = Mock()
     mock_db.is_remote_database.return_value = True
-    mock_db.mongo_db_config = None
+    mock_db.db_config = None
     mock_input.side_effect = ["yes", "yes"]
 
     result = db_model_upload._confirm_remote_database_upload(mock_db)
@@ -454,10 +454,10 @@ def test_confirm_remote_database_upload_no_db_config(mock_input):
 
 @patch("builtins.input")
 def test_confirm_remote_database_upload_empty_db_config(mock_input):
-    """Test confirmation for remote database with empty mongo_db_config."""
+    """Test confirmation for remote database with empty db_config."""
     mock_db = Mock()
     mock_db.is_remote_database.return_value = True
-    mock_db.mongo_db_config = {}
+    mock_db.db_config = {}
     mock_input.side_effect = ["yes", "yes"]
 
     result = db_model_upload._confirm_remote_database_upload(mock_db)
