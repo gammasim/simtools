@@ -76,7 +76,7 @@ jobs:
       - name: Install and run dotenv-linter
         run: |
           curl -sSfL https://git.io/JLbXn | sh -s
-          ./bin/dotenv-linter --skip UnorderedKey
+          ./bin/dotenv-linter check -i UnorderedKey .env*
 
       - name: Restore pre-commit cache
         uses: actions/cache@v4
