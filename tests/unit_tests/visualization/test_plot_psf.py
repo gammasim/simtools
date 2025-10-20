@@ -309,7 +309,7 @@ def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
         plt.close("all")
 
         # Verify telescope parameters were applied and simulation was run
-        mock_telescope_model.change_multiple_parameters.assert_called_once_with(**sample_parameters)
+        mock_telescope_model.overwrite_parameters.assert_called_once_with(**sample_parameters)
         assert mock_save.call_count >= 1  # At least one save call
 
 

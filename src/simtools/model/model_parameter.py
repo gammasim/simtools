@@ -8,6 +8,7 @@ from copy import copy
 import astropy.units as u
 
 import simtools.utils.general as gen
+from simtools.data_model import schema
 from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
@@ -40,6 +41,8 @@ class ModelParameter:
         as stored under collection in the DB.
     label: str
         Instance label. Used for output file naming.
+    overwrite_model_parameters: str, optional
+        File name to overwrite model parameters from DB with provided values.
     """
 
     def __init__(
@@ -50,6 +53,7 @@ class ModelParameter:
         array_element_name=None,
         collection="telescopes",
         label=None,
+        overwrite_model_parameters=None,
     ):
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
@@ -71,12 +75,13 @@ class ModelParameter:
         )
         self._config_file_directory = None
         self._config_file_path = None
+        self.overwrite_model_parameters = overwrite_model_parameters
+        self._added_parameter_files = None
+        self._is_exported_model_files_up_to_date = False
+
         self._load_parameters_from_db()
 
         self.simtel_config_writer = None
-        self._added_parameter_files = None
-        self._is_config_file_up_to_date = False
-        self._is_exported_model_files_up_to_date = False
 
     def _get_parameter_dict(self, par_name):
         """
@@ -311,53 +316,79 @@ class ModelParameter:
 
         self._load_simulation_software_parameter()
 
-    def change_parameter(self, par_name, value):
+        if self.overwrite_model_parameters:
+            self.overwrite_parameters_from_file(self.overwrite_model_parameters)
+
+    def overwrite_model_parameter(self, par_name, value, parameter_version=None):
         """
-        Overwrite the value of an existing parameter in the model parameter dictionary.
+        Overwrite the parameter dictionary for a specific parameter in the model.
 
         This function does not modify the DB, it affects only the current instance of
         the model parameter dictionary.
+
+        If the parameter version is given only, the parameter dictionary is updated
+        from the database for the given version.
 
         Parameters
         ----------
         par_name: str
             Name of the parameter.
         value:
-            Value of the parameter.
+            New value for the parameter.
+        parameter_version: str, optional
+            New version for the parameter.
 
         Raises
         ------
         InvalidModelParameterError
             If the parameter to be changed does not exist in this model.
         """
+        # TODO - we cannot add a new one?
         if par_name not in self.parameters:
             raise InvalidModelParameterError(f"Parameter {par_name} not in the model")
 
-        value = gen.convert_string_to_list(value) if isinstance(value, str) else value
+        if value is None and parameter_version:
+            _para_dict = self.db.get_model_parameter(
+                parameter=par_name,
+                site=self.site,
+                array_element_name=self.name,
+                parameter_version=parameter_version,
+            )
+            if _para_dict:
+                self.parameters[par_name] = _para_dict.get(par_name)
+            self._logger.debug(
+                f"Changing parameter {par_name} to version {parameter_version} with value "
+                f"{self.parameters[par_name]['value']}"
+            )
+        else:
+            value = gen.convert_string_to_list(value) if isinstance(value, str) else value
 
-        par_type = self.get_parameter_type(par_name)
-        if not gen.validate_data_type(
-            reference_dtype=par_type,
-            value=value,
-            dtype=None,
-            allow_subtypes=True,
-        ):
-            raise ValueError(f"Could not cast {value} of type {type(value)} to {par_type}.")
+            par_type = self.get_parameter_type(par_name)
+            if not gen.validate_data_type(
+                reference_dtype=par_type,
+                value=value,
+                dtype=None,
+                allow_subtypes=True,
+            ):
+                raise ValueError(f"Could not cast {value} of type {type(value)} to {par_type}.")
 
-        self._logger.debug(
-            f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} to {value}"
-        )
-        self.parameters[par_name]["value"] = value
+            self._logger.debug(
+                f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} "
+                f"to {value}"
+            )
+            self.parameters[par_name]["value"] = value
+            if parameter_version:
+                self.parameters[par_name]["parameter_version"] = parameter_version
 
         # In case parameter is a file, the model files will be outdated
         if self.get_parameter_file_flag(par_name):
             self._is_exported_model_files_up_to_date = False
 
-        self._is_config_file_up_to_date = False
-
-    def change_multiple_parameters_from_file(self, file_name):
+    def overwrite_parameters_from_file(self, file_name):
         """
-        Change values of multiple existing parameters in the model from a file.
+        Overwrite parameters from a file.
+
+        File is expected to follow the format described in 'simulation_models_info.schema.yml'.
 
         This function does not modify the DB, it affects only the current instance.
         This feature is intended for developers and lacks validation.
@@ -368,13 +399,20 @@ class ModelParameter:
             File containing the parameters to be changed.
         """
         self._logger.warning(
-            "Changing multiple parameters from file is a feature for developers."
-            "Insufficient validation of parameters."
+            "Changing multiple parameters from file. Insufficient validation of model parameters."
         )
         self._logger.debug(f"Changing parameters from file {file_name}")
-        self.change_multiple_parameters(**ascii_handler.collect_data_from_file(file_name=file_name))
+        changes_data = schema.validate_dict_using_schema(
+            data=ascii_handler.collect_data_from_file(file_name=file_name),
+            schema_file="simulation_models_info.schema.yml",
+        )
+        key = f"OBS-{self.site}" if self.site and not self.name else self.name
+        changes = changes_data.get("changes", {}).get(key) if key else None
 
-    def change_multiple_parameters(self, **kwargs):
+        if changes:
+            self.overwrite_parameters(changes)
+
+    def overwrite_parameters(self, changes):
         """
         Change the value of multiple existing parameters in the model.
 
@@ -382,19 +420,22 @@ class ModelParameter:
 
         Parameters
         ----------
-        **kwargs
-            Parameters should be passed as parameter_name=value.
+        changes: dict
+            Parameters to be changed with parameter_name: value pairs.
 
         """
-        for par, value in kwargs.items():
-            if par in self.parameters:
-                self.change_parameter(par, value)
+        self._logger.debug(f"Overwriting parameters: {changes}")
+        for par_name, par_dict in changes.items():
+            if par_name in self.parameters:
+                self.overwrite_model_parameter(
+                    par_name, par_dict.get("value"), par_dict.get("version")
+                )
 
-        self._is_config_file_up_to_date = False
-
-    def export_parameter_file(self, par_name, file_path):
+    def overwrite_model_file(self, par_name, file_path):
         """
-        Export a file to the config file directory.
+        Overwrite the existing model file in the config file directory.
+
+        Keeps track of updated model file with '_added_parameter_files' attribute.
 
         Parameters
         ----------
@@ -409,7 +450,7 @@ class ModelParameter:
 
     def export_model_files(self, destination_path=None, update_if_necessary=False):
         """
-        Export the model files into the config file directory.
+        Export model files from the database into the config file directory.
 
         Parameters
         ----------

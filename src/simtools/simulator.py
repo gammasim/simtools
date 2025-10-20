@@ -140,6 +140,7 @@ class Simulator:
                 calibration_device_types=self._get_calibration_device_types(
                     self.args_dict.get("run_mode")
                 ),
+                overwrite_model_parameters=self.args_dict.get("overwrite_model_parameters", None),
             )
             for version in versions
         ]

@@ -32,9 +32,11 @@ class SiteModel(ModelParameter):
         Model version or list of model versions (in which case only the first one is used).
     label: str, optional
         Instance label.
+    overwrite_model_parameters: str, optional
+        File name to overwrite model parameters from DB with provided values.
     """
 
-    def __init__(self, site, db_config, model_version, label=None):
+    def __init__(self, site, db_config, model_version, label=None, overwrite_model_parameters=None):
         """Initialize SiteModel."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SiteModel for site %s", site)
@@ -44,6 +46,7 @@ class SiteModel(ModelParameter):
             model_version=model_version,
             label=label,
             collection="sites",
+            overwrite_model_parameters=overwrite_model_parameters,
         )
 
     def get_reference_point(self):

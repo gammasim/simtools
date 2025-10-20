@@ -115,12 +115,12 @@ def test_handling_parameters(telescope_model_lst):
     )
     logger.info("Changing mirror_reflection_random_angle")
     new_mrra = "0.0080 0 0"
-    tel_model.change_parameter("mirror_reflection_random_angle", new_mrra)
+    tel_model.overwrite_model_parameter("mirror_reflection_random_angle", new_mrra)
     assert tel_model.get_parameter_value("mirror_reflection_random_angle")[0] == pytest.approx(
         0.0080
     )
 
-    tel_model.change_parameter(
+    tel_model.overwrite_model_parameter(
         "mirror_reflection_random_angle", gen.convert_string_to_list(new_mrra)
     )
     assert tel_model.get_parameter_value("mirror_reflection_random_angle")[0] == pytest.approx(
@@ -164,54 +164,53 @@ def test_load_parameters_from_db(telescope_model_lst, mocker):
     assert mock_db.call_count == 3
 
 
-def test_change_parameter(telescope_model_lst):
+def test_overwrite_model_parameter(telescope_model_lst):
     tel_model = copy.deepcopy(telescope_model_lst)
 
     logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('camera_pixels')}")
-    tel_model.change_parameter("camera_pixels", 9999)
+    tel_model.overwrite_model_parameter("camera_pixels", 9999)
     assert tel_model.get_parameter_value("camera_pixels") == 9999
 
     logger.info("Testing changing camera_pixels to a float (now allowed)")
     with pytest.raises(ValueError, match=r"^Could not cast 9999.9 of type"):
-        tel_model.change_parameter("camera_pixels", 9999.9)
+        tel_model.overwrite_model_parameter("camera_pixels", 9999.9)
 
     logger.info("Testing changing camera_pixels to a nonsense string")
     with pytest.raises(ValueError, match=r"^Could not cast bla_bla of type"):
-        tel_model.change_parameter("camera_pixels", "bla_bla")
+        tel_model.overwrite_model_parameter("camera_pixels", "bla_bla")
 
     logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('mirror_focal_length')}")
-    tel_model.change_parameter("mirror_focal_length", 55.0)
+    tel_model.overwrite_model_parameter("mirror_focal_length", 55.0)
     assert pytest.approx(55.0) == tel_model.get_parameter_value("mirror_focal_length")
-    tel_model.change_parameter("mirror_focal_length", 55)
+    tel_model.overwrite_model_parameter("mirror_focal_length", 55)
     assert pytest.approx(55.0) == tel_model.get_parameter_value("mirror_focal_length")
 
-    tel_model.change_parameter("mirror_focal_length", "9999.9 0.")
+    tel_model.overwrite_model_parameter("mirror_focal_length", "9999.9 0.")
     assert pytest.approx(9999.9) == tel_model.get_parameter_value("mirror_focal_length")[0]
 
     logger.info("Testing changing mirror_focal_length to a nonsense string")
     with pytest.raises(ValueError, match=r"^Could not cast bla_bla of type"):
-        tel_model.change_parameter("mirror_focal_length", "bla_bla")
+        tel_model.overwrite_model_parameter("mirror_focal_length", "bla_bla")
 
     with pytest.raises(InvalidModelParameterError, match="Parameter bla_bla not in the model"):
-        tel_model.change_parameter("bla_bla", 9999.9)
+        tel_model.overwrite_model_parameter("bla_bla", 9999.9)
 
 
-def test_change_multiple_parameters_from_file(telescope_model_lst, caplog, mocker):
+def test_overwrite_parameters_from_file(telescope_model_lst, caplog, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mocker_gen = mocker.patch("simtools.io.ascii_handler.collect_data_from_file", return_value={})
     with caplog.at_level(logging.WARNING):
-        telescope_copy.change_multiple_parameters_from_file(file_name="test_file")
+        telescope_copy.overwrite_parameters_from_file(file_name="test_file")
     assert "Changing multiple parameters from file is a feature for developers." in caplog.text
     mocker_gen.assert_called_once()
 
 
-def test_change_multiple_parameters(telescope_model_lst, mocker):
+def test_overwrite_parameters(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
-    mock_change = mocker.patch.object(TelescopeModel, "change_parameter")
-    telescope_copy.change_multiple_parameters(**{"camera_pixels": 9999, "mirror_focal_length": 55})
+    mock_change = mocker.patch.object(TelescopeModel, "overwrite_model_parameter")
+    telescope_copy.overwrite_parameters(**{"camera_pixels": 9999, "mirror_focal_length": 55})
     mock_change.assert_any_call("camera_pixels", 9999)
     mock_change.assert_any_call("mirror_focal_length", 55)
-    assert not telescope_copy._is_config_file_up_to_date
 
 
 def test_flen_type(telescope_model_lst):
@@ -247,7 +246,7 @@ def test_updating_export_model_files(db_config, model_version):
 
     # Changing a non-file parameter
     logger.info("Changing a parameter that IS NOT a file - mirror_reflection_random_angle")
-    tel.change_parameter("mirror_reflection_random_angle", "0.0080 0 0")
+    tel.overwrite_model_parameter("mirror_reflection_random_angle", "0.0080 0 0")
     logger.debug(
         "tel._is_exported_model_files should still be True because the changed "
         "parameter was not a file"
@@ -260,7 +259,9 @@ def test_updating_export_model_files(db_config, model_version):
 
     # Changing a parameter that is a file
     logger.debug("Changing a parameter that IS a file - camera_config_file")
-    tel.change_parameter("camera_config_file", tel.get_parameter_value("camera_config_file"))
+    tel.overwrite_model_parameter(
+        "camera_config_file", tel.get_parameter_value("camera_config_file")
+    )
     logger.debug(
         "tel._is_exported_model_files should be False because a parameter that "
         "is a file was changed."
@@ -268,12 +269,12 @@ def test_updating_export_model_files(db_config, model_version):
     assert False is tel._is_exported_model_files_up_to_date
 
 
-def test_export_parameter_file(telescope_model_lst, mocker):
+def test_overwrite_model_file(telescope_model_lst, mocker):
     parameter = "array_coordinates_UTM"
     file_path = "tests/resources/telescope_positions-North-ground.ecsv"
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_copy = mocker.patch("shutil.copy")
-    telescope_copy.export_parameter_file(par_name=parameter, file_path=file_path)
+    telescope_copy.overwrite_model_file(par_name=parameter, file_path=file_path)
     mock_copy.assert_called_once_with(file_path, telescope_copy.config_file_directory)
 
 

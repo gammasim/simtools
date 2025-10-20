@@ -23,15 +23,18 @@ class CalibrationModel(ModelParameter):
         Model version.
     label: str, optional
         Instance label. Important for output file naming.
+    overwrite_model_parameters: str, optional
+        File name to overwrite model parameters from DB with provided values.
     """
 
     def __init__(
         self,
-        site: str,
-        calibration_device_model_name: str,
-        db_config: dict,
-        model_version: str,
-        label: str | None = None,
+        site,
+        calibration_device_model_name,
+        db_config,
+        model_version,
+        label=None,
+        overwrite_model_parameters=None,
     ):
         """Initialize CalibrationModel."""
         super().__init__(
@@ -41,6 +44,7 @@ class CalibrationModel(ModelParameter):
             db_config=db_config,
             model_version=model_version,
             label=label,
+            overwrite_model_parameters=overwrite_model_parameters,
         )
 
         self._logger = logging.getLogger(__name__)

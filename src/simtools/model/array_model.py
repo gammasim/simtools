@@ -40,6 +40,8 @@ class ArrayModel:
         Dictionary with configuration for sim_telarray random instrument setup.
     simtel_path: str, Path, optional
         Path to the sim_telarray installation directory.
+    overwrite_model_parameters: str, optional
+        File name to overwrite model parameters from DB with provided values.
     """
 
     def __init__(
@@ -53,6 +55,7 @@ class ArrayModel:
         calibration_device_types=None,
         sim_telarray_seeds=None,
         simtel_path=None,
+        overwrite_model_parameters=None,
     ):
         """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
@@ -68,6 +71,8 @@ class ArrayModel:
         self._config_file_path = None
         self._config_file_directory = None
         self.io_handler = io_handler.IOHandler()
+
+        self.overwrite_model_parameters = overwrite_model_parameters
 
         self.array_elements, self.site_model, self.telescope_models, self.calibration_models = (
             self._initialize(site, array_elements, calibration_device_types)
@@ -106,6 +111,7 @@ class ArrayModel:
             db_config=self.db_config,
             model_version=self.model_version,
             label=self.label,
+            overwrite_model_parameters=self.overwrite_model_parameters,
         )
 
         # Case 1: array_elements is a file name
@@ -215,6 +221,7 @@ class ArrayModel:
                 model_version=self.model_version,
                 db_config=self.db_config,
                 label=self.label,
+                overwrite_model_parameters=self.overwrite_model_parameters,
             )
             calibration_models[element_name] = self._build_calibration_models(
                 telescope_models[element_name],
@@ -247,6 +254,7 @@ class ArrayModel:
                 db_config=self.db_config,
                 model_version=self.model_version,
                 label=self.label,
+                overwrite_model_parameters=self.overwrite_model_parameters,
             )
         return calibration_models
 
