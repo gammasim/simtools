@@ -974,25 +974,65 @@ def test_get_array_element_list_with_design_model_in_production_table(db, mocker
     assert result == ["LSTN-design", "LSTN-01"]
 
 
-def test_get_model_versions(db):
+def test_get_model_versions(db, mocker):
+    """Test get_model_versions with mocked collection."""
+    # Clear cache to ensure test isolation
+    db_handler.DatabaseHandler.model_versions_cached.clear()
+
+    mock_collection = mocker.Mock()
+    mock_collection.find.return_value = [
+        {"model_version": "6.0.0", "collection": "telescopes"},
+        {"model_version": "5.0.0", "collection": "telescopes"},
+        {"model_version": "5.0.0", "collection": "telescopes"},  # duplicate
+    ]
+    mocker.patch.object(db, "get_collection", return_value=mock_collection)
+
     model_versions = db.get_model_versions()
-    assert len(model_versions) > 0
+    assert len(model_versions) == 2
     assert "5.0.0" in model_versions
     assert "6.0.0" in model_versions
+    assert model_versions == ["5.0.0", "6.0.0"]  # sorted
 
 
-def test_get_array_elements(db):
+def test_get_array_elements(db, mocker):
+    """Test get_array_elements with mocked production table."""
+    mocker.patch.object(
+        db,
+        "read_production_table_from_db",
+        side_effect=[
+            {"parameters": {"LSTN-01": {}, "LSTN-design": {}, "SSTS-01": {}}},
+            {"parameters": {"LSTN-01": {}, "MSTN-101": {}, "LSTN-design": {}}},
+            {"parameters": {"ILLN-02": {}, "ILLN-design": {}}},
+        ],
+    )
+    mocker.patch.object(db, "get_model_versions", return_value=["5.0.0", "6.0.0"])
+
     prod5_elements = db.get_array_elements("5.0.0", "telescopes")
-    assert len(prod5_elements) > 0
+    assert len(prod5_elements) == 2
     assert "LSTN-01" in prod5_elements
     assert "MSTN-101" not in prod5_elements
+
     prod6_elements = db.get_array_elements("6.0.0", "telescopes")
     assert "MSTN-101" in prod6_elements
+
     prod6_calibration_devices = db.get_array_elements("6.0.0", "calibration_devices")
     assert "ILLN-02" in prod6_calibration_devices
 
 
-def test_get_design_model(db):
+def test_get_design_model(db, mocker):
+    """Test get_design_model with mocked production table."""
+    mocker.patch.object(
+        db,
+        "read_production_table_from_db",
+        side_effect=[
+            {"design_model": {"LSTN-01": "LSTN-design"}},
+            {"design_model": {"LSTN-01": "LSTN-design"}},
+            {"design_model": {"SSTS-03": "SSTS-design"}},
+            {"design_model": {}},
+        ],
+    )
+    mocker.patch.object(db, "get_model_versions", return_value=["5.0.0", "6.0.0"])
+
     assert db.get_design_model("5.0.0", "LSTN-01") == "LSTN-design"
     assert db.get_design_model("6.0.0", "LSTN-01") == "LSTN-design"
     assert db.get_design_model("5.0.0", "SSTS-03") == "SSTS-design"
