@@ -289,9 +289,7 @@ class ArrayModel:
         """Export sim_telarray configuration files for all telescopes into the model directory."""
         exported_models = []
         for tel_model in self.telescope_models.values():
-            name = tel_model.name + (
-                "_" + tel_model.extra_label if tel_model.extra_label != "" else ""
-            )
+            name = tel_model.name
             if name not in exported_models:
                 self._logger.debug(f"Exporting configuration file for telescope {name}")
                 tel_model.write_sim_telarray_config_file(

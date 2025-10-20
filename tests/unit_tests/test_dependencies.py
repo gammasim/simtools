@@ -6,7 +6,6 @@ from unittest import mock
 import pytest
 
 from simtools import dependencies
-from simtools.db.db_handler import DatabaseHandler
 
 
 @pytest.fixture
@@ -15,11 +14,6 @@ def mongo_db_config():
         "db_simulation_model": "sim_model_db",
         "db_simulation_model_version": "v1.0.0",
     }
-
-
-@pytest.fixture
-def db_config():
-    return {"host": "localhost", "port": 27017}
 
 
 @pytest.fixture
@@ -65,8 +59,6 @@ def get_build_options_literal():
 def test_get_version_string_success(
     monkeypatch,
     mongo_db_config,
-    db_config,
-    db_handler_function,
     fake_path,
     corsika_version_string,
     corsika_request_for_input,
@@ -74,83 +66,62 @@ def test_get_version_string_success(
     subprocess_popen,
     get_build_options_literal,
 ):
-    mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
-    mock_db_handler.mongo_db_config = mongo_db_config
+    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
 
-    with mock.patch(db_handler_function, return_value=mock_db_handler):
-        monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
+    mock_sim_telarray_result = mock.Mock()
+    mock_sim_telarray_result.stdout = "Release: 2024.271.0 from 2024-09-27"
+    mock_sim_telarray_result.stderr = ""
 
-        mock_sim_telarray_result = mock.Mock()
-        mock_sim_telarray_result.stdout = "Release: 2024.271.0 from 2024-09-27"
-        mock_sim_telarray_result.stderr = ""
+    mock_corsika_process = mock.Mock()
+    mock_corsika_process.stdout.readline.side_effect = [
+        corsika_version_string,
+        corsika_request_for_input,
+        "",
+    ]
 
-        mock_corsika_process = mock.Mock()
-        mock_corsika_process.stdout.readline.side_effect = [
-            corsika_version_string,
-            corsika_request_for_input,
-            "",
-        ]
-
-        with mock.patch(subprocess_run, return_value=mock_sim_telarray_result):
-            with mock.patch(subprocess_popen, return_value=mock_corsika_process):
-                with mock.patch(get_build_options_literal, return_value={"corsika_version": "7.7"}):
-                    expected_output = (
-                        "Database name: sim_model_db\n"
-                        "Database version: v1.0.0\n"
-                        "sim_telarray version: 2024.271.0\n"
-                        "CORSIKA version: 7.7550\n"
-                        "Build options: {'corsika_version': '7.7'}\n"
-                        "Runtime environment: None\n"
-                    )
-                    assert dependencies.get_version_string(db_config) == expected_output
+    with mock.patch(subprocess_run, return_value=mock_sim_telarray_result):
+        with mock.patch(subprocess_popen, return_value=mock_corsika_process):
+            with mock.patch(get_build_options_literal, return_value={"corsika_version": "7.7"}):
+                expected_output = (
+                    "Database name: sim_model_db\n"
+                    "Database version: v1.0.0\n"
+                    "sim_telarray version: 2024.271.0\n"
+                    "CORSIKA version: 7.7550\n"
+                    "Build options: {'corsika_version': '7.7'}\n"
+                    "Runtime environment: None\n"
+                )
+                assert dependencies.get_version_string(mongo_db_config) == expected_output
 
 
 def test_get_version_string_no_env_var(
     monkeypatch,
     mongo_db_config,
-    db_config,
-    db_handler_function,
     env_not_set_error,
     caplog,
     get_build_options_literal,
 ):
-    mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
-    mock_db_handler.mongo_db_config = mongo_db_config
+    monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
 
-    with mock.patch(db_handler_function, return_value=mock_db_handler):
-        monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
+    with caplog.at_level(logging.WARNING):
+        with mock.patch(get_build_options_literal, return_value=None):
+            expected_output = (
+                "Database name: sim_model_db\n"
+                "Database version: v1.0.0\n"
+                "sim_telarray version: None\n"
+                "CORSIKA version: None\n"
+                "Build options: None\n"
+                "Runtime environment: None\n"
+            )
+            assert dependencies.get_version_string(mongo_db_config) == expected_output
 
-        with caplog.at_level(logging.WARNING):
-            with mock.patch(get_build_options_literal, return_value=None):
-                expected_output = (
-                    "Database name: sim_model_db\n"
-                    "Database version: v1.0.0\n"
-                    "sim_telarray version: None\n"
-                    "CORSIKA version: None\n"
-                    "Build options: None\n"
-                    "Runtime environment: None\n"
-                )
-                assert dependencies.get_version_string(db_config) == expected_output
-
-        assert env_not_set_error in caplog.text
+    assert env_not_set_error in caplog.text
 
 
-def test_get_database_version_or_name_success(mongo_db_config, db_config, db_handler_function):
-    mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
-    mock_db_handler.mongo_db_config = mongo_db_config
-
-    with mock.patch(db_handler_function, return_value=mock_db_handler):
-        assert dependencies.get_database_version_or_name(db_config) == "v1.0.0"
+def test_get_database_version_or_name_success(mongo_db_config):
+    assert dependencies.get_database_version_or_name(mongo_db_config) == "v1.0.0"
+    assert dependencies.get_database_version_or_name(mongo_db_config, False) == "sim_model_db"
 
     assert dependencies.get_database_version_or_name(None) is None
-
-
-def test_get_database_version_or_name_no_version(db_config, db_handler_function):
-    mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
-    mock_db_handler.mongo_db_config = {}
-
-    with mock.patch(db_handler_function, return_value=mock_db_handler):
-        assert dependencies.get_database_version_or_name(db_config) is None
 
 
 def test_get_sim_telarray_version_success(monkeypatch, fake_path, subprocess_run):
@@ -355,3 +326,29 @@ def test_get_build_options_container_yaml_error(monkeypatch, fake_path, subproce
     with mock.patch(subprocess_run, return_value=mock_result):
         with pytest.raises(ValueError, match=r"Error parsing build_opts.yml from container:"):
             dependencies.get_build_options(run_time=["docker", "exec", "container"])
+
+
+def test_get_software_version_simtools():
+    assert dependencies.get_software_version("simtools") == dependencies.__version__
+    assert dependencies.get_software_version("SIMTOOLS") == dependencies.__version__
+
+
+def test_get_software_version_corsika(get_build_options_literal):
+    with mock.patch(get_build_options_literal, return_value={"corsika_version": "7.7"}):
+        with mock.patch("simtools.dependencies.get_corsika_version", return_value="7.7550"):
+            assert dependencies.get_software_version("corsika") == "7.7550"
+
+
+def test_get_software_version_sim_telarray(subprocess_run, fake_path, monkeypatch):
+    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
+    mock_result = mock.Mock()
+    mock_result.stdout = "Release: 2024.271.0 from 2024-09-27"
+    mock_result.stderr = ""
+
+    with mock.patch(subprocess_run, return_value=mock_result):
+        assert dependencies.get_software_version("sim_telarray") == "2024.271.0"
+
+
+def test_get_software_version_unknown():
+    with pytest.raises(ValueError, match="Unknown software: unknown_software"):
+        dependencies.get_software_version("unknown_software")
