@@ -49,8 +49,8 @@ def startup_application(parse_function, setup_io_handler=True, logger_name=None)
     io_handler_instance : io_handler.IOHandler or None
         IOHandler instance if setup_io_handler=True, None otherwise.
 
-    Example
-    -------
+    Examples
+    --------
     Basic usage in an application:
 
     .. code-block:: python
@@ -107,8 +107,8 @@ def get_application_label(file_path):
     str
         Application label (filename without extension).
 
-    Example
-    -------
+    Examples
+    --------
     .. code-block:: python
 
         def main():
