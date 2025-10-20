@@ -109,10 +109,8 @@ def test_position(telescope_model_lst, caplog):
     assert utm_xyz[0].value == pytest.approx(217659.6)
     assert utm_xyz[1].value == pytest.approx(3184995.1)
     assert utm_xyz[2].value == pytest.approx(2185.0)
-    with caplog.at_level("ERROR"):
-        with pytest.raises(InvalidModelParameterError):
-            tel_model.position(coordinate_system="invalid")
-    assert "Coordinate system invalid not found." in caplog.text
+    with pytest.raises(InvalidModelParameterError, match=r"Coordinate system invalid not found."):
+        tel_model.position(coordinate_system="invalid")
 
 
 def test_export_single_mirror_list_file(telescope_model_lst, caplog, monkeypatch):

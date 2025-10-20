@@ -37,7 +37,7 @@ class DatabaseHandler:
         """Initialize the DatabaseHandler class."""
         self._logger = logging.getLogger(__name__)
 
-        self.mongo_db_config = MongoDBHandler.validate_mongo_db_config(mongo_db_config)
+        self.mongo_db_config = MongoDBHandler.validate_db_config(mongo_db_config)
         self.io_handler = io_handler.IOHandler()
         self.mongo_db_handler = MongoDBHandler(mongo_db_config) if self.mongo_db_config else None
 
@@ -392,10 +392,8 @@ class DatabaseHandler:
             if Path(dest).joinpath(file_name).exists():
                 instance_ids[file_name] = "file exists"
             else:
-                file_path_instance = self.mongo_db_handler.get_file_from_mongo_db(
-                    db_name, file_name
-                )
-                self._write_file_from_mongo_to_disk(db_name, dest, file_path_instance)
+                file_path_instance = self.mongo_db_handler.get_file_from_db(db_name, file_name)
+                self._write_file_from_db_to_disk(db_name, dest, file_path_instance)
                 instance_ids[file_name] = file_path_instance._id  # pylint: disable=protected-access
         return instance_ids
 
@@ -436,7 +434,7 @@ class DatabaseHandler:
         ValueError
             if query returned no results.
         """
-        posts = self.mongo_db_handler.query_mongo_db(query, collection_name, self.db_name)
+        posts = self.mongo_db_handler.query_db(query, collection_name, self.db_name)
         parameters = {}
         for post in posts:
             par_now = post["parameter"]
@@ -638,7 +636,7 @@ class DatabaseHandler:
             )
         raise ValueError(f"Unknown simulation software: {simulation_software}")
 
-    def _write_file_from_mongo_to_disk(self, db_name, path, file):
+    def _write_file_from_db_to_disk(self, db_name, path, file):
         """
         Extract a file from MongoDB and write it to disk.
 
@@ -651,7 +649,7 @@ class DatabaseHandler:
         file: GridOut
             A file instance returned by GridFS find_one
         """
-        self.mongo_db_handler.write_file_from_mongo_to_disk(db_name, path, file)
+        self.mongo_db_handler.write_file_from_db_to_disk(db_name, path, file)
 
     def get_ecsv_file_as_astropy_table(self, file_name, db_name=None):
         """

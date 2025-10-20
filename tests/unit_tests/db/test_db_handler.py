@@ -133,9 +133,9 @@ def mock_file_system(mocker, mock_gridfs):
 def export_files_setup(db, mocker):
     """Common setup for export_model_files tests."""
     mock_get_file_mongo_db = mocker.patch.object(
-        db.mongo_db_handler, "get_file_from_mongo_db", return_value=mocker.Mock(_id="file_id")
+        db.mongo_db_handler, "get_file_from_db", return_value=mocker.Mock(_id="file_id")
     )
-    mock_write_file = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
+    mock_write_file = mocker.patch.object(db, "_write_file_from_db_to_disk")
     return {"get_file_mongo_db": mock_get_file_mongo_db, "write_file": mock_write_file}
 
 
@@ -209,24 +209,24 @@ def test_set_up_connection_with_config(db):
 def test_valid_db_config(db, db_config):
     from simtools.db.mongo_db import MongoDBHandler
 
-    assert db.mongo_db_config == MongoDBHandler.validate_mongo_db_config(db_config)
-    assert MongoDBHandler.validate_mongo_db_config(None) is None
+    assert db.mongo_db_config == MongoDBHandler.validate_db_config(db_config)
+    assert MongoDBHandler.validate_db_config(None) is None
     none_db_dict = copy.deepcopy(db_config)
     for key in none_db_dict.keys():
         none_db_dict[key] = None
-    assert MongoDBHandler.validate_mongo_db_config(none_db_dict) is None
-    assert MongoDBHandler.validate_mongo_db_config({}) is None
+    assert MongoDBHandler.validate_db_config(none_db_dict) is None
+    assert MongoDBHandler.validate_db_config({}) is None
     with pytest.raises(ValueError, match=r"Invalid MongoDB configuration"):
-        MongoDBHandler.validate_mongo_db_config({"wrong_config": "wrong"})
+        MongoDBHandler.validate_db_config({"wrong_config": "wrong"})
 
 
-def test_open_mongo_db_direct_connection(mocker, db, db_config):
-    """Test _open_mongo_db with direct connection configuration."""
+def test_open_db_direct_connection(mocker, db, db_config):
+    """Test _open_db with direct connection configuration."""
     db_config["db_server"] = "localhost"
     mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient", return_value="mock_client")
     db.mongo_db_config = db_config
     db.mongo_db_handler.mongo_db_config = db_config
-    client = db.mongo_db_handler._open_mongo_db()
+    client = db.mongo_db_handler._open_db()
     assert client == "mock_client"
     mock_mongo_client.assert_called_once_with(
         db_config["db_server"],
@@ -624,8 +624,8 @@ def test_export_model_files_with_parameters(
 
 def test_export_model_files_file_exists(db, mocker, tmp_test_directory, test_db, test_file):
     """Test export_model_files method when file already exists."""
-    mock_get_file_mongo_db = mocker.patch.object(db.mongo_db_handler, "get_file_from_mongo_db")
-    mock_write_file = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
+    mock_get_file_mongo_db = mocker.patch.object(db.mongo_db_handler, "get_file_from_db")
+    mock_write_file = mocker.patch.object(db, "_write_file_from_db_to_disk")
     mock_path_exists = mocker.patch("pathlib.Path.exists", return_value=True)
 
     file_names = [test_file]
@@ -640,9 +640,9 @@ def test_export_model_files_file_exists(db, mocker, tmp_test_directory, test_db,
 def test_export_model_files_file_not_found(db, mocker, tmp_test_directory, test_db, test_file):
     """Test export_model_files method when file is not found in parameters."""
     mock_get_file_mongo_db = mocker.patch.object(
-        db.mongo_db_handler, "get_file_from_mongo_db", side_effect=FileNotFoundError
+        db.mongo_db_handler, "get_file_from_db", side_effect=FileNotFoundError
     )
-    mock_write_file = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
+    mock_write_file = mocker.patch.object(db, "_write_file_from_db_to_disk")
 
     parameters = {"param1": {"file": True, "value": test_file}}
 
@@ -684,9 +684,9 @@ def test_read_mongo_db(db, mocker, test_db):
     """Test read_mongo_db method."""
     doc1_id = ObjectId()
     doc2_id = ObjectId()
-    mock_query_mongo_db = mocker.patch.object(
+    mock_query_db = mocker.patch.object(
         db.mongo_db_handler,
-        "query_mongo_db",
+        "query_db",
         return_value=[
             {"_id": doc1_id, "parameter": "param1", "value": "value1"},
             {"_id": doc2_id, "parameter": "param2", "value": "value2"},
@@ -698,7 +698,7 @@ def test_read_mongo_db(db, mocker, test_db):
 
     result = db._read_mongo_db(query, collection_name)
 
-    mock_query_mongo_db.assert_called_once_with(query, collection_name, db.db_name)
+    mock_query_db.assert_called_once_with(query, collection_name, db.db_name)
     assert result == {
         "param1": {
             "_id": doc1_id,
@@ -717,7 +717,7 @@ def test_read_mongo_db(db, mocker, test_db):
     # Test with no results
     mocker.patch.object(
         db.mongo_db_handler,
-        "query_mongo_db",
+        "query_db",
         side_effect=ValueError(
             f"The following query for {collection_name} returned zero results: {query}"
         ),
@@ -868,10 +868,10 @@ def test_get_simulation_configuration_parameters(db, mocker):
 
 
 def test_get_file_mongo_db_file(db, test_db, test_file, mock_file_system, mock_db_client):
-    """Test get_file_from_mongo_db method when file exists."""
+    """Test get_file_from_db method when file exists."""
     mock_file_system["fs"].exists.return_value = True
 
-    result = db.mongo_db_handler.get_file_from_mongo_db(test_db, test_file)
+    result = db.mongo_db_handler.get_file_from_db(test_db, test_file)
 
     mock_file_system["fs"].exists.assert_called_once_with({"filename": test_file})
     mock_file_system["fs"].find_one.assert_called_once_with({"filename": test_file})
@@ -882,13 +882,11 @@ def test_get_file_mongo_db_file(db, test_db, test_file, mock_file_system, mock_d
     with pytest.raises(
         FileNotFoundError, match=f"The file {test_file} does not exist in the database {test_db}"
     ):
-        db.mongo_db_handler.get_file_from_mongo_db(test_db, test_file)
+        db.mongo_db_handler.get_file_from_db(test_db, test_file)
 
 
-def test_write_file_from_mongo_to_disk(
-    db, mocker, tmp_test_directory, mock_open, test_db, test_file
-):
-    """Test _write_file_from_mongo_to_disk method."""
+def test_write_file_from_db_to_disk(db, mocker, tmp_test_directory, mock_open, test_db, test_file):
+    """Test _write_file_from_db_to_disk method."""
     from simtools.db.mongo_db import MongoDBHandler
 
     mock_db_client = mocker.patch.object(MongoDBHandler, "db_client", {"test_db": mocker.Mock()})
@@ -898,7 +896,7 @@ def test_write_file_from_mongo_to_disk(
     mock_file = mocker.Mock()
     mock_file.filename = test_file
 
-    db._write_file_from_mongo_to_disk(test_db, tmp_test_directory, mock_file)
+    db._write_file_from_db_to_disk(test_db, tmp_test_directory, mock_file)
 
     mock_gridfs_bucket.assert_called_once_with(mock_db_client[test_db])
     mock_open.assert_called_once_with(Path(tmp_test_directory).joinpath(mock_file.filename), "wb")
