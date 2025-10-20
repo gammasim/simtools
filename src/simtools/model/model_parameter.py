@@ -313,8 +313,33 @@ class ModelParameter:
             self.parameters = self.db.get_model_parameters(
                 self.site, self.name, self.collection, self.model_version
             )
+            self._check_model_parameter_software_versions(self.parameters.keys())
 
         self._load_simulation_software_parameter()
+        for software_name, parameters in self._simulation_config_parameters.items():
+            self._check_model_parameter_software_versions(
+                parameters.keys(), software_name=software_name
+            )
+
+    def _check_model_parameter_software_versions(self, parameter_list, software_name=None):
+        """
+        Ensure that model parameters are compatible with the installed software versions.
+
+        Compares software versions listed in schema files with the installed software versions
+        (e.g., sim_telarray, CORSIKA).
+
+        Parameters
+        ----------
+        parameter_list: list
+            List containing model parameter names.
+        software_name: str
+            Name of the software for which the parameters are checked.
+        """
+        for par_name in parameter_list:
+            if par_name in (parameter_schema := names.model_parameters()):
+                schema.validate_deprecation_and_version(
+                    data=parameter_schema[par_name], software_name=software_name
+                )
 
         if self.overwrite_model_parameters:
             self.overwrite_parameters_from_file(self.overwrite_model_parameters)

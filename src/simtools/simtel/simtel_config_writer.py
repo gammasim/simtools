@@ -528,7 +528,7 @@ class SimtelConfigWriter:
         """
         file.write(self.TAB + "% Site parameters\n")
         for par, value in site_parameters.items():
-            simtel_name, value = self._convert_model_parameters_to_simtel_format(
+            simtel_name, simtel_value = self._convert_model_parameters_to_simtel_format(
                 names.get_simulation_software_name_from_parameter_name(
                     par, software_name="sim_telarray"
                 ),
@@ -537,7 +537,7 @@ class SimtelConfigWriter:
                 telescope_model,
             )
             if simtel_name is not None:
-                file.write(f"{self.TAB}{simtel_name} = {value}\n")
+                file.write(f"{self.TAB}{simtel_name} = {simtel_value}\n")
         for meta in self._get_sim_telarray_metadata(
             "site", site_parameters, None, additional_metadata
         ):
