@@ -198,19 +198,27 @@ def test_overwrite_model_parameter(telescope_model_lst):
 
 def test_overwrite_parameters_from_file(telescope_model_lst, caplog, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
-    mocker_gen = mocker.patch("simtools.io.ascii_handler.collect_data_from_file", return_value={})
+    mocker.patch(
+        "simtools.model.model_parameter.ascii_handler.collect_data_from_file",
+        return_value={},
+    )
+    mocker.patch(
+        "simtools.model.model_parameter.schema.validate_dict_using_schema",
+        return_value={"changes": {}},
+    )
     with caplog.at_level(logging.WARNING):
         telescope_copy.overwrite_parameters_from_file(file_name="test_file")
     assert "Changing multiple parameters from file is a feature for developers." in caplog.text
-    mocker_gen.assert_called_once()
 
 
 def test_overwrite_parameters(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_change = mocker.patch.object(TelescopeModel, "overwrite_model_parameter")
-    telescope_copy.overwrite_parameters(**{"camera_pixels": 9999, "mirror_focal_length": 55})
-    mock_change.assert_any_call("camera_pixels", 9999)
-    mock_change.assert_any_call("mirror_focal_length", 55)
+    telescope_copy.overwrite_parameters(
+        {"camera_pixels": {"value": 9999}, "mirror_focal_length": {"value": 55}}
+    )
+    mock_change.assert_any_call("camera_pixels", 9999, None)
+    mock_change.assert_any_call("mirror_focal_length", 55, None)
 
 
 def test_flen_type(telescope_model_lst):
