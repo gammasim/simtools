@@ -12,6 +12,7 @@ import numpy as np
 from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.runners.simtel_runner import SimtelRunner
+from simtools.simtel.simtel_config_writer import write_lightpulse_table_gauss_expconv
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 from simtools.utils.geometry import fiducial_radius_from_shape
 
@@ -293,7 +294,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         parts = [str(self._simtel_path / "sim_telarray/LightEmission") + f"/{app_name}"]
         parts.extend(self._get_site_command(app_name, config_directory, corsika_observation_level))
-        parts.extend(self._get_light_source_command())
+        parts.extend(self._get_light_source_command(config_directory))
         if self.light_emission_config["light_source_type"] == "illuminator":
             parts += [
                 "-A",
@@ -322,17 +323,17 @@ class SimulatorLightEmission(SimtelRunner):
             f"--telpos-file {self._write_telescope_position_file()}",
         ]
 
-    def _get_light_source_command(self):
+    def _get_light_source_command(self, config_directory: Path):
         """Return light-source specific command options."""
         if self.light_emission_config["light_source_type"] == "flat_fielding":
-            return self._add_flasher_command_options()
+            return self._add_flasher_command_options(config_directory)
         if self.light_emission_config["light_source_type"] == "illuminator":
             return self._add_illuminator_command_options()
         raise ValueError(
             f"Unknown light_source_type '{self.light_emission_config['light_source_type']}'"
         )
 
-    def _add_flasher_command_options(self):
+    def _add_flasher_command_options(self, config_directory):
         """Add flasher options for all telescope types (ff-1m style)."""
         flasher_xyz = self.calibration_model.get_parameter_value_with_unit("flasher_position")
         camera_radius = fiducial_radius_from_shape(
@@ -347,6 +348,23 @@ class SimulatorLightEmission(SimtelRunner):
         dist_cm = self.calculate_distance_focal_plane_calibration_device().to(u.cm).value
         angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
 
+        # Build pulse table for ff-1m for LST/NectarCam: Gaussian rise + (Gaussian⊗Exponential) fall
+        # Only apply when an exponential decay parameter exists; else fall back to token string.
+        pulse_arg = self._get_pulse_shape_string_for_sim_telarray()
+        width_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
+        exp_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_exp_decay")
+        if exp_q is not None and width_q is not None:
+            try:
+                table_path = config_directory / "flasher_pulse_shape.dat"
+                write_lightpulse_table_gauss_expconv(
+                    file_path=table_path,
+                    width_ns=width_q.to(u.ns).value,
+                    exp_decay_ns=exp_q.to(u.ns).value,
+                )
+                pulse_arg = str(table_path)
+            except (ValueError, OSError) as err:  # keep running with token fallback
+                self._logger.warning(f"Failed to write pulse shape table, using token: {err}")
+
         return [
             f"--events {self.light_emission_config['number_of_events']}",
             f"--photons {self.light_emission_config['flasher_photons']}",
@@ -355,7 +373,7 @@ class SimulatorLightEmission(SimtelRunner):
             f"--distance {dist_cm}",
             f"--camera-radius {camera_radius}",
             f"--spectrum {int(flasher_wavelength.to(u.nm).value)}",
-            f"--lightpulse {self._get_pulse_shape_string_for_sim_telarray()}",
+            f"--lightpulse {pulse_arg}",
             f"--angular-distribution {angular_distribution}",
         ]
 
