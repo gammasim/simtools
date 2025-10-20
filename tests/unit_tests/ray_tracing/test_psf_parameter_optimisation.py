@@ -245,7 +245,7 @@ def test__run_ray_tracing_simulation(
             mock_telescope_model, mock_site_model, mock_args_dict, pars
         )
         assert psf_diameter == pytest.approx(expected_psf_diameter)
-        mock_telescope_model.change_multiple_parameters.assert_called_once_with(**pars)
+        mock_telescope_model.overwrite_parameters.assert_called_once_with(**pars)
 
 
 @pytest.mark.parametrize(
@@ -1249,7 +1249,7 @@ def test_run_psf_optimization_workflow_complete_success_path(
     """Test complete successful PSF optimization workflow including final steps."""
     mock_args_dict.update(
         {
-            "export_parameter_files": True,
+            "overwrite_model_files": True,
             "write_psf_parameters": True,
             "save_plots": True,
             "telescope": "LSTN-01",

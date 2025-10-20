@@ -144,7 +144,9 @@ def validate_dict_using_schema(
     ):
         raise FileNotFoundError(f"Meta schema URL does not exist: {data['meta_schema_url']}")
 
-    _logger.debug(f"Successful validation of data using schema ({json_schema.get('name')})")
+    _logger.debug(
+        f"Successful validation of data using schema ({json_schema.get('name', schema_file)})"
+    )
     return data
 
 
