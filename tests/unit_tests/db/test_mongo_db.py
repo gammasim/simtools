@@ -38,46 +38,46 @@ def mongo_handler(valid_db_config):
     return mongo_db.MongoDBHandler(valid_db_config)
 
 
-def test_validate_mongo_db_config_valid(valid_db_config):
+def test_validate_db_config_valid(valid_db_config):
     """Test validation of valid MongoDB configuration."""
-    result = mongo_db.MongoDBHandler.validate_mongo_db_config(valid_db_config)
+    result = mongo_db.MongoDBHandler.validate_db_config(valid_db_config)
     assert result == valid_db_config
 
 
-def test_validate_mongo_db_config_none():
+def test_validate_db_config_none():
     """Test validation with None configuration."""
-    result = mongo_db.MongoDBHandler.validate_mongo_db_config(None)
+    result = mongo_db.MongoDBHandler.validate_db_config(None)
     assert result is None
 
 
-def test_validate_mongo_db_config_empty():
+def test_validate_db_config_empty():
     """Test validation with empty configuration."""
-    result = mongo_db.MongoDBHandler.validate_mongo_db_config({})
+    result = mongo_db.MongoDBHandler.validate_db_config({})
     assert result is None
 
 
-def test_validate_mongo_db_config_all_none_values(valid_db_config):
+def test_validate_db_config_all_none_values(valid_db_config):
     """Test validation with all None values."""
     none_config = dict.fromkeys(valid_db_config.keys())
-    result = mongo_db.MongoDBHandler.validate_mongo_db_config(none_config)
+    result = mongo_db.MongoDBHandler.validate_db_config(none_config)
     assert result is None
 
 
-def test_validate_mongo_db_config_invalid():
+def test_validate_db_config_invalid():
     """Test validation with invalid configuration."""
     invalid_config = {"wrong_key": "wrong_value"}
     with pytest.raises(ValueError, match="Invalid MongoDB configuration"):
-        mongo_db.MongoDBHandler.validate_mongo_db_config(invalid_config)
+        mongo_db.MongoDBHandler.validate_db_config(invalid_config)
 
 
-def test_validate_mongo_db_config_missing_required():
+def test_validate_db_config_missing_required():
     """Test validation with missing required fields."""
     incomplete_config = {
         "db_server": "localhost",
         "db_api_port": 27017,
     }
     with pytest.raises(ValueError, match="Invalid MongoDB configuration"):
-        mongo_db.MongoDBHandler.validate_mongo_db_config(incomplete_config)
+        mongo_db.MongoDBHandler.validate_db_config(incomplete_config)
 
 
 def test_get_db_name_with_version_and_model():
@@ -123,14 +123,14 @@ def test_init_with_none_config():
     assert handler.mongo_db_config is None
 
 
-def test_open_mongo_db_direct_connection(mocker, valid_db_config):
-    """Test _open_mongo_db with direct connection."""
+def test_open_db_direct_connection(mocker, valid_db_config):
+    """Test _open_db with direct connection."""
     valid_db_config["db_server"] = "localhost"
     handler = mongo_db.MongoDBHandler(valid_db_config)
 
     mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient", return_value="mock_client")
 
-    client = handler._open_mongo_db()
+    client = handler._open_db()
 
     assert client == "mock_client"
     mock_mongo_client.assert_called_once_with(
@@ -146,14 +146,14 @@ def test_open_mongo_db_direct_connection(mocker, valid_db_config):
     )
 
 
-def test_open_mongo_db_remote_connection(mocker, valid_db_config):
-    """Test _open_mongo_db with remote connection."""
+def test_open_db_remote_connection(mocker, valid_db_config):
+    """Test _open_db with remote connection."""
     valid_db_config["db_server"] = "remote.server.com"
     handler = mongo_db.MongoDBHandler(valid_db_config)
 
     mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient", return_value="mock_client")
 
-    client = handler._open_mongo_db()
+    client = handler._open_db()
 
     assert client == "mock_client"
     mock_mongo_client.assert_called_once_with(
@@ -280,23 +280,23 @@ def test_list_database_names(mocker, mongo_handler):
     mock_client.list_database_names.assert_called_once()
 
 
-def test_query_mongo_db(mocker, mongo_handler):
-    """Test query_mongo_db method."""
+def test_query_db(mocker, mongo_handler):
+    """Test query_db method."""
     mock_collection = mocker.MagicMock()
     mock_collection.find.return_value = [{"param": "value1"}, {"param": "value2"}]
 
     mocker.patch.object(mongo_handler, "get_collection", return_value=mock_collection)
 
     query = {"field": "value"}
-    result = mongo_handler.query_mongo_db(query, "test_collection", "test_db")
+    result = mongo_handler.query_db(query, "test_collection", "test_db")
 
     assert len(result) == 2
     assert result[0] == {"param": "value1"}
     mock_collection.find.assert_called_once_with(query)
 
 
-def test_query_mongo_db_no_results(mocker, mongo_handler):
-    """Test query_mongo_db with no results."""
+def test_query_db_no_results(mocker, mongo_handler):
+    """Test query_db with no results."""
     mock_collection = mocker.MagicMock()
     mock_collection.find.return_value = []
 
@@ -304,7 +304,7 @@ def test_query_mongo_db_no_results(mocker, mongo_handler):
 
     query = {"field": "value"}
     with pytest.raises(ValueError, match="returned zero results"):
-        mongo_handler.query_mongo_db(query, "test_collection", "test_db")
+        mongo_handler.query_db(query, "test_collection", "test_db")
 
 
 def test_find_one(mocker, mongo_handler):
@@ -349,8 +349,8 @@ def test_insert_one(mocker, mongo_handler):
     mock_collection.insert_one.assert_called_once_with(document)
 
 
-def test_get_file_from_mongo_db_exists(mocker, mongo_handler):
-    """Test get_file_from_mongo_db when file exists."""
+def test_get_file_from_db_exists(mocker, mongo_handler):
+    """Test get_file_from_db when file exists."""
     mock_gridfs = mocker.patch("simtools.db.mongo_db.gridfs.GridFS")
     mock_fs = mock_gridfs.return_value
     mock_file = mocker.MagicMock()
@@ -360,15 +360,15 @@ def test_get_file_from_mongo_db_exists(mocker, mongo_handler):
     mock_client = mocker.MagicMock()
     mongo_db.MongoDBHandler.db_client = mock_client
 
-    result = mongo_handler.get_file_from_mongo_db("test_db", "test_file.dat")
+    result = mongo_handler.get_file_from_db("test_db", "test_file.dat")
 
     assert result == mock_file
     mock_fs.exists.assert_called_once_with({"filename": "test_file.dat"})
     mock_fs.find_one.assert_called_once_with({"filename": "test_file.dat"})
 
 
-def test_get_file_from_mongo_db_not_found(mocker, mongo_handler):
-    """Test get_file_from_mongo_db when file does not exist."""
+def test_get_file_from_db_not_found(mocker, mongo_handler):
+    """Test get_file_from_db when file does not exist."""
     mock_gridfs = mocker.patch("simtools.db.mongo_db.gridfs.GridFS")
     mock_fs = mock_gridfs.return_value
     mock_fs.exists.return_value = False
@@ -377,11 +377,11 @@ def test_get_file_from_mongo_db_not_found(mocker, mongo_handler):
     mongo_db.MongoDBHandler.db_client = mock_client
 
     with pytest.raises(FileNotFoundError, match="does not exist in the database"):
-        mongo_handler.get_file_from_mongo_db("test_db", "test_file.dat")
+        mongo_handler.get_file_from_db("test_db", "test_file.dat")
 
 
-def test_write_file_from_mongo_to_disk(mocker, tmp_path, mongo_handler):
-    """Test write_file_from_mongo_to_disk."""
+def test_write_file_from_db_to_disk(mocker, tmp_path, mongo_handler):
+    """Test write_file_from_db_to_disk."""
     mock_gridfs_bucket = mocker.patch("simtools.db.mongo_db.gridfs.GridFSBucket")
     mock_fs_output = mock_gridfs_bucket.return_value
     mock_file = mocker.MagicMock()
@@ -392,7 +392,7 @@ def test_write_file_from_mongo_to_disk(mocker, tmp_path, mongo_handler):
 
     mock_open = mocker.patch("builtins.open", mocker.mock_open())
 
-    mongo_handler.write_file_from_mongo_to_disk("test_db", tmp_path, mock_file)
+    mongo_handler.write_file_from_db_to_disk("test_db", tmp_path, mock_file)
 
     mock_open.assert_called_once_with(Path(tmp_path).joinpath("test_file.dat"), "wb")
     mock_fs_output.download_to_stream_by_name.assert_called_once()

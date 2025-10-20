@@ -76,16 +76,16 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
     def __init__(self, mongo_db_config=None):
         """Initialize the MongoDBHandler class."""
         self._logger = logging.getLogger(__name__)
-        self.mongo_db_config = self._validate_mongo_db_config(mongo_db_config)
+        self.mongo_db_config = self._validate_db_config(mongo_db_config)
         self.list_of_collections = {}
 
         if self.mongo_db_config and MongoDBHandler.db_client is None:
             with MongoDBHandler._lock:
                 if MongoDBHandler.db_client is None:
-                    MongoDBHandler.db_client = self._open_mongo_db()
+                    MongoDBHandler.db_client = self._open_db()
 
     @staticmethod
-    def validate_mongo_db_config(mongo_db_config):
+    def validate_db_config(mongo_db_config):
         """
         Validate the MongoDB configuration.
 
@@ -112,11 +112,11 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         except jsonschema.exceptions.ValidationError as err:
             raise ValueError("Invalid MongoDB configuration") from err
 
-    def _validate_mongo_db_config(self, mongo_db_config):
+    def _validate_db_config(self, mongo_db_config):
         """Validate the MongoDB configuration (instance method wrapper)."""
-        return MongoDBHandler.validate_mongo_db_config(mongo_db_config)
+        return MongoDBHandler.validate_db_config(mongo_db_config)
 
-    def _open_mongo_db(self):
+    def _open_db(self):
         """
         Open a connection to MongoDB and return the client.
 
@@ -349,7 +349,7 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         db_collection = self.get_collection("production_tables", db_name=db_name)
         db_collection.create_index([("collection", 1), ("model_version", 1)])
 
-    def query_mongo_db(self, query, collection_name, db_name):
+    def query_db(self, query, collection_name, db_name):
         """
         Query MongoDB and return results as list.
 
@@ -422,7 +422,7 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         collection = self.get_collection(collection_name, db_name=db_name)
         return collection.insert_one(document)
 
-    def get_file_from_mongo_db(self, db_name, file_name):
+    def get_file_from_db(self, db_name, file_name):
         """
         Extract a file from MongoDB and return GridFS file instance.
 
@@ -450,7 +450,7 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
 
         raise FileNotFoundError(f"The file {file_name} does not exist in the database {db_name}")
 
-    def write_file_from_mongo_to_disk(self, db_name, path, file):
+    def write_file_from_db_to_disk(self, db_name, path, file):
         """
         Extract a file from MongoDB and write it to disk.
 
