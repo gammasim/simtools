@@ -279,6 +279,7 @@ def test_build_calibration_models():
         array_model_north.db_config = {"test": "config"}
         array_model_north.model_version = "6.0.0"
         array_model_north.label = "test_label"
+        array_model_north.overwrite_model_parameters = None
 
         result = array_model_north._build_calibration_models(
             array_model_north,
