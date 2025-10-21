@@ -7,12 +7,11 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
-from scipy.optimize import brentq, minimize_scalar
-from scipy.signal import fftconvolve
 
 import simtools.utils.general as gen
 import simtools.version
 from simtools.io import ascii_handler
+from simtools.simtel.pulse_shapes import generate_pulse_from_risefall
 from simtools.utils import names
 
 
@@ -23,14 +22,11 @@ def write_lightpulse_table_gauss_expconv(
     dt_ns=0.1,
     duration_sigma=6.0,
 ):
-    """Write a pulse table for a Gaussian convolved with a causal exponential.
+    """Write a pulse table for a Gaussian convolved with a exponential.
 
-    The pulse is generated as a(t) = (g_sigma * exp_tau)(t) using an FFT convolution
-    and normalized to peak amplitude 1.
-
-    Provide rise and fall widths: width_ns is the 10-90 rise time [ns] and
-    exp_decay_ns is the 90-10 fall time [ns]. Internally, (sigma, tau) are
-    solved numerically so the convolved pulse matches these widths.
+    Provide rise and fall widths: width_ns is the 10-90 rise time (ns) and
+    exp_decay_ns is the 90-10 fall time (ns). Parameters are solved so the
+    convolved pulse matches these widths and is normalized to peak 1.
 
     Parameters
     ----------
@@ -51,8 +47,6 @@ def write_lightpulse_table_gauss_expconv(
         The path to the written file.
     """
     logger = logging.getLogger(__name__)
-    if dt_ns <= 0:
-        raise ValueError("dt_ns must be positive")
     if width_ns is None or exp_decay_ns is None:
         raise ValueError("width_ns (rise 10-90) and exp_decay_ns (fall 90-10) are required")
     logger.debug(
@@ -60,86 +54,17 @@ def write_lightpulse_table_gauss_expconv(
         f" ns, fall90-10={exp_decay_ns} ns, dt={dt_ns} ns"
     )
 
-    sigma, tau = _solve_sigma_tau_from_risefall(width_ns, exp_decay_ns, dt_ns)
-    logger.debug(
-        f"Solved sigma,tau from rise/fall: rise10-90={width_ns} ns, fall90-10={exp_decay_ns} ns -> "
-        f"sigma={sigma:.4f} ns, tau={tau:.4f} ns"
+    t, y = generate_pulse_from_risefall(
+        width_ns, exp_decay_ns, dt_ns=dt_ns, duration_sigma=duration_sigma
     )
-
-    tmin = -duration_sigma * sigma
-    tmax = duration_sigma * tau
-    t = np.arange(tmin, tmax + 0.5 * dt_ns, dt_ns, dtype=float)
-
-    g = np.exp(-0.5 * (t / sigma) ** 2)
-    exp_kernel = np.zeros_like(t)
-    exp_kernel[t >= 0.0] = np.exp(-t[t >= 0.0] / tau)
-
-    a = fftconvolve(g, exp_kernel, mode="same") * dt_ns
-    peak = a.max() if a.size else 1.0
-    if peak > 0:
-        a = a / peak
 
     file_path = Path(file_path)
     file_path.parent.mkdir(parents=True, exist_ok=True)
     with file_path.open("w", encoding="utf-8") as fh:
         fh.write("# time[ns] amplitude\n")
-        for ti, ai in zip(t, a):
-            fh.write(f"{ti:.6f} {ai:.8f}\n")
+        for ti, yi in zip(t, y):
+            fh.write(f"{ti:.6f} {yi:.8f}\n")
     return file_path
-
-
-def _solve_sigma_tau_from_risefall(rise_10_90_ns, fall_90_10_ns, dt_ns):
-    """Solve (sigma, tau) from target rise 10-90 and fall 90-10 using convolution-based widths.
-
-    First, find sigma by minimizing the difference between the convolved 10-90 rise time and
-    the target rise_10_90_ns using a placeholder exponential kernel. Then, solve tau via brentq
-    to match the convolved 90-10 fall time to fall_90_10_ns.
-    """
-    # Build a fixed time axis similar to the snippet
-    t = np.linspace(-10.0, 25.0, round((25.0 - (-10.0)) / max(dt_ns, 1e-3)))
-    if t.size < 3:
-        t = np.linspace(-10.0, 25.0, 2000)
-    dt = t[1] - t[0]
-
-    def get_exp_kernel(tvec: np.ndarray, tau: float) -> np.ndarray:
-        e = np.zeros_like(tvec)
-        mask = tvec >= 0.0
-        e[mask] = np.exp(-tvec[mask] / tau)
-        return e
-
-    # Minimize sigma to match rise 10-90 on the convolved pulse using a placeholder tau
-    def rise_error(sigma_try):
-        g = np.exp(-0.5 * (t / sigma_try) ** 2)
-        conv = fftconvolve(g, get_exp_kernel(t, tau=2.0), mode="same") * dt
-        conv /= conv.max()
-        peak_idx = int(np.argmax(conv))
-        rise_idx = slice(0, peak_idx + 1)
-        t_r10 = np.interp(0.1, conv[rise_idx], t[rise_idx])
-        t_r90 = np.interp(0.9, conv[rise_idx], t[rise_idx])
-        return abs((t_r90 - t_r10) - rise_10_90_ns)
-
-    res = minimize_scalar(rise_error, bounds=(0.3, 3.0), method="bounded")
-    sigma_eff = float(res.x)
-
-    # Solve tau to match fall 90-10 on the convolved pulse
-    def f_tau(tau_val):
-        g = np.exp(-0.5 * (t / sigma_eff) ** 2)
-        conv = fftconvolve(g, get_exp_kernel(t, tau_val), mode="same") * dt
-        conv /= conv.max()
-        peak_idx = int(np.argmax(conv))
-        fall = conv[peak_idx:]
-        t_fall = t[peak_idx:]
-        t90 = np.interp(0.9, fall[::-1], t_fall[::-1])
-        t10 = np.interp(0.1, fall[::-1], t_fall[::-1])
-        return (t10 - t90) - fall_90_10_ns
-
-    tau_eff = brentq(f_tau, 0.1, 20.0)
-
-    logger = logging.getLogger(__name__)
-    logger.info(
-        f"Solved sigma={sigma_eff:.4f} ns via rise minimization; tau={tau_eff:.4f} ns via brentq"
-    )
-    return sigma_eff, tau_eff
 
 
 def sim_telarray_random_seeds(seed, number):
@@ -350,7 +275,7 @@ class SimtelConfigWriter:
         value = "none" if value is None else value  # simtel requires 'none'
         if isinstance(value, bool):
             value = 1 if value else 0
-        elif isinstance(value, (list, np.ndarray)):
+        elif isinstance(value, list | np.ndarray):
             value = gen.convert_list_to_string(value, shorten_list=True)
         return value
 
