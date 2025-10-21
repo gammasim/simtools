@@ -348,7 +348,7 @@ class SimulatorLightEmission(SimtelRunner):
         dist_cm = self.calculate_distance_focal_plane_calibration_device().to(u.cm).value
         angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
 
-        # Build pulse table for ff-1m for LST/NectarCam: Gaussian rise + (Gaussian⊗Exponential) fall
+        # Build pulse table for ff-1m for LST/NectarCam: Gaussian rise + (Gaussian x Exponential)
         # Only apply when an exponential decay parameter exists; else fall back to token string.
         pulse_arg = self._get_pulse_shape_string_for_sim_telarray()
         width_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
