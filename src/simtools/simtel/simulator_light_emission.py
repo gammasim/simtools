@@ -294,7 +294,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         parts = [str(self._simtel_path / "sim_telarray/LightEmission") + f"/{app_name}"]
         parts.extend(self._get_site_command(app_name, config_directory, corsika_observation_level))
-        parts.extend(self._get_light_source_command(config_directory))
+        parts.extend(self._get_light_source_command())
         if self.light_emission_config["light_source_type"] == "illuminator":
             parts += [
                 "-A",
@@ -323,25 +323,26 @@ class SimulatorLightEmission(SimtelRunner):
             f"--telpos-file {self._write_telescope_position_file()}",
         ]
 
-    def _get_light_source_command(self, config_directory: Path):
+    def _get_light_source_command(self):
         """Return light-source specific command options."""
         if self.light_emission_config["light_source_type"] == "flat_fielding":
-            return self._add_flasher_command_options(config_directory)
+            return self._add_flasher_command_options()
         if self.light_emission_config["light_source_type"] == "illuminator":
             return self._add_illuminator_command_options()
         raise ValueError(
             f"Unknown light_source_type '{self.light_emission_config['light_source_type']}'"
         )
 
-    def _add_flasher_command_options(self, config_directory):
+    def _add_flasher_command_options(self):
         """Add flasher options for all telescope types (ff-1m style)."""
         flasher_xyz = self.calibration_model.get_parameter_value_with_unit("flasher_position")
-        camera_radius = fiducial_radius_from_shape(
+        camera_diam_cm = (
             self.telescope_model.get_parameter_value_with_unit("camera_body_diameter")
             .to(u.cm)
-            .value,
-            self.telescope_model.get_parameter_value("camera_body_shape"),
+            .value
         )
+        camera_shape = self.telescope_model.get_parameter_value("camera_body_shape")
+        camera_radius = fiducial_radius_from_shape(camera_diam_cm, camera_shape)
         flasher_wavelength = self.calibration_model.get_parameter_value_with_unit(
             "flasher_wavelength"
         )
@@ -353,16 +354,19 @@ class SimulatorLightEmission(SimtelRunner):
         pulse_arg = self._get_pulse_shape_string_for_sim_telarray()
         width_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
         exp_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_exp_decay")
-        if exp_q is not None and width_q is not None:
+        if isinstance(exp_q, u.Quantity) and isinstance(width_q, u.Quantity):
             try:
-                table_path = config_directory / "flasher_pulse_shape.dat"
+                config_directory = self.io_handler.get_model_configuration_directory(
+                    model_version=self.site_model.model_version
+                )
+                table_path = Path(config_directory) / "flasher_pulse_shape.dat"
                 write_lightpulse_table_gauss_expconv(
                     file_path=table_path,
                     width_ns=width_q.to(u.ns).value,
                     exp_decay_ns=exp_q.to(u.ns).value,
                 )
                 pulse_arg = str(table_path)
-            except (ValueError, OSError) as err:  # keep running with token fallback
+            except (ValueError, OSError) as err:
                 self._logger.warning(f"Failed to write pulse shape table, using token: {err}")
 
         return [
