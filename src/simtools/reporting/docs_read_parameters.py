@@ -544,6 +544,7 @@ class ReadParameters:
             model_version=self.model_version,
             label="reports",
             mongo_db_config=self.db_config,
+            ignore_software_version=True,
         )
 
         output_filename = Path(self.output_path / (telescope_model.name + ".md"))
