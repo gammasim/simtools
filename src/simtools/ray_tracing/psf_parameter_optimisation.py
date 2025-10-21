@@ -14,9 +14,11 @@ from collections import OrderedDict
 
 import astropy.units as u
 import numpy as np
+import yaml
 from astropy.table import Table
 from scipy import stats
 
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import model_data_writer as writer
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import general as gen
@@ -356,6 +358,213 @@ def export_psf_parameters(best_pars, telescope, parameter_version, output_dir):
         logger.error(f"Error exporting simulation parameters: {e}")
 
 
+def _get_parameter_range_from_schema(param_name, param_index):
+    """
+    Get the allowed range for a specific parameter index from its schema.
+
+    Parameters
+    ----------
+    param_name : str
+        Name of the parameter.
+    param_index : int
+        Index of the parameter component.
+
+    Returns
+    -------
+    tuple or None
+        (min_value, max_value) if range is defined, None otherwise.
+    """
+    schema_file = MODEL_PARAMETER_SCHEMA_PATH / f"{param_name}.schema.yml"
+
+    if not schema_file.exists():
+        logger.warning(f"Schema file not found: {schema_file}")
+        return None
+
+    try:
+        with open(schema_file, encoding="utf-8") as f:
+            schema = yaml.safe_load(f)
+    except (yaml.YAMLError, OSError) as e:
+        logger.warning(f"Error reading schema file {schema_file}: {e}")
+        return None
+
+    data = schema["data"]
+    if isinstance(data, list) and len(data) > param_index:
+        param_data = data[param_index]
+        if "allowed_range" in param_data:
+            allowed_range = param_data["allowed_range"]
+            return (allowed_range.get("min"), allowed_range.get("max"))
+
+    return None
+
+
+def _is_parameter_within_allowed_range(param_name, param_index, value):
+    """
+    Check if a parameter value is within the allowed range defined in its schema.
+
+    Parameters
+    ----------
+    param_name : str
+        Name of the parameter to check.
+    param_index : int
+        Index within the parameter array (for multi-component parameters).
+    value : float
+        The parameter value to check.
+
+    Returns
+    -------
+    bool
+        True if the parameter is within allowed range, False otherwise.
+        Returns True if no range constraints are defined for the parameter.
+    """
+    param_range = _get_parameter_range_from_schema(param_name, param_index)
+
+    if param_range is None:
+        return True  # No constraints defined in schema, allow any value
+
+    min_val, max_val = param_range
+    if min_val is not None and value < min_val:
+        return False
+    if max_val is not None and value > max_val:
+        return False
+
+    return True
+
+
+def _apply_range_clipping(value, min_val, max_val, param_name, param_index):
+    """
+    Apply range clipping and log if value was changed.
+
+    Parameters
+    ----------
+    value : float
+        Original value.
+    min_val : float or None
+        Minimum allowed value.
+    max_val : float or None
+        Maximum allowed value.
+    param_name : str
+        Parameter name for logging.
+    param_index : int
+        Parameter index for logging.
+
+    Returns
+    -------
+    float
+        Clipped value.
+    """
+    clipped_value = value
+
+    if min_val is not None:
+        clipped_value = max(min_val, clipped_value)
+    if max_val is not None:
+        clipped_value = min(max_val, clipped_value)
+
+    if clipped_value != value:
+        logger.debug(f"Clipped {param_name}[{param_index}] from {value:.6f} to {clipped_value:.6f}")
+
+    return clipped_value
+
+
+def _clip_parameter_to_allowed_range(param_name, param_index, value):
+    """
+    Clip a parameter value to its allowed range defined in the schema.
+
+    Parameters
+    ----------
+    param_name : str
+        Name of the parameter to clip.
+    param_index : int
+        Index within the parameter array (for multi-component parameters).
+    value : float
+        The parameter value to clip.
+
+    Returns
+    -------
+    float
+        The clipped parameter value, or the original value if no range constraints exist.
+    """
+    # Get range from schema file
+    param_range = _get_parameter_range_from_schema(param_name, param_index)
+
+    if param_range is None:
+        return value  # No constraints defined in schema, return original value
+
+    min_val, max_val = param_range
+    return _apply_range_clipping(value, min_val, max_val, param_name, param_index)
+
+
+def _create_perturbed_params(current_params, param_name, param_values, param_index, value, epsilon):
+    """
+    Create parameter dictionary with one parameter perturbed by epsilon.
+
+    Parameters
+    ----------
+    current_params : dict
+        Dictionary of current parameter values.
+    param_name : str
+        Name of the parameter to perturb.
+    param_values : float or list
+        Current parameter values.
+    param_index : int
+        Index of the parameter to perturb (for list parameters).
+    value : float
+        Current value of the specific parameter component.
+    epsilon : float
+        Perturbation amount.
+
+    Returns
+    -------
+    dict
+        New parameter dictionary with the specified parameter perturbed.
+    """
+    perturbed_params = {
+        k: v.copy() if isinstance(v, list) else v for k, v in current_params.items()
+    }
+
+    if isinstance(param_values, list):
+        perturbed_params[param_name][param_index] = value + epsilon
+    else:
+        perturbed_params[param_name] = value + epsilon
+
+    return perturbed_params
+
+
+def _calculate_single_gradient(
+    tel_model,
+    site_model,
+    args_dict,
+    perturbed_params,
+    data_to_plot,
+    radius,
+    current_rmsd,
+    epsilon,
+    use_ks_statistic,
+):
+    """
+    Calculate gradient for a single parameter perturbation.
+
+    Returns
+    -------
+    float
+        Calculated gradient value, or 0.0 if simulation fails.
+    """
+    try:
+        _, perturbed_rmsd, _, _ = run_psf_simulation(
+            tel_model,
+            site_model,
+            args_dict,
+            perturbed_params,
+            data_to_plot,
+            radius,
+            pdf_pages=None,
+            is_best=False,
+            use_ks_statistic=use_ks_statistic,
+        )
+        return (perturbed_rmsd - current_rmsd) / epsilon
+    except (ValueError, RuntimeError):
+        return 0.0
+
+
 def _calculate_param_gradient(
     tel_model,
     site_model,
@@ -413,30 +622,24 @@ def _calculate_param_gradient(
     values_list = param_values if isinstance(param_values, list) else [param_values]
 
     for i, value in enumerate(values_list):
-        perturbed_params = {
-            k: v.copy() if isinstance(v, list) else v for k, v in current_params.items()
-        }
+        # Create perturbed parameter set
+        perturbed_params = _create_perturbed_params(
+            current_params, param_name, param_values, i, value, epsilon
+        )
 
-        if isinstance(param_values, list):
-            perturbed_params[param_name][i] = value + epsilon
-        else:
-            perturbed_params[param_name] = value + epsilon
-
-        try:
-            _, perturbed_rmsd, _, _ = run_psf_simulation(
-                tel_model,
-                site_model,
-                args_dict,
-                perturbed_params,
-                data_to_plot,
-                radius,
-                pdf_pages=None,
-                is_best=False,
-                use_ks_statistic=use_ks_statistic,
-            )
-            param_gradients.append((perturbed_rmsd - current_rmsd) / epsilon)
-        except (ValueError, RuntimeError):
-            param_gradients.append(0.0)
+        # Calculate gradient for this parameter component
+        gradient = _calculate_single_gradient(
+            tel_model,
+            site_model,
+            args_dict,
+            perturbed_params,
+            data_to_plot,
+            radius,
+            current_rmsd,
+            epsilon,
+            use_ks_statistic,
+        )
+        param_gradients.append(gradient)
 
     return param_gradients[0] if not isinstance(param_values, list) else param_gradients
 
@@ -504,7 +707,12 @@ def calculate_gradient(
 
 def apply_gradient_step(current_params, gradients, learning_rate):
     """
-    Apply gradient descent step to update parameters.
+    Apply gradient descent step to update parameters while enforcing constraints.
+
+    This function applies the standard gradient descent update, then enforces
+    constraints by:
+    1. Clipping parameters to their allowed ranges
+    2. Preserving zenith angle components (index 1) for mirror alignment parameters
 
     Parameters
     ----------
@@ -518,19 +726,35 @@ def apply_gradient_step(current_params, gradients, learning_rate):
     Returns
     -------
     dict
-        Dictionary of updated parameter values after applying the gradient step.
+        Dictionary of updated parameter values after applying the gradient step
+        and enforcing constraints.
     """
     new_params = {}
     for param_name, param_values in current_params.items():
         param_gradients = gradients[param_name]
 
         if isinstance(param_values, list):
-            new_params[param_name] = [
-                value - learning_rate * gradient
-                for value, gradient in zip(param_values, param_gradients)
-            ]
+            updated_values = []
+            for i, (value, gradient) in enumerate(zip(param_values, param_gradients)):
+                # Apply gradient descent update
+                new_value = value - learning_rate * gradient
+
+                # Enforce constraint: preserve zenith angle (index 1) for mirror alignment
+                if (
+                    param_name in ["mirror_align_random_horizontal", "mirror_align_random_vertical"]
+                    and i == 1
+                ):
+                    new_value = value  # Keep original zenith angle value
+                else:
+                    # Clip to allowed range if defined
+                    new_value = _clip_parameter_to_allowed_range(param_name, i, new_value)
+
+                updated_values.append(new_value)
+
+            new_params[param_name] = updated_values
         else:
-            new_params[param_name] = param_values - learning_rate * param_gradients
+            new_value = param_values - learning_rate * param_gradients
+            new_params[param_name] = _clip_parameter_to_allowed_range(param_name, 0, new_value)
 
     return new_params
 
