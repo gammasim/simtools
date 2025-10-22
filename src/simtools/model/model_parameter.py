@@ -326,6 +326,8 @@ class ModelParameter:
                     self.site, self.name, self.collection, self.model_version
                 )
             )
+            if self.overwrite_model_parameters:
+                self.overwrite_parameters_from_file(self.overwrite_model_parameters)
             self._check_model_parameter_software_versions(self.parameters.keys())
 
         self._load_simulation_software_parameter()
@@ -355,9 +357,6 @@ class ModelParameter:
                     software_name=software_name,
                     ignore_software_version=self.ignore_software_version,
                 )
-
-        if self.overwrite_model_parameters:
-            self.overwrite_parameters_from_file(self.overwrite_model_parameters)
 
     def overwrite_model_parameter(self, par_name, value, parameter_version=None):
         """
