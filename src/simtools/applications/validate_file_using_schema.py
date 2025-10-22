@@ -33,13 +33,12 @@ r"""
 """
 
 import re
-from pathlib import Path
 
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import metadata_collector, schema, validate_data
-from simtools.io import ascii_handler
+from simtools.io import file_operations
 
 
 def _parse():
@@ -110,51 +109,11 @@ def _get_schema_file_name(args_dict, data_dict=None):
     return schema_file
 
 
-def _get_file_list(file_directory=None, file_name="*.json"):
-    """Return list of files in a directory."""
-    file_list = []
-    if file_directory is not None:
-        file_list = list(Path(file_directory).rglob(file_name))
-        if not file_list:
-            raise FileNotFoundError(f"No files found in {file_directory}")
-    elif file_name is not None:
-        file_list = [file_name]
-
-    return file_list
-
-
-def validate_dict_using_schema(args_dict, logger):
-    """
-    Validate a schema file (or several files) given in yaml or json format.
-
-    This function validate all documents in a multi-document YAML file.
-    Schema is either given as command line argument, read from the meta_schema_url or from
-    the metadata section of the data dictionary.
-
-    """
-    for file_name in _get_file_list(args_dict.get("file_directory"), args_dict.get("file_name")):
-        try:
-            data = ascii_handler.collect_data_from_file(file_name=file_name)
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(f"Error reading schema file from {file_name}") from exc
-        data = data if isinstance(data, list) else [data]
-        try:
-            for data_dict in data:
-                schema.validate_dict_using_schema(
-                    data_dict,
-                    _get_schema_file_name(args_dict, data_dict),
-                    ignore_software_version=args_dict.get("ignore_software_version", False),
-                )
-        except Exception as exc:
-            raise ValueError(f"Validation of file {file_name} failed") from exc
-        logger.info(f"Successful validation of file {file_name}")
-
-
 def validate_data_files(args_dict, logger):
     """Validate data files."""
     if args_dict.get("file_directory") is not None:
         tmp_args_dict = {}
-        for file_name in _get_file_list(args_dict.get("file_directory")):
+        for file_name in file_operations.get_file_list(args_dict.get("file_directory")):
             tmp_args_dict["file_name"] = file_name
             parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", file_name.stem)
             schema_file = schema.get_model_parameter_schema_file(f"{parameter_name}")
@@ -180,21 +139,24 @@ def validate_data_file(args_dict, logger):
     logger.info(f"Successful validation of data file {args_dict['file_name']}")
 
 
-def validate_metadata(args_dict, logger):
-    """Validate metadata."""
-    # metadata_collector runs the metadata validation by default, no need to do anything else
-    metadata_collector.MetadataCollector(None, metadata_file_name=args_dict["file_name"])
-    logger.info(f"Successful validation of metadata {args_dict['file_name']}")
-
-
 def main():
     """Validate a file or files in a directory using a schema."""
     app_context = startup_application(_parse)
 
+    file_name = app_context.args.get("file_name")
+
     if app_context.args["data_type"].lower() == "metadata":
-        validate_metadata(app_context.args, app_context.logger)
+        # metadata_collector runs the metadata validation by default, no need to do anything else
+        metadata_collector.MetadataCollector(None, metadata_file_name=file_name)
+        app_context.logger.info(f"Successful validation of metadata {file_name}")
+
     elif app_context.args["data_type"].lower() == "schema":
-        validate_dict_using_schema(app_context.args, app_context.logger)
+        schema.validate_schema_from_files(
+            file_directory=app_context.args.get("file_directory"),
+            file_name=file_name,
+            schema_file=app_context.args.get("schema"),
+            ignore_software_version=app_context.args.get("ignore_software_version", False),
+        )
     else:
         validate_data_files(app_context.args, app_context.logger)
 
