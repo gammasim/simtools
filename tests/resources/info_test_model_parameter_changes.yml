@@ -7,7 +7,7 @@
 #
 # Important: do not edit production tables or model parameters directly, but
 # only via changes in this file
-model_version: "6.1.0"
+model_version: "6.1.0"  # not used when changing via command line
 model_update: null
 model_version_history: []
 description: "Test file for changes to model applied through command line"

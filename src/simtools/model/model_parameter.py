@@ -320,7 +320,7 @@ class ModelParameter:
             return
 
         if self.name or self.site:
-            # deepcopy, as parameters dict may be modified later on
+            # copy parameters dict, is it may be modified later on
             self.parameters = deepcopy(
                 self.db.get_model_parameters(
                     self.site, self.name, self.collection, self.model_version
