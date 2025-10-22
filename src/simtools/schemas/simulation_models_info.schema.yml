@@ -14,11 +14,12 @@ definitions:
       model_version:
         $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
       model_update:
-        type: string
+        type: [string, 'null']
         description: The type of update for the model version.
         enum:
           - patch_update
           - full_update
+          - null
       model_version_history:
         type: array
         description: A list of previous model versions.
