@@ -405,6 +405,15 @@ def test_validate_deprecation_and_version(caplog, monkeypatch):
     custom_sw_data = {"simulation_software": [{"name": "custom_tool", "version": ">=1.0.0"}]}
     schema.validate_deprecation_and_version(custom_sw_data, software_name="custom_tool")
 
+    # Test 13a: Custom software name parameter with mismatch (should skip)
+    mismatch_sw_data = {
+        "simulation_software": [
+            {"name": "other_tool", "version": ">=2.0.0"},
+            {"name": "simtools", "version": ">=0.5.0"},
+        ]
+    }
+    schema.validate_deprecation_and_version(mismatch_sw_data, software_name="simtools")
+
     # Test 14: No matching software name should pass
     no_match_data = {"simulation_software": [{"name": "other_software", "version": ">=0.2.0"}]}
     schema.validate_deprecation_and_version(no_match_data)
@@ -427,3 +436,168 @@ def test_validate_deprecation_and_version(caplog, monkeypatch):
     with caplog.at_level(logging.WARNING):
         schema.validate_deprecation_and_version(mismatch_data, ignore_software_version=True)
     assert "does not match" in caplog.text
+
+
+def test_extract_schema_url_from_metadata_dict():
+    """Test _extract_schema_url_from_metadata_dict function."""
+    # Test with cta lowercase (default observatory is "cta")
+    metadata = {"cta": {"product": {"data": {"model": {"url": "http://schema.example.com"}}}}}
+    result = schema._extract_schema_url_from_metadata_dict(metadata)
+    assert result == "http://schema.example.com"
+
+    # Test with CTA uppercase and explicit observatory parameter
+    metadata = {"CTA": {"product": {"data": {"model": {"url": "http://schema2.example.com"}}}}}
+    result = schema._extract_schema_url_from_metadata_dict(metadata, observatory="CTA")
+    assert result == "http://schema2.example.com"
+
+    # Test with custom observatory
+    metadata = {
+        "veritas": {"product": {"data": {"model": {"url": "http://veritas-schema.example.com"}}}}
+    }
+    result = schema._extract_schema_url_from_metadata_dict(metadata, observatory="veritas")
+    assert result == "http://veritas-schema.example.com"
+
+    # Test with no URL
+    metadata = {"cta": {"product": {}}}
+    result = schema._extract_schema_url_from_metadata_dict(metadata)
+    assert result is None
+
+    # Test with empty metadata
+    result = schema._extract_schema_url_from_metadata_dict({})
+    assert result is None
+
+
+def test_extract_schema_from_file(tmp_test_directory):
+    """Test _extract_schema_from_file function."""
+    # Create a test file with schema URL (lowercase cta)
+    test_file = Path(tmp_test_directory) / "test_with_schema.yml"
+    metadata = {"cta": {"product": {"data": {"model": {"url": "http://schema.example.com"}}}}}
+    with open(test_file, "w", encoding="utf-8") as f:
+        yaml.dump(metadata, f)
+
+    result = schema._extract_schema_from_file(test_file)
+    assert result == "http://schema.example.com"
+
+    # Test with non-existent file
+    result = schema._extract_schema_from_file("non_existent_file.yml")
+    assert result is None
+
+
+def test_get_schema_file_name(tmp_test_directory):
+    """Test _get_schema_file_name function."""
+    # Test with schema_file provided
+    result = schema._get_schema_file_name(schema_file="my_schema.yml")
+    assert result == "my_schema.yml"
+
+    # Test with meta_schema_url in data_dict
+    data_dict = {"meta_schema_url": "http://schema.example.com"}
+    result = schema._get_schema_file_name(data_dict=data_dict)
+    assert result == "http://schema.example.com"
+
+    # Test with file_name (lowercase cta)
+    test_file = Path(tmp_test_directory) / "test_file.yml"
+    metadata = {"cta": {"product": {"data": {"model": {"url": "http://file-schema.example.com"}}}}}
+    with open(test_file, "w", encoding="utf-8") as f:
+        yaml.dump(metadata, f)
+
+    result = schema._get_schema_file_name(file_name=test_file)
+    assert result == "http://file-schema.example.com"
+
+    # Test with no inputs
+    result = schema._get_schema_file_name()
+    assert result is None
+
+
+def test_validate_schema_from_files(tmp_test_directory, caplog):
+    """Test validate_schema_from_files function."""
+    # Create a simple valid data file
+    test_file = Path(tmp_test_directory) / "valid_data.yml"
+    valid_data = {
+        "name": "test_parameter",
+        "schema_version": "0.1.0",
+        "data": [{"value": 1.0}],
+    }
+    with open(test_file, "w", encoding="utf-8") as f:
+        yaml.dump(valid_data, f)
+
+    # Create a simple schema file
+    schema_file = Path(tmp_test_directory) / "simple_schema.yml"
+    simple_schema = {
+        "schema_version": "0.1.0",
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "schema_version": {"type": "string"},
+            "data": {"type": "array"},
+        },
+        "required": ["name", "data"],
+    }
+    with open(schema_file, "w", encoding="utf-8") as f:
+        yaml.dump(simple_schema, f)
+
+    # Test successful validation
+    with caplog.at_level(logging.INFO):
+        schema.validate_schema_from_files(
+            file_directory=tmp_test_directory,
+            file_name="valid_data.yml",
+            schema_file=schema_file,
+            ignore_software_version=True,
+        )
+    assert "Successful validation of file" in caplog.text
+
+    # Test validation failure
+    invalid_file = Path(tmp_test_directory) / "invalid_data.yml"
+    invalid_data = {"name": "test_parameter"}
+    with open(invalid_file, "w", encoding="utf-8") as f:
+        yaml.dump(invalid_data, f)
+
+    with pytest.raises(ValueError, match=r"Validation of file .* failed"):
+        schema.validate_schema_from_files(
+            file_directory=tmp_test_directory,
+            file_name="invalid_data.yml",
+            schema_file=schema_file,
+            ignore_software_version=True,
+        )
+
+    # Test with missing file
+    with pytest.raises(FileNotFoundError, match=r"Error reading schema file"):
+        schema.validate_schema_from_files(
+            file_directory=None,
+            file_name="non_existent_file.yml",
+            schema_file=schema_file,
+        )
+
+
+def test_validate_meta_schema_url_offline():
+    """Test _validate_meta_schema_url function."""
+    # Test with non-dict data
+    schema._validate_meta_schema_url("not a dict")
+    schema._validate_meta_schema_url([1, 2, 3])
+
+    # Test with dict without meta_schema_url
+    schema._validate_meta_schema_url({"name": "test"})
+
+    # Test with empty meta_schema_url
+    schema._validate_meta_schema_url({"meta_schema_url": ""})
+
+
+def test_get_array_element_list(monkeypatch):
+    """Test _get_array_element_list function."""
+
+    def mock_array_elements():
+        return {"telescope": None, "calibration_device": None}
+
+    def mock_array_element_design_types(element):
+        if element == "telescope":
+            return ["design1", "design2"]
+        return []
+
+    monkeypatch.setattr(schema.names, "array_elements", mock_array_elements)
+    monkeypatch.setattr(schema.names, "array_element_design_types", mock_array_element_design_types)
+
+    result = schema._get_array_element_list()
+    assert isinstance(result, list)
+    assert "telescope" in result
+    assert "calibration_device" in result
+    assert "telescope-design1" in result
+    assert "telescope-design2" in result

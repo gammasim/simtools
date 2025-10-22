@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import logging
-import re
 import sys
 
 import numpy as np
@@ -13,6 +12,7 @@ from astropy.utils.diff import report_diff_values
 
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
 from simtools.data_model import schema, validate_data
+from simtools.io import ascii_handler
 
 logger = logging.getLogger()
 
@@ -189,6 +189,21 @@ def test_validate_parameter_and_file_name(caplog):
     with caplog.at_level(logging.WARNING):
         data_validator.validate_parameter_and_file_name()
     assert "File 'num_gains' has no parameter version defined." in caplog.text
+
+
+def test_validate_invalid_version():
+    """Test that invalid version strings raise ValueError."""
+    data_validator = validate_data.DataValidator(
+        schema_file=MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
+    )
+    data_validator.data_dict = {
+        "parameter": "num_gains",
+        "parameter_version": "invalid",
+        "value": 2,
+        "unit": "",
+    }
+    with pytest.raises(ValueError, match="Invalid version string 'invalid'"):
+        data_validator.validate_and_transform()
 
 
 def test_validate_data_columns(tmp_test_directory, caplog):
@@ -792,44 +807,6 @@ def test_prepare_model_parameter():
     assert isinstance(data_validator.data_dict["value"][0], int)
 
 
-def test_check_version_string(caplog):
-    data_validator = validate_data.DataValidator()
-
-    valid_versions = [
-        "1.0.0",
-        "0.1.0",
-        "2.3.4",
-        "1.0.0-alpha",
-        "1.0.0-alpha.1",
-        "1.0.0-0.3.7",
-        "1.0.0-x.7.z.92",
-        "1.0.0-alpha+001",
-        "1.0.0+20130313144700",
-        "1.0.0-beta+exp.sha.5114f85",
-    ]
-
-    for version in valid_versions:
-        with caplog.at_level("DEBUG"):
-            data_validator._check_version_string(version)
-        assert f"Valid version string '{version}'" in caplog.text
-        caplog.clear()
-
-    invalid_versions = [
-        "1.0",
-        f"{1}.{0}.{0}.{0}",  # SonarQube will otherwise think this is an IP address
-        "1.0.a",
-        "1.0.0-",
-        "1.0.0+",
-        "a.b.c",
-    ]
-
-    for version in invalid_versions:
-        with pytest.raises(ValueError, match=f"Invalid version string '{re.escape(version)}'"):
-            data_validator._check_version_string(version)
-
-    assert data_validator._check_version_string(None) is None
-
-
 def test_get_value_and_units_as_lists():
     data_validator = validate_data.DataValidator()
 
@@ -927,26 +904,6 @@ def test_validate_model_parameter(mocker):
     assert validated_data["unit"] == "km"
 
 
-def test__check_site_and_array_element_consistency():
-    data_validator = validate_data.DataValidator()
-
-    sucess_matrix = [(None, None), ("OBS-North", None), ("OBS-North", "North")]
-
-    for site, array_element in sucess_matrix:
-        assert data_validator._check_site_and_array_element_consistency(site, array_element) is None
-
-    assert data_validator._check_site_and_array_element_consistency("LSTN-01", "North") is None
-    assert data_validator._check_site_and_array_element_consistency("MSTS-22", "South") is None
-    assert (
-        data_validator._check_site_and_array_element_consistency("MSTx-design", ["North", "South"])
-        is None
-    )
-
-    expected_message = "Site '['South']' and instrument site '['North']' are inconsistent."
-    with pytest.raises(ValueError, match=re.escape(expected_message)):
-        data_validator._check_site_and_array_element_consistency("LSTN-03", "South")
-
-
 def test_rate_limited_logger(caplog):
     """Test the _rate_limited_logger method with different input types."""
     data_validator = validate_data.DataValidator()
@@ -980,3 +937,99 @@ def test_rate_limited_logger(caplog):
         caplog.clear()
         data_validator._rate_limited_logger("col1_name", "Test message 6", max_logs=10)
         assert "Test message 6" in caplog.text
+
+
+def test_validate_data_files_directory(tmp_test_directory, caplog):
+    """Test validate_data_files with a directory of files."""
+    # Create test files
+    test_file_1 = tmp_test_directory / "num_gains-1.0.0.json"
+    test_file_2 = tmp_test_directory / "reference_point_altitude-1.0.0.json"
+
+    test_data_1 = {
+        "parameter": "num_gains",
+        "parameter_version": "1.0.0",
+        "value": [2],
+        "unit": [""],
+    }
+    test_data_2 = {
+        "parameter": "reference_point_altitude",
+        "parameter_version": "1.0.0",
+        "value": 1000.0,
+        "unit": "m",
+    }
+
+    ascii_handler.write_data_to_file(test_data_1, test_file_1)
+    ascii_handler.write_data_to_file(test_data_2, test_file_2)
+
+    with caplog.at_level(logging.INFO):
+        validate_data.DataValidator.validate_data_files(file_directory=tmp_test_directory)
+
+    assert "Validated data file" in caplog.text
+    assert "num_gains-1.0.0.json" in caplog.text
+    assert "reference_point_altitude-1.0.0.json" in caplog.text
+
+
+def test_validate_data_files_single_file(caplog):
+    """Test validate_data_files with a single file."""
+    test_file = "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+
+    with caplog.at_level(logging.INFO):
+        validate_data.DataValidator.validate_data_files(file_name=test_file)
+
+    assert "Validated data file" in caplog.text
+    assert "num_gains-1.0.0.json" in caplog.text
+
+
+def test_validate_data_files_with_schema_file(caplog):
+    """Test validate_data_files with explicit schema file."""
+    test_file = "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+    schema_file = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
+
+    with caplog.at_level(logging.INFO):
+        validate_data.DataValidator.validate_data_files(
+            file_name=test_file, schema_file=schema_file
+        )
+
+    assert "Validated data file" in caplog.text
+
+
+def test_validate_data_files_no_input():
+    """Test validate_data_files with no input."""
+    result = validate_data.DataValidator.validate_data_files()
+    assert result is None
+
+
+def test_validate_data_files_check_exact_data_type(caplog):
+    """Test validate_data_files with check_exact_data_type flag."""
+    test_file = "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+
+    with caplog.at_level(logging.INFO):
+        validate_data.DataValidator.validate_data_files(
+            file_name=test_file, check_exact_data_type=True
+        )
+
+    assert "Validated data file" in caplog.text
+
+
+def test__check_site_and_array_element_consistency():
+    """Test _check_site_and_array_element_consistency method."""
+    data_validator = validate_data.DataValidator()
+
+    data_validator._check_site_and_array_element_consistency("LSTN-01", "North")
+    data_validator._check_site_and_array_element_consistency("MSTN-01", "North")
+    data_validator._check_site_and_array_element_consistency("SSTS-01", "South")
+
+    with pytest.raises(ValueError, match=r"Site .* and instrument site .* are inconsistent"):
+        data_validator._check_site_and_array_element_consistency("LSTN-01", "South")
+
+    with pytest.raises(ValueError, match=r"Site .* and instrument site .* are inconsistent"):
+        data_validator._check_site_and_array_element_consistency("SSTS-01", "North")
+
+    data_validator._check_site_and_array_element_consistency(None, "North")
+    data_validator._check_site_and_array_element_consistency("LSTN-01", None)
+    data_validator._check_site_and_array_element_consistency("LSTN-OBS", "South")
+
+    data_validator._check_site_and_array_element_consistency(["LSTN-01", "LSTN-02"], "North")
+
+    with pytest.raises(ValueError, match=r"Site .* and instrument site .* are inconsistent"):
+        data_validator._check_site_and_array_element_consistency(["LSTN-01", "MSTN-01"], "South")
