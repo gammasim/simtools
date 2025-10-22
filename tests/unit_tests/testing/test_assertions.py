@@ -184,3 +184,104 @@ def test_check_output_from_sim_telarray_invalid_file_extension(mock_simtelfile_c
         ValueError, match=r"Expected output file dummy_path.txt is not a zstd compressed file"
     ):
         assertions.check_output_from_sim_telarray(file, file_test)
+
+
+@patch("simtools.testing.assertions.read_sim_telarray_metadata")
+def test_assert_expected_simtel_metadata(mock_read_metadata):
+    mock_read_metadata.return_value = (
+        {"site": "North", "array_name": "test_array"},
+        {"telescope_1": {"mirror_area": 100.0}},
+    )
+
+    expected_metadata = {"site": "North", "array_name": "test_array"}
+
+    assert assertions.assert_expected_simtel_metadata(Path("dummy_path"), expected_metadata)
+
+
+@patch("simtools.testing.assertions.read_sim_telarray_metadata")
+def test_assert_expected_simtel_metadata_mismatch(mock_read_metadata):
+    mock_read_metadata.return_value = (
+        {"site": "North", "array_name": "test_array"},
+        {"telescope_1": {"mirror_area": 100.0}},
+    )
+
+    expected_metadata = {"site": "South", "array_name": "test_array"}
+
+    assert not assertions.assert_expected_simtel_metadata(Path("dummy_path"), expected_metadata)
+
+
+@patch("simtools.testing.assertions.read_sim_telarray_metadata")
+def test_assert_expected_simtel_metadata_missing_key(mock_read_metadata):
+    mock_read_metadata.return_value = (
+        {"site": "North"},
+        {"telescope_1": {"mirror_area": 100.0}},
+    )
+
+    expected_metadata = {"site": "North", "missing_key": "value"}
+
+    assert not assertions.assert_expected_simtel_metadata(Path("dummy_path"), expected_metadata)
+
+
+@patch("simtools.testing.assertions.assert_n_showers_and_energy_range")
+@patch("simtools.testing.assertions.assert_expected_output")
+@patch("simtools.testing.assertions.assert_expected_simtel_metadata")
+def test_check_output_from_sim_telarray_with_both_checks(
+    mock_assert_metadata, mock_assert_output, mock_assert_n_showers
+):
+    mock_assert_n_showers.return_value = True
+    mock_assert_output.return_value = True
+    mock_assert_metadata.return_value = True
+
+    file = Path("dummy_path.zst")
+    file_test = {
+        "expected_output": {"pe_sum": [5, 35]},
+        "expected_simtel_metadata": {"site": "North"},
+    }
+
+    assert assertions.check_output_from_sim_telarray(file, file_test)
+
+
+@patch("simtools.testing.assertions.assert_n_showers_and_energy_range")
+@patch("simtools.testing.assertions.assert_expected_output")
+def test_check_output_from_sim_telarray_output_only(mock_assert_output, mock_assert_n_showers):
+    mock_assert_n_showers.return_value = True
+    mock_assert_output.return_value = True
+
+    file = Path("dummy_path.zst")
+    file_test = {"expected_output": {"pe_sum": [5, 35]}}
+
+    assert assertions.check_output_from_sim_telarray(file, file_test)
+
+
+@patch("simtools.testing.assertions.assert_n_showers_and_energy_range")
+@patch("simtools.testing.assertions.assert_expected_simtel_metadata")
+def test_check_output_from_sim_telarray_metadata_only(mock_assert_metadata, mock_assert_n_showers):
+    mock_assert_n_showers.return_value = True
+    mock_assert_metadata.return_value = True
+
+    file = Path("dummy_path.zst")
+    file_test = {"expected_simtel_metadata": {"site": "North"}}
+
+    assert assertions.check_output_from_sim_telarray(file, file_test)
+
+
+@patch("simtools.testing.assertions.assert_n_showers_and_energy_range")
+def test_check_output_from_sim_telarray_no_checks(mock_assert_n_showers):
+    mock_assert_n_showers.return_value = True
+
+    file = Path("dummy_path.zst")
+    file_test = {}
+
+    assert assertions.check_output_from_sim_telarray(file, file_test)
+
+
+@patch("simtools.testing.assertions.assert_n_showers_and_energy_range")
+@patch("simtools.testing.assertions.assert_expected_output")
+def test_check_output_from_sim_telarray_failed_output(mock_assert_output, mock_assert_n_showers):
+    mock_assert_n_showers.return_value = True
+    mock_assert_output.return_value = False
+
+    file = Path("dummy_path.zst")
+    file_test = {"expected_output": {"pe_sum": [5, 35]}}
+
+    assert not assertions.check_output_from_sim_telarray(file, file_test)
