@@ -177,7 +177,7 @@ def get_value_as_quantity(value, unit):
         try:
             return value.to(unit)
         except u.UnitConversionError as exc:
-            raise ValueError(f"Cannot convert {value.unit} to {unit}.") from exc
+            raise ValueError(f"Cannot convert {value} with unit {value.unit} to {unit}.") from exc
     elif not isinstance(value, int | float):
         return value
 
