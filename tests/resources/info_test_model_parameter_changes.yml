@@ -12,19 +12,27 @@ model_update: null
 model_version_history: []
 description: "Test file for changes to model applied through command line"
 changes:
+  # changed parameter for LSTs-01
   LSTS-01:
     effective_focal_length:
       version: '3.0.0'
-      value: '2923.7 0 0 0 0'
+      value: '2923.7 0 0 2 0'
+  # unchanged parameter for other LSTSs (test that no changes are applied)
   LSTS-design:
     effective_focal_length:
       version: '3.0.0'
       value: '2923.7 0 0 0 0'
+  # no changes expected for MSTs
   MSTS-05:
     effective_focal_length:
       version: '3.0.0'
       value: '1644.51 0 0 0 0'
+  # change parameters for all SSTSs except SSTS-22
   SSTS-design:
+    effective_focal_length:
+      version: '3.0.0'
+      value: '315.191 0 0 0 0'
+  SSTS-22:
     effective_focal_length:
       version: '3.0.0'
       value: '215.191 0 0 0 0'

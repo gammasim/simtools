@@ -117,11 +117,7 @@ def _validate_output_path_and_file(config, integration_file_tests):
         except AssertionError as exc:
             raise AssertionError(f"Output file {output_file_path} does not exist. ") from exc
 
-        if "expected_output" in file_test:
-            assert assertions.check_output_from_sim_telarray(
-                output_file_path,
-                file_test["expected_output"],
-            )
+        assert assertions.check_output_from_sim_telarray(output_file_path, file_test)
 
 
 def _validate_model_parameter_json_file(config, model_parameter_validation, db_config):

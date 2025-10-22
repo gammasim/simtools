@@ -176,9 +176,11 @@ def test_check_output_from_sim_telarray(
 @patch("eventio.simtel.simtelfile.SimTelFile")
 def test_check_output_from_sim_telarray_invalid_file_extension(mock_simtelfile_class):
     file = Path("dummy_path.txt")
-    expected_output = {"pe_sum": [5, 35], "trigger_time": [0.5, 3.5], "photons": [50, 350]}
+    file_test = {
+        "expected_output": {"pe_sum": [5, 35], "trigger_time": [0.5, 3.5], "photons": [50, 350]}
+    }
 
     with pytest.raises(
         ValueError, match=r"Expected output file dummy_path.txt is not a zstd compressed file"
     ):
-        assertions.check_output_from_sim_telarray(file, expected_output)
+        assertions.check_output_from_sim_telarray(file, file_test)

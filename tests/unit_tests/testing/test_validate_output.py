@@ -348,7 +348,7 @@ def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check
     mock_path_exists.assert_called()
     mock_check_output.assert_called_once_with(
         Path(config["configuration"]["data_directory"]).joinpath(integration_test[0]["file"]),
-        {},
+        {"path_descriptor": "data_directory", "file": "output_file", "expected_output": {}},
     )
 
     wrong_integration_test = [
