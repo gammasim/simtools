@@ -31,9 +31,11 @@ class TelescopeModel(ModelParameter):
     model_version: str
         Model version.
     label: str, optional
-        Instance label. Used for output file naming.
+        Instance label.
     overwrite_model_parameters: str, optional
         File name to overwrite model parameters from DB with provided values.
+    ignore_software_version: bool, optional
+        If True, ignore software version checks for deprecated parameters.
     """
 
     def __init__(
@@ -44,6 +46,7 @@ class TelescopeModel(ModelParameter):
         model_version,
         label=None,
         overwrite_model_parameters=None,
+        ignore_software_version=False,
     ):
         """Initialize TelescopeModel."""
         super().__init__(
@@ -53,6 +56,7 @@ class TelescopeModel(ModelParameter):
             model_version=model_version,
             label=label,
             overwrite_model_parameters=overwrite_model_parameters,
+            ignore_software_version=ignore_software_version,
         )
 
         self._logger = logging.getLogger(__name__)

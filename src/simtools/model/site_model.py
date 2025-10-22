@@ -34,9 +34,19 @@ class SiteModel(ModelParameter):
         Instance label.
     overwrite_model_parameters: str, optional
         File name to overwrite model parameters from DB with provided values.
+    ignore_software_version: bool, optional
+        If True, ignore software version checks for deprecated parameters.
     """
 
-    def __init__(self, site, db_config, model_version, label=None, overwrite_model_parameters=None):
+    def __init__(
+        self,
+        site,
+        db_config,
+        model_version,
+        label=None,
+        overwrite_model_parameters=None,
+        ignore_software_version=False,
+    ):
         """Initialize SiteModel."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SiteModel for site %s", site)
@@ -47,6 +57,7 @@ class SiteModel(ModelParameter):
             label=label,
             collection="sites",
             overwrite_model_parameters=overwrite_model_parameters,
+            ignore_software_version=ignore_software_version,
         )
 
     def get_reference_point(self):
