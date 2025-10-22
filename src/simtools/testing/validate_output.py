@@ -382,7 +382,7 @@ def _compare_simtel_cfg_files(reference_file, test_file):
         return False
 
     for ref_line, test_line in zip(reference_cfg, test_cfg):
-        if any(ignore in ref_line for ignore in ("config_release", "Label")):
+        if any(ignore in ref_line for ignore in ("config_release", "Label", "simtools_version")):
             continue
         if ref_line != test_line:
             _logger.error(
