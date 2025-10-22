@@ -49,7 +49,6 @@ applications:
           effective_focal_length: '315.191 0 0 0 0'
         38:
           effective_focal_length: '215.191 0 0 0 0'
-
       file: gamma_run000001_za40deg_azm180deg_South_beta_6.0_check_output.simtel.zst
       path_descriptor: pack_for_grid_register
   - test_simtel_cfg_files:
