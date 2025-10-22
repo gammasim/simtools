@@ -1,8 +1,15 @@
 """Utilities for managing the simulation models repository.
 
 Simulation model parameters and production tables are managed through
-a gitlab repository ('SimulationModels'). This module provides service
+a gitlab repository ('simulation_models'). This module provides service
 functions to interact with and verify the repository.
+
+Main functionalities are:
+
+- validation of production tables against model parameters
+- generation of new production tables and model parameters based on
+  updates defined in a configuration file
+
 """
 
 import logging
@@ -16,6 +23,44 @@ from simtools.io import ascii_handler
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
+
+
+def get_production_directory(simulation_models_path, model_version=None):
+    """
+    Get the production directory for a specific model version.
+
+    Parameters
+    ----------
+    simulation_models_path : str
+        Path to the simulation models repository.
+    model_version : str, optional
+        Specific model version to get the production directory for.
+
+    Returns
+    -------
+    Path
+        Path to the production directory.
+    """
+    if model_version:
+        return Path(simulation_models_path) / "simulation-models/productions" / str(model_version)
+    return Path(simulation_models_path) / "simulation-models/productions"
+
+
+def get_model_parameter_directory(simulation_models_path):
+    """
+    Get the model parameters directory.
+
+    Parameters
+    ----------
+    simulation_models_path : str
+        Path to the simulation models repository.
+
+    Returns
+    -------
+    Path
+        Path to the model parameters directory.
+    """
+    return Path(simulation_models_path) / "simulation-models/model_parameters"
 
 
 def verify_simulation_model_production_tables(simulation_models_path):
@@ -35,7 +80,7 @@ def verify_simulation_model_production_tables(simulation_models_path):
     bool
         True if all parameters found, False if any missing.
     """
-    productions_path = Path(simulation_models_path) / "simulation-models" / "productions"
+    productions_path = get_production_directory(simulation_models_path)
     production_files = list(productions_path.rglob("*.json"))
 
     _logger.info(
@@ -124,9 +169,7 @@ def _get_model_parameter_file_path(
     """
     collection = names.get_collection_name_from_parameter_name(parameter_name)
     return (
-        Path(simulation_models_path)
-        / "simulation-models"
-        / "model_parameters"
+        get_model_parameter_directory(simulation_models_path)
         / (
             collection
             if collection in ("configuration_sim_telarray", "configuration_corsika")
@@ -138,39 +181,36 @@ def _get_model_parameter_file_path(
     )
 
 
-def generate_new_production(modifications, simulation_models_path):
+def generate_new_production(model_version, simulation_models_path):
     """
     Generate a new production definition (production tables and model parameters).
 
     The following steps are performed:
 
     - copy of production tables from an existing base model version
-    - update production tables with changes defined in a YAML file
+    - update production tables with changes defined in a configuration file (expected
+      to be called 'info.yml' in the target production directory)
     - generate new model parameter entries for changed parameters
     - allows for full or patch updates
 
     Parameters
     ----------
-    modifications: str
-        Path to the YAML file defining the changes to be applied.
+    model_version: str
+        Model version to be created or updated.
     simulation_models_path: str
         Path to the simulation models repository.
     """
-    modifications = ascii_handler.collect_data_from_file(modifications)
-    model_version_history = modifications.get("model_version_history", [])
-    try:
-        # oldest version is the base version
-        base_model_version = min(set(model_version_history), key=Version)
-    except ValueError as exc:
-        raise ValueError(f"Base model version not found in {modifications}") from exc
-    model_version = modifications["model_version"]
-    changes = modifications.get("changes", {})
+    modification_dict = _get_changes_dict(model_version, simulation_models_path)
+    update_type = modification_dict.get("model_update", "full_update")
+    changes, base_model_version = _get_changes_to_production(
+        modification_dict, simulation_models_path, update_type
+    )
 
     _apply_changes_to_production_tables(
         changes,
         base_model_version,
-        model_version,
-        modifications.get("model_update", "full_update"),
+        modification_dict["model_version"],
+        update_type,
         simulation_models_path,
     )
 
@@ -181,27 +221,27 @@ def _apply_changes_to_production_tables(
     changes, base_model_version, model_version, update_type, simulation_models_path
 ):
     """
-    Apply changes to production tables and write them to target directory.
+    Apply changes to or generate new production tables and write them to target directory.
 
     Parameters
     ----------
     changes: dict
-        The changes to be applied.
+        Changes to be applied.
     base_model_version: str
-        The base model version (source directory for production tables).
+        Base model version (source directory for production tables).
     model_version: str
-        The model version to be set in the JSON data.
+        Model version of the new production tables.
     update_type: str
-        Update mode, either 'full_update' or 'patch_update'.
+        Update type (e.g., 'full_update' or 'patch_update').
     simulation_models_path: Path
         Path to the simulation models repository.
     """
-    source = simulation_models_path / "productions" / base_model_version
-    target = simulation_models_path / "productions" / model_version
+    source = get_production_directory(simulation_models_path, base_model_version)
+    target = get_production_directory(simulation_models_path, model_version)
     _logger.info(f"Production tables {update_type} from {source} to {target}")
     target.mkdir(parents=True, exist_ok=True)
 
-    # load existing tables
+    # load existing tables from source
     tables = {}
     for file_path in Path(source).rglob("*.json"):
         data = ascii_handler.collect_data_from_file(file_path)
@@ -217,9 +257,10 @@ def _apply_changes_to_production_tables(
         if _apply_changes_to_production_table(
             table_name, data, changes, model_version, update_type == "patch_update"
         ):
-            _logger.info(f"Writing updated production table '{table_name}'")
+            target_file = target / f"{table_name}.json"
+            _logger.info(f"Writing updated production table '{target_file}'")
             data["production_table_name"] = table_name
-            ascii_handler.write_data_to_file(data, target / f"{table_name}.json", sort_keys=True)
+            ascii_handler.write_data_to_file(data, target_file, sort_keys=True)
 
 
 def _apply_changes_to_production_table(table_name, data, changes, model_version, patch_update):
@@ -228,12 +269,14 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
 
     Parameters
     ----------
+    table_name: str
+        Name of the production table.
     data: dict
-        The data to be updated.
+        Data to be updated.
     changes: dict
-        The changes to be applied.
+        Changes to be applied.
     model_version: str
-        The model version to be set in the JSON data.
+        Model version of the new production tables.
     patch_update: bool
         True if patch update (modify only changed parameters), False for full update.
 
@@ -248,12 +291,92 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
         table_parameters = {} if patch_update else data.get("parameters", {}).get(table_name, {})
         parameters, deprecated = _update_parameters_dict(table_parameters, changes, table_name)
         data["parameters"] = parameters
-        if deprecated:
+        if deprecated and patch_update:
             data["deprecated_parameters"] = deprecated
     elif patch_update:
         return False
 
     return True
+
+
+def _get_changes_dict(model_version, simulation_models_path):
+    """
+    Load the changes dictionary from 'info.yml' files in production directories.
+
+    Parameters
+    ----------
+    model_version: str
+        Model version of the new production tables.
+    simulation_models_path: Path
+        Path to the simulation models directory.
+
+    Returns
+    -------
+    dict
+        Changes dictionary.
+    """
+    return ascii_handler.collect_data_from_file(
+        get_production_directory(simulation_models_path, model_version) / "info.yml"
+    )
+
+
+def _get_changes_to_production(
+    modification_dict, simulation_models_path, update_type="full_update"
+):
+    """
+    Prepare changes applied to production tables.
+
+    For full updates, this includes the combination of changes to be applied
+    for all model versions in the history, starting from the base version.
+
+    Parameters
+    ----------
+    modification_dict: dict
+        Modifications dictionary.
+    simulation_models_path: Path
+        Path to the simulation models directory.
+    update_type: str
+        Update mode.
+
+    Returns
+    -------
+    dict, str
+        Changes dictionary and base model version.
+    """
+    model_version_history = modification_dict.get("model_version_history", [])
+
+    try:
+        # oldest version is the base version
+        base_model_version = min(set(model_version_history), key=Version)
+    except ValueError:
+        _logger.debug(f"Base model version not found in {model_version_history}")
+        return {}, modification_dict.get("model_version")
+
+    changes = modification_dict.get("changes", {})
+    if update_type == "patch_update":
+        return changes, base_model_version
+
+    for version_mod in reversed(model_version_history):
+        _changes_dict = _get_changes_dict(version_mod, simulation_models_path)
+        _version_changes, base_model_version = _get_changes_to_production(
+            _changes_dict, simulation_models_path, update_type="full_update"
+        )
+        changes = _update_two_levels_in_changes_dict(changes, _version_changes)
+        # stop iterative loop after reaching first full version of production tables
+        if _changes_dict.get("model_update", "full_update") == "full_update":
+            break
+
+    return changes, base_model_version
+
+
+def _update_two_levels_in_changes_dict(d, u):
+    """Update changes dict, e.g. {"LSTN-design": { "parameter_name: { ... } } }."""
+    for k, v in u.items():
+        if isinstance(v, dict) and isinstance(d.get(k), dict):
+            d[k].update(v)
+        else:
+            d[k] = v
+    return d
 
 
 def _update_parameters_dict(table_parameters, changes, table_name):
@@ -285,6 +408,7 @@ def _update_parameters_dict(table_parameters, changes, table_name):
         if data.get("deprecated", False):
             _logger.info(f"Removing model parameter '{table_name} - {param}'")
             deprecated_params.append(param)
+            new_params[table_name].pop(param, None)
         else:
             version = data["version"]
             _logger.info(f"Setting '{table_name} - {param}' to version {version}")
@@ -330,7 +454,7 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
     simulation_models_path: Path
         Path to the simulation models directory.
     """
-    telescope_dir = simulation_models_path / "model_parameters" / telescope
+    telescope_dir = get_model_parameter_directory(simulation_models_path) / telescope
     if not telescope_dir.exists():
         _logger.info(f"Create directory for array element '{telescope}': '{telescope_dir}'.")
         telescope_dir.mkdir(parents=True, exist_ok=True)
