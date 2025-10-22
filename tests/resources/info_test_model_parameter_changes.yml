@@ -1,0 +1,30 @@
+---
+# This file describes a test case for changes to model parameters
+# All changes to both production tables and model parameters are listed here.
+#
+# Note! Changes are applied relative to the base model. This file therefore should
+# include changes applied for all previous patch updates (if applicable).
+#
+# Important: do not edit production tables or model parameters directly, but
+# only via changes in this file
+model_version: "6.1.0"
+model_update: null
+model_version_history: []
+description: "Test file for changes to model applied through command line"
+changes:
+  LSTS-01:
+    effective_focal_length:
+      version: '3.0.0'
+      value: '2923.7 0 0 0 0'
+  LSTS-design:
+    effective_focal_length:
+      version: '3.0.0'
+      value: '2923.7 0 0 0 0'
+  MSTS-05:
+    effective_focal_length:
+      version: '3.0.0'
+      value: '1644.51 0 0 0 0'
+  SSTS-design:
+    effective_focal_length:
+      version: '3.0.0'
+      value: '215.191 0 0 0 0'
