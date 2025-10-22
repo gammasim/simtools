@@ -14,6 +14,7 @@ import simtools.utils.general as gen
 from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.utils import names, value_conversion
+from simtools.version import is_valid_semantic_version
 
 
 class DataValidator:
@@ -175,29 +176,23 @@ class DataValidator:
         check_exact_data_type: bool
             Require exact data type for validation.
         """
-        if file_directory is not None:
-            file_list = []
-            tmp_files = sorted(Path(file_directory).rglob("*.json"))
-            for tmp_file in tmp_files:
-                file_list.append(tmp_file)
-        elif file_name is not None:
+        if file_directory:
+            file_list = sorted(Path(file_directory).rglob("*.json"))
+        elif file_name:
             file_list = [Path(file_name)]
         else:
-            file_list = []
+            return
 
         for data_file in file_list:
             parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", data_file.stem)
-            schema_file = schema_file or schema.get_model_parameter_schema_file(f"{parameter_name}")
+            schema_path = schema_file or schema.get_model_parameter_schema_file(f"{parameter_name}")
             data_validator = DataValidator(
-                schema_file=schema_file,
+                schema_file=schema_path,
                 data_file=data_file,
                 check_exact_data_type=check_exact_data_type,
             )
             data_validator.validate_and_transform(is_model_parameter)
-
-            data_validator.logger.info(
-                f"Successful validation of data file {data_file} with schema {schema_file}"
-            )
+            data_validator.logger.info(f"Validated data file {data_file} with schema {schema_path}")
 
     def _validate_data_dict(self, is_model_parameter=False, lists_as_strings=False):
         """
@@ -254,8 +249,10 @@ class DataValidator:
                     self.data_dict.get("instrument"), self.data_dict.get("site")
                 )
 
-        for version_string in ("version", "parameter_version", "model_version"):
-            self._check_version_string(self.data_dict.get(version_string))
+        for version_type in ("version", "parameter_version", "model_version"):
+            version_string = self.data_dict.get(version_type, "0.0.0")
+            if not is_valid_semantic_version(version_string):
+                raise ValueError(f"Invalid version string '{version_string}'")
 
         if lists_as_strings:
             self._convert_results_to_model_format()
@@ -613,7 +610,7 @@ class DataValidator:
             If unit conversions fails
 
         """
-        self._rate_limitedlogger(col_name, f"Checking data column '{col_name}'")
+        self._rate_limited_logger(col_name, f"Checking data column '{col_name}'")
 
         reference_unit = self._get_reference_unit(col_name)
         try:
@@ -624,7 +621,7 @@ class DataValidator:
         if self._is_dimensionless(column_unit) and self._is_dimensionless(reference_unit):
             return data, u.dimensionless_unscaled
 
-        self._rate_limitedlogger(
+        self._rate_limited_logger(
             col_name,
             f"Data column '{col_name}' with reference unit "
             f"'{reference_unit}' and data unit '{column_unit}'",
@@ -703,7 +700,7 @@ class DataValidator:
             range columns
 
         """
-        self._rate_limitedlogger(
+        self._rate_limited_logger(
             col_name, f"Checking data in column '{col_name}' for '{range_type}'"
         )
 
@@ -726,7 +723,7 @@ class DataValidator:
                 f"{_entry[range_type].get('max', np.inf)}])"
             )
 
-    def _rate_limitedlogger(self, col_name, message, max_logs=10):
+    def _rate_limited_logger(self, col_name, message, max_logs=10):
         """
         Log debug messages at a limited rate defined by a numerical column name.
 
@@ -847,7 +844,7 @@ class DataValidator:
             If data column is not found.
 
         """
-        self._rate_limitedlogger(
+        self._rate_limited_logger(
             column_name,
             f"Getting reference data column {column_name} from schema {self._data_description}",
         )
@@ -914,42 +911,27 @@ class DataValidator:
         if isinstance(self.data_dict["unit"], list):
             self.data_dict["unit"] = gen.convert_list_to_string(self.data_dict["unit"])
 
-    def _check_version_string(self, version):
-        """
-        Check that version string follows semantic versioning.
-
-        Parameters
-        ----------
-        version: str
-            version string
-
-        Raises
-        ------
-        ValueError
-            if version string does not follow semantic versioning
-
-        """
-        if version is None:
-            return
-        semver_regex = r"^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$"
-        if not re.match(semver_regex, version):
-            raise ValueError(f"Invalid version string '{version}'")
-        self.logger.debug(f"Valid version string '{version}'")
-
     def _check_site_and_array_element_consistency(self, instrument, site):
         """
         Check that site and array element names are consistent.
 
         An example for an inconsistency is 'LSTN' at site 'South'
         """
-        if not all([instrument, site]) or "OBS" in instrument:
+        if not all([instrument, site]):
+            return
+
+        instruments = [instrument] if isinstance(instrument, str) else instrument
+        if any("OBS" in inst for inst in instruments):
             return
 
         def to_sorted_list(value):
             """Return value as sorted list."""
             return [value] if isinstance(value, str) else sorted(value)
 
-        instrument_site = to_sorted_list(names.get_site_from_array_element_name(instrument))
+        instrument_sites = []
+        for inst in instruments:
+            instrument_sites.append(names.get_site_from_array_element_name(inst))
+        instrument_site = to_sorted_list(sorted(set(instrument_sites)))
         site = to_sorted_list(site)
 
         if instrument_site != site:
