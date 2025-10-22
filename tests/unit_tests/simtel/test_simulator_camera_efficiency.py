@@ -96,8 +96,7 @@ def test_check_run_result(simulator_camera_efficiency):
         simulator_camera_efficiency._check_run_result()
 
 
-@pytest.mark.xfail(reason="Test requires Derived-Values Database")
-def test_get_one_dim_distribution(db_config, simtel_path, model_version_prod5):
+def test_get_one_dim_distribution(db_config, simtel_path, model_version_prod5, site_model_south):
     logger.warning(
         "Running test_get_one_dim_distribution using prod5 model "
         " (prod6 model with 1D transmission function)"
@@ -113,15 +112,16 @@ def test_get_one_dim_distribution(db_config, simtel_path, model_version_prod5):
         },
         db_config=db_config,
         label="validate_camera_efficiency",
-        test=True,
     )
 
     # 2D transmission window not defined in prod6; required prod5 runner
     camera_efficiency_sst_prod5.export_model_files()
     simulator_camera_efficiency_prod5 = SimulatorCameraEfficiency(
         telescope_model=camera_efficiency_sst_prod5.telescope_model,
+        site_model=site_model_south,
         file_simtel=camera_efficiency_sst_prod5._file["sim_telarray"],
         label="test-simtel-runner-camera-efficiency",
+        simtel_path=simtel_path,
     )
     camera_filter_file = simulator_camera_efficiency_prod5._get_one_dim_distribution(
         "camera_filter", "camera_filter_incidence_angle"
