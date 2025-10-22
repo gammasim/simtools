@@ -572,7 +572,6 @@ def test_check_model_parameter_with_overwrite_file(
     db_config, io_handler, model_version, tmp_path, mocker
 ):
     """Test _check_model_parameter_software_versions with overwrite_model_parameters - line 349."""
-    from simtools.model.telescope_model import TelescopeModel
 
     # Create a temporary overwrite file
     overwrite_file = tmp_path / "overwrite.yml"
@@ -605,3 +604,23 @@ def test_check_model_parameter_with_overwrite_file(
 
     # The overwrite file should have been applied during initialization
     assert tel_model.parameters["num_gains"]["value"] == 10
+
+
+def test__get_key_for_parameter_changes(telescope_model_lst):
+    assert telescope_model_lst._get_key_for_parameter_changes("North", None, {}) == "OBS-North"
+
+    lst = "LSTN-01"
+
+    assert telescope_model_lst._get_key_for_parameter_changes("North", lst, {}) is None
+
+    assert telescope_model_lst._get_key_for_parameter_changes("North", lst, {lst: "abc"}) == lst
+
+    assert (
+        telescope_model_lst._get_key_for_parameter_changes("North", lst, {"LSTN-design": "abc"})
+        == "LSTN-design"
+    )
+
+    assert (
+        telescope_model_lst._get_key_for_parameter_changes("North", "LSTN-design", {lst: "abc"})
+        is None
+    )

@@ -3,7 +3,7 @@
 
 import logging
 import shutil
-from copy import copy
+from copy import copy, deepcopy
 
 import astropy.units as u
 
@@ -320,8 +320,11 @@ class ModelParameter:
             return
 
         if self.name or self.site:
-            self.parameters = self.db.get_model_parameters(
-                self.site, self.name, self.collection, self.model_version
+            # deepcopy, as parameters dict may be modified later on
+            self.parameters = deepcopy(
+                self.db.get_model_parameters(
+                    self.site, self.name, self.collection, self.model_version
+                )
             )
             self._check_model_parameter_software_versions(self.parameters.keys())
 
@@ -380,7 +383,6 @@ class ModelParameter:
         InvalidModelParameterError
             If the parameter to be changed does not exist in this model.
         """
-        # TODO - we cannot add a new one?
         if par_name not in self.parameters:
             raise InvalidModelParameterError(f"Parameter {par_name} not in the model")
 
@@ -435,19 +437,53 @@ class ModelParameter:
         file_name: str
             File containing the parameters to be changed.
         """
-        self._logger.warning(
-            "Changing multiple parameters from file. Insufficient validation of model parameters."
-        )
-        self._logger.debug(f"Changing parameters from file {file_name}")
         changes_data = schema.validate_dict_using_schema(
             data=ascii_handler.collect_data_from_file(file_name=file_name),
             schema_file="simulation_models_info.schema.yml",
-        )
-        key = f"OBS-{self.site}" if self.site and not self.name else self.name
-        changes = changes_data.get("changes", {}).get(key) if key else None
+        ).get("changes", {})
 
-        if changes:
-            self.overwrite_parameters(changes)
+        key_for_changes = self._get_key_for_parameter_changes(self.site, self.name, changes_data)
+        self.overwrite_parameters(changes_data.get(key_for_changes, {}) if key_for_changes else {})
+
+    def _get_key_for_parameter_changes(self, site, array_element_name, changes_data):
+        """
+        Get the key for parameter changes based on site and array element name.
+
+        For array elements, the following cases are taken into account:
+
+        - array element name in changes_data: specific array element is returned
+        - design type in changes_data: specific design type is returned if array
+          element matches this design
+
+        Parameters
+        ----------
+        site: str
+            Site name.
+        array_element_name: str
+            Array element name.
+        changes_data: dict
+            Dictionary containing the changes data.
+
+        Returns
+        -------
+        str
+            Key for parameter changes.
+        """
+        if site and not array_element_name:
+            return f"OBS-{site}"
+
+        if array_element_name in changes_data:
+            return array_element_name
+
+        design_type = self.db.get_design_model(
+            model_version=self.model_version,
+            array_element_name=array_element_name,
+            collection=self.collection,
+        )
+        if design_type in changes_data:
+            return design_type
+
+        return None
 
     def overwrite_parameters(self, changes):
         """
@@ -464,10 +500,8 @@ class ModelParameter:
         Parameters
         ----------
         changes: dict
-            Parameters to be changed with parameter_name: value pairs.
-
+            Parameters to be changed.
         """
-        self._logger.debug(f"Overwriting parameters: {changes}")
         for par_name, par_value in changes.items():
             if par_name in self.parameters:
                 if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
