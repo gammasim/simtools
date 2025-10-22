@@ -46,7 +46,7 @@ class DataValidator:
         check_exact_data_type=True,
     ):
         """Initialize validation class and read required reference data columns."""
-        self._logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
 
         self.data_file_name = data_file
         self.schema_file_name = schema_file
@@ -83,7 +83,7 @@ class DataValidator:
             return self._validate_data_dict(is_model_parameter, lists_as_strings)
         if isinstance(self.data_table, Table):
             return self._validate_data_table()
-        self._logger.error("No data or data table to validate")
+        self.logger.error("No data or data table to validate")
         raise TypeError
 
     def validate_data_file(self, is_model_parameter=None):
@@ -100,10 +100,10 @@ class DataValidator:
         try:
             if Path(self.data_file_name).suffix in (".yml", ".yaml", ".json"):
                 self.data_dict = ascii_handler.collect_data_from_file(self.data_file_name)
-                self._logger.info(f"Validating data from: {self.data_file_name}")
+                self.logger.info(f"Validating data from: {self.data_file_name}")
             else:
                 self.data_table = Table.read(self.data_file_name, guess=True, delimiter=r"\s")
-                self._logger.info(f"Validating tabled data from: {self.data_file_name}")
+                self.logger.info(f"Validating tabled data from: {self.data_file_name}")
         except (AttributeError, TypeError):
             pass
         if is_model_parameter:
@@ -129,7 +129,7 @@ class DataValidator:
             raise ValueError(f"Mismatch: version '{param_version}' vs. file '{file_stem}'.")
 
         if param_version is None:
-            self._logger.warning(f"File '{file_stem}' has no parameter version defined.")
+            self.logger.warning(f"File '{file_stem}' has no parameter version defined.")
 
     @staticmethod
     def validate_model_parameter(par_dict):
@@ -152,6 +152,52 @@ class DataValidator:
             check_exact_data_type=False,
         )
         return data_validator.validate_and_transform(is_model_parameter=True)
+
+    @staticmethod
+    def validate_data_files(
+        file_directory=None,
+        file_name=None,
+        is_model_parameter=True,
+        check_exact_data_type=False,
+        schema_file=None,
+    ):
+        """
+        Validate data or model parameters in files in a directory or a single file.
+
+        Parameters
+        ----------
+        file_directory: str or Path
+            Directory with files to be validated.
+        file_name: str or Path
+            Name of the file to be validated.
+        is_model_parameter: bool
+            This is a model parameter (add some data preparation).
+        check_exact_data_type: bool
+            Require exact data type for validation.
+        """
+        if file_directory is not None:
+            file_list = []
+            tmp_files = sorted(Path(file_directory).rglob("*.json"))
+            for tmp_file in tmp_files:
+                file_list.append(tmp_file)
+        elif file_name is not None:
+            file_list = [Path(file_name)]
+        else:
+            file_list = []
+
+        for data_file in file_list:
+            parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", data_file.stem)
+            schema_file = schema_file or schema.get_model_parameter_schema_file(f"{parameter_name}")
+            data_validator = DataValidator(
+                schema_file=schema_file,
+                data_file=data_file,
+                check_exact_data_type=check_exact_data_type,
+            )
+            data_validator.validate_and_transform(is_model_parameter)
+
+            data_validator.logger.info(
+                f"Successful validation of data file {data_file} with schema {schema_file}"
+            )
 
     def _validate_data_dict(self, is_model_parameter=False, lists_as_strings=False):
         """
@@ -278,7 +324,7 @@ class DataValidator:
                 "table_columns", None
             )
         except IndexError:
-            self._logger.error(f"Error reading validation schema from {self.schema_file_name}")
+            self.logger.error(f"Error reading validation schema from {self.schema_file_name}")
             raise
 
         if self._data_description is not None:
@@ -327,7 +373,7 @@ class DataValidator:
         for entry in self._data_description:
             if entry.get("required", False):
                 if entry["name"] in self.data_table.columns:
-                    self._logger.debug(f"Found required data column {entry['name']}")
+                    self.logger.debug(f"Found required data column {entry['name']}")
                 else:
                     raise KeyError(f"Missing required column {entry['name']}")
 
@@ -353,18 +399,18 @@ class DataValidator:
                     _columns_by_which_to_reverse_sort.append(entry["name"])
 
         if len(_columns_by_which_to_sort) > 0:
-            self._logger.debug(f"Sorting data columns: {_columns_by_which_to_sort}")
+            self.logger.debug(f"Sorting data columns: {_columns_by_which_to_sort}")
             try:
                 self.data_table.sort(_columns_by_which_to_sort)
             except AttributeError:
-                self._logger.error("No data table defined for sorting")
+                self.logger.error("No data table defined for sorting")
                 raise
         elif len(_columns_by_which_to_reverse_sort) > 0:
-            self._logger.debug(f"Reverse sorting data columns: {_columns_by_which_to_reverse_sort}")
+            self.logger.debug(f"Reverse sorting data columns: {_columns_by_which_to_reverse_sort}")
             try:
                 self.data_table.sort(_columns_by_which_to_reverse_sort, reverse=True)
             except AttributeError:
-                self._logger.error("No data table defined for reverse sorting")
+                self.logger.error("No data table defined for reverse sorting")
                 raise
 
     def _check_data_for_duplicates(self):
@@ -379,7 +425,7 @@ class DataValidator:
         """
         _column_with_unique_requirement = self._get_unique_column_requirement()
         if len(_column_with_unique_requirement) == 0:
-            self._logger.debug("No data columns with unique value requirement")
+            self.logger.debug("No data columns with unique value requirement")
             return
         _data_table_unique_for_key_column = unique(
             self.data_table, keys=_column_with_unique_requirement
@@ -412,10 +458,10 @@ class DataValidator:
 
         for entry in self._data_description:
             if "input_processing" in entry and "remove_duplicates" in entry["input_processing"]:
-                self._logger.debug(f"Removing duplicates for column {entry['name']}")
+                self.logger.debug(f"Removing duplicates for column {entry['name']}")
                 _unique_required_column.append(entry["name"])
 
-        self._logger.debug(f"Unique required columns: {_unique_required_column}")
+        self.logger.debug(f"Unique required columns: {_unique_required_column}")
         return _unique_required_column
 
     def _get_reference_unit(self, column_name):
@@ -470,7 +516,7 @@ class DataValidator:
             dtype=dtype,
             allow_subtypes=(not self.check_exact_data_type),
         ):
-            self._logger.error(
+            self.logger.error(
                 f"Invalid data type in column '{column_name}'. "
                 f"Expected type '{reference_dtype}', found '{dtype}' "
                 f"(exact type: {self.check_exact_data_type})"
@@ -505,9 +551,9 @@ class DataValidator:
             data = np.array(data)
 
         if np.isnan(data).any():
-            self._logger.info(f"Column {col_name} contains NaN.")
+            self.logger.info(f"Column {col_name} contains NaN.")
         if np.isinf(data).any():
-            self._logger.info(f"Column {col_name} contains infinite value.")
+            self.logger.info(f"Column {col_name} contains infinite value.")
 
         entry = self._get_data_description(col_name)
         if "allow_nan" in entry.get("input_processing", {}):
@@ -567,7 +613,7 @@ class DataValidator:
             If unit conversions fails
 
         """
-        self._rate_limited_logger(col_name, f"Checking data column '{col_name}'")
+        self._rate_limitedlogger(col_name, f"Checking data column '{col_name}'")
 
         reference_unit = self._get_reference_unit(col_name)
         try:
@@ -578,7 +624,7 @@ class DataValidator:
         if self._is_dimensionless(column_unit) and self._is_dimensionless(reference_unit):
             return data, u.dimensionless_unscaled
 
-        self._rate_limited_logger(
+        self._rate_limitedlogger(
             col_name,
             f"Data column '{col_name}' with reference unit "
             f"'{reference_unit}' and data unit '{column_unit}'",
@@ -593,7 +639,7 @@ class DataValidator:
             # ensure that the data type is preserved (e.g., integers)
             return (type(data)(u.Unit(column_unit).to(reference_unit) * data), reference_unit)
         except (u.core.UnitConversionError, ValueError) as exc:
-            self._logger.error(
+            self.logger.error(
                 f"Invalid unit in data column '{col_name}'. "
                 f"Expected type '{reference_unit}', found '{column_unit}'"
             )
@@ -657,7 +703,7 @@ class DataValidator:
             range columns
 
         """
-        self._rate_limited_logger(
+        self._rate_limitedlogger(
             col_name, f"Checking data in column '{col_name}' for '{range_type}'"
         )
 
@@ -680,7 +726,7 @@ class DataValidator:
                 f"{_entry[range_type].get('max', np.inf)}])"
             )
 
-    def _rate_limited_logger(self, col_name, message, max_logs=10):
+    def _rate_limitedlogger(self, col_name, message, max_logs=10):
         """
         Log debug messages at a limited rate defined by a numerical column name.
 
@@ -696,9 +742,9 @@ class DataValidator:
         try:
             col_index = int(col_name)
             if col_index < max_logs:
-                self._logger.debug(message)
+                self.logger.debug(message)
         except (ValueError, TypeError):
-            self._logger.debug(message)
+            self.logger.debug(message)
 
     @staticmethod
     def _interval_check(data, axis_range, range_type):
@@ -801,7 +847,7 @@ class DataValidator:
             If data column is not found.
 
         """
-        self._rate_limited_logger(
+        self._rate_limitedlogger(
             column_name,
             f"Getting reference data column {column_name} from schema {self._data_description}",
         )
@@ -817,7 +863,7 @@ class DataValidator:
         except IndexError as exc:
             if len(self._data_description) == 1:  # all columns are described by the same schema
                 return self._data_description[0]
-            self._logger.error(
+            self.logger.error(
                 f"Data column '{column_name}' not found in reference column definition"
             )
             raise exc
@@ -835,7 +881,7 @@ class DataValidator:
         try:
             return _entry[_index]
         except IndexError:
-            self._logger.error(
+            self.logger.error(
                 f"Data column '{column_name}' not found in reference column definition"
             )
             raise
@@ -888,7 +934,7 @@ class DataValidator:
         semver_regex = r"^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$"
         if not re.match(semver_regex, version):
             raise ValueError(f"Invalid version string '{version}'")
-        self._logger.debug(f"Valid version string '{version}'")
+        self.logger.debug(f"Valid version string '{version}'")
 
     def _check_site_and_array_element_consistency(self, instrument, site):
         """
