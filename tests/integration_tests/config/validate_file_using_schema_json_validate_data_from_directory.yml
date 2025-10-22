@@ -1,0 +1,9 @@
+---
+applications:
+- application: simtools-validate-file-using-schema
+  configuration:
+    data_type: model_parameter
+    file_directory: tests/resources/model_parameters/
+  test_name: json_validate_data_from_directory
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
