@@ -84,6 +84,7 @@ RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
 
 # Build non-optimized / optimized CORSIKA
 WORKDIR /workdir/sim_telarray
+# hadolint ignore=DL3003
 RUN for variant in curved ""; do \
         (cd ./corsika-$CORSIKA_VERSION && \
         if [ "$AVX_FLAG" = "no_opt" ]; then \
