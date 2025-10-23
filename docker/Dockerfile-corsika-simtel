@@ -116,8 +116,10 @@ RUN for variant in curved ""; do \
             install && \
         if [ "$variant" = "curved" ]; then \
             mv -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-${CORSIKA_VERSION}/run/corsika-$variant"; \
+            cp -v -f "corsika-${CORSIKA_VERSION}/src/corsikacompilefile.f" "corsika-${CORSIKA_VERSION}/run/corsikacompilefile_$variant.f"; \
         else \
             mv -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-${CORSIKA_VERSION}/run/corsika"; \
+            cp -v -f "corsika-${CORSIKA_VERSION}/src/corsikacompilefile.f" "corsika-${CORSIKA_VERSION}/run/corsikacompilefile.f"; \
         fi; \
     done
 
