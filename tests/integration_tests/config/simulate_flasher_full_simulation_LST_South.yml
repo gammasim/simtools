@@ -1,0 +1,19 @@
+---
+applications:
+- application: simtools-simulate-flasher
+  configuration:
+    run_mode: full_simulation
+    light_source: LSFS-design
+    model_version: 6.0
+    output_path: simtools-output
+    site: South
+    telescope: LSTS-04
+    test: true
+    log_level: DEBUG
+  integration_tests:
+  - output_file: logfile.log
+  - output_file: ff-1m.simtel.zst
+  model_version_use_current: true
+  test_name: full-simulation
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
