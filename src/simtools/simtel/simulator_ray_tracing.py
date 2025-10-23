@@ -10,8 +10,6 @@ from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils import names
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 
-__all__ = ["SimulatorRayTracing"]
-
 # pylint: disable=no-member
 # The line above is needed because there are members which are created
 # by adding them to the __dict__ of the class rather than directly.

@@ -73,11 +73,28 @@ def test_validate_dict_using_schema(tmp_test_directory, caplog):
     # sample data dictionary to be validated
     data = {"name": "John", "age": 30}
 
-    schema.validate_dict_using_schema(data, schema_file)
+    schema.validate_dict_using_schema(data, schema_file, offline=True)
 
     invalid_data = {"name": "Alice", "age": "Thirty"}
     with pytest.raises(jsonschema.exceptions.ValidationError):
         schema.validate_dict_using_schema(invalid_data, schema_file)
+
+
+@pytest.mark.xfail(reason="No network connection")
+def test_validate_dict_using_schema_remote(tmp_test_directory):
+    sample_schema = {
+        "type": "object",
+        "properties": {"name": {"type": "string"}, "age": {"type": "number"}},
+        "meta_schema_url": "string",
+        "required": ["name", "age"],
+    }
+
+    schema_file = Path(tmp_test_directory) / "schema.yml"
+    with open(schema_file, "w", encoding="utf-8") as f:
+        yaml.dump(sample_schema, f)
+
+    # sample data dictionary to be validated
+    data = {"name": "John", "age": 30}
 
     # with valid meta_schema_url
     data["meta_schema_url"] = "https://github.com/gammasim/simtools"
@@ -88,14 +105,15 @@ def test_validate_dict_using_schema(tmp_test_directory, caplog):
         schema.validate_dict_using_schema(data, schema_file)
 
 
-@pytest.mark.xfail(reason="No network connection")
 def test_validate_schema_astropy_units(caplog):
     success_string = "Successful validation of data using schema"
 
-    _dict_1 = ascii_handler.collect_data_from_file(file_name="tests/resources/num_gains.schema.yml")
+    _dict_1 = ascii_handler.collect_data_from_file(
+        file_name=MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
+    )
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
 
@@ -103,13 +121,13 @@ def test_validate_schema_astropy_units(caplog):
     _dict_1["data"][0]["unit"] = "m"
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
     _dict_1["data"][0]["unit"] = "cm"
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
 
@@ -117,13 +135,13 @@ def test_validate_schema_astropy_units(caplog):
     _dict_1["data"][0]["unit"] = "cm/s"
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
     _dict_1["data"][0]["unit"] = "km/ s"
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
 
@@ -131,13 +149,13 @@ def test_validate_schema_astropy_units(caplog):
     _dict_1["data"][0]["unit"] = "dimensionless"
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
     _dict_1["data"][0]["unit"] = ""
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
 
@@ -145,7 +163,7 @@ def test_validate_schema_astropy_units(caplog):
     _dict_1["data"][0]["unit"] = "not_a_unit"
     with pytest.raises(ValueError, match="'not_a_unit' is not a valid Unit"):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
 
 
@@ -299,27 +317,33 @@ def test_get_schema_for_version_warns_on_version_mismatch(caplog):
 
 
 def test_validate_deprecation_and_version(caplog, monkeypatch):
-    """Test _validate_deprecation_and_version function covering all edge cases."""
+    """Test validate_deprecation_and_version function covering all edge cases."""
+
     # Mock simtools version for predictable testing
-    monkeypatch.setattr("simtools.version.__version__", "1.0.0")
+    def mock_get_software_version(software_name):
+        return "1.0.0"
+
+    monkeypatch.setattr(
+        "simtools.data_model.schema.get_software_version", mock_get_software_version
+    )
 
     # Test 1: Non-dict data should return early without errors
-    schema._validate_deprecation_and_version("not_a_dict")
-    schema._validate_deprecation_and_version(None)
-    schema._validate_deprecation_and_version([1, 2, 3])
+    schema.validate_deprecation_and_version("not_a_dict")
+    schema.validate_deprecation_and_version(None)
+    schema.validate_deprecation_and_version([1, 2, 3])
 
     # Test 2: Empty dict should not raise errors
-    schema._validate_deprecation_and_version({})
+    schema.validate_deprecation_and_version({})
 
     # Test 3: Deprecated data should log warning
     with caplog.at_level(logging.WARNING):
-        schema._validate_deprecation_and_version({"deprecated": True})
-    assert "Data is deprecated" in caplog.text
+        schema.validate_deprecation_and_version({"name": "test_parameter", "deprecated": True})
+    assert "Data for test_parameter is deprecated" in caplog.text
     caplog.clear()
 
     # Test 4: Deprecated data with custom note
     with caplog.at_level(logging.WARNING):
-        schema._validate_deprecation_and_version(
+        schema.validate_deprecation_and_version(
             {"deprecated": True, "deprecation_note": "Use new version instead"}
         )
     assert "Use new version instead" in caplog.text
@@ -327,60 +351,63 @@ def test_validate_deprecation_and_version(caplog, monkeypatch):
 
     # Test 5: Non-deprecated data should not warn
     with caplog.at_level(logging.WARNING):
-        schema._validate_deprecation_and_version({"deprecated": False})
+        schema.validate_deprecation_and_version({"deprecated": False})
     assert "deprecated" not in caplog.text
 
     # Test 6: Valid version constraint should pass
     valid_data = {"simulation_software": [{"name": "simtools", "version": ">=1.0.0"}]}
-    schema._validate_deprecation_and_version(valid_data)
+    schema.validate_deprecation_and_version(valid_data)
 
     # Test 7: Multiple software entries, only simtools matters
     multi_sw_data = {
         "simulation_software": [
-            {"name": "other_software", "version": ">=2.0.0"},
+            {"name": "other_software", "version": ">=0.2.0"},
             {"name": "simtools", "version": ">=0.5.0"},
-            {"name": "another_software", "version": ">=3.0.0"},
+            {"name": "another_software", "version": ">=0.8.0"},
         ]
     }
-    schema._validate_deprecation_and_version(multi_sw_data)
+    schema.validate_deprecation_and_version(multi_sw_data)
 
     # Test 8: Invalid version constraint should raise ValueError
-    invalid_data = {"simulation_software": [{"name": "simtools", "version": ">=2.0.0"}]}
+    invalid_data = {
+        "name": "invalid_parameter",
+        "simulation_software": [{"name": "simtools", "version": ">=2.0.0"}],
+    }
     with pytest.raises(
-        ValueError, match=r"Version 1.0.0 of simtools does not match constraint >=2.0.0"
+        ValueError, match=r"invalid_parameter: version 1.0.0 of simtools does not match >=2.0.0"
     ):
-        schema._validate_deprecation_and_version(invalid_data)
+        schema.validate_deprecation_and_version(invalid_data)
 
     # Test 9: Software without version constraint should pass
     no_version_data = {"simulation_software": [{"name": "simtools"}]}
-    schema._validate_deprecation_and_version(no_version_data)
+    schema.validate_deprecation_and_version(no_version_data)
 
     # Test 10: Software with None version should pass
     none_version_data = {"simulation_software": [{"name": "simtools", "version": None}]}
-    schema._validate_deprecation_and_version(none_version_data)
+    schema.validate_deprecation_and_version(none_version_data)
 
     # Test 11: Complex version constraints
     complex_constraints = ["==1.0.0", ">=1.0.0,<2.0.0", "~=1.0", "!=0.9.0"]
     for constraint in complex_constraints:
         data = {"simulation_software": [{"name": "simtools", "version": constraint}]}
-        schema._validate_deprecation_and_version(data)
+        schema.validate_deprecation_and_version(data)
 
     # Test 12: Version constraint with whitespace should be handled
     whitespace_data = {"simulation_software": [{"name": "simtools", "version": "  >=1.0.0  "}]}
-    schema._validate_deprecation_and_version(whitespace_data)
+    schema.validate_deprecation_and_version(whitespace_data)
 
     # Test 12a: Version constraint with random parameter should be handled
     invalid_data = {"simulation_software": [{"name": "simtools", "version": "  >=1.0.0-abc  "}]}
     with pytest.raises(InvalidSpecifier, match=r"Invalid specifier: '>=1.0.0-abc'"):
-        schema._validate_deprecation_and_version(invalid_data)
+        schema.validate_deprecation_and_version(invalid_data)
 
     # Test 13: Custom software name parameter
     custom_sw_data = {"simulation_software": [{"name": "custom_tool", "version": ">=1.0.0"}]}
-    schema._validate_deprecation_and_version(custom_sw_data, software_name="custom_tool")
+    schema.validate_deprecation_and_version(custom_sw_data, software_name="custom_tool")
 
     # Test 14: No matching software name should pass
-    no_match_data = {"simulation_software": [{"name": "other_software", "version": ">=2.0.0"}]}
-    schema._validate_deprecation_and_version(no_match_data)
+    no_match_data = {"simulation_software": [{"name": "other_software", "version": ">=0.2.0"}]}
+    schema.validate_deprecation_and_version(no_match_data)
 
     # Test 15: Combined deprecation and version validation
     combined_data = {
@@ -389,11 +416,14 @@ def test_validate_deprecation_and_version(caplog, monkeypatch):
         "simulation_software": [{"name": "simtools", "version": ">=0.5.0"}],
     }
     with caplog.at_level(logging.WARNING):
-        schema._validate_deprecation_and_version(combined_data)
+        schema.validate_deprecation_and_version(combined_data)
     assert "Old version" in caplog.text
 
     # Test 16: ignore_software_version=True should log warning and not raise
-    mismatch_data = {"simulation_software": [{"name": "simtools", "version": ">=2.0.0"}]}
+    mismatch_data = {
+        "name": "parameter_warning",
+        "simulation_software": [{"name": "simtools", "version": ">=2.0.0"}],
+    }
     with caplog.at_level(logging.WARNING):
-        schema._validate_deprecation_and_version(mismatch_data, ignore_software_version=True)
-    assert "does not match constraint" in caplog.text
+        schema.validate_deprecation_and_version(mismatch_data, ignore_software_version=True)
+    assert "does not match" in caplog.text

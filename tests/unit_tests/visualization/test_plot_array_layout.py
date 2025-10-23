@@ -117,6 +117,40 @@ def test_update_legend_without_telescopes():
         assert len(texts) == 0
 
 
+def test_update_legend_with_grayed_out_elements(telescopes):
+    """Test update_legend with grayed out elements."""
+    _, ax = plt.subplots()
+
+    # Gray out one of the LSTN telescopes
+    grayed_out_elements = ["LSTN-01"]
+    update_legend(ax, telescopes, grayed_out_elements=grayed_out_elements)
+
+    legend = ax.get_legend()
+    assert legend is not None
+
+    labels = [txt.get_text() for txt in legend.get_texts()]
+
+    # Should have counts excluding grayed out telescopes
+    # LSTN should show (1) instead of (2) since one is grayed out
+    # MSTN should still show (1)
+    assert any("LSTN" in label and "(1)" in label for label in labels)
+    assert any("MSTN" in label and "(1)" in label for label in labels)
+
+
+def test_update_legend_with_legend_location(telescopes):
+    """Test update_legend with custom legend location."""
+    _, ax = plt.subplots()
+
+    update_legend(ax, telescopes, legend_location="upper right")
+
+    legend = ax.get_legend()
+    assert legend is not None
+
+    # Check that legend was created (exact location testing may be complex)
+    labels = [txt.get_text() for txt in legend.get_texts()]
+    assert len(labels) > 0
+
+
 def test_get_sphere_radius_with_column():
     # Create a table with 'sphere_radius' column
     tbl = QTable(
@@ -247,9 +281,12 @@ def test_get_patches_simplest(monkeypatch):
 
     dummy_patches = ["dummy_patch1", "dummy_patch2"]  # Two patches
     dummy_radii = [2, 3] * u.m  # Two radii
+    dummy_highlighted_patches = []
 
-    def dummy_create_patches(telescopes, scale, show_label, ax):
-        return dummy_patches, dummy_radii
+    def dummy_create_patches(
+        telescopes, scale, show_label, ax, grayed_out_elements=None, highlighted_elements=None
+    ):
+        return dummy_patches, dummy_radii, dummy_highlighted_patches
 
     monkeypatch.setattr(
         "simtools.visualization.plot_array_layout.get_positions",
@@ -262,18 +299,52 @@ def test_get_patches_simplest(monkeypatch):
     _, ax = plt.subplots()
 
     provided_range = 50
-    patches, returned_range = get_patches(ax, telescopes, False, provided_range, 1.0)
+    patches, returned_range, highlighted_patches = get_patches(
+        ax, telescopes, False, provided_range, 1.0
+    )
 
     # Verify that get_patches returns the dummy patches and the provided axes_range
     assert patches == dummy_patches
     assert returned_range == provided_range
+    assert highlighted_patches == dummy_highlighted_patches
 
     # Verify that the rotated position columns were added to the table
     assert "pos_x_rotated" in telescopes.colnames
     assert "pos_y_rotated" in telescopes.colnames
 
-    patches, returned_range = get_patches(ax, telescopes, False, None, 1.0)
+    patches, returned_range, highlighted_patches = get_patches(ax, telescopes, False, None, 1.0)
     assert returned_range == pytest.approx(7.7)
+
+
+def test_get_patches_with_highlighted_elements(telescopes):
+    """Test get_patches with highlighted elements."""
+    _, ax = plt.subplots()
+
+    highlighted_elements = ["LSTN-01", "MSTN-01"]
+    grayed_out_elements = ["LSTN-02"]
+
+    patches, returned_range, highlighted_patches = get_patches(
+        ax,
+        telescopes,
+        False,
+        None,
+        1.0,
+        grayed_out_elements=grayed_out_elements,
+        highlighted_elements=highlighted_elements,
+    )
+
+    assert len(patches) == 3  # Total number of telescopes
+    assert len(highlighted_patches) == 2  # Two highlighted telescopes
+    assert returned_range > 0
+
+    # Verify highlighted patches are Circle objects
+    for highlight_patch in highlighted_patches:
+        assert isinstance(highlight_patch, mpatches.Circle)
+        assert highlight_patch.get_fill() is False
+        # Check color components without alpha since unfilled patches may have alpha=0
+        color_rgba = highlight_patch.get_facecolor()
+        expected_rgba = to_rgba("red")
+        assert color_rgba[:3] == expected_rgba[:3]  # Compare only RGB, not alpha
 
 
 def test_get_telescope_patch_circle(monkeypatch):
@@ -328,21 +399,30 @@ def test_get_telescope_patch_rectangle(monkeypatch):
 def test_plot_array_layout_calls_helpers(monkeypatch):
     calls = {"get_patches_count": 0, "update_legend_called": False, "finalize_plot_called": False}
 
-    def dummy_get_patches(ax, telescopes, show_tel_label, axes_range, marker_scaling):
+    def dummy_get_patches(
+        ax,
+        telescopes,
+        show_tel_label,
+        axes_range,
+        marker_scaling,
+        grayed_out_elements=None,
+        highlighted_elements=None,
+    ):
         calls["get_patches_count"] += 1
         # Create real patch objects instead of strings
         dummy_patch = mpatches.Circle((0, 0), 1)  # Simple circle patch
         dummy_bg_patch = mpatches.Circle((0, 0), 1)  # Another circle patch
+        dummy_highlighted_patches = []
         # For first call (primary telescopes)
         if calls["get_patches_count"] == 1:
-            return ([dummy_patch], 50)
+            return ([dummy_patch], 50, dummy_highlighted_patches)
         # For second call (background telescopes)
-        return ([dummy_bg_patch], 60)
+        return ([dummy_bg_patch], 60, dummy_highlighted_patches)
 
-    def dummy_update_legend(ax, telescopes):
+    def dummy_update_legend(ax, telescopes, grayed_out_elements=None, legend_location="best"):
         calls["update_legend_called"] = True
 
-    def dummy_finalize_plot(ax, patches, x_title, y_title, axes_range):
+    def dummy_finalize_plot(ax, patches, x_title, y_title, axes_range, highlighted_patches=None):
         calls["finalize_plot_called"] = True
 
     monkeypatch.setattr("simtools.visualization.plot_array_layout.get_patches", dummy_get_patches)
@@ -391,9 +471,89 @@ def test_plot_array_layout_calls_helpers(monkeypatch):
     assert call_count["count"] > 0
 
 
+def test_plot_array_layout_with_highlighted_elements():
+    """Test plot_array_layout with highlighted elements."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01", "MSTN-01", "LSTN-02"],
+            "position_x": [0, 100, 200] * u.m,
+            "position_y": [0, 100, 200] * u.m,
+            "sphere_radius": [12, 8, 12] * u.m,
+        }
+    )
+
+    highlighted_elements = ["LSTN-01"]
+    grayed_out_elements = ["MSTN-01"]
+
+    fig = plot_array_layout(
+        telescopes,
+        highlighted_elements=highlighted_elements,
+        grayed_out_elements=grayed_out_elements,
+        show_tel_label=False,
+        axes_range=300,
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+
+    # Check that the plot was created with the correct elements
+    ax = fig.get_axes()[0]
+    assert ax is not None
+
+    # Verify that patch collections were added (normal patches + highlighted patches)
+    collections = [coll for coll in ax.collections if isinstance(coll, PatchCollection)]
+    assert len(collections) >= 2  # At least normal patches and highlighted patches
+
+
 def test_create_patches(telescopes):
     _, ax = plt.subplots()
-    patches, radii = create_patches(telescopes, 1.0, True, ax)
+    patches, radii, highlighted_patches = create_patches(telescopes, 1.0, True, ax)
 
     assert len(patches)
     assert len(radii)
+    assert isinstance(highlighted_patches, list)
+
+
+def test_create_patches_with_highlighted_elements(telescopes):
+    """Test create_patches with highlighted elements to cover lines 266-273."""
+    _, ax = plt.subplots()
+
+    # Test with highlighted elements
+    highlighted_elements = ["LSTN-01", "MSTN-01"]
+    patches, radii, highlighted_patches = create_patches(
+        telescopes, 1.0, False, ax, highlighted_elements=highlighted_elements
+    )
+
+    assert len(patches) == 3  # Total number of telescopes
+    assert len(radii) == 3
+    assert len(highlighted_patches) == 2  # Two telescopes are highlighted
+
+    # Verify highlighted patches are Circle objects with correct properties
+    for highlight_patch in highlighted_patches:
+        assert isinstance(highlight_patch, mpatches.Circle)
+        assert highlight_patch.get_fill() is False
+        # Check color components without alpha since unfilled patches may have alpha=0
+        color_rgba = highlight_patch.get_facecolor()
+        expected_rgba = to_rgba("red")
+        assert color_rgba[:3] == expected_rgba[:3]  # Compare only RGB, not alpha
+        assert highlight_patch.get_linewidth() == 1
+
+
+def test_create_patches_with_grayed_out_elements(telescopes):
+    """Test create_patches with grayed out elements."""
+    _, ax = plt.subplots()
+
+    # Test with grayed out elements
+    grayed_out_elements = ["LSTN-02"]
+    patches, radii, highlighted_patches = create_patches(
+        telescopes, 1.0, False, ax, grayed_out_elements=grayed_out_elements
+    )
+
+    assert len(patches) == 3  # Total number of telescopes
+    assert len(radii) == 3
+    assert len(highlighted_patches) == 0  # No telescopes are highlighted
+
+    # Verify that the grayed out telescope patch has correct properties
+    # The grayed out telescope should be the third one (LSTN-02)
+    grayed_patch = patches[2]
+    assert isinstance(grayed_patch, mpatches.Circle)
+    # Note: The exact color testing might depend on implementation details

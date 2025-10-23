@@ -10,11 +10,6 @@ from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.io import io_handler
 from simtools.model.model_parameter import ModelParameter
 
-__all__ = [
-    "CorsikaConfig",
-    "InvalidCorsikaInputError",
-]
-
 
 class InvalidCorsikaInputError(Exception):
     """Exception for invalid corsika input."""

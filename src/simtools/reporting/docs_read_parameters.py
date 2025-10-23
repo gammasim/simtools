@@ -544,6 +544,7 @@ class ReadParameters:
             model_version=self.model_version,
             label="reports",
             mongo_db_config=self.db_config,
+            ignore_software_version=True,
         )
 
         output_filename = Path(self.output_path / (telescope_model.name + ".md"))
@@ -896,9 +897,6 @@ class ReadParameters:
                 output_filename, calibration_device, data, design_model
             )
 
-        # produce parameter comparison reports (site-independent)
-        self._generate_model_parameter_reports_for_devices(array_elements)
-
     def _collect_calibration_array_elements(self):
         """Return a list of calibration devices including their design models."""
         calibration_array_elements = self.db.get_array_elements(
@@ -954,11 +952,8 @@ class ReadParameters:
 
                 self._write_to_file(display_group, file)
 
-    def _generate_model_parameter_reports_for_devices(self, array_elements):
+    def generate_model_parameter_reports_for_devices(self, array_elements):
         """Create model-parameter comparison reports for calibration devices."""
-        new_output_path = Path(self.output_path).parent.parent / "parameters"
-        new_output_path.mkdir(parents=True, exist_ok=True)
-        self.output_path = new_output_path
         for calibration_device in array_elements:
             device_sites = names.get_site_from_array_element_name(calibration_device)
             # parameters are site independent so just take the first site to read from db

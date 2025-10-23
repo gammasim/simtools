@@ -27,7 +27,7 @@ def test_yaml_file():
 def mock_simtel_file():
     mock_file = MagicMock()
     mock_file.mc_run_headers = [{"n_showers": 100, "E_range": [0.1, 100]}]
-    mock_file.iter_mc_events.return_value = [
+    mock_file.__iter__.return_value = [
         {"mc_shower": {"energy": energy}} for energy in np.linspace(0.1, 100, 100)
     ]
     return mock_file
@@ -42,6 +42,7 @@ def valid_sim_telarray_file_content():
             "photons": np.array([200, 300, 400, 0, 0]),
         },
         "trigger_information": {"trigger_times": [1.0, 2.0, 3.0]},
+        "mc_shower": {"energy": 10.0},
     }
 
 
@@ -99,7 +100,7 @@ def test_assert_n_showers_and_energy_range_inconsistent_showers(
 def test_assert_n_showers_and_energy_range_out_of_range_energy(
     mock_simtelfile_class, mock_simtel_file
 ):
-    mock_simtel_file.iter_mc_events.return_value = [
+    mock_simtel_file.__iter__.return_value = [
         {"mc_shower": {"energy": energy}} for energy in np.linspace(0.05, 100.05, 100)
     ]  # Set energies slightly out of range
     mock_simtelfile_class.return_value.__enter__.return_value = mock_simtel_file
@@ -162,6 +163,7 @@ def test_check_output_from_sim_telarray(
     mock_simtelfile_class, mock_simtel_file, valid_sim_telarray_file_content
 ):
     mock_simtel_file.__iter__.return_value = [valid_sim_telarray_file_content]
+    mock_simtel_file.mc_run_headers = [{"n_showers": 1, "E_range": [5.0, 15.0]}]
     mock_simtelfile_class.return_value.__enter__.return_value = mock_simtel_file
 
     expected_output = {"pe_sum": [5, 35], "trigger_time": [0.5, 3.5], "photons": [50, 350]}

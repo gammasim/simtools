@@ -28,18 +28,6 @@ from simtools.constants import (
 
 _logger = logging.getLogger(__name__)
 
-__all__ = [
-    "generate_file_name",
-    "get_array_element_type_from_name",
-    "get_site_from_array_element_name",
-    "sanitize_name",
-    "simtel_config_file_name",
-    "simtel_single_mirror_list_file_name",
-    "validate_array_element_id_name",
-    "validate_array_element_name",
-    "validate_site_name",
-]
-
 # Mapping of db collection names to class keys
 db_collections_to_class_keys = {
     "sites": ["Site"],
@@ -122,7 +110,7 @@ def site_names():
 @cache
 def array_element_design_types(array_element_type):
     """
-    Get array element site types (e.g., 'design' or 'flashcam').
+    Get array element design type (e.g., 'design' or 'flashcam').
 
     Default values are ['design', 'test'].
 

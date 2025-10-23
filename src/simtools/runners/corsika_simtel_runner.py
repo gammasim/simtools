@@ -8,8 +8,6 @@ import simtools.utils.general as gen
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.simtel.simulator_array import SimulatorArray
 
-__all__ = ["CorsikaSimtelRunner"]
-
 
 class CorsikaSimtelRunner:
     """

@@ -219,8 +219,11 @@ def test_get_sim_telarray_metadata_without_model_parameters(simtel_config_writer
         "telescope", None, simtel_config_writer._telescope_model_name
     )
     assert len(_tel) == 8
-    assert f"camera_config_name = {simtel_config_writer._telescope_model_name}" in _tel
-    assert f"optics_config_name = {simtel_config_writer._telescope_model_name}" in _tel
+    assert f"camera_config_variant = {simtel_config_writer._telescope_model_name}" in _tel
+    assert f"optics_config_variant = {simtel_config_writer._telescope_model_name}" in _tel
+    # Check that variant fields have default value when telescope_design_model is not provided
+    assert "camera_config_name = design_model_not_set" in _tel
+    assert "optics_config_name = design_model_not_set" in _tel
 
     _site = simtel_config_writer._get_sim_telarray_metadata("site", None, None)
     assert f"site_config_name = {simtel_config_writer._site}" in _site

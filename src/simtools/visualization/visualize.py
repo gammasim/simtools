@@ -12,18 +12,6 @@ from astropy.table import QTable
 from cycler import cycler
 from matplotlib import gridspec
 
-__all__ = [
-    "get_colors",
-    "get_lines",
-    "get_markers",
-    "plot_1d",
-    "plot_hist_2d",
-    "plot_table",
-    "save_figure",
-    "set_style",
-]
-
-
 COLORS = {}
 COLORS["classic"] = [
     "#ba2c54",
