@@ -95,7 +95,7 @@ def get_model_parameter_schema_version(schema_version=None):
 
 
 def validate_dict_using_schema(
-    data, schema_file=None, json_schema=None, ignore_software_version=False
+    data, schema_file=None, json_schema=None, ignore_software_version=False, offline=False
 ):
     """
     Validate a data dictionary against a schema.
@@ -136,15 +136,22 @@ def validate_dict_using_schema(
     except jsonschema.exceptions.ValidationError as exc:
         _logger.error(f"Validation failed using schema: {json_schema} for data: {data}")
         raise exc
+
+    if not offline:
+        _validate_meta_schema_url(data)
+
+    _logger.debug(f"Successful validation of data using schema ({json_schema.get('name')})")
+    return data
+
+
+def _validate_meta_schema_url(data):
+    """Validate meta_schema_url if present in data."""
     if (
         isinstance(data, dict)
         and data.get("meta_schema_url")
         and not gen.url_exists(data["meta_schema_url"])
     ):
         raise FileNotFoundError(f"Meta schema URL does not exist: {data['meta_schema_url']}")
-
-    _logger.debug(f"Successful validation of data using schema ({json_schema.get('name')})")
-    return data
 
 
 def _retrieve_yaml_schema_from_uri(uri):

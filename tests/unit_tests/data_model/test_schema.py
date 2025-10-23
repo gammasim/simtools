@@ -73,11 +73,28 @@ def test_validate_dict_using_schema(tmp_test_directory, caplog):
     # sample data dictionary to be validated
     data = {"name": "John", "age": 30}
 
-    schema.validate_dict_using_schema(data, schema_file)
+    schema.validate_dict_using_schema(data, schema_file, offline=True)
 
     invalid_data = {"name": "Alice", "age": "Thirty"}
     with pytest.raises(jsonschema.exceptions.ValidationError):
         schema.validate_dict_using_schema(invalid_data, schema_file)
+
+
+@pytest.mark.xfail(reason="No network connection")
+def test_validate_dict_using_schema_remote(tmp_test_directory):
+    sample_schema = {
+        "type": "object",
+        "properties": {"name": {"type": "string"}, "age": {"type": "number"}},
+        "meta_schema_url": "string",
+        "required": ["name", "age"],
+    }
+
+    schema_file = Path(tmp_test_directory) / "schema.yml"
+    with open(schema_file, "w", encoding="utf-8") as f:
+        yaml.dump(sample_schema, f)
+
+    # sample data dictionary to be validated
+    data = {"name": "John", "age": 30}
 
     # with valid meta_schema_url
     data["meta_schema_url"] = "https://github.com/gammasim/simtools"
@@ -88,14 +105,15 @@ def test_validate_dict_using_schema(tmp_test_directory, caplog):
         schema.validate_dict_using_schema(data, schema_file)
 
 
-@pytest.mark.xfail(reason="No network connection")
 def test_validate_schema_astropy_units(caplog):
     success_string = "Successful validation of data using schema"
 
-    _dict_1 = ascii_handler.collect_data_from_file(file_name="tests/resources/num_gains.schema.yml")
+    _dict_1 = ascii_handler.collect_data_from_file(
+        file_name=MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
+    )
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
 
@@ -103,13 +121,13 @@ def test_validate_schema_astropy_units(caplog):
     _dict_1["data"][0]["unit"] = "m"
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
     _dict_1["data"][0]["unit"] = "cm"
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
 
@@ -117,13 +135,13 @@ def test_validate_schema_astropy_units(caplog):
     _dict_1["data"][0]["unit"] = "cm/s"
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
     _dict_1["data"][0]["unit"] = "km/ s"
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
 
@@ -131,13 +149,13 @@ def test_validate_schema_astropy_units(caplog):
     _dict_1["data"][0]["unit"] = "dimensionless"
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
     _dict_1["data"][0]["unit"] = ""
     with caplog.at_level(logging.DEBUG):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
     assert success_string in caplog.text
 
@@ -145,7 +163,7 @@ def test_validate_schema_astropy_units(caplog):
     _dict_1["data"][0]["unit"] = "not_a_unit"
     with pytest.raises(ValueError, match="'not_a_unit' is not a valid Unit"):
         schema.validate_dict_using_schema(
-            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA, offline=True
         )
 
 

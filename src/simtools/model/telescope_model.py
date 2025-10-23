@@ -32,6 +32,8 @@ class TelescopeModel(ModelParameter):
         Model version.
     label: str, optional
         Instance label. Important for output file naming.
+    ignore_software_version: bool, optional
+        If True, ignore software version checks for deprecated parameters.
     """
 
     def __init__(
@@ -41,6 +43,7 @@ class TelescopeModel(ModelParameter):
         mongo_db_config: dict,
         model_version: str,
         label: str | None = None,
+        ignore_software_version: bool = False,
     ):
         """Initialize TelescopeModel."""
         super().__init__(
@@ -50,6 +53,7 @@ class TelescopeModel(ModelParameter):
             model_version=model_version,
             db=None,
             label=label,
+            ignore_software_version=ignore_software_version,
         )
 
         self._logger = logging.getLogger(__name__)
