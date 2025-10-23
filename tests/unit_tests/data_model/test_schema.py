@@ -441,21 +441,21 @@ def test_validate_deprecation_and_version(caplog, monkeypatch):
 def test_extract_schema_url_from_metadata_dict():
     """Test _extract_schema_url_from_metadata_dict function."""
     # Test with cta lowercase (default observatory is "cta")
-    metadata = {"cta": {"product": {"data": {"model": {"url": "http://schema.example.com"}}}}}
+    metadata = {"cta": {"product": {"data": {"model": {"url": "https://schema.example.com"}}}}}
     result = schema._extract_schema_url_from_metadata_dict(metadata)
-    assert result == "http://schema.example.com"
+    assert result == "https://schema.example.com"
 
     # Test with CTA uppercase and explicit observatory parameter
-    metadata = {"CTA": {"product": {"data": {"model": {"url": "http://schema2.example.com"}}}}}
+    metadata = {"CTA": {"product": {"data": {"model": {"url": "https://schema2.example.com"}}}}}
     result = schema._extract_schema_url_from_metadata_dict(metadata, observatory="CTA")
-    assert result == "http://schema2.example.com"
+    assert result == "https://schema2.example.com"
 
     # Test with custom observatory
     metadata = {
-        "veritas": {"product": {"data": {"model": {"url": "http://veritas-schema.example.com"}}}}
+        "veritas": {"product": {"data": {"model": {"url": "https://veritas-schema.example.com"}}}}
     }
     result = schema._extract_schema_url_from_metadata_dict(metadata, observatory="veritas")
-    assert result == "http://veritas-schema.example.com"
+    assert result == "https://veritas-schema.example.com"
 
     # Test with no URL
     metadata = {"cta": {"product": {}}}
@@ -471,12 +471,12 @@ def test_extract_schema_from_file(tmp_test_directory):
     """Test _extract_schema_from_file function."""
     # Create a test file with schema URL (lowercase cta)
     test_file = Path(tmp_test_directory) / "test_with_schema.yml"
-    metadata = {"cta": {"product": {"data": {"model": {"url": "http://schema.example.com"}}}}}
+    metadata = {"cta": {"product": {"data": {"model": {"url": "https://schema.example.com"}}}}}
     with open(test_file, "w", encoding="utf-8") as f:
         yaml.dump(metadata, f)
 
     result = schema._extract_schema_from_file(test_file)
-    assert result == "http://schema.example.com"
+    assert result == "https://schema.example.com"
 
     # Test with non-existent file
     result = schema._extract_schema_from_file("non_existent_file.yml")
@@ -490,18 +490,18 @@ def test_get_schema_file_name(tmp_test_directory):
     assert result == "my_schema.yml"
 
     # Test with meta_schema_url in data_dict
-    data_dict = {"meta_schema_url": "http://schema.example.com"}
+    data_dict = {"meta_schema_url": "https://schema.example.com"}
     result = schema._get_schema_file_name(data_dict=data_dict)
-    assert result == "http://schema.example.com"
+    assert result == "https://schema.example.com"
 
     # Test with file_name (lowercase cta)
     test_file = Path(tmp_test_directory) / "test_file.yml"
-    metadata = {"cta": {"product": {"data": {"model": {"url": "http://file-schema.example.com"}}}}}
+    metadata = {"cta": {"product": {"data": {"model": {"url": "https://file-schema.example.com"}}}}}
     with open(test_file, "w", encoding="utf-8") as f:
         yaml.dump(metadata, f)
 
     result = schema._get_schema_file_name(file_name=test_file)
-    assert result == "http://file-schema.example.com"
+    assert result == "https://file-schema.example.com"
 
     # Test with no inputs
     result = schema._get_schema_file_name()
