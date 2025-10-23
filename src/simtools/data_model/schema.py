@@ -361,7 +361,7 @@ def validate_schema_from_files(
     file_directory, file_name=None, schema_file=None, ignore_software_version=False
 ):
     """
-    Validate a schema file (or several files).
+    Validate a schema file or several files in a directory.
 
     Files to be validated are taken from file_directory and file_name pattern.
     The schema is either given as command line argument, read from the meta_schema_url or from
@@ -378,7 +378,7 @@ def validate_schema_from_files(
     ignore_software_version : bool
         If True, ignore software version check.
     """
-    if file_directory is not None and file_name is not None:
+    if file_directory and file_name:
         file_list = sorted(Path(file_directory).rglob(file_name))
     else:
         file_list = [Path(file_name)] if file_name else []
@@ -418,7 +418,6 @@ def _get_schema_file_name(schema_file=None, file_name=None, data_dict=None):
     -------
     str or None
         Schema file name.
-
     """
     if schema_file is not None:
         return schema_file
