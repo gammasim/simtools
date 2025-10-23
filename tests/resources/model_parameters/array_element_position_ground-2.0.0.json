@@ -1,18 +1,18 @@
 {
-    "schema_version": "0.3.0",
-    "parameter": "array_element_position_ground",
+    "file": false,
     "instrument": "MSTN-09",
-    "site": "North",
+    "meta_parameter": false,
+    "model_parameter_schema_version": "0.1.0",
+    "parameter": "array_element_position_ground",
     "parameter_version": "2.0.0",
+    "schema_version": "0.3.0",
+    "site": "North",
+    "type": "float64",
     "unique_id": null,
+    "unit": "m",
     "value": [
         221.68,
         -355.66,
         49.0
-    ],
-    "unit": "m",
-    "type": "float64",
-    "file": false,
-    "meta_parameter": false,
-    "model_parameter_schema_version": "0.1.0"
+    ]
 }
