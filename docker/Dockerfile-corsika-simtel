@@ -84,21 +84,13 @@ RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
 
 # Build non-optimized / optimized CORSIKA
 WORKDIR /workdir/sim_telarray
-RUN for variant in curved standard; do \
-        cd ./corsika-$CORSIKA_VERSION && \
-        if [ "$variant" = "curved" ]; then \
-            sed -i.bak 's/plusopt=""/plusopt="curved "/' ../corsika_build_script; \
-        else \
-            if [ -f ./corsika_build_script.bak ]; then \
-                mv ../corsika_build_script.bak ../corsika_build_script; \
-            fi; \
-        fi && \
+RUN for variant in curved ""; do \
+        (cd ./corsika-$CORSIKA_VERSION && \
         if [ "$AVX_FLAG" = "no_opt" ]; then \
-            ../corsika_build_script "$HADRONIC_MODEL" generic; \
+            ../corsika_build_script "$HADRONIC_MODEL" generic $variant; \
         else \
-            ../corsika_build_script "$HADRONIC_MODEL" generic cerenkopt vlibm; \
-        fi && \
-        cd .. && \
+            ../corsika_build_script "$HADRONIC_MODEL" generic cerenkopt vlibm $variant; \
+        fi) && \
         make -C "corsika-$CORSIKA_VERSION" clean && rm -f ./*/*.a lib/*/*.a && \
         AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
         AVX_EXTRA_FLAG="" && \
