@@ -100,6 +100,7 @@ def main():
 
     file_name = app_context.args.get("file_name")
     file_directory = app_context.args.get("file_directory")
+    schema_file = app_context.args.get("schema")
     data_type = app_context.args.get("data_type").lower()
 
     if data_type == "metadata":
@@ -111,7 +112,7 @@ def main():
         schema.validate_schema_from_files(
             file_directory=file_directory,
             file_name=file_name,
-            schema_file=app_context.args.get("schema"),
+            schema_file=schema_file,
             ignore_software_version=app_context.args.get("ignore_software_version", False),
         )
     else:
@@ -119,8 +120,8 @@ def main():
             file_name=file_name,
             file_directory=file_directory,
             is_model_parameter=(data_type == "model_parameter"),
-            check_exact_data_type=app_context.args.get("require_exact_data_type", False),
-            schema_file=app_context.args.get("schema"),
+            check_exact_data_type=app_context.args.get("check_exact_data_type", False),
+            schema_file=schema_file,
         )
 
 
