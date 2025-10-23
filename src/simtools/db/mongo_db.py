@@ -76,7 +76,7 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
     def __init__(self, db_config=None):
         """Initialize the MongoDBHandler class."""
         self._logger = logging.getLogger(__name__)
-        self.db_config = self._validate_db_config(db_config)
+        self.db_config = MongoDBHandler.validate_db_config(db_config)
         self.list_of_collections = {}
 
         if self.db_config and MongoDBHandler.db_client is None:
@@ -111,10 +111,6 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
             return db_config
         except jsonschema.exceptions.ValidationError as err:
             raise ValueError("Invalid MongoDB configuration") from err
-
-    def _validate_db_config(self, db_config):
-        """Validate the MongoDB configuration (instance method wrapper)."""
-        return MongoDBHandler.validate_db_config(db_config)
 
     def _open_db(self):
         """
