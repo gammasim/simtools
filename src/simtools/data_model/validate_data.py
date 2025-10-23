@@ -931,7 +931,13 @@ class DataValidator:
         instrument_sites = []
         for inst in instruments:
             instrument_sites.append(names.get_site_from_array_element_name(inst))
-        instrument_site = to_sorted_list(sorted(set(instrument_sites)))
+        # names.get_site_from_array_element_name might return a list
+        flat_sites = [
+            s
+            for sublist in instrument_sites
+            for s in (sublist if isinstance(sublist, list) else [sublist])
+        ]
+        instrument_site = to_sorted_list(sorted(set(flat_sites)))
         site = to_sorted_list(site)
 
         if instrument_site != site:
