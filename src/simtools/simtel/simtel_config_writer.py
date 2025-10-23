@@ -11,7 +11,11 @@ import numpy as np
 import simtools.utils.general as gen
 import simtools.version
 from simtools.io import ascii_handler
+from simtools.simtel.pulse_shapes import generate_pulse_from_risefall
 from simtools.utils import names
+
+# Module-level logger for class/static utilities
+logger = logging.getLogger(__name__)
 
 
 def sim_telarray_random_seeds(seed, number):
@@ -23,6 +27,7 @@ def sim_telarray_random_seeds(seed, number):
     seed: int
         Seed for the random number generator.
     number: int
+        Number of random seeds to generate.
         Number of random seeds to generate.
 
     Returns
@@ -120,6 +125,39 @@ class SimtelConfigWriter:
                 telescope_design_model=_telescope_design_model,
             ):
                 file.write(f"{meta}\n")
+
+    @staticmethod
+    def write_lightpulse_table_gauss_expconv(
+        file_path,
+        width_ns=None,
+        exp_decay_ns=None,
+        dt_ns=0.1,
+        duration_sigma=6.0,
+    ):
+        """Write a pulse table for a Gaussian convolved with an exponential.
+
+        Provide rise and fall widths: width_ns is the 10-90 rise time (ns) and
+        exp_decay_ns is the 90-10 fall time (ns). Parameters are solved so the
+        convolved pulse matches these widths and is normalized to peak 1.
+
+        Note: This method assumes the parent directory of file_path exists.
+        """
+        if width_ns is None or exp_decay_ns is None:
+            raise ValueError("width_ns (rise 10-90) and exp_decay_ns (fall 90-10) are required")
+        logger.info(
+            f"Generating lightpulse table with rise10-90={width_ns} ns, "
+            f"fall90-10={exp_decay_ns} ns, dt={dt_ns} ns"
+        )
+
+        t, y = generate_pulse_from_risefall(
+            width_ns, exp_decay_ns, dt_ns=dt_ns, duration_sigma=duration_sigma
+        )
+
+        with open(file_path, "w", encoding="utf-8") as fh:
+            fh.write("# time[ns] amplitude\n")
+            for ti, yi in zip(t, y):
+                fh.write(f"{ti:.6f} {yi:.8f}\n")
+        return Path(file_path)
 
     def _get_parameters_for_sim_telarray(self, parameters, config_file_path):
         """
@@ -221,7 +259,7 @@ class SimtelConfigWriter:
         value = "none" if value is None else value  # simtel requires 'none'
         if isinstance(value, bool):
             value = 1 if value else 0
-        elif isinstance(value, (list, np.ndarray)):
+        elif isinstance(value, list | np.ndarray):
             value = gen.convert_list_to_string(value, shorten_list=True)
         return value
 
