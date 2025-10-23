@@ -15,7 +15,6 @@ ARG HADRONIC_MODEL="qgs2"
 ARG AVX_FLAG="avx2"
 ARG BERNLOHR_VERSION="1.68"
 ARG AUTOCONF_VERSION="2.71"
-ARG CORSIKA_PLUS_OPT=""  # add curved for curved atmosphere build
 
 #
 # hadolint global ignore=DL3013,DL3033,DL3041,SC1091
@@ -45,7 +44,6 @@ ARG CORSIKA_VERSION
 ARG BERNLOHR_VERSION
 ARG CORSIKA_OPT_PATCH_VERSION
 ARG AUTOCONF_VERSION
-ARG CORSIKA_PLUS_OPT
 
 ENV GCC_PATH="/usr/bin/"
 
@@ -175,8 +173,7 @@ RUN echo "build_opt: $BUILD_OPT" > ./build_opts.yml && \
     echo "avx_flag: $AVX_FLAG" >> ./build_opts.yml && \
     echo "corsika_version: $CORSIKA_VERSION" >> ./build_opts.yml && \
     echo "corsika_opt_patch_version: $CORSIKA_OPT_PATCH_VERSION" >> ./build_opts.yml && \
-    echo "bernlohr_version: $BERNLOHR_VERSION" >> ./build_opts.yml && \
-    echo "corsika_plus_opt: $CORSIKA_PLUS_OPT" >> ./build_opts.yml
+    echo "bernlohr_version: $BERNLOHR_VERSION" >> ./build_opts.yml
 
 # Final stage - minimal base image with CORSIKA and sim_telarray
 FROM almalinux:9.5-minimal
