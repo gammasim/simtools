@@ -8,11 +8,6 @@ from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 
-__all__ = [
-    "compute_telescope_transmission",
-    "is_two_mirror_telescope",
-]
-
 
 def initialize_simulation_models(
     label, db_config, model_version, site, telescope_name, calibration_device_name=None

@@ -15,8 +15,6 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import general, names
 
-__all__ = ["ArrayModel"]
-
 
 class ArrayModel:
     """
@@ -291,9 +289,7 @@ class ArrayModel:
         """Export sim_telarray configuration files for all telescopes into the model directory."""
         exported_models = []
         for tel_model in self.telescope_models.values():
-            name = tel_model.name + (
-                "_" + tel_model.extra_label if tel_model.extra_label != "" else ""
-            )
+            name = tel_model.name
             if name not in exported_models:
                 self._logger.debug(f"Exporting configuration file for telescope {name}")
                 tel_model.write_sim_telarray_config_file(
@@ -367,8 +363,8 @@ class ArrayModel:
             self._logger.warning("No model files found to pack.")
             return None
 
-        archive_name = self.get_config_directory() / "model_files.tar.gz"
-        general.pack_tar_file(archive_name, model_files)
+        archive_name = self.get_config_directory() / f"model_files_{self.model_version}.tar.gz"
+        general.pack_tar_file(archive_name, model_files, sub_dir=f"model/{self.model_version}")
         self._logger.info(f"Packed model files into {archive_name}")
         return archive_name
 

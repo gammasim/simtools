@@ -38,32 +38,19 @@ r"""
 
 """
 
-import logging
 from pathlib import Path
 
 import simtools.data_model.model_data_writer as writer
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 
 
-def _parse(label, description):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label: str
-        Label describing application.
-    description: str
-        Description of application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object
-
-    """
-    config = configurator.Configurator(label=label, description=description)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Submit and validate a model parameter.",
+    )
 
     config.parser.add_argument(
         "--parameter", type=str, required=True, help="Parameter for simulation model"
@@ -98,30 +85,30 @@ def _parse(label, description):
     return config.initialize(output=True, db_config=True)
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse(
-        label=Path(__file__).stem,
-        description="Submit and validate a model parameters).",
-    )
+def main():
+    """Submit and validate a model parameter value and metadata."""
+    app_context = startup_application(_parse)
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    output_path = (
-        Path(args_dict["output_path"]) / args_dict["parameter"]
-        if args_dict.get("output_path")
-        else None
-    )
+    if app_context.args.get("output_path"):
+        output_path = app_context.io_handler.get_output_directory(
+            sub_dir=app_context.args.get("parameter")
+        )
+    else:
+        output_path = None
 
     writer.ModelDataWriter.dump_model_parameter(
-        parameter_name=args_dict["parameter"],
-        value=args_dict["value"],
-        instrument=args_dict["instrument"],
-        parameter_version=args_dict["parameter_version"],
-        output_file=Path(args_dict["parameter"] + "-" + args_dict["parameter_version"] + ".json"),
+        parameter_name=app_context.args["parameter"],
+        value=app_context.args["value"],
+        instrument=app_context.args["instrument"],
+        parameter_version=app_context.args["parameter_version"],
+        output_file=Path(
+            app_context.args["parameter"] + "-" + app_context.args["parameter_version"] + ".json"
+        ),
         output_path=output_path,
-        metadata_input_dict=args_dict,
-        db_config=db_config if args_dict.get("check_parameter_version") else None,
+        metadata_input_dict=app_context.args,
+        db_config=app_context.db_config
+        if app_context.args.get("check_parameter_version")
+        else None,
     )
 
 

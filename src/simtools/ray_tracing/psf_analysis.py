@@ -19,8 +19,6 @@ import numpy as np
 
 from simtools.utils.general import collect_kwargs, set_default_kwargs
 
-__all__ = ["PSFImage"]
-
 
 class PSFImage:
     """

@@ -14,11 +14,6 @@ from simtools.db.db_handler import jsonschema_db_dict
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
 
-__all__ = [
-    "Configurator",
-    "InvalidConfigurationParameterError",
-]
-
 
 class InvalidConfigurationParameterError(Exception):
     """Exception for Invalid configuration parameter."""

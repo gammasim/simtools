@@ -57,7 +57,7 @@ def test_collect_dict_data(io_handler) -> None:
         )
 
 
-def test_collect_data_from_file_exceptions(io_handler, caplog) -> None:
+def test_collect_data_from_file_exceptions(io_handler) -> None:
     """Test error handling in collect_data_from_file."""
     # Create an invalid YAML file
     test_file = io_handler.get_output_file(file_name="invalid.yml")
@@ -85,7 +85,7 @@ def test_collect_data_from_file_exceptions(io_handler, caplog) -> None:
         ascii_handler.collect_data_from_file(test_unsupported)
 
 
-def test_collect_dict_from_url(io_handler) -> None:
+def test_collect_dict_from_url() -> None:
     _file = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
     _reference_dict = ascii_handler.collect_data_from_file(_file)
 

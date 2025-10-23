@@ -18,8 +18,6 @@ from simtools.data_model import metadata_model, schema
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import names
 
-__all__ = ["MetadataCollector"]
-
 
 class MetadataCollector:
     """

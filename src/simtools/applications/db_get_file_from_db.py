@@ -33,16 +33,15 @@
 
 """
 
-import logging
-
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.db import db_handler
-from simtools.io import io_handler
 
 
 def _parse():
+    """Parse command line configuration."""
     config = configurator.Configurator(
+        label=get_application_label(__file__),
         description="Get file(s) from the DB.",
         usage="simtools-get-file-from-db --file_name mirror_CTA-S-LST_v2020-04-07.dat",
     )
@@ -57,24 +56,23 @@ def _parse():
     return config.initialize(db_config=True, output=True)
 
 
-def main():  # noqa: D103
-    args_dict, db_config = _parse()
+def main():
+    """Get file from database."""
+    app_context = startup_application(_parse)
 
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-    _io_handler = io_handler.IOHandler()
-
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
     file_id = db.export_model_files(
-        dest=_io_handler.get_output_directory(),
-        file_names=args_dict["file_name"],
+        dest=app_context.io_handler.get_output_directory(),
+        file_names=app_context.args["file_name"],
     )
     if file_id is None:
-        logger.error(f"The file {args_dict['file_name']} was not found in {db.db_name}.")
+        app_context.logger.error(
+            f"The file {app_context.args['file_name']} was not found in {db.db_name}."
+        )
         raise FileNotFoundError
-    logger.info(
-        f"Got file {args_dict['file_name']} from DB {db.db_name} "
-        f"and saved into {_io_handler.get_output_directory()}"
+    app_context.logger.info(
+        f"Got file {app_context.args['file_name']} from DB {db.db_name} "
+        f"and saved into {app_context.io_handler.get_output_directory()}"
     )
 
 

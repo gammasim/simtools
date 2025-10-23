@@ -333,6 +333,10 @@ def test_auto_generate_parameter_reports(io_handler, db_config):
             "produce_model_parameter_reports",
             new_callable=MagicMock,
         ) as mock_produce,
+        patch.object(
+            report_generator,
+            "_generate_calibration_device_parameter_reports",
+        ) as mock_calibration_reports,
     ):
         report_generator.auto_generate_parameter_reports()
 
@@ -342,6 +346,43 @@ def test_auto_generate_parameter_reports(io_handler, db_config):
         # Check that each telescope-site combination was processed with correct args
         expected_calls = [call() for _ in mock_combinations]
         mock_produce.assert_has_calls(expected_calls, any_order=True)
+
+        # Verify that calibration device parameter reports were also generated
+        mock_calibration_reports.assert_called_once()
+
+
+def test_auto_generate_parameter_reports_no_all_telescopes(io_handler, db_config):
+    """Test parameter report generation when all_telescopes is False."""
+    args = {"all_telescopes": False, "telescope": "LSTN-01", "site": "North"}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    # Mock telescope-site combinations that would be returned
+    mock_combinations = [("LSTN-01", "North")]
+
+    with (
+        patch.object(
+            report_generator,
+            "_generate_parameter_report_combinations",
+            return_value=mock_combinations,
+        ),
+        patch(
+            "simtools.reporting.docs_read_parameters.ReadParameters."
+            "produce_model_parameter_reports",
+            new_callable=MagicMock,
+        ) as mock_produce,
+        patch.object(
+            report_generator,
+            "_generate_calibration_device_parameter_reports",
+        ) as mock_calibration_reports,
+    ):
+        report_generator.auto_generate_parameter_reports()
+
+        # Verify that produce_model_parameter_reports was called
+        assert mock_produce.call_count == len(mock_combinations)
+
+        # Verify that calibration device parameter reports were NOT generated
+        mock_calibration_reports.assert_not_called()
 
 
 def test__generate_single_array_element_report(io_handler, db_config):
@@ -527,3 +568,259 @@ def test_auto_generate_observatory_reports(io_handler, db_config):
         mock_generate_report.assert_has_calls(
             [call(site, version) for site, version in mock_combinations]
         )
+
+
+def test__generate_calibration_device_parameter_reports(io_handler, db_config):
+    """Test generation of calibration device parameter reports across all model versions."""
+    args = {"all_telescopes": True, "all_sites": True}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    mock_model_versions = ["5.0.0", "6.0.0", "6.1.0"]
+
+    with (
+        patch.object(report_generator.db, "get_model_versions", return_value=mock_model_versions),
+        patch.object(
+            report_generator, "_process_calibration_devices_for_version"
+        ) as mock_process_version,
+    ):
+        report_generator._generate_calibration_device_parameter_reports()
+
+        # Verify that _process_calibration_devices_for_version was called for each version
+        assert mock_process_version.call_count == len(mock_model_versions)
+        mock_process_version.assert_has_calls([call(version) for version in mock_model_versions])
+
+
+def test__process_calibration_devices_for_version_with_devices(io_handler, db_config):
+    """Test processing calibration devices for a specific model version when devices exist."""
+    args = {"all_telescopes": True, "all_sites": True, "model_version": "6.0.0"}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    mock_calibration_elements = ["ILLN-01", "ILLS-01"]
+    mock_design_model = "ILLN-design"
+
+    with (
+        patch.object(
+            report_generator.db,
+            "get_array_elements",
+            return_value=mock_calibration_elements,
+        ),
+        patch.object(report_generator.db, "get_design_model", return_value=mock_design_model),
+        patch(
+            "simtools.reporting.docs_auto_report_generator.ReadParameters"
+        ) as mock_read_params_class,
+    ):
+        mock_read_params = MagicMock()
+        mock_read_params_class.return_value = mock_read_params
+
+        # Store original args to verify they don't change
+        original_args = report_generator.args.copy()
+
+        report_generator._process_calibration_devices_for_version("6.0.0")
+
+        # Verify that get_array_elements was called with correct parameters
+        report_generator.db.get_array_elements.assert_called_once_with(
+            "6.0.0", collection="calibration_devices"
+        )
+
+        # Verify that ReadParameters was instantiated with a version-specific args copy
+        mock_read_params_class.assert_called_once()
+        called_args = mock_read_params_class.call_args[0][1]  # second argument (args)
+        assert called_args["model_version"] == "6.0.0"
+
+        # Verify that generate_model_parameter_reports_for_devices was called
+        mock_read_params.generate_model_parameter_reports_for_devices.assert_called_once()
+
+        # Verify that the original args were not modified
+        assert report_generator.args == original_args
+
+
+def test__process_calibration_devices_for_version_no_devices(io_handler, db_config):
+    """Test processing calibration devices when no devices exist for the model version."""
+    args = {"all_telescopes": True, "all_sites": True}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    # Test case 1: Empty calibration elements list
+    with patch.object(
+        report_generator.db, "get_array_elements", return_value=[]
+    ) as mock_get_elements:
+        with patch(
+            "simtools.reporting.docs_auto_report_generator.ReadParameters"
+        ) as mock_read_params_class:
+            report_generator._process_calibration_devices_for_version("5.0.0")
+
+            # Verify that get_array_elements was called
+            mock_get_elements.assert_called_once_with("5.0.0", collection="calibration_devices")
+
+            # Verify that ReadParameters was NOT instantiated since no devices exist
+            mock_read_params_class.assert_not_called()
+
+    # Test case 2: ValueError for missing calibration_devices collection
+    mock_error = ValueError(
+        "The following query returned zero results: "
+        "{'model_version': '5.0.0', 'collection': 'calibration_devices'}"
+    )
+
+    with patch.object(report_generator.db, "get_array_elements", side_effect=mock_error):
+        # Should not raise an exception, should log and return
+        report_generator._process_calibration_devices_for_version("5.0.0")
+
+
+def test__process_calibration_devices_for_version_unexpected_error(io_handler, db_config):
+    """Test handling of unexpected ValueError."""
+    args = {"all_telescopes": True, "all_sites": True}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    # Mock unexpected ValueError
+    mock_error = ValueError("Some unexpected error")
+
+    with patch.object(report_generator.db, "get_array_elements", side_effect=mock_error):
+        # Should re-raise unexpected ValueError
+        with pytest.raises(ValueError, match="Some unexpected error"):
+            report_generator._process_calibration_devices_for_version("5.0.0")
+
+
+def test_auto_generate_simulation_configuration_reports(io_handler, db_config):
+    """Test generation of simulation configuration reports."""
+    args = {"all_model_versions": True}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    mock_model_versions = ["5.0.0", "6.0.0"]
+
+    with (
+        patch.object(report_generator.db, "get_model_versions", return_value=mock_model_versions),
+        patch(
+            "simtools.reporting.docs_auto_report_generator.ReadParameters"
+        ) as mock_read_params_class,
+    ):
+        mock_read_params = MagicMock()
+        mock_read_params_class.return_value = mock_read_params
+
+        report_generator.auto_generate_simulation_configuration_reports()
+
+        # Verify ReadParameters was called for each model version
+        assert mock_read_params_class.call_count == len(mock_model_versions)
+
+        # Verify produce_simulation_configuration_report was called for each version
+        assert mock_read_params.produce_simulation_configuration_report.call_count == len(
+            mock_model_versions
+        )
+
+        # Verify args were updated correctly for each version
+        for _ in mock_model_versions:
+            assert report_generator.args["model_version"] in mock_model_versions
+
+
+def test_auto_generate_simulation_configuration_reports_single_version(io_handler, db_config):
+    """Test generation of simulation configuration reports for single version."""
+    args = {"all_model_versions": False, "model_version": "6.0.0"}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    with patch(
+        "simtools.reporting.docs_auto_report_generator.ReadParameters"
+    ) as mock_read_params_class:
+        mock_read_params = MagicMock()
+        mock_read_params_class.return_value = mock_read_params
+
+        report_generator.auto_generate_simulation_configuration_reports()
+
+        # Verify ReadParameters was called only once
+        mock_read_params_class.assert_called_once()
+
+        # Verify produce_simulation_configuration_report was called once
+        mock_read_params.produce_simulation_configuration_report.assert_called_once()
+
+        # Verify args maintained the correct version
+        assert report_generator.args["model_version"] == "6.0.0"
+
+
+def test_auto_generate_calibration_reports(io_handler, db_config):
+    """Test generation of calibration reports."""
+    args = {"all_model_versions": True}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    mock_model_versions = ["5.0.0", "6.0.0"]
+
+    with (
+        patch.object(report_generator.db, "get_model_versions", return_value=mock_model_versions),
+        patch(
+            "simtools.reporting.docs_auto_report_generator.ReadParameters"
+        ) as mock_read_params_class,
+    ):
+        mock_read_params = MagicMock()
+        mock_read_params_class.return_value = mock_read_params
+
+        report_generator.auto_generate_calibration_reports()
+
+        # Verify ReadParameters was called for each model version
+        assert mock_read_params_class.call_count == len(mock_model_versions)
+
+        # Verify produce_calibration_reports was called for each version
+        assert mock_read_params.produce_calibration_reports.call_count == len(mock_model_versions)
+
+
+def test_auto_generate_calibration_reports_with_valueerror(io_handler, db_config):
+    """Test generation of calibration reports with ValueError handling."""
+    args = {"all_model_versions": True}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    mock_model_versions = ["5.0.0", "6.0.0"]
+
+    # Mock ValueError for missing calibration_devices collection
+    mock_error = ValueError(
+        "The following query returned zero results: "
+        "{'model_version': '5.0.0', 'collection': 'calibration_devices'}"
+    )
+
+    with (
+        patch.object(report_generator.db, "get_model_versions", return_value=mock_model_versions),
+        patch(
+            "simtools.reporting.docs_auto_report_generator.ReadParameters"
+        ) as mock_read_params_class,
+    ):
+        mock_read_params = MagicMock()
+        mock_read_params_class.return_value = mock_read_params
+
+        # Make produce_calibration_reports raise ValueError for first version but succeed for second
+        mock_read_params.produce_calibration_reports.side_effect = [mock_error, None]
+
+        report_generator.auto_generate_calibration_reports()
+
+        # Verify ReadParameters was called for each model version
+        assert mock_read_params_class.call_count == len(mock_model_versions)
+
+        # Verify produce_calibration_reports was called for each version
+        assert mock_read_params.produce_calibration_reports.call_count == len(mock_model_versions)
+
+
+def test_auto_generate_calibration_reports_unexpected_valueerror(io_handler, db_config):
+    """Test generation of calibration reports with unexpected ValueError."""
+    args = {"all_model_versions": True}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    mock_model_versions = ["6.0.0"]
+
+    # Mock unexpected ValueError
+    mock_error = ValueError("Some unexpected error")
+
+    with (
+        patch.object(report_generator.db, "get_model_versions", return_value=mock_model_versions),
+        patch(
+            "simtools.reporting.docs_auto_report_generator.ReadParameters"
+        ) as mock_read_params_class,
+    ):
+        mock_read_params = MagicMock()
+        mock_read_params_class.return_value = mock_read_params
+        mock_read_params.produce_calibration_reports.side_effect = mock_error
+
+        # Should re-raise unexpected ValueError
+        with pytest.raises(ValueError, match="Some unexpected error"):
+            report_generator.auto_generate_calibration_reports()

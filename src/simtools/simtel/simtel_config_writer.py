@@ -13,8 +13,6 @@ import simtools.version
 from simtools.io import ascii_handler
 from simtools.utils import names
 
-__all__ = ["SimtelConfigWriter"]
-
 
 def sim_telarray_random_seeds(seed, number):
     """
@@ -67,6 +65,7 @@ class SimtelConfigWriter:
         model_version,
         layout_name=None,
         telescope_model_name=None,
+        telescope_design_model=None,
         label=None,
         simtel_path=None,
     ):
@@ -79,9 +78,12 @@ class SimtelConfigWriter:
         self._label = label
         self._layout_name = layout_name
         self._telescope_model_name = telescope_model_name
+        self._telescope_design_model = telescope_design_model
         self._simtel_path = simtel_path
 
-    def write_telescope_config_file(self, config_file_path, parameters, telescope_name=None):
+    def write_telescope_config_file(
+        self, config_file_path, parameters, telescope_name=None, telescope_design_model=None
+    ):
         """
         Write the sim_telarray config file for a single telescope.
 
@@ -93,22 +95,30 @@ class SimtelConfigWriter:
             Model parameters
         telescope_name: str
             Name of the telescope (use self._telescope_model_name if None)
+        telescope_design_model: str
+            Telescope design model.
         """
         self._logger.debug(f"Writing telescope config file {config_file_path}")
 
         simtel_par = self._get_parameters_for_sim_telarray(parameters, config_file_path)
+        telescope_name = telescope_name or self._telescope_model_name
+        _telescope_design_model = telescope_design_model or self._telescope_design_model
 
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "TELESCOPE CONFIGURATION FILE")
 
-            telescope_name = telescope_name or self._telescope_model_name
             file.write("#ifdef TELESCOPE\n")
             file.write(f"   echo Configuration for {telescope_name} - TELESCOPE $(TELESCOPE)\n")
             file.write("#endif\n\n")
 
             for simtel_name, simtel_value in simtel_par.items():
                 file.write(f"{simtel_name} = {self._get_value_string_for_simtel(simtel_value)}\n")
-            for meta in self._get_sim_telarray_metadata("telescope", parameters, telescope_name):
+            for meta in self._get_sim_telarray_metadata(
+                "telescope",
+                parameters,
+                telescope_name,
+                telescope_design_model=_telescope_design_model,
+            ):
                 file.write(f"{meta}\n")
 
     def _get_parameters_for_sim_telarray(self, parameters, config_file_path):
@@ -216,7 +226,12 @@ class SimtelConfigWriter:
         return value
 
     def _get_sim_telarray_metadata(
-        self, config_type, model_parameters, telescope_model_name, additional_metadata=None
+        self,
+        config_type,
+        model_parameters,
+        telescope_model_name,
+        additional_metadata=None,
+        telescope_design_model=None,
     ):
         """
         Return sim_telarray metadata.
@@ -231,6 +246,8 @@ class SimtelConfigWriter:
             Name of the telescope model
         additional_metadata: dict
             Dictionary with additional metadata to include using 'set'.
+        telescope_design_model: str
+            Name of the telescope design model.
 
         Returns
         -------
@@ -241,14 +258,15 @@ class SimtelConfigWriter:
             f"config_release = {self._model_version} with simtools v{simtools.version.__version__}",
             f"config_version = {self._model_version}",
         ]
+        telescope_design_model = telescope_design_model or "design_model_not_set"
         if config_type == "telescope":
             meta_parameters.extend(
                 [
-                    f"camera_config_name = {telescope_model_name}",
-                    "camera_config_variant = ",
+                    f"camera_config_name = {telescope_design_model}",
+                    f"camera_config_variant = {telescope_model_name}",
                     f"camera_config_version = {self._model_version}",
-                    f"optics_config_name = {telescope_model_name}",
-                    "optics_config_variant = ",
+                    f"optics_config_name = {telescope_design_model}",
+                    f"optics_config_variant = {telescope_model_name}",
                     f"optics_config_version = {self._model_version}",
                 ]
             )
@@ -510,7 +528,7 @@ class SimtelConfigWriter:
         """
         file.write(self.TAB + "% Site parameters\n")
         for par, value in site_parameters.items():
-            simtel_name, value = self._convert_model_parameters_to_simtel_format(
+            simtel_name, simtel_value = self._convert_model_parameters_to_simtel_format(
                 names.get_simulation_software_name_from_parameter_name(
                     par, software_name="sim_telarray"
                 ),
@@ -519,9 +537,9 @@ class SimtelConfigWriter:
                 telescope_model,
             )
             if simtel_name is not None:
-                file.write(f"{self.TAB}{simtel_name} = {value}\n")
+                file.write(f"{self.TAB}{simtel_name} = {simtel_value}\n")
         for meta in self._get_sim_telarray_metadata(
-            "site", site_parameters, self._telescope_model_name, additional_metadata
+            "site", site_parameters, None, additional_metadata
         ):
             file.write(f"{self.TAB}{meta}\n")
         file.write("\n")

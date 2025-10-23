@@ -56,6 +56,12 @@ axes_range : float, optional
     Range of the both axes in meters.
 marker_scaling : float, optional.
     Scaling factor for plotting of array elements, optional.
+grayed_out_array_elements : list, optional
+    List of array elements to plot as gray circles.
+highlighted_array_elements : list, optional
+    List of array elements to plot with red circles around them.
+legend_location : str, optional
+    Location of the legend (default "best").
 
 Examples
 --------
@@ -97,41 +103,39 @@ Plot all layouts for the North site and model version 6.0.0:
 .. code-block:: console
 
     simtools-plot-array-layout --site North --plot_all_layouts --model_version=6.0.0
-"""
 
-import logging
-from pathlib import Path
+Plot layout with some telescopes grayed out and others highlighted:
+
+.. code-block:: console
+
+    simtools-plot-array-layout --site North
+                               --array_layout_name alpha
+                               --model_version=6.0.0
+                               --grayed_out_array_elements LSTN-01 LSTN-02
+                               --highlighted_array_elements MSTN-01 MSTN-02
+                               --legend_location "upper right"
+"""
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import simtools.layout.array_layout_utils as layout_utils
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.io import io_handler
 from simtools.visualization import visualize
 from simtools.visualization.plot_array_layout import plot_array_layout
 
 
-def _parse(label, description, usage=None):
-    """
-    Parse command line configuration.
-
-    Parameters
-    ----------
-    label : str
-        Label describing the application.
-    description : str
-        Description of the application.
-    usage : str
-        Example on how to use the application.
-
-    Returns
-    -------
-    CommandLineParser
-        Command line parser object.
-    """
-    config = configurator.Configurator(label=label, description=description, usage=usage)
+def _parse():
+    """Parse command line configuration."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Plots array layout.",
+        usage=(
+            "Use '--array_layout_name plot_all' to plot all layouts for the given site "
+            "and model version."
+        ),
+    )
 
     config.parser.add_argument(
         "--figure_name",
@@ -176,6 +180,33 @@ def _parse(label, description, usage=None):
         required=False,
         default=None,
     )
+    config.parser.add_argument(
+        "--grayed_out_array_elements",
+        help="List of array elements to plot as gray circles.",
+        type=str,
+        nargs="*",
+        required=False,
+        default=None,
+    )
+    config.parser.add_argument(
+        "--highlighted_array_elements",
+        help="List of array elements to plot with red circles around them.",
+        type=str,
+        nargs="*",
+        required=False,
+        default=None,
+    )
+    config.parser.add_argument(
+        "--legend_location",
+        help=(
+            "Location of the legend (e.g., 'best', 'upper right', 'upper left', "
+            "'lower left', 'lower right', 'right', 'center left', 'center right', "
+            "'lower center', 'upper center', 'center')."
+        ),
+        type=str,
+        required=False,
+        default="best",
+    )
     return config.initialize(
         db_config=True,
         simulation_model=[
@@ -199,8 +230,8 @@ def read_layouts(args_dict, db_config, logger):
         Dictionary with command line arguments.
     db_config : dict
         Database configuration.
-    logger : logging.Logger
-        Logger instance.
+    logger : logging.app_context.logger
+        app_context.logger instance.
 
     Returns
     -------
@@ -248,28 +279,17 @@ def read_layouts(args_dict, db_config, logger):
 
 def main():
     """Plot array layout application."""
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(
-        label,
-        (
-            "Plots array layout."
-            "Use '--array_layout_name plot_all' to plot all layouts for the given site "
-            "and model version."
-        ),
-    )
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-    io_handler_instance = io_handler.IOHandler()
+    app_context = startup_application(_parse)
 
-    layouts = read_layouts(args_dict, db_config, logger)
+    layouts = read_layouts(app_context.args, app_context.db_config, app_context.logger)
 
-    if args_dict.get("array_layout_name_background"):
+    if app_context.args.get("array_layout_name_background"):
         background_layout = layout_utils.get_array_layouts_from_db(
-            args_dict["array_layout_name_background"],
-            args_dict["site"],
-            args_dict["model_version"],
-            db_config,
-            args_dict["coordinate_system"],
+            app_context.args["array_layout_name_background"],
+            app_context.args["site"],
+            app_context.args["model_version"],
+            app_context.db_config,
+            app_context.args["coordinate_system"],
         )["array_elements"]
     else:
         background_layout = None
@@ -278,28 +298,31 @@ def main():
     for layout in layouts:
         fig_out = plot_array_layout(
             telescopes=layout["array_elements"],
-            show_tel_label=args_dict["show_labels"],
-            axes_range=args_dict["axes_range"],
-            marker_scaling=args_dict["marker_scaling"],
+            show_tel_label=app_context.args["show_labels"],
+            axes_range=app_context.args["axes_range"],
+            marker_scaling=app_context.args["marker_scaling"],
             background_telescopes=background_layout,
+            grayed_out_elements=app_context.args["grayed_out_array_elements"],
+            highlighted_elements=app_context.args["highlighted_array_elements"],
+            legend_location=app_context.args["legend_location"],
         )
         site_string = ""
         if layout.get("site") is not None:
             site_string = f"_{layout['site']}"
-        elif args_dict["site"] is not None:
-            site_string = f"_{args_dict['site']}"
+        elif app_context.args["site"] is not None:
+            site_string = f"_{app_context.args['site']}"
         coordinate_system_string = (
-            f"_{args_dict['coordinate_system']}"
-            if args_dict["coordinate_system"] not in layout["name"]
+            f"_{app_context.args['coordinate_system']}"
+            if app_context.args["coordinate_system"] not in layout["name"]
             else ""
         )
-        plot_file_name = args_dict["figure_name"] or (
+        plot_file_name = app_context.args["figure_name"] or (
             f"array_layout_{layout['name']}{site_string}{coordinate_system_string}"
         )
 
         visualize.save_figure(
             fig_out,
-            io_handler_instance.get_output_directory() / plot_file_name,
+            app_context.io_handler.get_output_directory() / plot_file_name,
             dpi=400,
         )
         plt.close()

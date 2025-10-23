@@ -3,15 +3,18 @@ Generate a new simulation model production and update tables and model parameter
 
 This script is used to maintain the simulation model repository. It allows to create
 new production tables by copying an existing base version and applies modifications
-to production tables and model parameters as provided in a YAML file (see the example file below).
+to production tables and model parameters as provided in a configuration file (see
+the 'info.yml' examples in the simulation models repository).
 
 Two main use cases are covered by this script:
 
-1. full update: Create a complete new set of production tables (e.g. for new major or minor
+1. full update: create a complete new set of production tables (e.g. for new major or minor
    versions of the simulation models). This will copy all production tables from the source
    directory and apply the modifications to the tables that are listed in the modifications file.
+   If the full update is based on a previous patch update, the full history of changes is applied
+   iteratively until the last base version is reached.
 
-2. patch update: Create a set of new production tables including the changes defined in the
+2. patch update: create a set of new production tables including the changes defined in the
    modifications file. No unmodified tables are copied. For new production tables with patch
    modifications, the key-value pair 'base_model_version: <base_model version>' is added.
 
@@ -26,54 +29,34 @@ The following example applies a patch update with changes defined in a YAML file
 .. code-block:: console
 
     simtools-maintain-simulation-model-add-new-production \\
-        --simulation_models_path ../simulation-models-dev/simulation-models/ \\
-        --modifications tests/resources/production_tables_changes_for_threshold_study_6.2.0.yml
+        --model_path ../simulation-models-dev/simulation-models/ \\
+        --model_version 6.0.2
 
 """
 
-import logging
 from pathlib import Path
 
-import simtools.utils.general as gen
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.model import model_repository
 
 
-def _parse(label, description):
-    """
-    Parse command line arguments.
-
-    Returns
-    -------
-    dict
-        Parsed command-line arguments.
-    """
-    config = configurator.Configurator(label=label, description=description)
-    config.parser.add_argument(
-        "--simulation_models_path",
-        type=str,
-        required=True,
-        help="Path to the simulation models repository.",
+def _parse():
+    """Parse command line arguments."""
+    config = configurator.Configurator(
+        label=get_application_label(__file__),
+        description="Generate a new simulation model production",
     )
-    config.parser.add_argument(
-        "--modifications",
-        type=str,
-        required=True,
-        help="File containing the list of changes to apply.",
-    )
-
-    return config.initialize(db_config=False, output=False)
+    return config.initialize(db_config=False, output=False, simulation_model=["model_version"])
 
 
-def main():  # noqa: D103
-    label = Path(__file__).stem
-    args_dict, _ = _parse(label=label, description="Generate a new simulation model production")
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+def main():
+    """Generate a new simulation model production."""
+    app_context = startup_application(_parse)
 
     model_repository.generate_new_production(
-        modifications=args_dict["modifications"],
-        simulation_models_path=Path(args_dict["simulation_models_path"]),
+        model_version=app_context.args["model_version"],
+        simulation_models_path=Path(app_context.args["model_path"]),
     )
 
 

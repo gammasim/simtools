@@ -16,7 +16,7 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def array_model_from_list(db_config, io_handler, model_version):
+def array_model_from_list(db_config, model_version):
     return ArrayModel(
         label="test",
         site="North",
@@ -26,7 +26,7 @@ def array_model_from_list(db_config, io_handler, model_version):
     )
 
 
-def test_array_model_from_file(db_config, io_handler, model_version, telescope_north_test_file):
+def test_array_model_from_file(db_config, model_version, telescope_north_test_file):
     am = ArrayModel(
         label="test",
         site="North",
@@ -37,7 +37,7 @@ def test_array_model_from_file(db_config, io_handler, model_version, telescope_n
     assert am.number_of_telescopes == 13
 
 
-def test_array_model_init_without_layout_or_telescope_list(db_config, io_handler, model_version):
+def test_array_model_init_without_layout_or_telescope_list(db_config, model_version):
     with pytest.raises(ValueError, match=r"No array elements found."):
         ArrayModel(
             label="test",
@@ -58,7 +58,7 @@ def test_site(array_model):
     assert am.site == "North"
 
 
-def test_exporting_config_files(db_config, io_handler, model_version):
+def test_exporting_config_files(db_config, model_version):
     am = ArrayModel(
         label="test",
         site="North",
@@ -100,13 +100,13 @@ def test_exporting_config_files(db_config, io_handler, model_version):
         assert Path(am.get_config_directory()).joinpath(model_file).exists()
 
 
-def test_load_array_element_positions_from_file(array_model, io_handler, telescope_north_test_file):
+def test_load_array_element_positions_from_file(array_model, telescope_north_test_file):
     am = array_model
     telescopes = am._load_array_element_positions_from_file(telescope_north_test_file, "North")
     assert len(telescopes) > 0
 
 
-def test_get_telescope_position_parameter(array_model, io_handler):
+def test_get_telescope_position_parameter(array_model):
     am = array_model
     assert am._get_telescope_position_parameter(
         "LSTN-01", "North", 10.0 * u.m, 200.0 * u.cm, 30.0 * u.m, "2.0.0"
@@ -126,17 +126,17 @@ def test_get_telescope_position_parameter(array_model, io_handler):
     }
 
 
-def test_get_config_file(model_version, array_model, io_handler):
+def test_get_config_file(model_version, array_model):
     am = array_model
     assert am.config_file_path.name == "CTA-test_layout-North-" + model_version + "_test.cfg"
 
 
-def test_get_config_directory(array_model, io_handler):
+def test_get_config_directory(array_model):
     am = array_model
     assert am.get_config_directory().is_dir()
 
 
-def test_export_array_elements_as_table(array_model, io_handler):
+def test_export_array_elements_as_table(array_model):
     am = array_model
     table_ground = am.export_array_elements_as_table(coordinate_system="ground")
     assert isinstance(table_ground, QTable)
@@ -149,7 +149,7 @@ def test_export_array_elements_as_table(array_model, io_handler):
     assert len(table_utm) > 0
 
 
-def test_get_array_elements_from_list(array_model, io_handler):
+def test_get_array_elements_from_list(array_model):
     am = array_model
     assert am._get_array_elements_from_list(["LSTN-01", "MSTN-01"]) == {
         "LSTN-01": None,
@@ -161,7 +161,7 @@ def test_get_array_elements_from_list(array_model, io_handler):
     assert "LSTN-01" in all_msts_plus_lst
 
 
-def test_get_all_array_elements_of_type(array_model, io_handler):
+def test_get_all_array_elements_of_type(array_model):
     am = array_model
     assert am._get_all_array_elements_of_type("LSTS") == {
         "LSTS-01": None,
@@ -220,7 +220,7 @@ def test_pack_model_files(array_model, io_handler, tmp_path, model_version):
     ):
         archive_path = array_model.pack_model_files()
 
-        assert archive_path == mock_output_dir.joinpath("model_files.tar.gz")
+        assert archive_path == mock_output_dir.joinpath(f"model_files_{model_version}.tar.gz")
         assert mock_tarfile.add.call_count == 2
 
     mock_rglob = MagicMock(return_value=[])
@@ -232,7 +232,7 @@ def test_pack_model_files(array_model, io_handler, tmp_path, model_version):
         assert array_model.pack_model_files() is None
 
 
-def test_get_additional_simtel_metadata(array_model, caplog, mocker):
+def test_get_additional_simtel_metadata(array_model, mocker):
     array_model_cp = copy.deepcopy(array_model)
     array_model_cp.sim_telarray_seeds = {"seeds": 1234}
     mocker.patch.object(array_model_cp.site_model, "get_nsb_integrated_flux", return_value=42.0)

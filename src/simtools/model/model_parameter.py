@@ -8,12 +8,11 @@ from copy import copy
 import astropy.units as u
 
 import simtools.utils.general as gen
+from simtools.data_model import schema
 from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
-
-__all__ = ["InvalidModelParameterError", "ModelParameter"]
 
 
 class InvalidModelParameterError(Exception):
@@ -44,6 +43,9 @@ class ModelParameter:
         MongoDB configuration.
     label: str
         Instance label. Important for output file naming.
+    ignore_software_version: bool
+        If True, ignore software version checks for deprecated parameters.
+        Useful for documentation generation.
 
     """
 
@@ -56,9 +58,9 @@ class ModelParameter:
         collection="telescopes",
         db=None,
         label=None,
+        ignore_software_version=False,
     ):
         self._logger = logging.getLogger(__name__)
-        self._extra_label = None
         self.io_handler = io_handler.IOHandler()
         self.db = (
             db if db is not None else db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
@@ -69,6 +71,7 @@ class ModelParameter:
         self.collection = collection
         self.label = label
         self.model_version = model_version
+        self.ignore_software_version = ignore_software_version
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
             names.validate_array_element_name(array_element_name)
@@ -343,7 +346,6 @@ class ModelParameter:
             self.model_version,
             telescope_model_name=self.name,
             label=self.label,
-            extra_label=self._extra_label,
         )
         self._config_file_path = self.config_file_directory.joinpath(config_file_name)
 
@@ -381,7 +383,12 @@ class ModelParameter:
                 pass
 
     def _load_parameters_from_db(self):
-        """Read parameters from DB and store them in _parameters."""
+        """
+        Read parameters from DB and store them in _parameters.
+
+        This is assumed to be the only call to the database to read parameters
+        (plus functions called from here).
+        """
         if self.db is None:
             return
 
@@ -389,13 +396,35 @@ class ModelParameter:
             self._parameters = self.db.get_model_parameters(
                 self.site, self.name, self.collection, self.model_version
             )
+            self._check_model_parameter_software_versions(self.parameters.keys())
 
         self._load_simulation_software_parameter()
+        for software_name, parameters in self._simulation_config_parameters.items():
+            self._check_model_parameter_software_versions(
+                parameters.keys(), software_name=software_name
+            )
 
-    @property
-    def extra_label(self):
-        """Return the extra label if defined, if not return ''."""
-        return self._extra_label if self._extra_label is not None else ""
+    def _check_model_parameter_software_versions(self, parameter_list, software_name=None):
+        """
+        Ensure that model parameters are compatible with the installed software versions.
+
+        Compares software versions listed in schema files with the installed software versions
+        (e.g., sim_telarray, CORSIKA).
+
+        Parameters
+        ----------
+        parameter_list: list
+            List containing model parameter names.
+        software_name: str
+            Name of the software for which the parameters are checked.
+        """
+        for par_name in parameter_list:
+            if par_name in (parameter_schema := names.model_parameters()):
+                schema.validate_deprecation_and_version(
+                    data=parameter_schema[par_name],
+                    software_name=software_name,
+                    ignore_software_version=self.ignore_software_version,
+                )
 
     def change_parameter(self, par_name, value):
         """
@@ -574,6 +603,7 @@ class ModelParameter:
             self.simtel_config_writer = SimtelConfigWriter(
                 site=self.site,
                 telescope_model_name=self.name,
+                telescope_design_model=self.design_model,
                 model_version=self.model_version,
                 label=self.label,
             )

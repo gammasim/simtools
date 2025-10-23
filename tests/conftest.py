@@ -47,7 +47,7 @@ def data_path():
     return "./data/"
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def io_handler(tmp_test_directory, data_path):
     """Define io_handler fixture including output and model directories."""
     tmp_io_handler = simtools.io.io_handler.IOHandler()
@@ -482,8 +482,7 @@ def sim_telarray_file_gamma():
     """Gamma sim_telarray file for testing."""
     return (
         "tests/resources/"
-        "run000010_gamma_za20deg_azm000deg_North_test_layout_6.0.0"
-        "_test-production-North.simtel.zst"
+        "gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst"
     )
 
 

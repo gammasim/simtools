@@ -9,8 +9,6 @@ from astropy import units as u
 
 from simtools.model.model_parameter import ModelParameter
 
-__all__ = ["SiteModel"]
-
 
 class SiteModel(ModelParameter):
     """
@@ -26,6 +24,8 @@ class SiteModel(ModelParameter):
         Model version or list of model versions (in which case only the first one is used).
     label: str, optional
         Instance label. Important for output file naming.
+    ignore_software_version: bool, optional
+        If True, ignore software version checks for deprecated parameters.
     """
 
     def __init__(
@@ -34,6 +34,7 @@ class SiteModel(ModelParameter):
         mongo_db_config: dict,
         model_version: str,
         label: str | None = None,
+        ignore_software_version: bool = False,
     ):
         """Initialize SiteModel."""
         self._logger = logging.getLogger(__name__)
@@ -45,6 +46,7 @@ class SiteModel(ModelParameter):
             db=None,
             label=label,
             collection="sites",
+            ignore_software_version=ignore_software_version,
         )
 
     def get_reference_point(self) -> dict:
