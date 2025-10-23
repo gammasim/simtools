@@ -43,6 +43,9 @@ class ModelParameter:
         MongoDB configuration.
     label: str
         Instance label. Important for output file naming.
+    ignore_software_version: bool
+        If True, ignore software version checks for deprecated parameters.
+        Useful for documentation generation.
 
     """
 
@@ -55,6 +58,7 @@ class ModelParameter:
         collection="telescopes",
         db=None,
         label=None,
+        ignore_software_version=False,
     ):
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
@@ -67,6 +71,7 @@ class ModelParameter:
         self.collection = collection
         self.label = label
         self.model_version = model_version
+        self.ignore_software_version = ignore_software_version
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
             names.validate_array_element_name(array_element_name)
@@ -416,7 +421,9 @@ class ModelParameter:
         for par_name in parameter_list:
             if par_name in (parameter_schema := names.model_parameters()):
                 schema.validate_deprecation_and_version(
-                    data=parameter_schema[par_name], software_name=software_name
+                    data=parameter_schema[par_name],
+                    software_name=software_name,
+                    ignore_software_version=self.ignore_software_version,
                 )
 
     def change_parameter(self, par_name, value):
