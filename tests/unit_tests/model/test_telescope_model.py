@@ -14,15 +14,6 @@ from simtools.model.model_parameter import InvalidModelParameterError
 logger = logging.getLogger()
 
 
-@pytest.mark.xfail(reason="Missing ray_tracing for prod6 in Derived-DB")
-def test_get_on_axis_eff_optical_area(telescope_model_lst):
-    tel_model = telescope_model_lst
-
-    assert tel_model.get_on_axis_eff_optical_area().value == pytest.approx(
-        365.48310154491
-    )  # Value for LST -1
-
-
 # depends on prod5; prod6 is incomplete in the DB
 def test_read_two_dim_wavelength_angle(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
@@ -54,7 +45,6 @@ def test_read_incidence_angle_distribution(telescope_model_sst):
 
 
 # depends on prod5 (no 2D camera file file in prod6)
-@pytest.mark.xfail(reason="Test requires Derived-Values Database")
 def test_calc_average_curve(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
     tel_model.write_sim_telarray_config_file()
@@ -70,7 +60,6 @@ def test_calc_average_curve(telescope_model_sst_prod5):
 
 
 # depends on prod5 (no 2D camera file file in prod6)
-@pytest.mark.xfail(reason="Test requires Derived-Values Database")
 def test_export_table_to_model_directory(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
     tel_model.write_sim_telarray_config_file()
