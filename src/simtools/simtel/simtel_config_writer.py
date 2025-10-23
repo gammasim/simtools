@@ -14,57 +14,8 @@ from simtools.io import ascii_handler
 from simtools.simtel.pulse_shapes import generate_pulse_from_risefall
 from simtools.utils import names
 
-
-def write_lightpulse_table_gauss_expconv(
-    file_path,
-    width_ns=None,
-    exp_decay_ns=None,
-    dt_ns=0.1,
-    duration_sigma=6.0,
-):
-    """Write a pulse table for a Gaussian convolved with a exponential.
-
-    Provide rise and fall widths: width_ns is the 10-90 rise time (ns) and
-    exp_decay_ns is the 90-10 fall time (ns). Parameters are solved so the
-    convolved pulse matches these widths and is normalized to peak 1.
-
-    Parameters
-    ----------
-    file_path : Path
-        Output file path.
-    width_ns : float
-        Target 10-90 rise time (ns).
-    exp_decay_ns : float
-        Target 90-10 fall time (ns).
-    dt_ns : float
-        Time step (ns) for the table.
-    duration_sigma : float
-        Sets time window as [-duration_sigma*sigma, +duration_sigma*tau].
-
-    Returns
-    -------
-    Path
-        The path to the written file.
-    """
-    logger = logging.getLogger(__name__)
-    if width_ns is None or exp_decay_ns is None:
-        raise ValueError("width_ns (rise 10-90) and exp_decay_ns (fall 90-10) are required")
-    logger.debug(
-        f"Generating lightpulse table with rise10-90={width_ns}"
-        f" ns, fall90-10={exp_decay_ns} ns, dt={dt_ns} ns"
-    )
-
-    t, y = generate_pulse_from_risefall(
-        width_ns, exp_decay_ns, dt_ns=dt_ns, duration_sigma=duration_sigma
-    )
-
-    file_path = Path(file_path)
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-    with file_path.open("w", encoding="utf-8") as fh:
-        fh.write("# time[ns] amplitude\n")
-        for ti, yi in zip(t, y):
-            fh.write(f"{ti:.6f} {yi:.8f}\n")
-    return file_path
+# Module-level logger for class/static utilities
+logger = logging.getLogger(__name__)
 
 
 def sim_telarray_random_seeds(seed, number):
@@ -174,6 +125,39 @@ class SimtelConfigWriter:
                 telescope_design_model=_telescope_design_model,
             ):
                 file.write(f"{meta}\n")
+
+    @staticmethod
+    def write_lightpulse_table_gauss_expconv(
+        file_path,
+        width_ns=None,
+        exp_decay_ns=None,
+        dt_ns=0.1,
+        duration_sigma=6.0,
+    ):
+        """Write a pulse table for a Gaussian convolved with an exponential.
+
+        Provide rise and fall widths: width_ns is the 10-90 rise time (ns) and
+        exp_decay_ns is the 90-10 fall time (ns). Parameters are solved so the
+        convolved pulse matches these widths and is normalized to peak 1.
+
+        Note: This method assumes the parent directory of file_path exists.
+        """
+        if width_ns is None or exp_decay_ns is None:
+            raise ValueError("width_ns (rise 10-90) and exp_decay_ns (fall 90-10) are required")
+        logger.info(
+            f"Generating lightpulse table with rise10-90={width_ns} ns, "
+            f"fall90-10={exp_decay_ns} ns, dt={dt_ns} ns"
+        )
+
+        t, y = generate_pulse_from_risefall(
+            width_ns, exp_decay_ns, dt_ns=dt_ns, duration_sigma=duration_sigma
+        )
+
+        with open(file_path, "w", encoding="utf-8") as fh:
+            fh.write("# time[ns] amplitude\n")
+            for ti, yi in zip(t, y):
+                fh.write(f"{ti:.6f} {yi:.8f}\n")
+        return Path(file_path)
 
     def _get_parameters_for_sim_telarray(self, parameters, config_file_path):
         """
