@@ -12,7 +12,7 @@ import numpy as np
 from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.runners.simtel_runner import SimtelRunner
-from simtools.simtel.simtel_config_writer import write_lightpulse_table_gauss_expconv
+from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 from simtools.utils.geometry import fiducial_radius_from_shape
 
@@ -349,18 +349,26 @@ class SimulatorLightEmission(SimtelRunner):
         dist_cm = self.calculate_distance_focal_plane_calibration_device().to(u.cm).value
         angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
 
-        # Build pulse table for ff-1m for LST/NectarCam: Gaussian rise + (Gaussian x Exponential)
+        # Build pulse table for ff-1m: Gaussian rise + (Gaussian x Exponential)
         # Only apply when an exponential decay parameter exists; else fall back to token string.
         pulse_arg = self._get_pulse_shape_string_for_sim_telarray()
         width_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
         exp_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_exp_decay")
         if isinstance(exp_q, u.Quantity) and isinstance(width_q, u.Quantity):
             try:
-                config_directory = self.io_handler.get_model_configuration_directory(
-                    model_version=self.site_model.model_version
-                )
-                table_path = Path(config_directory) / "flasher_pulse_shape.dat"
-                write_lightpulse_table_gauss_expconv(
+                base_dir = self.io_handler.get_output_directory("pulse_shapes")
+
+                def _sanitize_name(value):
+                    return "".join(
+                        ch if (ch.isalnum() or ch in ("-", "_")) else "_" for ch in str(value)
+                    )
+
+                tel = self.light_emission_config.get("telescope") or "telescope"
+                cal = self.light_emission_config.get("light_source") or "calibration"
+                fname = f"flasher_pulse_shape_{_sanitize_name(tel)}_{_sanitize_name(cal)}.dat"
+                table_path = base_dir / fname
+
+                SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
                     file_path=table_path,
                     width_ns=width_q.to(u.ns).value,
                     exp_decay_ns=exp_q.to(u.ns).value,

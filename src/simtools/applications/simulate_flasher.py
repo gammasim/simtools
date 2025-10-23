@@ -28,8 +28,8 @@ Example Usage
 
     .. code-block:: console
 
-        simtools-simulate-flasher --run_mode full_simulation  \
-        --light_source MSFx-NectarCam --model_version 6.0    \
+        simtools-simulate-flasher --run_mode full_simulation \
+        --light_source MSFx-NectarCam --model_version 6.0 \
         --telescope MSTS-04 --site South --run_number 1 \
         --array_layout_name 1mst
 
