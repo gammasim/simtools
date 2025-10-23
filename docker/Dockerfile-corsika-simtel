@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1.4
 # Dockerfile for base CORSIKA / sim_telarray build.
 #
-# Contains only CORSIKA (non-optimized / optimized) and sim_telarray
+# Contains CORSIKA (possibly optimized; with and without curved atmosphere)
+# and sim_telarray
 # Requires CORSIKA and sim_telarray source code tarballs (plus tarball for
 # CORSIKA optimized build) to be in the same directory as this Dockerfile.
 
@@ -14,6 +15,7 @@ ARG HADRONIC_MODEL="qgs2"
 ARG AVX_FLAG="avx2"
 ARG BERNLOHR_VERSION="1.68"
 ARG AUTOCONF_VERSION="2.71"
+ARG CORSIKA_PLUS_OPT=""  # add curved for curved atmosphere build
 
 #
 # hadolint global ignore=DL3013,DL3033,DL3041,SC1091
@@ -43,6 +45,7 @@ ARG CORSIKA_VERSION
 ARG BERNLOHR_VERSION
 ARG CORSIKA_OPT_PATCH_VERSION
 ARG AUTOCONF_VERSION
+ARG CORSIKA_PLUS_OPT
 
 ENV GCC_PATH="/usr/bin/"
 
@@ -76,41 +79,57 @@ WORKDIR /workdir/sim_telarray/corsika-$CORSIKA_VERSION
 RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
         patch -b -p0 src/corsika.F < "../corsika-77550.patch"; \
     fi && \
-    if [ "$AVX_FLAG" = "no_opt" ]; then \
-        ../corsika_build_script "$HADRONIC_MODEL" generic; \
-    else \
+    if [ "$AVX_FLAG" != "no_opt" ]; then \
         ./corsika_opt_patching.sh && \
-        autoreconf && \
-        ../corsika_build_script "$HADRONIC_MODEL" generic cerenkopt vlibm; \
+        autoreconf; \
     fi
 
 # Build non-optimized / optimized CORSIKA
 WORKDIR /workdir/sim_telarray
-RUN make -C "corsika-$CORSIKA_VERSION" clean && rm -f ./*/*.a lib/*/*.a && \
-    AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
-    AVX_EXTRA_FLAG="" && \
-    CFLAGS="" && CXXFLAGS="" && FFLAGS="" && \
-    if [ "$AVX_FLAG" = "no_opt" ]; then \
-        CFLAGS="-g  -std=c99 -O3"; \
-        CXXFLAGS="-g  -std=c99 -O3"; \
-        FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -O3"; \
-    else \
-        CFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
-        CXXFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
-        FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
-    fi && \
-    make -C "corsika-$CORSIKA_VERSION" \
-        CC="${GCC_PATH}/gcc -static" \
-        CXX="${GCC_PATH}/g++ -static" \
-        CPP="${GCC_PATH}/gcc -static -E" \
-        F77="${GCC_PATH}/gfortran -L/lib64/" \
-        CFLAGS="${CFLAGS}" \
-        CXXFLAGS="${CXXFLAGS}" \
-        FFLAGS="${FFLAGS}" \
-        install
+RUN for variant in curved standard; do \
+        cd ./corsika-$CORSIKA_VERSION && \
+        if [ "$variant" = "curved" ]; then \
+            sed -i.bak 's/plusopt=""/plusopt="curved "/' ../corsika_build_script; \
+        else \
+            if [ -f ./corsika_build_script.bak ]; then \
+                mv ../corsika_build_script.bak ../corsika_build_script; \
+            fi; \
+        fi && \
+        if [ "$AVX_FLAG" = "no_opt" ]; then \
+            ../corsika_build_script "$HADRONIC_MODEL" generic; \
+        else \
+            ../corsika_build_script "$HADRONIC_MODEL" generic cerenkopt vlibm; \
+        fi && \
+        cd .. && \
+        make -C "corsika-$CORSIKA_VERSION" clean && rm -f ./*/*.a lib/*/*.a && \
+        AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
+        AVX_EXTRA_FLAG="" && \
+        CFLAGS="" && CXXFLAGS="" && FFLAGS="" && \
+        if [ "$AVX_FLAG" = "no_opt" ]; then \
+            CFLAGS="-g  -std=c99 -O3"; \
+            CXXFLAGS="-g  -std=c99 -O3"; \
+            FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -O3"; \
+        else \
+            CFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
+            CXXFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
+            FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
+        fi && \
+        make -C "corsika-$CORSIKA_VERSION" \
+            CC="${GCC_PATH}/gcc -static" \
+            CXX="${GCC_PATH}/g++ -static" \
+            CPP="${GCC_PATH}/gcc -static -E" \
+            F77="${GCC_PATH}/gfortran -L/lib64/" \
+            CFLAGS="${CFLAGS}" \
+            CXXFLAGS="${CXXFLAGS}" \
+            FFLAGS="${FFLAGS}" \
+            install && \
+        if [ "$variant" = "curved" ]; then \
+            mv -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-${CORSIKA_VERSION}/run/corsika-$variant"; \
+        else \
+            mv -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-${CORSIKA_VERSION}/run/corsika"; \
+        fi; \
+    done
 
-# Rename executable to 'corsika'
-RUN mv -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-${CORSIKA_VERSION}/run/corsika"
 # Build sim_telarray (with and without debug options)
 RUN touch corsika-$CORSIKA_VERSION.tar.gz && \
     # build with debug options; move binary to temporary location (to avoid being purged in next step)
@@ -156,7 +175,8 @@ RUN echo "build_opt: $BUILD_OPT" > ./build_opts.yml && \
     echo "avx_flag: $AVX_FLAG" >> ./build_opts.yml && \
     echo "corsika_version: $CORSIKA_VERSION" >> ./build_opts.yml && \
     echo "corsika_opt_patch_version: $CORSIKA_OPT_PATCH_VERSION" >> ./build_opts.yml && \
-    echo "bernlohr_version: $BERNLOHR_VERSION" >> ./build_opts.yml
+    echo "bernlohr_version: $BERNLOHR_VERSION" >> ./build_opts.yml && \
+    echo "corsika_plus_opt: $CORSIKA_PLUS_OPT" >> ./build_opts.yml
 
 # Final stage - minimal base image with CORSIKA and sim_telarray
 FROM almalinux:9.5-minimal
