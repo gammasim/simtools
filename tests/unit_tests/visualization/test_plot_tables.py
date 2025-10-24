@@ -121,7 +121,7 @@ def test_read_table_data_from_model_database(
 
     result = plot_tables.read_table_data(config, db_config)
 
-    mock_db_handler_class.assert_called_once_with(mongo_db_config=db_config)
+    mock_db_handler_class.assert_called_once_with(db_config=db_config)
     mock_db_handler.export_model_file.assert_called_once_with(
         parameter="test_parameter",
         site="test_site",
@@ -162,7 +162,7 @@ def test_export_model_file(mock_db_handler_class):
 
     plot_tables.read_table_data(config, db_config)
 
-    mock_db_handler_class.assert_called_once_with(mongo_db_config=db_config)
+    mock_db_handler_class.assert_called_once_with(db_config=db_config)
     mock_db_handler.export_model_file.assert_called_once_with(
         parameter="test_parameter",
         site="test_site",
@@ -192,7 +192,7 @@ def test_export_model_file_site_only(mock_db_handler_class):
 
     plot_tables.read_table_data(config, db_config)
 
-    mock_db_handler_class.assert_called_once_with(mongo_db_config=db_config)
+    mock_db_handler_class.assert_called_once_with(db_config=db_config)
     mock_db_handler.export_model_file.assert_called_once_with(
         parameter="test_parameter",
         site="test_site",

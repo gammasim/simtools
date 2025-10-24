@@ -52,8 +52,8 @@ def mock_run_simulations_and_analysis_string():
 def dummy_tel():
     class DummyTel:
         def __init__(self):
-            self.change_parameter = MagicMock(name="change_parameter")
-            self.export_parameter_file = MagicMock(name="export_parameter_file")
+            self.overwrite_model_parameter = MagicMock(name="overwrite_model_parameter")
+            self.overwrite_model_file = MagicMock(name="overwrite_model_file")
             self.get_parameter_value = MagicMock(name="get_parameter_value", return_value=[0.3])
 
     return DummyTel()
@@ -98,8 +98,8 @@ def test_define_telescope_model(
             model_version=args_dict["model_version"],
         )
         mock_find_file.assert_not_called()
-        tel.change_parameter.assert_not_called()
-        tel.export_parameter_file.assert_not_called()
+        tel.overwrite_model_parameter.assert_not_called()
+        tel.overwrite_model_file.assert_not_called()
 
     # mirror list and random focal length
     with (
@@ -125,8 +125,8 @@ def test_define_telescope_model(
             model_version=args_dict["model_version"],
         )
         mock_find_file.assert_called_once()
-        assert tel.change_parameter.call_count == 2
-        tel.export_parameter_file.assert_called_once()
+        assert tel.overwrite_model_parameter.call_count == 2
+        tel.overwrite_model_file.assert_called_once()
 
 
 def test_define_telescope_model_test_errors(

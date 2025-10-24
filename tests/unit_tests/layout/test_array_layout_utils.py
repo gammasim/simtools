@@ -371,14 +371,14 @@ def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
 
     expected_calls = [
         mocker.call(
-            mongo_db_config=db_config,
+            db_config=db_config,
             model_version=model_version,
             site="north",
             array_elements=None,
             layout_name="array1",
         ),
         mocker.call(
-            mongo_db_config=db_config,
+            db_config=db_config,
             model_version=model_version,
             site="north",
             array_elements=None,
@@ -430,7 +430,7 @@ def test_get_array_layouts_from_db_with_layout_name(mock_array_model):
 
     # Assert that ArrayModel was initialized with the correct parameters.
     mock_array_model.assert_called_once_with(
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=model_version,
         site=site,
         array_elements=None,
@@ -483,21 +483,21 @@ def test_get_array_layouts_from_db_without_layout_name(mocker, mock_array_model)
 
     # Assert that SiteModel was correctly used.
     mock_site_model.assert_called_once_with(
-        site=site, model_version=model_version, mongo_db_config=db_config
+        site=site, model_version=model_version, db_config=db_config
     )
     instance_site.get_list_of_array_layouts.assert_called_once()
 
     # Assert that ArrayModel was called for each layout returned by SiteModel.
     calls = [
         mocker.call(
-            mongo_db_config=db_config,
+            db_config=db_config,
             model_version=model_version,
             site=site,
             array_elements=None,
             layout_name="layout1",
         ),
         mocker.call(
-            mongo_db_config=db_config,
+            db_config=db_config,
             model_version=model_version,
             site=site,
             array_elements=None,
@@ -637,7 +637,7 @@ def test_get_array_layout_dict_with_layout_name(mock_array_model):
 
     # Verify ArrayModel initialization
     mock_array_model.assert_called_once_with(
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=model_version,
         site=site,
         array_elements=None,
@@ -672,7 +672,7 @@ def test_get_array_layout_dict_with_telescope_list(mock_array_model):
 
     # Verify ArrayModel initialization
     mock_array_model.assert_called_once_with(
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=model_version,
         site=site,
         array_elements=telescope_list,
@@ -703,7 +703,7 @@ def test_read_array_layouts_from_db_specific_layouts(mocker):
 
     assert result == {"LST": [1, 2], "MST": [3, 4]}
     mock_site_model.assert_called_once_with(
-        site=site, model_version=model_version, mongo_db_config=db_config
+        site=site, model_version=model_version, db_config=db_config
     )
     assert instance.get_array_elements_for_layout.call_count == 2
     instance.get_array_elements_for_layout.assert_any_call("LST")

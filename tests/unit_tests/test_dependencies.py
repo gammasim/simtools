@@ -9,16 +9,13 @@ from simtools import dependencies
 
 
 @pytest.fixture
-def mongo_db_config():
+def db_config():
     return {
         "db_simulation_model": "sim_model_db",
         "db_simulation_model_version": "v1.0.0",
+        "host": "localhost",
+        "port": 27017,
     }
-
-
-@pytest.fixture
-def db_handler_function():
-    return "simtools.dependencies.DatabaseHandler"
 
 
 @pytest.fixture
@@ -58,7 +55,7 @@ def get_build_options_literal():
 
 def test_get_version_string_success(
     monkeypatch,
-    mongo_db_config,
+    db_config,
     fake_path,
     corsika_version_string,
     corsika_request_for_input,
@@ -90,18 +87,16 @@ def test_get_version_string_success(
                     "Build options: {'corsika_version': '7.7'}\n"
                     "Runtime environment: None\n"
                 )
-                assert dependencies.get_version_string(mongo_db_config) == expected_output
+                assert dependencies.get_version_string(db_config) == expected_output
 
 
 def test_get_version_string_no_env_var(
     monkeypatch,
-    mongo_db_config,
+    db_config,
     env_not_set_error,
     caplog,
     get_build_options_literal,
 ):
-    monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
-
     with caplog.at_level(logging.WARNING):
         with mock.patch(get_build_options_literal, return_value=None):
             expected_output = (
@@ -112,16 +107,23 @@ def test_get_version_string_no_env_var(
                 "Build options: None\n"
                 "Runtime environment: None\n"
             )
-            assert dependencies.get_version_string(mongo_db_config) == expected_output
+            assert dependencies.get_version_string(db_config) == expected_output
 
     assert env_not_set_error in caplog.text
 
 
-def test_get_database_version_or_name_success(mongo_db_config):
-    assert dependencies.get_database_version_or_name(mongo_db_config) == "v1.0.0"
-    assert dependencies.get_database_version_or_name(mongo_db_config, False) == "sim_model_db"
-
+def test_get_database_version_or_name_success(db_config):
+    assert dependencies.get_database_version_or_name(db_config) == "v1.0.0"
     assert dependencies.get_database_version_or_name(None) is None
+
+
+def test_get_database_version_or_name_no_version(db_config):
+    db_config_no_version = {
+        "db_simulation_model": "sim_model_db",
+        "host": "localhost",
+        "port": 27017,
+    }
+    assert dependencies.get_database_version_or_name(db_config_no_version) is None
 
 
 def test_get_sim_telarray_version_success(monkeypatch, fake_path, subprocess_run):

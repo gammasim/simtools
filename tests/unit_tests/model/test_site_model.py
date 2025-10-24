@@ -13,7 +13,7 @@ logger = logging.getLogger()
 def test_site_model(db_config, model_version):
     _south = SiteModel(
         site="South",
-        mongo_db_config=db_config,
+        db_config=db_config,
         label="testing-sitemodel",
         model_version=model_version,
     )
@@ -29,7 +29,7 @@ def test_site_model(db_config, model_version):
 def test_get_corsika_site_parameters(db_config, model_version):
     _north = SiteModel(
         site="North",
-        mongo_db_config=db_config,
+        db_config=db_config,
         label="testing-sitemodel",
         model_version=model_version,
     )
@@ -39,10 +39,10 @@ def test_get_corsika_site_parameters(db_config, model_version):
     assert "ARRANG" in _north.get_corsika_site_parameters(config_file_style=True)
 
 
-def test_get_corsika_site_parameters_with_model_directory(array_model):
+def test_get_corsika_site_parameters_with_model_directory(array_model_north):
     """Test that the atmospheric profile file is provided with the model directory."""
-    model_directory = array_model.get_config_directory()
-    corsika_site_parameters = array_model.site_model.get_corsika_site_parameters(
+    model_directory = array_model_north.get_config_directory()
+    corsika_site_parameters = array_model_north.site_model.get_corsika_site_parameters(
         config_file_style=True, model_directory=model_directory
     )
     assert "model/" in str(corsika_site_parameters["IACT ATMOFILE"][0])
@@ -51,7 +51,7 @@ def test_get_corsika_site_parameters_with_model_directory(array_model):
 def test_get_array_elements_for_layout(db_config, model_version):
     _north = SiteModel(
         site="North",
-        mongo_db_config=db_config,
+        db_config=db_config,
         label="testing-sitemodel",
         model_version=model_version,
     )
@@ -69,7 +69,7 @@ def test_get_array_elements_for_layout(db_config, model_version):
 def test_get_list_of_array_layouts(db_config, model_version):
     _north = SiteModel(
         site="North",
-        mongo_db_config=db_config,
+        db_config=db_config,
         label="testing-sitemodel",
         model_version=model_version,
     )
@@ -81,7 +81,7 @@ def test_get_list_of_array_layouts(db_config, model_version):
 def test_export_atmospheric_transmission_file(db_config, model_version, tmp_path, mocker):
     _south = SiteModel(
         site="South",
-        mongo_db_config=db_config,
+        db_config=db_config,
         label="testing-sitemodel",
         model_version=model_version,
     )
@@ -108,7 +108,7 @@ def test_export_atmospheric_transmission_file(db_config, model_version, tmp_path
 def test_get_nsb_integrated_flux(db_config, model_version, mocker):
     _south = SiteModel(
         site="South",
-        mongo_db_config=db_config,
+        db_config=db_config,
         label="testing-sitemodel",
         model_version=model_version,
     )
