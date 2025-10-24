@@ -116,13 +116,12 @@ RUN for variant in curved ""; do \
             install && \
         if [ "$variant" = "curved" ]; then \
             mkdir -p corsika-run && \
-            mv -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-run/corsika-$variant" && \
+            mv -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}"* "corsika-run/corsika-$variant" && \
             cp -v -f "corsika-${CORSIKA_VERSION}/src/corsikacompilefile.f" "corsika-run/corsikacompilefile_$variant.f"; \
         else \
-            mv -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-${CORSIKA_VERSION}/run/corsika"; \
-            cp -v -f "corsika-${CORSIKA_VERSION}/src/corsikacompilefile.f" "corsika-${CORSIKA_VERSION}/run/corsikacompilefile.f"; \
-            cp -v -f "corsika-${CORSIKA_VERSION}/run/corsika" corsika-run/ && \
-            cp -v -f "corsika-${CORSIKA_VERSION}/run/corsikacompilefile.f" corsika-run/; \
+            mkdir -p corsika-run && \
+            mv -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}"* "corsika-run/corsika" && \
+            cp -v -f "corsika-${CORSIKA_VERSION}/src/corsikacompilefile.f" "corsika-run/corsikacompilefile.f"; \
         fi && \
         if [ "$variant" = "" ]; then \
             cp -r -v "corsika-${CORSIKA_VERSION}/run/"* corsika-run/ 2>/dev/null || true; \
