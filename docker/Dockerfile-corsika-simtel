@@ -124,7 +124,7 @@ RUN for variant in curved ""; do \
         if [ -d corsika-run ]; then \
             cp -v -f "corsika-${CORSIKA_VERSION}/run/corsika"* corsika-run/; \
         else \
-            cp -v -f ./corsika-$CORSIKA_VERSION/run corsika-run; \
+            cp -v -f -r ./corsika-$CORSIKA_VERSION/run corsika-run; \
         fi; \
     done
 
