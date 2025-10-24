@@ -250,6 +250,13 @@ class CommandLineParser(argparse.ArgumentParser):
                 type=str,
                 default=None,
             )
+        _job_group.add_argument(
+            "--overwrite_model_parameters",
+            help="File name to overwrite model parameters from DB with provided values",
+            type=str,
+            required=False,
+        )
+
         if any(
             option in model_options for option in ["site", "telescope", "layout", "layout_file"]
         ):
@@ -260,15 +267,6 @@ class CommandLineParser(argparse.ArgumentParser):
                 "--telescope",
                 help="telescope model name (e.g., LSTN-01, SSTS-design, ...)",
                 type=self.telescope,
-            )
-            _job_group.add_argument(
-                "--telescope_model_file",
-                help=(
-                    "Path to a YAML file containing modifications to the telescope model. "
-                    "This feature is intended for developers and lacks validation."
-                ),
-                type=Path,
-                required=False,
             )
         if "layout" in model_options or "layout_file" in model_options:
             _job_group = self._add_model_option_layout(

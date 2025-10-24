@@ -131,7 +131,7 @@ def _read_table_from_model_database(table_config, db_config):
     Table
         Astropy table
     """
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(db_config=db_config)
     return db.export_model_file(
         parameter=table_config["parameter"],
         site=table_config["site"],

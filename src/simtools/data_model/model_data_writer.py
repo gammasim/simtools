@@ -186,7 +186,7 @@ class ModelDataWriter:
         ValueError
             If parameter with the same version exists in the database.
         """
-        db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+        db = db_handler.DatabaseHandler(db_config=db_config)
         try:
             db.get_model_parameter(
                 parameter=parameter_name,
