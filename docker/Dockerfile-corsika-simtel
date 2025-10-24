@@ -87,7 +87,7 @@ WORKDIR /workdir/sim_telarray
 # hadolint ignore=DL3003
 RUN for variant in curved ""; do \
         (cd ./corsika-$CORSIKA_VERSION && \
-        if [ "$AVX_FLAG" = "no_opt" ]; then \
+        if [ "$AVX_FLAG" = "no_opt" ] || [ "$variant" = "curved" ]; then \
             ../corsika_build_script "$HADRONIC_MODEL" generic $variant; \
         else \
             ../corsika_build_script "$HADRONIC_MODEL" generic cerenkopt vlibm $variant; \
@@ -96,7 +96,7 @@ RUN for variant in curved ""; do \
         AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
         AVX_EXTRA_FLAG="" && \
         CFLAGS="" && CXXFLAGS="" && FFLAGS="" && \
-        if [ "$AVX_FLAG" = "no_opt" ]; then \
+        if [ "$AVX_FLAG" = "no_opt" ] || [ "$variant" = "curved" ]; then \
             CFLAGS="-g  -std=c99 -O3"; \
             CXXFLAGS="-g  -std=c99 -O3"; \
             FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -O3"; \
