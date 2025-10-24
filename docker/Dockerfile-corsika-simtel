@@ -114,14 +114,20 @@ RUN for variant in curved ""; do \
             CXXFLAGS="${CXXFLAGS}" \
             FFLAGS="${FFLAGS}" \
             install && \
+        echo "=== Listing corsika-${CORSIKA_VERSION}/run/ after install (variant: $variant) ===" && \
+        ls -la "corsika-${CORSIKA_VERSION}/run/" && \
         if [ "$variant" = "curved" ]; then \
             mkdir -p corsika-run && \
-            mv -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}"* "corsika-run/corsika-$variant" && \
-            cp -v -f "corsika-${CORSIKA_VERSION}/src/corsikacompilefile.f" "corsika-run/corsikacompilefile_$variant.f"; \
+            mv -v -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-run/corsika-$variant" && \
+            cp -v -f "corsika-${CORSIKA_VERSION}/src/corsikacompilefile.f" "corsika-run/corsikacompilefile_$variant.f" && \
+            echo "=== After curved variant copy, corsika-run contains: ===" && \
+            ls -la corsika-run/; \
         else \
             mkdir -p corsika-run && \
-            mv -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}"* "corsika-run/corsika" && \
-            cp -v -f "corsika-${CORSIKA_VERSION}/src/corsikacompilefile.f" "corsika-run/corsikacompilefile.f"; \
+            mv -v -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-run/corsika" && \
+            cp -v -f "corsika-${CORSIKA_VERSION}/src/corsikacompilefile.f" "corsika-run/corsikacompilefile.f" && \
+            echo "=== After non-curved variant copy, corsika-run contains: ===" && \
+            ls -la corsika-run/; \
         fi && \
         if [ "$variant" = "" ]; then \
             cp -r -v "corsika-${CORSIKA_VERSION}/run/"* corsika-run/ 2>/dev/null || true; \
@@ -149,7 +155,8 @@ RUN rm -rf ./corsika-$CORSIKA_VERSION* && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/* && \
     rm -f build_all clean_all corsika_build_script init_batch_job_SGE && \
     rm -f new_export test_build_all && \
-    rm -rf ./sim_telarray/cfg ./lib ./include
+    rm -rf ./sim_telarray/cfg ./lib ./include && \
+    rm -f ./example_scripts/Prod6/'*'
 
 # Use QGSJet tables downloaded externally (overwrite any existing copies)
 WORKDIR /workdir/sim_telarray/corsika-run
