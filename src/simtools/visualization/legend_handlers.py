@@ -21,10 +21,11 @@ TELESCOPE_CONFIG = {
     "RLD": {"color": "brown", "radius": 2.0, "shape": "hexagon", "filled": True},
     "STP": {"color": "olive", "radius": 2.0, "shape": "hexagon", "filled": True},
     "MSP": {"color": "teal", "radius": 2.0, "shape": "hexagon", "filled": True},
-    "ILL": {"color": "navy", "radius": 2.0, "shape": "hexagon", "filled": True},
+    "ILL": {"color": "red", "radius": 2.0, "shape": "hexagon", "filled": False},
     "WST": {"color": "maroon", "radius": 2.0, "shape": "hexagon", "filled": True},
     "ASC": {"color": "cyan", "radius": 2.0, "shape": "hexagon", "filled": True},
     "DUS": {"color": "magenta", "radius": 2.0, "shape": "hexagon", "filled": True},
+    "SUB": {"color": "blue", "radius": 2.0, "shape": "hexagon", "filled": True},
 }
 
 REFERENCE_RADIUS = 12.5
