@@ -42,6 +42,8 @@ def plot_array_layout(
     legend_location="best",
     bounds_mode: str = "exact",
     padding: float = 0.1,
+    x_lim: tuple[float, float] | None = None,
+    y_lim: tuple[float, float] | None = None,
 ):
     """
     Plot telescope array layout.
@@ -77,8 +79,15 @@ def plot_array_layout(
         maximum extent (default), while "exact" uses individual x/y min/max bounds.
     padding : float
         Fractional padding applied around computed extents (used for both modes).
+    x_lim, y_lim : tuple(float, float), optional
+        Explicit axis limits in meters. If provided, these override axes_range and bounds_mode
+        for the respective axis. If only one is provided, the other axis is derived per mode.
     """
     fig, ax = plt.subplots(1)
+
+    # If explicit limits are provided (one or both), filter patches accordingly
+    filter_x = x_lim
+    filter_y = y_lim
 
     patches, plot_range, highlighted_patches, bounds = get_patches(
         ax,
@@ -88,6 +97,8 @@ def plot_array_layout(
         marker_scaling,
         grayed_out_elements,
         highlighted_elements,
+        filter_x_lim=filter_x,
+        filter_y_lim=filter_y,
     )
 
     plot_range, bounds = _get_patches_for_background_telescopes(
@@ -98,36 +109,58 @@ def plot_array_layout(
         bounds_mode,
         plot_range,
         bounds,
+        filter_x_lim=filter_x,
+        filter_y_lim=filter_y,
     )
 
     if legend_location != "no_legend":
         update_legend(ax, telescopes, grayed_out_elements, legend_location)
-    x_lim, y_lim = _get_axis_limits(axes_range, bounds_mode, padding, plot_range, bounds)
+
+    x_lim, y_lim = _get_axis_limits(
+        axes_range, bounds_mode, padding, plot_range, bounds, x_lim, y_lim
+    )
+
     finalize_plot(ax, patches, "Easting [m]", "Northing [m]", x_lim, y_lim, highlighted_patches)
 
     return fig
 
 
-def _get_axis_limits(axes_range, bounds_mode, padding, plot_range, bounds):
+def _get_axis_limits(
+    axes_range,
+    bounds_mode,
+    padding,
+    plot_range,
+    bounds,
+    x_lim_override=None,
+    y_lim_override=None,
+):
     """Get axis limits based on mode and padding."""
-    if axes_range is not None:
-        x_lim = (-axes_range, axes_range)
-        y_lim = (-axes_range, axes_range)
-    elif bounds_mode == "exact":
-        x_span = bounds.x_lim[1] - bounds.x_lim[0]
-        y_span = bounds.y_lim[1] - bounds.y_lim[0]
-        x_pad = padding * x_span
-        y_pad = padding * y_span
-        x_lim = (bounds.x_lim[0] - x_pad, bounds.x_lim[1] + x_pad)
-        y_lim = (bounds.y_lim[0] - y_pad, bounds.y_lim[1] + y_pad)
-    else:
+
+    def _derive_axis(axis: str) -> tuple[float, float]:
+        if bounds_mode == "exact":
+            if axis == "x":
+                span = bounds.x_lim[1] - bounds.x_lim[0]
+                pad = padding * span
+                return (bounds.x_lim[0] - pad, bounds.x_lim[1] + pad)
+            span = bounds.y_lim[1] - bounds.y_lim[0]
+            pad = padding * span
+            return (bounds.y_lim[0] - pad, bounds.y_lim[1] + pad)
+        # symmetric
         sym = plot_range
-        if padding is not None:
-            pad = max(0.0, min(1.0, float(padding)))
-            sym = sym * (1.0 + pad)
-        x_lim = (-sym, sym)
-        y_lim = (-sym, sym)
-    return x_lim, y_lim
+        padf = max(0.0, min(1.0, float(padding))) if padding is not None else 0.0
+        sym *= 1.0 + padf
+        return (-sym, sym)
+
+    # Highest priority: explicit overrides (per axis)
+    if x_lim_override is not None or y_lim_override is not None:
+        x_lim = x_lim_override if x_lim_override is not None else _derive_axis("x")
+        y_lim = y_lim_override if y_lim_override is not None else _derive_axis("y")
+        return x_lim, y_lim
+
+    if axes_range is not None:
+        return (-axes_range, axes_range), (-axes_range, axes_range)
+    # Derive both axes using selected mode
+    return _derive_axis("x"), _derive_axis("y")
 
 
 def _get_patches_for_background_telescopes(
@@ -138,13 +171,23 @@ def _get_patches_for_background_telescopes(
     bounds_mode,
     plot_range,
     bounds,
+    filter_x_lim=None,
+    filter_y_lim=None,
 ):
     """Get background telescope patches and update plot range/bounds."""
     if background_telescopes is None:
         return plot_range, bounds
 
     bg_patches, bg_range, _, bg_bounds = get_patches(
-        ax, background_telescopes, False, axes_range, marker_scaling
+        ax,
+        background_telescopes,
+        False,
+        axes_range,
+        marker_scaling,
+        None,
+        None,
+        filter_x_lim=filter_x_lim,
+        filter_y_lim=filter_y_lim,
     )
     ax.add_collection(PatchCollection(bg_patches, match_original=True, alpha=0.1))
     if axes_range is None:
@@ -164,6 +207,26 @@ def _get_patches_for_background_telescopes(
     return plot_range, bounds
 
 
+def _apply_limits_filter(telescopes, pos_x, pos_y, filter_x_lim, filter_y_lim):
+    """Filter telescope table and positions by optional axis limits."""
+    if filter_x_lim is None and filter_y_lim is None:
+        return telescopes, pos_x, pos_y
+
+    px = np.asarray(pos_x.to_value(u.m))
+    py = np.asarray(pos_y.to_value(u.m))
+    mask = np.ones(px.shape, dtype=bool)
+    if filter_x_lim is not None:
+        mask &= (px >= float(filter_x_lim[0])) & (px <= float(filter_x_lim[1]))
+    if filter_y_lim is not None:
+        mask &= (py >= float(filter_y_lim[0])) & (py <= float(filter_y_lim[1]))
+
+    if mask.size and mask.any():
+        return telescopes[mask], pos_x[mask], pos_y[mask]
+
+    # No telescopes within limits
+    return telescopes[:0], pos_x[:0], pos_y[:0]
+
+
 def get_patches(
     ax,
     telescopes,
@@ -172,6 +235,8 @@ def get_patches(
     marker_scaling,
     grayed_out_elements=None,
     highlighted_elements=None,
+    filter_x_lim=None,
+    filter_y_lim=None,
 ):
     """
     Get plot patches and axis range.
@@ -205,15 +270,26 @@ def get_patches(
         Min/max for x and y in meters.
     """
     pos_x, pos_y = get_positions(telescopes)
-    telescopes["pos_x_rotated"] = Column(pos_x)
-    telescopes["pos_y_rotated"] = Column(pos_y)
+    tel_table, pos_x, pos_y = _apply_limits_filter(
+        telescopes, pos_x, pos_y, filter_x_lim, filter_y_lim
+    )
+
+    tel_table["pos_x_rotated"] = Column(pos_x)
+    tel_table["pos_y_rotated"] = Column(pos_y)
 
     patches, radii, highlighted_patches = create_patches(
-        telescopes, marker_scaling, show_tel_label, ax, grayed_out_elements, highlighted_elements
+        tel_table, marker_scaling, show_tel_label, ax, grayed_out_elements, highlighted_elements
     )
 
     radii_q = u.Quantity(radii) if len(radii) > 0 else 0.0 * u.m
     r = float(np.nanmax(radii_q).to_value(u.m)) if np.size(radii_q) else 0.0
+
+    if len(pos_x) == 0:
+        bounds = PlotBounds(x_lim=(0.0, 0.0), y_lim=(0.0, 0.0))
+        if axes_range:
+            return patches, axes_range, highlighted_patches, bounds
+        return patches, 0.0, highlighted_patches, bounds
+
     x_min = float(np.nanmin(pos_x).to_value(u.m)) - r
     x_max = float(np.nanmax(pos_x).to_value(u.m)) + r
     y_min = float(np.nanmin(pos_y).to_value(u.m)) - r
