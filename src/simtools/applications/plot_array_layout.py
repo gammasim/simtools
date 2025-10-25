@@ -62,6 +62,11 @@ highlighted_array_elements : list, optional
     List of array elements to plot with red circles around them.
 legend_location : str, optional
     Location of the legend (default "best").
+bounds : str, optional
+    Axis bounds mode. Use "symmetric" for +-R with padding (default) or "exact" for
+    per-axis min/max bounds.
+padding : float, optional
+    Fractional padding applied around computed extents in both modes (default 0.1).
 
 Examples
 --------
@@ -88,6 +93,20 @@ Plot layout from a file with a list of telescopes:
 
     simtools-plot-array-layout
         --array_layout_file tests/resources/telescope_positions-North-ground.ecsv
+
+Use exact bounds with default padding:
+
+.. code-block:: console
+
+    simtools-plot-array-layout --array_layout_name alpha \
+        --site North --model_version 6.0.0 --bounds exact
+
+Use symmetric bounds with custom padding:
+
+.. code-block:: console
+
+    simtools-plot-array-layout --array_layout_name alpha \
+        --site North --model_version 6.0.0 --bounds symmetric --padding 0.15
 
 Plot layout from a parameter file with a list of telescopes:
 
@@ -201,11 +220,26 @@ def _parse():
         help=(
             "Location of the legend (e.g., 'best', 'upper right', 'upper left', "
             "'lower left', 'lower right', 'right', 'center left', 'center right', "
-            "'lower center', 'upper center', 'center')."
+            "'lower center', 'upper center', 'center', 'no_legend')."
         ),
         type=str,
         required=False,
         default="best",
+    )
+    config.parser.add_argument(
+        "--bounds",
+        help=("Axis bounds mode: 'symmetric' uses +-R with padding, 'exact' uses per-axis min/max"),
+        type=str,
+        choices=["symmetric", "exact"],
+        required=False,
+        default="symmetric",
+    )
+    config.parser.add_argument(
+        "--padding",
+        help=("Fractional padding applied around computed extents (used for both modes)."),
+        type=float,
+        required=False,
+        default=0.1,
     )
     return config.initialize(
         db_config=True,
@@ -305,6 +339,8 @@ def main():
             grayed_out_elements=app_context.args["grayed_out_array_elements"],
             highlighted_elements=app_context.args["highlighted_array_elements"],
             legend_location=app_context.args["legend_location"],
+            bounds_mode=app_context.args["bounds"],
+            padding=app_context.args["padding"],
         )
         site_string = ""
         if layout.get("site") is not None:
