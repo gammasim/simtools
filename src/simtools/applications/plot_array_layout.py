@@ -67,6 +67,12 @@ bounds : str, optional
     per-axis min/max bounds.
 padding : float, optional
     Fractional padding applied around computed extents in both modes (default 0.1).
+x_lim : tuple(float, float), optional
+    Explicit x-axis limits [xmin, xmax] in meters. When provided, overrides derived limits
+    and filters plotted elements by x.
+y_lim : tuple(float, float), optional
+    Explicit y-axis limits [ymin, ymax] in meters. When provided, overrides derived limits
+    and filters plotted elements by y.
 
 Examples
 --------
@@ -191,6 +197,24 @@ def _parse():
         type=float,
         required=False,
         default=None,
+    )
+    config.parser.add_argument(
+        "--x_lim",
+        help="Explicit x-axis limits [xmin xmax] in meters.",
+        type=float,
+        nargs=2,
+        required=False,
+        default=None,
+        metavar=("XMIN", "XMAX"),
+    )
+    config.parser.add_argument(
+        "--y_lim",
+        help="Explicit y-axis limits [ymin ymax] in meters.",
+        type=float,
+        nargs=2,
+        required=False,
+        default=None,
+        metavar=("YMIN", "YMAX"),
     )
     config.parser.add_argument(
         "--array_layout_name_background",
@@ -341,6 +365,8 @@ def main():
             legend_location=app_context.args["legend_location"],
             bounds_mode=app_context.args["bounds"],
             padding=app_context.args["padding"],
+            x_lim=tuple(app_context.args["x_lim"]) if app_context.args.get("x_lim") else None,
+            y_lim=tuple(app_context.args["y_lim"]) if app_context.args.get("y_lim") else None,
         )
         site_string = ""
         if layout.get("site") is not None:
