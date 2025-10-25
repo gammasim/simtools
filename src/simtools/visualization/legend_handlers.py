@@ -11,12 +11,20 @@ Radii are relative to a reference radius (REFERENCE_RADIUS).
 """
 TELESCOPE_CONFIG = {
     "LST": {"color": "darkorange", "radius": 12.5, "shape": "circle", "filled": False},
-    "MST": {"color": "dodgerblue", "radius": 9.15, "shape": "circle", "filled": True},
-    "SCT": {"color": "black", "radius": 7.15, "shape": "square", "filled": True},
-    "SST": {"color": "darkgreen", "radius": 3.0, "shape": "circle", "filled": True},
+    "MST": {"color": "dodgerblue", "radius": 9.15, "shape": "circle", "filled": False},
+    "SCT": {"color": "black", "radius": 7.15, "shape": "square", "filled": False},
+    "SST": {"color": "darkgreen", "radius": 3.0, "shape": "circle", "filled": False},
     "HESS": {"color": "grey", "radius": 6.0, "shape": "hexagon", "filled": True},
     "MAGIC": {"color": "grey", "radius": 8.5, "shape": "hexagon", "filled": True},
     "VERITAS": {"color": "grey", "radius": 6.0, "shape": "hexagon", "filled": True},
+    "CEI": {"color": "purple", "radius": 2.0, "shape": "hexagon", "filled": True},
+    "RLD": {"color": "brown", "radius": 2.0, "shape": "hexagon", "filled": True},
+    "STP": {"color": "olive", "radius": 2.0, "shape": "hexagon", "filled": True},
+    "MSP": {"color": "teal", "radius": 2.0, "shape": "hexagon", "filled": True},
+    "ILL": {"color": "navy", "radius": 2.0, "shape": "hexagon", "filled": True},
+    "WST": {"color": "maroon", "radius": 2.0, "shape": "hexagon", "filled": True},
+    "ASC": {"color": "cyan", "radius": 2.0, "shape": "hexagon", "filled": True},
+    "DUS": {"color": "magenta", "radius": 2.0, "shape": "hexagon", "filled": True},
 }
 
 REFERENCE_RADIUS = 12.5

@@ -2,16 +2,33 @@
 """Plot array elements for a layout."""
 
 from collections import Counter
+from typing import NamedTuple
 
 import astropy.units as u
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import numpy as np
 from astropy.table import Column
 from matplotlib.collections import PatchCollection
 
 from simtools.utils import geometry as transf
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
+
+
+class PlotBounds(NamedTuple):
+    """Axis-aligned bounds for the layout in meters.
+
+    Attributes
+    ----------
+    x_lim : tuple[float, float]
+        Min/max for x (meters).
+    y_lim : tuple[float, float]
+        Min/max for y (meters).
+    """
+
+    x_lim: tuple[float, float]
+    y_lim: tuple[float, float]
 
 
 def plot_array_layout(
@@ -23,6 +40,8 @@ def plot_array_layout(
     grayed_out_elements=None,
     highlighted_elements=None,
     legend_location="best",
+    bounds_mode: str = "exact",
+    padding: float = 0.1,
 ):
     """
     Plot telescope array layout.
@@ -50,10 +69,18 @@ def plot_array_layout(
     -------
     fig : Figure
         Matplotlib figure object.
+
+    Other Parameters
+    ----------------
+    bounds_mode : {"symmetric", "exact"}
+        Controls axis limits calculation. "symmetric" uses +-R where R is the padded
+        maximum extent (default), while "exact" uses individual x/y min/max bounds.
+    padding : float
+        Fractional padding applied around computed extents (used for both modes).
     """
     fig, ax = plt.subplots(1)
 
-    patches, plot_range, highlighted_patches = get_patches(
+    patches, plot_range, highlighted_patches, bounds = get_patches(
         ax,
         telescopes,
         show_tel_label,
@@ -63,18 +90,78 @@ def plot_array_layout(
         highlighted_elements,
     )
 
-    if background_telescopes is not None:
-        bg_patches, bg_range, _ = get_patches(
-            ax, background_telescopes, False, axes_range, marker_scaling
-        )
-        ax.add_collection(PatchCollection(bg_patches, match_original=True, alpha=0.1))
-        if axes_range is None:
-            plot_range = max(plot_range, bg_range)
+    plot_range, bounds = _get_patches_for_background_telescopes(
+        ax,
+        background_telescopes,
+        axes_range,
+        marker_scaling,
+        bounds_mode,
+        plot_range,
+        bounds,
+    )
 
-    update_legend(ax, telescopes, grayed_out_elements, legend_location)
-    finalize_plot(ax, patches, "Easting [m]", "Northing [m]", plot_range, highlighted_patches)
+    if legend_location != "no_legend":
+        update_legend(ax, telescopes, grayed_out_elements, legend_location)
+    x_lim, y_lim = _get_axis_limits(axes_range, bounds_mode, padding, plot_range, bounds)
+    finalize_plot(ax, patches, "Easting [m]", "Northing [m]", x_lim, y_lim, highlighted_patches)
 
     return fig
+
+
+def _get_axis_limits(axes_range, bounds_mode, padding, plot_range, bounds):
+    """Get axis limits based on mode and padding."""
+    if axes_range is not None:
+        x_lim = (-axes_range, axes_range)
+        y_lim = (-axes_range, axes_range)
+    elif bounds_mode == "exact":
+        x_span = bounds.x_lim[1] - bounds.x_lim[0]
+        y_span = bounds.y_lim[1] - bounds.y_lim[0]
+        x_pad = padding * x_span
+        y_pad = padding * y_span
+        x_lim = (bounds.x_lim[0] - x_pad, bounds.x_lim[1] + x_pad)
+        y_lim = (bounds.y_lim[0] - y_pad, bounds.y_lim[1] + y_pad)
+    else:
+        sym = plot_range
+        if padding is not None:
+            pad = max(0.0, min(1.0, float(padding)))
+            sym = sym * (1.0 + pad)
+        x_lim = (-sym, sym)
+        y_lim = (-sym, sym)
+    return x_lim, y_lim
+
+
+def _get_patches_for_background_telescopes(
+    ax,
+    background_telescopes,
+    axes_range,
+    marker_scaling,
+    bounds_mode,
+    plot_range,
+    bounds,
+):
+    """Get background telescope patches and update plot range/bounds."""
+    if background_telescopes is None:
+        return plot_range, bounds
+
+    bg_patches, bg_range, _, bg_bounds = get_patches(
+        ax, background_telescopes, False, axes_range, marker_scaling
+    )
+    ax.add_collection(PatchCollection(bg_patches, match_original=True, alpha=0.1))
+    if axes_range is None:
+        if bounds_mode == "symmetric":
+            plot_range = max(plot_range, bg_range)
+        else:
+            bounds = PlotBounds(
+                x_lim=(
+                    min(bounds.x_lim[0], bg_bounds.x_lim[0]),
+                    max(bounds.x_lim[1], bg_bounds.x_lim[1]),
+                ),
+                y_lim=(
+                    min(bounds.y_lim[0], bg_bounds.y_lim[0]),
+                    max(bounds.y_lim[1], bg_bounds.y_lim[1]),
+                ),
+            )
+    return plot_range, bounds
 
 
 def get_patches(
@@ -111,9 +198,11 @@ def get_patches(
     patches : list
         List of telescope patches.
     axes_range : float
-        Calculated or input axis range.
+        Calculated or input symmetric axis range (meters).
     highlighted_patches : list
         List of highlighted telescope patches.
+    bounds : PlotBounds
+        Min/max for x and y in meters.
     """
     pos_x, pos_y = get_positions(telescopes)
     telescopes["pos_x_rotated"] = Column(pos_x)
@@ -123,15 +212,22 @@ def get_patches(
         telescopes, marker_scaling, show_tel_label, ax, grayed_out_elements, highlighted_elements
     )
 
-    if axes_range:
-        return patches, axes_range, highlighted_patches
+    radii_q = u.Quantity(radii) if len(radii) > 0 else 0.0 * u.m
+    r = float(np.nanmax(radii_q).to_value(u.m)) if np.size(radii_q) else 0.0
+    x_min = float(np.nanmin(pos_x).to_value(u.m)) - r
+    x_max = float(np.nanmax(pos_x).to_value(u.m)) + r
+    y_min = float(np.nanmin(pos_y).to_value(u.m)) - r
+    y_max = float(np.nanmax(pos_y).to_value(u.m)) + r
+    bounds = PlotBounds(x_lim=(x_min, x_max), y_lim=(y_min, y_max))
 
-    r = max(radii).value
-    max_x = max(abs(pos_x.min().value), abs(pos_x.max().value)) + r
-    max_y = max(abs(pos_y.min().value), abs(pos_y.max().value)) + r
+    if axes_range:
+        return patches, axes_range, highlighted_patches, bounds
+
+    max_x = max(abs(x_min), abs(x_max))
+    max_y = max(abs(y_min), abs(y_max))
     updated_axes_range = max(max_x, max_y) * 1.1
 
-    return patches, updated_axes_range, highlighted_patches
+    return patches, updated_axes_range, highlighted_patches, bounds
 
 
 @u.quantity_input(x=u.m, y=u.m, radius=u.m)
@@ -158,23 +254,34 @@ def get_telescope_patch(name, x, y, radius, is_grayed_out=False):
         Circle or rectangle patch.
     """
     tel_type = names.get_array_element_type_from_name(name)
+    config = leg_h.get_telescope_config(tel_type)
     x, y, r = x.to(u.m), y.to(u.m), radius.to(u.m)
 
-    color = "gray" if is_grayed_out else leg_h.get_telescope_config(tel_type)["color"]
+    color = "gray" if is_grayed_out else config["color"]
+    fill_flag = True if is_grayed_out else bool(config.get("filled", True))
 
-    if tel_type == "SCTS":
+    if config.get("shape", "circle") == "square":
         return mpatches.Rectangle(
             ((x - r / 2).value, (y - r / 2).value),
             width=r.value,
             height=r.value,
-            fill=is_grayed_out,
+            fill=fill_flag,
+            color=color,
+        )
+    if config.get("shape") == "hexagon":
+        return mpatches.RegularPolygon(
+            (x.value, y.value),
+            numVertices=6,
+            radius=r.value * np.sqrt(3) / 2,
+            orientation=np.pi / 6,
+            fill=fill_flag,
             color=color,
         )
 
     return mpatches.Circle(
         (x.value, y.value),
         radius=r.value,
-        fill=is_grayed_out or tel_type.startswith("MST"),
+        fill=fill_flag,
         alpha=0.5 if is_grayed_out else 1.0,
         color=color,
     )
@@ -344,7 +451,15 @@ def update_legend(ax, telescopes, grayed_out_elements=None, legend_location="bes
     ax.legend(objs, labels, handler_map=handler_map, prop={"size": 11}, loc=legend_location)
 
 
-def finalize_plot(ax, patches, x_title, y_title, axes_range, highlighted_patches=None):
+def finalize_plot(
+    ax,
+    patches,
+    x_title,
+    y_title,
+    x_lim: tuple[float, float],
+    y_lim: tuple[float, float],
+    highlighted_patches=None,
+):
     """Finalize plot appearance and limits."""
     ax.add_collection(PatchCollection(patches, match_original=True))
 
@@ -354,7 +469,7 @@ def finalize_plot(ax, patches, x_title, y_title, axes_range, highlighted_patches
     ax.set(xlabel=x_title, ylabel=y_title)
     ax.tick_params(labelsize=8)
     ax.axis("square")
-    if axes_range:
-        ax.set_xlim(-axes_range, axes_range)
-        ax.set_ylim(-axes_range, axes_range)
+    if x_lim is not None and y_lim is not None:
+        ax.set_xlim(*x_lim)
+        ax.set_ylim(*y_lim)
     plt.tight_layout()
