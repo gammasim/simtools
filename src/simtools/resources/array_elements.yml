@@ -131,6 +131,11 @@ data:
     observatory: "CTAO"
     site: "South"
     description: "Lightning sensor"
+  SUBS:
+    collection: "infrastructure"
+    observatory: "CTAO"
+    site: "South"
+    description: "Substation"
   MSFx:
     collection: "calibration_devices"
     observatory: "CTAO"
