@@ -12,6 +12,7 @@ from matplotlib.colors import to_rgba
 
 from simtools.utils import geometry as transf
 from simtools.visualization.plot_array_layout import (
+    PlotBounds,
     create_patches,
     finalize_plot,
     get_patches,
@@ -46,7 +47,10 @@ def test_finalize_plot_with_range():
     y_title = "Northing [m]"
     axes_range = 10
 
-    finalize_plot(ax, [dummy_patch], x_title, y_title, axes_range)
+    # finalize_plot accepts x_lim and y_lim as tuples
+    finalize_plot(
+        ax, [dummy_patch], x_title, y_title, (-axes_range, axes_range), (-axes_range, axes_range)
+    )
 
     assert ax.get_xlabel() == x_title
     assert ax.get_ylabel() == y_title
@@ -72,13 +76,20 @@ def test_finalize_plot_without_range():
     x_title = "Easting [m]"
     y_title = "Northing [m]"
 
-    finalize_plot(ax, [dummy_patch], x_title, y_title, None)
+    # finalize_plot with None limits should not set explicit limits
+    finalize_plot(ax, [dummy_patch], x_title, y_title, None, None)
     assert ax.get_xlabel() == x_title
     assert ax.get_ylabel() == y_title
 
     # When axes_range is None, limits are not reset explicitly
     # Check that the updated limits differ from what would be set if a range were provided
     new_xlim = ax.get_xlim()
+    new_ylim = ax.get_ylim()
+    assert new_xlim != (-10, 10) or new_ylim != (-10, 10)
+
+    collections = [coll for coll in ax.collections if isinstance(coll, PatchCollection)]
+    assert collections, "Expected a PatchCollection to be added to the axes."
+
     new_ylim = ax.get_ylim()
     assert new_xlim != (-10, 10) or new_ylim != (-10, 10)
 
@@ -299,7 +310,7 @@ def test_get_patches_simplest(monkeypatch):
     _, ax = plt.subplots()
 
     provided_range = 50
-    patches, returned_range, highlighted_patches = get_patches(
+    patches, returned_range, highlighted_patches, _ = get_patches(
         ax, telescopes, False, provided_range, 1.0
     )
 
@@ -312,7 +323,7 @@ def test_get_patches_simplest(monkeypatch):
     assert "pos_x_rotated" in telescopes.colnames
     assert "pos_y_rotated" in telescopes.colnames
 
-    patches, returned_range, highlighted_patches = get_patches(ax, telescopes, False, None, 1.0)
+    patches, returned_range, highlighted_patches, _ = get_patches(ax, telescopes, False, None, 1.0)
     assert returned_range == pytest.approx(7.7)
 
 
@@ -323,7 +334,7 @@ def test_get_patches_with_highlighted_elements(telescopes):
     highlighted_elements = ["LSTN-01", "MSTN-01"]
     grayed_out_elements = ["LSTN-02"]
 
-    patches, returned_range, highlighted_patches = get_patches(
+    patches, returned_range, highlighted_patches, _ = get_patches(
         ax,
         telescopes,
         False,
@@ -367,8 +378,9 @@ def test_get_telescope_patch_circle(monkeypatch):
     assert patch.center == expected_center
     assert patch.radius == radius.to(u.m).value
 
-    assert patch.get_fill() is True
-    assert to_rgba("dodgerblue") == patch.get_facecolor()
+    # MST/MSTN has filled: False in the config, so get_fill() should be False
+    assert patch.get_fill() is False
+    assert to_rgba("dodgerblue") == patch.get_edgecolor()
 
 
 def test_get_telescope_patch_rectangle(monkeypatch):
@@ -407,22 +419,25 @@ def test_plot_array_layout_calls_helpers(monkeypatch):
         marker_scaling,
         grayed_out_elements=None,
         highlighted_elements=None,
+        filter_x_lim=None,
+        filter_y_lim=None,
     ):
         calls["get_patches_count"] += 1
         # Create real patch objects instead of strings
         dummy_patch = mpatches.Circle((0, 0), 1)  # Simple circle patch
         dummy_bg_patch = mpatches.Circle((0, 0), 1)  # Another circle patch
         dummy_highlighted_patches = []
+        dummy_bounds = PlotBounds(x_lim=(0.0, 100.0), y_lim=(0.0, 100.0))
         # For first call (primary telescopes)
         if calls["get_patches_count"] == 1:
-            return ([dummy_patch], 50, dummy_highlighted_patches)
+            return ([dummy_patch], 50, dummy_highlighted_patches, dummy_bounds)
         # For second call (background telescopes)
-        return ([dummy_bg_patch], 60, dummy_highlighted_patches)
+        return ([dummy_bg_patch], 60, dummy_highlighted_patches, dummy_bounds)
 
     def dummy_update_legend(ax, telescopes, grayed_out_elements=None, legend_location="best"):
         calls["update_legend_called"] = True
 
-    def dummy_finalize_plot(ax, patches, x_title, y_title, axes_range, highlighted_patches=None):
+    def dummy_finalize_plot(ax, patches, x_title, y_title, x_lim, y_lim, highlighted_patches=None):
         calls["finalize_plot_called"] = True
 
     monkeypatch.setattr("simtools.visualization.plot_array_layout.get_patches", dummy_get_patches)
