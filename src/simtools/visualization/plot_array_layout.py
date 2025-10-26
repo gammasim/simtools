@@ -307,14 +307,14 @@ def get_patches(
 
 
 @u.quantity_input(x=u.m, y=u.m, radius=u.m)
-def get_telescope_patch(name, x, y, radius, is_grayed_out=False):
+def get_telescope_patch(tel_type, x, y, radius, is_grayed_out=False):
     """
     Create patch for a telescope.
 
     Parameters
     ----------
-    name : str
-        Telescope name.
+    type: str
+        Telescope type.
     x : Quantity
         X position.
     y : Quantity
@@ -329,7 +329,6 @@ def get_telescope_patch(name, x, y, radius, is_grayed_out=False):
     patch : Patch
         Circle or rectangle patch.
     """
-    tel_type = names.get_array_element_type_from_name(name)
     config = leg_h.get_telescope_config(tel_type)
     x, y, r = x.to(u.m), y.to(u.m), radius.to(u.m)
 
@@ -426,7 +425,10 @@ def create_patches(
         name = get_telescope_name(tel)
         radius = get_sphere_radius(tel)
         radii.append(radius)
-        tel_type = names.get_array_element_type_from_name(name)
+        try:
+            tel_type = names.get_array_element_type_from_name(name)
+        except ValueError:
+            tel_type = None
 
         is_grayed_out = name in grayed_out_set
         is_highlighted = name in highlighted_set
