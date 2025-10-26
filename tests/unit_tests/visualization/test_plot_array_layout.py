@@ -572,3 +572,244 @@ def test_create_patches_with_grayed_out_elements(telescopes):
     grayed_patch = patches[2]
     assert isinstance(grayed_patch, mpatches.Circle)
     # Note: The exact color testing might depend on implementation details
+
+
+def test_plot_array_layout_with_bounds_mode_symmetric():
+    """Test plot_array_layout with symmetric bounds mode."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01", "MSTN-01"],
+            "position_x": [100, 200] * u.m,
+            "position_y": [100, 200] * u.m,
+            "sphere_radius": [12, 8] * u.m,
+        }
+    )
+
+    fig = plot_array_layout(
+        telescopes,
+        bounds_mode="symmetric",
+        padding=0.2,
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    ax = fig.get_axes()[0]
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    # In symmetric mode, xlim and ylim should be symmetric around 0
+    assert abs(xlim[0] + xlim[1]) < 1e-6
+    assert abs(ylim[0] + ylim[1]) < 1e-6
+    plt.close(fig)
+
+
+def test_plot_array_layout_with_bounds_mode_exact():
+    """Test plot_array_layout with exact bounds mode.
+
+    Tests that bounds_mode="exact" is accepted and produces a valid figure.
+    The exact coordinate transformations depend on internal rotation logic.
+    """
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01", "MSTN-01"],
+            "position_x": [100, 200] * u.m,
+            "position_y": [50, 150] * u.m,
+            "sphere_radius": [12, 8] * u.m,
+        }
+    )
+
+    fig = plot_array_layout(
+        telescopes,
+        axes_range=None,
+        bounds_mode="exact",
+        padding=0.1,
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    ax = fig.get_axes()[0]
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    # In exact mode, the bounds are derived from the actual data extents
+    # Verify that limits are set (not None or default)
+    assert xlim[0] is not None
+    assert xlim[1] is not None
+    assert ylim[0] is not None
+    assert ylim[1] is not None
+    # Verify that we have a reasonable plot range
+    assert abs(xlim[1] - xlim[0]) > 0
+    assert abs(ylim[1] - ylim[0]) > 0
+    plt.close(fig)
+
+
+def test_plot_array_layout_with_x_lim_override():
+    """Test plot_array_layout with explicit x_lim override."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01", "MSTN-01"],
+            "position_x": [0, 100] * u.m,
+            "position_y": [0, 100] * u.m,
+            "sphere_radius": [12, 8] * u.m,
+        }
+    )
+
+    fig = plot_array_layout(
+        telescopes,
+        x_lim=(-500, 500),
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    ax = fig.get_axes()[0]
+    xlim = ax.get_xlim()
+    assert xlim == (-500, 500)
+    plt.close(fig)
+
+
+def test_plot_array_layout_with_y_lim_override():
+    """Test plot_array_layout with explicit y_lim override."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01", "MSTN-01"],
+            "position_x": [0, 100] * u.m,
+            "position_y": [0, 100] * u.m,
+            "sphere_radius": [12, 8] * u.m,
+        }
+    )
+
+    fig = plot_array_layout(
+        telescopes,
+        y_lim=(-300, 300),
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    ax = fig.get_axes()[0]
+    ylim = ax.get_ylim()
+    assert ylim == (-300, 300)
+    plt.close(fig)
+
+
+def test_plot_array_layout_with_both_lim_overrides():
+    """Test plot_array_layout with both x_lim and y_lim overrides."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01", "MSTN-01", "LSTN-02"],
+            "position_x": [0, 100, 200] * u.m,
+            "position_y": [0, 100, 200] * u.m,
+            "sphere_radius": [12, 8, 12] * u.m,
+        }
+    )
+
+    # Limits that exclude LSTN-02
+    fig = plot_array_layout(
+        telescopes,
+        x_lim=(-50, 150),
+        y_lim=(-50, 150),
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    ax = fig.get_axes()[0]
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    assert xlim == (-50, 150)
+    assert ylim == (-50, 150)
+    plt.close(fig)
+
+
+def test_plot_array_layout_with_background_symmetric_mode():
+    """Test plot_array_layout with background telescopes in symmetric mode."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01"],
+            "position_x": [50] * u.m,
+            "position_y": [50] * u.m,
+            "sphere_radius": [12] * u.m,
+        }
+    )
+
+    background = QTable(
+        {
+            "telescope_name": ["MSTN-01"],
+            "position_x": [200] * u.m,
+            "position_y": [200] * u.m,
+            "sphere_radius": [8] * u.m,
+        }
+    )
+
+    fig = plot_array_layout(
+        telescopes,
+        background_telescopes=background,
+        bounds_mode="symmetric",
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    ax = fig.get_axes()[0]
+    # Background should expand the symmetric range
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    assert abs(xlim[0] + xlim[1]) < 1e-6
+    assert abs(ylim[0] + ylim[1]) < 1e-6
+    plt.close(fig)
+
+
+def test_plot_array_layout_with_empty_telescopes():
+    """Test plot_array_layout with empty telescope table raises IndexError.
+
+    This test documents current behavior where empty telescope lists
+    cause an IndexError in the rotate() function.
+    """
+    telescopes = QTable(
+        {
+            "telescope_name": [],
+            "position_x": [] * u.m,
+            "position_y": [] * u.m,
+            "sphere_radius": [] * u.m,
+        }
+    )
+
+    with pytest.raises(IndexError):
+        plot_array_layout(telescopes)
+
+
+def test_get_telescope_patch_hexagon():
+    """Test get_telescope_patch for hexagon shape."""
+
+    def dummy_get_type(name):
+        return "HESS"
+
+    import simtools.visualization.plot_array_layout as pal
+
+    # Temporarily patch the function
+    original_func = pal.names.get_array_element_type_from_name
+    pal.names.get_array_element_type_from_name = dummy_get_type
+
+    try:
+        x = 15 * u.m
+        y = 25 * u.m
+        radius = 3 * u.m
+
+        patch = get_telescope_patch("dummy", x, y, radius)
+        assert isinstance(patch, mpatches.RegularPolygon)
+        assert patch.numvertices == 6
+        assert patch.get_fill() is True
+    finally:
+        # Restore original function
+        pal.names.get_array_element_type_from_name = original_func
+
+
+def test_plot_array_layout_filter_removes_all_telescopes():
+    """Test plot_array_layout when filter removes all telescopes."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01", "MSTN-01"],
+            "position_x": [100, 200] * u.m,
+            "position_y": [100, 200] * u.m,
+            "sphere_radius": [12, 8] * u.m,
+        }
+    )
+
+    # Filter that excludes all telescopes
+    fig = plot_array_layout(
+        telescopes,
+        x_lim=(500, 600),
+        y_lim=(500, 600),
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    plt.close(fig)
