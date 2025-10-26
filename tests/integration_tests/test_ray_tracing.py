@@ -28,7 +28,7 @@ def test_ssts(
         telescope_name=telescope_model_name,
         model_version=model_version,
         label="test-sst",
-        mongo_db_config=db_config,
+        db_config=db_config,
     )
 
     ray = RayTracing(

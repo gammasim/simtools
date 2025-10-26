@@ -913,13 +913,6 @@ def test_produce_calibration_reports(db_config, mocker, tmp_path):
                 "instrument": "ILLN-design",
                 "collection": "calibration_devices",
             },
-            "pedestal_events": {
-                "value": 100,
-                "unit": None,
-                "parameter_version": "1.0.0",
-                "instrument": "ILLN-01",
-                "collection": "calibration_devices",
-            },
             "array_element_position_ground": {
                 "value": [0.0, 0.0, 0.0],
                 "unit": "m",
@@ -979,7 +972,7 @@ def test_produce_calibration_reports(db_config, mocker, tmp_path):
         assert mock_desc.call_count == 2
 
         # Verify the structure and ordering of the result
-        assert len(result) == 4
+        assert len(result) == 3
 
         # Verify the content of a specific entry
         laser_event = next(x for x in result if x[1] == "laser_events")
