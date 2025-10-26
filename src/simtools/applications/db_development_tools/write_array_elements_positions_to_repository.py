@@ -124,7 +124,7 @@ def write_ground_array_elements_to_repository(args_dict, db_config, logger):
 
     """
     array_model = ArrayModel(
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=None,
         site=args_dict["site"],
         array_elements=args_dict["input"],

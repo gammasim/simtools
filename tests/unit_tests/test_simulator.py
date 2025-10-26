@@ -395,7 +395,7 @@ def test_initialize_array_models_with_multiple_versions(shower_simulator):
         assert array_models[i].layout_name == shower_simulator.args_dict.get("array_layout_name")
 
 
-def test_validate_metadata(array_simulator, mocker, caplog):
+def test_validate_metadata(array_simulator, mocker, caplog, model_version):
     # Test when simulation software is not simtel
     array_simulator.simulation_software = "corsika"
     with caplog.at_level(logging.INFO):
@@ -404,14 +404,16 @@ def test_validate_metadata(array_simulator, mocker, caplog):
 
     # Test when simulation software is simtel and there are output files
     array_simulator.simulation_software = "sim_telarray"
-    mocker.patch.object(array_simulator, "get_file_list", return_value=["output_file1_6.0.0"])
+    mocker.patch.object(
+        array_simulator, "get_file_list", return_value=[f"output_file1_{model_version}"]
+    )
     mock_assert_sim_telarray_metadata = mocker.patch(
         "simtools.simulator.assert_sim_telarray_metadata"
     )
     with caplog.at_level(logging.INFO):
         array_simulator.validate_metadata()
-    assert "Validating metadata for output_file1_6.0.0" in caplog.text
-    assert "Metadata for sim_telarray file output_file1_6.0.0 is valid." in caplog.text
+    assert f"Validating metadata for output_file1_{model_version}" in caplog.text
+    assert f"Metadata for sim_telarray file output_file1_{model_version} is valid." in caplog.text
     assert mock_assert_sim_telarray_metadata.call_count == 1
 
     mocker.patch.object(array_simulator, "get_file_list", return_value=["output_file1_5.0.0"])

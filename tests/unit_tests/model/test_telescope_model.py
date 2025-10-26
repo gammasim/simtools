@@ -81,10 +81,10 @@ def test_get_telescope_effective_focal_length(telescope_model_lst, telescope_mod
     assert tel_model_sst.get_telescope_effective_focal_length("m") == pytest.approx(2.15191)
 
     # test zero case
-    tel_model_sst._parameters["effective_focal_length"]["value"] = 0.0
+    tel_model_sst.parameters["effective_focal_length"]["value"] = 0.0
     assert tel_model_sst.get_telescope_effective_focal_length("m") == pytest.approx(0.0)
     assert tel_model_sst.get_telescope_effective_focal_length("m", True) == pytest.approx(2.15)
-    tel_model_sst._parameters["effective_focal_length"]["value"] = None
+    tel_model_sst.parameters["effective_focal_length"]["value"] = None
     assert tel_model_sst.get_telescope_effective_focal_length("m", True) == pytest.approx(2.15)
 
 
@@ -98,10 +98,8 @@ def test_position(telescope_model_lst, caplog):
     assert utm_xyz[0].value == pytest.approx(217659.6)
     assert utm_xyz[1].value == pytest.approx(3184995.1)
     assert utm_xyz[2].value == pytest.approx(2185.0)
-    with caplog.at_level("ERROR"):
-        with pytest.raises(InvalidModelParameterError):
-            tel_model.position(coordinate_system="invalid")
-    assert "Coordinate system invalid not found." in caplog.text
+    with pytest.raises(InvalidModelParameterError, match=r"Coordinate system invalid not found."):
+        tel_model.position(coordinate_system="invalid")
 
 
 def test_export_single_mirror_list_file(telescope_model_lst, caplog, monkeypatch):
@@ -179,7 +177,7 @@ def test_load_mirrors(telescope_model_lst, monkeypatch, caplog):
     # Test case 1: File found in config directory
     find_file_mock.return_value = "path/to/mirror_list.dat"
     tel_model._load_mirrors()
-    mirrors_mock.assert_called_with("path/to/mirror_list.dat", parameters=tel_model._parameters)
+    mirrors_mock.assert_called_with("path/to/mirror_list.dat", parameters=tel_model.parameters)
     assert tel_model._mirrors == mirrors_mock.return_value
     find_file_mock.reset_mock()
 
@@ -193,7 +191,7 @@ def test_load_mirrors(telescope_model_lst, monkeypatch, caplog):
     assert "Using the one found in the model_path" in caplog.text
     assert find_file_mock.call_count == 2
     mirrors_mock.assert_called_with(
-        "path/to/model/mirror_list.dat", parameters=tel_model._parameters
+        "path/to/model/mirror_list.dat", parameters=tel_model.parameters
     )
     assert tel_model._mirrors == mirrors_mock.return_value
 

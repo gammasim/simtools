@@ -32,8 +32,8 @@ class ArrayLayout:
 
     Parameters
     ----------
-    mongo_db_config: dict
-        MongoDB configuration.
+    db_config: dict
+        Database configuration.
     site: str
         Site name or location (e.g., North/South or LaPalma/Paranal)
     model_version: str
@@ -52,7 +52,7 @@ class ArrayLayout:
 
     def __init__(
         self,
-        mongo_db_config,
+        db_config,
         site,
         model_version,
         label=None,
@@ -67,7 +67,7 @@ class ArrayLayout:
         self.model_version = model_version
         self.label = label
         self.name = name
-        self.mongo_db_config = mongo_db_config
+        self.db_config = db_config
         self.site = None if site is None else names.validate_site_name(site)
         self.site_model = None
         self.io_handler = io_handler.IOHandler()
@@ -95,13 +95,13 @@ class ArrayLayout:
     def _initialize_site_parameters_from_db(self):
         """Initialize site parameters required for transformations using the database."""
         self._logger.debug("Initialize parameters from DB")
-        if self.mongo_db_config is None:
+        if self.db_config is None:
             raise ValueError("No database configuration provided")
 
         self.site_model = SiteModel(
             site=self.site,
             model_version=self.model_version,
-            mongo_db_config=self.mongo_db_config,
+            db_config=self.db_config,
         )
         self._corsika_observation_level = self.site_model.get_corsika_site_parameters().get(
             "corsika_observation_level", None
@@ -419,7 +419,7 @@ class ArrayLayout:
             site=self.site,
             telescope_name=telescope_name,
             model_version=self.model_version,
-            mongo_db_config=self.mongo_db_config,
+            db_config=self.db_config,
             label=self.label,
         )
 
