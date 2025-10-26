@@ -151,12 +151,11 @@ def get_corsika_version(run_time=None):
     str
         Version of the CORSIKA package.
     """
-    version = None
-    sim_telarray_path = os.getenv("SIMTOOLS_SIMTEL_PATH")
-    if sim_telarray_path is None:
+    corsika_path = os.getenv("SIMTOOLS_SIMTEL_PATH")
+    if corsika_path is None:
         _logger.warning("Environment variable SIMTOOLS_SIMTEL_PATH is not set.")
         return None
-    corsika_command = Path(sim_telarray_path) / "corsika-run" / "corsika"
+    corsika_command = Path(corsika_path) / "corsika"
 
     if run_time is None:
         command = [str(corsika_command)]
@@ -173,11 +172,8 @@ def get_corsika_version(run_time=None):
         text=True,
     )
 
-    # Capture output until it waits for input
-    while True:
-        line = process.stdout.readline()
-        if not line:
-            break
+    version = None
+    for line in process.stdout:
         # Extract the version from the line "NUMBER OF VERSION :  7.7550"
         if "NUMBER OF VERSION" in line:
             version = line.split(":")[1].strip()
