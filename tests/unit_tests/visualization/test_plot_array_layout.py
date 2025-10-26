@@ -358,20 +358,13 @@ def test_get_patches_with_highlighted_elements(telescopes):
         assert color_rgba[:3] == expected_rgba[:3]  # Compare only RGB, not alpha
 
 
-def test_get_telescope_patch_circle(monkeypatch):
-    def dummy_get_type(name):
-        return "MSTN"
-
-    monkeypatch.setattr(
-        "simtools.visualization.plot_array_layout.names.get_array_element_type_from_name",
-        dummy_get_type,
-    )
-
+def test_get_telescope_patch_circle():
     x = 15 * u.m
     y = 25 * u.m
     radius = 3 * u.m
 
-    patch = get_telescope_patch("dummy", x, y, radius)
+    # Pass a real telescope type known to legend_handlers config
+    patch = get_telescope_patch("MSTN", x, y, radius)
     assert isinstance(patch, mpatches.Circle)
 
     expected_center = (x.to(u.m).value, y.to(u.m).value)
@@ -383,20 +376,13 @@ def test_get_telescope_patch_circle(monkeypatch):
     assert to_rgba("dodgerblue") == patch.get_edgecolor()
 
 
-def test_get_telescope_patch_rectangle(monkeypatch):
-    def dummy_get_type(name):
-        return "SCTS"
-
-    monkeypatch.setattr(
-        "simtools.visualization.plot_array_layout.names.get_array_element_type_from_name",
-        dummy_get_type,
-    )
-
+def test_get_telescope_patch_rectangle():
     x = 10 * u.m
     y = 20 * u.m
     radius = 2 * u.m
 
-    patch = get_telescope_patch("dummy", x, y, radius)
+    # Use SCTS which is configured as square in legend handlers
+    patch = get_telescope_patch("SCTS", x, y, radius)
     assert isinstance(patch, mpatches.Rectangle)
 
     expected_xy = ((x - radius / 2).value, (y - radius / 2).value)
@@ -770,27 +756,15 @@ def test_plot_array_layout_with_empty_telescopes():
 def test_get_telescope_patch_hexagon():
     """Test get_telescope_patch for hexagon shape."""
 
-    def dummy_get_type(name):
-        return "HESS"
+    x = 15 * u.m
+    y = 25 * u.m
+    radius = 3 * u.m
 
-    import simtools.visualization.plot_array_layout as pal
-
-    # Temporarily patch the function
-    original_func = pal.names.get_array_element_type_from_name
-    pal.names.get_array_element_type_from_name = dummy_get_type
-
-    try:
-        x = 15 * u.m
-        y = 25 * u.m
-        radius = 3 * u.m
-
-        patch = get_telescope_patch("dummy", x, y, radius)
-        assert isinstance(patch, mpatches.RegularPolygon)
-        assert patch.numvertices == 6
-        assert patch.get_fill() is True
-    finally:
-        # Restore original function
-        pal.names.get_array_element_type_from_name = original_func
+    # HESS is configured as hexagon in legend handlers
+    patch = get_telescope_patch("HESS", x, y, radius)
+    assert isinstance(patch, mpatches.RegularPolygon)
+    assert patch.numvertices == 6
+    assert patch.get_fill() is True
 
 
 def test_plot_array_layout_filter_removes_all_telescopes():
