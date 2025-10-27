@@ -137,7 +137,7 @@ def main():
     #     'camera_body_diameter': 289.7,
     #     'telescope_transmission': 1
     # }
-    # tel_model.change_multiple_parameters(**pars_to_change)
+    # tel_model.overwrite_parameters(pars_to_change)
 
     app_context.logger.info(
         f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n"
