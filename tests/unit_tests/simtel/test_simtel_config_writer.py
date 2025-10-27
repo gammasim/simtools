@@ -65,6 +65,74 @@ def create_standard_telescope_mapping():
     return {"LSTS": [1, 2], "MSTS": [3, 4], "SSTS": [5, 6]}
 
 
+def create_mock_telescope_model():
+    """Create standard mock telescope model for testing."""
+    return {
+        "LSTS-01": mock.Mock(),
+        "LSTS-02": mock.Mock(),
+        "MSTS-01": mock.Mock(),
+        "MSTS-02": mock.Mock(),
+        "SSTS-01": mock.Mock(),
+        "SSTS-02": mock.Mock(),
+    }
+
+
+def create_mock_array_triggers():
+    """Create standard mock array triggers for testing."""
+    return {
+        "multiplicity": {"value": 2},
+        "width": {"value": 400.0, "unit": "ns"},
+        "min_separation": {"value": 30.0, "unit": "m"},
+        "hard_stereo": {"value": False},
+    }
+
+
+def create_lsts_mock_trigger():
+    """Create LSTS mock trigger response."""
+    return {
+        "multiplicity": {"value": 2},
+        "width": {"value": 120.0, "unit": "ns"},
+        "min_separation": {"value": None, "unit": None},
+        "hard_stereo": {"value": True},
+    }
+
+
+def create_msts_different_params_mock_trigger():
+    """Create MSTS mock trigger with different parameters."""
+    return {
+        "multiplicity": {"value": 2},
+        "width": {"value": 300.0, "unit": "ns"},
+        "min_separation": {"value": 25.0, "unit": "m"},
+        "hard_stereo": {"value": False},
+    }
+
+
+def setup_mixed_trigger_test(simtel_config_writer, tmp_test_directory, mock_function):
+    """Set up and execute a mixed trigger test scenario."""
+    telescope_model = create_mock_telescope_model()
+    array_triggers = create_mock_array_triggers()
+
+    with mock.patch.object(
+        simtel_config_writer,
+        "_get_array_triggers_for_telescope_type",
+        side_effect=mock_function,
+    ):
+        result_file = simtel_config_writer._write_array_triggers_file(
+            array_triggers, tmp_test_directory, telescope_model
+        )
+
+    # Check file was created
+    assert result_file == "array_triggers.dat"
+    file_path = tmp_test_directory / result_file
+    assert file_path.exists()
+
+    # Read and return content
+    with open(file_path, encoding="utf-8") as f:
+        content = f.read()
+
+    return content.strip().split("\n")
+
+
 def create_msts_hardstereo_trigger(multiplicity=2):
     """Create MSTS hardstereo trigger for testing."""
     return create_trigger_dict("MSTS_array", multiplicity, 100.0, "ns", 20.0, "m", True)
@@ -576,59 +644,16 @@ def test_get_flasher_parameters_for_sim_telarray_missing_params(simtel_config_wr
 
 def test_write_array_triggers_file_mixed_hardstereo(simtel_config_writer, tmp_test_directory):
     """Test array triggers file generation with mixed hardstereo settings."""
-    # Mock telescope model with different telescope types
-    telescope_model = {
-        "LSTS-01": mock.Mock(),
-        "LSTS-02": mock.Mock(),
-        "MSTS-01": mock.Mock(),
-        "MSTS-02": mock.Mock(),
-        "SSTS-01": mock.Mock(),
-        "SSTS-02": mock.Mock(),
-    }
-
-    # Mock array triggers
-    array_triggers = {
-        "multiplicity": {"value": 2},
-        "width": {"value": 400.0, "unit": "ns"},
-        "min_separation": {"value": 30.0, "unit": "m"},
-        "hard_stereo": {"value": False},
-    }
 
     # Mock the method to return different values for different telescope types
     def mock_get_array_triggers(array_triggers, tel_type, num_tels):
         if tel_type == "LSTS":
-            return {
-                "multiplicity": {"value": 2},
-                "width": {"value": 120.0, "unit": "ns"},
-                "min_separation": {"value": None, "unit": None},
-                "hard_stereo": {"value": True},
-            }
-        return {
-            "multiplicity": {"value": 2},
-            "width": {"value": 400.0, "unit": "ns"},
-            "min_separation": {"value": 30.0, "unit": "m"},
-            "hard_stereo": {"value": False},
-        }
+            return create_lsts_mock_trigger()
+        return create_mock_array_triggers()
 
-    with mock.patch.object(
-        simtel_config_writer,
-        "_get_array_triggers_for_telescope_type",
-        side_effect=mock_get_array_triggers,
-    ):
-        result_file = simtel_config_writer._write_array_triggers_file(
-            array_triggers, tmp_test_directory, telescope_model
-        )
-
-    # Check file was created
-    assert result_file == "array_triggers.dat"
-    file_path = tmp_test_directory / result_file
-    assert file_path.exists()
-
-    # Read and check content
-    with open(file_path, encoding="utf-8") as f:
-        content = f.read()
-
-    lines = content.strip().split("\n")
+    lines = setup_mixed_trigger_test(
+        simtel_config_writer, tmp_test_directory, mock_get_array_triggers
+    )
     print(lines)
 
     # Should have comment line, hardstereo line for LSTs, individual and combined lines
@@ -645,67 +670,19 @@ def test_write_array_triggers_file_mixed_hardstereo(simtel_config_writer, tmp_te
 
 def test_write_array_triggers_file_different_parameters(simtel_config_writer, tmp_test_directory):
     """Test array triggers file generation with different width and min_separation values."""
-    # Mock telescope model with different telescope types
-    telescope_model = {
-        "LSTS-01": mock.Mock(),
-        "LSTS-02": mock.Mock(),
-        "MSTS-01": mock.Mock(),
-        "MSTS-02": mock.Mock(),
-        "SSTS-01": mock.Mock(),
-        "SSTS-02": mock.Mock(),
-    }
-
-    # Mock array triggers
-    array_triggers = {
-        "multiplicity": {"value": 2},
-        "width": {"value": 400.0, "unit": "ns"},
-        "min_separation": {"value": 30.0, "unit": "m"},
-        "hard_stereo": {"value": False},
-    }
 
     # Mock the method to return different values for different telescope types
     def mock_get_array_triggers(array_triggers, tel_type, num_tels):
         if tel_type == "LSTS":
-            return {
-                "multiplicity": {"value": 2},
-                "width": {"value": 120.0, "unit": "ns"},
-                "min_separation": {"value": None, "unit": None},
-                "hard_stereo": {"value": True},
-            }
+            return create_lsts_mock_trigger()
         if tel_type == "MSTS":
-            return {
-                "multiplicity": {"value": 2},
-                "width": {"value": 300.0, "unit": "ns"},  # Different width
-                "min_separation": {"value": 25.0, "unit": "m"},  # Different min_separation
-                "hard_stereo": {"value": False},
-            }
+            return create_msts_different_params_mock_trigger()
         # SSTS
-        return {
-            "multiplicity": {"value": 2},
-            "width": {"value": 400.0, "unit": "ns"},
-            "min_separation": {"value": 30.0, "unit": "m"},
-            "hard_stereo": {"value": False},
-        }
+        return create_mock_array_triggers()
 
-    with mock.patch.object(
-        simtel_config_writer,
-        "_get_array_triggers_for_telescope_type",
-        side_effect=mock_get_array_triggers,
-    ):
-        result_file = simtel_config_writer._write_array_triggers_file(
-            array_triggers, tmp_test_directory, telescope_model
-        )
-
-    # Check file was created
-    assert result_file == "array_triggers.dat"
-    file_path = tmp_test_directory / result_file
-    assert file_path.exists()
-
-    # Read and check content
-    with open(file_path, encoding="utf-8") as f:
-        content = f.read()
-
-    lines = content.strip().split("\n")
+    lines = setup_mixed_trigger_test(
+        simtel_config_writer, tmp_test_directory, mock_get_array_triggers
+    )
 
     # Should have comment, hardstereo line for LSTs, individual and combined lines
     assert "# Array trigger definition" in lines[0]
