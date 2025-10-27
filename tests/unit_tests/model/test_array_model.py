@@ -3,7 +3,7 @@
 import copy
 import logging
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from astropy import units as u
@@ -16,45 +16,45 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def array_model_from_list(db_config, model_version):
+def array_model_north_from_list(db_config, model_version):
     return ArrayModel(
         label="test",
         site="North",
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=model_version,
         array_elements=["LSTN-01", "MSTN-01"],
     )
 
 
-def test_array_model_from_file(db_config, model_version, telescope_north_test_file):
+def test_array_model_north_from_file(db_config, model_version, telescope_north_test_file):
     am = ArrayModel(
         label="test",
         site="North",
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=model_version,
         array_elements=telescope_north_test_file,
     )
     assert am.number_of_telescopes == 13
 
 
-def test_array_model_init_without_layout_or_telescope_list(db_config, model_version):
+def test_array_model_north_init_without_layout_or_telescope_list(db_config, model_version):
     with pytest.raises(ValueError, match=r"No array elements found."):
         ArrayModel(
             label="test",
             site="North",
-            mongo_db_config=db_config,
+            db_config=db_config,
             model_version=model_version,
         )
 
 
-def test_input_validation(array_model):
-    am = array_model
+def test_input_validation(array_model_north):
+    am = array_model_north
     am.print_telescope_list()
     assert am.number_of_telescopes == 13
 
 
-def test_site(array_model):
-    am = array_model
+def test_site(array_model_north):
+    am = array_model_north
     assert am.site == "North"
 
 
@@ -63,7 +63,7 @@ def test_exporting_config_files(db_config, model_version):
         label="test",
         site="North",
         layout_name="test_layout",
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=model_version,
     )
 
@@ -100,14 +100,14 @@ def test_exporting_config_files(db_config, model_version):
         assert Path(am.get_config_directory()).joinpath(model_file).exists()
 
 
-def test_load_array_element_positions_from_file(array_model, telescope_north_test_file):
-    am = array_model
+def test_load_array_element_positions_from_file(array_model_north, telescope_north_test_file):
+    am = array_model_north
     telescopes = am._load_array_element_positions_from_file(telescope_north_test_file, "North")
     assert len(telescopes) > 0
 
 
-def test_get_telescope_position_parameter(array_model):
-    am = array_model
+def test_get_telescope_position_parameter(array_model_north):
+    am = array_model_north
     assert am._get_telescope_position_parameter(
         "LSTN-01", "North", 10.0 * u.m, 200.0 * u.cm, 30.0 * u.m, "2.0.0"
     ) == {
@@ -126,18 +126,20 @@ def test_get_telescope_position_parameter(array_model):
     }
 
 
-def test_get_config_file(model_version, array_model):
-    am = array_model
-    assert am.config_file_path.name == "CTA-test_layout-North-" + model_version + "_test.cfg"
+def test_get_config_file(model_version, array_model_north):
+    am = array_model_north
+    assert (
+        am.config_file_path.name == "CTA-test_layout-North-" + model_version + "_test-lst-array.cfg"
+    )
 
 
-def test_get_config_directory(array_model):
-    am = array_model
+def test_get_config_directory(array_model_north):
+    am = array_model_north
     assert am.get_config_directory().is_dir()
 
 
-def test_export_array_elements_as_table(array_model):
-    am = array_model
+def test_export_array_elements_as_table(array_model_north):
+    am = array_model_north
     table_ground = am.export_array_elements_as_table(coordinate_system="ground")
     assert isinstance(table_ground, QTable)
     assert "position_z" in table_ground.colnames
@@ -149,56 +151,40 @@ def test_export_array_elements_as_table(array_model):
     assert len(table_utm) > 0
 
 
-def test_get_array_elements_from_list(array_model):
-    am = array_model
+def test_get_array_elements_from_list(array_model_north, site_model_north):
+    am = array_model_north
     assert am._get_array_elements_from_list(["LSTN-01", "MSTN-01"]) == {
         "LSTN-01": None,
         "MSTN-01": None,
     }
-    all_msts_plus_lst = am._get_array_elements_from_list(["LSTN-01", "MSTN"])
+    all_msts_plus_lst = am._get_array_elements_from_list(["LSTN-01", "MSTN"], site_model_north)
     assert "MSTN-01" in all_msts_plus_lst
     assert "MSTN-05" in all_msts_plus_lst
     assert "LSTN-01" in all_msts_plus_lst
 
 
-def test_get_all_array_elements_of_type(array_model):
-    am = array_model
-    assert am._get_all_array_elements_of_type("LSTS") == {
+def test_get_all_array_elements_of_type(array_model_north, site_model_north):
+    am = array_model_north
+    assert am._get_all_array_elements_of_type("LSTS", site_model_north) == {
         "LSTS-01": None,
         "LSTS-02": None,
         "LSTS-03": None,
         "LSTS-04": None,
     }
     # simple check that more than 10 MSTS are there
-    assert len(am._get_all_array_elements_of_type("MSTS")) > 10
+    assert len(am._get_all_array_elements_of_type("MSTS", site_model_north)) > 10
 
-    assert len(am._get_all_array_elements_of_type("MSTE")) == 0
+    assert len(am._get_all_array_elements_of_type("MSTE", site_model_north)) == 0
 
 
-def test_update_array_element_position(array_model_from_list):
-    am = array_model_from_list
+def test_update_array_element_position(array_model_north_from_list):
+    am = array_model_north_from_list
     assert "LSTN-01" in am.array_elements
     assert "LSTN-01" in am.telescope_models
     assert am.array_elements["LSTN-01"] is None
 
 
-def test_model_version_setter_with_valid_string(array_model):
-    am = array_model
-    am.model_version = "6.0.0"
-    assert am.model_version == "6.0.0"
-
-
-def test_model_version_setter_with_valid_list(array_model):
-    am = array_model
-    error_message = "Only one model version can be passed to ArrayModel, not a list."
-    with pytest.raises(ValueError, match=error_message):
-        am.model_version = ["6.0.0"]
-
-    with pytest.raises(ValueError, match=error_message):
-        am.model_version = ["6.0.0", "7.0.0"]
-
-
-def test_pack_model_files(array_model, io_handler, tmp_path, model_version):
+def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version):
     mock_tarfile = MagicMock()
     mock_tarfile_open = MagicMock()
     # Create a context manager wrapper so `with tarfile.open(...) as tar:` yields mock_tarfile
@@ -218,7 +204,7 @@ def test_pack_model_files(array_model, io_handler, tmp_path, model_version):
         patch.object(io_handler, "get_output_directory", mock_get_output_directory),
         patch("pathlib.Path.is_file", return_value=True),
     ):
-        archive_path = array_model.pack_model_files()
+        archive_path = array_model_north.pack_model_files()
 
         assert archive_path == mock_output_dir.joinpath(f"model_files_{model_version}.tar.gz")
         assert mock_tarfile.add.call_count == 2
@@ -229,27 +215,26 @@ def test_pack_model_files(array_model, io_handler, tmp_path, model_version):
         patch("pathlib.Path.rglob", mock_rglob),
         patch.object(io_handler, "get_output_directory", mock_get_output_directory),
     ):
-        assert array_model.pack_model_files() is None
+        assert array_model_north.pack_model_files() is None
 
 
-def test_get_additional_simtel_metadata(array_model, mocker):
-    array_model_cp = copy.deepcopy(array_model)
-    array_model_cp.sim_telarray_seeds = {"seeds": 1234}
-    mocker.patch.object(array_model_cp.site_model, "get_nsb_integrated_flux", return_value=42.0)
+def test_get_additional_simtel_metadata(array_model_north, mocker):
+    array_model_north_cp = copy.deepcopy(array_model_north)
+    array_model_north_cp.sim_telarray_seeds = {"seeds": 1234}
+    mocker.patch.object(
+        array_model_north_cp.site_model, "get_nsb_integrated_flux", return_value=42.0
+    )
 
-    assert "nsb_integrated_flux" in array_model_cp._get_additional_simtel_metadata()
-    assert "seeds" in array_model_cp._get_additional_simtel_metadata()
+    assert "nsb_integrated_flux" in array_model_north_cp._get_additional_simtel_metadata()
+    assert "seeds" in array_model_north_cp._get_additional_simtel_metadata()
 
 
 def test_build_calibration_models():
     """Test _build_calibration_models method with mocked dependencies."""
-    from unittest.mock import Mock
-
-    from simtools.model.array_model import ArrayModel
 
     # Create a mock array model instance
-    array_model = Mock(spec=ArrayModel)
-    array_model._build_calibration_models = ArrayModel._build_calibration_models
+    array_model_north = Mock(spec=ArrayModel)
+    array_model_north._build_calibration_models = ArrayModel._build_calibration_models
 
     # Mock telescope model
     telescope_model = Mock()
@@ -260,17 +245,21 @@ def test_build_calibration_models():
     site_model.site = "North"
 
     # Test case 1: No calibration device types provided
-    result = array_model._build_calibration_models(array_model, telescope_model, site_model, None)
+    result = array_model_north._build_calibration_models(
+        array_model_north, telescope_model, site_model, None
+    )
     assert result == {}
 
     # Test case 2: Empty calibration device types list
-    result = array_model._build_calibration_models(array_model, telescope_model, site_model, [])
+    result = array_model_north._build_calibration_models(
+        array_model_north, telescope_model, site_model, []
+    )
     assert result == {}
 
     # Test case 3: Calibration device types provided but device name not found
     telescope_model.get_calibration_device_name.return_value = None
-    result = array_model._build_calibration_models(
-        array_model, telescope_model, site_model, ["flasher"]
+    result = array_model_north._build_calibration_models(
+        array_model_north, telescope_model, site_model, ["flasher"]
     )
     assert result == {}
     telescope_model.get_calibration_device_name.assert_called_with("flasher")
@@ -287,12 +276,16 @@ def test_build_calibration_models():
         mock_calibration_model.return_value = mock_calibration_instance
 
         # Set up array model attributes for CalibrationModel initialization
-        array_model.mongo_db_config = {"test": "config"}
-        array_model.model_version = "6.0.0"
-        array_model.label = "test_label"
+        array_model_north.db_config = {"test": "config"}
+        array_model_north.model_version = "6.0.0"
+        array_model_north.label = "test_label"
+        array_model_north.overwrite_model_parameters = None
 
-        result = array_model._build_calibration_models(
-            array_model, telescope_model, site_model, ["flasher", "illuminator", "nonexistent"]
+        result = array_model_north._build_calibration_models(
+            array_model_north,
+            telescope_model,
+            site_model,
+            ["flasher", "illuminator", "nonexistent"],
         )
 
         # Should create calibration models for flasher and illuminator, but not nonexistent
@@ -308,26 +301,24 @@ def test_build_calibration_models():
 
 def test_export_all_simtel_config_files():
     """Test export_all_simtel_config_files method calls both export methods when needed."""
-    from unittest.mock import Mock
 
-    array_model = Mock()
-    array_model._telescope_model_files_exported = False
-    array_model._array_model_file_exported = False
+    array_model_north = Mock()
+    array_model_north._telescope_model_files_exported = False
+    array_model_north._array_model_file_exported = False
 
-    ArrayModel.export_all_simtel_config_files(array_model)
+    ArrayModel.export_all_simtel_config_files(array_model_north)
 
-    array_model.export_simtel_telescope_config_files.assert_called_once()
-    array_model.export_sim_telarray_config_file.assert_called_once()
+    array_model_north.export_simtel_telescope_config_files.assert_called_once()
+    array_model_north.export_sim_telarray_config_file.assert_called_once()
 
 
 def test_build_telescope_models():
     """Test _build_telescope_models method with mocked dependencies."""
-    from unittest.mock import Mock, patch
 
-    array_model = Mock()
-    array_model.model_version = "6.0.0"
-    array_model.mongo_db_config = {"test": "config"}
-    array_model.label = "test"
+    array_model_north = Mock()
+    array_model_north.model_version = "6.0.0"
+    array_model_north.db_config = {"test": "config"}
+    array_model_north.label = "test"
 
     site_model = Mock()
     site_model.site = "North"
@@ -343,7 +334,7 @@ def test_build_telescope_models():
         mock_names.side_effect = lambda name: "telescopes" if name == "LSTN-01" else "other"
 
         telescope_models, _ = ArrayModel._build_telescope_models(
-            array_model, site_model, array_elements, None
+            array_model_north, site_model, array_elements, None
         )
 
         assert "LSTN-01" in telescope_models

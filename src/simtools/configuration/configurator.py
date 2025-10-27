@@ -10,7 +10,7 @@ import astropy.units as u
 from dotenv import load_dotenv
 
 import simtools.configuration.commandline_parser as argparser
-from simtools.db.db_handler import jsonschema_db_dict
+from simtools.db.mongo_db import jsonschema_db_dict
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
 

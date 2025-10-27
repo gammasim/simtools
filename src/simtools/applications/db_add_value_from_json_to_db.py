@@ -67,7 +67,7 @@ def main():
         app_context.logger.info(
             f"Using test database version {app_context.db_config['db_simulation_model_version']}"
         )
-    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
+    db = db_handler.DatabaseHandler(db_config=app_context.db_config)
 
     files_to_insert = []
     if app_context.args.get("file_name", None) is not None:
@@ -109,7 +109,7 @@ def main():
     # drop test database; be safe and required DB name is sandbox
     if app_context.args.get("test_db", False) and "sandbox" in db.get_db_name():
         app_context.logger.info(f"Test database used. Dropping all data from {db.get_db_name()}")
-        db.db_client.drop_database(db.get_db_name())
+        db.mongo_db_handler.db_client.drop_database(db.get_db_name())
 
 
 if __name__ == "__main__":

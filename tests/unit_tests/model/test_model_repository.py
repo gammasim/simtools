@@ -390,9 +390,9 @@ def test_apply_changes_to_production_table_with_list_data():
 def test_apply_changes_to_production_tables(tmp_path):
     """Test applying changes to production tables."""
     # Create source directory with sample files
-    source_prod_table_path = tmp_path / "productions" / "6.0.0"
+    source_prod_table_path = tmp_path / "simulation-models/productions" / "6.0.0"
     source_prod_table_path.mkdir(parents=True)
-    target_prod_table_path = tmp_path / "productions" / "6.5.0"
+    target_prod_table_path = tmp_path / "simulation-models/productions" / "6.5.0"
 
     # Create sample production table files in source
     prod_table_data = {
@@ -446,9 +446,9 @@ def test_apply_changes_to_production_tables(tmp_path):
 def test_apply_changes_to_production_tables_no_parameters(tmp_path):
     """Test applying changes to production tables with no parameters."""
     # Create source directory with sample files
-    source_prod_table_path = tmp_path / "productions" / "6.0.0"
+    source_prod_table_path = tmp_path / "simulation-models/productions" / "6.0.0"
     source_prod_table_path.mkdir(parents=True)
-    target_prod_table_path = tmp_path / "productions" / "6.5.0"
+    target_prod_table_path = tmp_path / "simulation-models/productions" / "6.5.0"
 
     # Create a sample production table file in source
     prod_table_data = {
@@ -481,9 +481,9 @@ def test_apply_changes_to_production_tables_no_parameters(tmp_path):
 def test_apply_changes_to_production_tables_simple(tmp_path):
     """Test applying changes to production tables."""
     # Create source directory with sample files
-    source_prod_table_path = tmp_path / "productions" / "6.0.0"
+    source_prod_table_path = tmp_path / "simulation-models/productions" / "6.0.0"
     source_prod_table_path.mkdir(parents=True)
-    target_prod_table_path = tmp_path / "productions" / "6.5.0"
+    target_prod_table_path = tmp_path / "simulation-models/productions" / "6.5.0"
 
     # Create a sample production table file in source
     prod_table_data = {
@@ -513,9 +513,9 @@ def test_apply_changes_to_production_tables_simple(tmp_path):
 def test_apply_changes_to_production_tables_multiple_files(tmp_path):
     """Test applying changes to multiple production table files."""
     # Create source directory with sample files
-    source_prod_table_path = tmp_path / "productions" / "6.0.0"
+    source_prod_table_path = tmp_path / "simulation-models/productions" / "6.0.0"
     source_prod_table_path.mkdir(parents=True)
-    target_prod_table_path = tmp_path / "productions" / "6.5.0"
+    target_prod_table_path = tmp_path / "simulation-models/productions" / "6.5.0"
 
     # Create multiple sample production table files in source
     prod_table_data_1 = {
@@ -560,7 +560,7 @@ def test_apply_changes_to_production_tables_multiple_files(tmp_path):
 def test_apply_changes_to_production_tables_invalid_data_type(tmp_path):
     """Test error handling when JSON file contains non-dict data."""
     # Create source directory with a malformed JSON file
-    source_prod_table_path = tmp_path / "productions" / "6.0.0"
+    source_prod_table_path = tmp_path / "simulation-models/productions" / "6.0.0"
     source_prod_table_path.mkdir(parents=True)
 
     # Create a JSON file with list data instead of dict
@@ -578,70 +578,22 @@ def test_apply_changes_to_production_tables_invalid_data_type(tmp_path):
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
 @patch("simtools.model.model_repository._apply_changes_to_production_tables")
 @patch("simtools.model.model_repository._apply_changes_to_model_parameters")
-def test_generate_new_production_success(
+def test_generate_new_production_empty_version_history(
     mock_apply_model_changes, mock_apply_table_changes, mock_collect_data, tmp_path
 ):
-    """Test successful execution of generate_new_production."""
-    args_dict = {
-        "simulation_models_path": str(tmp_path),
-        "base_model_version": "source",
-        "modifications": TEST_MODIFICATIONS_FILE,
-    }
+    """Test handling when model_version_history is empty."""
     mock_collect_data.return_value = {
         "model_version": "6.5.0",
-        "model_version_history": ["6.0.0"],
-        "changes": {"telescope": {"param": {"version": "1.0.0", "value": 42}}},
-    }
-
-    model_repository.generate_new_production(
-        args_dict["modifications"], args_dict["simulation_models_path"]
-    )
-
-    # Verify the new functions were called correctly
-    mock_apply_table_changes.assert_called_once_with(
-        {"telescope": {"param": {"version": "1.0.0", "value": 42}}},
-        "6.0.0",
-        "6.5.0",
-        "full_update",
-        str(tmp_path),
-    )
-    mock_apply_model_changes.assert_called_once()
-
-
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
-@patch("simtools.model.model_repository._apply_changes_to_production_tables")
-@patch("simtools.model.model_repository._apply_changes_to_model_parameters")
-def test_generate_new_production_no_changes(
-    mock_apply_model_changes, mock_apply_table_changes, mock_collect_data, tmp_path
-):
-    """Test execution with no changes in modifications."""
-    args_dict = {
-        "simulation_models_path": str(tmp_path),
-        "base_model_version": "source",
-        "modifications": TEST_MODIFICATIONS_FILE,
-    }
-    mock_collect_data.return_value = {"model_version": "6.5.0", "model_version_history": ["6.0.0"]}
-
-    model_repository.generate_new_production(
-        args_dict["modifications"], args_dict["simulation_models_path"]
-    )
-
-    mock_apply_table_changes.assert_called_once()
-    # Since there are no changes, _apply_changes_to_model_parameters should still be called
-    mock_apply_model_changes.assert_called_once_with({}, args_dict["simulation_models_path"])
-
-
-@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
-def test_generate_new_production_empty_version_history(mock_collect_data, tmp_path):
-    """Test error handling when model_version_history is empty."""
-    mock_collect_data.return_value = {
-        "model_version": "6.5.0",
-        "model_version_history": [],  # Empty list should trigger IndexError
+        "model_version_history": [],
         "changes": {},
     }
 
-    with pytest.raises(ValueError, match="Base model version not found in"):
-        model_repository.generate_new_production("fake_modifications.yml", str(tmp_path))
+    model_repository.generate_new_production("fake_modifications.yml", str(tmp_path))
+
+    mock_apply_table_changes.assert_called_once_with(
+        {}, "6.5.0", "6.5.0", "full_update", str(tmp_path)
+    )
+    mock_apply_model_changes.assert_called_once()
 
 
 def test_apply_changes_to_production_table_patch_update():
@@ -691,7 +643,7 @@ def test_apply_changes_to_production_table_with_deprecated_parameters():
     model_version = "6.5.0"
 
     result = model_repository._apply_changes_to_production_table(
-        "test_table", data, changes, model_version, False
+        "test_table", data, changes, model_version, True
     )
 
     assert result is True
@@ -734,7 +686,7 @@ def test_create_new_model_parameter_entry_simple(mock_dump, mock_get_latest, tmp
     telescope = "MSTx-FlashCam"
     param = "dsum_threshold"
     param_data = {"version": "1.0.0", "value": 42.5}
-    model_parameters_dir = Path(tmp_test_directory / "model_parameters")
+    model_parameters_dir = Path(tmp_test_directory / "simulation-models/model_parameters")
     telescope_dir = model_parameters_dir / telescope
     telescope_dir.mkdir(parents=True)
 
@@ -786,7 +738,6 @@ def test_create_new_model_parameter_entry_with_existing_file(
     telescope_dir = model_parameters_dir / telescope
     telescope_dir.mkdir(parents=True)
 
-    # Mock existing file found
     mock_get_latest.return_value = "/path/to/existing/file.json"
     mock_collect_data.return_value = {
         "value": [30.0, 31.0, 32.0],  # List value to trigger the conversion
@@ -806,3 +757,257 @@ def test_create_new_model_parameter_entry_with_existing_file(
     assert param_data["version"] == "2.0.0"
     assert param_data["meta_parameter"] is True
     assert param_data["value"] == [42.5, 42.5, 42.5]  # Single value converted to list
+
+
+def test_get_production_directory(tmp_path):
+    """Test getting production directory with and without model version."""
+    simulation_models_path = str(tmp_path)
+
+    # Test without model version
+    result = model_repository.get_production_directory(simulation_models_path)
+    expected = tmp_path / "simulation-models" / "productions"
+    assert result == expected
+
+    # Test with model version
+    result = model_repository.get_production_directory(simulation_models_path, "6.0.0")
+    expected = tmp_path / "simulation-models" / "productions" / "6.0.0"
+    assert result == expected
+
+
+def test_get_model_parameter_directory(tmp_path):
+    """Test getting the model parameter directory."""
+    simulation_models_path = str(tmp_path)
+
+    result = model_repository.get_model_parameter_directory(simulation_models_path)
+    expected = tmp_path / "simulation-models" / "model_parameters"
+
+    assert result == expected
+
+
+def test_get_changes_to_production_path_update(tmp_test_directory):
+    """Test retrieving changes from modifications file."""
+    modifications_data = {
+        "model_version": "6.5.0",
+        "model_version_history": ["6.0.0"],
+        "changes": {
+            "MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62}},
+            "MSTx-NectarCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31}},
+        },
+    }
+
+    with patch("simtools.io.ascii_handler.collect_data_from_file") as mock_collect:
+        mock_collect.return_value = modifications_data
+
+        changes, base_model_version = model_repository._get_changes_to_production(
+            modifications_data, tmp_test_directory, "patch_update"
+        )
+
+        assert base_model_version == "6.0.0"
+        assert "MSTx-FlashCam" in changes
+        assert changes["MSTx-FlashCam"]["dsum_threshold"]["value"] == 62
+        assert "MSTx-NectarCam" in changes
+        assert changes["MSTx-NectarCam"]["discriminator_threshold"]["value"] == 31
+
+
+def test_update_two_levels_in_changes_dict():
+    """Test updating nested dictionary with two levels."""
+    # Test basic update with nested dictionaries
+    d = {"LSTN-design": {"param1": {"version": "1.0.0"}}}
+    u = {"LSTN-design": {"param2": {"version": "2.0.0"}}}
+
+    result = model_repository._update_two_levels_in_changes_dict(d, u)
+
+    assert "LSTN-design" in result
+    assert "param1" in result["LSTN-design"]
+    assert "param2" in result["LSTN-design"]
+    assert result["LSTN-design"]["param1"]["version"] == "1.0.0"
+    assert result["LSTN-design"]["param2"]["version"] == "2.0.0"
+
+
+def test_update_two_levels_in_changes_dict_overwrite():
+    """Test overwriting existing parameters in nested dictionary."""
+    d = {"LSTN-design": {"param1": {"version": "1.0.0"}}}
+    u = {"LSTN-design": {"param1": {"version": "2.0.0"}}}
+
+    result = model_repository._update_two_levels_in_changes_dict(d, u)
+
+    assert result["LSTN-design"]["param1"]["version"] == "2.0.0"
+
+
+def test_update_two_levels_in_changes_dict_new_telescope():
+    """Test adding new telescope to changes dictionary."""
+    d = {"LSTN-design": {"param1": {"version": "1.0.0"}}}
+    u = {"MST-design": {"param2": {"version": "2.0.0"}}}
+
+    result = model_repository._update_two_levels_in_changes_dict(d, u)
+
+    assert "LSTN-design" in result
+    assert "MST-design" in result
+    assert result["LSTN-design"]["param1"]["version"] == "1.0.0"
+    assert result["MST-design"]["param2"]["version"] == "2.0.0"
+
+
+def test_update_two_levels_in_changes_dict_non_dict_value():
+    """Test updating with non-dict value replaces entire value."""
+    d = {"LSTN-design": {"param1": {"version": "1.0.0"}}}
+    u = {"LSTN-design": "non_dict_value"}
+
+    result = model_repository._update_two_levels_in_changes_dict(d, u)
+
+    assert result["LSTN-design"] == "non_dict_value"
+
+
+def test_update_two_levels_in_changes_dict_empty_dicts():
+    """Test updating with empty dictionaries."""
+    d = {}
+    u = {"LSTN-design": {"param1": {"version": "1.0.0"}}}
+
+    result = model_repository._update_two_levels_in_changes_dict(d, u)
+
+    assert result["LSTN-design"]["param1"]["version"] == "1.0.0"
+
+
+@patch("simtools.model.model_repository._get_changes_dict")
+def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_path):
+    """Test full_update mode aggregates changes from version history.
+
+    This test simulates the scenario where version 7.0.0 is created as a full_update
+    based on version history [6.0.2], which itself references [6.0.1, 6.0.0].
+    The function should recursively collect and merge changes from all versions
+    in the history chain.
+    """
+    # Mock data for version 7.0.0 (full_update with history pointing to 6.0.2)
+    modification_dict_7_0_0 = {
+        "model_version": "7.0.0",
+        "model_update": "full_update",
+        "model_version_history": ["6.0.2"],
+        "changes": {
+            "LSTN-design": {
+                "transit_time_random": {"version": "1.0.0", "value": 0.36, "unit": "ns"}
+            },
+            "LSTS-design": {
+                "transit_time_random": {"version": "1.0.0", "value": 0.36, "unit": "ns"}
+            },
+            "MSTx-FlashCam": {
+                "transit_time_random": {"version": "1.0.0", "value": 0.0, "unit": "ns"}
+            },
+        },
+    }
+
+    # Mock data for version 6.0.2 (patch_update with history [6.0.1, 6.0.0])
+    info_6_0_2 = {
+        "model_version": "6.0.2",
+        "model_update": "patch_update",
+        "model_version_history": ["6.0.1", "6.0.0"],
+        "changes": {
+            "LSTN-design": {"pedestal_events": {"deprecated": True}},
+            "MSTx-FlashCam": {
+                "calibration_devices": {
+                    "version": "1.0.0",
+                    "value": {"flat_fielding": "MSFx-FlashCam"},
+                }
+            },
+        },
+    }
+
+    # Mock data for version 6.0.1 (patch_update with history [6.0.0])
+    info_6_0_1 = {
+        "model_version": "6.0.1",
+        "model_update": "patch_update",
+        "model_version_history": ["6.0.0"],
+        "changes": {"LSTN-design": {"some_parameter": {"version": "1.0.0", "value": 100}}},
+    }
+
+    # Mock data for version 6.0.0 (base version with no history, marked as full_update)
+    info_6_0_0 = {
+        "model_version": "6.0.0",
+        "model_update": "full_update",  # This triggers the break statement
+        "model_version_history": [],
+        "changes": {},
+    }
+
+    # Setup mock to return appropriate info.yml data based on version
+    def get_changes_side_effect(version, path):
+        version_data = {
+            "6.0.2": info_6_0_2,
+            "6.0.1": info_6_0_1,
+            "6.0.0": info_6_0_0,
+        }
+        return version_data.get(version, {})
+
+    mock_get_changes_dict.side_effect = get_changes_side_effect
+
+    changes, base_version = model_repository._get_changes_to_production(
+        modification_dict_7_0_0, tmp_path, update_type="full_update"
+    )
+
+    # Verify the base version is correctly identified as the oldest
+    assert base_version == "6.0.0"
+
+    # Verify changes from 7.0.0 are present
+    assert "LSTN-design" in changes
+    assert "transit_time_random" in changes["LSTN-design"]
+    assert changes["LSTN-design"]["transit_time_random"]["value"] == pytest.approx(0.36)
+
+    assert "LSTS-design" in changes
+    assert changes["LSTS-design"]["transit_time_random"]["value"] == pytest.approx(0.36)
+
+    assert "MSTx-FlashCam" in changes
+    assert changes["MSTx-FlashCam"]["transit_time_random"]["value"] == pytest.approx(0.0)
+
+    # Verify changes from 6.0.2 are merged
+    assert "pedestal_events" in changes["LSTN-design"]
+    assert changes["LSTN-design"]["pedestal_events"]["deprecated"] is True
+    assert "calibration_devices" in changes["MSTx-FlashCam"]
+
+    # Verify that 6.0.1 changes are NOT included because the loop breaks at 6.0.0 (full_update)
+    assert "some_parameter" not in changes["LSTN-design"]
+
+    # Verify mock was called for versions up to the full_update
+    # Should call 6.0.2 and 6.0.0, but NOT 6.0.1 due to the break
+    mock_get_changes_dict.assert_any_call("6.0.2", tmp_path)
+    mock_get_changes_dict.assert_any_call("6.0.0", tmp_path)
+
+
+@patch("simtools.model.model_repository._get_changes_dict")
+def test_get_changes_to_production_patch_update(mock_get_changes_dict, tmp_path):
+    """Test patch_update mode returns only direct changes without recursion."""
+    modification_dict = {
+        "model_version": "6.0.2",
+        "model_update": "patch_update",
+        "model_version_history": ["6.0.1", "6.0.0"],
+        "changes": {"LSTN-design": {"pedestal_events": {"deprecated": True}}},
+    }
+
+    changes, base_version = model_repository._get_changes_to_production(
+        modification_dict, tmp_path, update_type="patch_update"
+    )
+
+    # Verify base version is the oldest in history
+    assert base_version == "6.0.0"
+
+    # Verify only the direct changes are returned (no recursion)
+    assert "LSTN-design" in changes
+    assert "pedestal_events" in changes["LSTN-design"]
+    assert changes["LSTN-design"]["pedestal_events"]["deprecated"] is True
+
+    # Verify _get_changes_dict was NOT called (no recursion for patch_update)
+    mock_get_changes_dict.assert_not_called()
+
+
+def test_get_changes_to_production_empty_history(tmp_test_directory):
+    """Test handling of empty version history."""
+    modification_dict = {
+        "model_version": "6.0.0",
+        "model_update": None,
+        "model_version_history": [],
+        "changes": {},
+    }
+
+    changes, base_version = model_repository._get_changes_to_production(
+        modification_dict, tmp_test_directory, update_type="full_update"
+    )
+
+    # When history is empty, should return empty changes and the model_version
+    assert changes == {}
+    assert base_version == "6.0.0"

@@ -7,6 +7,40 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.23.0](https://github.com/gammasim/simtools/releases/tag/v0.23.0) - 2025-10-13
+
+### Bugfixes
+
+- Bugfix in comparing model versions in integration tests to decide which tests should run.
+  Bugfix in getting model parameter values with units for the case of value-unit pairs consisting of lists with None entries. ([#1805](https://github.com/gammasim/simtools/pull/1805))
+- Fix a bug where hard stereo trigger was set every time the hard_stereo key existed in dictionary, rather than checking its value. Now it only sets hardstereo if the value is True. ([#1813](https://github.com/gammasim/simtools/pull/1813))
+- Bugfix packing model files: model version was not taken into account correctly. ([#1818](https://github.com/gammasim/simtools/pull/1818))
+- Bugfix in preparing sim_telarray command for shower simulations: power-law configuration (used to fill histograms) set at the wrong place. ([#1825](https://github.com/gammasim/simtools/pull/1825))
+- Bugfix in writing sim_telarray configuration option: "-C show=all" should be last in command. ([#1828](https://github.com/gammasim/simtools/pull/1828))
+
+### New Features
+
+- Add new CORSKIA / sim_telarray image build for:
+
+  - CORSIKA 7.8010
+  - Bernloehr package 1.70
+  - sim_telarray 250903
+
+  Improved downloading script and handling of QGSJet tables.
+
+  ([#1824](https://github.com/gammasim/simtools/pull/1824))
+- Fill telescope design types into sim_telarray metadata field for `camera_config_variant` and `optics_config_variant`. ([#1826](https://github.com/gammasim/simtools/pull/1826))
+- Allow to highlight or grey out telescopes in layout plotting application. ([#1829](https://github.com/gammasim/simtools/pull/1829))
+- Allow to provide integers in scientific notation in yaml configuration files. Currently only implemented for the --number_of_photons argument of calculate_incident_angles.py. ([#1837](https://github.com/gammasim/simtools/pull/1837))
+
+### Maintenance
+
+- Add application control functionality for all simtools applications. ([#1809](https://github.com/gammasim/simtools/pull/1809))
+- Adding --all_model_versions flag for calibration and software report generation. ([#1815](https://github.com/gammasim/simtools/pull/1815))
+- Replace superlinter in linter CI. Add toml linter and shellcheck to precommit. ([#1838](https://github.com/gammasim/simtools/pull/1838))
+- Update one function used in the tests to comply with version 2.x of pyeventio. ([#1840](https://github.com/gammasim/simtools/pull/1840))
+
+
 ## [v0.22.0](https://github.com/gammasim/simtools/releases/tag/v0.22.0) - 2025-09-30
 
 ### Bugfixes

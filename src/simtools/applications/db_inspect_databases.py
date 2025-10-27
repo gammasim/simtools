@@ -32,10 +32,12 @@ def main():
     """Inspect databases."""
     app_context = startup_application(_parse, setup_io_handler=False)
 
-    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
+    db = db_handler.DatabaseHandler(db_config=app_context.db_config)
     # databases without internal databases we don't have rights to modify
     databases = [
-        d for d in db.db_client.list_database_names() if d not in ("config", "admin", "local")
+        d
+        for d in db.mongo_db_handler.db_client.list_database_names()
+        if d not in ("config", "admin", "local")
     ]
     requested = app_context.args["db_name"]
     if requested != "all" and requested not in databases:

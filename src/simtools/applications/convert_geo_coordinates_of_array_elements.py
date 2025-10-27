@@ -138,7 +138,7 @@ def main():
         validate_schema_file = metadata.get_data_model_schema_file_name()
 
     layout = array_layout.ArrayLayout(
-        mongo_db_config=app_context.db_config,
+        db_config=app_context.db_config,
         model_version=app_context.args["model_version"],
         site=site,
         telescope_list_file=app_context.args["input"],

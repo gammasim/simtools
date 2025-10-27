@@ -250,6 +250,13 @@ class CommandLineParser(argparse.ArgumentParser):
                 type=str,
                 default=None,
             )
+        _job_group.add_argument(
+            "--overwrite_model_parameters",
+            help="File name to overwrite model parameters from DB with provided values",
+            type=str,
+            required=False,
+        )
+
         if any(
             option in model_options for option in ["site", "telescope", "layout", "layout_file"]
         ):
@@ -260,15 +267,6 @@ class CommandLineParser(argparse.ArgumentParser):
                 "--telescope",
                 help="telescope model name (e.g., LSTN-01, SSTS-design, ...)",
                 type=self.telescope,
-            )
-            _job_group.add_argument(
-                "--telescope_model_file",
-                help=(
-                    "Path to a YAML file containing modifications to the telescope model. "
-                    "This feature is intended for developers and lacks validation."
-                ),
-                type=Path,
-                required=False,
             )
         if "layout" in model_options or "layout_file" in model_options:
             _job_group = self._add_model_option_layout(
@@ -556,6 +554,38 @@ class CommandLineParser(argparse.ArgumentParser):
             "--site", help="site (e.g., North, South)", type=self.site, required=False
         )
         return job_group
+
+    @staticmethod
+    def scientific_int(value):
+        """
+        Convert string (including scientific notation) to integer.
+
+        Parameters
+        ----------
+        value: str or int or float
+            Value to convert to integer. Can be a regular integer,
+            float, or string in scientific notation (e.g., '1e7').
+
+        Returns
+        -------
+        int
+            Converted integer value
+
+        Raises
+        ------
+        argparse.ArgumentTypeError
+            If the value cannot be converted to an integer
+        """
+        try:
+            f = float(value)
+            if not f.is_integer():
+                raise ValueError
+            return int(f)
+        except (ValueError, TypeError) as exc:
+            raise argparse.ArgumentTypeError(
+                f"Invalid integer value: '{value}'. "
+                "Expected an integer or scientific notation like '1e7'."
+            ) from exc
 
     @staticmethod
     def site(value):

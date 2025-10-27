@@ -1,17 +1,18 @@
 #!/usr/bin/python3
-"""Base class for simulation model parameters."""
+"""Base class for simulation model parameters (e.g., for SiteModel or TelescopeModel)."""
 
 import logging
 import shutil
-from copy import copy
+from copy import copy, deepcopy
 
 import astropy.units as u
 
 import simtools.utils.general as gen
+from simtools.data_model import schema
 from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 
 
 class InvalidModelParameterError(Exception):
@@ -27,8 +28,8 @@ class ModelParameter:
 
     Parameters
     ----------
-    db: DatabaseHandler
-        Database handler.
+    db_config:
+        Database configuration dictionary.
     model_version: str
         Version of the model (ex. 5.0.0).
     site: str
@@ -38,35 +39,37 @@ class ModelParameter:
     collection: str
         instrument class (e.g. telescopes, calibration_devices)
         as stored under collection in the DB.
-    mongo_db_config: dict
-        MongoDB configuration.
     label: str
+        Instance label. Used for output file naming.
+    overwrite_model_parameters: str, optional
+        File name to overwrite model parameters from DB with provided values.
         Instance label. Important for output file naming.
-
+    ignore_software_version: bool
+        If True, ignore software version checks for deprecated parameters.
+        Useful for documentation generation.
     """
 
     def __init__(
         self,
-        mongo_db_config,
+        db_config,
         model_version,
         site=None,
         array_element_name=None,
         collection="telescopes",
-        db=None,
         label=None,
+        overwrite_model_parameters=None,
+        ignore_software_version=False,
     ):
         self._logger = logging.getLogger(__name__)
-        self._extra_label = None
         self.io_handler = io_handler.IOHandler()
-        self.db = (
-            db if db is not None else db_handler.DatabaseHandler(mongo_db_config=mongo_db_config)
-        )
+        self.db = db_handler.DatabaseHandler(db_config=db_config)
 
-        self._parameters = {}
+        self.parameters = {}
         self._simulation_config_parameters = {sw: {} for sw in names.simulation_software()}
         self.collection = collection
         self.label = label
         self.model_version = model_version
+        self.ignore_software_version = ignore_software_version
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
             names.validate_array_element_name(array_element_name)
@@ -78,56 +81,17 @@ class ModelParameter:
         )
         self._config_file_directory = None
         self._config_file_path = None
+        self.overwrite_model_parameters = overwrite_model_parameters
+        self._added_parameter_files = None
+        self._is_exported_model_files_up_to_date = False
+
         self._load_parameters_from_db()
 
         self.simtel_config_writer = None
-        self._added_parameter_files = None
-        self._is_config_file_up_to_date = False
-        self._is_exported_model_files_up_to_date = False
-
-    @property
-    def model_version(self):
-        """Model version."""
-        return self._model_version
-
-    @model_version.setter
-    def model_version(self, model_version):
-        """
-        Set model version.
-
-        Parameters
-        ----------
-        model_version: str or list
-            Model version (e.g., "6.0.0").
-            If a list is passed, it must contain exactly one element,
-            and only that element will be used.
-
-        Raises
-        ------
-        ValueError
-            If more than one model version is passed.
-        """
-        if isinstance(model_version, list):
-            raise ValueError(
-                f"Only one model version can be passed to {self.__class__.__name__}, not a list."
-            )
-        self._model_version = model_version
-
-    @property
-    def parameters(self):
-        """
-        Model parameters dictionary.
-
-        Returns
-        -------
-        dict
-            Dictionary containing all model parameters
-        """
-        return self._parameters
 
     def _get_parameter_dict(self, par_name):
         """
-        Get model parameter dictionary as stored in the DB.
+        Get model parameter dictionary for a specific parameter as stored in the DB.
 
         No conversion to values are applied for the use in simtools
         (e.g., no conversion from the string representation of lists
@@ -155,7 +119,7 @@ class ModelParameter:
                 f"Parameter {par_name} was not found in the model {self.name}, {self.site}."
             ) from e
 
-    def get_parameter_value(self, par_name, parameter_dict=None):
+    def get_parameter_value(self, par_name):
         """
         Get the value of a model parameter.
 
@@ -166,9 +130,6 @@ class ModelParameter:
         ----------
         par_name: str
             Name of the parameter.
-        parameter_dict: dict
-            Dictionary with complete DB entry for the given parameter
-            (including the 'value', 'units' fields).
 
         Returns
         -------
@@ -176,50 +137,28 @@ class ModelParameter:
 
         Raises
         ------
-        KeyError
+        InvalidModelParameterError
             If par_name does not match any parameter in this model.
         """
-        parameter_dict = parameter_dict if parameter_dict else self._get_parameter_dict(par_name)
         try:
-            _parameter = parameter_dict["value"]
+            value = self._get_parameter_dict(par_name)["value"]
         except KeyError as exc:
-            self._logger.error(f"Parameter {par_name} does not have a value")
-            raise exc
-        if isinstance(_parameter, str):
-            _is_float = False
+            raise InvalidModelParameterError(f"Parameter {par_name} does not have a value") from exc
+
+        if isinstance(value, str):
             try:
                 _is_float = self.get_parameter_type(par_name).startswith("float")
-            except (InvalidModelParameterError, TypeError):  # float - in case we don't know
+            except (
+                InvalidModelParameterError,
+                TypeError,
+                AttributeError,
+            ):  # float - in case we don't know
                 _is_float = True
-            _parameter = gen.convert_string_to_list(_parameter, is_float=_is_float)
-            _parameter = _parameter if len(_parameter) > 1 else _parameter[0]
+            value = gen.convert_string_to_list(value, is_float=_is_float)
+            if len(value) == 1:
+                value = value[0]
 
-        return _parameter
-
-    def _create_quantity_for_value(self, value, unit):
-        """
-        Create an astropy quantity for a single value and unit.
-
-        Parameters
-        ----------
-        value: numeric or str
-            The value to create a quantity for.
-        unit: str or None
-            The unit string or None.
-
-        Returns
-        -------
-        astropy.Quantity or original value
-            Astropy quantity for numeric values with units,
-            original value for non-numeric values.
-        """
-        if not isinstance(value, int | float):
-            return value
-
-        if unit is None or unit == "null":
-            return value * u.dimensionless_unscaled
-
-        return value * u.Unit(unit)
+        return value
 
     def get_parameter_value_with_unit(self, par_name):
         """
@@ -237,7 +176,7 @@ class ModelParameter:
 
         """
         _parameter = self._get_parameter_dict(par_name)
-        _value = self.get_parameter_value(par_name, _parameter)
+        _value = self.get_parameter_value(par_name)
 
         try:
             if isinstance(_parameter.get("unit"), str):
@@ -251,7 +190,9 @@ class ModelParameter:
 
             # Create list of quantities for multiple values with different units
             return [
-                self._create_quantity_for_value(_value[i], _unit[i] if i < len(_unit) else None)
+                value_conversion.get_value_as_quantity(
+                    _value[i], _unit[i] if i < len(_unit) else None
+                )
                 for i in range(len(_value))
             ]
 
@@ -272,13 +213,11 @@ class ModelParameter:
 
         Returns
         -------
-        str or None
-            type of the parameter (None if no type is defined)
-
+        str
+            type of the parameter
         """
-        parameter_dict = self._get_parameter_dict(par_name)
         try:
-            return parameter_dict["type"]
+            return self._get_parameter_dict(par_name)["type"]
         except KeyError:
             self._logger.debug(f"Parameter {par_name} does not have a type.")
         return None
@@ -298,9 +237,8 @@ class ModelParameter:
             True if file flag is set.
 
         """
-        parameter_dict = self._get_parameter_dict(par_name)
         try:
-            return parameter_dict["file"]
+            return self._get_parameter_dict(par_name)["file"]
         except KeyError:
             self._logger.debug(f"Parameter {par_name} does not have a file associated with it.")
         return False
@@ -321,11 +259,6 @@ class ModelParameter:
         """
         return self._get_parameter_dict(par_name)["parameter_version"]
 
-    def print_parameters(self):
-        """Print parameters and their values for debugging purposes."""
-        for par in self.parameters:
-            print(f"{par} = {self.get_parameter_value(par)}")
-
     def _set_config_file_directory_and_name(self):
         """Set and create the directory and the name of the config file."""
         if self.name is None and self.site is None:
@@ -341,7 +274,6 @@ class ModelParameter:
             self.model_version,
             telescope_model_name=self.name,
             label=self.label,
-            extra_label=self._extra_label,
         )
         self._config_file_path = self.config_file_directory.joinpath(config_file_name)
 
@@ -379,34 +311,71 @@ class ModelParameter:
                 pass
 
     def _load_parameters_from_db(self):
-        """Read parameters from DB and store them in _parameters."""
+        """
+        Read parameters from Database.
+
+        This is the main function to load the model parameters from the DB.
+        """
         if self.db is None:
             return
 
         if self.name or self.site:
-            self._parameters = self.db.get_model_parameters(
-                self.site, self.name, self.collection, self.model_version
+            # copy parameters dict, is it may be modified later on
+            self.parameters = deepcopy(
+                self.db.get_model_parameters(
+                    self.site, self.name, self.collection, self.model_version
+                )
             )
+            if self.overwrite_model_parameters:
+                self.overwrite_parameters_from_file(self.overwrite_model_parameters)
+            self._check_model_parameter_software_versions(self.parameters.keys())
 
         self._load_simulation_software_parameter()
+        for software_name, parameters in self._simulation_config_parameters.items():
+            self._check_model_parameter_software_versions(
+                parameters.keys(), software_name=software_name
+            )
 
-    @property
-    def extra_label(self):
-        """Return the extra label if defined, if not return ''."""
-        return self._extra_label if self._extra_label is not None else ""
-
-    def change_parameter(self, par_name, value):
+    def _check_model_parameter_software_versions(self, parameter_list, software_name=None):
         """
-        Change the value of an existing parameter.
+        Ensure that model parameters are compatible with the installed software versions.
 
-        This function does not modify the  DB, it affects only the current instance.
+        Compares software versions listed in schema files with the installed software versions
+        (e.g., sim_telarray, CORSIKA).
+
+        Parameters
+        ----------
+        parameter_list: list
+            List containing model parameter names.
+        software_name: str
+            Name of the software for which the parameters are checked.
+        """
+        for par_name in parameter_list:
+            if par_name in (parameter_schema := names.model_parameters()):
+                schema.validate_deprecation_and_version(
+                    data=parameter_schema[par_name],
+                    software_name=software_name,
+                    ignore_software_version=self.ignore_software_version,
+                )
+
+    def overwrite_model_parameter(self, par_name, value, parameter_version=None):
+        """
+        Overwrite the parameter dictionary for a specific parameter in the model.
+
+        This function does not modify the DB, it affects only the current instance of
+        the model parameter dictionary.
+
+        If the parameter version is given only, the parameter dictionary is updated
+        from the database for the given version.
 
         Parameters
         ----------
         par_name: str
             Name of the parameter.
         value:
-            Value of the parameter.
+            New value for the parameter.
+        parameter_version: str, optional
+            New version for the parameter.
 
         Raises
         ------
@@ -416,31 +385,48 @@ class ModelParameter:
         if par_name not in self.parameters:
             raise InvalidModelParameterError(f"Parameter {par_name} not in the model")
 
-        value = gen.convert_string_to_list(value) if isinstance(value, str) else value
+        if value is None and parameter_version:
+            _para_dict = self.db.get_model_parameter(
+                parameter=par_name,
+                site=self.site,
+                array_element_name=self.name,
+                parameter_version=parameter_version,
+            )
+            if _para_dict:
+                self.parameters[par_name] = _para_dict.get(par_name)
+            self._logger.debug(
+                f"Changing parameter {par_name} to version {parameter_version} with value "
+                f"{self.parameters[par_name]['value']}"
+            )
+        else:
+            value = gen.convert_string_to_list(value) if isinstance(value, str) else value
 
-        par_type = self.get_parameter_type(par_name)
-        if not gen.validate_data_type(
-            reference_dtype=par_type,
-            value=value,
-            dtype=None,
-            allow_subtypes=True,
-        ):
-            raise ValueError(f"Could not cast {value} of type {type(value)} to {par_type}.")
+            par_type = self.get_parameter_type(par_name)
+            if not gen.validate_data_type(
+                reference_dtype=par_type,
+                value=value,
+                dtype=None,
+                allow_subtypes=True,
+            ):
+                raise ValueError(f"Could not cast {value} of type {type(value)} to {par_type}.")
 
-        self._logger.debug(
-            f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} to {value}"
-        )
-        self.parameters[par_name]["value"] = value
+            self._logger.debug(
+                f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} "
+                f"to {value}"
+            )
+            self.parameters[par_name]["value"] = value
+            if parameter_version:
+                self.parameters[par_name]["parameter_version"] = parameter_version
 
         # In case parameter is a file, the model files will be outdated
         if self.get_parameter_file_flag(par_name):
             self._is_exported_model_files_up_to_date = False
 
-        self._is_config_file_up_to_date = False
-
-    def change_multiple_parameters_from_file(self, file_name):
+    def overwrite_parameters_from_file(self, file_name):
         """
-        Change values of multiple existing parameters in the model from a file.
+        Overwrite parameters from a file.
+
+        File is expected to follow the format described in 'simulation_models_info.schema.yml'.
 
         This function does not modify the DB, it affects only the current instance.
         This feature is intended for developers and lacks validation.
@@ -450,34 +436,85 @@ class ModelParameter:
         file_name: str
             File containing the parameters to be changed.
         """
-        self._logger.warning(
-            "Changing multiple parameters from file is a feature for developers."
-            "Insufficient validation of parameters."
-        )
-        self._logger.debug(f"Changing parameters from file {file_name}")
-        self.change_multiple_parameters(**ascii_handler.collect_data_from_file(file_name=file_name))
+        changes_data = schema.validate_dict_using_schema(
+            data=ascii_handler.collect_data_from_file(file_name=file_name),
+            schema_file="simulation_models_info.schema.yml",
+        ).get("changes", {})
 
-    def change_multiple_parameters(self, **kwargs):
+        key_for_changes = self._get_key_for_parameter_changes(self.site, self.name, changes_data)
+        self.overwrite_parameters(changes_data.get(key_for_changes, {}) if key_for_changes else {})
+
+    def _get_key_for_parameter_changes(self, site, array_element_name, changes_data):
+        """
+        Get the key for parameter changes based on site and array element name.
+
+        For array elements, the following cases are taken into account:
+
+        - array element name in changes_data: specific array element is returned
+        - design type in changes_data: specific design type is returned if array
+          element matches this design
+
+        Parameters
+        ----------
+        site: str
+            Site name.
+        array_element_name: str
+            Array element name.
+        changes_data: dict
+            Dictionary containing the changes data.
+
+        Returns
+        -------
+        str
+            Key for parameter changes.
+        """
+        if site and not array_element_name:
+            return f"OBS-{site}"
+
+        if array_element_name in changes_data:
+            return array_element_name
+
+        design_type = self.db.get_design_model(
+            model_version=self.model_version,
+            array_element_name=array_element_name,
+            collection=self.collection,
+        )
+        if design_type in changes_data:
+            return design_type
+
+        return None
+
+    def overwrite_parameters(self, changes):
         """
         Change the value of multiple existing parameters in the model.
 
         This function does not modify the DB, it affects only the current instance.
 
+        Allows for two types of 'changes' dictionary:
+
+        - simple: '{parameter_name: new_value, ...}'
+        - model repository style:
+          '{parameter_name: {"value": new_value, "version": new_version}, ...}'
+
         Parameters
         ----------
-        **kwargs
-            Parameters should be passed as parameter_name=value.
-
+        changes: dict
+            Parameters to be changed.
         """
-        for par, value in kwargs.items():
-            if par in self.parameters:
-                self.change_parameter(par, value)
+        for par_name, par_value in changes.items():
+            if par_name in self.parameters:
+                if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
+                    self.overwrite_model_parameter(
+                        par_name, par_value.get("value"), par_value.get("version")
+                    )
+                else:
+                    self.overwrite_model_parameter(par_name, par_value)
 
-        self._is_config_file_up_to_date = False
-
-    def export_parameter_file(self, par_name, file_path):
+    def overwrite_model_file(self, par_name, file_path):
         """
-        Export a file to the config file directory.
+        Overwrite the existing model file in the config file directory.
+
+        Keeps track of updated model file with '_added_parameter_files' attribute.
 
         Parameters
         ----------
@@ -492,7 +529,7 @@ class ModelParameter:
 
     def export_model_files(self, destination_path=None, update_if_necessary=False):
         """
-        Export the model files into the config file directory.
+        Export model files from the database into the config file directory.
 
         Parameters
         ----------
@@ -572,6 +609,7 @@ class ModelParameter:
             self.simtel_config_writer = SimtelConfigWriter(
                 site=self.site,
                 telescope_model_name=self.name,
+                telescope_design_model=self.design_model,
                 model_version=self.model_version,
                 label=self.label,
             )

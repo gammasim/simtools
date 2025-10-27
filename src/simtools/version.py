@@ -4,6 +4,7 @@
 # which is adapted from https://github.com/astropy/astropy/blob/master/astropy/version.py
 # see https://github.com/astropy/astropy/pull/10774 for a discussion on why this needed.
 
+from packaging.specifiers import SpecifierSet
 from packaging.version import InvalidVersion, Version
 
 MAJOR_MINOR_PATCH = "major.minor.patch"
@@ -189,3 +190,26 @@ def compare_versions(version_string_1, version_string_2, level=MAJOR_MINOR_PATCH
         raise ValueError(f"Unknown level: {level}")
 
     return (ver1 > ver2) - (ver1 < ver2)
+
+
+def check_version_constraint(version_string, constraint):
+    """
+    Check if a version satisfies a constraint.
+
+    Parameters
+    ----------
+    version_string : str
+        The version string to check (e.g., "6.0.2").
+    constraint : str
+        The version constraint to check against (e.g., ">=6.0.0").
+
+    Returns
+    -------
+    bool
+        True if the version satisfies the constraint, False otherwise.
+    """
+    spec = SpecifierSet(constraint.strip(), prereleases=True)
+    ver = Version(version_string)
+    if ver in spec:
+        return True
+    return False

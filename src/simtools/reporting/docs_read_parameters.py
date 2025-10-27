@@ -29,7 +29,7 @@ class ReadParameters:
     def __init__(self, db_config, args, output_path):
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
-        self.db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+        self.db = db_handler.DatabaseHandler(db_config=db_config)
         self.db_config = db_config
         self.array_element = args.get("telescope", None)
         self.site = args.get("site", None)
@@ -543,7 +543,8 @@ class ReadParameters:
             telescope_name=self.array_element,
             model_version=self.model_version,
             label="reports",
-            mongo_db_config=self.db_config,
+            db_config=self.db_config,
+            ignore_software_version=True,
         )
 
         output_filename = Path(self.output_path / (telescope_model.name + ".md"))

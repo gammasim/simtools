@@ -8,6 +8,8 @@ from pathlib import Path
 import numpy as np
 import yaml
 
+from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
+
 _logger = logging.getLogger(__name__)
 
 
@@ -62,9 +64,9 @@ def assert_n_showers_and_energy_range(file):
 
     simulated_energies = []
     simulation_config = {}
-    with SimTelFile(file) as f:
+    with SimTelFile(file, skip_non_triggered=False) as f:
         simulation_config = f.mc_run_headers[0]
-        for event in f.iter_mc_events():
+        for event in f:
             simulated_energies.append(event["mc_shower"]["energy"])
 
     # The relative tolerance is set to 1% because ~0.5% shower simulations do not
@@ -124,7 +126,35 @@ def assert_expected_output(file, expected_output):
     return True
 
 
-def check_output_from_sim_telarray(file, expected_output):
+def assert_expected_simtel_metadata(file, expected_metadata):
+    """
+    Assert that expected metadata is present in the sim_telarray file.
+
+    Parameters
+    ----------
+    file: Path
+        Path to the sim_telarray file.
+    expected_metadata: dict
+        Expected metadata values.
+
+    """
+    global_meta, telescope_meta = read_sim_telarray_metadata(file)
+
+    for key, value in expected_metadata.items():
+        if key not in global_meta and key not in telescope_meta:
+            _logger.error(f"Metadata key {key} not found in sim_telarray file {file}")
+            return False
+        if key in global_meta and global_meta[key] != value:
+            _logger.error(
+                f"Metadata key {key} has value {global_meta[key]} instead of expected {value}"
+            )
+            return False
+        _logger.debug(f"Metadata key {key} matches expected value {value}")
+
+    return True
+
+
+def check_output_from_sim_telarray(file, file_test):
     """
     Check that the sim_telarray simulation result is reasonable and matches the expected output.
 
@@ -132,20 +162,34 @@ def check_output_from_sim_telarray(file, expected_output):
     ----------
     file: Path
         Path to the sim_telarray file.
-    expected_output: dict
-        Expected output values.
+    file_test: dict
+        File test description including expected output and metadata.
 
     Raises
     ------
     ValueError
         If the file is not a zstd compressed file.
     """
+    if "expected_output" not in file_test and "expected_simtel_metadata" not in file_test:
+        _logger.debug(f"No expected output or metadata provided, skipping checks {file_test}")
+        return True
+
     if file.suffix != ".zst":
         raise ValueError(
             f"Expected output file {file} is not a zstd compressed file "
             f"(i.e., a sim_telarray file)."
         )
 
-    return assert_n_showers_and_energy_range(file=file) and assert_expected_output(
-        file=file, expected_output=expected_output
-    )
+    assert_output = assert_metadata = True
+
+    if "expected_output" in file_test:
+        assert_output = assert_expected_output(
+            file=file, expected_output=file_test["expected_output"]
+        )
+
+    if "expected_simtel_metadata" in file_test:
+        assert_metadata = assert_expected_simtel_metadata(
+            file=file, expected_metadata=file_test["expected_simtel_metadata"]
+        )
+
+    return assert_n_showers_and_energy_range(file=file) and assert_output and assert_metadata

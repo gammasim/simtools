@@ -288,7 +288,7 @@ def _confirm_remote_database_upload(db):
     if not db.is_remote_database():
         return True
 
-    db_config = db.mongo_db_config
+    db_config = db.db_config
     db_server = db_config.get("db_server", "unknown server") if db_config else "unknown server"
 
     try:

@@ -81,10 +81,10 @@ class MirrorPanelPSF:
             mirror_list_file = gen.find_file(
                 name=self.args_dict["mirror_list"], loc=self.args_dict["model_path"]
             )
-            tel_model.change_parameter("mirror_list", self.args_dict["mirror_list"])
-            tel_model.export_parameter_file("mirror_list", mirror_list_file)
+            tel_model.overwrite_model_parameter("mirror_list", self.args_dict["mirror_list"])
+            tel_model.overwrite_model_file("mirror_list", mirror_list_file)
         if self.args_dict["random_focal_length"] is not None:
-            tel_model.change_parameter(
+            tel_model.overwrite_model_parameter(
                 "random_focal_length", str(self.args_dict["random_focal_length"])
             )
 
@@ -221,7 +221,7 @@ class MirrorPanelPSF:
         sig_d80: float
             Standard deviation of D80 in cm.
         """
-        self.telescope_model.change_parameter("mirror_reflection_random_angle", rnda)
+        self.telescope_model.overwrite_model_parameter("mirror_reflection_random_angle", rnda)
         ray = RayTracing(
             telescope_model=self.telescope_model,
             site_model=self.site_model,
