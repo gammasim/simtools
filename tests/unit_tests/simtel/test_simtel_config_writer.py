@@ -674,8 +674,8 @@ def test_extract_trigger_parameters(simtel_config_writer):
     width, minsep = simtel_config_writer._extract_trigger_parameters(trigger_dict)
 
     # The .to() method returns the numerical value, not a Quantity object
-    assert width == 120.0  # nanoseconds
-    assert minsep == 30.0  # meters
+    assert width == pytest.approx(120.0)  # nanoseconds
+    assert minsep == pytest.approx(30.0)  # meters
 
 
 def test_extract_trigger_parameters_no_minsep(simtel_config_writer):
@@ -687,7 +687,7 @@ def test_extract_trigger_parameters_no_minsep(simtel_config_writer):
 
     width, minsep = simtel_config_writer._extract_trigger_parameters(trigger_dict)
 
-    assert width == 120.0  # nanoseconds
+    assert width == pytest.approx(120.0)  # nanoseconds
     assert minsep is None
 
 
@@ -729,9 +729,7 @@ def test_get_minimum_minsep(simtel_config_writer):
     }
 
     min_minsep = simtel_config_writer._get_minimum_minsep(non_hardstereo_groups)
-    assert min_minsep == 25.0
-
-    # Test with None values
+    assert min_minsep == pytest.approx(25.0)  # Test with None values
     non_hardstereo_groups = {
         (300.0, None): [3, 4],
         (400.0, None): [5, 6],
@@ -747,7 +745,7 @@ def test_get_minimum_minsep(simtel_config_writer):
     }
 
     min_minsep = simtel_config_writer._get_minimum_minsep(non_hardstereo_groups)
-    assert min_minsep == 25.0
+    assert min_minsep == pytest.approx(25.0)
 
 
 def test_process_telescope_triggers(simtel_config_writer):
@@ -837,7 +835,7 @@ def test_get_minimum_minsep_edge_cases(simtel_config_writer):
     # Test single group
     non_hardstereo_groups = {(300.0, 25.0): [3, 4]}
     min_minsep = simtel_config_writer._get_minimum_minsep(non_hardstereo_groups)
-    assert min_minsep == 25.0
+    assert min_minsep == pytest.approx(25.0)
 
 
 def test_process_telescope_triggers_multiple_hardstereo(simtel_config_writer):
