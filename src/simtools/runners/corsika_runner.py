@@ -34,6 +34,8 @@ class CorsikaRunner:
         Use seeds based on run number and primary particle. If False, use sim_telarray seeds.
     use_multipipe: bool
         Use multipipe to run CORSIKA and sim_telarray.
+    curved_atmosphere_min_zenith_angle: Quantity
+        Minimum zenith angle for which to use the curved-atmosphere CORSIKA binary.
     """
 
     def __init__(
@@ -43,6 +45,7 @@ class CorsikaRunner:
         label=None,
         keep_seeds=False,
         use_multipipe=False,
+        curved_atmosphere_min_zenith_angle=None,
     ):
         """Initialize CorsikaRunner."""
         self._logger = logging.getLogger(__name__)
@@ -52,6 +55,7 @@ class CorsikaRunner:
         self.corsika_config = corsika_config
         self._keep_seeds = keep_seeds
         self._use_multipipe = use_multipipe
+        self.curved_atmosphere_min_zenith_angle = curved_atmosphere_min_zenith_angle
 
         self._simtel_path = Path(simtel_path)
         self.io_handler = io_handler.IOHandler()
@@ -183,7 +187,7 @@ class CorsikaRunner:
         """
         Get autoinputs command.
 
-        corsika_autoinputs is a tool to generate random and user/host dependent
+        corsika_autoinputs is a tool to generate random seeds and user/host dependent
         parameters for CORSIKA configuration.
 
         Parameters
@@ -198,7 +202,12 @@ class CorsikaRunner:
         str
             autoinputs command.
         """
-        corsika_bin_path = self._simtel_path.joinpath("corsika-run/corsika")
+        if self.corsika_config.use_curved_atmosphere():
+            corsika_bin_path = self._simtel_path.joinpath("corsika-run/corsika-curved")
+            self._logger.debug("Using curved-atmosphere CORSIKA binary.")
+        else:
+            corsika_bin_path = self._simtel_path.joinpath("corsika-run/corsika")
+            self._logger.debug("Using flat-atmosphere CORSIKA binary")
 
         log_file = self.get_file_name(file_type="log", run_number=run_number)
         if self._use_multipipe:

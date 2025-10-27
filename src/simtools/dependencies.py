@@ -155,7 +155,7 @@ def get_corsika_version(run_time=None):
     if corsika_path is None:
         _logger.warning("Environment variable SIMTOOLS_SIMTEL_PATH is not set.")
         return None
-    corsika_command = Path(corsika_path) / "corsika"
+    corsika_command = Path(corsika_path) / "corsika-run" / "corsika"
 
     if run_time is None:
         command = [str(corsika_command)]
