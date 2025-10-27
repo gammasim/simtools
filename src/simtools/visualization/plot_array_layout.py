@@ -460,7 +460,7 @@ def create_patches(
                 name,
                 ha="center",
                 va="bottom",
-                fontsize=fontsize,
+                fontsize=fontsize * 0.8,
             )
 
     return patches, radii, highlighted_patches
