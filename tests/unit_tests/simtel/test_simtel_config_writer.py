@@ -488,3 +488,569 @@ def test_get_flasher_parameters_for_sim_telarray_missing_params(simtel_config_wr
         result[key] == pytest.approx(0.0)
         for key in ["laser_pulse_sigtime", "laser_pulse_twidth", "laser_pulse_exptime"]
     )
+
+
+def test_write_array_triggers_file_mixed_hardstereo(simtel_config_writer, tmp_test_directory):
+    """Test array triggers file generation with mixed hardstereo settings."""
+    # Mock telescope model with different telescope types
+    telescope_model = {
+        "LSTS-01": mock.Mock(),
+        "LSTS-02": mock.Mock(),
+        "MSTS-01": mock.Mock(),
+        "MSTS-02": mock.Mock(),
+        "SSTS-01": mock.Mock(),
+        "SSTS-02": mock.Mock(),
+    }
+
+    # Mock array triggers
+    array_triggers = {
+        "multiplicity": {"value": 2},
+        "width": {"value": 400.0, "unit": "ns"},
+        "min_separation": {"value": 30.0, "unit": "m"},
+        "hard_stereo": {"value": False},
+    }
+
+    # Mock the method to return different values for different telescope types
+    def mock_get_array_triggers(array_triggers, tel_type, num_tels):
+        if tel_type == "LSTS":
+            return {
+                "multiplicity": {"value": 2},
+                "width": {"value": 120.0, "unit": "ns"},
+                "min_separation": {"value": None, "unit": None},
+                "hard_stereo": {"value": True},
+            }
+        return {
+            "multiplicity": {"value": 2},
+            "width": {"value": 400.0, "unit": "ns"},
+            "min_separation": {"value": 30.0, "unit": "m"},
+            "hard_stereo": {"value": False},
+        }
+
+    with mock.patch.object(
+        simtel_config_writer,
+        "_get_array_triggers_for_telescope_type",
+        side_effect=mock_get_array_triggers,
+    ):
+        result_file = simtel_config_writer._write_array_triggers_file(
+            array_triggers, tmp_test_directory, telescope_model
+        )
+
+    # Check file was created
+    assert result_file == "array_triggers.dat"
+    file_path = tmp_test_directory / result_file
+    assert file_path.exists()
+
+    # Read and check content
+    with open(file_path, encoding="utf-8") as f:
+        content = f.read()
+
+    lines = content.strip().split("\n")
+    print(lines)
+
+    # Should have comment line, hardstereo line for LSTs, individual and combined lines
+    assert "# Array trigger definition" in lines[0]
+
+    # Check that LST line has hardstereo
+    lst_line = next(line for line in lines if "hardstereo" in line)
+    assert "Trigger 2 of 1, 2 width 120.0 hardstereo" in lst_line
+
+    # Check that there's a combined line with all non-hardstereo telescopes
+    combined_line = next(line for line in lines if "3, 4, 5, 6" in line)
+    assert "Trigger 2 of 3, 4, 5, 6 width 400.0 minsep 30.0" in combined_line
+
+
+def test_write_array_triggers_file_different_parameters(simtel_config_writer, tmp_test_directory):
+    """Test array triggers file generation with different width and min_separation values."""
+    # Mock telescope model with different telescope types
+    telescope_model = {
+        "LSTS-01": mock.Mock(),
+        "LSTS-02": mock.Mock(),
+        "MSTS-01": mock.Mock(),
+        "MSTS-02": mock.Mock(),
+        "SSTS-01": mock.Mock(),
+        "SSTS-02": mock.Mock(),
+    }
+
+    # Mock array triggers
+    array_triggers = {
+        "multiplicity": {"value": 2},
+        "width": {"value": 400.0, "unit": "ns"},
+        "min_separation": {"value": 30.0, "unit": "m"},
+        "hard_stereo": {"value": False},
+    }
+
+    # Mock the method to return different values for different telescope types
+    def mock_get_array_triggers(array_triggers, tel_type, num_tels):
+        if tel_type == "LSTS":
+            return {
+                "multiplicity": {"value": 2},
+                "width": {"value": 120.0, "unit": "ns"},
+                "min_separation": {"value": None, "unit": None},
+                "hard_stereo": {"value": True},
+            }
+        if tel_type == "MSTS":
+            return {
+                "multiplicity": {"value": 2},
+                "width": {"value": 300.0, "unit": "ns"},  # Different width
+                "min_separation": {"value": 25.0, "unit": "m"},  # Different min_separation
+                "hard_stereo": {"value": False},
+            }
+        # SSTS
+        return {
+            "multiplicity": {"value": 2},
+            "width": {"value": 400.0, "unit": "ns"},
+            "min_separation": {"value": 30.0, "unit": "m"},
+            "hard_stereo": {"value": False},
+        }
+
+    with mock.patch.object(
+        simtel_config_writer,
+        "_get_array_triggers_for_telescope_type",
+        side_effect=mock_get_array_triggers,
+    ):
+        result_file = simtel_config_writer._write_array_triggers_file(
+            array_triggers, tmp_test_directory, telescope_model
+        )
+
+    # Check file was created
+    assert result_file == "array_triggers.dat"
+    file_path = tmp_test_directory / result_file
+    assert file_path.exists()
+
+    # Read and check content
+    with open(file_path, encoding="utf-8") as f:
+        content = f.read()
+
+    lines = content.strip().split("\n")
+
+    # Should have comment, hardstereo line for LSTs, individual and combined lines
+    assert "# Array trigger definition" in lines[0]
+
+    # Check that LST line has hardstereo
+    lst_line = next(line for line in lines if "hardstereo" in line)
+    assert "Trigger 2 of 1, 2 width 120.0 hardstereo" in lst_line
+
+    # Check that MSTs have their own line (different parameters)
+    mst_line = next(line for line in lines if "3, 4" in line and "width 300.0" in line)
+    assert "Trigger 2 of 3, 4 width 300.0 minsep 25.0" in mst_line
+
+    # Check that SSTs have their own line (different parameters)
+    sst_line = next(
+        line for line in lines if "5, 6" in line and "width 400.0" in line and "30" in line
+    )
+    assert "Trigger 2 of 5, 6 width 400.0 minsep 30.0" in sst_line
+
+    # Check that there's a combined line with all non-hardstereo telescopes using shortest values
+    combined_line = next(line for line in lines if "3, 4, 5, 6" in line)
+    assert "Trigger 2 of 3, 4, 5, 6 width 300.0 minsep 25.0" in combined_line  # shortest values
+
+
+def test_group_telescopes_by_type(simtel_config_writer):
+    """Test the _group_telescopes_by_type helper method."""
+    telescope_model = {
+        "LSTS-01": mock.Mock(),
+        "LSTS-02": mock.Mock(),
+        "MSTS-01": mock.Mock(),
+        "SSTS-01": mock.Mock(),
+    }
+
+    result = simtel_config_writer._group_telescopes_by_type(telescope_model)
+
+    expected = {
+        "LSTS": [1, 2],
+        "MSTS": [3],
+        "SSTS": [4],
+    }
+    assert result == expected
+
+
+def test_extract_trigger_parameters(simtel_config_writer):
+    """Test the _extract_trigger_parameters helper method."""
+    trigger_dict = {
+        "width": {"value": 120.0, "unit": "ns"},
+        "min_separation": {"value": 30.0, "unit": "m"},
+    }
+
+    width, minsep = simtel_config_writer._extract_trigger_parameters(trigger_dict)
+
+    # The .to() method returns the numerical value, not a Quantity object
+    assert width == 120.0  # nanoseconds
+    assert minsep == 30.0  # meters
+
+
+def test_extract_trigger_parameters_no_minsep(simtel_config_writer):
+    """Test _extract_trigger_parameters when min_separation is None."""
+    trigger_dict = {
+        "width": {"value": 120.0, "unit": "ns"},
+        "min_separation": {"value": None, "unit": None},
+    }
+
+    width, minsep = simtel_config_writer._extract_trigger_parameters(trigger_dict)
+
+    assert width == 120.0  # nanoseconds
+    assert minsep is None
+
+
+def test_build_trigger_line(simtel_config_writer):
+    """Test the _build_trigger_line helper method."""
+    trigger_dict = {"multiplicity": {"value": 2}}
+    tel_list = [1, 2, 3]
+    width = 120.0 * u.ns
+    minsep = 30.0 * u.m
+
+    # Test hardstereo line
+    line = simtel_config_writer._build_trigger_line(
+        trigger_dict, tel_list, width, minsep, hardstereo=True
+    )
+    expected = "Trigger 2 of 1, 2, 3 width 120.0 ns hardstereo minsep 30.0 m"
+    assert line == expected
+
+    # Test non-hardstereo line
+    line = simtel_config_writer._build_trigger_line(
+        trigger_dict, tel_list, width, minsep, hardstereo=False
+    )
+    expected = "Trigger 2 of 1, 2, 3 width 120.0 ns minsep 30.0 m"
+    assert line == expected
+
+    # Test line without minsep
+    line = simtel_config_writer._build_trigger_line(
+        trigger_dict, tel_list, width, None, hardstereo=True
+    )
+    expected = "Trigger 2 of 1, 2, 3 width 120.0 ns hardstereo"
+    assert line == expected
+
+
+def test_get_minimum_minsep(simtel_config_writer):
+    """Test the _get_minimum_minsep helper method."""
+    # Test with minsep values - use plain numbers as keys like the actual implementation
+    non_hardstereo_groups = {
+        (300.0, 25.0): [3, 4],
+        (400.0, 30.0): [5, 6],
+    }
+
+    min_minsep = simtel_config_writer._get_minimum_minsep(non_hardstereo_groups)
+    assert min_minsep == 25.0
+
+    # Test with None values
+    non_hardstereo_groups = {
+        (300.0, None): [3, 4],
+        (400.0, None): [5, 6],
+    }
+
+    min_minsep = simtel_config_writer._get_minimum_minsep(non_hardstereo_groups)
+    assert min_minsep is None
+
+    # Test with mixed values
+    non_hardstereo_groups = {
+        (300.0, 25.0): [3, 4],
+        (400.0, None): [5, 6],
+    }
+
+    min_minsep = simtel_config_writer._get_minimum_minsep(non_hardstereo_groups)
+    assert min_minsep == 25.0
+
+
+def test_process_telescope_triggers(simtel_config_writer):
+    """Test the _process_telescope_triggers helper method."""
+    array_triggers = [
+        {
+            "name": "LSTS_array",
+            "multiplicity": {"value": 2},
+            "width": {"value": 120.0, "unit": "ns"},
+            "min_separation": {"value": None, "unit": None},
+            "hard_stereo": {"value": True},
+        },
+        {
+            "name": "MSTS_array",
+            "multiplicity": {"value": 2},
+            "width": {"value": 300.0, "unit": "ns"},
+            "min_separation": {"value": 25.0, "unit": "m"},
+            "hard_stereo": {"value": False},
+        },
+    ]
+
+    trigger_per_telescope_type = {
+        "LSTS": [1, 2],
+        "MSTS": [3, 4],
+    }
+
+    hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity = (
+        simtel_config_writer._process_telescope_triggers(array_triggers, trigger_per_telescope_type)
+    )
+
+    # Check hardstereo lines
+    assert len(hardstereo_lines) == 1
+    assert "Trigger 2 of 1, 2 width 120.0 hardstereo" in hardstereo_lines[0]
+
+    # Check non-hardstereo groups - keys are plain numbers, not Quantity objects
+    assert len(non_hardstereo_groups) == 1
+    key = (300.0, 25.0)  # Plain numbers as used in the actual implementation
+    assert key in non_hardstereo_groups
+    assert non_hardstereo_groups[key] == [3, 4]
+
+    # Check all non-hardstereo telescopes
+    assert all_non_hardstereo_tels == [3, 4]
+
+    # Check multiplicity
+    assert multiplicity == 2
+
+
+def test_extract_trigger_parameters_unit_conversion(simtel_config_writer):
+    """Test _extract_trigger_parameters with unit conversion."""
+    trigger_dict = {
+        "width": {"value": 0.12, "unit": "us"},  # microseconds -> nanoseconds
+        "min_separation": {"value": 0.03, "unit": "km"},  # kilometers -> meters
+    }
+
+    width, minsep = simtel_config_writer._extract_trigger_parameters(trigger_dict)
+
+    assert width == pytest.approx(120.0)  # 0.12 us = 120 ns
+    assert minsep == pytest.approx(30.0)  # 0.03 km = 30 m
+
+
+def test_build_trigger_line_edge_cases(simtel_config_writer):
+    """Test _build_trigger_line with edge cases."""
+    trigger_dict = {"multiplicity": {"value": 1}}
+
+    # Test single telescope
+    line = simtel_config_writer._build_trigger_line(
+        trigger_dict, [5], 100.0, None, hardstereo=False
+    )
+    expected = "Trigger 1 of 5 width 100.0"
+    assert line == expected
+
+    # Test large telescope list
+    tel_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    line = simtel_config_writer._build_trigger_line(
+        trigger_dict, tel_list, 200.0, 50.0, hardstereo=False
+    )
+    expected = "Trigger 1 of 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 width 200.0 minsep 50.0"
+    assert line == expected
+
+
+def test_get_minimum_minsep_edge_cases(simtel_config_writer):
+    """Test _get_minimum_minsep with edge cases."""
+    # Test empty dictionary
+    min_minsep = simtel_config_writer._get_minimum_minsep({})
+    assert min_minsep is None
+
+    # Test single group
+    non_hardstereo_groups = {(300.0, 25.0): [3, 4]}
+    min_minsep = simtel_config_writer._get_minimum_minsep(non_hardstereo_groups)
+    assert min_minsep == 25.0
+
+
+def test_process_telescope_triggers_multiple_hardstereo(simtel_config_writer):
+    """Test _process_telescope_triggers with multiple hardstereo telescope types."""
+    array_triggers = [
+        {
+            "name": "LSTS_array",
+            "multiplicity": {"value": 2},
+            "width": {"value": 120.0, "unit": "ns"},
+            "min_separation": {"value": None, "unit": None},
+            "hard_stereo": {"value": True},
+        },
+        {
+            "name": "MSTS_array",
+            "multiplicity": {"value": 2},
+            "width": {"value": 100.0, "unit": "ns"},
+            "min_separation": {"value": 20.0, "unit": "m"},
+            "hard_stereo": {"value": True},
+        },
+        {
+            "name": "SSTS_array",
+            "multiplicity": {"value": 2},
+            "width": {"value": 300.0, "unit": "ns"},
+            "min_separation": {"value": 25.0, "unit": "m"},
+            "hard_stereo": {"value": False},
+        },
+    ]
+
+    trigger_per_telescope_type = {
+        "LSTS": [1, 2],
+        "MSTS": [3, 4],
+        "SSTS": [5, 6],
+    }
+
+    hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity = (
+        simtel_config_writer._process_telescope_triggers(array_triggers, trigger_per_telescope_type)
+    )
+
+    # Check multiple hardstereo lines
+    assert len(hardstereo_lines) == 2
+    assert any("Trigger 2 of 1, 2 width 120.0 hardstereo" in line for line in hardstereo_lines)
+    assert any(
+        "Trigger 2 of 3, 4 width 100.0 hardstereo minsep 20.0" in line for line in hardstereo_lines
+    )
+
+    # Check single non-hardstereo group
+    assert len(non_hardstereo_groups) == 1
+    assert all_non_hardstereo_tels == [5, 6]
+    assert multiplicity == 2
+
+
+def test_process_telescope_triggers_all_hardstereo(simtel_config_writer):
+    """Test _process_telescope_triggers when all telescopes are hardstereo."""
+    array_triggers = [
+        {
+            "name": "LSTS_array",
+            "multiplicity": {"value": 2},
+            "width": {"value": 120.0, "unit": "ns"},
+            "min_separation": {"value": None, "unit": None},
+            "hard_stereo": {"value": True},
+        },
+        {
+            "name": "MSTS_array",
+            "multiplicity": {"value": 2},
+            "width": {"value": 100.0, "unit": "ns"},
+            "min_separation": {"value": 20.0, "unit": "m"},
+            "hard_stereo": {"value": True},
+        },
+    ]
+
+    trigger_per_telescope_type = {
+        "LSTS": [1, 2],
+        "MSTS": [3, 4],
+    }
+
+    hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity = (
+        simtel_config_writer._process_telescope_triggers(array_triggers, trigger_per_telescope_type)
+    )
+
+    # Check all are hardstereo
+    assert len(hardstereo_lines) == 2
+    assert len(non_hardstereo_groups) == 0
+    assert len(all_non_hardstereo_tels) == 0
+    assert multiplicity == 2
+
+
+def test_process_telescope_triggers_all_non_hardstereo_same_params(simtel_config_writer):
+    """Test _process_telescope_triggers when all non-hardstereo have same parameters."""
+    array_triggers = [
+        {
+            "name": "MSTS_array",
+            "multiplicity": {"value": 2},
+            "width": {"value": 300.0, "unit": "ns"},
+            "min_separation": {"value": 25.0, "unit": "m"},
+            "hard_stereo": {"value": False},
+        },
+        {
+            "name": "SSTS_array",
+            "multiplicity": {"value": 2},
+            "width": {"value": 300.0, "unit": "ns"},
+            "min_separation": {"value": 25.0, "unit": "m"},
+            "hard_stereo": {"value": False},
+        },
+    ]
+
+    trigger_per_telescope_type = {
+        "MSTS": [1, 2],
+        "SSTS": [3, 4],
+    }
+
+    hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, _ = (
+        simtel_config_writer._process_telescope_triggers(array_triggers, trigger_per_telescope_type)
+    )
+
+    # Check no hardstereo lines
+    assert len(hardstereo_lines) == 0
+
+    # Check single group with all telescopes (same parameters)
+    assert len(non_hardstereo_groups) == 1
+    key = (300.0, 25.0)
+    assert key in non_hardstereo_groups
+    assert non_hardstereo_groups[key] == [1, 2, 3, 4]
+    assert all_non_hardstereo_tels == [1, 2, 3, 4]
+
+
+def test_write_trigger_lines_comprehensive(simtel_config_writer, tmp_test_directory):
+    """Test _write_trigger_lines with comprehensive scenarios."""
+    import io
+
+    # Test scenario with hardstereo, multiple non-hardstereo groups, and combined line
+    hardstereo_lines = [
+        "Trigger 2 of 1, 2 width 120.0 hardstereo",
+        "Trigger 2 of 3, 4 width 100.0 hardstereo minsep 20.0",
+    ]
+
+    non_hardstereo_groups = {
+        (300.0, 25.0): [5, 6],
+        (400.0, 30.0): [7, 8],
+    }
+
+    all_non_hardstereo_tels = [5, 6, 7, 8]
+    multiplicity = 2
+
+    # Use StringIO to capture file output
+    output = io.StringIO()
+    simtel_config_writer._write_trigger_lines(
+        output, hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
+    )
+
+    content = output.getvalue()
+    lines = content.strip().split("\n")
+
+    # Should have hardstereo lines + individual group lines + combined line
+    expected_line_count = len(hardstereo_lines) + len(non_hardstereo_groups) + 1
+    assert len(lines) == expected_line_count
+
+    # Check hardstereo lines are written first
+    assert lines[0] == "Trigger 2 of 1, 2 width 120.0 hardstereo"
+    assert lines[1] == "Trigger 2 of 3, 4 width 100.0 hardstereo minsep 20.0"
+
+    # Check individual group lines
+    assert "Trigger 2 of 5, 6 width 300.0 minsep 25.0" in lines
+    assert "Trigger 2 of 7, 8 width 400.0 minsep 30.0" in lines
+
+    # Check combined line uses minimum values
+    assert "Trigger 2 of 5, 6, 7, 8 width 300.0 minsep 25.0" in lines
+
+
+def test_write_trigger_lines_single_group_no_individual_lines(simtel_config_writer):
+    """Test _write_trigger_lines when there's only one non-hardstereo group."""
+    import io
+
+    hardstereo_lines = ["Trigger 2 of 1, 2 width 120.0 hardstereo"]
+    non_hardstereo_groups = {(300.0, 25.0): [3, 4, 5, 6]}  # Single group
+    all_non_hardstereo_tels = [3, 4, 5, 6]
+    multiplicity = 2
+
+    output = io.StringIO()
+    simtel_config_writer._write_trigger_lines(
+        output, hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
+    )
+
+    content = output.getvalue()
+    lines = content.strip().split("\n")
+
+    # Should have hardstereo line + combined line only (no individual group lines)
+    assert len(lines) == 2
+    assert lines[0] == "Trigger 2 of 1, 2 width 120.0 hardstereo"
+    assert lines[1] == "Trigger 2 of 3, 4, 5, 6 width 300.0 minsep 25.0"
+
+
+def test_write_trigger_lines_no_hardstereo_no_minsep(simtel_config_writer):
+    """Test _write_trigger_lines with no hardstereo and no min_separation."""
+    import io
+
+    hardstereo_lines = []
+    non_hardstereo_groups = {
+        (300.0, None): [1, 2],
+        (400.0, None): [3, 4],
+    }
+    all_non_hardstereo_tels = [1, 2, 3, 4]
+    multiplicity = 3
+
+    output = io.StringIO()
+    simtel_config_writer._write_trigger_lines(
+        output, hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
+    )
+
+    content = output.getvalue()
+    lines = content.strip().split("\n")
+
+    # Should have individual lines + combined line (no minsep in combined line)
+    assert len(lines) == 3
+    assert "Trigger 3 of 1, 2 width 300.0" in lines
+    assert "Trigger 3 of 3, 4 width 400.0" in lines
+    assert "Trigger 3 of 1, 2, 3, 4 width 300.0" in lines  # Min width, no minsep
