@@ -365,8 +365,8 @@ def main():
             legend_location=app_context.args["legend_location"],
             bounds_mode=app_context.args["bounds"],
             padding=app_context.args["padding"],
-            x_lim=tuple(app_context.args["x_lim"]) if app_context.args.get("x_lim") else None,
-            y_lim=tuple(app_context.args["y_lim"]) if app_context.args.get("y_lim") else None,
+            x_lim=tuple(app_context.args["x_lim"]) if app_context.args["x_lim"] else None,
+            y_lim=tuple(app_context.args["y_lim"]) if app_context.args["y_lim"] else None,
         )
         site_string = ""
         if layout.get("site") is not None:
