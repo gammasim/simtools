@@ -170,19 +170,23 @@ class PSFParameterOptimizer:
 
         Returns
         -------
-        dict
+        dict or None
             Dictionary mapping parameter names to their gradient values.
+            Returns None if gradient calculation fails for any parameter.
         """
         gradients = {}
 
         for param_name, param_values in current_params.items():
-            gradients[param_name] = self._calculate_param_gradient(
+            param_gradient = self._calculate_param_gradient(
                 current_params,
                 current_metric,
                 param_name,
                 param_values,
                 epsilon,
             )
+            if param_gradient is None:
+                return None
+            gradients[param_name] = param_gradient
 
         return gradients
 
@@ -258,8 +262,9 @@ class PSFParameterOptimizer:
 
         Returns
         -------
-        float or list
+        float or list or None
             Gradient value(s) for the parameter.
+            Returns None if simulation fails for any component.
         """
         param_gradients = []
         values_list = param_values if isinstance(param_values, list) else [param_values]
@@ -274,8 +279,9 @@ class PSFParameterOptimizer:
             try:
                 _, perturbed_metric, _, _ = self.run_simulation(perturbed_params, use_cache=True)
                 gradient = (perturbed_metric - current_metric) / epsilon
-            except (ValueError, RuntimeError):
-                gradient = 0.0
+            except (ValueError, RuntimeError) as e:
+                logger.warning(f"Simulation failed for {param_name}[{i}] gradient calculation: {e}")
+                return None
 
             param_gradients.append(gradient)
 
@@ -309,6 +315,13 @@ class PSFParameterOptimizer:
         for attempt in range(max_retries):
             try:
                 gradients = self.calculate_gradient(current_params, current_metric)
+
+                if gradients is None:
+                    logger.warning(
+                        f"Gradient calculation failed on attempt {attempt + 1}, skipping step"
+                    )
+                    return None, None, None, None, None, False, current_lr
+
                 new_params = self.apply_gradient_step(current_params, gradients, current_lr)
 
                 # Validate that all parameters are within allowed ranges
