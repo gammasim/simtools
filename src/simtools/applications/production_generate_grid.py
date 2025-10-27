@@ -132,7 +132,7 @@ def main():
 
     axes = load_axes(app_context.args["axes"])
     site_model = SiteModel(
-        mongo_db_config=app_context.db_config,
+        db_config=app_context.db_config,
         model_version=app_context.args["model_version"],
         site=app_context.args["site"],
     )

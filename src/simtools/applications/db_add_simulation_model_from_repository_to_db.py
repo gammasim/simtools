@@ -93,7 +93,7 @@ def main():
     """Add or update a model parameter database to the DB."""
     app_context = startup_application(_parse, setup_io_handler=False)
 
-    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
+    db = db_handler.DatabaseHandler(db_config=app_context.db_config)
 
     if app_context.args.get("type") == "model_parameters":
         db_model_upload.add_model_parameters_to_db(

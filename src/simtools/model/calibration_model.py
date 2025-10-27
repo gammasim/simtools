@@ -17,31 +17,34 @@ class CalibrationModel(ModelParameter):
         Site name (e.g., South or North).
     calibration_device_model_name: str
         Calibration device model name (ex. ILLS-01, ILLN-01, ...).
-    mongo_db_config: dict
-        MongoDB configuration.
+    db_config: dict
+        Database configuration.
     model_version: str
         Model version.
     label: str, optional
         Instance label. Important for output file naming.
+    overwrite_model_parameters: str, optional
+        File name to overwrite model parameters from DB with provided values.
     """
 
     def __init__(
         self,
-        site: str,
-        calibration_device_model_name: str,
-        mongo_db_config: dict,
-        model_version: str,
-        label: str | None = None,
+        site,
+        calibration_device_model_name,
+        db_config,
+        model_version,
+        label=None,
+        overwrite_model_parameters=None,
     ):
         """Initialize CalibrationModel."""
         super().__init__(
             site=site,
             array_element_name=calibration_device_model_name,
             collection="calibration_devices",
-            mongo_db_config=mongo_db_config,
+            db_config=db_config,
             model_version=model_version,
-            db=None,
             label=label,
+            overwrite_model_parameters=overwrite_model_parameters,
         )
 
         self._logger = logging.getLogger(__name__)

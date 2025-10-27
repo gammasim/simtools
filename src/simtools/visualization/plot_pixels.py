@@ -44,7 +44,7 @@ def plot(config, output_file, db_config=None):
     None
         The function saves the plot to the specified output file.
     """
-    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    db = db_handler.DatabaseHandler(db_config=db_config)
     db.export_model_file(
         parameter=config["parameter"],
         site=config["site"],
