@@ -207,7 +207,7 @@ class CorsikaRunner:
             self._logger.debug("Using curved-atmosphere CORSIKA binary.")
         else:
             corsika_bin_path = self._simtel_path.joinpath("corsika-run/corsika")
-            self._logger.debug("Using flat-atmosphere CORSIKA binary")
+            self._logger.debug("Using flat-atmosphere CORSIKA binary.")
 
         log_file = self.get_file_name(file_type="log", run_number=run_number)
         if self._use_multipipe:
