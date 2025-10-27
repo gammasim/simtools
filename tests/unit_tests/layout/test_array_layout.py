@@ -16,14 +16,14 @@ logger = logging.getLogger()
 @pytest.fixture
 def array_layout_north_instance(db_config, model_version):
     return ArrayLayout(
-        site="North", mongo_db_config=db_config, model_version=model_version, name="test_layout"
+        site="North", db_config=db_config, model_version=model_version, name="test_layout"
     )
 
 
 @pytest.fixture
 def array_layout_south_instance(db_config, model_version):
     return ArrayLayout(
-        site="South", mongo_db_config=db_config, model_version=model_version, name="test_layout"
+        site="South", db_config=db_config, model_version=model_version, name="test_layout"
     )
 
 
@@ -55,7 +55,7 @@ def south_layout_center_data_dict():
 def array_layout_north_four_lst_instance(db_config, model_version):
     return ArrayLayout(
         site="North",
-        mongo_db_config=db_config,
+        db_config=db_config,
         label="test_layout",
         name="LST4",
         model_version=model_version,
@@ -66,7 +66,7 @@ def array_layout_north_four_lst_instance(db_config, model_version):
 def array_layout_south_four_lst_instance(db_config, model_version):
     return ArrayLayout(
         site="South",
-        mongo_db_config=db_config,
+        db_config=db_config,
         label="test_layout",
         name="LST4",
         model_version=model_version,
@@ -75,7 +75,7 @@ def array_layout_south_four_lst_instance(db_config, model_version):
 
 def test_initialize_site_parameters_from_db():
     with pytest.raises(ValueError, match="No database configuration provided"):
-        ArrayLayout(site="North", mongo_db_config=None, model_version="test_model_version")
+        ArrayLayout(site="North", db_config=None, model_version="test_model_version")
 
 
 def test_initialize_coordinate_systems(
@@ -128,7 +128,7 @@ def test_select_assets(
         site="North",
         name="test_layout",
         telescope_list_file=telescope_north_with_calibration_devices_test_file,
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=model_version,
     )
 
@@ -392,7 +392,7 @@ def test_try_set_coordinate(
 def test_len(telescope_north_test_file, db_config, model_version):
     layout = ArrayLayout(
         telescope_list_file=telescope_north_test_file,
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=model_version,
         site="North",
     )
@@ -403,7 +403,7 @@ def test_len(telescope_north_test_file, db_config, model_version):
 def test_getitem(db_config, telescope_north_test_file, model_version):
     layout = ArrayLayout(
         telescope_list_file=telescope_north_test_file,
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=model_version,
         site="North",
     )
@@ -415,7 +415,7 @@ def test_export_telescope_list_table(
     db_config, telescope_north_test_file, telescope_north_utm_test_file, model_version
 ):
     layout = ArrayLayout(
-        mongo_db_config=db_config,
+        db_config=db_config,
         site="North",
         model_version=model_version,
         telescope_list_file=telescope_north_test_file,
@@ -429,7 +429,7 @@ def test_export_telescope_list_table(
     assert "sequence_number" not in table.colnames
 
     layout_utm = ArrayLayout(
-        mongo_db_config=db_config,
+        db_config=db_config,
         site="North",
         model_version=model_version,
         telescope_list_file=telescope_north_utm_test_file,
@@ -449,7 +449,7 @@ def test_export_telescope_list_table(
 
 def test_export_one_telescope_as_json(db_config, model_version, telescope_north_utm_test_file):
     layout = ArrayLayout(
-        mongo_db_config=db_config,
+        db_config=db_config,
         site="North",
         model_version=model_version,
         telescope_list_file=(
@@ -469,7 +469,7 @@ def test_export_one_telescope_as_json(db_config, model_version, telescope_north_
     assert mercator_dict["parameter"] == "array_element_position_mercator"
 
     layout_utm = ArrayLayout(
-        mongo_db_config=db_config,
+        db_config=db_config,
         site="North",
         model_version=model_version,
         telescope_list_file=telescope_north_utm_test_file,
@@ -481,7 +481,7 @@ def test_export_one_telescope_as_json(db_config, model_version, telescope_north_
 def test_read_table_from_json_file(db_config, model_version):
     ground_table_file = "tests/resources/model_parameters/array_element_position_ground-2.0.0.json"
     layout = ArrayLayout(
-        mongo_db_config=db_config,
+        db_config=db_config,
         site="North",
         model_version=model_version,
         telescope_list_file=ground_table_file,

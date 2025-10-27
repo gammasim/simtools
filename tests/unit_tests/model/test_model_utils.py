@@ -51,13 +51,13 @@ def test_initialize_simulation_models(mocker, mock_db_config, site, telescope_na
     mock_tel_model.assert_called_once_with(
         site=site,
         telescope_name=telescope_name,
-        mongo_db_config=mock_db_config,
+        db_config=mock_db_config,
         model_version=model_version,
         label=label,
     )
 
     mock_site_model.assert_called_once_with(
-        site=site, model_version=model_version, mongo_db_config=mock_db_config, label=label
+        site=site, model_version=model_version, db_config=mock_db_config, label=label
     )
 
     mock_tel_model.return_value.export_model_files.assert_called_once()
@@ -88,7 +88,7 @@ def test_initialize_simulation_models_with_calibration_device(mocker, mock_db_co
     mock_cal_model.assert_called_once_with(
         site=site,
         calibration_device_model_name=calibration_device_name,
-        mongo_db_config=mock_db_config,
+        db_config=mock_db_config,
         model_version=model_version,
         label=label,
     )

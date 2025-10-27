@@ -136,8 +136,8 @@ def main():
         model_version=app_context.args["model_version"],
     )
 
-    if app_context.args.get("telescope_model_file"):
-        tel_model.change_multiple_parameters_from_file(app_context.args["telescope_model_file"])
+    if app_context.args.get("overwrite_model_parameters"):
+        tel_model.overwrite_parameters_from_file(app_context.args["overwrite_model_parameters"])
 
     ray = RayTracing(
         telescope_model=tel_model,
