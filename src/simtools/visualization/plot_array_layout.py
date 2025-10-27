@@ -281,8 +281,11 @@ def get_patches(
         tel_table, marker_scaling, show_tel_label, ax, grayed_out_elements, highlighted_elements
     )
 
-    radii_q = u.Quantity(radii) if len(radii) > 0 else 0.0 * u.m
-    r = float(np.nanmax(radii_q).to_value(u.m)) if np.size(radii_q) else 0.0
+    if len(radii) == 0:
+        r = 0.0
+    else:
+        radii_q = u.Quantity(radii)
+        r = float(np.nanmax(radii_q).to_value(u.m))
 
     if len(pos_x) == 0:
         bounds = PlotBounds(x_lim=(0.0, 0.0), y_lim=(0.0, 0.0))
