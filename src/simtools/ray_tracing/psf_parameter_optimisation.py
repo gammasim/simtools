@@ -14,14 +14,13 @@ from collections import OrderedDict
 
 import astropy.units as u
 import numpy as np
-import yaml
 from astropy.table import Table
 from scipy import stats
 
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import model_data_writer as writer
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import general as gen
+from simtools.utils import names
 from simtools.visualization import plot_psf
 from simtools.visualization.plot_psf import DEFAULT_FRACTION, get_psf_diameter_label
 
@@ -342,7 +341,7 @@ def export_psf_parameters(best_pars, telescope, parameter_version, output_dir):
     """
     try:
         psf_pars_with_units = _add_units_to_psf_parameters(best_pars)
-        parameter_output_path = output_dir.parent / telescope
+        parameter_output_path = output_dir / telescope
         for parameter_name, parameter_value in psf_pars_with_units.items():
             writer.ModelDataWriter.dump_model_parameter(
                 parameter_name=parameter_name,
@@ -362,6 +361,8 @@ def _get_parameter_range_from_schema(param_name, param_index):
     """
     Get the allowed range for a specific parameter index from its schema.
 
+    Uses the already-cached model_parameters() from names module to avoid file I/O.
+
     Parameters
     ----------
     param_name : str
@@ -374,25 +375,22 @@ def _get_parameter_range_from_schema(param_name, param_index):
     tuple or None
         (min_value, max_value) if range is defined, None otherwise.
     """
-    schema_file = MODEL_PARAMETER_SCHEMA_PATH / f"{param_name}.schema.yml"
-
-    if not schema_file.exists():
-        logger.warning(f"Schema file not found: {schema_file}")
-        return None
-
     try:
-        with open(schema_file, encoding="utf-8") as f:
-            schema = yaml.safe_load(f)
-    except (yaml.YAMLError, OSError) as e:
-        logger.warning(f"Error reading schema file {schema_file}: {e}")
-        return None
+        param_schema = names.model_parameters().get(param_name)
+        if param_schema is None:
+            logger.warning(f"Schema not found for parameter: {param_name}")
+            return None
 
-    data = schema["data"]
-    if isinstance(data, list) and len(data) > param_index:
-        param_data = data[param_index]
-        if "allowed_range" in param_data:
-            allowed_range = param_data["allowed_range"]
-            return (allowed_range.get("min"), allowed_range.get("max"))
+        data = param_schema.get("data")
+        if isinstance(data, list) and len(data) > param_index:
+            param_data = data[param_index]
+            if "allowed_range" in param_data:
+                allowed_range = param_data["allowed_range"]
+                return (allowed_range.get("min"), allowed_range.get("max"))
+
+    except (KeyError, IndexError) as e:
+        logger.warning(f"Error reading schema for {param_name}[{param_index}]: {e}")
+        return None
 
     return None
 
@@ -430,67 +428,33 @@ def _is_parameter_within_allowed_range(param_name, param_index, value):
     return True
 
 
-def _apply_range_clipping(value, min_val, max_val, param_name, param_index):
+def _are_all_parameters_within_allowed_range(params):
     """
-    Apply range clipping and log if value was changed.
+    Check if all parameters in the parameter dictionary are within allowed ranges.
 
     Parameters
     ----------
-    value : float
-        Original value.
-    min_val : float or None
-        Minimum allowed value.
-    max_val : float or None
-        Maximum allowed value.
-    param_name : str
-        Parameter name for logging.
-    param_index : int
-        Parameter index for logging.
+    params : dict
+        Dictionary of parameter values to validate.
 
     Returns
     -------
-    float
-        Clipped value.
+    bool
+        True if all parameters are within allowed ranges, False otherwise.
     """
-    clipped_value = value
-
-    if min_val is not None:
-        clipped_value = max(min_val, clipped_value)
-    if max_val is not None:
-        clipped_value = min(max_val, clipped_value)
-
-    if clipped_value != value:
-        logger.debug(f"Clipped {param_name}[{param_index}] from {value:.6f} to {clipped_value:.6f}")
-
-    return clipped_value
-
-
-def _clip_parameter_to_allowed_range(param_name, param_index, value):
-    """
-    Clip a parameter value to its allowed range defined in the schema.
-
-    Parameters
-    ----------
-    param_name : str
-        Name of the parameter to clip.
-    param_index : int
-        Index within the parameter array (for multi-component parameters).
-    value : float
-        The parameter value to clip.
-
-    Returns
-    -------
-    float
-        The clipped parameter value, or the original value if no range constraints exist.
-    """
-    # Get range from schema file
-    param_range = _get_parameter_range_from_schema(param_name, param_index)
-
-    if param_range is None:
-        return value  # No constraints defined in schema, return original value
-
-    min_val, max_val = param_range
-    return _apply_range_clipping(value, min_val, max_val, param_name, param_index)
+    for param_name, param_values in params.items():
+        if isinstance(param_values, list):
+            for i, value in enumerate(param_values):
+                if not _is_parameter_within_allowed_range(param_name, i, value):
+                    logger.debug(
+                        f"Parameter {param_name}[{i}] = {value:.6f} is out of allowed range"
+                    )
+                    return False
+        else:
+            if not _is_parameter_within_allowed_range(param_name, 0, param_values):
+                logger.debug(f"Parameter {param_name} = {param_values:.6f} is out of allowed range")
+                return False
+    return True
 
 
 def _create_perturbed_params(current_params, param_name, param_values, param_index, value, epsilon):
@@ -707,12 +671,13 @@ def calculate_gradient(
 
 def apply_gradient_step(current_params, gradients, learning_rate):
     """
-    Apply gradient descent step to update parameters while enforcing constraints.
+    Apply gradient descent step to update parameters while preserving constraints.
 
-    This function applies the standard gradient descent update, then enforces
-    constraints by:
-    1. Clipping parameters to their allowed ranges
-    2. Preserving zenith angle components (index 1) for mirror alignment parameters
+    This function applies the standard gradient descent update and preserves
+    zenith angle components (index 1) for mirror alignment parameters.
+
+    Note: Use _are_all_parameters_within_allowed_range() to validate the result before
+    accepting the step.
 
     Parameters
     ----------
@@ -726,8 +691,7 @@ def apply_gradient_step(current_params, gradients, learning_rate):
     Returns
     -------
     dict
-        Dictionary of updated parameter values after applying the gradient step
-        and enforcing constraints.
+        Dictionary of updated parameter values after applying the gradient step.
     """
     new_params = {}
     for param_name, param_values in current_params.items():
@@ -745,16 +709,13 @@ def apply_gradient_step(current_params, gradients, learning_rate):
                     and i == 1
                 ):
                     new_value = value  # Keep original zenith angle value
-                else:
-                    # Clip to allowed range if defined
-                    new_value = _clip_parameter_to_allowed_range(param_name, i, new_value)
 
                 updated_values.append(new_value)
 
             new_params[param_name] = updated_values
         else:
             new_value = param_values - learning_rate * param_gradients
-            new_params[param_name] = _clip_parameter_to_allowed_range(param_name, 0, new_value)
+            new_params[param_name] = new_value
 
     return new_params
 
@@ -830,6 +791,17 @@ def _perform_gradient_step_with_retries(
                 use_ks_statistic=False,
             )
             new_params = apply_gradient_step(current_params, gradients, current_lr)
+
+            # Validate that all parameters are within allowed ranges
+            if not _are_all_parameters_within_allowed_range(new_params):
+                logger.info(
+                    f"Step rejected: parameters would go out of bounds"
+                    f"reducing learning rate to {current_lr * 0.7:.6f}"
+                )
+                current_lr *= 0.7
+                if current_lr < 1e-5:
+                    current_lr = 0.001
+                continue
 
             new_psf_diameter, new_metric, new_p_value, new_simulated_data = run_psf_simulation(
                 tel_model,
