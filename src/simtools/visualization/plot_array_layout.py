@@ -313,7 +313,7 @@ def get_telescope_patch(tel_type, x, y, radius, is_grayed_out=False):
 
     Parameters
     ----------
-    type: str
+    tel_type: str
         Telescope type.
     x : Quantity
         X position.
