@@ -48,12 +48,7 @@ def env_not_set_error():
     return "Environment variable SIMTOOLS_SIMTEL_PATH is not set."
 
 
-@pytest.fixture
-def corsika_env_not_set_error():
-    # Not used in this branch; CORSIKA uses SIMTOOLS_SIMTEL_PATH
-    return "Environment variable SIMTOOLS_SIMTEL_PATH is not set."
-
-
+# (lines 51–55 removed)
 @pytest.fixture
 def get_build_options_literal():
     return "simtools.dependencies.get_build_options"
