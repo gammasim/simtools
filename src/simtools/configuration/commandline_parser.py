@@ -395,6 +395,14 @@ class CommandLineParser(argparse.ArgumentParser):
                 "required": False,
                 "default": True,
             },
+            "curved_atmosphere_min_zenith_angle": {
+                "help": (
+                    "Minimum zenith angle (deg) for using curved-atmosphere CORSIKA binaries. "
+                ),
+                "type": CommandLineParser.zenith_angle,
+                "required": False,
+                "default": 65 * u.deg,
+            },
         }
 
     @staticmethod

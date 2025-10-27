@@ -621,6 +621,7 @@ def test_initialize_simulation_runner_with_corsika(shower_simulator, db_config, 
         simtel_path=shower_simulator.args_dict.get("simtel_path"),
         use_multipipe=False,
         keep_seeds=shower_simulator.args_dict.get("corsika_test_seeds", False),
+        curved_atmosphere_min_zenith_angle=65 * u.deg,
     )
 
 
@@ -664,9 +665,10 @@ def test_initialize_simulation_runner_with_corsika_sim_telarray(
         * len(shower_array_simulator.array_models),
         simtel_path=shower_array_simulator.args_dict.get("simtel_path"),
         use_multipipe=True,
+        keep_seeds=shower_array_simulator.args_dict.get("corsika_test_seeds", False),
+        curved_atmosphere_min_zenith_angle=65 * u.deg,
         sim_telarray_seeds=shower_array_simulator.sim_telarray_seeds,
         sequential=shower_array_simulator.args_dict.get("sequential", False),
-        keep_seeds=shower_array_simulator.args_dict.get("corsika_test_seeds", False),
         calibration_config=None,
     )
 
@@ -691,9 +693,10 @@ def test_initialize_simulation_runner_with_calibration_simulator(
         corsika_config=[mock_corsika_config.return_value] * len(calibration_simulator.array_models),
         simtel_path=calibration_simulator.args_dict.get("simtel_path"),
         use_multipipe=True,
+        keep_seeds=calibration_simulator.args_dict.get("corsika_test_seeds", False),
+        curved_atmosphere_min_zenith_angle=65 * u.deg,
         sim_telarray_seeds=calibration_simulator.sim_telarray_seeds,
         sequential=calibration_simulator.args_dict.get("sequential", False),
-        keep_seeds=calibration_simulator.args_dict.get("corsika_test_seeds", False),
         calibration_config=calibration_simulator.args_dict,
     )
 
