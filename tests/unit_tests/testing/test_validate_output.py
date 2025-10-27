@@ -348,7 +348,7 @@ def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check
     mock_path_exists.assert_called()
     mock_check_output.assert_called_once_with(
         Path(config["configuration"]["data_directory"]).joinpath(integration_test[0]["file"]),
-        {},
+        {"path_descriptor": "data_directory", "file": "output_file", "expected_output": {}},
     )
 
     wrong_integration_test = [
@@ -608,7 +608,7 @@ def test_validate_model_parameter_json_file(mocker, output_path):
         config, model_parameter_validation, db_config=None
     )
 
-    mock_db_handler.assert_called_once_with(mongo_db_config=None)
+    mock_db_handler.assert_called_once_with(db_config=None)
     mock_db_instance.get_model_parameter.assert_called_once_with(
         parameter="reference_param",
         site="test_site",
@@ -653,7 +653,7 @@ def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
             config, model_parameter_validation, db_config=None
         )
 
-    mock_db_handler.assert_called_once_with(mongo_db_config=None)
+    mock_db_handler.assert_called_once_with(db_config=None)
     mock_db_instance.get_model_parameter.assert_called_once_with(
         parameter="reference_param",
         site="test_site",
