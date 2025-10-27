@@ -133,6 +133,8 @@ class SimtelConfigWriter:
         exp_decay_ns=None,
         dt_ns=0.1,
         duration_sigma=6.0,
+        rise_range=(0.1, 0.9),
+        fall_range=(0.9, 0.1),
     ):
         """Write a pulse table for a Gaussian convolved with an exponential.
 
@@ -150,7 +152,12 @@ class SimtelConfigWriter:
         )
 
         t, y = generate_pulse_from_risefall(
-            width_ns, exp_decay_ns, dt_ns=dt_ns, duration_sigma=duration_sigma
+            width_ns,
+            exp_decay_ns,
+            dt_ns=dt_ns,
+            duration_sigma=duration_sigma,
+            rise_range=rise_range,
+            fall_range=fall_range,
         )
 
         with open(file_path, "w", encoding="utf-8") as fh:
