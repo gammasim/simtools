@@ -280,7 +280,7 @@ def get_array_layouts_from_db(
     if layout_name:
         layout_names = gen.ensure_iterable(layout_name)
     else:
-        site_model = SiteModel(site=site, model_version=model_version, mongo_db_config=db_config)
+        site_model = SiteModel(site=site, model_version=model_version, db_config=db_config)
         layout_names = site_model.get_list_of_array_layouts()
 
     layouts = []
@@ -373,7 +373,7 @@ def _get_array_layout_dict(
 ):
     """Return array layout dictionary for a given telescope list."""
     array_model = ArrayModel(
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=model_version,
         site=site,
         array_elements=telescope_list,
@@ -416,7 +416,7 @@ def get_array_elements_from_db_for_layouts(layouts, site, model_version, db_conf
     dict
         Dictionary mapping layout names to telescope IDs.
     """
-    site_model = SiteModel(site=site, model_version=model_version, mongo_db_config=db_config)
+    site_model = SiteModel(site=site, model_version=model_version, db_config=db_config)
     layout_names = site_model.get_list_of_array_layouts() if layouts == ["all"] else layouts
     layout_dict = {}
     for layout_name in layout_names:

@@ -13,6 +13,15 @@ Modules for database access. See the databases sections for details.
    :members:
 ```
 
+## mongo_db
+
+(mongo-db-class)=
+
+```{eval-rst}
+.. automodule:: db.mongo_db
+   :members:
+```
+
 ## db_model_upload
 
 (db-module-upload)=

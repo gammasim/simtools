@@ -93,7 +93,7 @@ def test_assign_unit_to_quantity():
 
     assert value_conversion.get_value_as_quantity(1000 * u.cm, u.m) == 10 * u.m
 
-    with pytest.raises(u.UnitConversionError):
+    with pytest.raises(ValueError, match=r"Cannot convert 1000.0 TeV with unit TeV to m."):
         value_conversion.get_value_as_quantity(1000 * u.TeV, u.m)
 
 

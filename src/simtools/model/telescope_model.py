@@ -26,30 +26,37 @@ class TelescopeModel(ModelParameter):
         Site name (e.g., South or North).
     telescope_name: str
         Telescope name (ex. LSTN-01, LSTN-design, ...).
-    mongo_db_config: dict
-        MongoDB configuration.
+    db_config: dict
+        Database configuration.
     model_version: str
         Model version.
     label: str, optional
-        Instance label. Important for output file naming.
+        Instance label.
+    overwrite_model_parameters: str, optional
+        File name to overwrite model parameters from DB with provided values.
+    ignore_software_version: bool, optional
+        If True, ignore software version checks for deprecated parameters.
     """
 
     def __init__(
         self,
-        site: str,
-        telescope_name: str,
-        mongo_db_config: dict,
-        model_version: str,
-        label: str | None = None,
+        site,
+        telescope_name,
+        db_config,
+        model_version,
+        label=None,
+        overwrite_model_parameters=None,
+        ignore_software_version=False,
     ):
         """Initialize TelescopeModel."""
         super().__init__(
             site=site,
             array_element_name=telescope_name,
-            mongo_db_config=mongo_db_config,
+            db_config=db_config,
             model_version=model_version,
-            db=None,
             label=label,
+            overwrite_model_parameters=overwrite_model_parameters,
+            ignore_software_version=ignore_software_version,
         )
 
         self._logger = logging.getLogger(__name__)
@@ -142,7 +149,7 @@ class TelescopeModel(ModelParameter):
         except TypeError as exc:
             raise TypeError("Undefined mirror list") from exc
 
-        self._mirrors = Mirrors(mirror_list_file, parameters=self._parameters)
+        self._mirrors = Mirrors(mirror_list_file, parameters=self.parameters)
 
     def get_telescope_effective_focal_length(
         self, unit: str = "m", return_focal_length_if_zero: bool = False
@@ -374,8 +381,9 @@ class TelescopeModel(ModelParameter):
         try:
             return self.get_parameter_value_with_unit(f"array_element_position_{coordinate_system}")
         except InvalidModelParameterError as exc:
-            self._logger.error(f"Coordinate system {coordinate_system} not found.")
-            raise exc
+            raise InvalidModelParameterError(
+                f"Coordinate system {coordinate_system} not found."
+            ) from exc
 
     def get_calibration_device_name(self, device_type):
         """

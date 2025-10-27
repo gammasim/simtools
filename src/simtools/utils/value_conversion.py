@@ -170,16 +170,21 @@ def get_value_as_quantity(value, unit):
 
     Raises
     ------
-    u.UnitConversionError
+    ValueError
         If the value cannot be converted to the given unit.
     """
     if isinstance(value, u.Quantity):
         try:
             return value.to(unit)
-        except u.UnitConversionError:
-            _logger.error(f"Cannot convert {value.unit} to {unit}.")
-            raise
-    return value * unit
+        except u.UnitConversionError as exc:
+            raise ValueError(f"Cannot convert {value} with unit {value.unit} to {unit}.") from exc
+    elif not isinstance(value, int | float):
+        return value
+
+    if unit is None or unit == "null":
+        return value * u.dimensionless_unscaled
+
+    return value * u.Unit(unit)
 
 
 def _unit_as_string(unit):

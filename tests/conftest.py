@@ -134,7 +134,7 @@ def args_dict_site(tmp_test_directory, simtel_path, data_path):
 def db_config():
     """DB configuration from .env file."""
 
-    mongo_db_config = {
+    db_config = {
         key.lower().replace("simtools_", ""): value
         for key, value in dict(dotenv_values(".env")).items()
     }
@@ -148,17 +148,17 @@ def db_config():
         "db_simulation_model_version",
     )
     for _para in _db_para:
-        if _para not in mongo_db_config:
-            mongo_db_config[_para] = os.environ.get(f"SIMTOOLS_{_para.upper()}")
-    if mongo_db_config["db_api_port"] is not None:
-        mongo_db_config["db_api_port"] = int(mongo_db_config["db_api_port"])
-    return mongo_db_config
+        if _para not in db_config:
+            db_config[_para] = os.environ.get(f"SIMTOOLS_{_para.upper()}")
+    if db_config["db_api_port"] is not None:
+        db_config["db_api_port"] = int(db_config["db_api_port"])
+    return db_config
 
 
 @pytest.fixture
 def db(db_config):
     """Database object with configuration from .env file."""
-    return db_handler.DatabaseHandler(mongo_db_config=db_config)
+    return db_handler.DatabaseHandler(db_config=db_config)
 
 
 def pytest_addoption(parser):
@@ -169,7 +169,7 @@ def pytest_addoption(parser):
 @pytest.fixture
 def model_version():
     """Simulation model version used in tests."""
-    return "6.0"
+    return "6.0.2"
 
 
 @pytest.fixture
@@ -185,7 +185,7 @@ def array_model_north(io_handler, db_config, model_version):
         label="test-lst-array",
         site="North",
         layout_name="test_layout",
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=model_version,
     )
 
@@ -197,7 +197,7 @@ def array_model_south(io_handler, db_config, model_version):
         label="test-lst-array",
         site="South",
         layout_name="test_layout",
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=model_version,
     )
 
@@ -207,7 +207,7 @@ def site_model_south(db_config, model_version):
     """Site model for South site."""
     return SiteModel(
         site="South",
-        mongo_db_config=db_config,
+        db_config=db_config,
         label="site-south",
         model_version=model_version,
     )
@@ -218,7 +218,7 @@ def site_model_north(db_config, model_version):
     """Site model for North site."""
     return SiteModel(
         site="North",
-        mongo_db_config=db_config,
+        db_config=db_config,
         label="site-north",
         model_version=model_version,
     )
@@ -231,7 +231,7 @@ def telescope_model_lst(db_config, io_handler, model_version):
         site="North",
         telescope_name="LSTN-01",
         model_version=model_version,
-        mongo_db_config=db_config,
+        db_config=db_config,
         label="test-telescope-model-lst",
     )
 
@@ -244,7 +244,7 @@ def telescope_model_mst(db_config, io_handler, model_version):
         telescope_name="MSTx-FlashCam",
         model_version=model_version,
         label="test-telescope-model-mst",
-        mongo_db_config=db_config,
+        db_config=db_config,
     )
 
 
@@ -255,7 +255,7 @@ def telescope_model_sst(db_config, io_handler, model_version):
         site="South",
         telescope_name="SSTS-design",
         model_version=model_version,
-        mongo_db_config=db_config,
+        db_config=db_config,
         label="test-telescope-model-sst",
     )
 
@@ -268,7 +268,7 @@ def telescope_model_sst_prod5(db_config, io_handler, model_version_prod5):
         site="South",
         telescope_name="SSTS-design",
         model_version=model_version_prod5,
-        mongo_db_config=db_config,
+        db_config=db_config,
         label="test-telescope-model-sst",
     )
 
@@ -427,17 +427,6 @@ def corsika_runner_mock_array_model(corsika_config_mock_array_model, io_handler,
 
 
 @pytest.fixture
-def array_model(db_config, io_handler, model_version):
-    return ArrayModel(
-        label="test",
-        site="North",
-        layout_name="test_layout",
-        mongo_db_config=db_config,
-        model_version=model_version,
-    )
-
-
-@pytest.fixture
 def file_has_text():
     """Check if a file contains a specific text."""
 
@@ -482,8 +471,7 @@ def sim_telarray_file_gamma():
     """Gamma sim_telarray file for testing."""
     return (
         "tests/resources/"
-        "run000010_gamma_za20deg_azm000deg_North_test_layout_6.0.0"
-        "_test-production-North.simtel.zst"
+        "gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst"
     )
 
 
