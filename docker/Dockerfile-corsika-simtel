@@ -130,7 +130,11 @@ RUN for variant in curved ""; do \
             ls -la corsika-run/; \
         fi && \
         if [ "$variant" = "" ]; then \
-            cp -r -v "corsika-${CORSIKA_VERSION}/run/"* corsika-run/ 2>/dev/null || true; \
+            if [ -d "corsika-${CORSIKA_VERSION}/run/" ]; then \
+                cp -r -v "corsika-${CORSIKA_VERSION}/run/"* corsika-run/; \
+            else \
+                echo "Skipping copy: source directory corsika-${CORSIKA_VERSION}/run/ does not exist."; \
+            fi; \
         fi; \
     done
 
