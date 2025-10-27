@@ -90,13 +90,6 @@ def test_finalize_plot_without_range():
     collections = [coll for coll in ax.collections if isinstance(coll, PatchCollection)]
     assert collections, "Expected a PatchCollection to be added to the axes."
 
-    new_ylim = ax.get_ylim()
-    assert new_xlim != (-10, 10) or new_ylim != (-10, 10)
-
-    collections = [coll for coll in ax.collections if isinstance(coll, PatchCollection)]
-    assert collections, "Expected a PatchCollection to be added to the axes."
-
-
 def test_update_legend_with_telescopes(telescopes):
     """Test update_legend with telescopes."""
     _, ax = plt.subplots()
