@@ -66,7 +66,7 @@ def test_write_array_layouts(
 ):
     array_layouts = {"value": [{"name": "test_array", "elements": ["tel1", "tel2"]}]}
     args_dict = {
-        "site": "north",
+        "site": "North",
         "output_path": test_path,
         "updated_parameter_version": "v1",
     }
@@ -80,7 +80,7 @@ def test_write_array_layouts(
     mock_model_data_writer.dump_model_parameter.assert_called_once_with(
         parameter_name="array_layouts",
         value=array_layouts["value"],
-        instrument="north",
+        instrument="OBS-North",
         parameter_version="v1",
         output_file=test_output,
         db_config={"test": "config"},
