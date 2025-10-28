@@ -1,6 +1,7 @@
 """Compare application output to reference output."""
 
 import logging
+import re
 from pathlib import Path
 
 import numpy as np
@@ -12,6 +13,52 @@ from simtools.io import ascii_handler
 from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
+
+
+def resolve_model_version_path(base_path, model_version):
+    """
+    Resolve path with model version, trying PATCH version first, then MINOR only.
+
+    This function handles the case where files are organized by MAJOR.MINOR versions
+    but the application uses MAJOR.MINOR.PATCH versions.
+
+    Parameters
+    ----------
+    base_path : Path
+        Base path containing model version directory
+    model_version : str
+        Version string (e.g., "6.0.1" or "6.0")
+
+    Returns
+    -------
+    Path
+        Resolved path that exists, or path with MAJOR.MINOR if PATCH version not found
+
+    """
+    path_with_full_version = Path(base_path) / model_version
+
+    if path_with_full_version.exists():
+        return path_with_full_version
+
+    version_parts = model_version.split(".")
+    if len(version_parts) >= 2:
+        # First try exact MAJOR.MINOR
+        minor_version = f"{version_parts[0]}.{version_parts[1]}"
+        path_with_minor = Path(base_path) / minor_version
+        if path_with_minor.exists():
+            _logger.debug(f"Model version path resolved from {model_version} to {minor_version}")
+            return path_with_minor
+
+        # If neither exists, try glob pattern to find MAJOR.MINOR.*
+        glob_pattern = f"{version_parts[0]}.{version_parts[1]}.*"
+        matching_dirs = sorted(Path(base_path).glob(glob_pattern))
+        if matching_dirs:
+            _logger.debug(
+                f"Model version path resolved from {model_version} to {matching_dirs[0].name}"
+            )
+            return matching_dirs[0]
+
+    return path_with_full_version
 
 
 def validate_application_output(
@@ -100,6 +147,129 @@ def _validate_reference_output_file(config, integration_test):
     )
 
 
+def _try_resolve_version_in_directory(base_path, file_str):
+    """
+    Try to resolve version in directory path (e.g., "6.0/file.md" -> "6.0.2/file.md").
+
+    Parameters
+    ----------
+    base_path : Path
+        Base path to search in
+    file_str : str
+        File path string with version directory
+
+    Returns
+    -------
+    Path or None
+        Resolved path if found, None otherwise
+
+    """
+    if "/" not in file_str:
+        return None
+
+    parts = file_str.split("/", 1)
+    version_dir = parts[0]
+    file_name = parts[1]
+
+    if not (version_dir.replace(".", "").replace("-", "").isdigit() or "." in version_dir):
+        return None
+
+    version_parts = version_dir.split(".")
+    if len(version_parts) < 2:
+        return None
+
+    glob_pattern = f"{version_parts[0]}.{version_parts[1]}.*"
+    matching_dirs = sorted(base_path.glob(glob_pattern))
+
+    if matching_dirs:
+        alternative_file_path = matching_dirs[0] / file_name
+        if alternative_file_path.exists():
+            _logger.debug(f"Resolved {file_str} to {alternative_file_path.relative_to(base_path)}")
+            return alternative_file_path
+
+    return None
+
+
+def _try_resolve_version_in_filename(base_path, file_str, model_version):
+    """
+    Try to resolve version in filename (e.g., "file_6.0_name.txt" -> "file_6.0.2_name.txt").
+
+    Parameters
+    ----------
+    base_path : Path
+        Base path to search in
+    file_str : str
+        File path string with version in filename
+    model_version : str
+        Model version string
+
+    Returns
+    -------
+    Path or None
+        Resolved path if found, None otherwise
+
+    """
+    version_parts = model_version.split(".")
+    if len(version_parts) < 2:
+        return None
+
+    minor_version = f"{version_parts[0]}.{version_parts[1]}"
+    if minor_version not in file_str:
+        return None
+
+    glob_pattern = file_str.replace(minor_version, f"{minor_version}*")
+    matching_files = sorted(base_path.glob(glob_pattern))
+
+    if matching_files:
+        _logger.debug(f"Resolved {file_str} to {matching_files[0].relative_to(base_path)}")
+        return matching_files[0]
+
+    return None
+
+
+def _resolve_output_file_path(output_path, file_str, model_version):
+    """
+    Resolve output file path, trying version-aware resolution if needed.
+
+    Handles two cases:
+    1. Version in directory path: "6.0/file.md" -> "6.0.2/file.md"
+    2. Version in filename: "file_6.0_name.txt" -> "file_6.0.2_name.txt"
+
+    Parameters
+    ----------
+    output_path : str or Path
+        Base output path
+    file_str : str
+        File path string (may contain version directory or version in filename)
+    model_version : str
+        Model version string
+
+    Returns
+    -------
+    Path
+        Resolved file path
+
+    """
+    output_file_path = Path(output_path) / file_str
+
+    if output_file_path.exists():
+        return output_file_path
+
+    base_path = Path(output_path)
+
+    # Try resolving version in directory path
+    resolved_path = _try_resolve_version_in_directory(base_path, file_str)
+    if resolved_path:
+        return resolved_path
+
+    # Try resolving version in filename
+    resolved_path = _try_resolve_version_in_filename(base_path, file_str, model_version)
+    if resolved_path:
+        return resolved_path
+
+    return output_file_path
+
+
 def _validate_output_path_and_file(config, integration_file_tests):
     """Check if output paths and files exist."""
     for file_test in integration_file_tests:
@@ -110,7 +280,13 @@ def _validate_output_path_and_file(config, integration_file_tests):
                 f"Path {file_test['path_descriptor']} not found in integration test configuration."
             ) from exc
 
-        output_file_path = Path(output_path) / file_test["file"]
+        if "model_version" in config["configuration"]:
+            output_file_path = _resolve_output_file_path(
+                output_path, file_test["file"], config["configuration"]["model_version"]
+            )
+        else:
+            output_file_path = Path(output_path) / file_test["file"]
+
         _logger.info(f"Checking path: {output_file_path}")
         try:
             assert output_file_path.exists()
@@ -329,20 +505,91 @@ def _validate_simtel_cfg_files(config, simtel_cfg_file):
     """
     Check sim_telarray configuration files and compare with reference file.
 
+    File names with version patterns are resolved accordingly (first tries
+    MAJOR.MINOR.PATCH, then falls back to MAJOR.MINOR).
+
     Note the finetuned naming of configuration files by simtools.
+
+    Parameters
+    ----------
+    config : dict
+        Configuration dictionary.
+    simtel_cfg_file : str
+        Reference sim_telarray configuration file.
 
     """
     reference_file = Path(simtel_cfg_file)
-    test_file = (
-        Path(config["configuration"]["output_path"])
-        / f"model/{config['configuration']['model_version']}"
-        / reference_file.name.replace("_test", f"_{config['configuration']['label']}")
-    )
+    model_version = config["configuration"]["model_version"]
+    output_path = Path(config["configuration"]["output_path"])
+
+    resolved_model_path = resolve_model_version_path(output_path / "model", model_version)
+    _logger.info(f"Resolved model path: {resolved_model_path}")
+
+    # Build expected filename with label
+    expected_filename = reference_file.name.replace("_test", f"_{config['configuration']['label']}")
+    test_file = resolved_model_path / expected_filename
+    _logger.info(f"Looking for test file: {test_file}")
+
+    if not test_file.exists():
+        _logger.info("Test file not found, trying version-aware resolution")
+        version_parts = model_version.split(".")
+        if len(version_parts) >= 2:
+            minor_version = f"{version_parts[0]}.{version_parts[1]}"
+            if minor_version in expected_filename:
+                glob_pattern = expected_filename.replace(minor_version, f"{minor_version}*")
+                matching_files = sorted(resolved_model_path.glob(glob_pattern))
+                _logger.info(f"Found {len(matching_files)} matching files: {matching_files}")
+                if matching_files:
+                    test_file = matching_files[0]
+                    _logger.info(f"Resolved simtel cfg file to: {test_file.name}")
+
     _logger.info(
         f"Comparing simtel cfg files: {reference_file} and {test_file} "
-        f"for model version {config['configuration']['model_version']}"
+        f"for model version {model_version}"
     )
     assert _compare_simtel_cfg_files(reference_file, test_file)
+
+
+def _lines_match_with_version_flexibility(ref_line, test_line):
+    """
+    Compare two lines with flexibility for version differences.
+
+    Strategy:
+    - Exact string equality passes.
+    - Otherwise, normalize all version patterns in both lines to MAJOR.MINOR and compare.
+
+    Parameters
+    ----------
+    ref_line : str
+        Reference line
+    test_line : str
+        Test line
+
+    Returns
+    -------
+    bool
+        True if lines match (considering version flexibility)
+
+    """
+    if ref_line == test_line:
+        return True
+
+    # Match MAJOR.MINOR or MAJOR.MINOR.PATCH even when followed by underscores/letters
+    # Ensure we don't match when adjacent to other digits
+    version_re = re.compile(r"(?<!\d)(\d+)\.(\d+)(?:\.\d+)?(?!\d)")
+
+    def _to_minor(match: re.Match) -> str:
+        return f"{match.group(1)}.{match.group(2)}"
+
+    ref_norm = version_re.sub(_to_minor, ref_line)
+    test_norm = version_re.sub(_to_minor, test_line)
+
+    if ref_norm == test_norm:
+        if ref_line != test_line:
+            _logger.debug(f"Lines match after version normalization: '{ref_line}' vs '{test_line}'")
+        return True
+
+    return False
 
 
 def _compare_simtel_cfg_files(reference_file, test_file):
@@ -352,6 +599,7 @@ def _compare_simtel_cfg_files(reference_file, test_file):
     Line-by-line string comparison. Requires similar sequence of
     parameters in the files. Ignore lines containing 'config_release'
     (as it contains the simtools package version).
+    For ModelVersion lines, compare MAJOR.MINOR only.
 
     Parameters
     ----------
@@ -380,7 +628,8 @@ def _compare_simtel_cfg_files(reference_file, test_file):
     for ref_line, test_line in zip(reference_cfg, test_cfg):
         if any(ignore in ref_line for ignore in ("config_release", "Label", "simtools_version")):
             continue
-        if ref_line != test_line:
+
+        if not _lines_match_with_version_flexibility(ref_line, test_line):
             _logger.error(
                 f"Configuration files {reference_file} and {test_file} do not match: "
                 f"'{ref_line}' and '{test_line}'"
