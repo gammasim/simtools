@@ -875,6 +875,27 @@ def test_validate_output_path_and_file_without_model_version(
     mock_check_output.assert_called_once()
 
 
+def test_validate_output_path_and_file_without_model_version_real_file(
+    tmp_test_directory, mock_check_output
+):
+    tmp_dir = Path(str(tmp_test_directory))
+    data_dir = tmp_dir / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    test_file = data_dir / "output_file.txt"
+    test_file.write_text("test content")
+
+    config = {
+        "configuration": {"data_directory": str(data_dir)},
+    }
+    integration_test = [
+        {"path_descriptor": "data_directory", "file": "output_file.txt", "expected_output": {}}
+    ]
+
+    validate_output._validate_output_path_and_file(config, integration_test)
+    mock_check_output.assert_called_once()
+
+
 def test_validate_simtel_cfg_files_with_version_glob_resolution(mocker, tmp_test_directory):
     tmp_dir = Path(str(tmp_test_directory))
     output_path = tmp_dir / "output"
