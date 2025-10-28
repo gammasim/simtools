@@ -137,13 +137,20 @@ def _resolve_model_version_to_latest_patch(args_dict, db_config, logger):
     logger : logging.Logger
         Logger instance for logging information.
     """
-    model_version = args_dict.get("model_version")
-    if not model_version or not db_config:
-        return
-    if version.version_kind(model_version) == version.MAJOR_MINOR_PATCH:
+    mv = args_dict.get("model_version")
+    if not mv or not db_config:
         return
 
-    db = db_handler.DatabaseHandler(db_config)
-    latest = version.resolve_version_to_latest_patch(model_version, db.get_model_versions())
-    logger.info(f"Resolved model_version {model_version} to latest patch version {latest}")
-    args_dict["model_version"] = latest
+    def resolve(ver):
+        if version.version_kind(ver) == version.MAJOR_MINOR_PATCH:
+            return ver
+        try:
+            db = db_handler.DatabaseHandler(db_config)
+            latest = version.resolve_version_to_latest_patch(ver, db.get_model_versions())
+            logger.info(f"Resolved {ver} to {latest}")
+            return latest
+        except (ValueError, KeyError, OSError):
+            logger.warning(f"Could not resolve {ver}, using as-is.")
+            return ver
+
+    args_dict["model_version"] = [resolve(v) for v in mv] if isinstance(mv, list) else resolve(mv)
