@@ -101,29 +101,68 @@ def _validate_reference_output_file(config, integration_test):
     )
 
 
-def _try_resolve_version_path(base_path, file_str, model_version):
+def _normalize_model_version(model_version):
     """
-    Try to resolve paths with incomplete version info in directory or filename.
+    Return model_version as string, or None if list/None (needs special handling).
+
+    Parameters
+    ----------
+    model_version : str, list, or None
+        Model version
+
+    Returns
+    -------
+    str or None
+        String if single version, None otherwise
+
+    """
+    if not model_version or isinstance(model_version, list):
+        return None
+    return model_version
+
+
+def _extract_version_from_filename(file_str):
+    """
+    Extract MAJOR.MINOR version from filename or path.
+
+    Parameters
+    ----------
+    file_str : str
+        Filename or path string potentially containing a version
+
+    Returns
+    -------
+    str or None
+        Extracted version string (MAJOR.MINOR) or None if not found
+
+    """
+    # Match MAJOR.MINOR (optionally followed by .PATCH) then _ or /
+    version_pattern = re.compile(r"(\d{1,10})\.(\d{1,10})(?:\.\d{1,10})?[_/]")
+    match = version_pattern.search(file_str)
+    if match:
+        return f"{match.group(1)}.{match.group(2)}"
+    return None
+
+
+def _try_resolve_single_version_path(base_path, file_str, minor_version):
+    """
+    Try to resolve path for a single version.
 
     Parameters
     ----------
     base_path : Path
         Base path to search in
     file_str : str
-        File path string (may contain version directory or version in filename)
-    model_version : str
-        Model version string
+        File path string
+    minor_version : str
+        Version in MAJOR.MINOR format
 
-    Examples
-    --------
-    "6.0/file.md" -> "6.0.2/file.md"
-    "file_6.0_name.txt" -> "file_6.0.2_name.txt"
+    Returns
+    -------
+    Path or None
+        Resolved path or None if not found
+
     """
-    parts = model_version.split(".")
-    if len(parts) < 2:
-        return None
-    minor_version = f"{parts[0]}.{parts[1]}"
-
     # Case 1: version as directory
     if "/" in file_str:
         dir_ver, rest = file_str.split("/", 1)
@@ -137,11 +176,51 @@ def _try_resolve_version_path(base_path, file_str, model_version):
     # Case 2: version in filename
     if minor_version in file_str:
         glob_pattern = file_str.replace(minor_version, f"{minor_version}*")
-        for match in sorted(base_path.glob(glob_pattern)):
-            _logger.debug(f"Resolved {file_str} to {match.relative_to(base_path)}")
-            return match
+        for match_path in sorted(base_path.glob(glob_pattern)):
+            _logger.debug(f"Resolved {file_str} to {match_path.relative_to(base_path)}")
+            return match_path
 
     return None
+
+
+def _try_resolve_version_path(base_path, file_str, model_version):
+    """
+    Try to resolve paths with incomplete version info in directory or filename.
+
+    Parameters
+    ----------
+    base_path : Path
+        Base path to search in
+    file_str : str
+        File path string (may contain version directory or version in filename)
+    model_version : str, list, or None
+        Model version string, list of version strings, or None if version
+        should be extracted from filename
+
+    Examples
+    --------
+    "6.0/file.md" -> "6.0.2/file.md"
+    "file_6.0_name.txt" -> "file_6.0.2_name.txt"
+    With list: model_version=["6.0", "6.1"], file "file_6.1_name.txt" -> "file_6.1.5_name.txt"
+    """
+    if isinstance(model_version, list):
+        for version in model_version:
+            result = _try_resolve_version_path(base_path, file_str, version)
+            if result:
+                return result
+        return None
+
+    if model_version is None:
+        model_version = _extract_version_from_filename(file_str)
+        if model_version is None:
+            return None
+
+    parts = model_version.split(".")
+    if len(parts) < 2:
+        return None
+    minor_version = f"{parts[0]}.{parts[1]}"
+
+    return _try_resolve_single_version_path(base_path, file_str, minor_version)
 
 
 def _resolve_output_file_path(output_path, file_str, model_version):
@@ -180,6 +259,39 @@ def _resolve_output_file_path(output_path, file_str, model_version):
     return output_file_path
 
 
+def _resolve_file_path_with_version_list(output_path, file_str, version_list):
+    """
+    Resolve file path when model_version is a list.
+
+    Try each version in the list until one resolves successfully.
+
+    Parameters
+    ----------
+    output_path : Path or str
+        Base output path
+    file_str : str
+        File path string
+    version_list : list
+        List of version strings
+
+    Returns
+    -------
+    Path
+        Resolved file path
+
+    """
+    for version in version_list:
+        try:
+            resolved_path = _resolve_output_file_path(output_path, file_str, version)
+            if resolved_path.exists():
+                return resolved_path
+        except (OSError, ValueError):
+            continue
+
+    # If none resolved, return direct path
+    return Path(output_path) / file_str
+
+
 def _validate_output_path_and_file(config, integration_file_tests):
     """Check if output paths and files exist."""
     for file_test in integration_file_tests:
@@ -191,9 +303,17 @@ def _validate_output_path_and_file(config, integration_file_tests):
             ) from exc
 
         if "model_version" in config["configuration"]:
-            output_file_path = _resolve_output_file_path(
-                output_path, file_test["file"], config["configuration"]["model_version"]
-            )
+            raw_model_version = config["configuration"]["model_version"]
+
+            if isinstance(raw_model_version, list):
+                output_file_path = _resolve_file_path_with_version_list(
+                    output_path, file_test["file"], raw_model_version
+                )
+            else:
+                model_version = _normalize_model_version(raw_model_version)
+                output_file_path = _resolve_output_file_path(
+                    output_path, file_test["file"], model_version
+                )
         else:
             output_file_path = Path(output_path) / file_test["file"]
 
@@ -225,16 +345,30 @@ def _validate_model_parameter_json_file(config, model_parameter_validation, db_c
 
     reference_parameter_name = model_parameter_validation.get("reference_parameter_name")
 
-    reference_model_parameter = db.get_model_parameter(
-        parameter=reference_parameter_name,
-        site=config["configuration"].get("site"),
-        array_element_name=config["configuration"].get("telescope"),
-        model_version=config["configuration"].get("model_version"),
-    )
+    # Construct parameter file path to extract version from it
     parameter_file = (
         Path(config["configuration"]["output_path"])
         / config["configuration"].get("telescope")
         / model_parameter_validation["parameter_file"]
+    )
+
+    # Try to extract version from the parameter file path
+    model_version = _extract_version_from_filename(str(parameter_file))
+
+    # If no version found in path, fall back to config model_version
+    if model_version is None:
+        raw_model_version = config["configuration"].get("model_version")
+        if isinstance(raw_model_version, list):
+            # If list, use first version as fallback
+            model_version = raw_model_version[0] if raw_model_version else None
+        else:
+            model_version = _normalize_model_version(raw_model_version)
+
+    reference_model_parameter = db.get_model_parameter(
+        parameter=reference_parameter_name,
+        site=config["configuration"].get("site"),
+        array_element_name=config["configuration"].get("telescope"),
+        model_version=model_version,
     )
     model_parameter = ascii_handler.collect_data_from_file(parameter_file)
     assert _compare_value_from_parameter_dict(
@@ -429,10 +563,16 @@ def _validate_simtel_cfg_files(config, simtel_cfg_file):
 
     """
     reference_file = Path(simtel_cfg_file)
-    model_version = config["configuration"]["model_version"]
+    raw_model_version = config["configuration"]["model_version"]
     output_path = Path(config["configuration"]["output_path"])
 
     expected_filename = reference_file.name.replace("_test", f"_{config['configuration']['label']}")
+
+    # Handle list of versions - use first version for simtel cfg validation
+    if isinstance(raw_model_version, list):
+        model_version = raw_model_version[0] if raw_model_version else None
+    else:
+        model_version = _normalize_model_version(raw_model_version)
 
     test_file = _resolve_output_file_path(
         output_path / "model", f"{model_version}/{expected_filename}", model_version
