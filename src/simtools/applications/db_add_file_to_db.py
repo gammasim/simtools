@@ -159,14 +159,14 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
     # drop test database; be safe and required DB name is sandbox
     if args_dict.get("test_db", False) and "sandbox" in args_dict["db"]:
         logger.info(f"Test database used. Dropping all data from {args_dict['db']}")
-        db.db_client.drop_database(args_dict["db"])
+        db.mongo_db_handler.db_client.drop_database(args_dict["db"])
 
 
 def main():
     """Add files to the database."""
     app_context = startup_application(_parse, setup_io_handler=False)
 
-    db = db_handler.DatabaseHandler(mongo_db_config=app_context.db_config)
+    db = db_handler.DatabaseHandler(db_config=app_context.db_config)
 
     files_to_insert = collect_files_to_insert(app_context.args, app_context.logger, db)
     confirm_and_insert_files(files_to_insert, app_context.args, db, app_context.logger)

@@ -38,21 +38,21 @@ def initialize_simulation_models(
     tel_model = TelescopeModel(
         site=site,
         telescope_name=telescope_name,
-        mongo_db_config=db_config,
+        db_config=db_config,
         model_version=model_version,
         label=label,
     )
     site_model = SiteModel(
         site=site,
         model_version=model_version,
-        mongo_db_config=db_config,
+        db_config=db_config,
         label=label,
     )
     if calibration_device_name is not None:
         calibration_model = CalibrationModel(
             site=site,
             calibration_device_model_name=calibration_device_name,
-            mongo_db_config=db_config,
+            db_config=db_config,
             model_version=model_version,
             label=label,
         )
