@@ -135,7 +135,7 @@ def _extract_version_from_filename(file_str):
 
     """
     # Match MAJOR.MINOR (optionally followed by .PATCH) then _ or /
-    version_pattern = re.compile(r"(\d{1,10})\.(\d{1,10})(?:\.\d{1,10})?[_/]")
+    version_pattern = re.compile(r"(\d{1,5})\.(\d{1,5})(?:\.\d{1,5})?[_/]")
     match = version_pattern.search(file_str)
     if match:
         return f"{match.group(1)}.{match.group(2)}"
@@ -145,6 +145,8 @@ def _extract_version_from_filename(file_str):
 def _try_resolve_single_version_path(base_path, file_str, minor_version):
     """
     Try to resolve path for a single version.
+
+    Selects the highest (latest) patch version when multiple matches exist.
 
     Parameters
     ----------
@@ -165,7 +167,7 @@ def _try_resolve_single_version_path(base_path, file_str, minor_version):
     if "/" in file_str:
         dir_ver, rest = file_str.split("/", 1)
         if minor_version in dir_ver:
-            for match in sorted(base_path.glob(f"{minor_version}.*")):
+            for match in sorted(base_path.glob(f"{minor_version}.*"), reverse=True):
                 candidate = match / rest
                 if candidate.exists():
                     _logger.debug(f"Resolved {file_str} to {candidate.relative_to(base_path)}")
@@ -174,7 +176,7 @@ def _try_resolve_single_version_path(base_path, file_str, minor_version):
     # Case 2: version in filename
     if minor_version in file_str:
         glob_pattern = file_str.replace(minor_version, f"{minor_version}*")
-        for match_path in sorted(base_path.glob(glob_pattern)):
+        for match_path in sorted(base_path.glob(glob_pattern), reverse=True):
             _logger.debug(f"Resolved {file_str} to {match_path.relative_to(base_path)}")
             return match_path
 
@@ -600,7 +602,7 @@ def _lines_match_with_version_flexibility(ref_line, test_line):
 
     # Match MAJOR.MINOR or MAJOR.MINOR.PATCH even when followed by underscores/letters
     # Ensure we don't match when adjacent to other digits
-    version_re = re.compile(r"(?<!\d)(\d{1,10})\.(\d{1,10})(?:\.(\d{1,10}))?(?!\d)")
+    version_re = re.compile(r"(?<!\d)(\d{1,5})\.(\d{1,5})(?:\.(\d{1,5}))?(?!\d)")
 
     def _to_minor(match: re.Match) -> str:
         return f"{match.group(1)}.{match.group(2)}"

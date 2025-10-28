@@ -706,7 +706,8 @@ def test_resolve_output_file_path_multiple_versions(tmp_test_directory):
     test_file2.write_text("test content 2")
 
     resolved = validate_output._resolve_output_file_path(output_path, "6.0/test.md", "6.0")
-    assert resolved == test_file1
+    # Should resolve to highest (latest) patch version
+    assert resolved == test_file2
 
 
 def test_resolve_output_file_path_no_match(tmp_test_directory):
