@@ -654,7 +654,6 @@ def test_write_array_triggers_file_mixed_hardstereo(simtel_config_writer, tmp_te
     lines = setup_mixed_trigger_test(
         simtel_config_writer, tmp_test_directory, mock_get_array_triggers
     )
-    print(lines)
 
     # Should have comment line, hardstereo line for LSTs, individual and combined lines
     assert "# Array trigger definition" in lines[0]
