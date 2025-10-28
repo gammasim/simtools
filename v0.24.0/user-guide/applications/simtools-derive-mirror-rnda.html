@@ -1,0 +1,767 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>simtools-derive-mirror-rnda &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=a9084e48"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-derive-mirror-rnda';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="simtools-derive-photon-electron-spectrum" href="simtools-derive-photon-electron-spectrum.html" />
+    <link rel="prev" title="simtools-derive-ctao-array-layouts" href="simtools-derive-ctao-array-layouts.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.24.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../productions.html">Simulation Productions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../manage_simulation_models.html">Manage simulation models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../manage_simulation_models/simulation_models_database.html">Simulation Models Database and Repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../manage_simulation_models/model_import.html">Import of simulation model parameters</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulate_calibration_data.html">Simulate Calibration Data</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../applications.html">Applications</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="simtools-calculate-incident-angles.html">simtools-calculate-incident-angles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-convert-all-model-parameters-from-simtel.html">simtools-convert-all-model-parameters-from-simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-add-file-to-db.html">simtools-db-add-file-to-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-add-simulation-model-from-repository-to-db.html">simtools-db-add-simulation-model-from-repository-to-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-add-value-from-json-to-db.html">simtools-db-add-value-from-json-to-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-get-array-layouts-from-db.html">simtools-db-get-array-layouts-from-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-generate-compound-indexes.html">simtools-db-generate-compound-indexes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-upload-model-repository.html">simtools-db-upload-model-repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-derive-mirror-rnda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-trigger-rates.html">simtools-derive-trigger-rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-calibration-reports.html">simtools-docs-produce-calibration-reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-simulation-configuration-report.html">simtools-docs-produce-simulation-configuration-report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-array-config.html">simtools-generate-array-config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-add-production.html">simtools-maintain-simulation-model-add-production</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-compare-productions.html">simtools-maintain-simulation-model-compare-productions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-verify-production-tables.html">simtools-maintain-simulation-model-verify-production-tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-merge-tables.html">simtools-merge-tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-tabular-data-for-model-parameter.html">simtools-plot-tabular-data-for-model-parameter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-simtel-events.html">simtools-plot-simtel-events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-print-version.html">simtools-print-version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-statistics.html">simtools-production-derive-statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-production-merge-corsika-limits.html">simtools-production-merge-corsika-limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-flasher.html">simtools-simulate-flasher</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-illuminator.html">simtools-simulate-illuminator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-pedestals.html">simtools-simulate-pedestals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod.html">simtools-simulate-prod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-submit-array-layouts.html">simtools-submit-array-layouts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-submit-data-from-external.html">simtools-submit-data-from-external</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-submit-model-parameter-from-external.html">simtools-submit-model-parameter-from-external</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-camera-efficiency.html">simtools-validate-camera-efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-camera-fov.html">simtools-validate-camera-fov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-cumulative-psf.html">simtools-validate-cumulative-psf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-file-using-schema.html">simtools-validate-file-using-schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-optics.html">simtools-validate-optics</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../applications.html" class="nav-link">Applications</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools-derive-mirror-rnda</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-derive_mirror_rnda">
+<span id="simtools-derive-mirror-rnda"></span><h1>simtools-derive-mirror-rnda<a class="headerlink" href="#module-derive_mirror_rnda" title="Link to this heading">#</a></h1>
+<p>Derive mirror random reflection angle (mirror roughness) of a single mirror panel.</p>
+<section id="description">
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">#</a></h2>
+<p>This application derives the value of the simulation model parameter
+<em>mirror_reflection_random_angle</em> using measurements of the focal length
+and point-spread function (PSF) of individual mirror panels.
+This parameter is sometimes referred to as the “mirror roughness”.</p>
+<p>PSF measurements are provided by one of the following options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>mean and sigma value obtained from the measurement of containment diameters of a number of
+mirror panels in cm (<code class="docutils literal notranslate"><span class="pre">--psf_measurement_containment_mean</span></code> and
+<code class="docutils literal notranslate"><span class="pre">--psf_measurement_containment_sigma</span></code>)</p></li>
+<li><p>file (table) with measured PSF for each mirror panel spot size (<code class="docutils literal notranslate"><span class="pre">--psf_measurement</span></code>)</p></li>
+</ul>
+</div></blockquote>
+<p>The containment fraction used for the PSF diameter calculation is set through
+the argument <code class="docutils literal notranslate"><span class="pre">--containment_fraction</span></code> (typically 0.8 = 80%; called below D80).</p>
+<p>Mirror panels are simulated individually, using one of the following options to set the
+mirror panel focal length:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>file (table) with measured focal lengths per mirror panel
+(provided through <code class="docutils literal notranslate"><span class="pre">--mirror_list</span></code>)</p></li>
+<li><p>randomly generated focal lengths using an expected spread (value given through
+<code class="docutils literal notranslate"><span class="pre">--random_focal_length</span></code>) around the mean focal length (provided through the
+Model Parameters DB). This option is switched with <code class="docutils literal notranslate"><span class="pre">--use_random_focal_length</span></code>.</p></li>
+</ul>
+</div></blockquote>
+<p>The tuning algorithm requires a starting value for the random reflection angle. This is either
+taken from the Model Parameters DB (default) or can be set using the argument <code class="docutils literal notranslate"><span class="pre">--rnda</span></code>.</p>
+<p>Ray-tracing simulations are performed for single mirror configurations for each
+mirror given in the mirror list. The mean simulated containment diameter for all the mirrors
+is compared with the mean measured containment diameter. The algorithm defines a new value for
+the random reflection angle based on the sign of the difference between measured and simulated
+containment diameters and a new set of simulations is performed. This process is repeated
+until the sign of the difference changes, meaning that the two final values of the random
+reflection angle brackets the optimal. These two values are used to find the optimal one by
+a linear interpolation. Finally, simulations are performed by using the interpolated value,
+which is defined as the desired optimal.</p>
+<p>The option <code class="docutils literal notranslate"><span class="pre">--no_tuning</span></code> can be used if one only wants to simulate one value for the random
+reflection angle and compare the results with the measured ones.</p>
+<p>Results of the tuning are plotted. See examples of the PSF containment diameter
+D80 vs random reflection angle plot, on the left, and the D80 distributions
+(per mirror panel), on the right.</p>
+<a class="reference internal image-reference" href="../../_images/derive_mirror_rnda_North-MST-FlashCam-D.png" id="derive-rnda-plot"><img alt="../../_images/derive_mirror_rnda_North-MST-FlashCam-D.png" id="derive-rnda-plot" src="../../_images/derive_mirror_rnda_North-MST-FlashCam-D.png" style="width: 49%;" />
+</a>
+<a class="reference internal image-reference" href="../../_images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png"><img alt="../../_images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png" src="../../_images/derive_mirror_rnda_North-MST-FlashCam-D_D80-distributions.png" style="width: 49%;" />
+</a>
+<p>This application uses the following software tools:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>sim_telarray/bin/sim_telarray</p></li>
+<li><p>sim_telarray/bin/rx (optional)</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="command-line-arguments">
+<h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>telescope (str, required)</dt><dd><p>Telescope name (e.g. LSTN-01, SSTS-25)</p>
+</dd>
+<dt>model_version (str, optional)</dt><dd><p>Model version</p>
+</dd>
+<dt>psf_measurement (str, optional)</dt><dd><p>Table with results from PSF measurements for each mirror panel spot size</p>
+</dd>
+<dt>psf_measurement_containment_mean (float, required)</dt><dd><p>Mean of measured containment diameter [cm]</p>
+</dd>
+<dt>psf_measurement_containment_sigma (float, optional)</dt><dd><p>Std dev of measured containment diameter [cm]</p>
+</dd>
+<dt>containment_fraction (float, required)</dt><dd><p>Containment fraction for diameter calculation</p>
+</dd>
+<dt>rnda (float, optional)</dt><dd><p>Starting value of mirror_reflection_random_angle [deg]. If not given, the value from the
+default model is read from the simulation model database.</p>
+</dd>
+<dt>mirror_list (file, optional)</dt><dd><p>Table with mirror ID and panel radius.</p>
+</dd>
+<dt>use_random_focal_length (activation mode, optional)</dt><dd><p>Use random focal lengths, instead of the measured ones. The argument random_focal_length
+can be used to replace the default random_focal_length from the model.</p>
+</dd>
+<dt>random_focal_length (float, optional)</dt><dd><p>Value of the random focal lengths to replace the default random_focal_length. Only used if
+‘use_random_focal_length’ is activated.</p>
+</dd>
+<dt>random_focal_length_seed (int, optional)</dt><dd><p>Seed for the random number generator used for focal length variation.</p>
+</dd>
+<dt>no_tuning (activation mode, optional)</dt><dd><p>Turn off the tuning - A single case will be simulated and plotted.</p>
+</dd>
+<dt>test (activation mode, optional)</dt><dd><p>If activated, application will be faster by simulating only few mirrors.</p>
+</dd>
+</dl>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
+<p>Derive mirror random reflection angle for a large-sized telescope (LSTS),
+simulation production 6.0.0</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-mirror-rnda \\</span>
+<span class="go">    --site South \\</span>
+<span class="go">    --telescope LSTS-design \\</span>
+<span class="go">    --model_version 6.0.0 \\</span>
+<span class="go">    --containment_fraction 0.8 \\</span>
+<span class="go">    --mirror_list ./tests/resources/mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv</span>
+<span class="go">    --rnda 0.003 \\</span>
+<span class="go">    --psf_measurement_containment_mean 1.4 \\</span>
+</pre></div>
+</div>
+<p>Expected final print-out message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Measured D80:</span>
+<span class="go">Mean = 1.400 cm</span>
+
+<span class="go">Simulated D80:</span>
+<span class="go">Mean = 1.406 cm, StdDev = 0.005 cm</span>
+
+<span class="go">mirror_random_reflection_angle</span>
+<span class="go">Previous value = 0.003000</span>
+<span class="go">New value = 0.003824</span>
+</pre></div>
+</div>
+</section>
+<dl class="py function">
+<dt class="sig sig-object py" id="derive_mirror_rnda.main">
+<span class="sig-prename descclassname"><span class="pre">derive_mirror_rnda.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/derive_mirror_rnda.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#derive_mirror_rnda.main" title="Link to this definition">#</a></dt>
+<dd><p>Derive mirror random reflection angle of a single mirror panel.</p>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="simtools-derive-ctao-array-layouts.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">simtools-derive-ctao-array-layouts</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="simtools-derive-photon-electron-spectrum.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">simtools-derive-photon-electron-spectrum</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#description">Description</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#derive_mirror_rnda.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/user-guide/applications/simtools-derive-mirror-rnda.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

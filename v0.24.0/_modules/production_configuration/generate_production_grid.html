@@ -1,0 +1,892 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>production_configuration.generate_production_grid &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=a9084e48"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_configuration/generate_production_grid';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.24.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">production_configuration.generate_production_grid</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for production_configuration.generate_production_grid</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module defines the `GridGeneration` class.</span>
+
+<span class="sd">Used to generate a grid of simulation points based on flexible axes definitions such</span>
+<span class="sd">azimuth, zenith angle, night-sky background, and camera offset.</span>
+<span class="sd">The module handles axis binning, scaling and interpolation of energy thresholds, viewcone,</span>
+<span class="sd">and radius limits from a lookup table.</span>
+<span class="sd">Additionally, it allows for converting between Altitude/Azimuth and Right Ascension</span>
+<span class="sd">Declination coordinates. The resulting grid points are saved to a file.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">AltAz</span><span class="p">,</span> <span class="n">EarthLocation</span><span class="p">,</span> <span class="n">SkyCoord</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">Quantity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.interpolate</span><span class="w"> </span><span class="kn">import</span> <span class="n">griddata</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span>
+
+
+<div class="viewcode-block" id="GridGeneration">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GridGeneration</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines and generates a grid of simulation points based on flexible axes definitions.</span>
+
+<span class="sd">    This class generates a grid of points for a simulation based on parameters such as</span>
+<span class="sd">    azimuth, zenith angle, night-sky background, and camera offset,</span>
+<span class="sd">    taking into account axis definitions, scaling, and units and interpolating values</span>
+<span class="sd">    for simulations from a lookup table.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">axes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">coordinate_system</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;zenith_azimuth&quot;</span><span class="p">,</span>
+        <span class="n">observing_location</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">observing_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">lookup_table</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">telescope_ids</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the grid with the given axes and coordinate system.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        axes : dict</span>
+<span class="sd">            Dictionary where each key is the axis name and the value is a dictionary</span>
+<span class="sd">            defining the axis properties (range, binning, scaling, etc.).</span>
+<span class="sd">        coordinate_system : str, optional</span>
+<span class="sd">            The coordinate system for the grid generation (default is &#39;zenith_azimuth&#39;).</span>
+<span class="sd">        observing_location : EarthLocation, optional</span>
+<span class="sd">            The location of the observation (latitude, longitude, height).</span>
+<span class="sd">        observing_time : Time, optional</span>
+<span class="sd">            The time of the observation. If None, coordinate conversion to RA/Dec not working.</span>
+<span class="sd">        lookup_table : str, optional</span>
+<span class="sd">            Path to the lookup table file (ECSV format).</span>
+<span class="sd">        telescope_ids : list of int, optional</span>
+<span class="sd">            List of telescope IDs to get the limits for.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="s2">&quot;axes&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;axes&quot;</span> <span class="ow">in</span> <span class="n">axes</span> <span class="k">else</span> <span class="n">axes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">=</span> <span class="n">coordinate_system</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observing_location</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">observing_location</span>
+            <span class="k">if</span> <span class="n">observing_location</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">EarthLocation</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observing_time</span> <span class="o">=</span> <span class="n">observing_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lookup_table</span> <span class="o">=</span> <span class="n">lookup_table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_ids</span> <span class="o">=</span> <span class="n">telescope_ids</span>
+
+        <span class="c1"># Store target values for each axis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_target_values</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup_table</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_lookup_table_limits</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_target_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate target axis values and store them as Quantities.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary of target values for each axis, stored as Quantity objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">target_values</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">axis_name</span><span class="p">,</span> <span class="n">axis</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">axis_range</span> <span class="o">=</span> <span class="n">axis</span><span class="p">[</span><span class="s2">&quot;range&quot;</span><span class="p">]</span>
+            <span class="n">binning</span> <span class="o">=</span> <span class="n">axis</span><span class="p">[</span><span class="s2">&quot;binning&quot;</span><span class="p">]</span>
+            <span class="n">scaling</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scaling&quot;</span><span class="p">,</span> <span class="s2">&quot;linear&quot;</span><span class="p">)</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">axis_name</span> <span class="o">==</span> <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span>
+                <span class="c1"># Use circular binning for azimuth</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_circular_binning</span><span class="p">(</span><span class="n">axis_range</span><span class="p">,</span> <span class="n">binning</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">scaling</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span>
+                <span class="c1"># Log scaling</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">axis_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">axis_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">binning</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">scaling</span> <span class="o">==</span> <span class="s2">&quot;1/cos&quot;</span><span class="p">:</span>
+                <span class="c1"># 1/cos scaling</span>
+                <span class="n">cos_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">axis_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="n">cos_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">axis_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">inv_cos_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">cos_min</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">cos_max</span><span class="p">,</span> <span class="n">binning</span><span class="p">)</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">inv_cos_values</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Linear scaling</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">axis_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">binning</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">units</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">values</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+
+            <span class="n">target_values</span><span class="p">[</span><span class="n">axis_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+
+        <span class="k">return</span> <span class="n">target_values</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_lookup_table_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply limits from the lookup table and interpolate values.&quot;&quot;&quot;</span>
+        <span class="n">lookup_table</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lookup_table</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">)</span>
+
+        <span class="n">matching_rows</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">lookup_table</span> <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_ids</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;telescope_ids&quot;</span><span class="p">])</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">matching_rows</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;No matching rows in the lookup table for telescope_ids: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_ids</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">extract_array</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">transform</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">field</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">matching_rows</span><span class="p">])</span>
+
+        <span class="n">zeniths</span> <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s2">&quot;zenith&quot;</span><span class="p">)</span>
+        <span class="n">azimuths</span> <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s2">&quot;azimuth&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">%</span> <span class="mi">360</span><span class="p">)</span>
+        <span class="n">nsb_values</span> <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s2">&quot;nsb&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="s2">&quot;dark&quot;</span> <span class="k">else</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">lower_energy_thresholds</span> <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s2">&quot;lower_energy_threshold&quot;</span><span class="p">)</span>
+        <span class="n">upper_radius_thresholds</span> <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s2">&quot;upper_radius_threshold&quot;</span><span class="p">)</span>
+        <span class="n">viewcone_radii</span> <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s2">&quot;viewcone_radius&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Wrap azimuths and repeat others</span>
+        <span class="n">azimuths_wrapped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">azimuths</span> <span class="o">+</span> <span class="n">shift</span> <span class="k">for</span> <span class="n">shift</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">360</span><span class="p">,</span> <span class="o">-</span><span class="mi">360</span><span class="p">)])</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">repeat_3</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Repeat an array three times.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">repeat_3</span><span class="p">(</span><span class="n">zeniths</span><span class="p">),</span>
+                <span class="n">azimuths_wrapped</span><span class="p">,</span>
+                <span class="n">repeat_3</span><span class="p">(</span><span class="n">nsb_values</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">target_grid</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">target_values</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">target_values</span><span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">target_values</span><span class="p">[</span><span class="s2">&quot;nsb&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">T</span>
+        <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">interpolate</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">griddata</span><span class="p">(</span>
+                <span class="n">points</span><span class="p">,</span> <span class="n">repeat_3</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">target_grid</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_values</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">]),</span>
+                <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_values</span><span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">]),</span>
+                <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_values</span><span class="p">[</span><span class="s2">&quot;nsb&quot;</span><span class="p">]),</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">interpolated_limits</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="n">interpolate</span><span class="p">(</span><span class="n">lower_energy_thresholds</span><span class="p">),</span>
+            <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="n">interpolate</span><span class="p">(</span><span class="n">upper_radius_thresholds</span><span class="p">),</span>
+            <span class="s2">&quot;viewcone&quot;</span><span class="p">:</span> <span class="n">interpolate</span><span class="p">(</span><span class="n">viewcone_radii</span><span class="p">),</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="GridGeneration.create_circular_binning">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration.create_circular_binning">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_circular_binning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">azimuth_range</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create bin centers for azimuth angles, handling circular wraparound (0 deg to 360 deg).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        azimuth_range : tuple</span>
+<span class="sd">            (min_azimuth, max_azimuth), can wrap around 0 deg.</span>
+<span class="sd">        num_bins : int</span>
+<span class="sd">            Number of bins.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Array of bin centers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">azimuth_min</span><span class="p">,</span> <span class="n">azimuth_max</span> <span class="o">=</span> <span class="n">azimuth_range</span>
+        <span class="n">azimuth_min</span> <span class="o">%=</span> <span class="mi">360</span>  <span class="c1"># Normalize to [0, 360)</span>
+        <span class="n">azimuth_max</span> <span class="o">%=</span> <span class="mi">360</span>
+
+        <span class="n">clockwise_distance</span> <span class="o">=</span> <span class="p">(</span><span class="n">azimuth_max</span> <span class="o">-</span> <span class="n">azimuth_min</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span>
+        <span class="n">counterclockwise_distance</span> <span class="o">=</span> <span class="p">(</span><span class="n">azimuth_min</span> <span class="o">-</span> <span class="n">azimuth_max</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span>
+
+        <span class="k">if</span> <span class="n">clockwise_distance</span> <span class="o">&lt;=</span> <span class="n">counterclockwise_distance</span><span class="p">:</span>
+            <span class="n">bin_centers</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">azimuth_min</span><span class="p">,</span> <span class="n">azimuth_min</span> <span class="o">+</span> <span class="n">clockwise_distance</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="o">%</span> <span class="mi">360</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bin_centers</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+                    <span class="n">azimuth_min</span><span class="p">,</span> <span class="n">azimuth_min</span> <span class="o">-</span> <span class="n">counterclockwise_distance</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="o">%</span> <span class="mi">360</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">bin_centers</span></div>
+
+
+<div class="viewcode-block" id="GridGeneration.generate_grid">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration.generate_grid">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate the grid based on the required axes and include interpolated limits.</span>
+
+<span class="sd">        Takes energy threshold, viewcone, and radius from the interpolated lookup table.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of dict</span>
+<span class="sd">            A list of grid points, each represented as a dictionary with axis names</span>
+<span class="sd">            as keys and axis values as values. Axis values may include units where defined.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value_arrays</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_values</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="o">.</span><span class="n">unit</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_values</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">value_arrays</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span><span class="p">)</span>
+        <span class="n">combinations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">,</span> <span class="n">grid</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">grid_points</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">combination</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">:</span>
+            <span class="n">grid_point</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">Quantity</span><span class="p">(</span><span class="n">combination</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">units</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_values</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="s2">&quot;energy&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolated_limits</span><span class="p">:</span>
+                <span class="n">zenith_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">target_values</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">grid_point</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                <span class="p">)</span>
+                <span class="n">azimuth_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">target_values</span><span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">grid_point</span><span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                <span class="p">)</span>
+                <span class="n">nsb_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_values</span><span class="p">[</span><span class="s2">&quot;nsb&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">grid_point</span><span class="p">[</span><span class="s2">&quot;nsb&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">energy_lower</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolated_limits</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">][</span><span class="n">zenith_idx</span><span class="p">,</span> <span class="n">azimuth_idx</span><span class="p">,</span> <span class="n">nsb_idx</span><span class="p">]</span>
+                <span class="n">grid_point</span><span class="p">[</span><span class="s2">&quot;energy_threshold&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;lower&quot;</span><span class="p">:</span> <span class="n">energy_lower</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">}</span>
+
+            <span class="k">if</span> <span class="s2">&quot;radius&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolated_limits</span><span class="p">:</span>
+                <span class="n">radius_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolated_limits</span><span class="p">[</span><span class="s2">&quot;radius&quot;</span><span class="p">][</span><span class="n">zenith_idx</span><span class="p">,</span> <span class="n">azimuth_idx</span><span class="p">,</span> <span class="n">nsb_idx</span><span class="p">]</span>
+                <span class="n">grid_point</span><span class="p">[</span><span class="s2">&quot;radius&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radius_value</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
+
+            <span class="k">if</span> <span class="s2">&quot;viewcone&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolated_limits</span><span class="p">:</span>
+                <span class="n">viewcone_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolated_limits</span><span class="p">[</span><span class="s2">&quot;viewcone&quot;</span><span class="p">][</span>
+                    <span class="n">zenith_idx</span><span class="p">,</span> <span class="n">azimuth_idx</span><span class="p">,</span> <span class="n">nsb_idx</span>
+                <span class="p">]</span>
+                <span class="n">grid_point</span><span class="p">[</span><span class="s2">&quot;viewcone&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">viewcone_value</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+
+            <span class="n">grid_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grid_point</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">grid_points</span></div>
+
+
+<div class="viewcode-block" id="GridGeneration.convert_altaz_to_radec">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration.convert_altaz_to_radec">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">convert_altaz_to_radec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alt</span><span class="p">,</span> <span class="n">az</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert Altitude/Azimuth (AltAz) coordinates to Right Ascension/Declination (RA/Dec).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        alt : float</span>
+<span class="sd">            Altitude angle in degrees.</span>
+<span class="sd">        az : float</span>
+<span class="sd">            Azimuth angle in degrees.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SkyCoord</span>
+<span class="sd">            SkyCoord object containing the RA/Dec coordinates.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If observing_time is not set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">observing_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Observing time is not set. &quot;</span>
+                <span class="s2">&quot;Please provide an observing_time to convert coordinates.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">alt_rad</span> <span class="o">=</span> <span class="n">alt</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span>
+        <span class="n">az_rad</span> <span class="o">=</span> <span class="n">az</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span>
+        <span class="n">aa</span> <span class="o">=</span> <span class="n">AltAz</span><span class="p">(</span>
+            <span class="n">alt</span><span class="o">=</span><span class="n">alt_rad</span><span class="p">,</span>
+            <span class="n">az</span><span class="o">=</span><span class="n">az_rad</span><span class="p">,</span>
+            <span class="n">location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">observing_location</span><span class="p">,</span>
+            <span class="n">obstime</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">observing_time</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">skycoord</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">aa</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">skycoord</span><span class="o">.</span><span class="n">icrs</span>  <span class="c1"># Return RA/Dec in ICRS frame</span></div>
+
+
+<div class="viewcode-block" id="GridGeneration.convert_coordinates">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration.convert_coordinates">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">convert_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_points</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert the grid points to RA/Dec coordinates if necessary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        grid_points : list of dict</span>
+<span class="sd">            List of grid points, each represented as a dictionary with axis</span>
+<span class="sd">              names as keys and values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of dict</span>
+<span class="sd">            The grid points with converted RA/Dec coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;ra_dec&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">grid_points</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;zenith_angle&quot;</span> <span class="ow">in</span> <span class="n">point</span> <span class="ow">and</span> <span class="s2">&quot;azimuth&quot;</span> <span class="ow">in</span> <span class="n">point</span><span class="p">:</span>
+                    <span class="n">alt</span> <span class="o">=</span> <span class="p">(</span><span class="mf">90.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span> <span class="o">-</span> <span class="n">point</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">)</span>
+                    <span class="n">az</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;azimuth&quot;</span><span class="p">)</span>
+                    <span class="n">radec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_altaz_to_radec</span><span class="p">(</span><span class="n">alt</span><span class="p">,</span> <span class="n">az</span><span class="p">)</span>
+                    <span class="n">point</span><span class="p">[</span><span class="s2">&quot;ra&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radec</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">deg</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+                    <span class="n">point</span><span class="p">[</span><span class="s2">&quot;dec&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radec</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">deg</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+        <span class="k">return</span> <span class="n">grid_points</span></div>
+
+
+<div class="viewcode-block" id="GridGeneration.serialize_grid_points">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration.serialize_grid_points">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">serialize_grid_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_points</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Serialize the grid output and save to a file or print to the console.&quot;&quot;&quot;</span>
+        <span class="n">cleaned_points</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">grid_points</span><span class="p">:</span>
+            <span class="n">cleaned_point</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">point</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="c1"># Nested dictionaries</span>
+                    <span class="n">cleaned_point</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">serialize_quantity</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cleaned_point</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">serialize_quantity</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+            <span class="n">cleaned_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cleaned_point</span><span class="p">)</span>
+
+        <span class="n">ascii_handler</span><span class="o">.</span><span class="n">write_data_to_file</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">cleaned_points</span><span class="p">,</span>
+            <span class="n">output_file</span><span class="o">=</span><span class="n">output_file</span><span class="p">,</span>
+            <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output saved to </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GridGeneration.serialize_quantity">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration.serialize_quantity">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">serialize_quantity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Serialize Quantity.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">unit</span><span class="p">)}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2"> for serialization. Returning as is.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

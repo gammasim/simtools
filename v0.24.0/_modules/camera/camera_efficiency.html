@@ -1,0 +1,1051 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>camera.camera_efficiency &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=a9084e48"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/camera/camera_efficiency';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.24.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">camera.camera_efficiency</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for camera.camera_efficiency</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Camera efficiency simulations and analysis.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.io.ascii</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">initialize_simulation_models</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simulator_camera_efficiency</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulatorCameraEfficiency</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">visualize</span>
+
+
+<div class="viewcode-block" id="CameraEfficiency">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CameraEfficiency</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Camera efficiency simulations and analysis.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db_config: dict</span>
+<span class="sd">        Configuration for the database.</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label, optional.</span>
+<span class="sd">    config_data: dict.</span>
+<span class="sd">        Dict containing the configurable parameters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_data</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the CameraEfficiency class.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span> <span class="o">=</span> <span class="n">config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simtel_path&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">initialize_simulation_models</span><span class="p">(</span>
+            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+            <span class="n">site</span><span class="o">=</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+            <span class="n">telescope_name</span><span class="o">=</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_results</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configuration_from_args_dict</span><span class="p">(</span><span class="n">config_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_files</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsb_rate_ref_conditions</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return string representation of the CameraEfficiency instance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;CameraEfficiency(label=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_configuration_from_args_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract configuration data from command line arguments.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config_data: dict</span>
+<span class="sd">            Dict containing the configurable parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Configuration data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s2">&quot;azimuth_angle&quot;</span><span class="p">:</span> <span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;azimuth_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s2">&quot;nsb_spectrum&quot;</span><span class="p">:</span> <span class="n">config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nsb_spectrum&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define variables used for file names, including results, sim_telarray and log files.&quot;&quot;&quot;</span>
+        <span class="n">_file</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;results&quot;</span><span class="p">,</span> <span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;.ecsv&quot;</span><span class="p">,</span> <span class="s2">&quot;.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;.log&quot;</span><span class="p">],</span>
+        <span class="p">):</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">generate_file_name</span><span class="p">(</span>
+                <span class="n">file_type</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">&quot;camera_efficiency_table&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="s2">&quot;results&quot;</span> <span class="k">else</span> <span class="s2">&quot;camera_efficiency&quot;</span>
+                <span class="p">),</span>
+                <span class="n">suffix</span><span class="o">=</span><span class="n">suffix</span><span class="p">,</span>
+                <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+                <span class="n">telescope_model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">zenith_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">],</span>
+                <span class="n">azimuth_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;azimuth_angle&quot;</span><span class="p">],</span>
+                <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">_file</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_file</span>
+
+<div class="viewcode-block" id="CameraEfficiency.simulate">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.simulate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Simulate camera efficiency using testeff.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Simulating CameraEfficiency&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">()</span>
+
+        <span class="n">simtel</span> <span class="o">=</span> <span class="n">SimulatorCameraEfficiency</span><span class="p">(</span>
+            <span class="n">simtel_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="p">,</span>
+            <span class="n">telescope_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span>
+            <span class="n">site_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span>
+            <span class="n">zenith_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">],</span>
+            <span class="n">file_simtel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">],</span>
+            <span class="n">file_log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;log&quot;</span><span class="p">],</span>
+            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="n">nsb_spectrum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;nsb_spectrum&quot;</span><span class="p">],</span>
+            <span class="n">skip_correction_to_nsb_spectrum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;skip_correction_to_nsb_spectrum&quot;</span><span class="p">,</span> <span class="kc">False</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">simtel</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="CameraEfficiency.export_model_files">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.export_model_files">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export model and config files to the output directory.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">write_sim_telarray_config_file</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;skip_correction_to_nsb_spectrum&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">export_nsb_spectrum_to_telescope_altitude_correction_file</span><span class="p">(</span>
+                <span class="n">model_directory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">config_file_directory</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CameraEfficiency.get_nsb_pixel_rate">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.get_nsb_pixel_rate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_nsb_pixel_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_conditions</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the expected NSB pixel rate for each camera pixel.</span>
+
+<span class="sd">        This is an approximation, as testeff calculates the expected NSB pixel rate</span>
+<span class="sd">        for the on-axis pixel only.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Expected NSB pixel rate in p.e./ns for the provided NSB spectrum.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">base_rate</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nsb_rate_ref_conditions</span> <span class="k">if</span> <span class="n">reference_conditions</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span>
+        <span class="p">)</span>
+        <span class="c1"># Accept either a plain float (assumed already in GHz) or an astropy Quantity</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_rate</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+            <span class="n">base_rate_ghz</span> <span class="o">=</span> <span class="n">base_rate</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">GHz</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">base_rate_ghz</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">base_rate</span><span class="p">)</span>
+
+        <span class="n">n_pixels</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;camera_pixels&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_pixels</span><span class="p">,</span> <span class="n">base_rate_ghz</span><span class="p">),</span> <span class="n">u</span><span class="o">.</span><span class="n">GHz</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CameraEfficiency.analyze">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.analyze">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">export</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Analyze camera efficiency output file and store the results in _results.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        export: bool</span>
+<span class="sd">            If True, results will be exported to a file automatically. Alternatively, export_results</span>
+<span class="sd">            function can be used.</span>
+<span class="sd">        force: bool</span>
+<span class="sd">            If True, existing results files will be removed and analysis will be done again.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Analyzing CameraEfficiency&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;results&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Results file exists and force=False - skipping analyze&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_read_results</span><span class="p">()</span>
+            <span class="k">return</span>
+
+        <span class="c1"># List of parameters to be calculated and stored</span>
+        <span class="n">eff_pars</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;wl&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;eff&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;eff_atm&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;qe&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ref&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;masts&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;filt&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;pixel&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;atm_trans&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cher&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nsb&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;atm_corr&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nsb_site&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nsb_site_eff&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nsb_be&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nsb_be_eff&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;C1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;C2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;C3&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;C4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;C4x&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;N1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;N2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;N3&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;N4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;N4x&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="n">_results</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+        <span class="c1"># Search for at least 5 consecutive numbers to see that we are in the table</span>
+        <span class="n">re_table</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}{0}{0}{0}{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[-+]?[0-9]*\.?[0-9]+\s+&quot;</span><span class="p">))</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">],</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">re_table</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                    <span class="n">words</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">eff_pars</span><span class="p">)</span> <span class="o">-</span> <span class="mi">10</span><span class="p">):</span>
+                        <span class="n">_results</span><span class="p">[</span><span class="n">eff_pars</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numbers</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="n">C1</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">400</span> <span class="o">/</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">C2</span> <span class="o">=</span> <span class="n">C1</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">C3</span> <span class="o">=</span> <span class="n">C2</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">C4</span> <span class="o">=</span> <span class="n">C3</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">c4x_value</span> <span class="o">=</span> <span class="n">C1</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+                    <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C1</span><span class="p">)</span>
+                    <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C2</span><span class="p">)</span>
+                    <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C3&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C3</span><span class="p">)</span>
+                    <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C4&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C4</span><span class="p">)</span>
+                    <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C4x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c4x_value</span><span class="p">)</span>
+                    <span class="n">N1</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">N2</span> <span class="o">=</span> <span class="n">N1</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">N3</span> <span class="o">=</span> <span class="n">N2</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">N4</span> <span class="o">=</span> <span class="n">N3</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>  <span class="c1"># noqa: N806</span>
+                    <span class="n">n4x_value</span> <span class="o">=</span> <span class="n">N1</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+                    <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">N1</span><span class="p">)</span>
+                    <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">N2</span><span class="p">)</span>
+                    <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N3&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">N3</span><span class="p">)</span>
+                    <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N4&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">N4</span><span class="p">)</span>
+                    <span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N4x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n4x_value</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">_results</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_results</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsb_rate_ref_conditions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_nsb_rate</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\33</span><span class="s2">[40;37;1m&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">results_summary</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[0m&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">export</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">export_results</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="CameraEfficiency.results_summary">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.results_summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">results_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print a summary of the results.</span>
+
+<span class="sd">        Include a header for the zenith/azimuth settings and the NSB spectrum file which was used.</span>
+<span class="sd">        The summary includes the various CTAO requirements and the final expected NSB pixel rate.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nsb_spectrum_text</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;NSB spectrum file: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;nsb_spectrum&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;nsb_spectrum&quot;</span><span class="p">]</span>
+            <span class="k">else</span> <span class="s2">&quot;default sim_telarray spectrum.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Results summary for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> at &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;zenith=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;zenith_angle&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> deg, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;azimuth=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;azimuth_angle&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> deg</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Using the </span><span class="si">{</span><span class="n">nsb_spectrum_text</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Spectrum weighted reflectivity: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_reflectivity</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Camera nominal efficiency with gaps (B-TEL-1170): &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_camera_efficiency</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Telescope total efficiency&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot; with gaps (was A-PERF-2020): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_tel_efficiency</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Telescope total Cherenkov light efficiency / sqrt(total NSB efficiency) &quot;</span>
+            <span class="s2">&quot;(A-PERF-2025/B-TEL-0090): &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_tot_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_tel_efficiency</span><span class="p">())</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Expected NSB pixel rate for the provided NSB spectrum: &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> [p.e./ns]</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Expected NSB pixel rate for the reference NSB: &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nsb_rate_ref_conditions</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> [p.e./ns]</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CameraEfficiency.export_results">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.export_results">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export results to a ecsv file.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_results</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Cannot export results because they do not exist&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting testeff table to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s1">&#39;results&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">astropy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">ascii</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;results&quot;</span><span class="p">],</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;basic&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="n">_results_summary_file</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;results&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.ecsv&quot;</span><span class="p">,</span> <span class="s2">&quot;.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_table_&quot;</span><span class="p">,</span> <span class="s2">&quot;_summary_&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting summary results to </span><span class="si">{</span><span class="n">_results_summary_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">_results_summary_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_summary</span><span class="p">())</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read existing results file and store it in _results.&quot;&quot;&quot;</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">ascii</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;results&quot;</span><span class="p">],</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;basic&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="n">table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_results</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="CameraEfficiency.calc_tel_efficiency">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.calc_tel_efficiency">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calc_tel_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the telescope total efficiency including gaps (as defined in A-PERF-2020).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tel_efficiency: float</span>
+<span class="sd">            Telescope efficiency</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Sum(C1) from 300 - 550 nm:</span>
+        <span class="n">c1_reduced_wl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C1&quot;</span><span class="p">][[</span><span class="mi">299</span> <span class="o">&lt;</span> <span class="n">wl_now</span> <span class="o">&lt;</span> <span class="mi">551</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]]</span>
+        <span class="n">c1_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">c1_reduced_wl</span><span class="p">)</span>
+        <span class="c1"># Sum(C4) from 200 - 999 nm:</span>
+        <span class="n">c4_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C4&quot;</span><span class="p">])</span>
+        <span class="n">masts_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;masts&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">fill_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_camera_fill_factor</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">fill_factor</span> <span class="o">*</span> <span class="p">(</span><span class="n">c4_sum</span> <span class="o">/</span> <span class="p">(</span><span class="n">masts_factor</span> <span class="o">*</span> <span class="n">c1_sum</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="CameraEfficiency.calc_camera_efficiency">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.calc_camera_efficiency">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calc_camera_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the camera nominal efficiency including gaps (as defined in B-TEL-1170).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cam_efficiency: float</span>
+<span class="sd">            Wavelength-averaged camera efficiency</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Sum(C1) from 300 - 550 nm:</span>
+        <span class="n">c1_reduced_wl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C1&quot;</span><span class="p">][[</span><span class="mi">299</span> <span class="o">&lt;</span> <span class="n">wl_now</span> <span class="o">&lt;</span> <span class="mi">551</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]]</span>
+        <span class="n">c1_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">c1_reduced_wl</span><span class="p">)</span>
+        <span class="c1"># Sum(C4x) from 300 - 550 nm:</span>
+        <span class="n">c4x_reduced_wl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C4x&quot;</span><span class="p">][</span>
+            <span class="p">[</span><span class="mi">299</span> <span class="o">&lt;</span> <span class="n">wl_now</span> <span class="o">&lt;</span> <span class="mi">551</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]</span>
+        <span class="p">]</span>
+        <span class="n">c4x_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">c4x_reduced_wl</span><span class="p">)</span>
+        <span class="n">fill_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_camera_fill_factor</span><span class="p">()</span>
+
+        <span class="n">cam_efficiency_no_gaps</span> <span class="o">=</span> <span class="n">c4x_sum</span> <span class="o">/</span> <span class="n">c1_sum</span>
+        <span class="k">return</span> <span class="n">cam_efficiency_no_gaps</span> <span class="o">*</span> <span class="n">fill_factor</span></div>
+
+
+<div class="viewcode-block" id="CameraEfficiency.calc_tot_efficiency">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.calc_tot_efficiency">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calc_tot_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tel_efficiency</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the telescope total efficiency including gaps (as defined in A-PERF-2020).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tel_efficiency: float</span>
+<span class="sd">            The telescope efficiency as calculated by calc_tel_efficiency()</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Float</span>
+<span class="sd">            Telescope total efficiency including gaps</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Sum(N1) from 300 - 550 nm:</span>
+        <span class="n">n1_reduced_wl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N1&quot;</span><span class="p">][[</span><span class="mi">299</span> <span class="o">&lt;</span> <span class="n">wl_now</span> <span class="o">&lt;</span> <span class="mi">551</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]]</span>
+        <span class="n">n1_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">n1_reduced_wl</span><span class="p">)</span>
+        <span class="c1"># Sum(N4) from 200 - 999 nm:</span>
+        <span class="n">n4_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N4&quot;</span><span class="p">])</span>
+        <span class="n">masts_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;masts&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">fill_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_camera_fill_factor</span><span class="p">()</span>
+
+        <span class="n">tel_efficiency_nsb</span> <span class="o">=</span> <span class="n">fill_factor</span> <span class="o">*</span> <span class="p">(</span><span class="n">n4_sum</span> <span class="o">/</span> <span class="p">(</span><span class="n">masts_factor</span> <span class="o">*</span> <span class="n">n1_sum</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">tel_efficiency</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tel_efficiency_nsb</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CameraEfficiency.calc_reflectivity">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.calc_reflectivity">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calc_reflectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the Cherenkov spectrum weighted reflectivity in the range 300-550 nm.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Float</span>
+<span class="sd">            Cherenkov spectrum weighted reflectivity (300-550 nm)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Sum(C1) from 300 - 550 nm:</span>
+        <span class="n">c1_reduced_wl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C1&quot;</span><span class="p">][[</span><span class="mi">299</span> <span class="o">&lt;</span> <span class="n">wl_now</span> <span class="o">&lt;</span> <span class="mi">551</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]]</span>
+        <span class="n">c1_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">c1_reduced_wl</span><span class="p">)</span>
+        <span class="c1"># Sum(C2) from 300 - 550 nm:</span>
+        <span class="n">c2_reduced_wl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;C2&quot;</span><span class="p">][[</span><span class="mi">299</span> <span class="o">&lt;</span> <span class="n">wl_now</span> <span class="o">&lt;</span> <span class="mi">551</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]]</span>
+        <span class="n">c2_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">c2_reduced_wl</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">c2_sum</span> <span class="o">/</span> <span class="n">c1_sum</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;masts&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="CameraEfficiency.calc_nsb_rate">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.calc_nsb_rate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calc_nsb_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wavelength_range</span><span class="o">=</span><span class="p">(</span><span class="mi">300</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">nm</span><span class="p">,</span> <span class="mi">650</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">nm</span><span class="p">)):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the NSB rate.</span>
+
+<span class="sd">        CTAO reference wavelength range is 300-650 nm.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wavelength_range: tuple</span>
+<span class="sd">            Wavelength range used for the NSB rate calculation (default: (300 nm, 650 nm)).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        nsb_rate_provided_spectrum: float</span>
+<span class="sd">            NSB pixel rate in p.e./ns for the provided NSB spectrum</span>
+<span class="sd">        nsb_rate_ref_conditions: float</span>
+<span class="sd">            NSB pixel rate in p.e./ns for reference conditions</span>
+<span class="sd">            (https://jama.cta-observatory.org/perspective.req#/items/26694?projectId=11)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N4&quot;</span><span class="p">])</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_pixel_active_solid_angle</span><span class="p">()</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_on_axis_eff_optical_area</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;telescope_transmission&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">wavelength_range</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">wavelength_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;nm&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">wavelength_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;nm&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># (integral is in ph./(m^2 ns sr) ) over wavelength_range</span>
+        <span class="n">n1_reduced_wl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N1&quot;</span><span class="p">][</span>
+            <span class="p">[</span><span class="n">wavelength_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">wl_now</span> <span class="o">&lt;=</span> <span class="n">wavelength_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]</span>
+        <span class="p">]</span>
+        <span class="n">n1_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">n1_reduced_wl</span><span class="p">)</span>
+        <span class="n">n1_integral_edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;N1&quot;</span><span class="p">][</span>
+            <span class="p">[</span><span class="n">wl_now</span> <span class="ow">in</span> <span class="p">[</span><span class="n">wavelength_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">wavelength_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">wl_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;wl&quot;</span><span class="p">]]</span>
+        <span class="p">]</span>
+        <span class="n">n1_integral_edges_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">n1_integral_edges</span><span class="p">)</span>
+        <span class="n">nsb_integral</span> <span class="o">=</span> <span class="mf">0.0001</span> <span class="o">*</span> <span class="p">(</span><span class="n">n1_sum</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">n1_integral_edges_sum</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsb_rate_ref_conditions</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;nsb_reference_value&quot;</span><span class="p">)</span>
+            <span class="o">/</span> <span class="n">nsb_integral</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsb_pixel_pe_per_ns</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GHz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsb_rate_ref_conditions</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GHz</span></div>
+
+
+<div class="viewcode-block" id="CameraEfficiency.plot_efficiency">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.plot_efficiency">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">efficiency_type</span><span class="p">,</span> <span class="n">save_fig</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot efficiency vs wavelength.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        efficiency_type: str</span>
+<span class="sd">            The type of efficiency to plot (Cherenkov &#39;C&#39; or NSB &#39;N&#39;)</span>
+<span class="sd">        save_fig: bool</span>
+<span class="sd">            If True, the figure will be saved to a file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        fig</span>
+<span class="sd">            The figure instance of pyplot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plotting </span><span class="si">{</span><span class="n">efficiency_type</span><span class="si">}</span><span class="s2"> efficiency vs wavelength&quot;</span><span class="p">)</span>
+
+        <span class="n">_col_type</span> <span class="o">=</span> <span class="s2">&quot;C&quot;</span> <span class="k">if</span> <span class="n">efficiency_type</span> <span class="o">==</span> <span class="s2">&quot;Cherenkov&quot;</span> <span class="k">else</span> <span class="s2">&quot;N&quot;</span>
+
+        <span class="n">column_titles</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;wl&quot;</span><span class="p">:</span> <span class="s2">&quot;Wavelength [nm]&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">1&quot;</span><span class="p">:</span> <span class="sa">rf</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">1: Cherenkov light on ground&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">2&quot;</span><span class="p">:</span> <span class="sa">rf</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">2: </span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">1 $\times$ ref. $\times$ masts&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">3&quot;</span><span class="p">:</span> <span class="sa">rf</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">3: </span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">2 $\times$ filter $\times$ lightguide&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">4&quot;</span><span class="p">:</span> <span class="sa">rf</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">4: </span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">3 $\times$ q.e.&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">4x&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">rf</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">4x: </span><span class="si">{</span><span class="n">_col_type</span><span class="si">}</span><span class="s2">1 $\times$ filter $\times$ lightguide $\times$ q.e.&quot;</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="n">table_to_plot</span> <span class="o">=</span> <span class="n">Table</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">col_now</span><span class="p">]</span> <span class="k">for</span> <span class="n">col_now</span> <span class="ow">in</span> <span class="n">column_titles</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">column_now</span><span class="p">,</span> <span class="n">column_title</span> <span class="ow">in</span> <span class="n">column_titles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">table_to_plot</span><span class="o">.</span><span class="n">rename_column</span><span class="p">(</span><span class="n">column_now</span><span class="p">,</span> <span class="n">column_title</span><span class="p">)</span>
+
+        <span class="n">y_title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">efficiency_type</span><span class="si">}</span><span class="s2"> light efficiency&quot;</span>
+        <span class="k">if</span> <span class="n">efficiency_type</span> <span class="o">==</span> <span class="s2">&quot;NSB&quot;</span><span class="p">:</span>
+            <span class="n">y_title</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;Diff. ph. rate [$10^</span><span class="si">{9}</span><span class="s2"> \times $ph/(nm s m$^2$ sr)]&quot;</span>
+        <span class="n">plot</span> <span class="o">=</span> <span class="n">visualize</span><span class="o">.</span><span class="n">plot_table</span><span class="p">(</span>
+            <span class="n">table_to_plot</span><span class="p">,</span>
+            <span class="n">y_title</span><span class="o">=</span><span class="n">y_title</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> response to </span><span class="si">{</span><span class="n">efficiency_type</span><span class="si">}</span><span class="s2"> light&quot;</span><span class="p">,</span>
+            <span class="n">no_markers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">efficiency_type</span> <span class="o">==</span> <span class="s2">&quot;NSB&quot;</span><span class="p">:</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+            <span class="n">ylim</span> <span class="o">=</span> <span class="n">plot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">ylim</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">save_fig</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_save_plot</span><span class="p">(</span><span class="n">plot</span><span class="p">,</span> <span class="n">efficiency_type</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">plot</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_save_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fig</span><span class="p">,</span> <span class="n">plot_title</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save plot to pdf and png file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fig</span>
+<span class="sd">            The figure instance of pyplot</span>
+<span class="sd">        plot_title: str</span>
+<span class="sd">            The title of the plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">plot_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">plot_title</span>
+        <span class="p">)</span>
+        <span class="n">visualize</span><span class="o">.</span><span class="n">save_figure</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">plot_file</span><span class="p">,</span> <span class="n">log_title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">plot_title</span><span class="si">}</span><span class="s2"> efficiency&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

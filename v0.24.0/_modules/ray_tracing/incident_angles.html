@@ -1,0 +1,1224 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ray_tracing.incident_angles &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=a9084e48"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/ray_tracing/incident_angles';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.24.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">ray_tracing.incident_angles</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for ray_tracing.incident_angles</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Calculate photon incident angles on focal plane and primary/secondary mirrors.</span>
+
+<span class="sd">Parses the imaging list (``.lis``) produced by sim_telarray_debug_trace and uses</span>
+<span class="sd">Angle of incidence at focal surface, with respect to the optical axis [deg],</span>
+<span class="sd">Angle of incidence on to primary mirror [deg], and</span>
+<span class="sd">Angle of incidence on to secondary mirror [deg] (if available).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">QTable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">initialize_simulation_models</span>
+
+
+<div class="viewcode-block" id="IncidentAnglesCalculator">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.incident_angles.IncidentAnglesCalculator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IncidentAnglesCalculator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run a PSF-style sim_telarray job and compute incident angles at mirrors or focal surfaces.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    simtel_path : str or pathlib.Path</span>
+<span class="sd">        Path to the sim_telarray installation directory (containing ``sim_telarray/bin``).</span>
+<span class="sd">    db_config : dict</span>
+<span class="sd">        Database configuration passed to ``initialize_simulation_models``.</span>
+<span class="sd">    config_data : dict</span>
+<span class="sd">        Simulation configuration (e.g. ``site``, ``telescope``, ``model_version``,</span>
+<span class="sd">        ``off_axis_angle``, ``source_distance``, ``number_of_photons``).</span>
+<span class="sd">    output_dir : str or pathlib.Path</span>
+<span class="sd">        Output directory where logs, scripts, photons files and results are written.</span>
+<span class="sd">    label : str, optional</span>
+<span class="sd">        Label used to name outputs; defaults to ``incident_angles_&lt;telescope&gt;`` when omitted.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Additional options are read from ``config_data`` when present:</span>
+<span class="sd">    - ``perfect_mirror`` (bool, default False)</span>
+<span class="sd">    - ``calculate_primary_secondary_angles`` (bool, default True)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Use fixed zenith angle (degrees) for incident-angle simulations.</span>
+    <span class="n">ZENITH_ANGLE_DEG</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">simtel_path</span><span class="p">,</span>
+        <span class="n">db_config</span><span class="p">,</span>
+        <span class="n">config_data</span><span class="p">,</span>
+        <span class="n">output_dir</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">simtel_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config_data</span> <span class="o">=</span> <span class="n">config_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;incident_angles_</span><span class="si">{</span><span class="n">config_data</span><span class="p">[</span><span class="s1">&#39;telescope&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">config_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">perfect_mirror</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;perfect_mirror&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calculate_primary_secondary_angles</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;calculate_primary_secondary_angles&quot;</span><span class="p">,</span> <span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logs_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;logs&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scripts_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;scripts&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">photons_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;photons_files&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;incident_angles&quot;</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logs_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scripts_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">photons_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_dir</span><span class="p">):</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Initializing models for </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+            <span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">initialize_simulation_models</span><span class="p">(</span>
+            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
+            <span class="n">site</span><span class="o">=</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+            <span class="n">telescope_name</span><span class="o">=</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">],</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_label_suffix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a filename suffix including telescope and off-axis angle.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Suffix of the form ``&quot;&lt;label&gt;_&lt;telescope&gt;_off&lt;angle&gt;&quot;`` where</span>
+<span class="sd">            ``&lt;angle&gt;`` is formatted without trailing zeros.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tel</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;telescope&quot;</span><span class="p">,</span> <span class="s2">&quot;TEL&quot;</span><span class="p">))</span>
+        <span class="n">off</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;off_axis_angle&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">))</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">tel</span><span class="si">}</span><span class="s2">_off</span><span class="si">{</span><span class="n">off</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<div class="viewcode-block" id="IncidentAnglesCalculator.run">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.incident_angles.IncidentAnglesCalculator.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run sim_telarray, parse the imaging list, and return an angle table.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.table.QTable</span>
+<span class="sd">            Table containing at least the ``angle_incidence_focal`` column</span>
+<span class="sd">            and, when configured, primary/secondary angles and hit geometry.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">write_sim_telarray_config_file</span><span class="p">(</span><span class="n">additional_models</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">)</span>
+
+        <span class="n">photons_file</span><span class="p">,</span> <span class="n">stars_file</span><span class="p">,</span> <span class="n">log_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_psf_io_files</span><span class="p">()</span>
+        <span class="n">run_script</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_run_script</span><span class="p">(</span><span class="n">photons_file</span><span class="p">,</span> <span class="n">stars_file</span><span class="p">,</span> <span class="n">log_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_script</span><span class="p">(</span><span class="n">run_script</span><span class="p">,</span> <span class="n">log_file</span><span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_incidence_angles_from_imaging_list</span><span class="p">(</span><span class="n">photons_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">QTable</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;angle_incidence_focal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;angle_incidence_focal_deg&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_primary_secondary_angles</span><span class="p">:</span>
+            <span class="n">field_map</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;angle_incidence_primary_deg&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;angle_incidence_primary&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+                <span class="s2">&quot;angle_incidence_secondary_deg&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;angle_incidence_secondary&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+                <span class="s2">&quot;primary_hit_radius_m&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;primary_hit_radius&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+                <span class="s2">&quot;secondary_hit_radius_m&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;secondary_hit_radius&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+                <span class="s2">&quot;primary_hit_x_m&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;primary_hit_x&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+                <span class="s2">&quot;primary_hit_y_m&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;primary_hit_y&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+                <span class="s2">&quot;secondary_hit_x_m&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;secondary_hit_x&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+                <span class="s2">&quot;secondary_hit_y_m&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;secondary_hit_y&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span> <span class="ow">in</span> <span class="n">field_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">*</span> <span class="n">unit</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_results</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="IncidentAnglesCalculator.run_for_offsets">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.incident_angles.IncidentAnglesCalculator.run_for_offsets">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_for_offsets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offsets</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the simulation for multiple off-axis angles.</span>
+
+<span class="sd">        For each off-axis angle provided, run a full simulation, labeling output files</span>
+<span class="sd">        accordingly.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        offsets : Iterable[float]</span>
+<span class="sd">            Off-axis angles in degrees.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict[float, astropy.table.QTable]</span>
+<span class="sd">            Mapping from off-axis angle (deg) to the resulting table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">results_by_offset</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">base_off</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;off_axis_angle&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">off</span> <span class="ow">in</span> <span class="n">offsets</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;off_axis_angle&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">off</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running for off-axis angle </span><span class="si">{</span><span class="n">off</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> deg&quot;</span><span class="p">)</span>
+            <span class="n">tbl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+            <span class="n">results_by_offset</span><span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">off</span><span class="p">)]</span> <span class="o">=</span> <span class="n">tbl</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;off_axis_angle&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_off</span>
+        <span class="k">return</span> <span class="n">results_by_offset</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_psf_io_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare photons, stars, and log file paths for a PSF-style incident angle simulation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple[pathlib.Path, pathlib.Path, pathlib.Path]</span>
+<span class="sd">            Paths to the photons file, stars file, and log file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label_suffix</span><span class="p">()</span>
+        <span class="n">photons_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">photons_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;incident_angles_photons_</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">.lis&quot;</span>
+        <span class="n">stars_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">photons_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;incident_angles_stars_</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">.lis&quot;</span>
+        <span class="n">log_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logs_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;incident_angles_</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">.log&quot;</span>
+
+        <span class="k">if</span> <span class="n">photons_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">photons_file</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to remove existing photons file </span><span class="si">{</span><span class="n">photons_file</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">photons_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pf</span><span class="p">:</span>
+            <span class="n">pf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">50</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">pf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# Imaging list for Incident Angle simulations</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">pf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">50</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">pf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# config_file = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">config_file_path</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">pf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# zenith_angle [deg] = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ZENITH_ANGLE_DEG</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">pf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;# off_axis_angle [deg] = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config_data</span><span class="p">[</span><span class="s1">&#39;off_axis_angle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">pf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# source_distance [km] = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config_data</span><span class="p">[</span><span class="s1">&#39;source_distance&#39;</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">stars_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">sf</span><span class="p">:</span>
+            <span class="n">zen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ZENITH_ANGLE_DEG</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;source_distance&quot;</span><span class="p">])</span>
+            <span class="n">sf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;0. </span><span class="si">{</span><span class="mf">90.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">zen</span><span class="si">}</span><span class="s2"> 1.0 </span><span class="si">{</span><span class="n">dist</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">photons_file</span><span class="p">,</span> <span class="n">stars_file</span><span class="p">,</span> <span class="n">log_file</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_run_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons_file</span><span class="p">,</span> <span class="n">stars_file</span><span class="p">,</span> <span class="n">log_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a run script for sim_telarray with the provided configuration and inputs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        photons_file, stars_file, log_file : pathlib.Path</span>
+<span class="sd">            Input/output files for the run.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pathlib.Path</span>
+<span class="sd">            Path to the generated shell script.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">script_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scripts_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;run_incident_angles_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_label_suffix</span><span class="p">()</span><span class="si">}</span><span class="s2">.sh&quot;</span>
+        <span class="n">simtel_bin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span> <span class="o">/</span> <span class="s2">&quot;sim_telarray/bin/sim_telarray_debug_trace&quot;</span>
+        <span class="n">corsika_dummy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span> <span class="o">/</span> <span class="s2">&quot;sim_telarray/run9991.corsika.gz&quot;</span>
+
+        <span class="n">theta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ZENITH_ANGLE_DEG</span>
+        <span class="n">off</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;off_axis_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">))</span>
+        <span class="n">star_photons</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;number_of_photons&quot;</span><span class="p">]</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">cfg</span><span class="p">(</span><span class="n">par</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;-C </span><span class="si">{</span><span class="n">par</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">opts</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;-c </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">config_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;-I</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">config_file_directory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">perfect_mirror</span><span class="p">:</span>
+            <span class="n">opts</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="s2">&quot;-DPERFECT_DISH=1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;-C random_focal_length=0&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;-C mirror_reflection_random_angle=0&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;-C mirror_align_random_distance=0&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;-C mirror_align_random_horizontal=0,28,0,0&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;-C mirror_align_random_vertical=0,28,0,0&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+
+        <span class="n">opts</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;IMAGING_LIST&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">photons_file</span><span class="p">)),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;stars&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">stars_file</span><span class="p">)),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;altitude&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;corsika_observation_level&quot;</span><span class="p">)),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;telescope_theta&quot;</span><span class="p">,</span> <span class="n">theta</span> <span class="o">+</span> <span class="n">off</span><span class="p">),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;star_photons&quot;</span><span class="p">,</span> <span class="n">star_photons</span><span class="p">),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;telescope_phi&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;camera_transmission&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;nightsky_background&quot;</span><span class="p">,</span> <span class="s2">&quot;all:0.&quot;</span><span class="p">),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;trigger_current_limit&quot;</span><span class="p">,</span> <span class="s2">&quot;1e10&quot;</span><span class="p">),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;telescope_random_angle&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;telescope_random_error&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;convergent_depth&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;maximum_telescopes&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">),</span>
+            <span class="n">cfg</span><span class="p">(</span><span class="s2">&quot;camera_filter&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+
+        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">simtel_bin</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">corsika_dummy</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">with</span> <span class="n">script_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">sh</span><span class="p">:</span>
+            <span class="n">sh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#!/usr/bin/env bash</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">sh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;set -e</span><span class="se">\n</span><span class="s2">set -o pipefail</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">sh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;exec &gt; &#39;</span><span class="si">{</span><span class="n">log_file</span><span class="si">}</span><span class="s2">&#39; 2&gt;&amp;1</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">sh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">script_path</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">script_path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mode</span> <span class="o">|</span> <span class="mo">0o110</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">script_path</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script_path</span><span class="p">,</span> <span class="n">log_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute the script and log output; raise an error if execution fails.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        script_path : pathlib.Path</span>
+<span class="sd">            Path to the script to execute.</span>
+<span class="sd">        log_file : pathlib.Path</span>
+<span class="sd">            Destination log file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Executing </span><span class="si">%s</span><span class="s2"> (logging to </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">script_path</span><span class="p">,</span> <span class="n">log_file</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">script_path</span><span class="p">)])</span>
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Incident angles run failed, see log: </span><span class="si">{</span><span class="n">log_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_incidence_angles_from_imaging_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute incidence angles from an imaging list file.</span>
+
+<span class="sd">        Column positions may differ between telescope types and sim_telarray versions.</span>
+<span class="sd">        Header lines (``# Column N: ...``) are parsed to find indices; otherwise</span>
+<span class="sd">        legacy positions (1-based) are used: focal=26, primary=32, secondary=36,</span>
+<span class="sd">        primary X/Y = 29/30, secondary X/Y = 33/34.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        photons_file : pathlib.Path</span>
+<span class="sd">            Path to the imaging list file (``.lis``).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict[str, list[float]]</span>
+<span class="sd">            Parsed columns in degrees/meters as plain Python lists. Always</span>
+<span class="sd">            contains ``angle_incidence_focal_deg``; additional keys are present</span>
+<span class="sd">            when primary/secondary angles are enabled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">col_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_column_indices</span><span class="p">(</span><span class="n">photons_file</span><span class="p">)</span>
+
+        <span class="n">focal</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Initialize optional arrays once based on the configuration</span>
+        <span class="n">primary</span> <span class="o">=</span> <span class="n">secondary</span> <span class="o">=</span> <span class="n">radius_m</span> <span class="o">=</span> <span class="n">secondary_radius_m</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">primary_hit_x_m</span> <span class="o">=</span> <span class="n">primary_hit_y_m</span> <span class="o">=</span> <span class="n">secondary_hit_x_m</span> <span class="o">=</span> <span class="n">secondary_hit_y_m</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_primary_secondary_angles</span><span class="p">:</span>
+            <span class="n">primary</span><span class="p">,</span> <span class="n">secondary</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="n">radius_m</span><span class="p">,</span> <span class="n">secondary_radius_m</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="n">primary_hit_x_m</span><span class="p">,</span> <span class="n">primary_hit_y_m</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="n">secondary_hit_x_m</span><span class="p">,</span> <span class="n">secondary_hit_y_m</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">parts</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iter_data_rows</span><span class="p">(</span><span class="n">photons_file</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_append_values</span><span class="p">(</span>
+                <span class="n">parts</span><span class="p">,</span>
+                <span class="n">col_idx</span><span class="p">,</span>
+                <span class="n">focal</span><span class="p">,</span>
+                <span class="n">primary</span><span class="p">,</span>
+                <span class="n">secondary</span><span class="p">,</span>
+                <span class="n">radius_m</span><span class="p">,</span>
+                <span class="n">secondary_radius_m</span><span class="p">,</span>
+                <span class="n">primary_hit_x_m</span><span class="p">,</span>
+                <span class="n">primary_hit_y_m</span><span class="p">,</span>
+                <span class="n">secondary_hit_x_m</span><span class="p">,</span>
+                <span class="n">secondary_hit_y_m</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;angle_incidence_focal_deg&quot;</span><span class="p">:</span> <span class="n">focal</span><span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_primary_secondary_angles</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;angle_incidence_primary_deg&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">primary</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;angle_incidence_secondary_deg&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">secondary</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;primary_hit_radius_m&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radius_m</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;secondary_hit_radius_m&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">secondary_radius_m</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;primary_hit_x_m&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">primary_hit_x_m</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;primary_hit_y_m&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">primary_hit_y_m</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;secondary_hit_x_m&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">secondary_hit_x_m</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;secondary_hit_y_m&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">secondary_hit_y_m</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_find_column_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return 0-based column indices found from headers as a dict.</span>
+
+<span class="sd">        Returns a mapping with keys ``&#39;focal&#39;`` and, when applicable, ``&#39;primary&#39;``,</span>
+<span class="sd">        ``&#39;secondary&#39;``, ``&#39;prim_x&#39;``, ``&#39;prim_y&#39;``, ``&#39;sec_x&#39;``, ``&#39;sec_y&#39;``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        photons_file : pathlib.Path</span>
+<span class="sd">            Imaging list file whose headers may define column numbers.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict[str, int]</span>
+<span class="sd">            0-based indices for the required columns.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_column_indices</span><span class="p">()</span>
+
+        <span class="n">col_pat</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^\s*#\s*Column\s+(\d{1,4})\s*:(.*)$&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">photons_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">raw</span> <span class="ow">in</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="n">col_pat</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">desc</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_update_indices_from_header_desc</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">indices</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_default_column_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return default 0-based indices matching SST-like photon files.</span>
+
+<span class="sd">        Fallbacks (1-based): focal=26, primary=32, secondary=36,</span>
+<span class="sd">        primary X/Y=29/30, secondary X/Y=33/34.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict[str, int]</span>
+<span class="sd">            Default index mapping. When primary/secondary angles are disabled,</span>
+<span class="sd">            only ``&#39;focal&#39;`` is included.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;focal&quot;</span><span class="p">:</span> <span class="mi">25</span><span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_primary_secondary_angles</span><span class="p">:</span>
+            <span class="n">idx</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;primary&quot;</span><span class="p">:</span> <span class="mi">31</span><span class="p">,</span>
+                    <span class="s2">&quot;secondary&quot;</span><span class="p">:</span> <span class="mi">35</span><span class="p">,</span>
+                    <span class="s2">&quot;prim_x&quot;</span><span class="p">:</span> <span class="mi">28</span><span class="p">,</span>
+                    <span class="s2">&quot;prim_y&quot;</span><span class="p">:</span> <span class="mi">29</span><span class="p">,</span>
+                    <span class="s2">&quot;sec_x&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
+                    <span class="s2">&quot;sec_y&quot;</span><span class="p">:</span> <span class="mi">33</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">idx</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_indices_from_header_desc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update indices dict in-place based on a header description and column number.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        desc : str</span>
+<span class="sd">            Header description text (lower-cased).</span>
+<span class="sd">        num : int</span>
+<span class="sd">            1-based column number from the header.</span>
+<span class="sd">        indices : dict[str, int]</span>
+<span class="sd">            Mapping to update in-place.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Angles</span>
+        <span class="k">if</span> <span class="s2">&quot;angle of incidence&quot;</span> <span class="ow">in</span> <span class="n">desc</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;focal surface&quot;</span> <span class="ow">in</span> <span class="n">desc</span><span class="p">:</span>
+                <span class="n">indices</span><span class="p">[</span><span class="s2">&quot;focal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="k">return</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_primary_secondary_angles</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;primary mirror&quot;</span> <span class="ow">in</span> <span class="n">desc</span><span class="p">:</span>
+                    <span class="n">indices</span><span class="p">[</span><span class="s2">&quot;primary&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="k">return</span>
+                <span class="k">if</span> <span class="s2">&quot;secondary mirror&quot;</span> <span class="ow">in</span> <span class="n">desc</span><span class="p">:</span>
+                    <span class="n">indices</span><span class="p">[</span><span class="s2">&quot;secondary&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="k">return</span>
+        <span class="c1"># Reflection points (X/Y)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_primary_secondary_angles</span> <span class="ow">or</span> <span class="s2">&quot;reflection point&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">desc</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_reflection_index_if_match</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_contains_axis</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="n">axis</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether a description contains a stand-alone axis label.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        desc : str</span>
+<span class="sd">            Header description string.</span>
+<span class="sd">        axis : str</span>
+<span class="sd">            Either ``&quot;x&quot;`` or ``&quot;y&quot;``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True when the token is present as a separate word; False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">desc_l</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">axis_l</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(^|\s)&quot;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">axis_l</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;(\s|$)&quot;</span><span class="p">,</span> <span class="n">desc_l</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_reflection_index_if_match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set reflection point indices for primary/secondary mirrors if the header matches.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        desc : str</span>
+<span class="sd">            Header description string (lower-cased).</span>
+<span class="sd">        num : int</span>
+<span class="sd">            1-based column number from the header.</span>
+<span class="sd">        indices : dict[str, int]</span>
+<span class="sd">            Mapping to update in-place with keys ``prim_x``, ``prim_y``,</span>
+<span class="sd">            ``sec_x``, or ``sec_y``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">is_primary</span> <span class="o">=</span> <span class="s2">&quot;primary mirror&quot;</span> <span class="ow">in</span> <span class="n">desc</span>
+        <span class="n">is_secondary</span> <span class="o">=</span> <span class="s2">&quot;secondary mirror&quot;</span> <span class="ow">in</span> <span class="n">desc</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_primary</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_secondary</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">is_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contains_axis</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">)</span>
+        <span class="n">is_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contains_axis</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">is_x</span> <span class="ow">or</span> <span class="n">is_y</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="n">key_prefix</span> <span class="o">=</span> <span class="s2">&quot;prim&quot;</span> <span class="k">if</span> <span class="n">is_primary</span> <span class="k">else</span> <span class="s2">&quot;sec&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key_prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="s1">&#39;x&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">is_x</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;y&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">indices</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_float</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Try to parse a float from ``parts[idx]``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parts : list[str]</span>
+<span class="sd">            Tokenized row.</span>
+<span class="sd">        idx : int | None</span>
+<span class="sd">            Index into ``parts``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple[bool, float]</span>
+<span class="sd">            Tuple of ``(ok, value)`` where ``ok`` is False when parsing fails</span>
+<span class="sd">            or the index is out of range; in that case ``value`` is 0.0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">idx</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="mf">0.0</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_float_with_nan</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse a float or return NaN when missing/invalid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parts : list[str]</span>
+<span class="sd">            Tokenized row.</span>
+<span class="sd">        idx : int | None</span>
+<span class="sd">            Index into ``parts``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Parsed float value, or ``nan`` when unavailable/invalid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">idx</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_iter_data_rows</span><span class="p">(</span><span class="n">photons_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Iterate over tokenized, non-empty, non-comment rows.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        photons_file : pathlib.Path</span>
+<span class="sd">            Imaging list file to read.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Iterator[list[str]]</span>
+<span class="sd">            Iterator over tokenized rows.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">photons_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="k">yield</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_append_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">parts</span><span class="p">,</span>
+        <span class="n">col_idx</span><span class="p">,</span>
+        <span class="n">focal</span><span class="p">,</span>
+        <span class="n">primary</span><span class="p">,</span>
+        <span class="n">secondary</span><span class="p">,</span>
+        <span class="n">radius_m</span><span class="p">,</span>
+        <span class="n">secondary_radius_m</span><span class="p">,</span>
+        <span class="n">primary_hit_x_m</span><span class="p">,</span>
+        <span class="n">primary_hit_y_m</span><span class="p">,</span>
+        <span class="n">secondary_hit_x_m</span><span class="p">,</span>
+        <span class="n">secondary_hit_y_m</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Append parsed values from parts into target arrays if valid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parts : list[str]</span>
+<span class="sd">            Tokenized input row.</span>
+<span class="sd">        col_idx : dict[str, int]</span>
+<span class="sd">            Column indices used to read values.</span>
+<span class="sd">        focal, primary, secondary : list | None</span>
+<span class="sd">            Output arrays to append into.</span>
+<span class="sd">        radius_m, secondary_radius_m : list | None</span>
+<span class="sd">            Output arrays for radii in meters.</span>
+<span class="sd">        primary_hit_x_m, primary_hit_y_m, secondary_hit_x_m, secondary_hit_y_m : list | None</span>
+<span class="sd">            Output arrays for hit coordinates in meters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">foc_ok</span><span class="p">,</span> <span class="n">foc_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_float</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">col_idx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;focal&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">foc_ok</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">focal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">foc_val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_primary_secondary_angles</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append_primary_secondary_angles</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">col_idx</span><span class="p">,</span> <span class="n">primary</span><span class="p">,</span> <span class="n">secondary</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append_primary_hit_geometry</span><span class="p">(</span>
+            <span class="n">parts</span><span class="p">,</span> <span class="n">col_idx</span><span class="p">,</span> <span class="n">radius_m</span><span class="p">,</span> <span class="n">primary_hit_x_m</span><span class="p">,</span> <span class="n">primary_hit_y_m</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append_secondary_hit_geometry</span><span class="p">(</span>
+            <span class="n">parts</span><span class="p">,</span> <span class="n">col_idx</span><span class="p">,</span> <span class="n">secondary_radius_m</span><span class="p">,</span> <span class="n">secondary_hit_x_m</span><span class="p">,</span> <span class="n">secondary_hit_y_m</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_append_primary_secondary_angles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parts</span><span class="p">,</span> <span class="n">col_idx</span><span class="p">,</span> <span class="n">primary</span><span class="p">,</span> <span class="n">secondary</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Append primary/secondary angle values (or NaN) if arrays are provided.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parts : list[str]</span>
+<span class="sd">            Tokenized input row.</span>
+<span class="sd">        col_idx : dict[str, int]</span>
+<span class="sd">            Indices for angle columns.</span>
+<span class="sd">        primary, secondary : list | None</span>
+<span class="sd">            Output arrays to append into.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">primary</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">primary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parse_float_with_nan</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">col_idx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary&quot;</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">secondary</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">secondary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parse_float_with_nan</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">col_idx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;secondary&quot;</span><span class="p">)))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_append_primary_hit_geometry</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">parts</span><span class="p">,</span> <span class="n">col_idx</span><span class="p">,</span> <span class="n">radius_m</span><span class="p">,</span> <span class="n">primary_hit_x_m</span><span class="p">,</span> <span class="n">primary_hit_y_m</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Append primary-mirror hit geometry (radius and x/y in meters).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parts : list[str]</span>
+<span class="sd">            Tokenized input row.</span>
+<span class="sd">        col_idx : dict[str, int]</span>
+<span class="sd">            Indices for hit coordinate columns.</span>
+<span class="sd">        radius_m, primary_hit_x_m, primary_hit_y_m : list | None</span>
+<span class="sd">            Output arrays to append into.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x_ok</span><span class="p">,</span> <span class="n">x_cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_float</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">col_idx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;prim_x&quot;</span><span class="p">))</span>
+        <span class="n">y_ok</span><span class="p">,</span> <span class="n">y_cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_float</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">col_idx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;prim_y&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">x_ok</span> <span class="ow">and</span> <span class="n">y_ok</span><span class="p">:</span>
+            <span class="n">x_m</span><span class="p">,</span> <span class="n">y_m</span> <span class="o">=</span> <span class="n">x_cm</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">,</span> <span class="n">y_cm</span> <span class="o">/</span> <span class="mf">100.0</span>
+            <span class="n">r_m</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">x_cm</span><span class="p">,</span> <span class="n">y_cm</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x_m</span> <span class="o">=</span> <span class="n">y_m</span> <span class="o">=</span> <span class="n">r_m</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="k">if</span> <span class="n">radius_m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">radius_m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r_m</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">primary_hit_x_m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">primary_hit_x_m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_m</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">primary_hit_y_m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">primary_hit_y_m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_m</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_append_secondary_hit_geometry</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">parts</span><span class="p">,</span> <span class="n">col_idx</span><span class="p">,</span> <span class="n">secondary_radius_m</span><span class="p">,</span> <span class="n">secondary_hit_x_m</span><span class="p">,</span> <span class="n">secondary_hit_y_m</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Append secondary-mirror hit geometry (radius and x/y in meters).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parts : list[str]</span>
+<span class="sd">            Tokenized input row.</span>
+<span class="sd">        col_idx : dict[str, int]</span>
+<span class="sd">            Indices for hit coordinate columns.</span>
+<span class="sd">        secondary_radius_m, secondary_hit_x_m, secondary_hit_y_m : list | None</span>
+<span class="sd">            Output arrays to append into.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sx_ok</span><span class="p">,</span> <span class="n">sx_cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_float</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">col_idx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sec_x&quot;</span><span class="p">))</span>
+        <span class="n">sy_ok</span><span class="p">,</span> <span class="n">sy_cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_float</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">col_idx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sec_y&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sx_ok</span> <span class="ow">and</span> <span class="n">sy_ok</span><span class="p">:</span>
+            <span class="n">x_m</span><span class="p">,</span> <span class="n">y_m</span> <span class="o">=</span> <span class="n">sx_cm</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">,</span> <span class="n">sy_cm</span> <span class="o">/</span> <span class="mf">100.0</span>
+            <span class="n">r_m</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">sx_cm</span><span class="p">,</span> <span class="n">sy_cm</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x_m</span> <span class="o">=</span> <span class="n">y_m</span> <span class="o">=</span> <span class="n">r_m</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="k">if</span> <span class="n">secondary_radius_m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">secondary_radius_m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r_m</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">secondary_hit_x_m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">secondary_hit_x_m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_m</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">secondary_hit_y_m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">secondary_hit_y_m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_m</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_match_header_column</span><span class="p">(</span><span class="n">col_pat</span><span class="p">,</span> <span class="n">raw</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse a header line for a known angle column.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        col_pat : Pattern[str]</span>
+<span class="sd">            Compiled regular expression matching ``# Column N`` prefix.</span>
+<span class="sd">        raw : str</span>
+<span class="sd">            Raw header line.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple[str, int] | None</span>
+<span class="sd">            ``(kind, column_number)`` when recognized, otherwise ``None``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="ow">and</span> <span class="s2">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+            <span class="n">prefix</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">col_pat</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+                <span class="n">num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">desc</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">if</span> <span class="s2">&quot;angle of incidence at focal surface&quot;</span> <span class="ow">in</span> <span class="n">desc</span> <span class="ow">and</span> <span class="s2">&quot;optical axis&quot;</span> <span class="ow">in</span> <span class="n">desc</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s2">&quot;focal&quot;</span><span class="p">,</span> <span class="n">num</span>
+                <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;angle of incidence\s+on(to)?\s+primary mirror&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="s2">&quot;primary&quot;</span><span class="p">,</span> <span class="n">num</span>
+                <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;angle of incidence\s+on(to)?\s+secondary mirror&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="s2">&quot;secondary&quot;</span><span class="p">,</span> <span class="n">num</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_save_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save the results to an ECSV file with metadata.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No results to save&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">output_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;incident_angles_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_label_suffix</span><span class="p">()</span><span class="si">}</span><span class="s2">.ecsv&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">MetadataCollector</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config_data</span><span class="p">,</span>
+            <span class="n">output_file</span><span class="o">=</span><span class="n">output_file</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.yml&quot;</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
