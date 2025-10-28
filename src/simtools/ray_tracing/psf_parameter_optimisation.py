@@ -1074,7 +1074,7 @@ def export_psf_parameters(best_pars, telescope, parameter_version, output_dir):
     """
     try:
         psf_pars_with_units = _add_units_to_psf_parameters(best_pars)
-        parameter_output_path = output_dir / telescope
+        parameter_output_path = output_dir.joinpath(telescope)
         for parameter_name, parameter_value in psf_pars_with_units.items():
             writer.ModelDataWriter.dump_model_parameter(
                 parameter_name=parameter_name,
