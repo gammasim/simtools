@@ -331,8 +331,8 @@ class PSFParameterOptimizer:
                         f"{current_lr:.6f}, reducing to {current_lr * 0.7:.6f}"
                     )
                     current_lr *= 0.7
-                    if current_lr < 1e-5:
-                        current_lr = 0.001
+                    if current_lr < 1e-6:
+                        current_lr = 0.0001
                     continue
 
                 new_psf_diameter, new_metric, new_p_value, new_simulated_data = self.run_simulation(
@@ -356,8 +356,8 @@ class PSFParameterOptimizer:
                 )
                 current_lr *= 0.7
 
-                if current_lr < 1e-5:
-                    current_lr = 0.001
+                if current_lr < 1e-6:
+                    current_lr = 0.0001
 
             except (ValueError, RuntimeError, KeyError) as e:
                 logger.warning(f"Simulation failed on attempt {attempt + 1}: {e}")
@@ -728,121 +728,6 @@ def _create_perturbed_params(current_params, param_name, param_values, param_ind
         perturbed_params[param_name] = value + epsilon
 
     return perturbed_params
-
-
-def _calculate_single_gradient(
-    tel_model,
-    site_model,
-    args_dict,
-    perturbed_params,
-    data_to_plot,
-    radius,
-    current_rmsd,
-    epsilon,
-    use_ks_statistic,
-):
-    """
-    Calculate gradient for a single parameter perturbation.
-
-    Returns
-    -------
-    float
-        Calculated gradient value, or 0.0 if simulation fails.
-    """
-    try:
-        _, perturbed_rmsd, _, _ = run_psf_simulation(
-            tel_model,
-            site_model,
-            args_dict,
-            perturbed_params,
-            data_to_plot,
-            radius,
-            pdf_pages=None,
-            is_best=False,
-            use_ks_statistic=use_ks_statistic,
-        )
-        return (perturbed_rmsd - current_rmsd) / epsilon
-    except (ValueError, RuntimeError):
-        return 0.0
-
-
-def _calculate_param_gradient(
-    tel_model,
-    site_model,
-    args_dict,
-    current_params,
-    data_to_plot,
-    radius,
-    current_rmsd,
-    param_name,
-    param_values,
-    epsilon,
-    use_ks_statistic,
-):
-    """
-    Calculate numerical gradient for a single parameter using finite differences.
-
-    The gradient is calculated using forward finite differences:
-    gradient = (f(x + epsilon) - f(x)) / epsilon
-
-    Parameters
-    ----------
-    tel_model : TelescopeModel
-        The telescope model object containing the current parameter configuration.
-    site_model : SiteModel
-        The site model object with environmental conditions.
-    args_dict : dict
-        Dictionary containing simulation arguments and configuration options.
-    current_params : dict
-        Dictionary of current parameter values for all optimization parameters.
-    data_to_plot : dict
-        Dictionary containing measured PSF data with "measured" key.
-    radius : array-like
-        Radius values in cm for PSF evaluation.
-    current_rmsd : float
-        Current RMSD at the current parameter configuration.
-    param_name : str
-        Name of the parameter for which to calculate the gradient.
-    param_values : float or list
-        Current value(s) of the parameter. Can be a single value or list of values.
-    epsilon : float
-        Small perturbation value for finite difference calculation.
-    use_ks_statistic : bool
-        If True, calculate gradient with respect to KS statistic; if False, use RMSD.
-
-    Returns
-    -------
-    float or list
-        Gradient value(s) for the parameter. Returns a single float if param_values
-        is a single value, or a list of gradients if param_values is a list.
-
-    If a simulation fails during gradient calculation, a gradient of 0.0 is assigned
-    for that component to ensure the optimization can continue.
-    """
-    param_gradients = []
-    values_list = param_values if isinstance(param_values, list) else [param_values]
-
-    for i, value in enumerate(values_list):
-        # Create perturbed parameter set
-        perturbed_params = _create_perturbed_params(
-            current_params, param_name, param_values, i, value, epsilon
-        )
-
-        # Calculate gradient for this parameter component
-        gradient = _calculate_single_gradient(
-            tel_model,
-            site_model,
-            args_dict,
-            perturbed_params,
-            data_to_plot,
-            radius,
-            current_rmsd,
-            epsilon,
-            use_ks_statistic,
-        )
-        param_gradients.append(gradient)
-
-    return param_gradients[0] if not isinstance(param_values, list) else param_gradients
 
 
 def _create_log_header_and_format_value(title, tel_model, additional_info=None, value=None):
