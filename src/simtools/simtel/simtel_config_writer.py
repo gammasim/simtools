@@ -637,34 +637,111 @@ class SimtelConfigWriter:
         telescope_model: dict of TelescopeModel
             Telescope models.
         """
-        trigger_per_telescope_type = {}
-        for count, tel_name in enumerate(telescope_model.keys()):
-            telescope_type = names.get_array_element_type_from_name(tel_name)
-            trigger_per_telescope_type.setdefault(telescope_type, []).append(count + 1)
-
-        trigger_lines = {}
-        for tel_type, tel_list in trigger_per_telescope_type.items():
-            trigger_dict = self._get_array_triggers_for_telescope_type(
-                array_triggers, tel_type, len(tel_list)
-            )
-            trigger_lines[tel_type] = f"Trigger {trigger_dict['multiplicity']['value']} of "
-            trigger_lines[tel_type] += ", ".join(map(str, tel_list))
-            width = trigger_dict["width"]["value"] * u.Unit(trigger_dict["width"]["unit"]).to("ns")
-            trigger_lines[tel_type] += f" width {width}"
-            if trigger_dict.get("hard_stereo", {}).get("value"):
-                trigger_lines[tel_type] += " hardstereo"
-            if all(trigger_dict["min_separation"][key] is not None for key in ["value", "unit"]):
-                min_sep = trigger_dict["min_separation"]["value"] * u.Unit(
-                    trigger_dict["min_separation"]["unit"]
-                ).to("m")
-                trigger_lines[tel_type] += f" minsep {min_sep}"
+        trigger_per_telescope_type = self._group_telescopes_by_type(telescope_model)
+        hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity = (
+            self._process_telescope_triggers(array_triggers, trigger_per_telescope_type)
+        )
 
         array_triggers_file = "array_triggers.dat"
         with open(model_path / array_triggers_file, "w", encoding="utf-8") as file:
             file.write("# Array trigger definition\n")
-            file.writelines(f"{line}\n" for line in trigger_lines.values())
+            self._write_trigger_lines(
+                file, hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
+            )
 
         return array_triggers_file
+
+    def _group_telescopes_by_type(self, telescope_model):
+        """Group telescopes by their type."""
+        trigger_per_telescope_type = {}
+        for count, tel_name in enumerate(telescope_model.keys()):
+            telescope_type = names.get_array_element_type_from_name(tel_name)
+            trigger_per_telescope_type.setdefault(telescope_type, []).append(count + 1)
+        return trigger_per_telescope_type
+
+    def _process_telescope_triggers(self, array_triggers, trigger_per_telescope_type):
+        """Process telescope triggers and group them by hardstereo and parameters."""
+        hardstereo_lines = []
+        non_hardstereo_groups = {}
+        all_non_hardstereo_tels = []
+        multiplicity = None
+
+        for tel_type, tel_list in trigger_per_telescope_type.items():
+            trigger_dict = self._get_array_triggers_for_telescope_type(
+                array_triggers, tel_type, len(tel_list)
+            )
+            width, minsep = self._extract_trigger_parameters(trigger_dict)
+            multiplicity = trigger_dict["multiplicity"]["value"]  # Store for later use
+
+            if trigger_dict.get("hard_stereo", {}).get("value"):
+                line = self._build_trigger_line(
+                    trigger_dict, tel_list, width, minsep, hardstereo=True
+                )
+                hardstereo_lines.append(line)
+            else:
+                key = (width, minsep)
+                non_hardstereo_groups.setdefault(key, []).extend(tel_list)
+                all_non_hardstereo_tels.extend(tel_list)
+
+        return hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
+
+    def _extract_trigger_parameters(self, trigger_dict):
+        """Extract width and min_separation parameters from trigger dictionary."""
+        width = trigger_dict["width"]["value"] * u.Unit(trigger_dict["width"]["unit"]).to("ns")
+        minsep = None
+        if all(trigger_dict["min_separation"][key] is not None for key in ["value", "unit"]):
+            minsep = trigger_dict["min_separation"]["value"] * u.Unit(
+                trigger_dict["min_separation"]["unit"]
+            ).to("m")
+        return width, minsep
+
+    def _build_trigger_line(self, trigger_dict, tel_list, width, minsep, hardstereo=False):
+        """Build a trigger line string."""
+        line = f"Trigger {trigger_dict['multiplicity']['value']} of "
+        line += ", ".join(map(str, tel_list))
+        line += f" width {width}"
+        if hardstereo:
+            line += " hardstereo"
+        if minsep is not None:
+            line += f" minsep {minsep}"
+        return line
+
+    def _write_trigger_lines(
+        self, file, hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
+    ):
+        """Write all trigger lines to file."""
+        # Write hardstereo lines first
+        for line in hardstereo_lines:
+            file.write(f"{line}\n")
+
+        # Write individual non-hardstereo groups if they have different parameters
+        if len(non_hardstereo_groups) > 1:
+            for (width, minsep), tel_list in non_hardstereo_groups.items():
+                line = f"Trigger {multiplicity} of "
+                line += ", ".join(map(str, tel_list))
+                line += f" width {width}"
+                if minsep is not None:
+                    line += f" minsep {minsep}"
+                file.write(f"{line}\n")
+
+        # Write combined line with all non-hardstereo telescopes using shortest values
+        if all_non_hardstereo_tels:
+            min_width = min(width for width, minsep in non_hardstereo_groups.keys())
+            min_minsep = self._get_minimum_minsep(non_hardstereo_groups)
+
+            combined_line = f"Trigger {multiplicity} of "
+            combined_line += ", ".join(map(str, sorted(all_non_hardstereo_tels)))
+            combined_line += f" width {min_width}"
+            if min_minsep is not None:
+                combined_line += f" minsep {min_minsep}"
+            file.write(f"{combined_line}\n")
+
+    def _get_minimum_minsep(self, non_hardstereo_groups):
+        """Get minimum min_separation value from groups."""
+        minsep_values = [
+            minsep for width, minsep in non_hardstereo_groups.keys() if minsep is not None
+        ]
+        return min(minsep_values) if minsep_values else None
 
     def _get_array_triggers_for_telescope_type(
         self, array_triggers, telescope_type, num_telescopes_of_type

@@ -133,7 +133,7 @@ class CorsikaConfig:
         self.assert_corsika_configurations_match(model_versions, db_config=db_config)
         model_version = model_versions[0]
         self._logger.debug(f"Using model version {model_version} for CORSIKA parameters")
-        db_model_parameters = ModelParameter(mongo_db_config=db_config, model_version=model_version)
+        db_model_parameters = ModelParameter(db_config=db_config, model_version=model_version)
         parameters_from_db = db_model_parameters.get_simulation_software_parameters("corsika")
 
         config["INTERACTION_FLAGS"] = self._corsika_configuration_interaction_flags(
@@ -170,9 +170,7 @@ class CorsikaConfig:
 
         # Get parameters for all model versions
         for model_version in model_versions:
-            db_model_parameters = ModelParameter(
-                mongo_db_config=db_config, model_version=model_version
-            )
+            db_model_parameters = ModelParameter(db_config=db_config, model_version=model_version)
             parameters_from_db_list.append(
                 db_model_parameters.get_simulation_software_parameters("corsika")
             )
