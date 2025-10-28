@@ -13,6 +13,21 @@ from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
 
+# Keys to ignore when comparing sim_telarray configuration files
+cfg_ignore_keys = [
+    "config_release",
+    "Label",
+    "simtools_version",
+    "simtools_model_production_version",
+    "simtools_build_opt",
+    "simtools_extra_def",
+    "simtools_hadronic_model",
+    "simtools_avx_flag",
+    "simtools_corsika_version",
+    "simtools_corsika_opt_patch_version",
+    "simtools_bernlohr_version",
+]
+
 
 def validate_application_output(
     config, from_command_line=None, from_config_file=None, db_config=None
@@ -350,8 +365,8 @@ def _compare_simtel_cfg_files(reference_file, test_file):
     Compare two sim_telarray configuration files.
 
     Line-by-line string comparison. Requires similar sequence of
-    parameters in the files. Ignore lines containing 'config_release'
-    (as it contains the simtools package version).
+    parameters in the files. Ignore lines containing listed in
+    cfg_ignore_keys (e.g., simtools package versions).
 
     Parameters
     ----------
@@ -378,7 +393,11 @@ def _compare_simtel_cfg_files(reference_file, test_file):
         return False
 
     for ref_line, test_line in zip(reference_cfg, test_cfg):
-        if any(ignore in ref_line for ignore in ("config_release", "Label", "simtools_version")):
+        ignored_key = next((ignore for ignore in cfg_ignore_keys if ignore in ref_line), None)
+        if ignored_key:
+            _logger.debug(
+                f"Ignoring line in config comparison due to key '{ignored_key}': {ref_line}"
+            )
             continue
         if ref_line != test_line:
             _logger.error(
