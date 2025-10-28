@@ -1043,3 +1043,210 @@ def test_extract_version_from_filename_first_match():
     """Test that only the first version match is extracted."""
     assert validate_output._extract_version_from_filename("file_6.0_name_7.1_data.txt") == "6.0"
     assert validate_output._extract_version_from_filename("1.2/path/3.4/file.txt") == "1.2"
+
+
+def test_try_resolve_single_version_path(tmp_test_directory):
+    """Test _try_resolve_single_version_path function."""
+    tmp_dir = Path(str(tmp_test_directory))
+    base_path = tmp_dir / "base"
+    base_path.mkdir(parents=True, exist_ok=True)
+
+    # Create version directory with patch
+    version_dir = base_path / "6.0.2"
+    version_dir.mkdir(parents=True, exist_ok=True)
+    test_file = version_dir / "test.md"
+    test_file.write_text("test content")
+
+    # Should find file in 6.0.* directory when asked for 6.0
+    result = validate_output._try_resolve_single_version_path(base_path, "6.0/test.md", "6.0")
+    assert result == test_file
+
+    # Should not find file for non-existent version
+    result = validate_output._try_resolve_single_version_path(base_path, "7.0/test.md", "7.0")
+    assert result is None
+
+
+def test_try_resolve_version_path_with_list(tmp_test_directory):
+    """Test _try_resolve_version_path with list of versions."""
+    tmp_dir = Path(str(tmp_test_directory))
+    base_path = tmp_dir / "base"
+    base_path.mkdir(parents=True, exist_ok=True)
+
+    # Create version directory
+    version_dir = base_path / "6.1.0"
+    version_dir.mkdir(parents=True, exist_ok=True)
+    test_file = version_dir / "test.md"
+    test_file.write_text("test content")
+
+    # Should find file with second version in list
+    result = validate_output._try_resolve_version_path(base_path, "6.1/test.md", ["6.0", "6.1"])
+    assert result == test_file
+
+    # Should return None if no version matches
+    result = validate_output._try_resolve_version_path(base_path, "7.0/test.md", ["7.0", "7.1"])
+    assert result is None
+
+
+def test_try_resolve_version_path_with_none(tmp_test_directory):
+    """Test _try_resolve_version_path with None model_version (extract from filename)."""
+    tmp_dir = Path(str(tmp_test_directory))
+    base_path = tmp_dir / "base"
+    base_path.mkdir(parents=True, exist_ok=True)
+
+    # Create version directory
+    version_dir = base_path / "6.0.2"
+    version_dir.mkdir(parents=True, exist_ok=True)
+    test_file = version_dir / "test.md"
+    test_file.write_text("test content")
+
+    # Should extract version from filename and find file
+    result = validate_output._try_resolve_version_path(base_path, "6.0/test.md", None)
+    assert result == test_file
+
+    # Should return None if no version in filename
+    result = validate_output._try_resolve_version_path(base_path, "noversion/test.md", None)
+    assert result is None
+
+
+def test_try_resolve_version_path_invalid_version_format():
+    """Test _try_resolve_version_path with version having less than 2 parts (lines 205-209)."""
+    result = validate_output._try_resolve_version_path(Path("/tmp"), "file.txt", "6")
+    assert result is None
+
+    result = validate_output._try_resolve_version_path(Path("/tmp"), "file.txt", "")
+    assert result is None
+
+
+def test_resolve_file_path_with_versions_fallback_to_direct_path(tmp_test_directory):
+    """Test _resolve_file_path_with_versions when no version resolves (lines 291-292)."""
+    tmp_dir = Path(str(tmp_test_directory))
+    output_path = tmp_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    # No matching version files exist
+    result = validate_output._resolve_file_path_with_versions(
+        output_path, "file.txt", ["6.0", "6.1"]
+    )
+
+    # Should return direct path as fallback
+    assert result == output_path / "file.txt"
+
+
+def test_resolve_file_path_with_versions_with_single_version(tmp_test_directory):
+    """Test _resolve_file_path_with_versions with single version string."""
+    tmp_dir = Path(str(tmp_test_directory))
+    output_path = tmp_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    version_dir = output_path / "6.0.2"
+    version_dir.mkdir(parents=True, exist_ok=True)
+    test_file = version_dir / "test.txt"
+    test_file.write_text("test content")
+
+    # Single version should also work (not just lists)
+    result = validate_output._resolve_file_path_with_versions(output_path, "6.0.2/test.txt", "6.0")
+    assert result == test_file
+
+
+def test_resolve_file_path_with_versions_oserror_handling(tmp_test_directory, mocker):
+    """Test _resolve_file_path_with_versions handles OSError gracefully."""
+    tmp_dir = Path(str(tmp_test_directory))
+    output_path = tmp_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    # Mock _resolve_output_file_path to raise OSError
+    mocker.patch(
+        "simtools.testing.validate_output._resolve_output_file_path",
+        side_effect=OSError("Permission denied"),
+    )
+
+    # Should catch OSError and return direct path
+    result = validate_output._resolve_file_path_with_versions(output_path, "file.txt", ["6.0"])
+    assert result == output_path / "file.txt"
+
+
+def test_resolve_file_path_with_versions_valueerror_handling(tmp_test_directory, mocker):
+    """Test _resolve_file_path_with_versions handles ValueError gracefully."""
+    tmp_dir = Path(str(tmp_test_directory))
+    output_path = tmp_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    # Mock _resolve_output_file_path to raise ValueError
+    mocker.patch(
+        "simtools.testing.validate_output._resolve_output_file_path",
+        side_effect=ValueError("Invalid version"),
+    )
+
+    # Should catch ValueError and return direct path
+    result = validate_output._resolve_file_path_with_versions(output_path, "file.txt", ["6.0"])
+    assert result == output_path / "file.txt"
+
+
+def test_validate_output_files(mocker, output_path):
+    """Test _validate_output_files function."""
+    mock_validate_reference = mocker.patch(
+        "simtools.testing.validate_output._validate_reference_output_file"
+    )
+    mock_validate_path = mocker.patch(
+        "simtools.testing.validate_output._validate_output_path_and_file"
+    )
+    mock_validate_model_param = mocker.patch(
+        "simtools.testing.validate_output._validate_model_parameter_json_file"
+    )
+
+    config = {"configuration": {"output_path": output_path}}
+    integration_test = {
+        "reference_output_file": "/path/to/ref.txt",
+        "test_output_files": [{"file": "test.txt"}],
+        "output_file": "output.txt",
+        "model_parameter_validation": {
+            "reference_parameter_name": "param",
+            "parameter_file": "param.json",
+            "tolerance": 1.0e-5,
+        },
+    }
+
+    validate_output._validate_output_files(config, integration_test, db_config=None)
+
+    mock_validate_reference.assert_called_once_with(config, integration_test)
+    assert mock_validate_path.call_count == 2
+    mock_validate_model_param.assert_called_once()
+
+
+def test_validate_model_parameter_json_file_with_version_in_path(mocker, output_path):
+    """Test _validate_model_parameter_json_file extracts version from path."""
+    mock_db_handler = mocker.patch("simtools.db.db_handler.DatabaseHandler")
+    mock_collect_data = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
+    mocker.patch(
+        "simtools.testing.validate_output._compare_value_from_parameter_dict", return_value=True
+    )
+
+    mock_db_instance = mock_db_handler.return_value
+    mock_db_instance.get_model_parameter.return_value = {"param": {"value": [1.0]}}
+    mock_collect_data.return_value = {"value": [1.0]}
+
+    config = {
+        "configuration": {
+            "output_path": output_path,
+            "telescope": "telescope",
+            "model_version": ["6.0", "6.1"],  # List, but should extract from path
+            "site": "site",
+        }
+    }
+    model_parameter_validation = {
+        "reference_parameter_name": "param",
+        "parameter_file": "param_6.0.2_data.json",  # Version in filename
+        "tolerance": 1.0e-5,
+    }
+
+    validate_output._validate_model_parameter_json_file(
+        config, model_parameter_validation, db_config=None
+    )
+
+    # Should use version extracted from filename (6.0)
+    mock_db_instance.get_model_parameter.assert_called_once_with(
+        parameter="param",
+        site="site",
+        array_element_name="telescope",
+        model_version="6.0",  # Extracted from filename, not from config list
+    )
