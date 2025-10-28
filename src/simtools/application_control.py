@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools import version
+from simtools.db import db_handler
 from simtools.io import io_handler
 
 
@@ -83,6 +85,8 @@ def startup_application(parse_function, setup_io_handler=True, logger_name=None)
 
     io_handler_instance = io_handler.IOHandler() if setup_io_handler else None
 
+    _resolve_model_version_to_latest_patch(args_dict, db_config, logger)
+
     return ApplicationContext(
         args=args_dict,
         db_config=db_config,
@@ -116,3 +120,37 @@ def get_application_label(file_path):
             # label will be the filename without .py extension
     """
     return Path(file_path).stem
+
+
+def _resolve_model_version_to_latest_patch(args_dict, db_config, logger):
+    """
+    Update model_version in args_dict to latest patch version if needed.
+
+    Updated to the latest patch version requires to setup a DB connection.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Parsed command line arguments and configuration.
+    db_config : dict
+        Database configuration dictionary.
+    logger : logging.Logger
+        Logger instance for logging information.
+    """
+    mv = args_dict.get("model_version")
+    if not mv or not db_config:
+        return
+
+    def resolve(ver):
+        if version.version_kind(ver) == version.MAJOR_MINOR_PATCH:
+            return ver
+        try:
+            db = db_handler.DatabaseHandler(db_config)
+            latest = version.resolve_version_to_latest_patch(ver, db.get_model_versions())
+            logger.info(f"Resolved {ver} to {latest}")
+            return latest
+        except (ValueError, KeyError, OSError) as exc:
+            logger.warning(f"Could not resolve {ver}, using as-is. Error: {exc}")
+            return ver
+
+    args_dict["model_version"] = [resolve(v) for v in mv] if isinstance(mv, list) else resolve(mv)
