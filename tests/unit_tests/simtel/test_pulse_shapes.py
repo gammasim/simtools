@@ -2,9 +2,9 @@ import numpy as np
 
 from simtools.simtel.pulse_shapes import (
     _exp_decay,
-    _fall_90_10_width,
+    _fall_width,
     _gaussian,
-    _rise_10_90_width,
+    _rise_width,
     generate_gauss_expconv_pulse,
     generate_pulse_from_risefall,
     solve_sigma_tau_from_risefall,
@@ -68,8 +68,8 @@ def _measure_rise_fall_widths(t, y):
 
 def test__rise_fall_width_helpers_match_manual():
     t, y = generate_gauss_expconv_pulse(1.2, 3.0, dt_ns=0.05)
-    rise_h = _rise_10_90_width(t, y)
-    fall_h = _fall_90_10_width(t, y)
+    rise_h = _rise_width(t, y, y_low=0.1, y_high=0.9)
+    fall_h = _fall_width(t, y, y_high=0.9, y_low=0.1)
     rise_m, fall_m = _measure_rise_fall_widths(t, y)
     assert np.isclose(rise_h, rise_m, atol=0.1)
     assert np.isclose(fall_h, fall_m, atol=0.1)
