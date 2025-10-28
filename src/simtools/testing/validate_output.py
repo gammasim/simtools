@@ -76,12 +76,10 @@ def _validate_output_files(config, integration_test, db_config):
 def _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file):
     """Test simtel cfg files."""
     cfg_files = integration_test.get("test_simtel_cfg_files", {})
-    if isinstance(from_command_line, list):
-        sources = from_command_line
-    elif isinstance(from_config_file, list):
-        sources = from_config_file
-    else:
-        sources = [from_command_line or from_config_file]
+
+    source = from_command_line or from_config_file
+    sources = source if isinstance(source, list) else [source]
+
     for version in sources:
         cfg = cfg_files.get(version)
         if cfg:
@@ -259,11 +257,9 @@ def _resolve_output_file_path(output_path, file_str, model_version):
     return output_file_path
 
 
-def _resolve_file_path_with_version_list(output_path, file_str, version_list):
+def _resolve_file_path_with_versions(output_path, file_str, model_version):
     """
-    Resolve file path when model_version is a list.
-
-    Try each version in the list until one resolves successfully.
+    Resolve file path for single version or list of versions.
 
     Parameters
     ----------
@@ -271,8 +267,8 @@ def _resolve_file_path_with_version_list(output_path, file_str, version_list):
         Base output path
     file_str : str
         File path string
-    version_list : list
-        List of version strings
+    model_version : str, list, or None
+        Model version(s)
 
     Returns
     -------
@@ -280,7 +276,14 @@ def _resolve_file_path_with_version_list(output_path, file_str, version_list):
         Resolved file path
 
     """
-    for version in version_list:
+    versions = (
+        model_version
+        if isinstance(model_version, list)
+        else [_normalize_model_version(model_version)]
+    )
+
+    # Try each version until one resolves successfully
+    for version in versions:
         try:
             resolved_path = _resolve_output_file_path(output_path, file_str, version)
             if resolved_path.exists():
@@ -302,20 +305,10 @@ def _validate_output_path_and_file(config, integration_file_tests):
                 f"Path {file_test['path_descriptor']} not found in integration test configuration."
             ) from exc
 
-        if "model_version" in config["configuration"]:
-            raw_model_version = config["configuration"]["model_version"]
-
-            if isinstance(raw_model_version, list):
-                output_file_path = _resolve_file_path_with_version_list(
-                    output_path, file_test["file"], raw_model_version
-                )
-            else:
-                model_version = _normalize_model_version(raw_model_version)
-                output_file_path = _resolve_output_file_path(
-                    output_path, file_test["file"], model_version
-                )
-        else:
-            output_file_path = Path(output_path) / file_test["file"]
+        model_version = config["configuration"].get("model_version")
+        output_file_path = _resolve_file_path_with_versions(
+            output_path, file_test["file"], model_version
+        )
 
         _logger.info(f"Checking path: {output_file_path}")
         try:
@@ -358,11 +351,11 @@ def _validate_model_parameter_json_file(config, model_parameter_validation, db_c
     # If no version found in path, fall back to config model_version
     if model_version is None:
         raw_model_version = config["configuration"].get("model_version")
-        if isinstance(raw_model_version, list):
-            # If list, use first version as fallback
-            model_version = raw_model_version[0] if raw_model_version else None
-        else:
-            model_version = _normalize_model_version(raw_model_version)
+        model_version = (
+            raw_model_version[0]
+            if isinstance(raw_model_version, list) and raw_model_version
+            else _normalize_model_version(raw_model_version)
+        )
 
     reference_model_parameter = db.get_model_parameter(
         parameter=reference_parameter_name,
@@ -563,16 +556,12 @@ def _validate_simtel_cfg_files(config, simtel_cfg_file):
 
     """
     reference_file = Path(simtel_cfg_file)
-    raw_model_version = config["configuration"]["model_version"]
     output_path = Path(config["configuration"]["output_path"])
 
     expected_filename = reference_file.name.replace("_test", f"_{config['configuration']['label']}")
 
-    # Handle list of versions - use first version for simtel cfg validation
-    if isinstance(raw_model_version, list):
-        model_version = raw_model_version[0] if raw_model_version else None
-    else:
-        model_version = _normalize_model_version(raw_model_version)
+    # Extract version from reference file name (e.g., "CTA-South-LSTS-01-6.0_test.cfg" -> "6.0")
+    model_version = _extract_version_from_filename(reference_file.name)
 
     test_file = _resolve_output_file_path(
         output_path / "model", f"{model_version}/{expected_filename}", model_version
