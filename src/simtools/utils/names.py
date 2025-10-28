@@ -516,6 +516,8 @@ def get_site_from_array_element_name(array_element_name):
         Site name(s).
     """
     try:  # e.g. instrument is 'North' as given for the site parameters
+        if array_element_name.startswith("OBS"):
+            return validate_site_name(array_element_name.split("-")[1])
         return validate_site_name(array_element_name)
     except ValueError:  # e.g. instrument is 'LSTN' as given for the array element types
         return array_elements()[get_array_element_type_from_name(array_element_name)]["site"]
