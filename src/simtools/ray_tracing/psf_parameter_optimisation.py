@@ -64,6 +64,12 @@ class PSFParameterOptimizer:
         Value: (psf_diameter, metric, p_value, simulated_data)
     """
 
+    # Learning rate adjustment constants
+    LR_REDUCTION_FACTOR = 0.7
+    LR_INCREASE_FACTOR = 2.0
+    LR_MINIMUM_THRESHOLD = 1e-6
+    LR_RESET_VALUE = 0.0001
+
     def __init__(self, tel_model, site_model, args_dict, data_to_plot, radius, output_dir):
         """Initialize the PSF parameter optimizer."""
         self.tel_model = tel_model
@@ -88,6 +94,41 @@ class PSFParameterOptimizer:
             else:
                 items.append((key, value))
         return frozenset(items)
+
+    def _reduce_learning_rate(self, current_lr):
+        """
+        Reduce learning rate with minimum threshold and reset.
+
+        Parameters
+        ----------
+        current_lr : float
+            Current learning rate.
+
+        Returns
+        -------
+        float
+            Reduced learning rate, reset to LR_RESET_VALUE if below threshold.
+        """
+        new_lr = current_lr * self.LR_REDUCTION_FACTOR
+        if new_lr < self.LR_MINIMUM_THRESHOLD:
+            return self.LR_RESET_VALUE
+        return new_lr
+
+    def _increase_learning_rate(self, current_lr):
+        """
+        Increase learning rate.
+
+        Parameters
+        ----------
+        current_lr : float
+            Current learning rate.
+
+        Returns
+        -------
+        float
+            Increased learning rate.
+        """
+        return current_lr * self.LR_INCREASE_FACTOR
 
     def get_initial_parameters(self):
         """
@@ -328,11 +369,9 @@ class PSFParameterOptimizer:
                 if not _are_all_parameters_within_allowed_range(new_params):
                     logger.info(
                         f"Step rejected: parameters would go out of bounds with learning rate "
-                        f"{current_lr:.6f}, reducing to {current_lr * 0.7:.6f}"
+                        f"{current_lr:.6f}, reducing to {current_lr * self.LR_REDUCTION_FACTOR:.6f}"
                     )
-                    current_lr *= 0.7
-                    if current_lr < 1e-6:
-                        current_lr = 0.0001
+                    current_lr = self._reduce_learning_rate(current_lr)
                     continue
 
                 new_psf_diameter, new_metric, new_p_value, new_simulated_data = self.run_simulation(
@@ -352,12 +391,9 @@ class PSFParameterOptimizer:
 
                 logger.info(
                     f"Step rejected (RMSD {current_metric:.6f} -> {new_metric:.6f}), "
-                    f"reducing learning rate {current_lr:.6f} -> {current_lr * 0.7:.6f}"
+                    f"reducing learning rate to {current_lr * self.LR_REDUCTION_FACTOR:.6f}"
                 )
-                current_lr *= 0.7
-
-                if current_lr < 1e-6:
-                    current_lr = 0.0001
+                current_lr = self._reduce_learning_rate(current_lr)
 
             except (ValueError, RuntimeError, KeyError) as e:
                 logger.warning(f"Simulation failed on attempt {attempt + 1}: {e}")
@@ -514,7 +550,7 @@ class PSFParameterOptimizer:
             ) = step_result
 
             if not step_accepted or new_params is None:
-                current_lr *= 2.0
+                current_lr = self._increase_learning_rate(current_lr)
                 logger.info(f"No step accepted, increasing learning rate to {current_lr:.6f}")
                 continue
 
@@ -1295,12 +1331,7 @@ def write_monte_carlo_analysis(
             zip(metric_values, p_values, psf_diameter_values)
         ):
             if use_ks_statistic and p_value is not None:
-                if p_value > 0.05:
-                    significance = "GOOD"
-                elif p_value > 0.01:
-                    significance = "FAIR"
-                else:
-                    significance = "POOR"
+                significance = plot_psf.get_significance_label(p_value)
                 f.write(
                     f"Simulation {i + 1:2d}: {metric_name}={metric_val:.6f}, "
                     f"p_value={p_value:.6f} ({significance}), {psf_label}={psf_diameter:.6f} cm\n"
