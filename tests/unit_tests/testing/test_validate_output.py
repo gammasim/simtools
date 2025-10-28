@@ -898,3 +898,148 @@ def test_validate_output_path_and_file_with_model_version_in_config(
     # This should use the if branch and call _resolve_output_file_path (line 194-196)
     validate_output._validate_output_path_and_file(config, integration_test)
     mock_check_output.assert_called_once()
+
+
+def test_normalize_model_version_with_string():
+    """Test _normalize_model_version with a string."""
+    assert validate_output._normalize_model_version("6.0.2") == "6.0.2"
+
+
+def test_normalize_model_version_with_list():
+    """Test _normalize_model_version with a list returns None (skip version resolution)."""
+    assert validate_output._normalize_model_version(["6.0.2", "6.0.1"]) is None
+
+
+def test_normalize_model_version_with_empty_list():
+    """Test _normalize_model_version with an empty list returns None."""
+    assert validate_output._normalize_model_version([]) is None
+
+
+def test_validate_output_path_and_file_with_list_model_version(
+    tmp_test_directory, mock_check_output
+):
+    """Test _validate_output_path_and_file when model_version is a list.
+
+    When model_version is a list like ['6.0', '6.1'], the code should try
+    to resolve files with each version until one matches and exists.
+    """
+    tmp_dir = Path(str(tmp_test_directory))
+    data_dir = tmp_dir / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create a file with version 6.0.2 (patch version resolved from 6.0)
+    test_file = data_dir / "output_6.0.2_data.txt"
+    test_file.write_text("test content")
+
+    # Config with model_version as list
+    config = {
+        "configuration": {
+            "data_directory": str(data_dir),
+            "model_version": ["6.0", "6.1"],  # List of minor versions
+        },
+    }
+    integration_test = [
+        {
+            "path_descriptor": "data_directory",
+            "file": "output_6.0_data.txt",  # Filename with minor version (will resolve to 6.0.2)
+            "expected_output": {},
+        }
+    ]
+
+    # Should try each version in list and find the file with 6.0.2
+    validate_output._validate_output_path_and_file(config, integration_test)
+    mock_check_output.assert_called_once()
+
+
+def test_validate_output_path_and_file_with_list_multiple_files(
+    tmp_test_directory, mock_check_output
+):
+    """Test that all files with different versions from the list are validated.
+
+    Simulates the real integration test scenario where model_version=['6.0', '6.1']
+    and there are separate output files for each version.
+    """
+    tmp_dir = Path(str(tmp_test_directory))
+    data_dir = tmp_dir / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create files with exact version names (no patch resolution needed)
+    file_6_0 = data_dir / "gamma_run001_6.0_output.txt"
+    file_6_1 = data_dir / "gamma_run001_6.1_output.txt"
+    file_6_0.write_text("6.0 content")
+    file_6_1.write_text("6.1 content")
+
+    # Config with model_version as list (like in integration test)
+    config = {
+        "configuration": {
+            "data_directory": str(data_dir),
+            "model_version": ["6.0", "6.1"],
+        },
+    }
+
+    # Test files list exactly as in integration test config
+    integration_test = [
+        {
+            "path_descriptor": "data_directory",
+            "file": "gamma_run001_6.0_output.txt",
+            "expected_output": {},
+        },
+        {
+            "path_descriptor": "data_directory",
+            "file": "gamma_run001_6.1_output.txt",
+            "expected_output": {},
+        },
+    ]
+
+    # Should validate both files
+    validate_output._validate_output_path_and_file(config, integration_test)
+    assert mock_check_output.call_count == 2
+
+
+def test_extract_version_from_filename_with_underscore_separator():
+    """Test extracting version from filename with underscore separator."""
+    assert validate_output._extract_version_from_filename("file_6.0_name.txt") == "6.0"
+    assert validate_output._extract_version_from_filename("file_6.1_name.txt") == "6.1"
+    assert validate_output._extract_version_from_filename("config_1.2_test.cfg") == "1.2"
+
+
+def test_extract_version_from_filename_with_slash_separator():
+    """Test extracting version from path with slash separator."""
+    assert validate_output._extract_version_from_filename("6.0/file.txt") == "6.0"
+    assert validate_output._extract_version_from_filename("model/6.1/config.cfg") == "6.1"
+    assert validate_output._extract_version_from_filename("path/to/1.5/data.json") == "1.5"
+
+
+def test_extract_version_from_filename_no_version():
+    """Test extracting version from filename without version."""
+    assert validate_output._extract_version_from_filename("file_name.txt") is None
+    assert validate_output._extract_version_from_filename("config.cfg") is None
+    assert validate_output._extract_version_from_filename("path/to/file.json") is None
+
+
+def test_extract_version_from_filename_patch_version():
+    """Test that patch version is ignored (only MAJOR.MINOR extracted)."""
+    assert validate_output._extract_version_from_filename("file_6.0.2_name.txt") == "6.0"
+    assert validate_output._extract_version_from_filename("6.1.5/file.txt") == "6.1"
+    assert validate_output._extract_version_from_filename("config_1.2.3_test.cfg") == "1.2"
+
+
+def test_extract_version_from_filename_large_version_numbers():
+    """Test extracting version with large version numbers."""
+    assert validate_output._extract_version_from_filename("file_123.456_name.txt") == "123.456"
+    assert validate_output._extract_version_from_filename("9999.8888/file.txt") == "9999.8888"
+
+
+def test_extract_version_from_filename_complex_path():
+    """Test extracting version from complex file paths."""
+    filename = "gamma_run000001_za40deg_azm180deg_North_alpha_6.0.2_check_output.log"
+    assert validate_output._extract_version_from_filename(filename) == "6.0"
+
+    filename = "CTA-North-LSTN-01_6.0.2_test_label.cfg"
+    assert validate_output._extract_version_from_filename(filename) == "6.0"
+
+
+def test_extract_version_from_filename_first_match():
+    """Test that only the first version match is extracted."""
+    assert validate_output._extract_version_from_filename("file_6.0_name_7.1_data.txt") == "6.0"
+    assert validate_output._extract_version_from_filename("1.2/path/3.4/file.txt") == "1.2"
