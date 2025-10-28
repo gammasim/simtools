@@ -1108,12 +1108,13 @@ def test_try_resolve_version_path_with_none(tmp_test_directory):
     assert result is None
 
 
-def test_try_resolve_version_path_invalid_version_format():
+def test_try_resolve_version_path_invalid_version_format(tmp_test_directory):
     """Test _try_resolve_version_path with version having less than 2 parts (lines 205-209)."""
-    result = validate_output._try_resolve_version_path(Path("/tmp"), "file.txt", "6")
+    tmp_dir = Path(str(tmp_test_directory))
+    result = validate_output._try_resolve_version_path(tmp_dir, "file.txt", "6")
     assert result is None
 
-    result = validate_output._try_resolve_version_path(Path("/tmp"), "file.txt", "")
+    result = validate_output._try_resolve_version_path(tmp_dir, "file.txt", "")
     assert result is None
 
 
