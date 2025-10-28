@@ -149,8 +149,8 @@ def _resolve_model_version_to_latest_patch(args_dict, db_config, logger):
             latest = version.resolve_version_to_latest_patch(ver, db.get_model_versions())
             logger.info(f"Resolved {ver} to {latest}")
             return latest
-        except (ValueError, KeyError, OSError):
-            logger.warning(f"Could not resolve {ver}, using as-is.")
+        except (ValueError, KeyError, OSError) as exc:
+            logger.warning(f"Could not resolve {ver}, using as-is. Error: {exc}")
             return ver
 
     args_dict["model_version"] = [resolve(v) for v in mv] if isinstance(mv, list) else resolve(mv)
