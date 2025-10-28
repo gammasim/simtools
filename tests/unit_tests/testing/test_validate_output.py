@@ -664,3 +664,240 @@ def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
         Path(output_path) / "test_telescope" / TEST_PARAM_JSON
     )
     mock_compare_value.assert_called_once_with([1.1, 2.1, 3.1], [1.0, 2.0, 3.0], 1.0e-5)
+
+
+def test_resolve_model_version_path_with_patch_exists(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    base_path = tmp_dir / "model"
+    base_path.mkdir(parents=True, exist_ok=True)
+    version_path = base_path / "6.0.1"
+    version_path.mkdir(parents=True, exist_ok=True)
+
+    resolved = validate_output.resolve_model_version_path(base_path, "6.0.1")
+    assert resolved == version_path
+
+
+def test_resolve_model_version_path_fallback_to_minor(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    base_path = tmp_dir / "model"
+    base_path.mkdir(parents=True, exist_ok=True)
+    minor_version_path = base_path / "6.0"
+    minor_version_path.mkdir(parents=True, exist_ok=True)
+
+    resolved = validate_output.resolve_model_version_path(base_path, "6.0.1")
+    assert resolved == minor_version_path
+
+
+def test_resolve_model_version_path_glob_fallback(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    base_path = tmp_dir / "model"
+    base_path.mkdir(parents=True, exist_ok=True)
+    patch_version_path = base_path / "6.0.2"
+    patch_version_path.mkdir(parents=True, exist_ok=True)
+
+    resolved = validate_output.resolve_model_version_path(base_path, "6.0")
+    assert resolved == patch_version_path
+
+
+def test_resolve_model_version_path_no_version_exists(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    base_path = tmp_dir / "model"
+    base_path.mkdir(parents=True, exist_ok=True)
+
+    resolved = validate_output.resolve_model_version_path(base_path, "6.0.1")
+    assert resolved == base_path / "6.0.1"
+
+
+def test_resolve_model_version_path_with_minor_version_only(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    base_path = tmp_dir / "model"
+    base_path.mkdir(parents=True, exist_ok=True)
+    minor_version_path = base_path / "6.0"
+    minor_version_path.mkdir(parents=True, exist_ok=True)
+
+    resolved = validate_output.resolve_model_version_path(base_path, "6.0")
+    assert resolved == minor_version_path
+
+
+def test_resolve_output_file_path_exact_match(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    output_path = tmp_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+    version_dir = output_path / "6.0"
+    version_dir.mkdir(parents=True, exist_ok=True)
+    test_file = version_dir / "test.md"
+    test_file.write_text("test content")
+
+    resolved = validate_output._resolve_output_file_path(output_path, "6.0/test.md", "6.0")
+    assert resolved == test_file
+
+
+def test_resolve_output_file_path_glob_fallback(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    output_path = tmp_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+    version_dir = output_path / "6.0.2"
+    version_dir.mkdir(parents=True, exist_ok=True)
+    test_file = version_dir / "test.md"
+    test_file.write_text("test content")
+
+    resolved = validate_output._resolve_output_file_path(output_path, "6.0/test.md", "6.0")
+    assert resolved == test_file
+
+
+def test_resolve_output_file_path_multiple_versions(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    output_path = tmp_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+    version_dir1 = output_path / "6.0.1"
+    version_dir1.mkdir(parents=True, exist_ok=True)
+    version_dir2 = output_path / "6.0.2"
+    version_dir2.mkdir(parents=True, exist_ok=True)
+    test_file1 = version_dir1 / "test.md"
+    test_file1.write_text("test content 1")
+    test_file2 = version_dir2 / "test.md"
+    test_file2.write_text("test content 2")
+
+    resolved = validate_output._resolve_output_file_path(output_path, "6.0/test.md", "6.0")
+    assert resolved == test_file1
+
+
+def test_resolve_output_file_path_no_match(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    output_path = tmp_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    resolved = validate_output._resolve_output_file_path(output_path, "6.0/test.md", "6.0")
+    assert resolved == output_path / "6.0" / "test.md"
+
+
+def test_resolve_output_file_path_version_in_filename(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    output_path = tmp_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+    actual_filename = "gamma_run000001_za40deg_azm180deg_North_alpha_6.0.2_check_output.log"
+    test_file = output_path / actual_filename
+    test_file.write_text("test content")
+
+    expected_filename = "gamma_run000001_za40deg_azm180deg_North_alpha_6.0_check_output.log"
+    resolved = validate_output._resolve_output_file_path(output_path, expected_filename, "6.0")
+    assert resolved == test_file
+
+
+def test_resolve_output_file_path_version_in_filename_exact_match(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    output_path = tmp_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+    test_file = output_path / "file_6.0_name.txt"
+    test_file.write_text("test content")
+
+    resolved = validate_output._resolve_output_file_path(output_path, "file_6.0_name.txt", "6.0")
+    assert resolved == test_file
+
+
+def test_resolve_output_file_path_version_in_filename_no_match(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    output_path = tmp_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    resolved = validate_output._resolve_output_file_path(output_path, "file_6.0_name.txt", "6.0")
+    assert resolved == output_path / "file_6.0_name.txt"
+
+
+def test_try_resolve_version_in_directory_invalid_version_format(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    base_path = tmp_dir / "output"
+    base_path.mkdir(parents=True, exist_ok=True)
+
+    resolved = validate_output._try_resolve_version_in_directory(base_path, "not_version/test.md")
+    assert resolved is None
+
+
+def test_try_resolve_version_in_directory_single_digit_version(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    base_path = tmp_dir / "output"
+    base_path.mkdir(parents=True, exist_ok=True)
+
+    resolved = validate_output._try_resolve_version_in_directory(base_path, "6/test.md")
+    assert resolved is None
+
+
+def test_try_resolve_version_in_filename_single_digit_version(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    base_path = tmp_dir / "output"
+    base_path.mkdir(parents=True, exist_ok=True)
+
+    resolved = validate_output._try_resolve_version_in_filename(base_path, "file_6_name.txt", "6")
+    assert resolved is None
+
+
+def test_try_resolve_version_in_filename_no_version_in_name(tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    base_path = tmp_dir / "output"
+    base_path.mkdir(parents=True, exist_ok=True)
+
+    resolved = validate_output._try_resolve_version_in_filename(base_path, "file_name.txt", "6.0.2")
+    assert resolved is None
+
+
+def test_lines_match_with_version_flexibility():
+    ref = "ModelVersion 6.0"
+    test = "ModelVersion 6.0.2"
+    assert validate_output._lines_match_with_version_flexibility(ref, test)
+
+    ref = "include CTA-North-LSTN-01_6.0_test.cfg"
+    test = "include CTA-North-LSTN-01_6.0.2_test.cfg"
+    assert validate_output._lines_match_with_version_flexibility(ref, test)
+
+    ref = "config_version 6.0"
+    test = "config_version 6.0.2"
+    assert validate_output._lines_match_with_version_flexibility(ref, test)
+
+    ref = "value 5.0"
+    test = "value 5.5"
+    assert not validate_output._lines_match_with_version_flexibility(ref, test)
+
+
+def test_validate_output_path_and_file_without_model_version(
+    output_path, mock_path_exists, mock_check_output
+):
+    config = {
+        "configuration": {"output_path": output_path, "data_directory": "/path/to/data"},
+        "integration_tests": [{"expected_output": "expected_output"}],
+    }
+    integration_test = [
+        {"path_descriptor": "data_directory", "file": "output_file", "expected_output": {}}
+    ]
+
+    validate_output._validate_output_path_and_file(config, integration_test)
+
+    mock_path_exists.assert_called()
+    mock_check_output.assert_called_once()
+
+
+def test_validate_simtel_cfg_files_with_version_glob_resolution(mocker, tmp_test_directory):
+    tmp_dir = Path(str(tmp_test_directory))
+    output_path = tmp_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    model_dir = output_path / "model" / "6.0.2"
+    model_dir.mkdir(parents=True, exist_ok=True)
+
+    reference_file = Path(
+        "tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0_test.cfg"
+    )
+
+    test_cfg_content = reference_file.read_text()
+    # The expected filename has version 6.0 and label appended, but actual has 6.0.2
+    test_file_actual = model_dir / "CTA-North-LSTN-01-6.0.2_test_label.cfg"
+    test_file_actual.write_text(test_cfg_content)
+
+    config = {
+        "configuration": {
+            "output_path": str(output_path),
+            "model_version": "6.0.2",
+            "label": "test_label",
+        },
+    }
+
+    validate_output._validate_simtel_cfg_files(config, str(reference_file))
