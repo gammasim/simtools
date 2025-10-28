@@ -666,59 +666,6 @@ def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
     mock_compare_value.assert_called_once_with([1.1, 2.1, 3.1], [1.0, 2.0, 3.0], 1.0e-5)
 
 
-def test_resolve_model_version_path_with_patch_exists(tmp_test_directory):
-    tmp_dir = Path(str(tmp_test_directory))
-    base_path = tmp_dir / "model"
-    base_path.mkdir(parents=True, exist_ok=True)
-    version_path = base_path / "6.0.1"
-    version_path.mkdir(parents=True, exist_ok=True)
-
-    resolved = validate_output.resolve_model_version_path(base_path, "6.0.1")
-    assert resolved == version_path
-
-
-def test_resolve_model_version_path_fallback_to_minor(tmp_test_directory):
-    tmp_dir = Path(str(tmp_test_directory))
-    base_path = tmp_dir / "model"
-    base_path.mkdir(parents=True, exist_ok=True)
-    minor_version_path = base_path / "6.0"
-    minor_version_path.mkdir(parents=True, exist_ok=True)
-
-    resolved = validate_output.resolve_model_version_path(base_path, "6.0.1")
-    assert resolved == minor_version_path
-
-
-def test_resolve_model_version_path_glob_fallback(tmp_test_directory):
-    tmp_dir = Path(str(tmp_test_directory))
-    base_path = tmp_dir / "model"
-    base_path.mkdir(parents=True, exist_ok=True)
-    patch_version_path = base_path / "6.0.2"
-    patch_version_path.mkdir(parents=True, exist_ok=True)
-
-    resolved = validate_output.resolve_model_version_path(base_path, "6.0")
-    assert resolved == patch_version_path
-
-
-def test_resolve_model_version_path_no_version_exists(tmp_test_directory):
-    tmp_dir = Path(str(tmp_test_directory))
-    base_path = tmp_dir / "model"
-    base_path.mkdir(parents=True, exist_ok=True)
-
-    resolved = validate_output.resolve_model_version_path(base_path, "6.0.1")
-    assert resolved == base_path / "6.0.1"
-
-
-def test_resolve_model_version_path_with_minor_version_only(tmp_test_directory):
-    tmp_dir = Path(str(tmp_test_directory))
-    base_path = tmp_dir / "model"
-    base_path.mkdir(parents=True, exist_ok=True)
-    minor_version_path = base_path / "6.0"
-    minor_version_path.mkdir(parents=True, exist_ok=True)
-
-    resolved = validate_output.resolve_model_version_path(base_path, "6.0")
-    assert resolved == minor_version_path
-
-
 def test_resolve_output_file_path_exact_match(tmp_test_directory):
     tmp_dir = Path(str(tmp_test_directory))
     output_path = tmp_dir / "output"
@@ -804,42 +751,6 @@ def test_resolve_output_file_path_version_in_filename_no_match(tmp_test_director
     assert resolved == output_path / "file_6.0_name.txt"
 
 
-def test_try_resolve_version_in_directory_invalid_version_format(tmp_test_directory):
-    tmp_dir = Path(str(tmp_test_directory))
-    base_path = tmp_dir / "output"
-    base_path.mkdir(parents=True, exist_ok=True)
-
-    resolved = validate_output._try_resolve_version_in_directory(base_path, "not_version/test.md")
-    assert resolved is None
-
-
-def test_try_resolve_version_in_directory_single_digit_version(tmp_test_directory):
-    tmp_dir = Path(str(tmp_test_directory))
-    base_path = tmp_dir / "output"
-    base_path.mkdir(parents=True, exist_ok=True)
-
-    resolved = validate_output._try_resolve_version_in_directory(base_path, "6/test.md")
-    assert resolved is None
-
-
-def test_try_resolve_version_in_filename_single_digit_version(tmp_test_directory):
-    tmp_dir = Path(str(tmp_test_directory))
-    base_path = tmp_dir / "output"
-    base_path.mkdir(parents=True, exist_ok=True)
-
-    resolved = validate_output._try_resolve_version_in_filename(base_path, "file_6_name.txt", "6")
-    assert resolved is None
-
-
-def test_try_resolve_version_in_filename_no_version_in_name(tmp_test_directory):
-    tmp_dir = Path(str(tmp_test_directory))
-    base_path = tmp_dir / "output"
-    base_path.mkdir(parents=True, exist_ok=True)
-
-    resolved = validate_output._try_resolve_version_in_filename(base_path, "file_name.txt", "6.0.2")
-    assert resolved is None
-
-
 def test_lines_match_with_version_flexibility():
     ref = "ModelVersion 6.0"
     test = "ModelVersion 6.0.2"
@@ -922,3 +833,68 @@ def test_validate_simtel_cfg_files_with_version_glob_resolution(mocker, tmp_test
     }
 
     validate_output._validate_simtel_cfg_files(config, str(reference_file))
+
+
+def test_try_resolve_version_path_with_invalid_version(tmp_test_directory):
+    """Test _try_resolve_version_path when model_version has less than 2 parts."""
+    tmp_dir = Path(str(tmp_test_directory))
+    output_path = tmp_dir / "output"
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    # Model version with only one part should return None
+    result = validate_output._try_resolve_version_path(output_path, "6/file.txt", "6")
+    assert result is None
+
+
+def test_validate_output_path_and_file_without_model_version_in_config(
+    tmp_test_directory, mock_check_output
+):
+    """Test _validate_output_path_and_file when model_version is not in config."""
+    tmp_dir = Path(str(tmp_test_directory))
+    data_dir = tmp_dir / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    test_file = data_dir / "simple_file.txt"
+    test_file.write_text("test content")
+
+    # Config without model_version
+    config = {
+        "configuration": {"data_directory": str(data_dir)},
+    }
+    integration_test = [
+        {"path_descriptor": "data_directory", "file": "simple_file.txt", "expected_output": {}}
+    ]
+
+    # This should use the else branch on line 198
+    validate_output._validate_output_path_and_file(config, integration_test)
+    mock_check_output.assert_called_once()
+
+
+def test_validate_output_path_and_file_with_model_version_in_config(
+    tmp_test_directory, mock_check_output
+):
+    """Test _validate_output_path_and_file when model_version IS in config."""
+    tmp_dir = Path(str(tmp_test_directory))
+    data_dir = tmp_dir / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create version directory
+    version_dir = data_dir / "6.0.2"
+    version_dir.mkdir(parents=True, exist_ok=True)
+    test_file = version_dir / "output.txt"
+    test_file.write_text("test content")
+
+    # Config WITH model_version
+    config = {
+        "configuration": {
+            "data_directory": str(data_dir),
+            "model_version": "6.0.2",
+        },
+    }
+    integration_test = [
+        {"path_descriptor": "data_directory", "file": "6.0.2/output.txt", "expected_output": {}}
+    ]
+
+    # This should use the if branch and call _resolve_output_file_path (line 194-196)
+    validate_output._validate_output_path_and_file(config, integration_test)
+    mock_check_output.assert_called_once()
