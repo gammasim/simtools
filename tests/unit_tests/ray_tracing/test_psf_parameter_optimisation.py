@@ -546,11 +546,14 @@ def test_perform_gradient_step_with_retries(optimizer):
         patch.object(optimizer, "calculate_gradient") as mock_grad,
         patch.object(optimizer, "apply_gradient_step") as mock_step,
         patch.object(optimizer, "run_simulation") as mock_sim,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation._are_all_parameters_within_allowed_range"
+        ) as mock_validate,
     ):
-        # Set up mocks to return improved results
         mock_grad.return_value = {"mirror_reflection_random_angle": [0.001]}
         mock_step.return_value = {"mirror_reflection_random_angle": [0.004]}
         mock_sim.return_value = (8.0, 4.5, 0.9, {"data": "test"})  # Better metric
+        mock_validate.return_value = True  # Parameters are valid
 
         result = optimizer.perform_gradient_step_with_retries(
             current_params,
@@ -722,6 +725,21 @@ def test_run_gradient_descent_optimization(optimizer, sample_data):
         assert "mirror_reflection_random_angle" in best_pars
         assert isinstance(best_psf_diameter, float)
         assert len(gd_results) > 0
+
+
+def test_run_gradient_descent_with_no_data(optimizer):
+    """Test that run_gradient_descent returns early when no data is available."""
+    optimizer.data_to_plot = None
+    optimizer.radius = None
+
+    best_pars, best_psf_diameter, gd_results = optimizer.run_gradient_descent(
+        rmsd_threshold=0.1,
+        learning_rate=0.1,
+    )
+
+    assert best_pars is None
+    assert best_psf_diameter is None
+    assert gd_results == []
 
 
 def test__write_log_interpretation():
@@ -1132,10 +1150,17 @@ def test_workflow_edge_cases(
 ):
     """Test PSF optimization workflow edge cases: no data, failed optimization, Monte Carlo."""
     # Test 1: No data
-    with patch(
-        "simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data"
-    ) as mock_load:
+    with (
+        patch("simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data") as mock_load,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer"
+        ) as mock_opt_cls,
+    ):
         mock_load.return_value = (None, None)
+        mock_optimizer = MagicMock()
+        mock_opt_cls.return_value = mock_optimizer
+        mock_optimizer.run_gradient_descent.return_value = (None, None, [])
+
         psf_opt.run_psf_optimization_workflow(
             mock_telescope_model, mock_site_model, mock_args_dict, tmp_path
         )
@@ -1166,6 +1191,7 @@ def test_workflow_edge_cases(
         patch(
             "simtools.ray_tracing.psf_parameter_optimisation.write_monte_carlo_analysis"
         ) as mock_write,
+        patch("simtools.visualization.plot_psf.create_monte_carlo_uncertainty_plot"),
     ):
         mock_load.return_value = ({"measured": sample_data}, sample_data[psf_opt.RADIUS])
         mock_optimizer = MagicMock()
