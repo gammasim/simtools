@@ -471,7 +471,7 @@ def _lines_match_with_version_flexibility(ref_line, test_line):
 
     # Match MAJOR.MINOR or MAJOR.MINOR.PATCH even when followed by underscores/letters
     # Ensure we don't match when adjacent to other digits
-    version_re = re.compile(r"(?<!\d)(\d+)\.(\d+)(?:\.\d+)?(?!\d)")
+    version_re = re.compile(r"(?<!\d)(\d{1,10})\.(\d{1,10})(?:\.(\d{1,10}))?(?!\d)")
 
     def _to_minor(match: re.Match) -> str:
         return f"{match.group(1)}.{match.group(2)}"
