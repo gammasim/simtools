@@ -7,6 +7,32 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.24.0](https://github.com/gammasim/simtools/releases/tag/v0.24.0) - 2025-10-28
+
+### Bugfixes
+
+- Bugfix in validation of generated sim_telarray configuration: missing assert on the outcome of the tests (tests always passed, even with differences). ([#1856](https://github.com/gammasim/simtools/pull/1856))
+- Fixed array trigger file generation to properly combine non-hardstereo telescopes. Previously, each telescope type generated separate trigger lines, preventing software stereo triggers between different telescope types (e.g., SST+MST). Now hardstereo lines remain separate while non-hardstereo telescopes are combined into a single line, enabling cross-telescope-type triggering. ([#1863](https://github.com/gammasim/simtools/pull/1863))
+
+### New Features
+
+- Add new simulation model parameter `transit_time_random`. ([#1808](https://github.com/gammasim/simtools/pull/1808))
+- Implement version check for model parameters for any software type. ([#1842](https://github.com/gammasim/simtools/pull/1842))
+- Add possibility to define new base models taking into account the correct history of models for `simtools-maintain-simulation-model-add-production`. ([#1844](https://github.com/gammasim/simtools/pull/1844))
+- Add possibility to change model parameters from command line using the `--overwrite_model_parameters` command line parameter. ([#1850](https://github.com/gammasim/simtools/pull/1850))
+
+### Maintenance
+
+- Change source of simulation model database in CI to 'main' branch of simulation model repository.
+  Tests against the latest release versions for simtools release candidates (`1.2.3-rc`).
+  Allow to configure simulation model repository branches for manually triggered workflows. ([#1846](https://github.com/gammasim/simtools/pull/1846))
+- Review and update all XPASS unit tests. ([#1855](https://github.com/gammasim/simtools/pull/1855))
+
+### Simulation model
+
+- Change default simulation models database version to 0.11.0. ([#1852](https://github.com/gammasim/simtools/pull/1852))
+
+
 ## [v0.23.0](https://github.com/gammasim/simtools/releases/tag/v0.23.0) - 2025-10-13
 
 ### Bugfixes
