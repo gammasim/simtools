@@ -480,14 +480,14 @@ def test_calculate_gradient(optimizer, sample_parameters):
 
 
 def test_calculate_gradient_returns_none_on_failure(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data
+    mock_telescope_model, mock_site_model, mock_args_dict, sample_data, tmp_path
 ):
     """Test that calculate_gradient returns None if any parameter gradient fails."""
     data_to_plot = {"measured": sample_data}
     radius = sample_data[psf_opt.RADIUS]
 
     optimizer = psf_opt.PSFParameterOptimizer(
-        mock_telescope_model, mock_site_model, mock_args_dict, data_to_plot, radius, Path("/tmp")
+        mock_telescope_model, mock_site_model, mock_args_dict, data_to_plot, radius, tmp_path
     )
 
     current_params = {
@@ -564,7 +564,7 @@ def test_perform_gradient_step_with_retries(optimizer):
         assert result[5] is True  # step_accepted
 
 
-def test__create_step_plot(sample_data, mock_args_dict):
+def test__create_step_plot(sample_data, mock_args_dict, tmp_path):
     """Test creating step plot for optimization iteration."""
     data_to_plot = {"measured": sample_data}
     current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
@@ -575,7 +575,7 @@ def test__create_step_plot(sample_data, mock_args_dict):
     mock_tel = MagicMock()
     mock_site = MagicMock()
     optimizer = psf_opt.PSFParameterOptimizer(
-        mock_tel, mock_site, mock_args_dict, data_to_plot, sample_data[psf_opt.RADIUS], Path("/tmp")
+        mock_tel, mock_site, mock_args_dict, data_to_plot, sample_data[psf_opt.RADIUS], tmp_path
     )
 
     with (
@@ -606,7 +606,7 @@ def test__create_step_plot(sample_data, mock_args_dict):
     # Test early return when plot_all is False
     mock_args_dict["plot_all"] = False
     optimizer_no_plot = psf_opt.PSFParameterOptimizer(
-        mock_tel, mock_site, mock_args_dict, data_to_plot, sample_data[psf_opt.RADIUS], Path("/tmp")
+        mock_tel, mock_site, mock_args_dict, data_to_plot, sample_data[psf_opt.RADIUS], tmp_path
     )
     result = optimizer_no_plot._create_step_plot(
         mock_pages, current_params, 3.5, 0.1, 0.8, sample_data
@@ -616,7 +616,7 @@ def test__create_step_plot(sample_data, mock_args_dict):
     # Test early return when new_simulated_data is None
     mock_args_dict["plot_all"] = True
     optimizer2 = psf_opt.PSFParameterOptimizer(
-        mock_tel, mock_site, mock_args_dict, data_to_plot, sample_data[psf_opt.RADIUS], Path("/tmp")
+        mock_tel, mock_site, mock_args_dict, data_to_plot, sample_data[psf_opt.RADIUS], tmp_path
     )
     result = optimizer2._create_step_plot(mock_pages, current_params, 3.5, 0.1, 0.8, None)
     assert result is None
