@@ -1332,6 +1332,28 @@ def write_monte_carlo_analysis(
     return mc_file
 
 
+def cleanup_intermediate_files(output_dir):
+    """
+    Remove intermediate log and list files from the output directory.
+
+    Parameters
+    ----------
+    output_dir : Path
+        Directory containing output files to clean up.
+    """
+    patterns = ["*.log", "*.lis*"]
+    files_removed = 0
+
+    for pattern in patterns:
+        for file_path in output_dir.glob(pattern):
+            file_path.unlink()
+            files_removed += 1
+            logger.debug(f"Removed: {file_path.name}")
+
+    if files_removed > 0:
+        logger.info(f"Cleanup: removed {files_removed} intermediate files")
+
+
 def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
     """
     Run the complete PSF parameter optimization workflow using gradient descent.
@@ -1408,3 +1430,6 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
         export_psf_parameters(
             best_pars, args_dict.get("telescope"), args_dict.get("parameter_version"), output_dir
         )
+
+    if args_dict.get("cleanup", False):
+        cleanup_intermediate_files(output_dir)
