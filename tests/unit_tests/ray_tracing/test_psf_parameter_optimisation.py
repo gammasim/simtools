@@ -1580,3 +1580,47 @@ def test_workflow_with_all_features(
         mock_write_log.assert_called_once()
         mock_offaxis_plot.assert_called_once()
         mock_export.assert_called_once()
+
+
+def test_cleanup_intermediate_files(
+    tmp_path, mock_telescope_model, mock_site_model, mock_args_dict, sample_data
+):
+    """Test cleanup of intermediate log and list files via workflow integration."""
+    mock_args_dict["cleanup"] = True
+    (tmp_path / "test.log").write_text("log content")
+    (tmp_path / "sim.lis").write_text("lis content")
+    (tmp_path / "sim.lis.gz").write_bytes(b"lis.gz content")
+    (tmp_path / "keep_me.png").write_bytes(b"png content")
+    (tmp_path / "keep_me.pdf").write_bytes(b"pdf content")
+
+    with (
+        patch("simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data") as mock_load,
+        patch("simtools.ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer") as mock_opt,
+        patch("simtools.visualization.plot_psf.create_optimization_plots"),
+        patch("simtools.visualization.plot_psf.create_gradient_descent_convergence_plot"),
+        patch("simtools.ray_tracing.psf_parameter_optimisation.write_gradient_descent_log"),
+        patch("simtools.visualization.plot_psf.create_psf_vs_offaxis_plot"),
+    ):
+        mock_load.return_value = ({"measured": sample_data}, sample_data[psf_opt.RADIUS])
+        mock_opt.return_value.run_gradient_descent.return_value = (
+            {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]},
+            3.5,
+            [
+                (
+                    {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]},
+                    0.05,
+                    0.8,
+                    3.5,
+                    sample_data,
+                )
+            ],
+        )
+        psf_opt.run_psf_optimization_workflow(
+            mock_telescope_model, mock_site_model, mock_args_dict, tmp_path
+        )
+
+    assert not (tmp_path / "test.log").exists()
+    assert not (tmp_path / "sim.lis").exists()
+    assert not (tmp_path / "sim.lis.gz").exists()
+    assert (tmp_path / "keep_me.png").exists()
+    assert (tmp_path / "keep_me.pdf").exists()
