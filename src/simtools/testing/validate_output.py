@@ -385,20 +385,28 @@ def _compare_simtel_cfg_files(reference_file, test_file):
         reference_cfg = [line.rstrip() for line in f1 if line.strip()]
         test_cfg = [line.rstrip() for line in f2 if line.strip()]
 
-    if len(reference_cfg) != len(test_cfg):
+    def filter_ignored(cfg_lines, file_label):
+        filtered = []
+        for line in cfg_lines:
+            ignored_key = next((ignore for ignore in cfg_ignore_keys if ignore in line), None)
+            if ignored_key:
+                _logger.debug(f"Ignoring line in {file_label} due to key '{ignored_key}': {line}")
+                continue
+            filtered.append(line)
+        return filtered
+
+    reference_cfg_filtered = filter_ignored(reference_cfg, "reference file")
+    test_cfg_filtered = filter_ignored(test_cfg, "test file")
+
+    if len(reference_cfg_filtered) != len(test_cfg_filtered):
         _logger.error(
-            f"Line counts differ: {reference_file} ({len(reference_cfg)} lines), "
-            f"{test_file} ({len(test_cfg)} lines)."
+            f"Line counts differ after filtering: {reference_file} "
+            f"({len(reference_cfg_filtered)} lines), "
+            f"{test_file} ({len(test_cfg_filtered)} lines)."
         )
         return False
 
-    for ref_line, test_line in zip(reference_cfg, test_cfg):
-        ignored_key = next((ignore for ignore in cfg_ignore_keys if ignore in ref_line), None)
-        if ignored_key:
-            _logger.debug(
-                f"Ignoring line in config comparison due to key '{ignored_key}': {ref_line}"
-            )
-            continue
+    for ref_line, test_line in zip(reference_cfg_filtered, test_cfg_filtered):
         if ref_line != test_line:
             _logger.error(
                 f"Configuration files {reference_file} and {test_file} do not match: "
