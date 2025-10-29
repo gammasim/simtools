@@ -37,10 +37,6 @@ class PSFParameterOptimizer:
     """
     Gradient descent optimizer for PSF parameters.
 
-    This class encapsulates the state and methods needed for PSF parameter optimization,
-    eliminating repetitive parameter passing and enabling performance optimizations
-    such as caching and potential parallelization.
-
     Parameters
     ----------
     tel_model : TelescopeModel
@@ -51,7 +47,7 @@ class PSFParameterOptimizer:
         Dictionary containing simulation configuration arguments.
     data_to_plot : dict
         Dictionary containing measured PSF data under "measured" key.
-    radius : array-like
+    radius : numpy.ndarray
         Radius values in cm for PSF evaluation.
     output_dir : Path
         Directory for saving optimization results and plots.
@@ -168,7 +164,6 @@ class PSFParameterOptimizer:
         # Determine which statistic to use
         ks_stat = use_ks_statistic if use_ks_statistic is not None else self.use_ks_statistic
 
-        # Check cache only if requested and not plotting
         if use_cache and pdf_pages is None and not is_best:
             cache_key = self._params_to_cache_key(pars)
             if cache_key in self.simulation_cache:
@@ -176,7 +171,6 @@ class PSFParameterOptimizer:
                 return self.simulation_cache[cache_key]
             self.cache_misses += 1
 
-        # Run the actual simulation
         result = run_psf_simulation(
             self.tel_model,
             self.site_model,
@@ -311,7 +305,6 @@ class PSFParameterOptimizer:
         values_list = param_values if isinstance(param_values, list) else [param_values]
 
         for i, value in enumerate(values_list):
-            # Create perturbed parameter set
             perturbed_params = _create_perturbed_params(
                 current_params, param_name, param_values, i, value, epsilon
             )
@@ -715,17 +708,11 @@ def _are_all_parameters_within_allowed_range(params):
     bool
         True if all parameters are within allowed ranges, False otherwise.
     """
-    for param_name, param_values in params.items():
-        if isinstance(param_values, list):
-            for i, value in enumerate(param_values):
-                if not _is_parameter_within_allowed_range(param_name, i, value):
-                    logger.debug(
-                        f"Parameter {param_name}[{i}] = {value:.6f} is out of allowed range"
-                    )
-                    return False
-        else:
-            if not _is_parameter_within_allowed_range(param_name, 0, param_values):
-                logger.debug(f"Parameter {param_name} = {param_values:.6f} is out of allowed range")
+    for name, values in params.items():
+        values = values if isinstance(values, list) else [values]
+        for i, v in enumerate(values):
+            if not _is_parameter_within_allowed_range(name, i, v):
+                logger.debug(f"{name}[{i}]={v:.6f} out of range")
                 return False
     return True
 
@@ -871,7 +858,7 @@ def run_psf_simulation(
         Dictionary of parameter values to test in the simulation.
     data_to_plot : dict
         Dictionary containing measured PSF data under "measured" key.
-    radius : array-like
+    radius : numpy.ndarray
         Radius values in cm for PSF evaluation.
     pdf_pages : PdfPages, optional
         PDF pages object for saving plots (default: None).
