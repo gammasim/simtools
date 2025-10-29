@@ -97,6 +97,7 @@ class PSFParameterOptimizer:
     LR_REDUCTION_FACTOR = 0.7
     LR_INCREASE_FACTOR = 2.0
     LR_MINIMUM_THRESHOLD = 1e-6
+    LR_MAXIMUM_THRESHOLD = 0.01
     LR_RESET_VALUE = 0.0001
 
     def __init__(self, tel_model, site_model, args_dict, data_to_plot, radius, output_dir):
@@ -155,9 +156,10 @@ class PSFParameterOptimizer:
         Returns
         -------
         float
-            Increased learning rate.
+            Increased learning rate, capped at LR_MAXIMUM_THRESHOLD.
         """
-        return current_lr * self.LR_INCREASE_FACTOR
+        new_lr = current_lr * self.LR_INCREASE_FACTOR
+        return min(new_lr, self.LR_MAXIMUM_THRESHOLD)
 
     def get_initial_parameters(self):
         """

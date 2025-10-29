@@ -1480,6 +1480,59 @@ def test_run_gradient_descent_no_step_accepted(optimizer, sample_data):
         assert best_params is not None
 
 
+def test_run_gradient_descent_learning_rate_cap(optimizer, sample_data):
+    """Test that learning rate is capped at maximum threshold when increased."""
+
+    with (
+        patch.object(optimizer, "get_initial_parameters") as mock_get_params,
+        patch.object(optimizer, "run_simulation") as mock_sim,
+        patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
+    ):
+        mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_sim.return_value = (3.5, 0.05, 0.8, sample_data)
+
+        # Multiple steps not accepted to trigger learning rate increases
+        mock_step.side_effect = [
+            GradientStepResult(
+                params=None,
+                psf_diameter=None,
+                metric=None,
+                p_value=None,
+                simulated_data=None,
+                step_accepted=False,
+                learning_rate=0.5,
+            ),
+            GradientStepResult(
+                params=None,
+                psf_diameter=None,
+                metric=None,
+                p_value=None,
+                simulated_data=None,
+                step_accepted=False,
+                learning_rate=1.0,
+            ),
+            GradientStepResult(
+                params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+                psf_diameter=3.4,
+                metric=0.008,
+                p_value=0.85,
+                simulated_data=sample_data,
+                step_accepted=True,
+                learning_rate=1.0,
+            ),
+        ]
+
+        best_params, _, _ = optimizer.run_gradient_descent(
+            rmsd_threshold=0.01, learning_rate=0.5, max_iterations=5
+        )
+
+        # Verify that learning rate was capped
+        calls = mock_step.call_args_list
+        final_lr = calls[-1][0][2]
+        assert final_lr <= optimizer.LR_MAXIMUM_THRESHOLD
+        assert best_params is not None
+
+
 def test_parameter_validation_edge_cases():
     """Test _is_parameter_within_allowed_range edge cases"""
     # Test when data is not a list
