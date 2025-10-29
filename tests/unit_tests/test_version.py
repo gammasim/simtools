@@ -210,3 +210,19 @@ def test_check_version_constraint():
     assert version.check_version_constraint("6.0.2", "<6.0.2") is False
     assert version.check_version_constraint("7.550", ">7.500")
     assert version.check_version_constraint("2025.100.0", ">=2024.365.0")
+
+
+def test_is_valid_semantic_version():
+    assert version.is_valid_semantic_version("1.0.0")
+    assert version.is_valid_semantic_version("6.0.2")
+    assert version.is_valid_semantic_version("1.0.0a1")
+    assert version.is_valid_semantic_version("2025.246.0")
+    assert version.is_valid_semantic_version("1.0")
+    assert version.is_valid_semantic_version("1")
+
+    assert version.is_valid_semantic_version("invalid") is False
+    assert version.is_valid_semantic_version("") is False
+
+    assert version.is_valid_semantic_version("1.0.0-alpha", strict=False)
+    assert version.is_valid_semantic_version("1.0.0-0.3.7", strict=False)
+    assert version.is_valid_semantic_version("1.0.0+build123", strict=False)
