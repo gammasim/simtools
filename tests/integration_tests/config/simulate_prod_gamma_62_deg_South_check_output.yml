@@ -20,6 +20,7 @@ applications:
     simulation_software: corsika_sim_telarray
     site: South
     zenith_angle: 62.
+    curved_atmosphere_min_zenith_angle: 60. deg
     overwrite_model_parameters: tests/resources/info_test_model_parameter_changes.yml
   integration_tests:
   - test_output_files:
