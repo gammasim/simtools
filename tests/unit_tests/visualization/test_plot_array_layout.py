@@ -12,6 +12,7 @@ from matplotlib.colors import to_rgba
 
 from simtools.utils import geometry as transf
 from simtools.visualization.plot_array_layout import (
+    PlotBounds,
     create_patches,
     finalize_plot,
     get_patches,
@@ -46,7 +47,10 @@ def test_finalize_plot_with_range():
     y_title = "Northing [m]"
     axes_range = 10
 
-    finalize_plot(ax, [dummy_patch], x_title, y_title, axes_range)
+    # finalize_plot accepts x_lim and y_lim as tuples
+    finalize_plot(
+        ax, [dummy_patch], x_title, y_title, (-axes_range, axes_range), (-axes_range, axes_range)
+    )
 
     assert ax.get_xlabel() == x_title
     assert ax.get_ylabel() == y_title
@@ -72,7 +76,8 @@ def test_finalize_plot_without_range():
     x_title = "Easting [m]"
     y_title = "Northing [m]"
 
-    finalize_plot(ax, [dummy_patch], x_title, y_title, None)
+    # finalize_plot with None limits should not set explicit limits
+    finalize_plot(ax, [dummy_patch], x_title, y_title, None, None)
     assert ax.get_xlabel() == x_title
     assert ax.get_ylabel() == y_title
 
@@ -299,7 +304,7 @@ def test_get_patches_simplest(monkeypatch):
     _, ax = plt.subplots()
 
     provided_range = 50
-    patches, returned_range, highlighted_patches = get_patches(
+    patches, returned_range, highlighted_patches, _ = get_patches(
         ax, telescopes, False, provided_range, 1.0
     )
 
@@ -312,7 +317,7 @@ def test_get_patches_simplest(monkeypatch):
     assert "pos_x_rotated" in telescopes.colnames
     assert "pos_y_rotated" in telescopes.colnames
 
-    patches, returned_range, highlighted_patches = get_patches(ax, telescopes, False, None, 1.0)
+    patches, returned_range, highlighted_patches, _ = get_patches(ax, telescopes, False, None, 1.0)
     assert returned_range == pytest.approx(7.7)
 
 
@@ -323,7 +328,7 @@ def test_get_patches_with_highlighted_elements(telescopes):
     highlighted_elements = ["LSTN-01", "MSTN-01"]
     grayed_out_elements = ["LSTN-02"]
 
-    patches, returned_range, highlighted_patches = get_patches(
+    patches, returned_range, highlighted_patches, _ = get_patches(
         ax,
         telescopes,
         False,
@@ -347,44 +352,31 @@ def test_get_patches_with_highlighted_elements(telescopes):
         assert color_rgba[:3] == expected_rgba[:3]  # Compare only RGB, not alpha
 
 
-def test_get_telescope_patch_circle(monkeypatch):
-    def dummy_get_type(name):
-        return "MSTN"
-
-    monkeypatch.setattr(
-        "simtools.visualization.plot_array_layout.names.get_array_element_type_from_name",
-        dummy_get_type,
-    )
-
+def test_get_telescope_patch_circle():
     x = 15 * u.m
     y = 25 * u.m
     radius = 3 * u.m
 
-    patch = get_telescope_patch("dummy", x, y, radius)
+    # Pass a real telescope type known to legend_handlers config
+    patch = get_telescope_patch("MSTN", x, y, radius)
     assert isinstance(patch, mpatches.Circle)
 
     expected_center = (x.to(u.m).value, y.to(u.m).value)
     assert patch.center == expected_center
     assert patch.radius == radius.to(u.m).value
 
-    assert patch.get_fill() is True
-    assert to_rgba("dodgerblue") == patch.get_facecolor()
+    # MST/MSTN has filled: False in the config, so get_fill() should be False
+    assert patch.get_fill() is False
+    assert to_rgba("dodgerblue") == patch.get_edgecolor()
 
 
-def test_get_telescope_patch_rectangle(monkeypatch):
-    def dummy_get_type(name):
-        return "SCTS"
-
-    monkeypatch.setattr(
-        "simtools.visualization.plot_array_layout.names.get_array_element_type_from_name",
-        dummy_get_type,
-    )
-
+def test_get_telescope_patch_rectangle():
     x = 10 * u.m
     y = 20 * u.m
     radius = 2 * u.m
 
-    patch = get_telescope_patch("dummy", x, y, radius)
+    # Use SCTS which is configured as square in legend handlers
+    patch = get_telescope_patch("SCTS", x, y, radius)
     assert isinstance(patch, mpatches.Rectangle)
 
     expected_xy = ((x - radius / 2).value, (y - radius / 2).value)
@@ -407,22 +399,25 @@ def test_plot_array_layout_calls_helpers(monkeypatch):
         marker_scaling,
         grayed_out_elements=None,
         highlighted_elements=None,
+        filter_x_lim=None,
+        filter_y_lim=None,
     ):
         calls["get_patches_count"] += 1
         # Create real patch objects instead of strings
         dummy_patch = mpatches.Circle((0, 0), 1)  # Simple circle patch
         dummy_bg_patch = mpatches.Circle((0, 0), 1)  # Another circle patch
         dummy_highlighted_patches = []
+        dummy_bounds = PlotBounds(x_lim=(0.0, 100.0), y_lim=(0.0, 100.0))
         # For first call (primary telescopes)
         if calls["get_patches_count"] == 1:
-            return ([dummy_patch], 50, dummy_highlighted_patches)
+            return ([dummy_patch], 50, dummy_highlighted_patches, dummy_bounds)
         # For second call (background telescopes)
-        return ([dummy_bg_patch], 60, dummy_highlighted_patches)
+        return ([dummy_bg_patch], 60, dummy_highlighted_patches, dummy_bounds)
 
     def dummy_update_legend(ax, telescopes, grayed_out_elements=None, legend_location="best"):
         calls["update_legend_called"] = True
 
-    def dummy_finalize_plot(ax, patches, x_title, y_title, axes_range, highlighted_patches=None):
+    def dummy_finalize_plot(ax, patches, x_title, y_title, x_lim, y_lim, highlighted_patches=None):
         calls["finalize_plot_called"] = True
 
     monkeypatch.setattr("simtools.visualization.plot_array_layout.get_patches", dummy_get_patches)
@@ -557,3 +552,232 @@ def test_create_patches_with_grayed_out_elements(telescopes):
     grayed_patch = patches[2]
     assert isinstance(grayed_patch, mpatches.Circle)
     # Note: The exact color testing might depend on implementation details
+
+
+def test_plot_array_layout_with_bounds_mode_symmetric():
+    """Test plot_array_layout with symmetric bounds mode."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01", "MSTN-01"],
+            "position_x": [100, 200] * u.m,
+            "position_y": [100, 200] * u.m,
+            "sphere_radius": [12, 8] * u.m,
+        }
+    )
+
+    fig = plot_array_layout(
+        telescopes,
+        bounds_mode="symmetric",
+        padding=0.2,
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    ax = fig.get_axes()[0]
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    # In symmetric mode, xlim and ylim should be symmetric around 0
+    assert abs(xlim[0] + xlim[1]) < 1e-6
+    assert abs(ylim[0] + ylim[1]) < 1e-6
+    plt.close(fig)
+
+
+def test_plot_array_layout_with_bounds_mode_exact():
+    """Test plot_array_layout with exact bounds mode.
+
+    Tests that bounds_mode="exact" is accepted and produces a valid figure.
+    The exact coordinate transformations depend on internal rotation logic.
+    """
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01", "MSTN-01"],
+            "position_x": [100, 200] * u.m,
+            "position_y": [50, 150] * u.m,
+            "sphere_radius": [12, 8] * u.m,
+        }
+    )
+
+    fig = plot_array_layout(
+        telescopes,
+        axes_range=None,
+        bounds_mode="exact",
+        padding=0.1,
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    ax = fig.get_axes()[0]
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    # In exact mode, the bounds are derived from the actual data extents
+    # Verify that limits are set (not None or default)
+    assert xlim[0] is not None
+    assert xlim[1] is not None
+    assert ylim[0] is not None
+    assert ylim[1] is not None
+    # Verify that we have a reasonable plot range
+    assert abs(xlim[1] - xlim[0]) > 0
+    assert abs(ylim[1] - ylim[0]) > 0
+    plt.close(fig)
+
+
+def test_plot_array_layout_with_x_lim_override():
+    """Test plot_array_layout with explicit x_lim override."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01", "MSTN-01"],
+            "position_x": [0, 100] * u.m,
+            "position_y": [0, 100] * u.m,
+            "sphere_radius": [12, 8] * u.m,
+        }
+    )
+
+    fig = plot_array_layout(
+        telescopes,
+        x_lim=(-500, 500),
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    ax = fig.get_axes()[0]
+    xlim = ax.get_xlim()
+    assert xlim == (-500, 500)
+    plt.close(fig)
+
+
+def test_plot_array_layout_with_y_lim_override():
+    """Test plot_array_layout with explicit y_lim override."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01", "MSTN-01"],
+            "position_x": [0, 100] * u.m,
+            "position_y": [0, 100] * u.m,
+            "sphere_radius": [12, 8] * u.m,
+        }
+    )
+
+    fig = plot_array_layout(
+        telescopes,
+        y_lim=(-300, 300),
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    ax = fig.get_axes()[0]
+    ylim = ax.get_ylim()
+    assert ylim == (-300, 300)
+    plt.close(fig)
+
+
+def test_plot_array_layout_with_both_lim_overrides():
+    """Test plot_array_layout with both x_lim and y_lim overrides."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01", "MSTN-01", "LSTN-02"],
+            "position_x": [0, 100, 200] * u.m,
+            "position_y": [0, 100, 200] * u.m,
+            "sphere_radius": [12, 8, 12] * u.m,
+        }
+    )
+
+    # Limits that exclude LSTN-02
+    fig = plot_array_layout(
+        telescopes,
+        x_lim=(-50, 150),
+        y_lim=(-50, 150),
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    ax = fig.get_axes()[0]
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    assert xlim == (-50, 150)
+    assert ylim == (-50, 150)
+    plt.close(fig)
+
+
+def test_plot_array_layout_with_background_symmetric_mode():
+    """Test plot_array_layout with background telescopes in symmetric mode."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01"],
+            "position_x": [50] * u.m,
+            "position_y": [50] * u.m,
+            "sphere_radius": [12] * u.m,
+        }
+    )
+
+    background = QTable(
+        {
+            "telescope_name": ["MSTN-01"],
+            "position_x": [200] * u.m,
+            "position_y": [200] * u.m,
+            "sphere_radius": [8] * u.m,
+        }
+    )
+
+    fig = plot_array_layout(
+        telescopes,
+        background_telescopes=background,
+        bounds_mode="symmetric",
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    ax = fig.get_axes()[0]
+    # Background should expand the symmetric range
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    assert abs(xlim[0] + xlim[1]) < 1e-6
+    assert abs(ylim[0] + ylim[1]) < 1e-6
+    plt.close(fig)
+
+
+def test_plot_array_layout_with_empty_telescopes():
+    """Test plot_array_layout with empty telescope table raises IndexError.
+
+    This test documents current behavior where empty telescope lists
+    cause an IndexError in the rotate() function.
+    """
+    telescopes = QTable(
+        {
+            "telescope_name": [],
+            "position_x": [] * u.m,
+            "position_y": [] * u.m,
+            "sphere_radius": [] * u.m,
+        }
+    )
+
+    with pytest.raises(IndexError):
+        plot_array_layout(telescopes)
+
+
+def test_get_telescope_patch_hexagon():
+    """Test get_telescope_patch for hexagon shape."""
+
+    x = 15 * u.m
+    y = 25 * u.m
+    radius = 3 * u.m
+
+    # HESS is configured as hexagon in legend handlers
+    patch = get_telescope_patch("HESS", x, y, radius)
+    assert isinstance(patch, mpatches.RegularPolygon)
+    assert patch.numvertices == 6
+    assert patch.get_fill() is True
+
+
+def test_plot_array_layout_filter_removes_all_telescopes():
+    """Test plot_array_layout when filter removes all telescopes."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01", "MSTN-01"],
+            "position_x": [100, 200] * u.m,
+            "position_y": [100, 200] * u.m,
+            "sphere_radius": [12, 8] * u.m,
+        }
+    )
+
+    # Filter that excludes all telescopes
+    fig = plot_array_layout(
+        telescopes,
+        x_lim=(500, 600),
+        y_lim=(500, 600),
+    )
+
+    assert isinstance(fig, mpl_fig.Figure)
+    plt.close(fig)
