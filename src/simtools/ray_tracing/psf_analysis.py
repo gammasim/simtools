@@ -520,14 +520,13 @@ class PSFImage:
             image_* for the histogram plot and psf_* for the psf circle.
         """
         data = self.get_cumulative_data()
-        ax = plt.gca()
-        plt.tight_layout(pad=1.5)
+        fig, ax = plt.subplots(constrained_layout=True)
         ax.set_xlabel("Radius (cm)")
         ax.set_ylabel("Contained light %")
-        plt.plot(data[self.__PSF_RADIUS], data[self.__PSF_CUMULATIVE], **kwargs)
-        plt.axvline(x=self.get_psf(0.8) / 2, color="b", linestyle="--", linewidth=1)
+        ax.plot(data[self.__PSF_RADIUS], data[self.__PSF_CUMULATIVE], **kwargs)
+        ax.axvline(x=self.get_psf(0.8) / 2, color="b", linestyle="--", linewidth=1)
         if d80 is not None:
-            plt.axvline(x=d80 / 2.0, color="r", linestyle="--", linewidth=1)
+            ax.axvline(x=d80 / 2.0, color="r", linestyle="--", linewidth=1)
         if file_name is not None:
-            plt.savefig(file_name)
+            fig.savefig(file_name)
             plt.close()
