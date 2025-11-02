@@ -1027,7 +1027,7 @@ def test__check_site_and_array_element_consistency():
 
     data_validator._check_site_and_array_element_consistency(None, "North")
     data_validator._check_site_and_array_element_consistency("LSTN-01", None)
-    data_validator._check_site_and_array_element_consistency("LSTN-OBS", "South")
+    data_validator._check_site_and_array_element_consistency("OBS-South", "South")
 
     data_validator._check_site_and_array_element_consistency(["LSTN-01", "LSTN-02"], "North")
 

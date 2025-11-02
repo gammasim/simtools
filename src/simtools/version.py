@@ -221,7 +221,11 @@ def is_valid_semantic_version(version_string, strict=True):
         except InvalidVersion:
             return False
     else:
-        semver_regex = r"^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$"
+        semver_regex = (
+            r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"  # major.minor.patch
+            r"(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?"  # pre-release
+            r"(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$"  # build metadata
+        )
         return bool(re.match(semver_regex, version_string))
 
 

@@ -917,11 +917,11 @@ class DataValidator:
 
         An example for an inconsistency is 'LSTN' at site 'South'
         """
-        if not all([instrument, site]):
+        if not (instrument and site):
             return
 
         instruments = [instrument] if isinstance(instrument, str) else instrument
-        if any("OBS" in inst for inst in instruments):
+        if any(inst.startswith("OBS") for inst in instruments):
             return
 
         def to_sorted_list(value):
@@ -937,7 +937,7 @@ class DataValidator:
             for sublist in instrument_sites
             for s in (sublist if isinstance(sublist, list) else [sublist])
         ]
-        instrument_site = to_sorted_list(sorted(set(flat_sites)))
+        instrument_site = to_sorted_list(set(flat_sites))
         site = to_sorted_list(site)
 
         if instrument_site != site:

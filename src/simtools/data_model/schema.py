@@ -146,11 +146,10 @@ def validate_dict_using_schema(
 
 def _validate_meta_schema_url(data):
     """Validate meta_schema_url if present in data."""
-    if (
-        isinstance(data, dict)
-        and data.get("meta_schema_url")
-        and not gen.url_exists(data["meta_schema_url"])
-    ):
+    if not isinstance(data, dict):
+        return
+
+    if data.get("meta_schema_url") is not None and not gen.url_exists(data["meta_schema_url"]):
         raise FileNotFoundError(f"Meta schema URL does not exist: {data['meta_schema_url']}")
 
 

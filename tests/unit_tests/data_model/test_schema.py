@@ -578,7 +578,8 @@ def test_validate_meta_schema_url_offline():
     schema._validate_meta_schema_url({"name": "test"})
 
     # Test with empty meta_schema_url
-    schema._validate_meta_schema_url({"meta_schema_url": ""})
+    with pytest.raises(ValueError, match=r"unknown url type: ''"):
+        schema._validate_meta_schema_url({"meta_schema_url": ""})
 
 
 def test_get_array_element_list(monkeypatch):
