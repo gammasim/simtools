@@ -14,6 +14,7 @@ from simtools.testing import assertions
 _logger = logging.getLogger(__name__)
 
 # Keys to ignore when comparing sim_telarray configuration files
+# (e.g., version numbers, system dependent parameters, CORSIKA options)
 cfg_ignore_keys = [
     "config_release",
     "Label",
