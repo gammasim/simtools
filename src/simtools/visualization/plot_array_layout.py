@@ -40,10 +40,10 @@ def plot_array_layout(
     grayed_out_elements=None,
     highlighted_elements=None,
     legend_location="best",
-    bounds_mode: str = "exact",
-    padding: float = 0.1,
-    x_lim: tuple[float, float] | None = None,
-    y_lim: tuple[float, float] | None = None,
+    bounds_mode="exact",
+    padding=0.1,
+    x_lim=None,
+    y_lim=None,
 ):
     """
     Plot telescope array layout.
@@ -537,8 +537,8 @@ def finalize_plot(
     patches,
     x_title,
     y_title,
-    x_lim: tuple[float, float],
-    y_lim: tuple[float, float],
+    x_lim=None,
+    y_lim=None,
     highlighted_patches=None,
 ):
     """Finalize plot appearance and limits."""
