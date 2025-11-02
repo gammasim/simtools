@@ -35,7 +35,7 @@ jobs:
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets[format('CLOUD_SIMTEL_R_{0}', matrix.simtel_version)] }}/download -O corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_AUTOCONF }}/download -O autoconf.tar.gz
       - name: Upload corsika-simtel-package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: corsika-simtelarray-package-${{ matrix.simtel_version }}
           path: |
@@ -53,7 +53,7 @@ jobs:
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download -O qgsdat-III.bz2
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_AUTOCONF }}/download -O autoconf.tar.gz
       - name: Upload QGSJet files and autoconf
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: upload-auxiliary-files
           path: |
@@ -95,7 +95,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Download corsika-simtel-package
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: corsika-simtelarray-package-${{ matrix.version.simtel_version }}
           path: ./downloaded-artifacts
@@ -105,7 +105,7 @@ jobs:
           mv ./downloaded-artifacts/corsika_simtelarray_${{ matrix.version.simtel_version }}.tar.gz corsika_simtelarray.tar.gz
 
       - name: Download auxiliary files
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: upload-auxiliary-files
           path: ./downloaded-artifacts
