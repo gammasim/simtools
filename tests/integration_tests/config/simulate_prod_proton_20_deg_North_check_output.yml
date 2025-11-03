@@ -10,7 +10,7 @@ applications:
     energy_range: 200 GeV 500 GeV
     label: check_output
     log_level: DEBUG
-    model_version: 6.0
+    model_version: 6.0.2
     nshow: 5
     output_path: simtools-output
     pack_for_grid_register: simtools-grid-output

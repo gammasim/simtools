@@ -6,7 +6,7 @@ applications:
     array_layout_name: alpha
     label: test-pedestal-production-North
     log_level: DEBUG
-    model_version: 6.0
+    model_version: 6.0.2
     number_of_events: 3
     output_path: simtools-output
     run_number: 10
