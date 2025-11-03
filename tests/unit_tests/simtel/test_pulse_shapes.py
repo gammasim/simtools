@@ -6,7 +6,7 @@ from simtools.simtel.pulse_shapes import (
     _gaussian,
     _rise_width,
     generate_gauss_expconv_pulse,
-    generate_pulse_from_risefall,
+    generate_pulse_from_rise_fall_times,
     solve_sigma_tau_from_risefall,
 )
 
@@ -28,7 +28,7 @@ def test_generate_gauss_expconv_pulse_shape():
 
 
 def test_generate_pulse_from_risefall_roundtrip():
-    t, y = generate_pulse_from_risefall(2.5, 5.0, dt_ns=0.05)
+    t, y = generate_pulse_from_rise_fall_times(2.5, 5.0, dt_ns=0.05)
     assert y.size == t.size
     assert np.isclose(y.max(), 1.0)
 
@@ -79,7 +79,7 @@ def test_pulse_matches_rise_fall_targets():
     target_rise = 2.5
     target_fall = 5.0
     dt = 0.05
-    t, y = generate_pulse_from_risefall(target_rise, target_fall, dt_ns=dt)
+    t, y = generate_pulse_from_rise_fall_times(target_rise, target_fall, dt_ns=dt)
     rise, fall = _measure_rise_fall_widths(t, y)
     atol = 5 * dt
     assert np.isclose(rise, target_rise, atol=atol)
