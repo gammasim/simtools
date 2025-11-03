@@ -141,16 +141,28 @@ def _resolve_model_version_to_latest_patch(args_dict, db_config, logger):
     if not mv or not db_config:
         return
 
-    def resolve(ver):
-        if version.version_kind(ver) == version.MAJOR_MINOR_PATCH:
-            return ver
-        try:
-            db = db_handler.DatabaseHandler(db_config)
-            latest = version.resolve_version_to_latest_patch(ver, db.get_model_versions())
-            logger.info(f"Resolved {ver} to {latest}")
-            return latest
-        except (ValueError, KeyError, OSError) as exc:
-            logger.warning(f"Could not resolve {ver}, using as-is. Error: {exc}")
-            return ver
+    versions = mv if isinstance(mv, list) else [mv]
+    kinds = [version.version_kind(v) for v in versions]
+    if all(k == version.MAJOR_MINOR_PATCH for k in kinds):
+        return
 
-    args_dict["model_version"] = [resolve(v) for v in mv] if isinstance(mv, list) else resolve(mv)
+    try:
+        db = db_handler.DatabaseHandler(db_config)
+        model_versions = db.get_model_versions()
+    except (ValueError, KeyError, OSError) as exc:
+        logger.warning(f"Could not connect to database, using version(s) as-is. Error: {exc}")
+        return
+
+    def resolve(v, k):
+        if k == version.MAJOR_MINOR_PATCH:
+            return v
+        try:
+            latest = version.resolve_version_to_latest_patch(v, model_versions)
+            logger.info(f"Resolved {v} to {latest}")
+            return latest
+        except (ValueError, KeyError) as exc:
+            logger.warning(f"Could not resolve {v}, using as-is. Error: {exc}")
+            return v
+
+    resolved = [resolve(v, k) for v, k in zip(versions, kinds)]
+    args_dict["model_version"] = resolved if isinstance(mv, list) else resolved[0]
