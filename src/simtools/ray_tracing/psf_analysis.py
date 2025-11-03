@@ -521,7 +521,7 @@ class PSFImage:
         d80: float
             d80 value to be marked in the plot (in cm).
         **kwargs:
-            passed to `ax.plot()` for customizing the line plot (e.g., color, linestyle, linewidth).
+            Customization of line plot (e.g., color, linestyle, linewidth).
         """
         data = self.get_cumulative_data()
         fig, ax = plt.subplots(constrained_layout=True)
