@@ -11,7 +11,7 @@ import numpy as np
 import simtools.utils.general as gen
 import simtools.version
 from simtools.io import ascii_handler
-from simtools.simtel.pulse_shapes import generate_pulse_from_risefall
+from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 from simtools.utils import names
 
 # Module-level logger for class/static utilities
@@ -136,13 +136,38 @@ class SimtelConfigWriter:
         rise_range=(0.1, 0.9),
         fall_range=(0.9, 0.1),
     ):
-        """Write a pulse table for a Gaussian convolved with an exponential.
+        """Write a pulse table for a Gaussian convolved with a causal exponential.
 
-        Provide rise and fall widths: width_ns is the 10-90 rise time (ns) and
-        exp_decay_ns is the 90-10 fall time (ns). Parameters are solved so the
-        convolved pulse matches these widths and is normalized to peak 1.
+        Parameters
+        ----------
+        file_path : str or pathlib.Path
+            Destination path of the ASCII pulse table to write. Parent directory must exist.
+        width_ns : float
+            Target rise time in ns between the fractional levels defined by ``rise_range``.
+            Defaults correspond to 10-90% rise time.
+        exp_decay_ns : float
+            Target fall time in ns between the fractional levels defined by ``fall_range``.
+            Defaults correspond to 90-10% fall time.
+        dt_ns : float, optional
+            Time sampling step in ns for the generated pulse table. Default is 0.1.
+        duration_sigma : float, optional
+            Half-duration in units of max(sigma, tau) to include on either side when computing
+            the pulse grid. Default is 6.0.
+        rise_range : tuple[float, float], optional
+            Fractional amplitude bounds (low, high) for rise-time definition. Default (0.1, 0.9).
+        fall_range : tuple[float, float], optional
+            Fractional amplitude bounds (high, low) for fall-time definition. Default (0.9, 0.1).
 
-        Note: This method assumes the parent directory of file_path exists.
+        Returns
+        -------
+        pathlib.Path
+            The path to the created pulse table file.
+
+        Notes
+        -----
+        The underlying model is a Gaussian convolved with a causal exponential. The model
+        parameters (sigma, tau) are solved such that the normalized pulse matches the requested
+        rise and fall times. The pulse is normalized to a peak amplitude of 1.
         """
         if width_ns is None or exp_decay_ns is None:
             raise ValueError("width_ns (rise 10-90) and exp_decay_ns (fall 90-10) are required")
@@ -151,7 +176,7 @@ class SimtelConfigWriter:
             f"fall90-10={exp_decay_ns} ns, dt={dt_ns} ns"
         )
 
-        t, y = generate_pulse_from_risefall(
+        t, y = generate_pulse_from_rise_fall_times(
             width_ns,
             exp_decay_ns,
             dt_ns=dt_ns,

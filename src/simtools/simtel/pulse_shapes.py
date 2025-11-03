@@ -1,11 +1,9 @@
 """Pulse shape computations for light emission simulations for flasher."""
 
-from __future__ import annotations
-
 import logging
 
 import numpy as np
-from scipy.optimize import brentq, minimize_scalar
+from scipy.optimize import least_squares
 from scipy.signal import fftconvolve
 
 _logger = logging.getLogger(__name__)
@@ -39,10 +37,7 @@ def _gaussian(t, sigma):
 
 def _exp_decay(t, tau):
     tau = max(tau, 1e-9)
-    h = np.zeros_like(t)
-    m = t >= 0
-    h[m] = np.exp(-t[m] / tau)
-    return h
+    return np.where(t >= 0, np.exp(-t / tau), 0.0)
 
 
 def generate_gauss_expconv_pulse(sigma_ns, tau_ns, dt_ns=0.1, duration_sigma=8.0):
@@ -80,63 +75,31 @@ def solve_sigma_tau_from_risefall(
     fall_range : tuple[float, float]
         Fractional amplitudes (high, low) for the falling width, defaults to (0.9, 0.1).
     """
-    # Solving convolved expression, which is a transcendental equation
-    # ~erf(1/tau - 1/sigma) * exp(sigma**2/(2*tau**2) - (t-mu)/tau)
     t = np.arange(-10.0, 25.0 + dt_ns, dt_ns, dtype=float)
 
-    def pulse_for(sigma, tau):
+    def pulse(sigma, tau):
         g = _gaussian(t, sigma)
         e = _exp_decay(t, tau)
         y = fftconvolve(g, e, mode="same")
-        if y.max() > 0:
-            y = y / y.max()
-        return y
-
-    # initial tau guess from exponential width between fall_range levels
-    fall_hi, fall_lo = fall_range
-    ratio = max(fall_hi / max(fall_lo, 1e-9), 1.000001)
-    tau_guess = max(fall_width_ns / np.log(ratio), 1e-6)
+        return y / y.max() if y.max() > 0 else y
 
     rise_lo, rise_hi = rise_range
+    fall_hi, fall_lo = fall_range
 
-    def rise_error(sigma):
-        y = pulse_for(sigma, tau_guess)
-        return abs(_rise_width(t, y, y_low=rise_lo, y_high=rise_hi) - rise_width_ns)
+    def residuals(x):
+        sigma, tau = x
+        y = pulse(sigma, tau)
+        r = _rise_width(t, y, y_low=rise_lo, y_high=rise_hi) - rise_width_ns
+        f = _fall_width(t, y, y_high=fall_hi, y_low=fall_lo) - fall_width_ns
+        return [r, f]
 
-    res = minimize_scalar(rise_error, bounds=(0.3, 3.0), method="bounded")
-    sigma = float(res.x)
-
-    def fall_residual(tau):
-        y = pulse_for(sigma, tau)
-        return _fall_width(t, y, y_high=fall_hi, y_low=fall_lo) - fall_width_ns
-
-    # bracket search for tau with expansion and fallback to minimization
-    a, b = 0.01, 30.0
-    fa, fb = fall_residual(a), fall_residual(b)
-    expand = 0
-    while fa * fb > 0 and expand < 10:
-        b *= 2.0
-        fb = fall_residual(b)
-        expand += 1
-    if fa * fb > 0:
-        shrink = 0
-        while fa * fb > 0 and shrink < 8 and a > 1e-6:
-            a /= 2.0
-            fa = fall_residual(a)
-            shrink += 1
-    if fa * fb > 0:
-        res_tau = minimize_scalar(
-            lambda x: abs(fall_residual(x)), bounds=(max(a, 1e-6), b), method="bounded"
-        )
-        tau = float(res_tau.x)
-    else:
-        tau = brentq(fall_residual, a, b, maxiter=200)
-
-    _logger.info(f"Solved pulse parameters: sigma={sigma:.6g}, tau={tau:.6g}")
-    return sigma, float(tau)
+    res = least_squares(residuals, x0=[0.3, 10.0], bounds=(1e-6, 500))
+    sigma, tau = float(res.x[0]), float(res.x[1])
+    _logger.info(f"Solved pulse parameters (LSQ): sigma={sigma:.6g}, tau={tau:.6g}")
+    return sigma, tau
 
 
-def generate_pulse_from_risefall(
+def generate_pulse_from_rise_fall_times(
     rise_width_ns,
     fall_width_ns,
     dt_ns=0.1,
@@ -146,7 +109,7 @@ def generate_pulse_from_risefall(
 ):
     """Get (t, y) by solving parameters from generic rise/fall specs and convolving.
 
-    Defaults correspond to 10-90 rise and 90-10 fall widths.
+    Defaults correspond to 10-90% rise and 90-10% fall times.
     """
     sigma, tau = solve_sigma_tau_from_risefall(
         rise_width_ns, fall_width_ns, dt_ns=dt_ns, rise_range=rise_range, fall_range=fall_range

@@ -505,9 +505,8 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The angular distribution string.
         """
-        option_string = self.calibration_model.get_parameter_value(
-            "flasher_angular_distribution"
-        ).lower()
+        opt = self.calibration_model.get_parameter_value("flasher_angular_distribution")
+        option_string = str(opt).lower() if opt is not None else ""
         width = self.calibration_model.get_parameter_value_with_unit(
             "flasher_angular_distribution_width"
         )
@@ -522,6 +521,7 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The pulse shape string.
         """
-        option_string = self.calibration_model.get_parameter_value("flasher_pulse_shape").lower()
+        opt = self.calibration_model.get_parameter_value("flasher_pulse_shape")
+        option_string = str(opt).lower() if opt is not None else ""
         width = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
         return f"{option_string}:{width.to(u.ns).value}" if width is not None else option_string
