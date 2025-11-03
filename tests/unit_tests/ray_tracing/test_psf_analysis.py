@@ -414,11 +414,14 @@ def test_find_psf_brute_force(psf_image, mocker, caplog):
 
 def test_plot_cumulative(psf_image, mocker):
     image = psf_image
-    mock_plot = mocker.patch("matplotlib.pyplot.plot")
+    mock_subplot = mocker.patch("matplotlib.pyplot.subplots")
+    mock_ax = mocker.Mock()
+    mock_subplot.return_value = (mocker.Mock(), mock_ax)
+
     image.plot_cumulative(color="blue", linestyle="--")
 
-    mock_plot.assert_called_once()
-    args, kwargs = mock_plot.call_args
+    mock_ax.plot.assert_called_once()
+    args, kwargs = mock_ax.plot.call_args
     assert np.array_equal(args[0], image.get_cumulative_data()[image._PSFImage__PSF_RADIUS])
     assert np.array_equal(args[1], image.get_cumulative_data()[image._PSFImage__PSF_CUMULATIVE])
     assert kwargs["color"] == "blue"

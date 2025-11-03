@@ -3,25 +3,24 @@ r"""
     Validate a file or files in a directory using a schema.
 
     Input files can be metadata, schema, or data files in yaml, json, or ecsv format.
+    For model parameters, the schema files are taken from the simtools model parameter
+    schema directory by default.
 
     Command line arguments
     ----------------------
     file_name (str)
       input file to be validated
-    model_parameters_directory (str)
+    file_directory (str)
         directory with json files of model parameters to be validated
     schema (str)
       schema file (jsonschema format) used for validation
     data_type (str)
-        type of input data (allowed types: metadata, schema, data)
-
-    Raises
-    ------
-    FileNotFoundError
-      if file to be validated is not found
+        type of input data (allowed types: metadata, schema, data, model_parameter)
 
     Example
     -------
+
+    Validate metadata of a file:
 
     .. code-block:: console
 
@@ -30,16 +29,29 @@ r"""
          --schema simtools/schemas/metadata.metaschema.yml \\
          --data_type metadata
 
-"""
+    Validate schema of a file:
 
-import re
-from pathlib import Path
+    .. code-block:: console
+
+        simtools-validate-file-using-schema \\
+         --file_name tests/resources/model_parameters/schema-0.3.0/num_gains-1.0.0.json \\
+         --schema src/simtools/schemas/model_parameter.metaschema.yml \\
+         --data_type schema
+
+    Validate all model parameter files in a directory:
+
+    .. code-block:: console
+
+        simtools-validate-file-using-schema \\
+         --file_directory tests/resources/model_parameters \\
+         --data_type model_parameter
+
+"""
 
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import metadata_collector, schema, validate_data
-from simtools.io import ascii_handler
 
 
 def _parse():
@@ -62,7 +74,7 @@ def _parse():
             f"{MODEL_PARAMETER_SCHEMA_PATH}."
         ),
     )
-    config.parser.add_argument("--schema", help="Json schema file", required=False)
+    config.parser.add_argument("--schema", help="Schema file", required=False)
     config.parser.add_argument(
         "--data_type",
         help="Type of input data",
@@ -70,7 +82,7 @@ def _parse():
         default="data",
     )
     config.parser.add_argument(
-        "--require_exact_data_type",
+        "--check_exact_data_type",
         help="Require exact data type for validation",
         action="store_true",
     )
@@ -82,121 +94,35 @@ def _parse():
     return config.initialize(paths=False)
 
 
-def _get_schema_file_name(args_dict, data_dict=None):
-    """
-    Get schema file name from metadata, data dict, or from command line argument.
-
-    Parameters
-    ----------
-    args_dict (dict)
-        command line arguments
-    data_dict (dict)
-        dictionary with metaschema information
-
-    Returns
-    -------
-    schema_file: str
-        schema file name
-
-    """
-    schema_file = args_dict.get("schema")
-    if schema_file is None and data_dict is not None:
-        schema_file = data_dict.get("meta_schema_url")
-    if schema_file is None:
-        metadata = metadata_collector.MetadataCollector(
-            None, metadata_file_name=args_dict["file_name"]
-        )
-        schema_file = metadata.get_data_model_schema_file_name()
-    return schema_file
-
-
-def _get_file_list(file_directory=None, file_name="*.json"):
-    """Return list of files in a directory."""
-    file_list = []
-    if file_directory is not None:
-        file_list = list(Path(file_directory).rglob(file_name))
-        if not file_list:
-            raise FileNotFoundError(f"No files found in {file_directory}")
-    elif file_name is not None:
-        file_list = [file_name]
-
-    return file_list
-
-
-def validate_dict_using_schema(args_dict, logger):
-    """
-    Validate a schema file (or several files) given in yaml or json format.
-
-    This function validate all documents in a multi-document YAML file.
-    Schema is either given as command line argument, read from the meta_schema_url or from
-    the metadata section of the data dictionary.
-
-    """
-    for file_name in _get_file_list(args_dict.get("file_directory"), args_dict.get("file_name")):
-        try:
-            data = ascii_handler.collect_data_from_file(file_name=file_name)
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(f"Error reading schema file from {file_name}") from exc
-        data = data if isinstance(data, list) else [data]
-        try:
-            for data_dict in data:
-                schema.validate_dict_using_schema(
-                    data_dict,
-                    _get_schema_file_name(args_dict, data_dict),
-                    ignore_software_version=args_dict.get("ignore_software_version", False),
-                )
-        except Exception as exc:
-            raise ValueError(f"Validation of file {file_name} failed") from exc
-        logger.info(f"Successful validation of file {file_name}")
-
-
-def validate_data_files(args_dict, logger):
-    """Validate data files."""
-    if args_dict.get("file_directory") is not None:
-        tmp_args_dict = {}
-        for file_name in _get_file_list(args_dict.get("file_directory")):
-            tmp_args_dict["file_name"] = file_name
-            parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", file_name.stem)
-            schema_file = schema.get_model_parameter_schema_file(f"{parameter_name}")
-            tmp_args_dict["schema"] = schema_file
-            tmp_args_dict["data_type"] = "model_parameter"
-            tmp_args_dict["require_exact_data_type"] = args_dict["require_exact_data_type"]
-            validate_data_file(tmp_args_dict, logger)
-    else:
-        validate_data_file(args_dict, logger)
-
-
-def validate_data_file(args_dict, logger):
-    """Validate a data file (e.g., in ecsv, json, yaml format)."""
-    data_validator = validate_data.DataValidator(
-        schema_file=_get_schema_file_name(args_dict),
-        data_file=args_dict["file_name"],
-        check_exact_data_type=args_dict["require_exact_data_type"],
-    )
-    data_validator.validate_and_transform(
-        is_model_parameter=(args_dict["data_type"].lower() == "model_parameter")
-    )
-
-    logger.info(f"Successful validation of data file {args_dict['file_name']}")
-
-
-def validate_metadata(args_dict, logger):
-    """Validate metadata."""
-    # metadata_collector runs the metadata validation by default, no need to do anything else
-    metadata_collector.MetadataCollector(None, metadata_file_name=args_dict["file_name"])
-    logger.info(f"Successful validation of metadata {args_dict['file_name']}")
-
-
 def main():
     """Validate a file or files in a directory using a schema."""
     app_context = startup_application(_parse)
 
-    if app_context.args["data_type"].lower() == "metadata":
-        validate_metadata(app_context.args, app_context.logger)
-    elif app_context.args["data_type"].lower() == "schema":
-        validate_dict_using_schema(app_context.args, app_context.logger)
+    file_name = app_context.args.get("file_name")
+    file_directory = app_context.args.get("file_directory")
+    schema_file = app_context.args.get("schema")
+    data_type = app_context.args.get("data_type").lower()
+
+    if data_type == "metadata":
+        # metadata_collector runs the metadata validation by default, no need to do anything else
+        metadata_collector.MetadataCollector(None, metadata_file_name=file_name)
+        app_context.logger.info(f"Successful validation of metadata {file_name}")
+
+    elif data_type == "schema":
+        schema.validate_schema_from_files(
+            file_directory=file_directory,
+            file_name=file_name,
+            schema_file=schema_file,
+            ignore_software_version=app_context.args.get("ignore_software_version", False),
+        )
     else:
-        validate_data_files(app_context.args, app_context.logger)
+        validate_data.DataValidator.validate_data_files(
+            file_name=file_name,
+            file_directory=file_directory,
+            is_model_parameter=(data_type == "model_parameter"),
+            check_exact_data_type=app_context.args.get("check_exact_data_type", False),
+            schema_file=schema_file,
+        )
 
 
 if __name__ == "__main__":
