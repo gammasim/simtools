@@ -162,7 +162,7 @@ def write_array_layouts(array_layouts, args_dict, db_config):
     ModelDataWriter.dump_model_parameter(
         parameter_name="array_layouts",
         value=array_layouts["value"],
-        instrument=site,
+        instrument=f"OBS-{site}",
         parameter_version=args_dict.get("updated_parameter_version"),
         output_file=output_file,
         db_config=db_config,
