@@ -11,6 +11,7 @@ to quantify the difference between measured and simulated PSF curves.
 
 import logging
 from collections import OrderedDict
+from dataclasses import dataclass
 
 import astropy.units as u
 import numpy as np
@@ -31,6 +32,38 @@ logger = logging.getLogger(__name__)
 RADIUS = "Radius"
 CUMULATIVE_PSF = "Cumulative PSF"
 KS_STATISTIC_NAME = "KS statistic"
+
+
+@dataclass
+class GradientStepResult:
+    """
+    Result from a gradient descent step attempt.
+
+    Attributes
+    ----------
+    params : dict or None
+        Updated parameter values, None if step failed.
+    psf_diameter : float or None
+        PSF containment diameter in cm, None if step failed.
+    metric : float or None
+        Optimization metric value (RMSD or KS statistic), None if step failed.
+    p_value : float or None
+        P-value from KS test (None if using RMSD or if step failed).
+    simulated_data : numpy.ndarray or None
+        Simulated PSF data, None if step failed.
+    step_accepted : bool
+        True if the step improved the metric, False otherwise.
+    learning_rate : float
+        Final learning rate after adjustments.
+    """
+
+    params: dict | None
+    psf_diameter: float | None
+    metric: float | None
+    p_value: float | None
+    simulated_data: np.ndarray | None
+    step_accepted: bool
+    learning_rate: float
 
 
 class PSFParameterOptimizer:
@@ -64,6 +97,7 @@ class PSFParameterOptimizer:
     LR_REDUCTION_FACTOR = 0.7
     LR_INCREASE_FACTOR = 2.0
     LR_MINIMUM_THRESHOLD = 1e-6
+    LR_MAXIMUM_THRESHOLD = 0.01
     LR_RESET_VALUE = 0.0001
 
     def __init__(self, tel_model, site_model, args_dict, data_to_plot, radius, output_dir):
@@ -122,9 +156,10 @@ class PSFParameterOptimizer:
         Returns
         -------
         float
-            Increased learning rate.
+            Increased learning rate, capped at LR_MAXIMUM_THRESHOLD.
         """
-        return current_lr * self.LR_INCREASE_FACTOR
+        new_lr = current_lr * self.LR_INCREASE_FACTOR
+        return min(new_lr, self.LR_MAXIMUM_THRESHOLD)
 
     def get_initial_parameters(self):
         """
@@ -340,9 +375,8 @@ class PSFParameterOptimizer:
 
         Returns
         -------
-        tuple
-            (new_params, new_psf_diameter, new_metric, new_p_value,
-             new_simulated_data, step_accepted, final_learning_rate)
+        GradientStepResult
+            Result object containing updated parameters and step status.
         """
         current_lr = learning_rate
 
@@ -354,7 +388,15 @@ class PSFParameterOptimizer:
                     logger.warning(
                         f"Gradient calculation failed on attempt {attempt + 1}, skipping step"
                     )
-                    return None, None, None, None, None, False, current_lr
+                    return GradientStepResult(
+                        params=None,
+                        psf_diameter=None,
+                        metric=None,
+                        p_value=None,
+                        simulated_data=None,
+                        step_accepted=False,
+                        learning_rate=current_lr,
+                    )
 
                 new_params = self.apply_gradient_step(current_params, gradients, current_lr)
 
@@ -372,14 +414,14 @@ class PSFParameterOptimizer:
                 )
 
                 if new_metric < current_metric:
-                    return (
-                        new_params,
-                        new_psf_diameter,
-                        new_metric,
-                        new_p_value,
-                        new_simulated_data,
-                        True,
-                        current_lr,
+                    return GradientStepResult(
+                        params=new_params,
+                        psf_diameter=new_psf_diameter,
+                        metric=new_metric,
+                        p_value=new_p_value,
+                        simulated_data=new_simulated_data,
+                        step_accepted=True,
+                        learning_rate=current_lr,
                     )
 
                 logger.info(
@@ -392,7 +434,15 @@ class PSFParameterOptimizer:
                 logger.warning(f"Simulation failed on attempt {attempt + 1}: {e}")
                 continue
 
-        return None, None, None, None, None, False, current_lr
+        return GradientStepResult(
+            params=None,
+            psf_diameter=None,
+            metric=None,
+            p_value=None,
+            simulated_data=None,
+            step_accepted=False,
+            learning_rate=current_lr,
+        )
 
     def _create_step_plot(
         self,
@@ -532,34 +582,25 @@ class PSFParameterOptimizer:
                 current_metric,
                 current_lr,
             )
-            (
-                new_params,
-                new_psf_diameter,
-                new_metric,
-                new_p_value,
-                new_simulated_data,
-                step_accepted,
-                current_lr,
-            ) = step_result
 
-            if not step_accepted or new_params is None:
+            if not step_result.step_accepted or step_result.params is None:
                 current_lr = self._increase_learning_rate(current_lr)
                 logger.info(f"No step accepted, increasing learning rate to {current_lr:.6f}")
                 continue
 
             # Step was accepted - update state
-            current_params, current_metric, current_psf_diameter = (
-                new_params,
-                new_metric,
-                new_psf_diameter,
-            )
+            current_params = step_result.params
+            current_metric = step_result.metric
+            current_psf_diameter = step_result.psf_diameter
+            current_lr = step_result.learning_rate
+
             results.append(
                 (
                     current_params.copy(),
                     current_metric,
                     None,
                     current_psf_diameter,
-                    new_simulated_data,
+                    step_result.simulated_data,
                 )
             )
 
@@ -573,12 +614,12 @@ class PSFParameterOptimizer:
             self._create_step_plot(
                 pdf_pages,
                 current_params,
-                new_psf_diameter,
-                new_metric,
-                new_p_value,
-                new_simulated_data,
+                step_result.psf_diameter,
+                step_result.metric,
+                step_result.p_value,
+                step_result.simulated_data,
             )
-            logger.info(f"  Accepted step: improved to {new_metric:.6f}")
+            logger.info(f"  Accepted step: improved to {step_result.metric:.6f}")
 
         self._create_final_plot(pdf_pages, best_params, best_psf_diameter)
         return best_params, best_psf_diameter, results
@@ -1332,6 +1373,28 @@ def write_monte_carlo_analysis(
     return mc_file
 
 
+def cleanup_intermediate_files(output_dir):
+    """
+    Remove intermediate log and list files from the output directory.
+
+    Parameters
+    ----------
+    output_dir : Path
+        Directory containing output files to clean up.
+    """
+    patterns = ["*.log", "*.lis*"]
+    files_removed = 0
+
+    for pattern in patterns:
+        for file_path in output_dir.glob(pattern):
+            file_path.unlink()
+            files_removed += 1
+            logger.debug(f"Removed: {file_path.name}")
+
+    if files_removed > 0:
+        logger.info(f"Cleanup: removed {files_removed} intermediate files")
+
+
 def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
     """
     Run the complete PSF parameter optimization workflow using gradient descent.
@@ -1408,3 +1471,6 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
         export_psf_parameters(
             best_pars, args_dict.get("telescope"), args_dict.get("parameter_version"), output_dir
         )
+
+    if args_dict.get("cleanup", False):
+        cleanup_intermediate_files(output_dir)
