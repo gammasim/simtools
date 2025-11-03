@@ -2,7 +2,7 @@
 applications:
 - application: simtools-docs-produce-simulation-configuration-report
   configuration:
-    model_version: 6.0
+    model_version: 6.0.2
     output_path: simtools-output/reports/productions/
     simulation_software: corsika
   integration_tests:
