@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 
 import simtools.ray_tracing.psf_parameter_optimisation as psf_opt
+from simtools.ray_tracing.psf_parameter_optimisation import GradientStepResult
 
 TEST_OUTPUT_DIR = Path("/dummy_test_path")
 
@@ -561,10 +562,10 @@ def test_perform_gradient_step_with_retries(optimizer):
             0.1,
         )
 
-        # Should return tuple with improved parameters
         assert result is not None
-        assert result[0] == {"mirror_reflection_random_angle": [0.004]}
-        assert result[5] is True  # step_accepted
+        assert isinstance(result, GradientStepResult)
+        assert result.params == {"mirror_reflection_random_angle": [0.004]}
+        assert result.step_accepted is True
 
 
 def test__create_step_plot(sample_data, mock_args_dict, tmp_path):
@@ -907,12 +908,12 @@ def test_perform_gradient_step_comprehensive(optimizer, sample_data):
     """Test perform_gradient_step_with_retries: tuple structure, retries, bounds checking, and LR reset."""
     current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
 
-    # Test 1: Returns tuple with False when gradient is None
+    # Test 1: Returns dataclass with False when gradient is None
     with patch.object(optimizer, "calculate_gradient") as mock_calc_grad:
         mock_calc_grad.return_value = None
         result = optimizer.perform_gradient_step_with_retries(current_params, 0.1, 0.1)
-        assert result[5] is False  # step_accepted is False
-        assert result[6] == pytest.approx(0.1)  # learning rate unchanged
+        assert result.step_accepted is False
+        assert result.learning_rate == pytest.approx(0.1)
 
     # Test 2: Learning rate reduction with retries
     with (
@@ -930,8 +931,8 @@ def test_perform_gradient_step_comprehensive(optimizer, sample_data):
         result = optimizer.perform_gradient_step_with_retries(
             current_params, 0.1, 0.1, max_retries=3
         )
-        assert result[5] is True  # step_accepted
-        assert result[6] == pytest.approx(0.07, rel=1e-2)  # reduced learning rate
+        assert result.step_accepted is True
+        assert result.learning_rate == pytest.approx(0.07, rel=1e-2)
 
     # Test 3: Parameters out of bounds - all retries fail
     with (
@@ -950,7 +951,7 @@ def test_perform_gradient_step_comprehensive(optimizer, sample_data):
         result = optimizer.perform_gradient_step_with_retries(
             current_params, 0.1, 0.1, max_retries=3
         )
-        assert result[5] is False  # step_accepted is False when all retries fail
+        assert result.step_accepted is False
 
     # Test 4: Learning rate reset when < 1e-6
     with (
@@ -968,7 +969,7 @@ def test_perform_gradient_step_comprehensive(optimizer, sample_data):
         result = optimizer.perform_gradient_step_with_retries(
             current_params, 0.1, 0.0000015, max_retries=3
         )
-        assert result[6] == pytest.approx(0.0001)  # Reset to 0.0001
+        assert result.learning_rate == pytest.approx(0.0001)
 
 
 def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
@@ -983,14 +984,14 @@ def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
         mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
         mock_sim.return_value = (3.5, 0.05, 0.8, sample_data)
         mock_step.side_effect = [
-            (
-                {"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
-                3.4,
-                0.008,
-                0.85,
-                sample_data,
-                True,
-                0.1,
+            GradientStepResult(
+                params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+                psf_diameter=3.4,
+                metric=0.008,
+                p_value=0.85,
+                simulated_data=sample_data,
+                step_accepted=True,
+                learning_rate=0.1,
             ),
         ]
 
@@ -1007,14 +1008,14 @@ def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
     ):
         mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
         mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
-        mock_step.return_value = (
-            {"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
-            3.4,
-            0.095,
-            0.85,
-            sample_data,
-            True,
-            0.1,
+        mock_step.return_value = GradientStepResult(
+            params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+            psf_diameter=3.4,
+            metric=0.095,
+            p_value=0.85,
+            simulated_data=sample_data,
+            step_accepted=True,
+            learning_rate=0.1,
         )
 
         _, _, results = optimizer.run_gradient_descent(
@@ -1031,32 +1032,32 @@ def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
         mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
         mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
         mock_step.side_effect = [
-            (
-                {"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
-                3.4,
-                0.08,
-                0.85,
-                sample_data,
-                True,
-                0.1,
+            GradientStepResult(
+                params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+                psf_diameter=3.4,
+                metric=0.08,
+                p_value=0.85,
+                simulated_data=sample_data,
+                step_accepted=True,
+                learning_rate=0.1,
             ),  # Better
-            (
-                {"mirror_reflection_random_angle": [0.003, 0.15, 0.025]},
-                3.3,
-                0.05,
-                0.85,
-                sample_data,
-                True,
-                0.1,
+            GradientStepResult(
+                params={"mirror_reflection_random_angle": [0.003, 0.15, 0.025]},
+                psf_diameter=3.3,
+                metric=0.05,
+                p_value=0.85,
+                simulated_data=sample_data,
+                step_accepted=True,
+                learning_rate=0.1,
             ),  # Best
-            (
-                {"mirror_reflection_random_angle": [0.002, 0.15, 0.020]},
-                3.2,
-                0.12,
-                0.85,
-                sample_data,
-                True,
-                0.1,
+            GradientStepResult(
+                params={"mirror_reflection_random_angle": [0.002, 0.15, 0.020]},
+                psf_diameter=3.2,
+                metric=0.12,
+                p_value=0.85,
+                simulated_data=sample_data,
+                step_accepted=True,
+                learning_rate=0.1,
             ),  # Worse
         ]
 
@@ -1092,9 +1093,9 @@ def test_perform_gradient_step_with_retries_learning_rate_reduction(
             current_params, 0.1, 0.1, max_retries=3
         )
 
-        # Should fail and return 7-element tuple with False for step_accepted
-        assert len(result) == 7
-        assert result[5] is False  # step_accepted
+        # Should fail and return GradientStepResult with False for step_accepted
+        assert isinstance(result, GradientStepResult)
+        assert result.step_accepted is False
 
 
 def test_parameter_validation():
@@ -1381,8 +1382,8 @@ def test_perform_gradient_step_with_metric_rejection_lr_reset(
 
         # Step should be accepted with reset learning rate
         # After 2 rejections: 0.0000015 * 0.7 * 0.7 = 0.000000735 < 1e-6, resets to 0.0001
-        assert result[5] is True  # step_accepted
-        assert result[6] == pytest.approx(0.0001)
+        assert result.step_accepted is True
+        assert result.learning_rate == pytest.approx(0.0001)
 
 
 def test_get_initial_parameters(optimizer, mock_telescope_model):
@@ -1452,15 +1453,23 @@ def test_run_gradient_descent_no_step_accepted(optimizer, sample_data):
         # First call: step not accepted
         # Second call: step accepted
         mock_step.side_effect = [
-            (None, None, None, None, None, False, 0.1),
-            (
-                {"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
-                3.4,
-                0.008,
-                0.85,
-                sample_data,
-                True,
-                0.2,
+            GradientStepResult(
+                params=None,
+                psf_diameter=None,
+                metric=None,
+                p_value=None,
+                simulated_data=None,
+                step_accepted=False,
+                learning_rate=0.1,
+            ),
+            GradientStepResult(
+                params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+                psf_diameter=3.4,
+                metric=0.008,
+                p_value=0.85,
+                simulated_data=sample_data,
+                step_accepted=True,
+                learning_rate=0.2,
             ),
         ]
 
@@ -1468,6 +1477,59 @@ def test_run_gradient_descent_no_step_accepted(optimizer, sample_data):
             rmsd_threshold=0.01, learning_rate=0.1, max_iterations=5
         )
 
+        assert best_params is not None
+
+
+def test_run_gradient_descent_learning_rate_cap(optimizer, sample_data):
+    """Test that learning rate is capped at maximum threshold when increased."""
+
+    with (
+        patch.object(optimizer, "get_initial_parameters") as mock_get_params,
+        patch.object(optimizer, "run_simulation") as mock_sim,
+        patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
+    ):
+        mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_sim.return_value = (3.5, 0.05, 0.8, sample_data)
+
+        # Multiple steps not accepted to trigger learning rate increases
+        mock_step.side_effect = [
+            GradientStepResult(
+                params=None,
+                psf_diameter=None,
+                metric=None,
+                p_value=None,
+                simulated_data=None,
+                step_accepted=False,
+                learning_rate=0.5,
+            ),
+            GradientStepResult(
+                params=None,
+                psf_diameter=None,
+                metric=None,
+                p_value=None,
+                simulated_data=None,
+                step_accepted=False,
+                learning_rate=1.0,
+            ),
+            GradientStepResult(
+                params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+                psf_diameter=3.4,
+                metric=0.008,
+                p_value=0.85,
+                simulated_data=sample_data,
+                step_accepted=True,
+                learning_rate=1.0,
+            ),
+        ]
+
+        best_params, _, _ = optimizer.run_gradient_descent(
+            rmsd_threshold=0.01, learning_rate=0.5, max_iterations=5
+        )
+
+        # Verify that learning rate was capped
+        calls = mock_step.call_args_list
+        final_lr = calls[-1][0][2]
+        assert final_lr <= optimizer.LR_MAXIMUM_THRESHOLD
         assert best_params is not None
 
 
@@ -1580,3 +1642,47 @@ def test_workflow_with_all_features(
         mock_write_log.assert_called_once()
         mock_offaxis_plot.assert_called_once()
         mock_export.assert_called_once()
+
+
+def test_cleanup_intermediate_files(
+    tmp_path, mock_telescope_model, mock_site_model, mock_args_dict, sample_data
+):
+    """Test cleanup of intermediate log and list files via workflow integration."""
+    mock_args_dict["cleanup"] = True
+    (tmp_path / "test.log").write_text("log content")
+    (tmp_path / "sim.lis").write_text("lis content")
+    (tmp_path / "sim.lis.gz").write_bytes(b"lis.gz content")
+    (tmp_path / "keep_me.png").write_bytes(b"png content")
+    (tmp_path / "keep_me.pdf").write_bytes(b"pdf content")
+
+    with (
+        patch("simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data") as mock_load,
+        patch("simtools.ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer") as mock_opt,
+        patch("simtools.visualization.plot_psf.create_optimization_plots"),
+        patch("simtools.visualization.plot_psf.create_gradient_descent_convergence_plot"),
+        patch("simtools.ray_tracing.psf_parameter_optimisation.write_gradient_descent_log"),
+        patch("simtools.visualization.plot_psf.create_psf_vs_offaxis_plot"),
+    ):
+        mock_load.return_value = ({"measured": sample_data}, sample_data[psf_opt.RADIUS])
+        mock_opt.return_value.run_gradient_descent.return_value = (
+            {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]},
+            3.5,
+            [
+                (
+                    {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]},
+                    0.05,
+                    0.8,
+                    3.5,
+                    sample_data,
+                )
+            ],
+        )
+        psf_opt.run_psf_optimization_workflow(
+            mock_telescope_model, mock_site_model, mock_args_dict, tmp_path
+        )
+
+    assert not (tmp_path / "test.log").exists()
+    assert not (tmp_path / "sim.lis").exists()
+    assert not (tmp_path / "sim.lis.gz").exists()
+    assert (tmp_path / "keep_me.png").exists()
+    assert (tmp_path / "keep_me.pdf").exists()
