@@ -59,6 +59,8 @@ def solve_sigma_tau_from_risefall(
     dt_ns=0.1,
     rise_range=(0.1, 0.9),
     fall_range=(0.9, 0.1),
+    t_start_ns=-10,
+    t_stop_ns=25,
 ):
     """Solve (sigma, tau) so convolved pulse matches target rise/fall widths.
 
@@ -74,8 +76,14 @@ def solve_sigma_tau_from_risefall(
         Fractional amplitudes (low, high) for the rising width, defaults to (0.1, 0.9).
     fall_range : tuple[float, float]
         Fractional amplitudes (high, low) for the falling width, defaults to (0.9, 0.1).
+    t_start_ns : float
+        Optional start time (ns) for the internal sampling window. If provided together with
+        ``t_stop_ns``, overrides the default window.
+    t_stop_ns : float
+        Optional stop time (ns) for the internal sampling window. If provided together with
+        ``t_start_ns``, overrides the default window.
     """
-    t = np.arange(-10.0, 25.0 + dt_ns, dt_ns, dtype=float)
+    t = np.arange(float(t_start_ns), float(t_stop_ns) + dt_ns, dt_ns, dtype=float)
 
     def pulse(sigma, tau):
         g = _gaussian(t, sigma)
@@ -106,12 +114,20 @@ def generate_pulse_from_rise_fall_times(
     duration_sigma=8.0,
     rise_range=(0.1, 0.9),
     fall_range=(0.9, 0.1),
+    t_start_ns=-10,
+    t_stop_ns=25,
 ):
     """Get (t, y) by solving parameters from generic rise/fall specs and convolving.
 
     Defaults correspond to 10-90% rise and 90-10% fall times.
     """
     sigma, tau = solve_sigma_tau_from_risefall(
-        rise_width_ns, fall_width_ns, dt_ns=dt_ns, rise_range=rise_range, fall_range=fall_range
+        rise_width_ns,
+        fall_width_ns,
+        dt_ns=dt_ns,
+        rise_range=rise_range,
+        fall_range=fall_range,
+        t_start_ns=t_start_ns,
+        t_stop_ns=t_stop_ns,
     )
     return generate_gauss_expconv_pulse(sigma, tau, dt_ns=dt_ns, duration_sigma=duration_sigma)

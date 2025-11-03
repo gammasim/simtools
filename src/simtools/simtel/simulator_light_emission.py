@@ -367,11 +367,14 @@ class SimulatorLightEmission(SimtelRunner):
                 cal = self.light_emission_config.get("light_source") or "calibration"
                 fname = f"flasher_pulse_shape_{_sanitize_name(tel)}_{_sanitize_name(cal)}.dat"
                 table_path = base_dir / fname
+                fadc_bins = self.telescope_model.get_parameter_value("fadc_sum_bins")
 
                 SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
                     file_path=table_path,
                     width_ns=width_q.to(u.ns).value,
                     exp_decay_ns=exp_q.to(u.ns).value,
+                    fadc_sum_bins=fadc_bins,
+                    time_margin_ns=5.0,
                 )
                 pulse_arg = str(table_path)
             except (ValueError, OSError) as err:
