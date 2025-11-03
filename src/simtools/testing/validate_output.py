@@ -366,8 +366,8 @@ def _compare_simtel_cfg_files(reference_file, test_file):
     Compare two sim_telarray configuration files.
 
     Line-by-line string comparison. Requires similar sequence of
-    parameters in the files. Ignore lines containing listed in
-    cfg_ignore_keys (e.g., simtools package versions).
+    parameters in the files. Ignore lines listed in cfg_ignore_keys
+    (e.g., simtools package versions or hadronic interaction model strings).
 
     Parameters
     ----------
