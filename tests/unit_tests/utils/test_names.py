@@ -201,6 +201,9 @@ def test_get_site_from_array_element_name(invalid_name):
     with pytest.raises(ValueError, match=rf"^{invalid_name}"):
         names.get_site_from_array_element_name("LSTW")
     assert ["North", "South"] == names.get_site_from_array_element_name("MSTx")
+    assert "North" == names.get_site_from_array_element_name("OBS-North")
+    assert "South" == names.get_site_from_array_element_name("OBS-South")
+    assert "South" == names.get_site_from_array_element_name("South")
 
 
 def test_get_collection_name_from_array_element_name():
