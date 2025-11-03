@@ -36,6 +36,14 @@ applications:
         - 50
       file: gamma_run000001_za40deg_azm180deg_South_beta_6.0_check_output.simtel.zst
       path_descriptor: pack_for_grid_register
+    - expected_log_output:
+        pattern:
+        - "NUMBER OF GENERATED EVENTS =         10"
+        - "========== END OF RUN ========"
+        - "Sim_telarray finished at"
+        - "Run(s) completed as expected after 10 events (10 showers)."
+      file: gamma_run000001_za40deg_azm180deg_South_beta_6.0_check_output.log_hist.tar.gz
+      path_descriptor: pack_for_grid_register
   - test_simtel_cfg_files:
       "5.0": tests/resources/sim_telarray_configurations/CTA-South-LSTS-01-5.0_test.cfg
       "6.0": tests/resources/sim_telarray_configurations/CTA-South-LSTS-01-6.0_test.cfg
