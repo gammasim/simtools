@@ -516,8 +516,12 @@ class PSFImage:
 
         Parameters
         ----------
+        file_name: str
+            Name of the file to save the plot to.
+        d80: float
+            d80 value to be marked in the plot (in cm).
         **kwargs:
-            image_* for the histogram plot and psf_* for the psf circle.
+            passed to `ax.plot()` for customizing the line plot (e.g., color, linestyle, linewidth).
         """
         data = self.get_cumulative_data()
         fig, ax = plt.subplots(constrained_layout=True)
@@ -529,4 +533,4 @@ class PSFImage:
             ax.axvline(x=d80 / 2.0, color="r", linestyle="--", linewidth=1)
         if file_name is not None:
             fig.savefig(file_name)
-            plt.close()
+            plt.close(fig)
