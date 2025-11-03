@@ -62,6 +62,17 @@ highlighted_array_elements : list, optional
     List of array elements to plot with red circles around them.
 legend_location : str, optional
     Location of the legend (default "best").
+bounds : str, optional
+    Axis bounds mode. Use "symmetric" for +-R with padding (default) or "exact" for
+    per-axis min/max bounds.
+padding : float, optional
+    Fractional padding applied around computed extents in both modes (default 0.1).
+x_lim : tuple(float, float), optional
+    Explicit x-axis limits [xmin, xmax] in meters. When provided, overrides derived limits
+    and filters plotted elements by x.
+y_lim : tuple(float, float), optional
+    Explicit y-axis limits [ymin, ymax] in meters. When provided, overrides derived limits
+    and filters plotted elements by y.
 
 Examples
 --------
@@ -88,6 +99,20 @@ Plot layout from a file with a list of telescopes:
 
     simtools-plot-array-layout
         --array_layout_file tests/resources/telescope_positions-North-ground.ecsv
+
+Use exact bounds with default padding:
+
+.. code-block:: console
+
+    simtools-plot-array-layout --array_layout_name alpha \
+        --site North --model_version 6.0.0 --bounds exact
+
+Use symmetric bounds with custom padding:
+
+.. code-block:: console
+
+    simtools-plot-array-layout --array_layout_name alpha \
+        --site North --model_version 6.0.0 --bounds symmetric --padding 0.15
 
 Plot layout from a parameter file with a list of telescopes:
 
@@ -174,6 +199,24 @@ def _parse():
         default=None,
     )
     config.parser.add_argument(
+        "--x_lim",
+        help="Explicit x-axis limits [xmin xmax] in meters.",
+        type=float,
+        nargs=2,
+        required=False,
+        default=None,
+        metavar=("XMIN", "XMAX"),
+    )
+    config.parser.add_argument(
+        "--y_lim",
+        help="Explicit y-axis limits [ymin ymax] in meters.",
+        type=float,
+        nargs=2,
+        required=False,
+        default=None,
+        metavar=("YMIN", "YMAX"),
+    )
+    config.parser.add_argument(
         "--array_layout_name_background",
         help="Name of the background layout array (e.g., test_layout, alpha, 4mst, etc.).",
         type=str,
@@ -201,11 +244,26 @@ def _parse():
         help=(
             "Location of the legend (e.g., 'best', 'upper right', 'upper left', "
             "'lower left', 'lower right', 'right', 'center left', 'center right', "
-            "'lower center', 'upper center', 'center')."
+            "'lower center', 'upper center', 'center', 'no_legend')."
         ),
         type=str,
         required=False,
         default="best",
+    )
+    config.parser.add_argument(
+        "--bounds",
+        help=("Axis bounds mode: 'symmetric' uses +-R with padding, 'exact' uses per-axis min/max"),
+        type=str,
+        choices=["symmetric", "exact"],
+        required=False,
+        default="symmetric",
+    )
+    config.parser.add_argument(
+        "--padding",
+        help=("Fractional padding applied around computed extents (used for both modes)."),
+        type=float,
+        required=False,
+        default=0.1,
     )
     return config.initialize(
         db_config=True,
@@ -305,6 +363,10 @@ def main():
             grayed_out_elements=app_context.args["grayed_out_array_elements"],
             highlighted_elements=app_context.args["highlighted_array_elements"],
             legend_location=app_context.args["legend_location"],
+            bounds_mode=app_context.args["bounds"],
+            padding=app_context.args["padding"],
+            x_lim=tuple(app_context.args["x_lim"]) if app_context.args["x_lim"] else None,
+            y_lim=tuple(app_context.args["y_lim"]) if app_context.args["y_lim"] else None,
         )
         site_string = ""
         if layout.get("site") is not None:
