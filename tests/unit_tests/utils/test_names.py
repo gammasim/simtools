@@ -367,39 +367,35 @@ def test_generate_file_name_camera_efficiency():
     )
 
 
-def test_simtel_telescope_config_file_name(model_version):
+def test_simtel_telescope_config_file_name():
     assert (
         names.simtel_config_file_name(
-            "South", model_version, telescope_model_name="LSTS-01", label=None, extra_label=None
+            "South", telescope_model_name="LSTS-01", label=None, extra_label=None
         )
-        == "CTA-South-LSTS-01-" + model_version + ".cfg"
+        == "CTA-South-LSTS-01.cfg"
     )
     assert (
         names.simtel_config_file_name(
-            "South", model_version, telescope_model_name="LSTS-01", label="A", extra_label=None
+            "South", telescope_model_name="LSTS-01", label="A", extra_label=None
         )
-        == "CTA-South-LSTS-01-" + model_version + "_A.cfg"
+        == "CTA-South-LSTS-01_A.cfg"
     )
     assert (
         names.simtel_config_file_name(
-            "South", model_version, telescope_model_name="LSTS-01", label="A", extra_label="B"
+            "South", telescope_model_name="LSTS-01", label="A", extra_label="B"
         )
-        == "CTA-South-LSTS-01-" + model_version + "_A_B.cfg"
+        == "CTA-South-LSTS-01_A_B.cfg"
     )
 
 
-def test_sim_telarray_config_file_name(model_version):
+def test_sim_telarray_config_file_name():
     assert (
-        names.simtel_config_file_name(
-            array_name="4LSTs", site="South", model_version=model_version, label=None
-        )
-        == "CTA-4LSTs-South-" + model_version + ".cfg"
+        names.simtel_config_file_name(array_name="4LSTs", site="South", label=None)
+        == "CTA-4LSTs-South.cfg"
     )
     assert (
-        names.simtel_config_file_name(
-            array_name="4LSTs", site="South", model_version=model_version, label="A"
-        )
-        == "CTA-4LSTs-South-" + model_version + "_A.cfg"
+        names.simtel_config_file_name(array_name="4LSTs", site="South", label="A")
+        == "CTA-4LSTs-South_A.cfg"
     )
 
 

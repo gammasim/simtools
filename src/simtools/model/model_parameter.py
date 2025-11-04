@@ -271,7 +271,6 @@ class ModelParameter:
         # Setting file name and the location
         config_file_name = names.simtel_config_file_name(
             self.site,
-            self.model_version,
             telescope_model_name=self.name,
             label=self.label,
         )
