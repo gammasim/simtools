@@ -109,3 +109,15 @@ def test_parameter_sensitivity_sigma_tau():
     _, f3 = _measure_rise_fall_widths(t3, y3)
     _, f4 = _measure_rise_fall_widths(t4, y4)
     assert f4 > f3
+
+
+def test_center_on_peak_shifts_time_to_zero():
+    t, y = generate_gauss_expconv_pulse(1.2, 3.0, dt_ns=0.05, center_on_peak=True)
+    i_max = int(np.argmax(y))
+    assert abs(t[i_max]) <= 1e-6
+
+
+def test_center_on_peak_pass_through():
+    t, y = generate_pulse_from_rise_fall_times(2.0, 4.0, dt_ns=0.05, center_on_peak=True)
+    i_max = int(np.argmax(y))
+    assert abs(t[i_max]) <= 1e-6
