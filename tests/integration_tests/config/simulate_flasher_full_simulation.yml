@@ -4,7 +4,7 @@ applications:
   configuration:
     run_mode: full_simulation
     light_source: MSFx-FlashCam
-    model_version: 6.0
+    model_version: 6.0.2
     output_path: simtools-output
     site: South
     telescope: MSTS-04

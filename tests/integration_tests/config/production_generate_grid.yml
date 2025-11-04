@@ -5,7 +5,7 @@ applications:
     axes: tests/resources/production_grid_generation_axes_definition.yml
     coordinate_system: zenith_azimuth
     lookup_table: tests/resources/corsika_simulation_limits_lookup.ecsv
-    model_version: 6.0
+    model_version: 6.0.2
     observing_time: '2017-09-16 00:00:00'
     output_file: grid_output.json
     output_path: simtools-output
