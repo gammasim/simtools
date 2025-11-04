@@ -3,6 +3,7 @@
 import json
 import logging
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 import yaml
@@ -340,7 +341,11 @@ def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check
         "integration_tests": [{"expected_output": "expected_output"}],
     }
     integration_test = [
-        {"path_descriptor": "data_directory", "file": "output_file", "expected_output": {}}
+        {
+            "path_descriptor": "data_directory",
+            "file": "output_file.simtel.zst",
+            "expected_output": {},
+        }
     ]
 
     validate_output._validate_output_path_and_file(config, integration_test)
@@ -348,16 +353,38 @@ def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check
     mock_path_exists.assert_called()
     mock_check_output.assert_called_once_with(
         Path(config["configuration"]["data_directory"]).joinpath(integration_test[0]["file"]),
-        {"path_descriptor": "data_directory", "file": "output_file", "expected_output": {}},
+        {
+            "path_descriptor": "data_directory",
+            "file": "output_file.simtel.zst",
+            "expected_output": {},
+        },
     )
 
     wrong_integration_test = [
-        {"path_descriptor": "wrong_path", "file": "output_file", "expected_output": {}}
+        {"path_descriptor": "wrong_path", "file": "output_file.simtel.zst", "expected_output": {}}
     ]
     with pytest.raises(
         KeyError, match=r"Path wrong_path not found in integration test configuration."
     ):
         validate_output._validate_output_path_and_file(config, wrong_integration_test)
+
+
+def test_validate_output_path_and_file_log_archive(output_path, mock_path_exists):
+    config = {
+        "configuration": {"output_path": output_path, "data_directory": "/path/to/data"},
+    }
+    integration_test = [
+        {
+            "path_descriptor": "data_directory",
+            "file": "test.log_hist.tar.gz",
+            "expected_log_output": {"pattern": ["test"]},
+        }
+    ]
+
+    with patch("simtools.testing.assertions.check_simulation_logs") as mock_check_logs:
+        mock_check_logs.return_value = True
+        validate_output._validate_output_path_and_file(config, integration_test)
+        mock_check_logs.assert_called_once()
 
 
 def test_validate_application_output_no_integration_tests(mocker, output_path):
