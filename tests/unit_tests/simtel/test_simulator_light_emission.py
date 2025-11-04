@@ -576,7 +576,7 @@ def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_t
         if name == "flasher_angular_distribution":
             return "gaussian"
         if name == "flasher_pulse_shape":
-            return "gauss"
+            return "gauss-exponential"
         return None
 
     simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_param
@@ -585,7 +585,9 @@ def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_t
     mock_diameter = Mock()
     mock_diameter.to.return_value.value = 180.0
     simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
-    simulator_instance.telescope_model.get_parameter_value.return_value = "hexagonal"
+    simulator_instance.telescope_model.get_parameter_value.side_effect = (
+        lambda key: 40 if key == "fadc_sum_bins" else "hexagonal"
+    )
 
     # Mock distance and helpers
     with (
@@ -651,7 +653,16 @@ def test__add_flasher_command_options_writer_fallback(simulator_instance, tmp_te
     simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
         mock_get_param_with_unit
     )
-    simulator_instance.calibration_model.get_parameter_value.return_value = 4000  # bunch size
+
+    # Provide specific returns for plain-valued params used inside the call
+    def mock_get_param(name):
+        if name == "flasher_bunch_size":
+            return 4000
+        if name == "flasher_pulse_shape":
+            return "gauss-exponential"
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_param
 
     # Telescope parameters
     mock_diameter = Mock()
