@@ -102,7 +102,14 @@ def _exp_decay(t, tau):
     return np.where(t >= 0, np.exp(-t / tau), 0.0)
 
 
-def generate_gauss_expconv_pulse(sigma_ns, tau_ns, dt_ns=0.1, t_start_ns=-10, t_stop_ns=25):
+def generate_gauss_expconv_pulse(
+    sigma_ns,
+    tau_ns,
+    dt_ns=0.1,
+    t_start_ns=-10,
+    t_stop_ns=25,
+    center_on_peak=False,
+):
     """Generate a Gaussian convolved with a causal exponential.
 
     Parameters
@@ -119,6 +126,9 @@ def generate_gauss_expconv_pulse(sigma_ns, tau_ns, dt_ns=0.1, t_start_ns=-10, t_
     t_stop_ns : float
         Together with ``t_start_ns``, defines the explicit end of the time grid
         for pulse generation (ns).
+    center_on_peak : bool, optional
+        If True, shift the returned time array so the pulse maximum is at t=0.
+        Default is False.
 
     Returns
     -------
@@ -133,6 +143,9 @@ def generate_gauss_expconv_pulse(sigma_ns, tau_ns, dt_ns=0.1, t_start_ns=-10, t_
     y = fftconvolve(g, e, mode="same")
     if y.max() > 0:
         y = y / y.max()
+    if center_on_peak:
+        i_max = int(np.argmax(y))
+        t = t - float(t[i_max])
     return t, y
 
 
@@ -203,6 +216,7 @@ def generate_pulse_from_rise_fall_times(
     fall_range=(0.9, 0.1),
     t_start_ns=-10,
     t_stop_ns=25,
+    center_on_peak=False,
 ):
     """Generate pulse from rise/fall time specifications.
 
@@ -224,6 +238,9 @@ def generate_pulse_from_rise_fall_times(
         Start time (ns) for the internal solver sampling window and output grid. Default -10.
     t_stop_ns : float, optional
         Stop time (ns) for the internal solver sampling window and output grid. Default 25.
+    center_on_peak : bool, optional
+        If True, shift the returned time array so the pulse maximum is at t=0.
+        Default is False.
 
     Returns
     -------
@@ -247,5 +264,10 @@ def generate_pulse_from_rise_fall_times(
     )
 
     return generate_gauss_expconv_pulse(
-        sigma, tau, dt_ns=dt_ns, t_start_ns=t_start_ns, t_stop_ns=t_stop_ns
+        sigma,
+        tau,
+        dt_ns=dt_ns,
+        t_start_ns=t_start_ns,
+        t_stop_ns=t_stop_ns,
+        center_on_peak=center_on_peak,
     )
