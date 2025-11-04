@@ -803,23 +803,30 @@ class Simulator:
         ValueError
             If the number of simulated events does not match the expected number.
         """
+        event_errors = []
         for file in self.get_file_list(file_type="simtel_output"):
             shower_events, mc_events = get_simulated_events(file)
-            if shower_events != expected_shower_events:
-                raise ValueError(
-                    f"Number of simulated shower events ({shower_events}) does not match "
-                    f"the expected number ({expected_shower_events}) in file {file}."
+
+            if (shower_events, mc_events) != (expected_shower_events, expected_mc_events):
+                event_errors.append(
+                    f"Event mismatch: shower/MC events in {file}: {shower_events}/{mc_events}"
+                    f" (expected: {expected_shower_events}/{expected_mc_events})"
                 )
-            if mc_events != expected_mc_events:
-                raise ValueError(
-                    f"Number of simulated MC events ({mc_events}) does not match "
-                    f"the expected number ({expected_mc_events}) in file {file}."
+            else:
+                self.logger.info(
+                    f"Consistent number of events in: {file}: "
+                    f"shower events: {shower_events}, "
+                    f"MC events: {mc_events}"
                 )
-            self.logger.info(
-                f"Consistent number of events in: {file}: "
-                f"shower events: {shower_events}, "
-                f"MC events: {mc_events}"
+
+        if event_errors:
+            self.logger.error("Inconsistent event counts found:")
+            for error in event_errors:
+                self.logger.error(f" - {error}")
+            error_message = "Inconsistent event counts found:\n" + "\n".join(
+                f" - {error}" for error in event_errors
             )
+            raise ValueError(error_message)
 
     def _verify_simulated_events_in_reduced_event_lists(self, expected_mc_events):
         """
@@ -835,6 +842,7 @@ class Simulator:
         ValueError
             If the number of simulated events does not match the expected number.
         """
+        event_errors = []
         for file in self.get_file_list(file_type="event_data"):
             tables = table_handler.read_tables(file, ["SHOWERS"])
             try:
@@ -843,10 +851,21 @@ class Simulator:
                 raise ValueError(f"SHOWERS table not found in reduced event list {file}.") from exc
 
             if mc_events != expected_mc_events:
-                raise ValueError(
+                event_errors.append(
                     f"Number of simulated MC events ({mc_events}) does not match "
                     f"the expected number ({expected_mc_events}) in reduced event list {file}."
                 )
-            self.logger.info(
-                f"Consistent number of events in reduced event list: {file}: MC events: {mc_events}"
+            else:
+                self.logger.info(
+                    f"Consistent number of events in reduced event list: {file}: MC events:"
+                    f" {mc_events}"
+                )
+
+        if event_errors:
+            self.logger.error("Inconsistent event counts found in reduced event lists:")
+            for error in event_errors:
+                self.logger.error(f" - {error}")
+            error_message = "Inconsistent event counts found in reduced event lists:\n" + "\n".join(
+                f" - {error}" for error in event_errors
             )
+            raise ValueError(error_message)

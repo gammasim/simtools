@@ -774,7 +774,7 @@ def test_verify_simulated_events_in_reduced_event_lists_mismatch(shower_simulato
     mock_tables = {"SHOWERS": [{"event_id": 1}, {"event_id": 2}]}
     mocker.patch("simtools.simulator.table_handler.read_tables", return_value=mock_tables)
 
-    with pytest.raises(ValueError, match="Number of simulated MC events"):
+    with pytest.raises(ValueError, match="Inconsistent event counts found in reduced event lists"):
         shower_simulator._verify_simulated_events_in_reduced_event_lists(expected_mc_events=5)
 
 
@@ -806,7 +806,7 @@ def test_verify_simulated_events_in_sim_telarray_shower_mismatch(shower_array_si
 
     mocker.patch("simtools.simulator.get_simulated_events", return_value=(80, 500))
 
-    with pytest.raises(ValueError, match="Number of simulated shower events"):
+    with pytest.raises(ValueError, match="Inconsistent event counts found"):
         shower_array_simulator._verify_simulated_events_in_sim_telarray(
             expected_shower_events=100, expected_mc_events=500
         )
@@ -818,7 +818,7 @@ def test_verify_simulated_events_in_sim_telarray_mc_mismatch(shower_array_simula
 
     mocker.patch("simtools.simulator.get_simulated_events", return_value=(100, 400))
 
-    with pytest.raises(ValueError, match="Number of simulated MC events"):
+    with pytest.raises(ValueError, match="Inconsistent event counts found"):
         shower_array_simulator._verify_simulated_events_in_sim_telarray(
             expected_shower_events=100, expected_mc_events=500
         )
