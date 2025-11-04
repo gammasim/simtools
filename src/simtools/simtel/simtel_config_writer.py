@@ -191,6 +191,7 @@ class SimtelConfigWriter:
             fall_range=fall_range,
             t_start_ns=t_start_ns,
             t_stop_ns=t_stop_ns,
+            center_on_peak=True,
         )
 
         with open(file_path, "w", encoding="utf-8") as fh:
