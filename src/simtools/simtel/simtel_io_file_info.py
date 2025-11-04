@@ -85,9 +85,4 @@ def get_simulated_events(file):
             t = o.header.type
             if t in counts:
                 counts[t] += 1
-            if getattr(o.header, "only_subobjects", False):
-                for sub in o:
-                    st = sub.header.type
-                    if st in counts:
-                        counts[st] += 1
     return counts[2020], counts[2021]

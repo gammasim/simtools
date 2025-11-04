@@ -753,3 +753,100 @@ def test_is_calibration_run():
 def test_get_calibration_device_types():
     assert Simulator._get_calibration_device_types("direct_injection") == ["flat_fielding"]
     assert Simulator._get_calibration_device_types("what_ever") == []
+
+
+def test_verify_simulated_events_in_reduced_event_lists(shower_simulator, mocker):
+    shower_simulator.args_dict["save_reduced_event_lists"] = True
+
+    mock_file_list = ["event_data_file1.hdf5", "event_data_file2.hdf5"]
+    mocker.patch.object(shower_simulator, "get_file_list", return_value=mock_file_list)
+
+    mock_tables = {"SHOWERS": [{"event_id": 1}, {"event_id": 2}, {"event_id": 3}]}
+    mocker.patch("simtools.simulator.table_handler.read_tables", return_value=mock_tables)
+
+    shower_simulator._verify_simulated_events_in_reduced_event_lists(expected_mc_events=3)
+
+
+def test_verify_simulated_events_in_reduced_event_lists_mismatch(shower_simulator, mocker):
+    mock_file_list = ["event_data_file1.hdf5"]
+    mocker.patch.object(shower_simulator, "get_file_list", return_value=mock_file_list)
+
+    mock_tables = {"SHOWERS": [{"event_id": 1}, {"event_id": 2}]}
+    mocker.patch("simtools.simulator.table_handler.read_tables", return_value=mock_tables)
+
+    with pytest.raises(ValueError, match="Number of simulated MC events"):
+        shower_simulator._verify_simulated_events_in_reduced_event_lists(expected_mc_events=5)
+
+
+def test_verify_simulated_events_in_reduced_event_lists_missing_table(shower_simulator, mocker):
+    mock_file_list = ["event_data_file1.hdf5"]
+    mocker.patch.object(shower_simulator, "get_file_list", return_value=mock_file_list)
+
+    mock_tables = {"OTHER_TABLE": []}
+    mocker.patch("simtools.simulator.table_handler.read_tables", return_value=mock_tables)
+
+    with pytest.raises(ValueError, match="SHOWERS table not found"):
+        shower_simulator._verify_simulated_events_in_reduced_event_lists(expected_mc_events=3)
+
+
+def test_verify_simulated_events_in_sim_telarray(shower_array_simulator, mocker):
+    mock_file_list = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
+    mocker.patch.object(shower_array_simulator, "get_file_list", return_value=mock_file_list)
+
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(100, 500))
+
+    shower_array_simulator._verify_simulated_events_in_sim_telarray(
+        expected_shower_events=100, expected_mc_events=500
+    )
+
+
+def test_verify_simulated_events_in_sim_telarray_shower_mismatch(shower_array_simulator, mocker):
+    mock_file_list = ["output_file1.simtel.zst"]
+    mocker.patch.object(shower_array_simulator, "get_file_list", return_value=mock_file_list)
+
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(80, 500))
+
+    with pytest.raises(ValueError, match="Number of simulated shower events"):
+        shower_array_simulator._verify_simulated_events_in_sim_telarray(
+            expected_shower_events=100, expected_mc_events=500
+        )
+
+
+def test_verify_simulated_events_in_sim_telarray_mc_mismatch(shower_array_simulator, mocker):
+    mock_file_list = ["output_file1.simtel.zst"]
+    mocker.patch.object(shower_array_simulator, "get_file_list", return_value=mock_file_list)
+
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(100, 400))
+
+    with pytest.raises(ValueError, match="Number of simulated MC events"):
+        shower_array_simulator._verify_simulated_events_in_sim_telarray(
+            expected_shower_events=100, expected_mc_events=500
+        )
+
+
+def test_verify_simulations(shower_array_simulator, mocker):
+    shower_array_simulator.args_dict["nshow"] = 100
+    shower_array_simulator.args_dict["core_scatter"] = [5]
+
+    mock_verify_simtel = mocker.patch.object(
+        shower_array_simulator, "_verify_simulated_events_in_sim_telarray"
+    )
+
+    shower_array_simulator.verify_simulations()
+
+    mock_verify_simtel.assert_called_once_with(100, 500)
+
+
+def test_verify_simulations_with_reduced_event_lists(shower_array_simulator, mocker):
+    shower_array_simulator.args_dict["nshow"] = 100
+    shower_array_simulator.args_dict["core_scatter"] = [5]
+    shower_array_simulator.args_dict["save_reduced_event_lists"] = True
+
+    mocker.patch.object(shower_array_simulator, "_verify_simulated_events_in_sim_telarray")
+    mock_verify_reduced = mocker.patch.object(
+        shower_array_simulator, "_verify_simulated_events_in_reduced_event_lists"
+    )
+
+    shower_array_simulator.verify_simulations()
+
+    mock_verify_reduced.assert_called_once_with(500)
