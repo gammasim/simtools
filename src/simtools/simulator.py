@@ -489,7 +489,7 @@ class Simulator:
 
         Returns
         -------
-        dict
+        str
            string reporting on computing resources
 
         """
@@ -772,6 +772,7 @@ class Simulator:
         self.logger.info("Verifying simulations.")
 
         expected_shower_events = self.args_dict.get("nshow", 0)
+        # core scatter is a list: first element is the usage factor
         expected_mc_events = expected_shower_events * self.args_dict.get("core_scatter", [0])[0]
 
         self.logger.info(
