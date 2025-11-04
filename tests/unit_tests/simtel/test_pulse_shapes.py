@@ -90,13 +90,13 @@ def test_time_step_and_window():
     sigma = 1.0
     tau = 3.0
     dt = 0.1
-    duration_sigma = 8.0
-    t, _ = generate_gauss_expconv_pulse(sigma, tau, dt_ns=dt, duration_sigma=duration_sigma)
+    t, _ = generate_gauss_expconv_pulse(sigma, tau, dt_ns=dt)
     assert np.allclose(np.diff(t), dt)
-    left_expected = -duration_sigma * sigma
-    right_expected = duration_sigma * max(tau, sigma)
-    assert abs(t[0] - left_expected) <= 1.5 * dt
-    assert abs(t[-1] - right_expected) <= 1.5 * dt
+    # Window should straddle zero and provide both negative and positive times
+    assert t[0] < 0
+    assert t[-1] > 0
+    assert np.isclose(t[0], -10.0, atol=1.5 * dt)
+    assert np.isclose(t[-1], 25.0, atol=1.5 * dt)
 
 
 def test_parameter_sensitivity_sigma_tau():
