@@ -180,10 +180,9 @@ class SimtelConfigWriter:
             f"fall90-10={exp_decay_ns} ns, dt={dt_ns} ns"
         )
 
-        width = float(fadc_sum_bins) / 2
+        width = float(fadc_sum_bins)
         t_start_ns = -abs(time_margin_ns + width)
-        t_stop_ns = 2 * width + abs(time_margin_ns)
-
+        t_stop_ns = +abs(time_margin_ns + width)
         t, y = generate_pulse_from_rise_fall_times(
             width_ns,
             exp_decay_ns,
