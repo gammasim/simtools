@@ -192,7 +192,21 @@ def check_output_from_sim_telarray(file, file_test):
 
 
 def _scan_log_file(file_obj, pattern):
-    """Assert that expected log output is present in a file object."""
+    """
+    Scan a log file object for expected patterns and return the list of found patterns.
+
+    Parameters
+    ----------
+    file_obj: file-like object
+        The log file object to scan.
+    pattern: list of str
+        List of patterns to search for in the log file.
+
+    Returns
+    -------
+    list of str
+        Patterns found in the log file.
+    """
     text = file_obj.read().decode("utf-8", errors="ignore")
     return [p for p in pattern if p in text]
 
@@ -211,7 +225,7 @@ def check_simulation_logs(tar_file, file_test):
     Raises
     ------
     ValueError
-        If the file is not a zstd compressed file.
+        If the file is not a tar file.
     """
     patterns = file_test.get("expected_log_output", {}).get("pattern", [])
     if not patterns:

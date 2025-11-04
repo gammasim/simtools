@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
+import gzip
 import logging
+import tarfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -303,9 +305,6 @@ def test_check_simulation_logs_not_tar_file(tmp_test_directory):
 
 
 def test_check_simulation_logs_success(tmp_test_directory):
-    import gzip
-    import tarfile
-
     tmp_path = Path(tmp_test_directory)
     tar_path = tmp_path / "test_logs.tar.gz"
     log_content = b"Log line with pattern_A\nAnother line\nLine with pattern_B\n"
@@ -322,9 +321,6 @@ def test_check_simulation_logs_success(tmp_test_directory):
 
 
 def test_check_simulation_logs_missing_pattern(tmp_test_directory):
-    import gzip
-    import tarfile
-
     tmp_path = Path(tmp_test_directory)
     tar_path = tmp_path / "test_logs.tar.gz"
     log_content = b"Log line with pattern_A\nAnother line\n"
@@ -341,8 +337,6 @@ def test_check_simulation_logs_missing_pattern(tmp_test_directory):
 
 
 def test_check_simulation_logs_skip_non_log_files(tmp_test_directory):
-    import tarfile
-
     tmp_path = Path(tmp_test_directory)
     tar_path = tmp_path / "test_logs.tar.gz"
 
