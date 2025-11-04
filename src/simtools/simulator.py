@@ -18,6 +18,7 @@ from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
+from simtools.simtel.simtel_io_file_info import get_simulated_events
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
 from simtools.version import semver_to_int
@@ -475,7 +476,6 @@ class Simulator:
             List with the full path of all output files.
 
         """
-        self.logger.info(f"Getting list of {file_type} files")
         return self._results[file_type]
 
     def _make_resources_report(self, input_file_list):
@@ -761,3 +761,96 @@ class Simulator:
         if run_mode == "direct_injection":
             return ["flat_fielding"]
         return []
+
+    def verify_simulations(self):
+        """
+        Verify simulations.
+
+        This includes checking the number of simulated events.
+
+        """
+        self.logger.info("Verifying simulations.")
+
+        expected_shower_events = self.args_dict.get("nshow", 0)
+        expected_mc_events = expected_shower_events * self.args_dict.get("core_scatter", [0])[0]
+
+        self.logger.info(
+            f"Expected number of shower events: {expected_shower_events}, "
+            f"expected number of MC events: {expected_mc_events}"
+        )
+
+        if self.simulation_software in ["corsika_sim_telarray", "sim_telarray"]:
+            self._verify_simulated_events_in_sim_telarray(
+                expected_shower_events, expected_mc_events
+            )
+        if self.args_dict.get("save_reduced_event_lists"):
+            self._verify_simulated_events_in_reduced_event_lists(expected_mc_events)
+
+    def _verify_simulated_events_in_sim_telarray(self, expected_shower_events, expected_mc_events):
+        """
+        Verify the number of simulated events.
+
+        Parameters
+        ----------
+        expected_shower_events: int
+            Expected number of simulated shower events.
+        expected_mc_events: int
+            Expected number of simulated MC events.
+
+        Raises
+        ------
+        ValueError
+            If the number of simulated events does not match the expected number.
+        """
+        file_list = self.get_file_list(file_type="simtel_output")
+
+        for file in file_list:
+            shower_events, mc_events = get_simulated_events(file)
+            if shower_events != expected_shower_events:
+                raise ValueError(
+                    f"Number of simulated shower events ({shower_events}) does not match "
+                    f"the expected number ({expected_shower_events}) in file {file}."
+                )
+            if mc_events != expected_mc_events:
+                raise ValueError(
+                    f"Number of simulated MC events ({mc_events}) does not match "
+                    f"the expected number ({expected_mc_events}) in file {file}."
+                )
+            self.logger.info(
+                f"Consistent number of simulated events in file: {file}: "
+                f"simulated shower events: {shower_events}, "
+                f"simulated MC events: {mc_events}"
+            )
+
+    def _verify_simulated_events_in_reduced_event_lists(self, expected_mc_events):
+        """
+        Verify the number of simulated events in reduced event lists.
+
+        Parameters
+        ----------
+        expected_mc_events: int
+            Expected number of simulated MC events.
+
+        Raises
+        ------
+        ValueError
+            If the number of simulated events does not match the expected number.
+        """
+        file_list = self.get_file_list(file_type="event_data")
+
+        for file in file_list:
+            tables = table_handler.read_tables(file, ["SHOWERS"])
+            try:
+                mc_events = len(tables["SHOWERS"])
+            except KeyError as exc:
+                raise ValueError(f"SHOWERS table not found in reduced event list {file}.") from exc
+
+            if mc_events != expected_mc_events:
+                raise ValueError(
+                    f"Number of simulated MC events ({mc_events}) does not match "
+                    f"the expected number ({expected_mc_events}) in reduced event list {file}."
+                )
+            self.logger.info(
+                f"Consistent number of simulated events in reduced event list: {file}: "
+                f"simulated MC events: {mc_events}"
+            )

@@ -60,3 +60,34 @@ def get_corsika_run_header(file):
     if primary_id is not None:
         mc_run_header["primary_id"] = primary_id
     return run_header | mc_run_header or None
+
+
+def get_simulated_events(file):
+    """
+    Return the number of shower and MC events from a sim_telarray file.
+
+    Determined by counting the number of MCShower (type id 2020) and MCEvent
+    objects (type id 2021) in the sim_telarray file.
+
+    Parameters
+    ----------
+    file: str
+        Path to the sim_telarray file.
+
+    Returns
+    -------
+    tuple
+        Number of showers and number of MC events.
+    """
+    counts = {2020: 0, 2021: 0}
+    with EventIOFile(file) as f:
+        for o in f:
+            t = o.header.type
+            if t in counts:
+                counts[t] += 1
+            if getattr(o.header, "only_subobjects", False):
+                for sub in o:
+                    st = sub.header.type
+                    if st in counts:
+                        counts[st] += 1
+    return counts[2020], counts[2021]
