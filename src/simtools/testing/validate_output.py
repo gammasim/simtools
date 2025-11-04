@@ -55,6 +55,10 @@ def validate_application_output(
 
     for integration_test in config["integration_tests"]:
         _logger.info(f"Testing application output: {integration_test}")
+        _logger.debug(
+            f"Model version from command line: {from_command_line}, "
+            f"from config file: {from_config_file}"
+        )
 
         if from_command_line == from_config_file:
             _validate_output_files(config, integration_test, db_config)
@@ -133,7 +137,10 @@ def _validate_output_path_and_file(config, integration_file_tests):
         except AssertionError as exc:
             raise AssertionError(f"Output file {output_file_path} does not exist. ") from exc
 
-        assert assertions.check_output_from_sim_telarray(output_file_path, file_test)
+        if output_file_path.name.endswith(".simtel.zst"):
+            assert assertions.check_output_from_sim_telarray(output_file_path, file_test)
+        elif output_file_path.name.endswith(".log_hist.tar.gz"):
+            assert assertions.check_simulation_logs(output_file_path, file_test)
 
 
 def _validate_model_parameter_json_file(config, model_parameter_validation, db_config):
