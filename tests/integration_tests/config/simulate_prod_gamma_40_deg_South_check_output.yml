@@ -42,6 +42,9 @@ applications:
         - "========== END OF RUN ========"
         - "Sim_telarray finished at"
         - "Run(s) completed as expected after 10 events (10 showers)."
+        forbidden_pattern:
+        - "CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE"
+        - "CORSIKA was compiled with CURVED option."
       file: gamma_run000001_za40deg_azm180deg_South_beta_6.0.2_test.log_hist.tar.gz
       path_descriptor: pack_for_grid_register
   - test_simtel_cfg_files:

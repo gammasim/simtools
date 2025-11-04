@@ -276,19 +276,6 @@ def test_check_output_from_sim_telarray_failed_output(mock_assert_output, mock_a
     assert not assertions.check_output_from_sim_telarray(file, file_test)
 
 
-def test_scan_log_file():
-    test_data = b"Test log line with pattern1\nAnother line\nLine with pattern2\n"
-    file_obj = MagicMock()
-    file_obj.read.return_value = test_data
-
-    patterns = ["pattern1", "pattern2", "pattern3"]
-    found = assertions._scan_log_file(file_obj, patterns)
-
-    assert "pattern1" in found
-    assert "pattern2" in found
-    assert "pattern3" not in found
-
-
 def test_check_simulation_logs_no_patterns():
     file_test = {}
     result = assertions.check_simulation_logs(Path("dummy.tar.gz"), file_test)
@@ -348,3 +335,143 @@ def test_check_simulation_logs_skip_non_log_files(tmp_test_directory):
     file_test = {"expected_log_output": {"pattern": ["pattern"]}}
     result = assertions.check_simulation_logs(tar_path, file_test)
     assert not result
+
+
+def test_read_log(tmp_test_directory):
+    tmp_path = Path(tmp_test_directory)
+    tar_path = tmp_path / "test.tar.gz"
+    log_content = b"Test log content\nSecond line\n"
+
+    with tarfile.open(tar_path, "w:gz") as tar:
+        log_gz = tmp_path / "test.log.gz"
+        with gzip.open(log_gz, "wb") as gz:
+            gz.write(log_content)
+        tar.add(log_gz, arcname="test.log.gz")
+
+    with tarfile.open(tar_path, "r:gz") as tar:
+        member = tar.getmembers()[0]
+        result = assertions._read_log(member, tar)
+
+    assert result == "Test log content\nSecond line\n"
+
+
+def test_find_patterns():
+    text = "This is a test line with pattern1 and pattern2"
+    patterns = ["pattern1", "pattern2", "pattern3"]
+
+    found = assertions._find_patterns(text, patterns)
+
+    assert "pattern1" in found
+    assert "pattern2" in found
+    assert "pattern3" not in found
+    assert len(found) == 2
+
+
+def test_check_simulation_logs_forbidden_patterns_found(tmp_test_directory):
+    tmp_path = Path(tmp_test_directory)
+    tar_path = tmp_path / "test_logs.tar.gz"
+    log_content = b"Log line with CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE\nAnother line\n"
+
+    with tarfile.open(tar_path, "w:gz") as tar:
+        log_gz = tmp_path / "test.log.gz"
+        with gzip.open(log_gz, "wb") as gz:
+            gz.write(log_content)
+        tar.add(log_gz, arcname="test.log.gz")
+
+    file_test = {
+        "expected_log_output": {
+            "forbidden_pattern": ["CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE"]
+        }
+    }
+    result = assertions.check_simulation_logs(tar_path, file_test)
+    assert not result
+
+
+def test_check_simulation_logs_forbidden_patterns_not_found(tmp_test_directory):
+    tmp_path = Path(tmp_test_directory)
+    tar_path = tmp_path / "test_logs.tar.gz"
+    log_content = b"Log line with normal content\nAnother line\n"
+
+    with tarfile.open(tar_path, "w:gz") as tar:
+        log_gz = tmp_path / "test.log.gz"
+        with gzip.open(log_gz, "wb") as gz:
+            gz.write(log_content)
+        tar.add(log_gz, arcname="test.log.gz")
+
+    file_test = {"expected_log_output": {"forbidden_pattern": ["CURVED VERSION", "FATAL ERROR"]}}
+    result = assertions.check_simulation_logs(tar_path, file_test)
+    assert result
+
+
+def test_check_simulation_logs_wanted_and_forbidden_both_ok(tmp_test_directory):
+    tmp_path = Path(tmp_test_directory)
+    tar_path = tmp_path / "test_logs.tar.gz"
+    log_content = b"Log line with expected_pattern\nAnother line with good content\n"
+
+    with tarfile.open(tar_path, "w:gz") as tar:
+        log_gz = tmp_path / "test.log.gz"
+        with gzip.open(log_gz, "wb") as gz:
+            gz.write(log_content)
+        tar.add(log_gz, arcname="test.log.gz")
+
+    file_test = {
+        "expected_log_output": {
+            "pattern": ["expected_pattern"],
+            "forbidden_pattern": ["CURVED VERSION", "ERROR"],
+        }
+    }
+    result = assertions.check_simulation_logs(tar_path, file_test)
+    assert result
+
+
+def test_check_simulation_logs_wanted_ok_but_forbidden_found(tmp_test_directory):
+    tmp_path = Path(tmp_test_directory)
+    tar_path = tmp_path / "test_logs.tar.gz"
+    log_content = b"Log line with expected_pattern\nAnother line with ERROR\n"
+
+    with tarfile.open(tar_path, "w:gz") as tar:
+        log_gz = tmp_path / "test.log.gz"
+        with gzip.open(log_gz, "wb") as gz:
+            gz.write(log_content)
+        tar.add(log_gz, arcname="test.log.gz")
+
+    file_test = {
+        "expected_log_output": {
+            "pattern": ["expected_pattern"],
+            "forbidden_pattern": ["ERROR", "FATAL"],
+        }
+    }
+    result = assertions.check_simulation_logs(tar_path, file_test)
+    assert not result
+
+
+def test_check_simulation_logs_multiple_forbidden_patterns_found(tmp_test_directory):
+    tmp_path = Path(tmp_test_directory)
+    tar_path = tmp_path / "test_logs.tar.gz"
+    log_content = b"Log with ERROR\nAnother line with FATAL\nThird line with WARNING\n"
+
+    with tarfile.open(tar_path, "w:gz") as tar:
+        log_gz = tmp_path / "test.log.gz"
+        with gzip.open(log_gz, "wb") as gz:
+            gz.write(log_content)
+        tar.add(log_gz, arcname="test.log.gz")
+
+    file_test = {"expected_log_output": {"forbidden_pattern": ["ERROR", "FATAL", "CRITICAL"]}}
+    result = assertions.check_simulation_logs(tar_path, file_test)
+    assert not result
+
+
+def test_check_simulation_logs_forbidden_only_empty_list(tmp_test_directory):
+    tmp_path = Path(tmp_test_directory)
+    tar_path = tmp_path / "test_logs.tar.gz"
+    log_content = b"Log line with any content\n"
+
+    with tarfile.open(tar_path, "w:gz") as tar:
+        log_gz = tmp_path / "test.log.gz"
+        with gzip.open(log_gz, "wb") as gz:
+            gz.write(log_content)
+        tar.add(log_gz, arcname="test.log.gz")
+
+    file_test = {"expected_log_output": {"forbidden_pattern": []}}
+    result = assertions.check_simulation_logs(tar_path, file_test)
+    assert result
