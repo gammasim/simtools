@@ -3,7 +3,6 @@
 import copy
 import gzip
 import logging
-import math
 import shutil
 import tarfile
 from pathlib import Path
@@ -180,15 +179,6 @@ def test_prepare_run_list_and_range(shower_simulator, shower_array_simulator):
         assert simulator_now._prepare_run_list_and_range(run_list=5, run_range=None) == [5]
 
 
-def test_fill_results_without_run(array_simulator, input_file_list):
-    array_simulator._fill_results_without_run(input_file_list=[])
-    assert isinstance(array_simulator.runs, list)
-
-    array_simulator.runs = []
-    array_simulator._fill_results_without_run(input_file_list=input_file_list)
-    assert array_simulator.runs == [1, 22, 2]
-
-
 def test_simulate_shower_simulator(shower_simulator):
     shower_simulator._test = True
     shower_simulator.simulate()
@@ -256,22 +246,24 @@ def test_guess_run_from_file(array_simulator, caplog):
     assert "Run number could not be guessed from abc-ran12345_bla_ble using run = 1" in caplog.text
 
 
-def test_fill_results(array_simulator, shower_simulator, shower_array_simulator, input_file_list):
+def test_fill_list_of_generated_files(
+    array_simulator, shower_simulator, shower_array_simulator, input_file_list
+):
     for simulator_now in [array_simulator, shower_array_simulator]:
         for run_number in [1, 2, 22]:
-            simulator_now._fill_results(input_file_list[1], run_number=run_number)
+            simulator_now._fill_list_of_generated_files(input_file_list[1], run_number=run_number)
         assert len(simulator_now.get_file_list("simtel_output")) == 3
         assert len(simulator_now._results["sub_out"]) == 3
         assert len(simulator_now.get_file_list("log")) == 3
         assert len(simulator_now.get_file_list("input")) == 3
-        assert len(simulator_now.get_file_list("hist")) == 3
+        assert len(simulator_now.get_file_list("histogram")) == 3
         logger.error(simulator_now.get_file_list("input"))
         assert simulator_now.get_file_list("input")[1] == "abc_run22"
 
-    shower_simulator._fill_results(input_file_list[1], run_number=5)
+    shower_simulator._fill_list_of_generated_files(input_file_list[1], run_number=5)
     assert len(shower_simulator.get_file_list("simtel_output")) == 1
     assert len(shower_simulator.get_file_list("corsika_log")) == 1
-    assert len(shower_simulator.get_file_list("hist")) == 0
+    assert len(shower_simulator.get_file_list("histogram")) == 0
 
 
 def test_get_list_of_files(shower_simulator):
@@ -281,16 +273,14 @@ def test_get_list_of_files(shower_simulator):
     assert len(test_shower_simulator.get_file_list("not_a_valid_file_type")) == 0
 
 
-def test_resources(shower_simulator, capsys):
-    shower_simulator.resources(input_file_list=None)
-    print_text = capsys.readouterr()
-    assert "Wall time/run [sec] = nan" in print_text.out
+def test_report(shower_simulator, caplog):
+    with caplog.at_level(logging.INFO):
+        shower_simulator.report(input_file_list=None)
+
+    assert "Mean wall time/run [sec]: np.nan" in caplog.text
 
 
 def test_make_resources_report(shower_simulator):
-    _resources_1 = shower_simulator._make_resources_report(input_file_list=None)
-    assert math.isnan(_resources_1["Wall time/run [sec]"])
-
     # Copying the corsika log file to the expected location in the test directory.
     log_file_name = "log_sub_corsika_run000001_gamma_North_test_layout_test-production.out"
     shutil.copy(
@@ -304,7 +294,7 @@ def test_make_resources_report(shower_simulator):
     test_shower_simulator = copy.deepcopy(shower_simulator)
     test_shower_simulator.runs = [1]
     _resources_1 = test_shower_simulator._make_resources_report(input_file_list=log_file_name)
-    assert _resources_1["Wall time/run [sec]"] == 6
+    assert "Mean wall time/run [sec]: 6" in _resources_1
 
     test_shower_simulator.runs = [4]
     with pytest.raises(FileNotFoundError):
@@ -442,7 +432,7 @@ def test_pack_for_register_with_multiple_versions(
         "output": "output_file_{}_simtel.zst",
         "log": "log_file_{}_simtel.log.gz",
         "corsika_log": "log_file_corsika_{}.log.gz",
-        "hist": "hist_file_{}_hist_log.zst",
+        "histogram": "hist_file_{}_hist_log.zst",
     }
 
     # Generate file lists for side effects
@@ -450,7 +440,7 @@ def test_pack_for_register_with_multiple_versions(
         [file_patterns["output"].format(v) for v in model_versions],
         [file_patterns["log"].format(v) for v in model_versions],
         [file_patterns["corsika_log"].format(model_versions[0])],
-        [file_patterns["hist"].format(v) for v in model_versions],
+        [file_patterns["histogram"].format(v) for v in model_versions],
     ]
 
     # Mocking methods and objects
@@ -483,7 +473,7 @@ def test_pack_for_register_with_multiple_versions(
     # Generate expected additions using the same patterns
     expected_additions = []
     for version in model_versions:
-        for file_type in ["log", "hist"]:
+        for file_type in ["log", "histogram"]:
             filename = file_patterns[file_type].format(version)
             expected_additions.append((filename, filename))
 
