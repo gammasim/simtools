@@ -421,7 +421,7 @@ def _add_mirror_statistics(ax, mirrors, x_pos, y_pos, diameter):
         f"Mirror diameter: {diameter:.1f} cm\n"
         f"Max radius: {max_radius:.2f} m\n"
         f"Mean outer edge radius: {mean_outer_edge_radius:.2f} m\n"
-        f"Total surface area: {total_area:.2f} m²"
+        f"Total surface area: {total_area:.2f} $m^{2}$"
     )
 
     ax.text(
