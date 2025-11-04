@@ -149,14 +149,18 @@ def main():
 
     simulator.simulate()
     simulator.validate_metadata()
-    simulator.report()
 
     if app_context.args["save_reduced_event_lists"]:
         simulator.save_reduced_event_lists()
+
+    simulator.verify_simulations()
+
     if app_context.args.get("pack_for_grid_register"):
         simulator.pack_for_register(app_context.args["pack_for_grid_register"])
     if app_context.args["save_file_lists"]:
         simulator.save_file_lists()
+
+    simulator.report()
 
 
 if __name__ == "__main__":
