@@ -164,12 +164,7 @@ def test_make_run_command(simulator_ray_tracing_sst, model_version):
     command, stdout_file, stderr_file = simulator_ray_tracing_sst._make_run_command()
 
     assert "bin/sim_telarray" in command
-    assert (
-        f"model/{model_version}/CTA-South-SSTS-design-"
-        + model_version.replace("_", "-")
-        + "_test-telescope-model-sst.cfg"
-        in command
-    )
+    assert f"model/{model_version}/CTA-South-SSTS-design_test-telescope-model-sst.cfg" in command
     assert "altitude=2147.0 -C telescope_theta=20.0 -C star_photons=100000" in command
     log_file = f"ray_tracing_log_South_SSTS-design_d10.0km_za20.0deg_off0.000deg_{LABEL}.log"
     assert stdout_file.name == log_file

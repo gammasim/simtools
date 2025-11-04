@@ -3,7 +3,7 @@ applications:
 - application: simtools-db-get-parameter-from-db
   configuration:
     log_level: DEBUG
-    model_version: 6.0
+    model_version: 6.0.2
     output_file: test.json
     output_path: simtools-output
     parameter: array_element_position_ground
