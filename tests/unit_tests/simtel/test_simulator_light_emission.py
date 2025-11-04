@@ -576,7 +576,7 @@ def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_t
         if name == "flasher_angular_distribution":
             return "gaussian"
         if name == "flasher_pulse_shape":
-            return "gauss-exponential"
+            return "Gauss-Exponential"
         return None
 
     simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_param
@@ -659,7 +659,7 @@ def test__add_flasher_command_options_writer_fallback(simulator_instance, tmp_te
         if name == "flasher_bunch_size":
             return 4000
         if name == "flasher_pulse_shape":
-            return "gauss-exponential"
+            return "Gauss-Exponential"
         return None
 
     simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_param
