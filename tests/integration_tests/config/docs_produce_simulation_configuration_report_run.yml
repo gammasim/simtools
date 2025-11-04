@@ -2,11 +2,11 @@
 applications:
 - application: simtools-docs-produce-simulation-configuration-report
   configuration:
-    model_version: 6.0
+    model_version: 6.0.2
     output_path: simtools-output/reports/productions/
     simulation_software: corsika
   integration_tests:
-  - output_file: 6.0/configuration_corsika.md
+  - output_file: 6.0.2/configuration_corsika.md
   test_name: run
   test_use_case: UC-150-2.3
 schema_name: application_workflow.metaschema

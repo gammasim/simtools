@@ -2,12 +2,12 @@
 applications:
 - application: simtools-docs-produce-array-element-report
   configuration:
-    model_version: 6.0
+    model_version: 6.0.2
     output_path: simtools-output/reports/productions/
     site: North
     telescope: LSTN-01
   integration_tests:
-  - output_file: 6.0/LSTN-01.md
+  - output_file: 6.0.2/LSTN-01.md
   test_name: run
   test_use_case: UC-150-2.3
 schema_name: application_workflow.metaschema
