@@ -802,9 +802,7 @@ class Simulator:
         ValueError
             If the number of simulated events does not match the expected number.
         """
-        file_list = self.get_file_list(file_type="simtel_output")
-
-        for file in file_list:
+        for file in self.get_file_list(file_type="simtel_output"):
             shower_events, mc_events = get_simulated_events(file)
             if shower_events != expected_shower_events:
                 raise ValueError(
@@ -817,9 +815,9 @@ class Simulator:
                     f"the expected number ({expected_mc_events}) in file {file}."
                 )
             self.logger.info(
-                f"Consistent number of simulated events in file: {file}: "
-                f"simulated shower events: {shower_events}, "
-                f"simulated MC events: {mc_events}"
+                f"Consistent number of events in: {file}: "
+                f"shower events: {shower_events}, "
+                f"MC events: {mc_events}"
             )
 
     def _verify_simulated_events_in_reduced_event_lists(self, expected_mc_events):
@@ -836,9 +834,7 @@ class Simulator:
         ValueError
             If the number of simulated events does not match the expected number.
         """
-        file_list = self.get_file_list(file_type="event_data")
-
-        for file in file_list:
+        for file in self.get_file_list(file_type="event_data"):
             tables = table_handler.read_tables(file, ["SHOWERS"])
             try:
                 mc_events = len(tables["SHOWERS"])
@@ -851,6 +847,5 @@ class Simulator:
                     f"the expected number ({expected_mc_events}) in reduced event list {file}."
                 )
             self.logger.info(
-                f"Consistent number of simulated events in reduced event list: {file}: "
-                f"simulated MC events: {mc_events}"
+                f"Consistent number of events in reduced event list: {file}: MC events: {mc_events}"
             )
