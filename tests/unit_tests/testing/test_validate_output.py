@@ -475,8 +475,8 @@ def test_validate_application_output_with_file_type(
 
 
 def test_compare_simtel_cfg_files(tmp_test_directory):
-    file1 = Path("tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0_test.cfg")
-    file2 = Path("tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0_test.cfg")
+    file1 = Path("tests/resources/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg")
+    file2 = Path("tests/resources/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg")
 
     assert validate_output._compare_simtel_cfg_files(file1, file2)
 
