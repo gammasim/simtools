@@ -10,7 +10,24 @@ _logger = logging.getLogger(__name__)
 
 
 def _rise_width(t, y, y_low=0.1, y_high=0.9):
-    """Width on the rising edge between fractional amplitudes y_low and y_high."""
+    """Measure rise width between fractional amplitudes.
+
+    Parameters
+    ----------
+    t : array-like
+        Time samples in ns.
+    y : array-like
+        Pulse amplitude samples (normalized or arbitrary units).
+    y_low : float, optional
+        Lower fractional amplitude (0..1) on the rising edge. Default is 0.1.
+    y_high : float, optional
+        Upper fractional amplitude (0..1) on the rising edge. Default is 0.9.
+
+    Returns
+    -------
+    float
+        Width in ns between ``y_low`` and ``y_high`` on the rising edge.
+    """
     i_peak = int(np.argmax(y))
     tr = t[: i_peak + 1]
     yr = y[: i_peak + 1]
@@ -20,7 +37,24 @@ def _rise_width(t, y, y_low=0.1, y_high=0.9):
 
 
 def _fall_width(t, y, y_high=0.9, y_low=0.1):
-    """Width on the falling edge between fractional amplitudes y_high and y_low."""
+    """Measure fall width between fractional amplitudes.
+
+    Parameters
+    ----------
+    t : array-like
+        Time samples in ns.
+    y : array-like
+        Pulse amplitude samples (normalized or arbitrary units).
+    y_high : float, optional
+        Higher fractional amplitude (0..1) on the falling edge. Default is 0.9.
+    y_low : float, optional
+        Lower fractional amplitude (0..1) on the falling edge. Default is 0.1.
+
+    Returns
+    -------
+    float
+        Width in ns between ``y_high`` and ``y_low`` on the falling edge.
+    """
     i_peak = int(np.argmax(y))
     tf = t[i_peak:]
     yf = y[i_peak:]
@@ -32,16 +66,62 @@ def _fall_width(t, y, y_high=0.9, y_low=0.1):
 
 
 def _gaussian(t, sigma):
+    """Gaussian pulse shape.
+
+    Parameters
+    ----------
+    t : array-like
+        Time samples in ns.
+    sigma : float
+        Gaussian standard deviation in ns.
+
+    Returns
+    -------
+    numpy.ndarray
+        Gaussian values at ``t`` (unitless), with a small safeguard for ``sigma``.
+    """
     return np.exp(-0.5 * (t / max(sigma, 1e-9)) ** 2)
 
 
 def _exp_decay(t, tau):
+    """Causal exponential decay shape.
+
+    Parameters
+    ----------
+    t : array-like
+        Time samples in ns.
+    tau : float
+        Exponential decay constant in ns.
+
+    Returns
+    -------
+    numpy.ndarray
+        Exponential values at ``t`` (unitless), zero for ``t < 0``.
+    """
     tau = max(tau, 1e-9)
     return np.where(t >= 0, np.exp(-t / tau), 0.0)
 
 
 def generate_gauss_expconv_pulse(sigma_ns, tau_ns, dt_ns=0.1, duration_sigma=8.0):
-    """Return time and normalized pulse for Gaussian convolved with causal exponential."""
+    """Generate a Gaussian convolved with a causal exponential.
+
+    Parameters
+    ----------
+    sigma_ns : float
+        Gaussian standard deviation (ns).
+    tau_ns : float
+        Exponential decay constant (ns).
+    dt_ns : float, optional
+        Time sampling step (ns). Default is 0.1 ns.
+    duration_sigma : float, optional
+        Half-duration in units of ``max(tau_ns, sigma_ns)`` used to build the time window.
+        Default is 8.0.
+
+    Returns
+    -------
+    tuple[numpy.ndarray, numpy.ndarray]
+        Tuple ``(t, y)`` with time samples in ns and normalized pulse amplitude (peak 1).
+    """
     left = -duration_sigma * sigma_ns
     right = duration_sigma * max(tau_ns, sigma_ns)
     t = np.arange(left, right + dt_ns, dt_ns, dtype=float)
@@ -82,6 +162,11 @@ def solve_sigma_tau_from_risefall(
     t_stop_ns : float
         Optional stop time (ns) for the internal sampling window. If provided together with
         ``t_start_ns``, overrides the default window.
+
+    Returns
+    -------
+    tuple[float, float]
+        Tuple ``(sigma_ns, tau_ns)`` giving the Gaussian sigma and exponential tau in ns.
     """
     t = np.arange(float(t_start_ns), float(t_stop_ns) + dt_ns, dt_ns, dtype=float)
 
@@ -117,9 +202,40 @@ def generate_pulse_from_rise_fall_times(
     t_start_ns=-10,
     t_stop_ns=25,
 ):
-    """Get (t, y) by solving parameters from generic rise/fall specs and convolving.
+    """Generate pulse from rise/fall time specifications.
 
-    Defaults correspond to 10-90% rise and 90-10% fall times.
+    Parameters
+    ----------
+    rise_width_ns : float
+    Target rise time (ns) between the fractional levels defined by ``rise_range``.
+    Defaults correspond to 10-90% rise time.
+    fall_width_ns : float
+    Target fall time (ns) between the fractional levels defined by ``fall_range``.
+    Defaults correspond to 90-10% fall time.
+    dt_ns : float, optional
+        Time sampling step (ns). Default is 0.1 ns.
+    duration_sigma : float, optional
+        Half-duration in units of ``max(tau, sigma)`` used to build the output time grid.
+        Default is 8.0.
+    rise_range : tuple[float, float], optional
+        Fractional amplitudes (low, high) for rise-time definition. Default (0.1, 0.9).
+    fall_range : tuple[float, float], optional
+        Fractional amplitudes (high, low) for fall-time definition. Default (0.9, 0.1).
+    t_start_ns : float, optional
+        Start time (ns) for the internal solver sampling window. Default -10.
+    t_stop_ns : float, optional
+        Stop time (ns) for the internal solver sampling window. Default 25.
+
+    Returns
+    -------
+    tuple[numpy.ndarray, numpy.ndarray]
+        Tuple ``(t, y)`` with time samples in ns and normalized pulse amplitude (peak 1).
+
+    Notes
+    -----
+    The model is a Gaussian convolved with an exponential. The parameters (sigma, tau)
+    are solved via least-squares such that the resulting pulse matches the requested rise and
+    fall times measured on monotonic segments relative to the peak.
     """
     sigma, tau = solve_sigma_tau_from_risefall(
         rise_width_ns,
