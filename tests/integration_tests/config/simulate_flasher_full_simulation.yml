@@ -3,8 +3,8 @@ applications:
 - application: simtools-simulate-flasher
   configuration:
     run_mode: full_simulation
-    light_source: MSFx-FlashCam
-    model_version: 6.0.2
+    light_source: MSFx-NectarCam
+    model_version: 7.0
     output_path: simtools-output
     site: South
     telescope: MSTS-04
