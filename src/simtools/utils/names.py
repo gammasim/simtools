@@ -632,7 +632,6 @@ def get_simulation_software_name_from_parameter_name(
 
 def simtel_config_file_name(
     site,
-    model_version,
     array_name=None,
     telescope_model_name=None,
     label=None,
@@ -647,8 +646,6 @@ def simtel_config_file_name(
         South or North.
     telescope_model_name: str
         LST-1, MST-FlashCam, ...
-    model_version: str
-        Version of the model.
     label: str
         Instance label.
     extra_label: str
@@ -663,7 +660,6 @@ def simtel_config_file_name(
     name += f"-{array_name}" if array_name is not None else ""
     name += f"-{site}"
     name += f"-{telescope_model_name}" if telescope_model_name is not None else ""
-    name += f"-{model_version}"
     name += f"_{label}" if label is not None else ""
     name += f"_{extra_label}" if extra_label is not None else ""
     name += ".cfg"
