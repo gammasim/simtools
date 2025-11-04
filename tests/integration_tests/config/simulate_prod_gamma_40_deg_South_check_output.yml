@@ -42,7 +42,7 @@ applications:
         - "========== END OF RUN ========"
         - "Sim_telarray finished at"
         - "Run(s) completed as expected after 10 events (10 showers)."
-      file: gamma_run000001_za40deg_azm180deg_South_beta_6.0_check_output.log_hist.tar.gz
+      file: gamma_run000001_za40deg_azm180deg_South_beta_6.0.2_test.log_hist.tar.gz
       path_descriptor: pack_for_grid_register
   - test_simtel_cfg_files:
       "5.0.0": tests/resources/sim_telarray_configurations/5.0.0/CTA-South-LSTS-01_test.cfg
