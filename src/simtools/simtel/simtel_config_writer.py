@@ -132,7 +132,6 @@ class SimtelConfigWriter:
         width_ns=None,
         exp_decay_ns=None,
         dt_ns=0.1,
-        duration_sigma=6.0,
         rise_range=(0.1, 0.9),
         fall_range=(0.9, 0.1),
         fadc_sum_bins=None,
@@ -152,15 +151,12 @@ class SimtelConfigWriter:
             Defaults correspond to 90-10% fall time.
         dt_ns : float, optional
             Time sampling step in ns for the generated pulse table. Default is 0.1.
-        duration_sigma : float, optional
-            Half-duration in units of max(sigma, tau) to include on either side when computing
-            the pulse grid. Default is 6.0.
         rise_range : tuple[float, float], optional
             Fractional amplitude bounds (low, high) for rise-time definition. Default (0.1, 0.9).
         fall_range : tuple[float, float], optional
             Fractional amplitude bounds (high, low) for fall-time definition. Default (0.9, 0.1).
-        fadc_sum_bins : int, optional
-            Defines the length of the FADC integration window in ns used to derive
+        fadc_sum_bins : int
+            Length of the FADC integration window (treated as ns here) used to derive
             the internal time sampling window of the solver as [-(margin), bins + margin].
         time_margin_ns : float, optional
             Margin in ns to add to both ends of the FADC window when ``fadc_sum_bins`` is given.
@@ -192,7 +188,6 @@ class SimtelConfigWriter:
             width_ns,
             exp_decay_ns,
             dt_ns=dt_ns,
-            duration_sigma=duration_sigma,
             rise_range=rise_range,
             fall_range=fall_range,
             t_start_ns=t_start_ns,
