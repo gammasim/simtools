@@ -102,7 +102,7 @@ def _exp_decay(t, tau):
     return np.where(t >= 0, np.exp(-t / tau), 0.0)
 
 
-def generate_gauss_expconv_pulse(sigma_ns, tau_ns, dt_ns=0.1, duration_sigma=8.0):
+def generate_gauss_expconv_pulse(sigma_ns, tau_ns, dt_ns=0.1, t_start_ns=-10, t_stop_ns=25):
     """Generate a Gaussian convolved with a causal exponential.
 
     Parameters
@@ -113,17 +113,20 @@ def generate_gauss_expconv_pulse(sigma_ns, tau_ns, dt_ns=0.1, duration_sigma=8.0
         Exponential decay constant (ns).
     dt_ns : float, optional
         Time sampling step (ns). Default is 0.1 ns.
-    duration_sigma : float, optional
-        Half-duration in units of ``max(tau_ns, sigma_ns)`` used to build the time window.
-        Default is 8.0.
+    t_start_ns : float
+        Together with ``t_stop_ns``, defines the explicit start of the time grid
+        for pulse generation (ns).
+    t_stop_ns : float
+        Together with ``t_start_ns``, defines the explicit end of the time grid
+        for pulse generation (ns).
 
     Returns
     -------
     tuple[numpy.ndarray, numpy.ndarray]
         Tuple ``(t, y)`` with time samples in ns and normalized pulse amplitude (peak 1).
     """
-    left = -duration_sigma * sigma_ns
-    right = duration_sigma * max(tau_ns, sigma_ns)
+    left = float(t_start_ns)
+    right = float(t_stop_ns)
     t = np.arange(left, right + dt_ns, dt_ns, dtype=float)
     g = _gaussian(t, sigma_ns)
     e = _exp_decay(t, tau_ns)
@@ -196,7 +199,6 @@ def generate_pulse_from_rise_fall_times(
     rise_width_ns,
     fall_width_ns,
     dt_ns=0.1,
-    duration_sigma=8.0,
     rise_range=(0.1, 0.9),
     fall_range=(0.9, 0.1),
     t_start_ns=-10,
@@ -214,17 +216,14 @@ def generate_pulse_from_rise_fall_times(
     Defaults correspond to 90-10% fall time.
     dt_ns : float, optional
         Time sampling step (ns). Default is 0.1 ns.
-    duration_sigma : float, optional
-        Half-duration in units of ``max(tau, sigma)`` used to build the output time grid.
-        Default is 8.0.
     rise_range : tuple[float, float], optional
         Fractional amplitudes (low, high) for rise-time definition. Default (0.1, 0.9).
     fall_range : tuple[float, float], optional
         Fractional amplitudes (high, low) for fall-time definition. Default (0.9, 0.1).
     t_start_ns : float, optional
-        Start time (ns) for the internal solver sampling window. Default -10.
+        Start time (ns) for the internal solver sampling window and output grid. Default -10.
     t_stop_ns : float, optional
-        Stop time (ns) for the internal solver sampling window. Default 25.
+        Stop time (ns) for the internal solver sampling window and output grid. Default 25.
 
     Returns
     -------
@@ -246,4 +245,6 @@ def generate_pulse_from_rise_fall_times(
         t_start_ns=t_start_ns,
         t_stop_ns=t_stop_ns,
     )
-    return generate_gauss_expconv_pulse(sigma, tau, dt_ns=dt_ns, duration_sigma=duration_sigma)
+    return generate_gauss_expconv_pulse(
+        sigma, tau, dt_ns=dt_ns, t_start_ns=t_start_ns, t_stop_ns=t_stop_ns
+    )
