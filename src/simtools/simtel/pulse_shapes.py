@@ -127,7 +127,7 @@ def generate_gauss_expconv_pulse(sigma_ns, tau_ns, dt_ns=0.1, t_start_ns=-10, t_
     """
     left = float(t_start_ns)
     right = float(t_stop_ns)
-    t = np.arange(left, right + dt_ns, dt_ns, dtype=float)
+    t = np.arange(left, right, dt_ns, dtype=float)
     g = _gaussian(t, sigma_ns)
     e = _exp_decay(t, tau_ns)
     y = fftconvolve(g, e, mode="same")
