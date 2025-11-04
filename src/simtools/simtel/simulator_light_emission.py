@@ -352,9 +352,14 @@ class SimulatorLightEmission(SimtelRunner):
         # Build pulse table for ff-1m: Gaussian rise + (Gaussian x Exponential)
         # Only apply when an exponential decay parameter exists; else fall back to token string.
         pulse_arg = self._get_pulse_shape_string_for_sim_telarray()
+        pulse_shape = self.calibration_model.get_parameter_value("flasher_pulse_shape")
         width_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
         exp_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_exp_decay")
-        if isinstance(exp_q, u.Quantity) and isinstance(width_q, u.Quantity):
+        if (
+            isinstance(exp_q, u.Quantity)
+            and isinstance(width_q, u.Quantity)
+            and pulse_shape == "Gauss-Exponential"
+        ):
             try:
                 base_dir = self.io_handler.get_output_directory("pulse_shapes")
 
