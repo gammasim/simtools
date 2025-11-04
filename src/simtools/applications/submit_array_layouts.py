@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 
 r"""
-    Submit array-layouts definition and corresponding metadata and validate list of telescopes.
+    Read array layouts from file, validate with telescopes in DB, and prepare for submission.
 
-    Includes validation that all defined telescope exists.
+    Validates that all telescope defined in the array layouts exist in the database for the
+    specified model version. Prepares both JSON-style model parameters and corresponding
+    metadata for submission.
 
     Command line arguments
     ----------------------
@@ -19,7 +21,7 @@ r"""
     Example
     -------
 
-    Submit a new array layout dictionary:
+    Submit and validate a new array layout dictionary:
 
     .. code-block:: console
 

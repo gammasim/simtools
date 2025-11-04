@@ -153,7 +153,6 @@ class ArrayModel:
             config_file_name = names.simtel_config_file_name(
                 array_name=self.layout_name,
                 site=self.site_model.site,
-                model_version=self.model_version,
                 label=self.label,
             )
             self._config_file_path = self.get_config_directory().joinpath(config_file_name)
