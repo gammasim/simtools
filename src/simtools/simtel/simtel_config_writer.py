@@ -135,7 +135,7 @@ class SimtelConfigWriter:
         rise_range=(0.1, 0.9),
         fall_range=(0.9, 0.1),
         fadc_sum_bins=None,
-        time_margin_ns=5.0,
+        time_margin_ns=10.0,
     ):
         """Write a pulse table for a Gaussian convolved with a causal exponential.
 
@@ -180,9 +180,9 @@ class SimtelConfigWriter:
             f"fall90-10={exp_decay_ns} ns, dt={dt_ns} ns"
         )
 
-        width = float(fadc_sum_bins)
-        t_start_ns = -abs(time_margin_ns)
-        t_stop_ns = width + abs(time_margin_ns)
+        width = float(fadc_sum_bins) / 2
+        t_start_ns = -abs(time_margin_ns + width)
+        t_stop_ns = 2 * width + abs(time_margin_ns)
 
         t, y = generate_pulse_from_rise_fall_times(
             width_ns,
