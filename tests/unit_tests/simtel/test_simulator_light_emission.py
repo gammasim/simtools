@@ -554,32 +554,25 @@ def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_t
     """When pulse width and decay exist, a pulse table is written and used."""
 
     # Mock calibration model values including width/decay
-    def mock_get_param_with_unit(name):
-        if name == "flasher_position":
-            return [1.0 * u.cm, 2.0 * u.cm]
-        if name == "flasher_wavelength":
-            return 450.0 * u.nm
-        if name == "flasher_pulse_width":
-            return 2.0 * u.ns
-        if name == "flasher_pulse_exp_decay":
-            return 6.0 * u.ns
-        return None
-
+    params_with_unit = {
+        "flasher_position": [1.0 * u.cm, 2.0 * u.cm],
+        "flasher_wavelength": 450.0 * u.nm,
+        "flasher_pulse_width": 2.0 * u.ns,
+        "flasher_pulse_exp_decay": 6.0 * u.ns,
+    }
     simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
-        mock_get_param_with_unit
+        lambda name: params_with_unit.get(name)
     )
 
     # Provide specific returns for plain-valued params used inside the call
-    def mock_get_param(name):
-        if name == "flasher_bunch_size":
-            return 8000
-        if name == "flasher_angular_distribution":
-            return "gaussian"
-        if name == "flasher_pulse_shape":
-            return "Gauss-Exponential"
-        return None
-
-    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_param
+    plain_params = {
+        "flasher_bunch_size": 8000,
+        "flasher_angular_distribution": "gaussian",
+        "flasher_pulse_shape": "Gauss-Exponential",
+    }
+    simulator_instance.calibration_model.get_parameter_value.side_effect = (
+        lambda name: plain_params.get(name)
+    )
 
     # Mock telescope values
     mock_diameter = Mock()
