@@ -918,14 +918,17 @@ def test_write_lightpulse_table_gauss_expconv_creates_normalized_file(tmp_test_d
     assert y.size == t.size
     assert y.size > 2
     assert np.isclose(y.max(), 1.0, atol=1e-2)
-    # The output time window should at least cover [-margin, bins+margin]
-    # (generator may extend beyond these bounds based on duration)
+    # With centering enabled in the writer, the time axis is shifted so the peak is at ~0.
     margin = 5.0
     bins = 40.0
     dt = 0.2
-    assert t[-1] - t[0] >= margin
-    assert t[0] <= -margin + dt
-    assert t[-1] >= (bins + margin) - dt
+    assert np.allclose(np.diff(t), dt, atol=1e-9)
+    # Peak near t=0
+    i_max = int(np.argmax(y))
+    assert abs(t[i_max]) <= dt
+    # Coverage at least bins + 2*margin (symmetric window after centering)
+    expected_span = bins + 2 * margin
+    assert (t[-1] - t[0]) >= (expected_span - dt)
 
 
 def test_write_lightpulse_table_gauss_expconv_time_spacing(tmp_test_directory):
