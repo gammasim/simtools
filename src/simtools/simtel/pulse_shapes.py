@@ -245,6 +245,7 @@ def generate_pulse_from_rise_fall_times(
         t_start_ns=t_start_ns,
         t_stop_ns=t_stop_ns,
     )
+
     return generate_gauss_expconv_pulse(
         sigma, tau, dt_ns=dt_ns, t_start_ns=t_start_ns, t_stop_ns=t_stop_ns
     )
