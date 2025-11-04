@@ -17,10 +17,15 @@ from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
 
+# Common style constants
+PATCH_STYLE = {"alpha": 0.8, "edgecolor": "black", "facecolor": "dodgerblue"}
+LABEL_STYLE = {"ha": "center", "va": "center", "fontsize": 10, "color": "white", "weight": "bold"}
+STATS_BOX_STYLE = {"boxstyle": "round", "facecolor": "wheat", "alpha": 0.8}
+
 
 def _detect_segmentation_type(data_file_path):
     """
-    Detect the type of segmentation file (ring, petal/polygon, or standard).
+    Detect the type of segmentation file (ring, shape, or standard).
 
     Parameters
     ----------
@@ -30,7 +35,7 @@ def _detect_segmentation_type(data_file_path):
     Returns
     -------
     str
-        One of "ring", "petal", or "standard"
+        One of "ring", "shape", or "standard"
     """
     with open(data_file_path, encoding="utf-8") as f:
         for line in f:
@@ -39,8 +44,8 @@ def _detect_segmentation_type(data_file_path):
                 continue
             if line_lower.startswith("ring"):
                 return "ring"
-            if line_lower.startswith(("poly", "hex", "square", "circular", "yhex")):
-                return "petal"
+            if line_lower.startswith(("hex", "square", "circular", "yhex")):
+                return "shape"
     return "standard"
 
 
@@ -95,8 +100,8 @@ def plot(config, output_file, db_config=None):
                 parameter_type=parameter_type,
                 title=config.get("title"),
             )
-        elif segmentation_type == "petal":
-            fig = plot_mirror_petal_segmentation(
+        elif segmentation_type == "shape":
+            fig = plot_mirror_shape_segmentation(
                 data_file_path=data_file_path,
                 telescope_model_name=config["telescope"],
                 parameter_type=parameter_type,
@@ -169,12 +174,6 @@ def plot_mirror_layout(mirrors, telescope_model_name, title=None):
     collection.set_array(np.array(colors))
     ax.add_collection(collection)
 
-    mean_outer_edge_radius = _calculate_mean_outer_edge_radius(x_pos, y_pos, diameter, shape_type)
-    outer_edge_circle = mpatches.Circle(
-        (0, 0), mean_outer_edge_radius, fill=False, edgecolor="darkorange", linewidth=2.0
-    )
-    ax.add_patch(outer_edge_circle)
-
     _add_mirror_labels(ax, x_pos, y_pos, mirror_ids, max_labels=20)
 
     _configure_mirror_plot(
@@ -228,7 +227,7 @@ def plot_mirror_segmentation(data_file_path, telescope_model_name, parameter_typ
     shape_type = segmentation_data["shape_type"]
     segment_ids = segmentation_data["segment_ids"]
 
-    patches, colors = _create_segmentation_patches(x_pos, y_pos, diameter, shape_type, segment_ids)
+    patches, colors = _create_mirror_patches(x_pos, y_pos, diameter, shape_type, segment_ids)
 
     collection = PatchCollection(
         patches,
@@ -266,15 +265,15 @@ def plot_mirror_segmentation(data_file_path, telescope_model_name, parameter_typ
         transform=ax.transAxes,
         fontsize=11,
         verticalalignment="top",
-        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.8},
+        bbox=STATS_BOX_STYLE,
     )
 
     return fig
 
 
-def _create_mirror_patches(x_pos, y_pos, diameter, shape_type, focal_lengths):
+def _create_mirror_patches(x_pos, y_pos, diameter, shape_type, color_values):
     """
-    Create matplotlib patches for mirror panels.
+    Create matplotlib patches for mirror panels or segments.
 
     Parameters
     ----------
@@ -284,23 +283,18 @@ def _create_mirror_patches(x_pos, y_pos, diameter, shape_type, focal_lengths):
         Diameter of mirror panels
     shape_type : int
         Shape type (0: circular, 1/3: hexagonal, 2: square)
-    focal_lengths : array-like
-        Focal length values for each mirror panel (used for coloring)
+    color_values : array-like
+        Values for each mirror panel (used for coloring, e.g., focal_lengths or segment_ids)
 
     Returns
     -------
     tuple
         (patches, colors) - list of matplotlib patches and corresponding color values
     """
-    patches = []
-    colors = []
-
-    for i, (x, y) in enumerate(zip(x_pos, y_pos)):
-        patch = _create_single_mirror_patch(x, y, diameter, shape_type)
-        patches.append(patch)
-        colors.append(focal_lengths[i])
-
-    return patches, colors
+    patches = [
+        _create_single_mirror_patch(x, y, diameter, shape_type) for x, y in zip(x_pos, y_pos)
+    ]
+    return patches, list(color_values)
 
 
 def _read_segmentation_file(data_file_path):
@@ -371,37 +365,6 @@ def _extract_segment_id(parts, default_id):
         seg_id_str = parts[7].split("=")[-1] if "=" in parts[7] else parts[7]
         return int("".join(filter(str.isdigit, seg_id_str)))
     return default_id
-
-
-def _create_segmentation_patches(x_pos, y_pos, diameter, shape_type, segment_ids):
-    """
-    Create matplotlib patches for mirror segments.
-
-    Parameters
-    ----------
-    x_pos, y_pos : array-like
-        X and Y coordinates of segment centers
-    diameter : float
-        Diameter of segments
-    shape_type : int
-        Shape type (0: circular, 1/3: hexagonal, 2: square)
-    segment_ids : array-like
-        Segment ID values for each segment (used for coloring)
-
-    Returns
-    -------
-    tuple
-        (patches, colors) - list of matplotlib patches and corresponding color values
-    """
-    patches = []
-    colors = []
-
-    for i, (x, y) in enumerate(zip(x_pos, y_pos)):
-        patch = _create_single_mirror_patch(x, y, diameter, shape_type)
-        patches.append(patch)
-        colors.append(segment_ids[i])
-
-    return patches, colors
 
 
 def _create_single_mirror_patch(x, y, diameter, shape_type):
@@ -551,10 +514,13 @@ def _add_camera_frame_indicator(ax, telescope_model_name=None):
         x_label = "$X_{cam}$"
         y_label = "$Y_{cam}$"
 
-    arrow_props = {
-        "arrowstyle": "->",
-        "lw": 2.0,
+    arrow_props = {"arrowstyle": "->", "lw": 2.0, "color": "darkblue"}
+    text_props = {
+        "fontsize": 12,
         "color": "darkblue",
+        "weight": "bold",
+        "ha": "center",
+        "va": "center",
     }
 
     x_lim = ax.get_xlim()
@@ -564,45 +530,19 @@ def _add_camera_frame_indicator(ax, telescope_model_name=None):
     x_origin = x_lim[1] - (x_lim[1] - x_lim[0]) * 0.15
     y_origin = y_lim[0] + (y_lim[1] - y_lim[0]) * 0.12
 
-    dx_first = 0.0
-    dy_first = -arrow_length
+    arrows = [
+        (0.0, -arrow_length, x_label, 1.3),  # Down arrow
+        (arrow_length, 0.0, y_label, 1.5),  # Right arrow
+    ]
 
-    dx_second = arrow_length
-    dy_second = 0.0
-
-    ax.annotate(
-        "",
-        xy=(x_origin + dx_first, y_origin + dy_first),
-        xytext=(x_origin, y_origin),
-        arrowprops=arrow_props,
-    )
-    ax.text(
-        x_origin + dx_first * 1.3,
-        y_origin + dy_first * 1.3,
-        x_label,
-        fontsize=12,
-        color="darkblue",
-        weight="bold",
-        ha="center",
-        va="center",
-    )
-
-    ax.annotate(
-        "",
-        xy=(x_origin + dx_second, y_origin + dy_second),
-        xytext=(x_origin, y_origin),
-        arrowprops=arrow_props,
-    )
-    ax.text(
-        x_origin + dx_second * 1.5,
-        y_origin + dy_second * 1.3,
-        y_label,
-        fontsize=12,
-        color="darkblue",
-        weight="bold",
-        ha="center",
-        va="center",
-    )
+    for dx, dy, label, text_mult in arrows:
+        ax.annotate(
+            "",
+            xy=(x_origin + dx, y_origin + dy),
+            xytext=(x_origin, y_origin),
+            arrowprops=arrow_props,
+        )
+        ax.text(x_origin + dx * text_mult, y_origin + dy * 1.3, label, **text_props)
 
 
 def _add_mirror_statistics(ax, mirrors, x_pos, y_pos, diameter):
@@ -650,8 +590,31 @@ def _add_mirror_statistics(ax, mirrors, x_pos, y_pos, diameter):
         transform=ax.transAxes,
         fontsize=11,
         verticalalignment="top",
-        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.8},
+        bbox=STATS_BOX_STYLE,
     )
+
+
+def _get_radius_offset(diameter, shape_type):
+    """
+    Get the radius offset for a given shape type.
+
+    Parameters
+    ----------
+    diameter : float
+        Diameter of mirror panels
+    shape_type : int
+        Shape type (0: circular, 1/3: hexagonal, 2: square)
+
+    Returns
+    -------
+    float
+        Radius offset in cm
+    """
+    if shape_type == 0:
+        return diameter / 2
+    if shape_type in (1, 3):
+        return diameter / np.sqrt(3)
+    return diameter / np.sqrt(2)
 
 
 def _calculate_mean_outer_edge_radius(x_pos, y_pos, diameter, shape_type):
@@ -672,13 +635,7 @@ def _calculate_mean_outer_edge_radius(x_pos, y_pos, diameter, shape_type):
     float
         Mean outer edge radius in cm
     """
-    if shape_type == 0:
-        radius_offset = diameter / 2
-    elif shape_type in (1, 3):
-        radius_offset = diameter / np.sqrt(3)
-    else:
-        radius_offset = diameter / np.sqrt(2)
-
+    radius_offset = _get_radius_offset(diameter, shape_type)
     radii = np.sqrt(x_pos**2 + y_pos**2) + radius_offset
     return np.mean(radii)
 
@@ -694,67 +651,102 @@ def _read_ring_segmentation_data(data_file_path):
 
     Returns
     -------
-    tuple
-        (radii, phi0, nseg) - inner/outer radii, rotation angle, number of segments
+    list of dict
+        List of ring dictionaries, each containing rmin, rmax, nseg, phi0
     """
-    radii = []
-    phi0 = 0
-    nseg = 6
+    rings = []
 
     with open(data_file_path, encoding="utf-8") as f:
         for line in f:
             if not line.startswith("#") and not line.startswith("%"):
                 if line.lower().startswith("ring"):
                     parts = line.split()
-                    nseg = int(parts[1].strip())
-                    radii.append(float(parts[2].strip()))
-                    radii.append(float(parts[3].strip()))
-                    phi0 = float(parts[5].strip())
+                    rings.append(
+                        {
+                            "nseg": int(parts[1].strip()),
+                            "rmin": float(parts[2].strip()),
+                            "rmax": float(parts[3].strip()),
+                            "dphi": float(parts[4].strip()),
+                            "phi0": float(parts[5].strip()),
+                        }
+                    )
 
-    return radii, phi0, nseg
+    return rings
 
 
-def _plot_ring_structure(ax, theta, r, nseg, phi0, cmap, norm):
+def _plot_single_ring(ax, ring, cmap, norm, color_index):
     """
-    Plot the ring structure including boundaries and segments.
+    Plot a single ring with its segments.
 
     Parameters
     ----------
     ax : matplotlib.axes.Axes
         Polar axes to plot on
-    theta : array-like
-        Angular coordinates
-    r : array-like
-        Radial coordinates [inner_hole, inner_ring, outer_ring]
-    nseg : int
-        Number of segments
-    phi0 : float
-        Rotation angle in degrees
+    ring : dict
+        Ring parameters (rmin, rmax, nseg, phi0, dphi)
     cmap : matplotlib colormap
         Colormap for segments
     norm : matplotlib normalization
         Color normalization
+    color_index : int
+        Base color index for this ring
     """
     linewidth = 2
+    rmin, rmax = ring["rmin"], ring["rmax"]
+    nseg, phi0 = ring["nseg"], ring["phi0"]
+    dphi = ring["dphi"]
 
-    for i in range(r.shape[0]):
-        ax.plot(theta, np.repeat(r[i], theta.shape), "-k", lw=linewidth)
+    # Draw inner and outer circles
+    theta_full = np.linspace(0, 2 * np.pi, 360)
+    ax.plot(theta_full, np.repeat(rmin, len(theta_full)), "-k", lw=linewidth)
+    ax.plot(theta_full, np.repeat(rmax, len(theta_full)), "-k", lw=linewidth)
 
+    # Draw segment boundaries and fill segments
     if nseg > 1:
+        dphi_rad = dphi * np.pi / 180
+        phi0_rad = phi0 * np.pi / 180
+
         for i in range(nseg):
-            theta_i = (i - 1) * 60 * np.pi / 180 + phi0 * np.pi / 180
-            ax.plot([theta_i, theta_i], [r[1], r[2]], "-k", lw=linewidth)
+            theta_i = i * dphi_rad + phi0_rad
+            # Draw radial line
+            ax.plot([theta_i, theta_i], [rmin, rmax], "-k", lw=linewidth)
 
-    if phi0 == 0:
-        ax.plot([30 * np.pi / 180, 30 * np.pi / 180], [r[1], r[2]], "--k", lw=1)
+            # Fill segment
+            n_theta = 64
+            theta_seg = np.linspace(theta_i, theta_i + dphi_rad, n_theta)
+            r_seg = np.array([rmin, rmax])
+            theta_mesh = np.repeat(theta_seg[:, np.newaxis], 2, axis=1)
+            r_mesh = np.repeat(r_seg[np.newaxis, :], n_theta, axis=0)
+            z = np.ones((n_theta, 2)) * (color_index + i % 10)
+            ax.pcolormesh(theta_mesh, r_mesh, z, cmap=cmap, norm=norm, shading="auto")
 
-    r0 = r[1:3]
-    r0 = np.repeat(r0[:, np.newaxis], 128, axis=1).T
-    for i in range(nseg):
-        theta0 = theta[i * 128 : i * 128 + 128] + phi0 * np.pi / 180
-        theta0 = np.repeat(theta0[:, np.newaxis], 2, axis=1)
-        z = np.ones((128, 2)) * 11
-        ax.pcolormesh(theta0, r0, z, cmap=cmap, norm=norm)
+
+def _add_ring_radius_label(ax, angle, radius, label_text):
+    """
+    Add a radius label at the specified angle and radius.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Polar axes to add label to
+    angle : float
+        Angle in radians
+    radius : float
+        Radial position
+    label_text : str
+        Text to display
+    """
+    ax.text(
+        angle,
+        radius,
+        label_text,
+        ha="center",
+        va="center",
+        fontsize=9,
+        color="red",
+        weight="bold",
+        bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "alpha": 0.8},
+    )
 
 
 def plot_mirror_ring_segmentation(data_file_path, telescope_model_name, parameter_type, title=None):
@@ -781,26 +773,33 @@ def plot_mirror_ring_segmentation(data_file_path, telescope_model_name, paramete
     """
     logger.info(f"Plotting ring {parameter_type} for {telescope_model_name}")
 
-    radii, phi0, nseg = _read_ring_segmentation_data(data_file_path)
+    rings = _read_ring_segmentation_data(data_file_path)
+
+    if not rings:
+        logger.warning(f"No ring data found in {data_file_path}")
+        return None
 
     fig, ax = plt.subplots(subplot_kw={"projection": "polar"}, figsize=(10, 10))
 
     cmap = mcolors.LinearSegmentedColormap.from_list("mirror_blue", ["#deebf7", "#3182bd"])
     norm = mcolors.Normalize(vmin=1, vmax=20)
 
-    theta = np.linspace(0, 2 * np.pi, 128 * nseg)
-    r = np.array([0, radii[0], radii[1]])
+    for i, ring in enumerate(rings):
+        _plot_single_ring(ax, ring, cmap, norm, color_index=i * 10)
 
-    _plot_ring_structure(ax, theta, r, nseg, phi0, cmap, norm)
-
-    ax.set_ylim([r[0], r[2]])
+    max_radius = max(ring["rmax"] for ring in rings)
+    ax.set_ylim([0, max_radius])
     ax.set_yticklabels([])
 
-    if r[1] > 20:
-        plt.text(30 * np.pi / 180, (5 / 9) * r[1], f"{r[1]:.0f}")
-    else:
-        plt.text(225 * np.pi / 180, 3, f"{r[1]:.0f}")
-    plt.text(30 * np.pi / 180, r[2] + 5, f"{r[2]:.0f} [cm]")
+    label_angle = 30 * np.pi / 180
+
+    for ring in rings:
+        _add_ring_radius_label(ax, label_angle, ring["rmin"], f"{ring['rmin']:.0f}")
+        _add_ring_radius_label(ax, label_angle, ring["rmax"], f"{ring['rmax']:.0f}")
+
+    ax.text(
+        label_angle, max_radius + 5, "[cm]", ha="center", va="bottom", fontsize=10, weight="bold"
+    )
 
     if title:
         plt.subplots_adjust(top=0.85)
@@ -810,9 +809,42 @@ def plot_mirror_ring_segmentation(data_file_path, telescope_model_name, paramete
     return fig
 
 
-def _read_petal_segmentation_file(data_file_path):
+def _parse_segment_id_line(line_stripped):
+    """Extract segment ID from a line if it contains segment ID information."""
+    try:
+        return int(line_stripped.split()[-1])
+    except (ValueError, IndexError):
+        return 0
+
+
+def _is_skippable_line(line_stripped):
+    """Check if line should be skipped (empty or comment)."""
+    return not line_stripped or line_stripped.startswith(("#", "%"))
+
+
+def _parse_shape_line(line_stripped, shape_segments, segment_ids, current_segment_id):
+    """Parse and append a single shape segmentation line."""
+    entries = line_stripped.split()
+
+    if (
+        any(line_stripped.lower().startswith(s) for s in ["hex", "square", "circular", "yhex"])
+        and len(entries) >= 5
+    ):
+        shape_segments.append(
+            {
+                "shape": entries[0].lower(),
+                "x": float(entries[2]),
+                "y": float(entries[3]),
+                "diameter": float(entries[4]),
+                "rotation": float(entries[5]) if len(entries) > 5 else 0.0,
+            }
+        )
+        segment_ids.append(current_segment_id if current_segment_id > 0 else len(shape_segments))
+
+
+def _read_shape_segmentation_file(data_file_path):
     """
-    Read petal/shape segmentation file.
+    Read shape segmentation file.
 
     Parameters
     ----------
@@ -822,116 +854,29 @@ def _read_petal_segmentation_file(data_file_path):
     Returns
     -------
     tuple
-        (segments, shape_segments, segment_ids)
+        (shape_segments, segment_ids)
     """
-    segments = []
-    shape_segments = []
-    segment_ids = []
+    shape_segments, segment_ids = [], []
+    current_segment_id = 0
 
     with open(data_file_path, encoding="utf-8") as f:
-        current_segment_id = 0
         for line in f:
             line_stripped = line.strip()
 
             if "segment id" in line_stripped.lower():
-                try:
-                    current_segment_id = int(line_stripped.split()[-1])
-                except (ValueError, IndexError):
-                    pass
-                continue
+                current_segment_id = _parse_segment_id_line(line_stripped)
+            elif not _is_skippable_line(line_stripped):
+                _parse_shape_line(line_stripped, shape_segments, segment_ids, current_segment_id)
 
-            if not line_stripped or line_stripped.startswith("#") or line_stripped.startswith("%"):
-                continue
-
-            if line_stripped.startswith("poly"):
-                entries = line.split()
-                angle = int(entries[2].strip())
-                corners_x = [float(entries[i].strip()) for i in range(3, len(entries) - 1, 2)]
-                corners_y = [float(entries[i].strip()) for i in range(4, len(entries), 2)]
-                segments.append({"angle": angle, "x": corners_x, "y": corners_y})
-                segment_ids.append(current_segment_id if current_segment_id > 0 else len(segments))
-            elif any(
-                line_stripped.lower().startswith(shape)
-                for shape in ["hex", "square", "circular", "yhex"]
-            ):
-                entries = line.split()
-                if len(entries) >= 5:
-                    shape_type = entries[0].lower()
-                    x = float(entries[2])
-                    y = float(entries[3])
-                    diam = float(entries[4])
-                    rot = float(entries[5]) if len(entries) > 5 else 0.0
-
-                    shape_segments.append(
-                        {"shape": shape_type, "x": x, "y": y, "diameter": diam, "rotation": rot}
-                    )
-                    segment_ids.append(
-                        current_segment_id if current_segment_id > 0 else len(shape_segments)
-                    )
-
-    return segments, shape_segments, segment_ids
+    return shape_segments, segment_ids
 
 
-def _create_polygon_patches(segments, segment_ids, ax):
-    """
-    Create patches for polygon segments.
-
-    Parameters
-    ----------
-    segments : list
-        List of polygon segment dictionaries
-    segment_ids : list
-        List of segment IDs
-    ax : matplotlib.axes.Axes
-        Axes to add text labels to
-
-    Returns
-    -------
-    tuple
-        (patches, maximum_radius)
-    """
-    patches = []
-    maximum_radius = 0
-
-    for i_seg, segment in enumerate(segments):
-        angle_rad = np.deg2rad(segment["angle"])
-        cos_a = np.cos(angle_rad)
-        sin_a = np.sin(angle_rad)
-
-        rotated_x = []
-        rotated_y = []
-        for x, y in zip(segment["x"], segment["y"]):
-            rot_x = x * cos_a - y * sin_a
-            rot_y = x * sin_a + y * cos_a
-            rotated_x.append(rot_x)
-            rotated_y.append(rot_y)
-            maximum_radius = max(maximum_radius, abs(rot_x), abs(rot_y))
-
-        polygon = mpatches.Polygon(
-            list(zip(rotated_x, rotated_y)),
-            alpha=0.8,
-            edgecolor="black",
-            facecolor="dodgerblue",
-        )
-        patches.append(polygon)
-
-        center_x = np.mean(rotated_x)
-        center_y = np.mean(rotated_y)
-        ax.text(
-            center_x,
-            center_y,
-            str(segment_ids[i_seg]) if i_seg < len(segment_ids) else str(i_seg + 1),
-            ha="center",
-            va="center",
-            fontsize=10,
-            color="white",
-            weight="bold",
-        )
-
-    return patches, maximum_radius
+def _add_segment_label(ax, x, y, label):
+    """Add a label at the specified position."""
+    ax.text(x, y, str(label), **LABEL_STYLE)
 
 
-def _create_shape_patches(shape_segments, segment_ids, segments, ax):
+def _create_shape_patches(shape_segments, segment_ids, ax):
     """
     Create patches for shape segments (hex, square, circular).
 
@@ -941,8 +886,6 @@ def _create_shape_patches(shape_segments, segment_ids, segments, ax):
         List of shape segment dictionaries
     segment_ids : list
         List of segment IDs
-    segments : list
-        List of polygon segments (for offset calculation)
     ax : matplotlib.axes.Axes
         Axes to add text labels to
 
@@ -951,72 +894,42 @@ def _create_shape_patches(shape_segments, segment_ids, segments, ax):
     tuple
         (patches, maximum_radius)
     """
-    patches = []
-    maximum_radius = 0
+    patches, maximum_radius = [], 0
 
-    for i_seg, segment in enumerate(shape_segments):
-        x, y = segment["x"], segment["y"]
-        diam = segment["diameter"]
-        rot = segment["rotation"]
-        shape = segment["shape"]
-
+    for i_seg, seg in enumerate(shape_segments):
+        x, y, diam, rot, shape = seg["x"], seg["y"], seg["diameter"], seg["rotation"], seg["shape"]
         maximum_radius = max(maximum_radius, abs(x) + diam / 2, abs(y) + diam / 2)
 
         if "hex" in shape:
-            orientation = np.deg2rad(rot)
             patch = mpatches.RegularPolygon(
                 (x, y),
                 numVertices=6,
                 radius=diam / np.sqrt(3),
-                orientation=orientation,
-                alpha=0.8,
-                edgecolor="black",
-                facecolor="dodgerblue",
+                orientation=np.deg2rad(rot),
+                **PATCH_STYLE,
             )
         elif "square" in shape:
             patch = mpatches.Rectangle(
-                (x - diam / 2, y - diam / 2),
-                width=diam,
-                height=diam,
-                angle=rot,
-                alpha=0.8,
-                edgecolor="black",
-                facecolor="dodgerblue",
+                (x - diam / 2, y - diam / 2), diam, diam, angle=rot, **PATCH_STYLE
             )
         else:
-            patch = mpatches.Circle(
-                (x, y),
-                radius=diam / 2,
-                alpha=0.8,
-                edgecolor="black",
-                facecolor="dodgerblue",
-            )
+            patch = mpatches.Circle((x, y), radius=diam / 2, **PATCH_STYLE)
 
         patches.append(patch)
-
-        idx = len(segments) + i_seg
-        label = str(segment_ids[idx]) if idx < len(segment_ids) else str(i_seg + 1)
-        ax.text(
-            x,
-            y,
-            label,
-            ha="center",
-            va="center",
-            fontsize=10,
-            color="white",
-            weight="bold",
-        )
+        label = segment_ids[i_seg] if i_seg < len(segment_ids) else i_seg + 1
+        _add_segment_label(ax, x, y, label)
 
     return patches, maximum_radius
 
 
-def plot_mirror_petal_segmentation(
+def plot_mirror_shape_segmentation(
     data_file_path, telescope_model_name, parameter_type, title=None
 ):
     """
-    Plot mirror petal/polygon segmentation layout.
+    Plot mirror shape segmentation layout.
 
-    This function creates a visualization of mirror segments defined as polygons.
+    This function creates a visualization of mirror segments defined as shapes
+    (hexagonal, square, or circular).
 
     Parameters
     ----------
@@ -1034,48 +947,36 @@ def plot_mirror_petal_segmentation(
     matplotlib.figure.Figure
         The generated figure
     """
-    logger.info(f"Plotting petal {parameter_type} for {telescope_model_name}")
+    logger.info(f"Plotting shape {parameter_type} for {telescope_model_name}")
 
-    segments, shape_segments, segment_ids = _read_petal_segmentation_file(data_file_path)
-
+    shape_segments, segment_ids = _read_shape_segmentation_file(data_file_path)
     fig, ax = plt.subplots(figsize=(10, 10))
 
-    all_patches = []
-    maximum_radius = 0
-
-    # Handle polygon segments
-    patches, max_r = _create_polygon_patches(segments, segment_ids, ax)
-    all_patches.extend(patches)
-    maximum_radius = max(maximum_radius, max_r)
-
-    # Handle shape segments
-    patches, max_r = _create_shape_patches(shape_segments, segment_ids, segments, ax)
-    all_patches.extend(patches)
-    maximum_radius = max(maximum_radius, max_r)
+    # Create patches for shape segments
+    all_patches, maximum_radius = _create_shape_patches(shape_segments, segment_ids, ax)
 
     collection = PatchCollection(all_patches, match_original=True)
     ax.add_collection(collection)
 
+    # Configure plot
     ax.set_aspect("equal")
-    padding = maximum_radius * 0.1
+    padding = maximum_radius * 0.1 if maximum_radius > 0 else 100
     ax.set_xlim(-maximum_radius - padding, maximum_radius + padding)
     ax.set_ylim(-maximum_radius - padding, maximum_radius + padding)
 
     plt.grid(True, alpha=0.3)
     ax.set_axisbelow(True)
-
     plt.xlabel("X position [cm]", fontsize=16)
     plt.ylabel("Y position [cm]", fontsize=16)
+    plt.tick_params(axis="both", which="major", labelsize=14)
 
     if title:
         ax.set_title(title, fontsize=18, pad=20)
-    plt.tick_params(axis="both", which="major", labelsize=14)
 
-    # Count unique segment IDs if available
-    total_segments = len(segments) + len(shape_segments)
+    # Add statistics
+    total_segments = len(shape_segments)
     if segment_ids and total_segments > 0:
-        unique_segments = len(set(segment_ids))
-        stats_text = f"Number of segments: {unique_segments}"
+        stats_text = f"Number of segments: {len(set(segment_ids))}"
     elif total_segments > 0:
         stats_text = f"Number of segments: {total_segments}"
     else:
@@ -1088,7 +989,7 @@ def plot_mirror_petal_segmentation(
         transform=ax.transAxes,
         fontsize=11,
         verticalalignment="top",
-        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.8},
+        bbox=STATS_BOX_STYLE,
     )
 
     return fig
