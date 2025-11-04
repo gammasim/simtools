@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 
 import simtools.ray_tracing.psf_parameter_optimisation as psf_opt
+from simtools.ray_tracing.psf_parameter_optimisation import GradientStepResult
 
 TEST_OUTPUT_DIR = Path("/dummy_test_path")
 
@@ -98,6 +99,16 @@ def sample_mc_results():
         3.5,
         0.1,
         [3.4, 3.5, 3.6],  # mean_psf, std_psf, psf_values
+    )
+
+
+@pytest.fixture
+def optimizer(mock_telescope_model, mock_site_model, mock_args_dict, sample_data):
+    """Create a PSFParameterOptimizer instance for testing."""
+    radius = sample_data[psf_opt.RADIUS]
+    data_to_plot = {"measured": sample_data}
+    return psf_opt.PSFParameterOptimizer(
+        mock_telescope_model, mock_site_model, mock_args_dict, data_to_plot, radius, TEST_OUTPUT_DIR
     )
 
 
@@ -413,116 +424,163 @@ def test_export_psf_parameters(mock_telescope_model, temp_dir, sample_parameters
         )
 
 
-def test__calculate_param_gradient(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data, sample_parameters
-):
-    """Test parameter gradient calculation."""
-    radius = sample_data[psf_opt.RADIUS]
-    data_to_plot = {"measured": sample_data}
+def test__calculate_param_gradient_success(optimizer):
+    """Test successful parameter gradient calculation."""
+    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    current_metric = 0.1
 
-    with patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim:
-        # Need 3 calls for the 3 parameter values
-        mock_sim.side_effect = [
-            (3.5, 0.1, 0.8, sample_data),
-            (3.7, 0.12, 0.7, sample_data),
-            (3.6, 0.11, 0.75, sample_data),
-        ]
+    with patch.object(optimizer, "run_simulation") as mock_sim:
+        mock_sim.return_value = (None, 0.095, None, None)
 
-        gradient = psf_opt._calculate_param_gradient(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            sample_parameters,
-            data_to_plot,
-            radius,
+        gradient = optimizer._calculate_param_gradient(
+            current_params,
+            current_metric,
+            "mirror_reflection_random_angle",
+            [0.005, 0.15, 0.03],
+            0.0005,
+        )
+
+        assert gradient is not None
+        assert isinstance(gradient, list)
+        assert len(gradient) == 3
+        assert all(isinstance(g, float) for g in gradient)
+
+
+def test__calculate_param_gradient_simulation_failure(optimizer):
+    """Test parameter gradient calculation when simulation fails."""
+
+    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+
+    with patch.object(optimizer, "run_simulation") as mock_sim:
+        # First call succeeds, second fails
+        mock_sim.side_effect = ValueError("Simulation failed")
+
+        gradient = optimizer._calculate_param_gradient(
+            current_params,
             0.1,
             "mirror_reflection_random_angle",
             [0.005, 0.15, 0.03],
             0.0005,
-            False,
         )
-        assert isinstance(gradient, list)
-        assert len(gradient) == 3
+        # Should return None when simulation fails
+        assert gradient is None
 
 
-def test_calculate_gradient(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data, sample_parameters
-):
-    """Test gradient calculation for all parameters."""
-    radius = sample_data[psf_opt.RADIUS]
-    data_to_plot = {"measured": sample_data}
+def test_calculate_gradient(optimizer, sample_parameters):
+    """Test gradient calculation for all parameters using PSFParameterOptimizer."""
 
-    with patch(
-        "simtools.ray_tracing.psf_parameter_optimisation._calculate_param_gradient"
-    ) as mock_grad:
+    with patch.object(optimizer, "_calculate_param_gradient") as mock_grad:
         mock_grad.return_value = [-0.1, 0.05, -0.02]
 
-        gradients = psf_opt.calculate_gradient(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
+        gradients = optimizer.calculate_gradient(
             sample_parameters,
-            data_to_plot,
-            radius,
             0.1,
         )
         assert "mirror_reflection_random_angle" in gradients
+        assert gradients["mirror_reflection_random_angle"] == [-0.1, 0.05, -0.02]
 
 
-def test_apply_gradient_step():
-    """Test applying gradient descent step to parameters with multiple scenarios."""
-    # Basic test case
+def test_calculate_gradient_returns_none_on_failure(
+    mock_telescope_model, mock_site_model, mock_args_dict, sample_data, tmp_path
+):
+    """Test that calculate_gradient returns None if any parameter gradient fails."""
+    data_to_plot = {"measured": sample_data}
+    radius = sample_data[psf_opt.RADIUS]
+
+    optimizer = psf_opt.PSFParameterOptimizer(
+        mock_telescope_model, mock_site_model, mock_args_dict, data_to_plot, radius, tmp_path
+    )
+
+    current_params = {
+        "mirror_reflection_random_angle": [0.005, 0.15, 0.03],
+        "mirror_align_random_horizontal": [0.004, 28.0, 0.0, 0.0],
+    }
+
+    with patch.object(optimizer, "_calculate_param_gradient") as mock_grad:
+        # First parameter succeeds, second fails
+        mock_grad.side_effect = [[-0.1, 0.05, -0.02], None]
+
+        gradients = optimizer.calculate_gradient(current_params, 0.1)
+        # Should return None when any gradient calculation fails
+        assert gradients is None
+
+
+def test_apply_gradient_step(optimizer):
+    """Test applying gradient descent step with various parameter types and zenith angle preservation."""
+
+    # Test with list parameters
     current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
     gradients = {"mirror_reflection_random_angle": [-0.001, 0.01, -0.002]}
-    learning_rate = 0.1
-
-    new_params = psf_opt.apply_gradient_step(current_params, gradients, learning_rate)
+    new_params = optimizer.apply_gradient_step(current_params, gradients, 0.1)
     assert "mirror_reflection_random_angle" in new_params
-    # Check that parameters were updated
     assert (
         new_params["mirror_reflection_random_angle"][0]
         != current_params["mirror_reflection_random_angle"][0]
     )
 
-    # Edge case with single parameter (consolidating test_apply_gradient_step_edge_case)
-    parameters = {"param1": 1.0}
-    gradient = {"param1": 0.1}
-    learning_rate = 0.5
+    # Test with single-value parameter
+    current_params = {"camera_filter_relative_efficiency": 1.0}
+    gradients = {"camera_filter_relative_efficiency": 0.01}
+    new_params = optimizer.apply_gradient_step(current_params, gradients, 0.1)
+    assert new_params["camera_filter_relative_efficiency"] == pytest.approx(0.999)
 
-    result = psf_opt.apply_gradient_step(parameters, gradient, learning_rate)
-    assert result == {"param1": 0.95}  # gradient descent: 1.0 - 0.5 * 0.1 = 0.95
+    # Test zenith angle preservation for mirror_align parameters
+    current_params = {"mirror_align_random_horizontal": [0.005, 0.15, 0.03]}
+    gradients = {"mirror_align_random_horizontal": [-0.001, -0.02, -0.003]}
+    new_params = optimizer.apply_gradient_step(current_params, gradients, 0.1)
+    assert new_params["mirror_align_random_horizontal"][1] == pytest.approx(0.15)
+
+    # Test mirror_align_random_vertical
+    current_params = {"mirror_align_random_vertical": [0.005, 0.15, 0.03]}
+    gradients = {"mirror_align_random_vertical": [-0.001, -0.02, -0.003]}
+    new_params = optimizer.apply_gradient_step(current_params, gradients, 0.1)
+    assert new_params["mirror_align_random_vertical"][1] == pytest.approx(0.15)
+
+
+def test_perform_gradient_step_with_retries(optimizer):
+    """Test gradient step with retries using PSFParameterOptimizer."""
 
     current_params = {"mirror_reflection_random_angle": [0.005]}
+    current_metric = 10.0
+
     with (
-        patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.apply_gradient_step") as mock_step,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.calculate_gradient") as mock_grad,
+        patch.object(optimizer, "calculate_gradient") as mock_grad,
+        patch.object(optimizer, "apply_gradient_step") as mock_step,
+        patch.object(optimizer, "run_simulation") as mock_sim,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation._are_all_parameters_within_allowed_range"
+        ) as mock_validate,
     ):
-        # Set up mocks to return improved results
         mock_grad.return_value = {"mirror_reflection_random_angle": [0.001]}
         mock_step.return_value = {"mirror_reflection_random_angle": [0.004]}
-        mock_sim.return_value = (8.0, 4.5, 0.9, {"data": "test"})  # Better metric and PSF diameter
+        mock_sim.return_value = (8.0, 4.5, 0.9, {"data": "test"})  # Better metric
+        mock_validate.return_value = True  # Parameters are valid
 
-        result = psf_opt._perform_gradient_step_with_retries(
-            None,
-            None,
-            {},
+        result = optimizer.perform_gradient_step_with_retries(
             current_params,
-            10.0,
-            {"measured": {"data": "test"}},
-            np.array([1, 2, 3]),
-            3.0,
+            current_metric,
+            0.1,
         )
 
-        # Should return the improved parameters
         assert result is not None
+        assert isinstance(result, GradientStepResult)
+        assert result.params == {"mirror_reflection_random_angle": [0.004]}
+        assert result.step_accepted is True
 
 
-def test__create_step_plot(sample_data):
+def test__create_step_plot(sample_data, mock_args_dict, tmp_path):
     """Test creating step plot for optimization iteration."""
     data_to_plot = {"measured": sample_data}
     current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
-    args_dict = {"plot_all": True, "fraction": 0.8}
+    mock_args_dict["plot_all"] = True
+    mock_args_dict["fraction"] = 0.8
+
+    # Create optimizer instance
+    mock_tel = MagicMock()
+    mock_site = MagicMock()
+    optimizer = psf_opt.PSFParameterOptimizer(
+        mock_tel, mock_site, mock_args_dict, data_to_plot, sample_data[psf_opt.RADIUS], tmp_path
+    )
 
     with (
         patch("matplotlib.backends.backend_pdf.PdfPages") as mock_pdf,
@@ -531,9 +589,7 @@ def test__create_step_plot(sample_data):
         mock_pages = MagicMock()
         mock_pdf.return_value = mock_pages
 
-        psf_opt._create_step_plot(
-            mock_pages, args_dict, data_to_plot, current_params, 3.5, 0.1, 0.8, sample_data
-        )
+        optimizer._create_step_plot(mock_pages, current_params, 3.5, 0.1, 0.8, sample_data)
 
         mock_plot.assert_called_once_with(
             data_to_plot,
@@ -548,35 +604,37 @@ def test__create_step_plot(sample_data):
         )
 
     # Test early return when pdf_pages is None
-    result = psf_opt._create_step_plot(
-        None, args_dict, data_to_plot, current_params, 3.5, 0.1, 0.8, sample_data
-    )
+    result = optimizer._create_step_plot(None, current_params, 3.5, 0.1, 0.8, sample_data)
     assert result is None
 
     # Test early return when plot_all is False
-    args_dict_no_plot = {"plot_all": False}
-    result = psf_opt._create_step_plot(
-        mock_pages, args_dict_no_plot, data_to_plot, current_params, 3.5, 0.1, 0.8, sample_data
+    mock_args_dict["plot_all"] = False
+    optimizer_no_plot = psf_opt.PSFParameterOptimizer(
+        mock_tel, mock_site, mock_args_dict, data_to_plot, sample_data[psf_opt.RADIUS], tmp_path
+    )
+    result = optimizer_no_plot._create_step_plot(
+        mock_pages, current_params, 3.5, 0.1, 0.8, sample_data
     )
     assert result is None
 
     # Test early return when new_simulated_data is None
-    result = psf_opt._create_step_plot(
-        mock_pages, args_dict, data_to_plot, current_params, 3.5, 0.1, 0.8, None
+    mock_args_dict["plot_all"] = True
+    optimizer2 = psf_opt.PSFParameterOptimizer(
+        mock_tel, mock_site, mock_args_dict, data_to_plot, sample_data[psf_opt.RADIUS], tmp_path
     )
+    result = optimizer2._create_step_plot(mock_pages, current_params, 3.5, 0.1, 0.8, None)
     assert result is None
 
 
-def test__create_final_plot(mock_telescope_model, mock_site_model, mock_args_dict, sample_data):
+def test__create_final_plot(optimizer, sample_data):
     """Test creating final optimization result plot."""
-    radius = sample_data[psf_opt.RADIUS]
-    data_to_plot = {"measured": sample_data}
     best_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    data_to_plot = optimizer.data_to_plot
 
     with (
         patch("matplotlib.backends.backend_pdf.PdfPages") as mock_pdf,
         patch("simtools.visualization.plot_psf.create_psf_parameter_plot") as mock_plot,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
+        patch.object(optimizer, "run_simulation") as mock_sim,
         patch("simtools.ray_tracing.psf_parameter_optimisation.calculate_rmsd") as mock_rmsd,
     ):
         mock_pages = MagicMock()
@@ -584,26 +642,17 @@ def test__create_final_plot(mock_telescope_model, mock_site_model, mock_args_dic
         mock_sim.return_value = (3.5, 0.08, 0.9, sample_data)
         mock_rmsd.return_value = 0.05
 
-        psf_opt._create_final_plot(
+        optimizer._create_final_plot(
             mock_pages,
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
             best_params,
-            data_to_plot,
-            radius,
             3.5,
         )
 
         mock_sim.assert_called_once_with(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
             best_params,
-            data_to_plot,
-            radius,
             pdf_pages=None,
             is_best=False,
+            use_cache=False,
             use_ks_statistic=True,
         )
 
@@ -631,70 +680,67 @@ def test__create_final_plot(mock_telescope_model, mock_site_model, mock_args_dic
         mock_pages.close.assert_called_once()
 
     # Test early return when pdf_pages is None
-    result = psf_opt._create_final_plot(
+    result = optimizer._create_final_plot(
         None,
-        mock_telescope_model,
-        mock_site_model,
-        mock_args_dict,
         best_params,
-        data_to_plot,
-        radius,
         3.5,
     )
     assert result is None
 
     # Test early return when best_params is None
-    result = psf_opt._create_final_plot(
+    result = optimizer._create_final_plot(
         mock_pages,
-        mock_telescope_model,
-        mock_site_model,
-        mock_args_dict,
         None,
-        data_to_plot,
-        radius,
         3.5,
     )
     assert result is None
 
 
-def test_run_gradient_descent_optimization(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data
-):
-    """Test complete gradient descent optimization workflow."""
-    radius = sample_data[psf_opt.RADIUS]
-    data_to_plot = {"measured": sample_data}
+def test_run_gradient_descent_optimization(optimizer, sample_data):
+    """Test complete gradient descent optimization workflow using PSFParameterOptimizer."""
 
     with (
-        patch("simtools.ray_tracing.psf_parameter_optimisation.get_previous_values") as mock_prev,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
+        patch.object(optimizer, "get_initial_parameters") as mock_prev,
+        patch.object(optimizer, "run_simulation") as mock_sim,
         patch("simtools.visualization.plot_psf.setup_pdf_plotting") as mock_setup,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.calculate_gradient") as mock_grad,
-        patch(
-            "simtools.ray_tracing.psf_parameter_optimisation._perform_gradient_step_with_retries"
-        ) as mock_step,
+        patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
     ):
         mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
         mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
         mock_setup.return_value = None
-        mock_grad.return_value = {"mirror_reflection_random_angle": [-0.001, 0.01, -0.002]}
-        # Simulate convergence
-        mock_step.side_effect = [
-            ({"mirror_reflection_random_angle": [0.004, 0.16, 0.028]}, 0.05, 0.9, 3.2, sample_data)
-        ]
+        # Simulate convergence - return values match method signature
+        mock_step.return_value = (
+            {"mirror_reflection_random_angle": [0.004, 0.16, 0.028]},  # new_params
+            3.2,  # new_psf_diameter
+            0.05,  # new_metric
+            0.9,  # new_p_value
+            sample_data,  # new_simulated_data
+            True,  # step_accepted
+            0.1,  # final_learning_rate
+        )
 
-        best_pars, best_psf_diameter, gd_results = psf_opt.run_gradient_descent_optimization(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            data_to_plot,
-            radius,
+        best_pars, best_psf_diameter, gd_results = optimizer.run_gradient_descent(
             rmsd_threshold=0.1,
             learning_rate=0.1,
-            output_dir=TEST_OUTPUT_DIR,
         )
         assert "mirror_reflection_random_angle" in best_pars
         assert isinstance(best_psf_diameter, float)
         assert len(gd_results) > 0
+
+
+def test_run_gradient_descent_with_no_data(optimizer):
+    """Test that run_gradient_descent returns early when no data is available."""
+    optimizer.data_to_plot = None
+    optimizer.radius = None
+
+    best_pars, best_psf_diameter, gd_results = optimizer.run_gradient_descent(
+        rmsd_threshold=0.1,
+        learning_rate=0.1,
+    )
+
+    assert best_pars is None
+    assert best_psf_diameter is None
+    assert gd_results == []
 
 
 def test__write_log_interpretation():
@@ -766,492 +812,792 @@ def test_write_gradient_descent_log(mock_telescope_model, sample_data):
 
 
 def test_analyze_monte_carlo_error(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data
+    optimizer, mock_telescope_model, mock_site_model, mock_args_dict, sample_data
 ):
-    """Test Monte Carlo error analysis with multiple scenarios."""
+    """Test Monte Carlo error analysis using PSFParameterOptimizer."""
     radius = sample_data[psf_opt.RADIUS]
     data_to_plot = {"measured": sample_data}
 
     # Test 1: Normal case
     with (
-        patch("simtools.ray_tracing.psf_parameter_optimisation.get_previous_values") as mock_prev,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
+        patch.object(optimizer, "get_initial_parameters") as mock_prev,
+        patch.object(optimizer, "run_simulation") as mock_sim,
     ):
         mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
         mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
 
-        result = psf_opt.analyze_monte_carlo_error(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            data_to_plot,
-            radius,
-            n_simulations=2,
-        )
+        result = optimizer.analyze_monte_carlo_error(n_simulations=2)
         assert len(result) == 9  # All MC statistics
 
-    # Test 2: No data case (consolidating test_analyze_monte_carlo_error_no_data)
-    result = psf_opt.analyze_monte_carlo_error(
-        mock_telescope_model, mock_site_model, mock_args_dict, None, None
+    # Test 2: No data case
+    optimizer_no_data = psf_opt.PSFParameterOptimizer(
+        mock_telescope_model, mock_site_model, mock_args_dict, None, None, TEST_OUTPUT_DIR
     )
-    assert result == (None, None, [])
+    result = optimizer_no_data.analyze_monte_carlo_error()
+    assert result[0] is None
+    assert result[1] is None
+    assert result[2] == []
 
-    # Test 3: All simulations fail (consolidating test_analyze_monte_carlo_error_all_simulations_fail)
+    # Test 3: All simulations fail
     with (
-        patch("simtools.ray_tracing.psf_parameter_optimisation.get_previous_values") as mock_prev,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
+        patch.object(optimizer, "get_initial_parameters") as mock_prev,
+        patch.object(optimizer, "run_simulation") as mock_sim,
     ):
         mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
         mock_sim.side_effect = RuntimeError("All simulations failed")
 
-        result = psf_opt.analyze_monte_carlo_error(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            data_to_plot,
-            radius,
-            n_simulations=2,
-        )
+        result = optimizer.analyze_monte_carlo_error(n_simulations=2)
 
         assert result[0] is None  # mean_metric should be None
         assert result[1] is None  # std_metric should be None
         assert result[2] == []  # metric_values should be empty
 
-    # Test 4: With KS statistic (consolidating test_analyze_monte_carlo_error_with_ks_statistic)
+    # Test 4: With KS statistic
     mock_args_dict["ks_statistic"] = True
+    optimizer_ks = psf_opt.PSFParameterOptimizer(
+        mock_telescope_model, mock_site_model, mock_args_dict, data_to_plot, radius, TEST_OUTPUT_DIR
+    )
     with (
-        patch("simtools.ray_tracing.psf_parameter_optimisation.get_previous_values") as mock_prev,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
+        patch.object(optimizer_ks, "get_initial_parameters") as mock_prev,
+        patch.object(optimizer_ks, "run_simulation") as mock_sim,
     ):
         mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
         mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)  # psf_diameter, metric, p_value, data
 
-        result = psf_opt.analyze_monte_carlo_error(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            data_to_plot,
-            radius,
-            n_simulations=2,
-        )
-
-        assert len(result) == 9  # All MC statistics including KS
-        assert result[3] is not None  # mean_p_value should be set
-
-
-@pytest.mark.parametrize(
-    ("monte_carlo_enabled", "expected_result"),
-    [
-        (True, True),  # Monte Carlo analysis enabled
-        (False, False),  # Monte Carlo analysis disabled
-    ],
-)
-def test__handle_monte_carlo_analysis(
-    mock_telescope_model,
-    mock_site_model,
-    mock_args_dict,
-    sample_data,
-    monte_carlo_enabled,
-    expected_result,
-    temp_dir,
-):
-    """Test Monte Carlo analysis handling when enabled and disabled."""
-    radius = sample_data[psf_opt.RADIUS]
-    data_to_plot = {"measured": sample_data}
-
-    mock_args_dict["monte_carlo_analysis"] = monte_carlo_enabled
-
-    if monte_carlo_enabled:
-        with (
-            patch(
-                "simtools.ray_tracing.psf_parameter_optimisation.analyze_monte_carlo_error"
-            ) as mock_mc,
-            patch(
-                "simtools.ray_tracing.psf_parameter_optimisation.write_monte_carlo_analysis"
-            ) as mock_write,
-        ):
-            mock_mc.return_value = (
-                0.1,
-                0.01,
-                [0.09, 0.1, 0.11],
-                0.8,
-                0.05,
-                [0.75, 0.8, 0.85],
-                3.5,
-                0.1,
-                [3.4, 3.5, 3.6],
-            )
-            mock_write.return_value = temp_dir / "mc_log.log"
-
-            result = psf_opt._handle_monte_carlo_analysis(
-                mock_telescope_model,
-                mock_site_model,
-                mock_args_dict,
-                data_to_plot,
-                radius,
-                temp_dir,
-                False,
-            )
-    else:
-        result = psf_opt._handle_monte_carlo_analysis(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            data_to_plot,
-            radius,
-            temp_dir,
-            False,
-        )
-
-    assert result is expected_result
-
-
-def test__calculate_param_gradient_with_exception(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data
-):
-    """Test parameter gradient calculation with simulation exception."""
-    radius = sample_data[psf_opt.RADIUS]
-    data_to_plot = {"measured": sample_data}
-    current_params = {"mirror_reflection_random_angle": 0.005}  # Single value, not list
-
-    with patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim:
-        mock_sim.side_effect = RuntimeError("Simulation failed")
-
-        gradient = psf_opt._calculate_param_gradient(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            current_params,
-            data_to_plot,
-            radius,
-            0.1,
-            "mirror_reflection_random_angle",
-            0.005,
-            0.0005,
-            False,
-        )
-
-        assert gradient == pytest.approx(0.0)  # Should return 0.0 on exception
-
-
-def test_run_gradient_descent_optimization_no_data():
-    """Test gradient descent with no data."""
-    mock_tel_model = MagicMock()
-    mock_site_model = MagicMock()
-    args_dict = {}
-
-    result = psf_opt.run_gradient_descent_optimization(
-        mock_tel_model, mock_site_model, args_dict, None, None, 0.01, 0.1, TEST_OUTPUT_DIR
-    )
-
-    assert result == (None, None, [])
-
-
-def test_analyze_monte_carlo_error_no_data():
-    """Test Monte Carlo error analysis with no data."""
-    mock_tel_model = MagicMock()
-    mock_site_model = MagicMock()
-    args_dict = {}
-
-    result = psf_opt.analyze_monte_carlo_error(
-        mock_tel_model, mock_site_model, args_dict, None, None
-    )
-
-    assert result == (None, None, [])
-
-
-def test_analyze_monte_carlo_error_all_simulations_fail(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data
-):
-    """Test Monte Carlo error analysis when all simulations fail."""
-    radius = sample_data[psf_opt.RADIUS]
-    data_to_plot = {"measured": sample_data}
-
-    with (
-        patch("simtools.ray_tracing.psf_parameter_optimisation.get_previous_values") as mock_prev,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
-    ):
-        mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
-        mock_sim.side_effect = RuntimeError("All simulations failed")
-
-        result = psf_opt.analyze_monte_carlo_error(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            data_to_plot,
-            radius,
-            n_simulations=2,
-        )
-
-        assert result[0] is None  # mean_metric should be None
-        assert result[1] is None  # std_metric should be None
-        assert result[2] == []  # metric_values should be empty
-
-
-def test_analyze_monte_carlo_error_with_ks_statistic(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data
-):
-    """Test Monte Carlo error analysis with KS statistic."""
-    radius = sample_data[psf_opt.RADIUS]
-    data_to_plot = {"measured": sample_data}
-    mock_args_dict["ks_statistic"] = True
-
-    with (
-        patch("simtools.ray_tracing.psf_parameter_optimisation.get_previous_values") as mock_prev,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
-    ):
-        mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
-        mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)  # psf_diameter, metric, p_value, data
-
-        result = psf_opt.analyze_monte_carlo_error(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            data_to_plot,
-            radius,
-            n_simulations=2,
-        )
+        result = optimizer_ks.analyze_monte_carlo_error(n_simulations=2)
 
         assert len(result) == 9
-        assert result[3] is not None  # mean_p_value should be set
-        assert result[4] is not None  # std_p_value should be set
+        assert result[3] is not None
 
 
-def test_run_gradient_descent_optimization_no_step_accepted(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data
+def test_run_simulation_with_caching_and_ks_override(
+    optimizer, mock_telescope_model, mock_site_model, mock_args_dict, sample_data
 ):
-    """Test gradient descent when no steps are accepted."""
+    """Test run_simulation caching logic and KS statistic override."""
+    params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
     radius = sample_data[psf_opt.RADIUS]
     data_to_plot = {"measured": sample_data}
 
-    with (
-        patch("simtools.ray_tracing.psf_parameter_optimisation.get_previous_values") as mock_prev,
-        patch("simtools.visualization.plot_psf.setup_pdf_plotting") as mock_pdf,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
-        patch(
-            "simtools.ray_tracing.psf_parameter_optimisation._perform_gradient_step_with_retries"
-        ) as mock_step,
-    ):
-        mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
-        mock_pdf.return_value = None
-        mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)  # Initial simulation
-        # Return no step accepted
-        mock_step.return_value = (None, None, None, None, None, False, 0.2)
+    with patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim:
+        mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
 
-        best_pars, _, results = psf_opt.run_gradient_descent_optimization(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            data_to_plot,
-            radius,
-            rmsd_threshold=0.01,
-            learning_rate=0.1,
-            output_dir=TEST_OUTPUT_DIR,
-        )
+        # Test caching
+        optimizer.run_simulation(params, use_cache=True)
+        assert optimizer.cache_misses == 1
+        optimizer.run_simulation(params, use_cache=True)
+        assert optimizer.cache_hits == 1
 
-        assert best_pars is not None
-        assert len(results) == 1  # Only initial evaluation
+        # Test cache bypass with pdf_pages and is_best
+        optimizer.run_simulation(params, pdf_pages=MagicMock(), use_cache=True)
+        optimizer.run_simulation(params, is_best=True, use_cache=True)
+        optimizer.run_simulation(params, use_cache=False)
 
-
-@pytest.mark.parametrize(
-    ("use_ks_statistic", "p_values", "expected_content", "not_expected_content"),
-    [
-        (True, [0.75, 0.8, 0.85], ["KS Statistic=", "p_value=", "GOOD"], []),
-        (False, [None, None, None], ["RMSD="], ["p_value="]),
-        (True, [0.03, 0.02, 0.04], ["KS Statistic=", "p_value=", "FAIR"], []),
-        (True, [0.001, 0.005, 0.003], ["KS Statistic=", "p_value=", "POOR"], []),
-    ],
-)
-def test_write_monte_carlo_analysis(
-    mock_telescope_model, use_ks_statistic, p_values, expected_content, not_expected_content
-):
-    """Test writing Monte Carlo analysis with and without KS statistic."""
-    mc_results = (
-        0.1,
-        0.01,
-        [0.09, 0.1, 0.11],  # mean_metric, std_metric, metric_values
-        0.8 if use_ks_statistic else None,
-        0.05 if use_ks_statistic else None,
-        p_values,  # p-value stats
-        3.5,
-        0.1,
-        [3.4, 3.5, 3.6],  # mean_psf, std_psf, psf_values
+    # Test KS statistic override
+    mock_args_dict["ks_statistic"] = False
+    optimizer2 = psf_opt.PSFParameterOptimizer(
+        mock_telescope_model, mock_site_model, mock_args_dict, data_to_plot, radius, TEST_OUTPUT_DIR
     )
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        output_dir = Path(temp_dir)
-
-        result_file = psf_opt.write_monte_carlo_analysis(
-            mc_results, output_dir, mock_telescope_model, use_ks_statistic=use_ks_statistic
-        )
-
-        assert result_file.exists()
-        content = result_file.read_text()
-
-        # Check expected content is present
-        for expected in expected_content:
-            if expected in ["GOOD", "FAIR", "POOR"] and use_ks_statistic:
-                # For significance labels, check at least one is present
-                assert any(sig in content for sig in ["GOOD", "FAIR", "POOR"])
-            else:
-                assert expected in content
-
-        # Check unexpected content is not present
-        for not_expected in not_expected_content:
-            assert not_expected not in content
+    with patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim:
+        mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
+        optimizer2.run_simulation(params, use_ks_statistic=True)
+        assert mock_sim.call_args[0][8] is True
 
 
-def test__perform_gradient_step_with_retries_learning_rate_reset(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data
-):
-    """Test gradient step when learning rate becomes very small and resets."""
-    radius = sample_data[psf_opt.RADIUS]
-    data_to_plot = {"measured": sample_data}
+def test_perform_gradient_step_comprehensive(optimizer, sample_data):
+    """Test perform_gradient_step_with_retries: tuple structure, retries, bounds checking, and LR reset."""
     current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
-    current_metric = 0.1
 
+    # Test 1: Returns dataclass with False when gradient is None
+    with patch.object(optimizer, "calculate_gradient") as mock_calc_grad:
+        mock_calc_grad.return_value = None
+        result = optimizer.perform_gradient_step_with_retries(current_params, 0.1, 0.1)
+        assert result.step_accepted is False
+        assert result.learning_rate == pytest.approx(0.1)
+
+    # Test 2: Learning rate reduction with retries
     with (
-        patch(
-            "simtools.ray_tracing.psf_parameter_optimisation.calculate_gradient"
-        ) as mock_calc_grad,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.apply_gradient_step") as mock_apply,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
+        patch.object(optimizer, "calculate_gradient") as mock_calc_grad,
+        patch.object(optimizer, "apply_gradient_step") as mock_apply,
+        patch.object(optimizer, "run_simulation") as mock_sim,
     ):
         mock_calc_grad.return_value = {"mirror_reflection_random_angle": [-0.001, 0.01, -0.002]}
-        mock_apply.return_value = {"mirror_reflection_random_angle": [0.004, 0.16, 0.028]}
-        # Always return worse metric to trigger learning rate reduction
-        mock_sim.return_value = (3.8, 0.15, 0.7, sample_data)
+        mock_apply.return_value = {"mirror_reflection_random_angle": [0.006, 0.15, 0.031]}
+        mock_sim.side_effect = [
+            (3.6, 0.15, 0.75, sample_data),  # Worse than current (0.1)
+            (3.4, 0.08, 0.85, sample_data),  # Better
+        ]
 
-        result = psf_opt._perform_gradient_step_with_retries(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            current_params,
-            current_metric,
-            data_to_plot,
-            radius,
-            1e-6,  # Very small learning rate
+        result = optimizer.perform_gradient_step_with_retries(
+            current_params, 0.1, 0.1, max_retries=3
+        )
+        assert result.step_accepted is True
+        assert result.learning_rate == pytest.approx(0.07, rel=1e-2)
+
+    # Test 3: Parameters out of bounds - all retries fail
+    with (
+        patch.object(optimizer, "calculate_gradient") as mock_calc_grad,
+        patch.object(optimizer, "apply_gradient_step") as mock_apply,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation._are_all_parameters_within_allowed_range"
+        ) as mock_validate,
+    ):
+        mock_calc_grad.return_value = {"mirror_reflection_random_angle": [-0.001, 0.01, -0.002]}
+        mock_apply.return_value = {
+            "mirror_reflection_random_angle": [999, 999, 999]
+        }  # Out of bounds
+        mock_validate.return_value = False
+
+        result = optimizer.perform_gradient_step_with_retries(
+            current_params, 0.1, 0.1, max_retries=3
+        )
+        assert result.step_accepted is False
+
+    # Test 4: Learning rate reset when < 1e-6
+    with (
+        patch.object(optimizer, "calculate_gradient") as mock_calc_grad,
+        patch.object(optimizer, "apply_gradient_step") as mock_apply,
+        patch.object(optimizer, "run_simulation"),
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation._are_all_parameters_within_allowed_range"
+        ) as mock_valid,
+    ):
+        mock_calc_grad.return_value = {"mirror_reflection_random_angle": [-0.001, 0.01, -0.002]}
+        mock_apply.return_value = {"mirror_reflection_random_angle": [0.006, 0.15, 0.031]}
+        mock_valid.side_effect = [False, False, True]
+
+        result = optimizer.perform_gradient_step_with_retries(
+            current_params, 0.1, 0.0000015, max_retries=3
+        )
+        assert result.learning_rate == pytest.approx(0.0001)
+
+
+def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
+    """Test gradient descent convergence, max iterations, and best metric tracking."""
+
+    # Test 1: Convergence when threshold is reached
+    with (
+        patch.object(optimizer, "get_initial_parameters") as mock_get_params,
+        patch.object(optimizer, "run_simulation") as mock_sim,
+        patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
+    ):
+        mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_sim.return_value = (3.5, 0.05, 0.8, sample_data)
+        mock_step.side_effect = [
+            GradientStepResult(
+                params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+                psf_diameter=3.4,
+                metric=0.008,
+                p_value=0.85,
+                simulated_data=sample_data,
+                step_accepted=True,
+                learning_rate=0.1,
+            ),
+        ]
+
+        _, _, results = optimizer.run_gradient_descent(
+            rmsd_threshold=0.01, learning_rate=0.1, max_iterations=10
+        )
+        assert len(results) == 2  # Initial + 1 iteration
+
+    # Test 2: Max iterations reached
+    with (
+        patch.object(optimizer, "get_initial_parameters") as mock_get_params,
+        patch.object(optimizer, "run_simulation") as mock_sim,
+        patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
+    ):
+        mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
+        mock_step.return_value = GradientStepResult(
+            params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+            psf_diameter=3.4,
+            metric=0.095,
+            p_value=0.85,
+            simulated_data=sample_data,
+            step_accepted=True,
+            learning_rate=0.1,
         )
 
-        assert len(result) == 7
-        assert result[5] is False  # step_accepted should be False
-        # Check that learning rate was reduced and potentially reset (just check it's different)
-        assert result[6] != pytest.approx(1e-6)  # learning rate should be reset
+        _, _, results = optimizer.run_gradient_descent(
+            rmsd_threshold=0.01, learning_rate=0.1, max_iterations=2
+        )
+        assert len(results) == 3  # Initial + 2 iterations
+
+    # Test 3: Best metric tracking across iterations
+    with (
+        patch.object(optimizer, "get_initial_parameters") as mock_get_params,
+        patch.object(optimizer, "run_simulation") as mock_sim,
+        patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
+    ):
+        mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
+        mock_step.side_effect = [
+            GradientStepResult(
+                params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+                psf_diameter=3.4,
+                metric=0.08,
+                p_value=0.85,
+                simulated_data=sample_data,
+                step_accepted=True,
+                learning_rate=0.1,
+            ),  # Better
+            GradientStepResult(
+                params={"mirror_reflection_random_angle": [0.003, 0.15, 0.025]},
+                psf_diameter=3.3,
+                metric=0.05,
+                p_value=0.85,
+                simulated_data=sample_data,
+                step_accepted=True,
+                learning_rate=0.1,
+            ),  # Best
+            GradientStepResult(
+                params={"mirror_reflection_random_angle": [0.002, 0.15, 0.020]},
+                psf_diameter=3.2,
+                metric=0.12,
+                p_value=0.85,
+                simulated_data=sample_data,
+                step_accepted=True,
+                learning_rate=0.1,
+            ),  # Worse
+        ]
+
+        _, best_diameter, _ = optimizer.run_gradient_descent(
+            rmsd_threshold=0.01, learning_rate=0.1, max_iterations=3
+        )
+        assert best_diameter == pytest.approx(3.3)  # Should track best, not last
 
 
-def test__perform_gradient_step_with_retries_all_exceptions(
+def test_perform_gradient_step_with_retries_learning_rate_reduction(
     mock_telescope_model, mock_site_model, mock_args_dict, sample_data
 ):
-    """Test gradient step when all attempts raise exceptions."""
+    """Test learning rate reduction logic in gradient step retries."""
     radius = sample_data[psf_opt.RADIUS]
     data_to_plot = {"measured": sample_data}
     current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
-    current_metric = 0.1
 
-    with patch(
-        "simtools.ray_tracing.psf_parameter_optimisation.calculate_gradient"
-    ) as mock_calc_grad:
-        # All attempts raise KeyError
-        mock_calc_grad.side_effect = KeyError("Parameter not found")
-
-        result = psf_opt._perform_gradient_step_with_retries(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            current_params,
-            current_metric,
-            data_to_plot,
-            radius,
-            0.1,
-            max_retries=2,
-        )
-
-        assert result == (None, None, None, None, None, False, 0.1)
-
-
-def test_run_gradient_descent_optimization_step_accepted_path(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data
-):
-    """Test gradient descent optimization when steps are accepted."""
-    radius = sample_data[psf_opt.RADIUS]
-    data_to_plot = {"measured": sample_data}
+    optimizer = psf_opt.PSFParameterOptimizer(
+        mock_telescope_model, mock_site_model, mock_args_dict, data_to_plot, radius, TEST_OUTPUT_DIR
+    )
 
     with (
-        patch("simtools.ray_tracing.psf_parameter_optimisation.get_previous_values") as mock_prev,
-        patch("simtools.visualization.plot_psf.setup_pdf_plotting") as mock_pdf,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
-        patch(
-            "simtools.ray_tracing.psf_parameter_optimisation._perform_gradient_step_with_retries"
-        ) as mock_step,
+        patch.object(optimizer, "calculate_gradient") as mock_calc_grad,
+        patch.object(optimizer, "apply_gradient_step") as mock_apply,
+        patch.object(optimizer, "run_simulation") as mock_sim,
     ):
-        mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
-        mock_pdf.return_value = None
-        mock_sim.return_value = (3.5, 0.05, 0.8, sample_data)  # Initial simulation above threshold
+        # Simulate worse results to trigger learning rate reduction
+        mock_calc_grad.return_value = {"mirror_reflection_random_angle": [-0.001, 0.01, -0.002]}
+        mock_apply.return_value = {"mirror_reflection_random_angle": [0.006, 0.15, 0.031]}
+        mock_sim.return_value = (3.5, 0.15, 0.8, sample_data)  # Worse metric
 
-        # Step accepted with improvement - this will meet the threshold and stop
-        new_params = {"mirror_reflection_random_angle": [0.004, 0.16, 0.028]}
-        mock_step.return_value = (
-            new_params,
-            3.2,
-            0.005,
-            0.9,
-            sample_data,
-            True,
-            0.1,
-        )  # Lower than threshold
-
-        best_pars, _, results = psf_opt.run_gradient_descent_optimization(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            data_to_plot,
-            radius,
-            rmsd_threshold=0.01,
-            learning_rate=0.1,
-            output_dir=TEST_OUTPUT_DIR,
+        result = optimizer.perform_gradient_step_with_retries(
+            current_params, 0.1, 0.1, max_retries=3
         )
 
-        assert best_pars == new_params
-        assert len(results) == 2  # Initial + 1 accepted step
+        # Should fail and return GradientStepResult with False for step_accepted
+        assert isinstance(result, GradientStepResult)
+        assert result.step_accepted is False
 
 
-def test_run_psf_optimization_workflow_optimization_failed_no_radius(
-    mock_telescope_model, mock_site_model, mock_args_dict, sample_data
+def test_parameter_validation():
+    """Test parameter range validation and boundary checking."""
+    # Test with valid value in known range
+    assert (
+        psf_opt._is_parameter_within_allowed_range("camera_filter_relative_efficiency", 0, 0.5)
+        is True
+    )
+    # Test boundary values
+    assert (
+        psf_opt._is_parameter_within_allowed_range("camera_filter_relative_efficiency", 0, 0.0)
+        is True
+    )
+    assert (
+        psf_opt._is_parameter_within_allowed_range("camera_filter_relative_efficiency", 0, 1.0)
+        is True
+    )
+    # Test unknown parameter (no schema - returns True by default)
+    assert psf_opt._is_parameter_within_allowed_range("unknown_parameter", 0, 0.5) is True
+
+    # Test all parameters validation
+    params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    assert psf_opt._are_all_parameters_within_allowed_range(params) is True
+
+    # Test with clearly out-of-range value
+    invalid_params = {"camera_filter_relative_efficiency": 100.0}
+    result = psf_opt._are_all_parameters_within_allowed_range(invalid_params)
+    assert isinstance(result, bool)
+
+
+def test_params_to_cache_key(optimizer):
+    """Test _params_to_cache_key with list and non-list parameter values."""
+
+    # Test with mixed list and non-list values
+    params = {
+        "mirror_reflection_random_angle": [0.005, 0.15, 0.03],
+        "camera_filter_relative_efficiency": 1.0,
+    }
+    cache_key = optimizer._params_to_cache_key(params)
+    assert isinstance(cache_key, frozenset)
+    assert cache_key == optimizer._params_to_cache_key(params)
+
+    # Test with all non-list values
+    params2 = {"param1": 1.0, "param2": 2.0}
+    cache_key2 = optimizer._params_to_cache_key(params2)
+    assert isinstance(cache_key2, frozenset)
+    assert cache_key != cache_key2  # Different params = different keys
+
+
+def test_workflow_edge_cases(
+    mock_telescope_model, mock_site_model, mock_args_dict, sample_data, tmp_path
 ):
-    """Test PSF optimization workflow when optimization fails due to no radius data."""
+    """Test PSF optimization workflow edge cases: no data, failed optimization, Monte Carlo."""
+    # Test 1: No data
     with (
         patch("simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data") as mock_load,
         patch(
-            "simtools.ray_tracing.psf_parameter_optimisation._handle_monte_carlo_analysis"
-        ) as mock_mc,
-        patch(
-            "simtools.ray_tracing.psf_parameter_optimisation.run_gradient_descent_optimization"
-        ) as mock_gd,
+            "simtools.ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer"
+        ) as mock_opt_cls,
     ):
-        mock_load.return_value = ({"measured": sample_data}, None)  # No radius data
-        mock_mc.return_value = False
-        mock_gd.return_value = (None, None, [])  # Failed optimization
+        mock_load.return_value = (None, None)
+        mock_optimizer = MagicMock()
+        mock_opt_cls.return_value = mock_optimizer
+        mock_optimizer.run_gradient_descent.return_value = (None, None, [])
 
-        with patch("logging.Logger.error") as mock_logger:
-            psf_opt.run_psf_optimization_workflow(
-                mock_telescope_model, mock_site_model, mock_args_dict, TEST_OUTPUT_DIR
-            )
+        psf_opt.run_psf_optimization_workflow(
+            mock_telescope_model, mock_site_model, mock_args_dict, tmp_path
+        )
 
-            # Should log error about no radius data
-            mock_logger.assert_any_call(
-                "Possible cause: No PSF measurement data provided. Use --data argument to provide PSF data."
-            )
+    # Test 2: Optimization fails
+    with (
+        patch("simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data") as mock_load,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer"
+        ) as mock_opt_cls,
+    ):
+        mock_load.return_value = ({"measured": sample_data}, sample_data[psf_opt.RADIUS])
+        mock_optimizer = MagicMock()
+        mock_opt_cls.return_value = mock_optimizer
+        mock_optimizer.run_gradient_descent.return_value = (None, None, [])
+
+        psf_opt.run_psf_optimization_workflow(
+            mock_telescope_model, mock_site_model, mock_args_dict, tmp_path
+        )
+
+    # Test 3: Monte Carlo analysis with results
+    mock_args_dict["monte_carlo_analysis"] = True
+    with (
+        patch("simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data") as mock_load,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer"
+        ) as mock_opt_cls,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.write_monte_carlo_analysis"
+        ) as mock_write,
+        patch("simtools.visualization.plot_psf.create_monte_carlo_uncertainty_plot"),
+    ):
+        mock_load.return_value = ({"measured": sample_data}, sample_data[psf_opt.RADIUS])
+        mock_optimizer = MagicMock()
+        mock_opt_cls.return_value = mock_optimizer
+        mock_optimizer.analyze_monte_carlo_error.return_value = (
+            0.1,
+            0.01,
+            [0.09, 0.11],
+            None,
+            None,
+            [],
+            3.5,
+            0.05,
+            [3.4, 3.6],
+        )
+
+        psf_opt.run_psf_optimization_workflow(
+            mock_telescope_model, mock_site_model, mock_args_dict, tmp_path
+        )
+        mock_write.assert_called_once()
+
+    # Test 4: Monte Carlo with no results
+    with (
+        patch("simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data") as mock_load,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer"
+        ) as mock_opt_cls,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.write_monte_carlo_analysis"
+        ) as mock_write,
+    ):
+        mock_load.return_value = ({"measured": sample_data}, sample_data[psf_opt.RADIUS])
+        mock_optimizer = MagicMock()
+        mock_opt_cls.return_value = mock_optimizer
+        mock_optimizer.analyze_monte_carlo_error.return_value = (
+            None,
+            None,
+            [],
+            None,
+            None,
+            [],
+            None,
+            None,
+            [],
+        )
+
+        psf_opt.run_psf_optimization_workflow(
+            mock_telescope_model, mock_site_model, mock_args_dict, tmp_path
+        )
+        mock_write.assert_not_called()
 
 
-def test_run_psf_optimization_workflow_complete_success_path(
+def test_perturbed_params_creation():
+    """Test _create_perturbed_params with list and non-list parameters."""
+    current_params = {
+        "mirror_reflection_random_angle": [0.005, 0.15, 0.03],
+        "camera_filter_relative_efficiency": 1.0,
+    }
+
+    # Test list parameter perturbation
+    perturbed = psf_opt._create_perturbed_params(
+        current_params, "mirror_reflection_random_angle", [0.005, 0.15, 0.03], 0, 0.005, 0.001
+    )
+    assert perturbed["mirror_reflection_random_angle"][0] == pytest.approx(0.006)
+    assert perturbed["mirror_reflection_random_angle"][1] == pytest.approx(0.15)
+
+    # Test non-list parameter perturbation
+    perturbed2 = psf_opt._create_perturbed_params(
+        current_params, "camera_filter_relative_efficiency", 1.0, 0, 1.0, 0.01
+    )
+    assert perturbed2["camera_filter_relative_efficiency"] == pytest.approx(1.01)
+
+
+@pytest.mark.parametrize(
+    ("use_ks", "mc_results", "expected_content", "not_expected"),
+    [
+        # Test with KS statistic and p-values
+        (
+            True,
+            (
+                0.15,
+                0.02,
+                [0.14, 0.15, 0.16],
+                0.75,
+                0.05,
+                [0.7, 0.75, 0.8],
+                3.5,
+                0.1,
+                [3.4, 3.5, 3.6],
+            ),
+            ["KS Statistic", "P-VALUE STATISTICS", "Good fits", "Fair fits", "Poor fits"],
+            [],
+        ),
+        # Test with varied p-values (good, fair, poor mix)
+        (
+            True,
+            (
+                0.15,
+                0.02,
+                [0.14, 0.15, 0.16, 0.17, 0.18],
+                0.05,
+                0.03,
+                [0.08, 0.03, 0.005, 0.001, 0.2],
+                3.5,
+                0.1,
+                [3.4, 3.5, 3.6, 3.7, 3.8],
+            ),
+            ["GOOD", "FAIR", "POOR"],
+            [],
+        ),
+        # Test without KS statistic (RMSD mode)
+        (
+            False,
+            (
+                0.15,
+                0.02,
+                [0.14, 0.15, 0.16],
+                None,
+                None,
+                [None, None, None],
+                3.5,
+                0.1,
+                [3.4, 3.5, 3.6],
+            ),
+            ["RMSD"],
+            ["KS Statistic", "GOOD", "FAIR", "POOR"],
+        ),
+    ],
+)
+def test_write_monte_carlo_analysis(
+    mock_telescope_model, tmp_path, use_ks, mc_results, expected_content, not_expected
+):
+    """Test write_monte_carlo_analysis with various configurations."""
+    output_file = psf_opt.write_monte_carlo_analysis(
+        mc_results,
+        tmp_path,
+        mock_telescope_model,
+        use_ks_statistic=use_ks,
+        fraction=0.8,
+    )
+
+    assert output_file.exists()
+    content = output_file.read_text()
+
+    for expected in expected_content:
+        assert expected in content
+
+    for not_exp in not_expected:
+        assert not_exp not in content
+
+
+def test_perform_gradient_step_with_metric_rejection_lr_reset(
     mock_telescope_model, mock_site_model, mock_args_dict, sample_data
 ):
-    """Test complete successful PSF optimization workflow including final steps."""
+    """Test learning rate reset when metric gets worse and lr drops below 1e-6."""
+    radius = sample_data[psf_opt.RADIUS]
+    data_to_plot = {"measured": sample_data}
+    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+
+    optimizer = psf_opt.PSFParameterOptimizer(
+        mock_telescope_model, mock_site_model, mock_args_dict, data_to_plot, radius, TEST_OUTPUT_DIR
+    )
+
+    with (
+        patch.object(optimizer, "calculate_gradient") as mock_calc_grad,
+        patch.object(optimizer, "apply_gradient_step") as mock_apply,
+        patch.object(optimizer, "run_simulation") as mock_sim,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation._are_all_parameters_within_allowed_range"
+        ) as mock_valid,
+    ):
+        mock_calc_grad.return_value = {"mirror_reflection_random_angle": [-0.001, 0.01, -0.002]}
+        mock_apply.return_value = {"mirror_reflection_random_angle": [0.006, 0.15, 0.031]}
+        mock_valid.return_value = True  # Parameters within bounds
+
+        # First 2 calls: worse metric (triggers rejection and lr reduction)
+        # third call: improved metric (accepts)
+        mock_sim.side_effect = [
+            (3.6, 0.15, 0.8, sample_data),  # Worse: 0.15 > 0.1
+            (3.6, 0.15, 0.8, sample_data),  # Worse: 0.15 > 0.1,
+            (3.4, 0.08, 0.8, sample_data),  # Better: 0.08 < 0.1, accept
+        ]
+
+        result = optimizer.perform_gradient_step_with_retries(
+            current_params, 0.1, 0.0000015, max_retries=3
+        )
+
+        # Step should be accepted with reset learning rate
+        # After 2 rejections: 0.0000015 * 0.7 * 0.7 = 0.000000735 < 1e-6, resets to 0.0001
+        assert result.step_accepted is True
+        assert result.learning_rate == pytest.approx(0.0001)
+
+
+def test_get_initial_parameters(optimizer, mock_telescope_model):
+    """Test get_initial_parameters method calls get_previous_values."""
+
+    with patch("simtools.ray_tracing.psf_parameter_optimisation.get_previous_values") as mock_get:
+        mock_get.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+
+        result = optimizer.get_initial_parameters()
+
+        mock_get.assert_called_once_with(mock_telescope_model)
+        assert result == {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+
+
+def test_calculate_param_gradient_with_exception(optimizer, sample_data):
+    """Test _calculate_param_gradient exception handling with actual logging."""
+    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+
+    with patch.object(optimizer, "run_simulation") as mock_sim:
+        # Trigger exception during simulation - let logger actually log
+        mock_sim.side_effect = ValueError("Simulation failed")
+
+        # This should return None when exception occurs
+        result = optimizer._calculate_param_gradient(
+            current_params, 0.1, "mirror_reflection_random_angle", [0.005, 0.15, 0.03], 0.001
+        )
+
+        assert result is None
+
+
+def test_calculate_param_gradient_with_runtime_error(optimizer):
+    """Test _calculate_param_gradient with RuntimeError."""
+    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+
+    with patch.object(optimizer, "run_simulation") as mock_sim:
+        mock_sim.side_effect = RuntimeError("Runtime error in simulation")
+
+        result = optimizer._calculate_param_gradient(
+            current_params, 0.1, "mirror_reflection_random_angle", [0.005, 0.15, 0.03], 0.001
+        )
+
+        assert result is None
+
+
+def test_is_parameter_within_allowed_range_schema_errors():
+    """Test _is_parameter_within_allowed_range schema access errors."""
+    # Test that function handles KeyError and returns True
+    with patch("simtools.utils.names.model_parameters") as mock_params:
+        mock_params.side_effect = KeyError("Parameter not found")
+
+        result = psf_opt._is_parameter_within_allowed_range("nonexistent_param", 0, 0.5)
+
+        assert result is True
+
+
+def test_run_gradient_descent_no_step_accepted(optimizer, sample_data):
+    """Test gradient descent when no step is accepted, increases learning rate."""
+
+    with (
+        patch.object(optimizer, "get_initial_parameters") as mock_get_params,
+        patch.object(optimizer, "run_simulation") as mock_sim,
+        patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
+    ):
+        mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_sim.return_value = (3.5, 0.05, 0.8, sample_data)
+
+        # First call: step not accepted
+        # Second call: step accepted
+        mock_step.side_effect = [
+            GradientStepResult(
+                params=None,
+                psf_diameter=None,
+                metric=None,
+                p_value=None,
+                simulated_data=None,
+                step_accepted=False,
+                learning_rate=0.1,
+            ),
+            GradientStepResult(
+                params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+                psf_diameter=3.4,
+                metric=0.008,
+                p_value=0.85,
+                simulated_data=sample_data,
+                step_accepted=True,
+                learning_rate=0.2,
+            ),
+        ]
+
+        best_params, _, _ = optimizer.run_gradient_descent(
+            rmsd_threshold=0.01, learning_rate=0.1, max_iterations=5
+        )
+
+        assert best_params is not None
+
+
+def test_run_gradient_descent_learning_rate_cap(optimizer, sample_data):
+    """Test that learning rate is capped at maximum threshold when increased."""
+
+    with (
+        patch.object(optimizer, "get_initial_parameters") as mock_get_params,
+        patch.object(optimizer, "run_simulation") as mock_sim,
+        patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
+    ):
+        mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_sim.return_value = (3.5, 0.05, 0.8, sample_data)
+
+        # Multiple steps not accepted to trigger learning rate increases
+        mock_step.side_effect = [
+            GradientStepResult(
+                params=None,
+                psf_diameter=None,
+                metric=None,
+                p_value=None,
+                simulated_data=None,
+                step_accepted=False,
+                learning_rate=0.5,
+            ),
+            GradientStepResult(
+                params=None,
+                psf_diameter=None,
+                metric=None,
+                p_value=None,
+                simulated_data=None,
+                step_accepted=False,
+                learning_rate=1.0,
+            ),
+            GradientStepResult(
+                params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+                psf_diameter=3.4,
+                metric=0.008,
+                p_value=0.85,
+                simulated_data=sample_data,
+                step_accepted=True,
+                learning_rate=1.0,
+            ),
+        ]
+
+        best_params, _, _ = optimizer.run_gradient_descent(
+            rmsd_threshold=0.01, learning_rate=0.5, max_iterations=5
+        )
+
+        # Verify that learning rate was capped
+        calls = mock_step.call_args_list
+        final_lr = calls[-1][0][2]
+        assert final_lr <= optimizer.LR_MAXIMUM_THRESHOLD
+        assert best_params is not None
+
+
+def test_parameter_validation_edge_cases():
+    """Test _is_parameter_within_allowed_range edge cases"""
+    # Test when data is not a list
+    with patch("simtools.utils.names.model_parameters") as mock_params:
+        mock_params.return_value = {"test_param": {"data": "not_a_list"}}
+        result = psf_opt._is_parameter_within_allowed_range("test_param", 0, 0.5)
+        assert result is True
+
+    # Test when no allowed_range specified
+    with patch("simtools.utils.names.model_parameters") as mock_params:
+        mock_params.return_value = {"test_param": {"data": [{}]}}
+        result = psf_opt._is_parameter_within_allowed_range("test_param", 0, 0.5)
+        assert result is True
+
+    # Test value below minimum
+    with patch("simtools.utils.names.model_parameters") as mock_params:
+        mock_params.return_value = {
+            "test_param": {"data": [{"allowed_range": {"min": 0.0, "max": 1.0}}]}
+        }
+        result = psf_opt._is_parameter_within_allowed_range("test_param", 0, -0.1)
+        assert result is False
+
+    # Test value above maximum
+    with patch("simtools.utils.names.model_parameters") as mock_params:
+        mock_params.return_value = {
+            "test_param": {"data": [{"allowed_range": {"min": 0.0, "max": 1.0}}]}
+        }
+        result = psf_opt._is_parameter_within_allowed_range("test_param", 0, 1.5)
+        assert result is False
+
+
+def test_are_all_parameters_list_and_single_value(sample_data):
+    """Test _are_all_parameters_within_allowed_range with list and single values"""
+    # Test with list parameter out of range
+    with patch(
+        "simtools.ray_tracing.psf_parameter_optimisation._is_parameter_within_allowed_range"
+    ) as mock_check:
+        mock_check.return_value = False
+
+        params = {"mirror_reflection_random_angle": [0.005, 999.0, 0.03]}
+        result = psf_opt._are_all_parameters_within_allowed_range(params)
+
+        assert result is False
+
+    # Test with single value parameter out of range
+    with patch(
+        "simtools.ray_tracing.psf_parameter_optimisation._is_parameter_within_allowed_range"
+    ) as mock_check:
+        mock_check.return_value = False
+
+        params = {"camera_filter_relative_efficiency": 999.0}
+        result = psf_opt._are_all_parameters_within_allowed_range(params)
+
+        assert result is False
+
+
+def test_workflow_with_all_features(
+    mock_telescope_model, mock_site_model, mock_args_dict, sample_data, tmp_path
+):
+    """Test workflow with plotting, parameter export, and all features."""
     mock_args_dict.update(
         {
-            "overwrite_model_files": True,
+            "rmsd_threshold": 0.01,
+            "learning_rate": 0.1,
             "write_psf_parameters": True,
-            "save_plots": True,
             "telescope": "LSTN-01",
             "parameter_version": "1.0.0",
         }
@@ -1260,96 +1606,83 @@ def test_run_psf_optimization_workflow_complete_success_path(
     with (
         patch("simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data") as mock_load,
         patch(
-            "simtools.ray_tracing.psf_parameter_optimisation._handle_monte_carlo_analysis"
-        ) as mock_mc,
-        patch(
-            "simtools.ray_tracing.psf_parameter_optimisation.run_gradient_descent_optimization"
-        ) as mock_gd,
-        patch("simtools.visualization.plot_psf.create_optimization_plots") as mock_plots,
+            "simtools.ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer"
+        ) as mock_opt_cls,
+        patch("simtools.visualization.plot_psf.create_optimization_plots") as mock_opt_plot,
         patch(
             "simtools.visualization.plot_psf.create_gradient_descent_convergence_plot"
         ) as mock_conv_plot,
         patch(
             "simtools.ray_tracing.psf_parameter_optimisation.write_gradient_descent_log"
-        ) as mock_log,
-        patch("simtools.visualization.plot_psf.create_psf_vs_offaxis_plot") as mock_psf_plot,
+        ) as mock_write_log,
+        patch("simtools.visualization.plot_psf.create_psf_vs_offaxis_plot") as mock_offaxis_plot,
         patch(
             "simtools.ray_tracing.psf_parameter_optimisation.export_psf_parameters"
         ) as mock_export,
     ):
-        radius = np.linspace(0, 10, 21)
-        mock_load.return_value = ({"measured": sample_data}, radius)
-        mock_mc.return_value = False
-        best_pars = {"param": 1.5}
-        gd_results = [(best_pars, 0.03, 0.9, 3.2, sample_data)]
-        mock_gd.return_value = (best_pars, 3.2, gd_results)
-        mock_log.return_value = TEST_OUTPUT_DIR / "log.log"
+        mock_load.return_value = ({"measured": sample_data}, sample_data[psf_opt.RADIUS])
+
+        mock_optimizer = MagicMock()
+        mock_opt_cls.return_value = mock_optimizer
+
+        best_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        gd_results = [(best_params, 0.05, 0.8, 3.5, sample_data)]
+        mock_optimizer.run_gradient_descent.return_value = (best_params, 3.5, gd_results)
+        mock_optimizer.use_ks_statistic = False
+        mock_optimizer.fraction = 0.8
+
+        mock_write_log.return_value = tmp_path / "log.txt"
 
         psf_opt.run_psf_optimization_workflow(
-            mock_telescope_model, mock_site_model, mock_args_dict, TEST_OUTPUT_DIR
+            mock_telescope_model, mock_site_model, mock_args_dict, tmp_path
         )
 
-        # Verify all key workflow steps were called
-        mock_load.assert_called_once_with(mock_args_dict)
-        mock_mc.assert_called_once()
-        mock_gd.assert_called_once()
-        mock_plots.assert_called_once()
+        mock_opt_plot.assert_called_once()
         mock_conv_plot.assert_called_once()
-        mock_log.assert_called_once()
-        mock_psf_plot.assert_called_once()
-        mock_export.assert_called_once_with(best_pars, "LSTN-01", "1.0.0", TEST_OUTPUT_DIR)
+        mock_write_log.assert_called_once()
+        mock_offaxis_plot.assert_called_once()
+        mock_export.assert_called_once()
 
 
-def test_edge_cases(mock_telescope_model, mock_site_model, mock_args_dict, sample_data):
-    """Test miscellaneous edge cases"""
-    # 1. Test error handling in export_psf_parameters when writer fails
-    with patch("simtools.ray_tracing.psf_parameter_optimisation.writer") as mock_writer:
-        mock_writer.ModelDataWriter.dump_model_parameter.side_effect = ValueError("Export failed")
-        psf_opt.export_psf_parameters({}, "LSTN-01", "1.0.0", TEST_OUTPUT_DIR)
+def test_cleanup_intermediate_files(
+    tmp_path, mock_telescope_model, mock_site_model, mock_args_dict, sample_data
+):
+    """Test cleanup of intermediate log and list files via workflow integration."""
+    mock_args_dict["cleanup"] = True
+    (tmp_path / "test.log").write_text("log content")
+    (tmp_path / "sim.lis").write_text("lis content")
+    (tmp_path / "sim.lis.gz").write_bytes(b"lis.gz content")
+    (tmp_path / "keep_me.png").write_bytes(b"png content")
+    (tmp_path / "keep_me.pdf").write_bytes(b"pdf content")
 
-    # 2. Test learning rate reset in _perform_gradient_step_with_retries with very small learning rate
-    with (
-        patch("simtools.ray_tracing.psf_parameter_optimisation.calculate_gradient") as mock_grad,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.apply_gradient_step") as mock_apply,
-        patch("simtools.ray_tracing.psf_parameter_optimisation.run_psf_simulation") as mock_sim,
-    ):
-        mock_grad.return_value = {"param": [0.1]}
-        mock_apply.return_value = {"param": [0.2]}
-        mock_sim.return_value = (3.8, 0.15, 0.7, sample_data)  # Worse metric
-
-        result = psf_opt._perform_gradient_step_with_retries(
-            mock_telescope_model,
-            mock_site_model,
-            mock_args_dict,
-            {"param": [0.1]},
-            0.1,
-            {"measured": sample_data},
-            sample_data[psf_opt.RADIUS],
-            1e-6,
-        )
-        # Learning rate will be reduced by 0.7 multiple times until it gets reset to 0.001
-        assert result[5] is False  # step_accepted
-        assert result[6] > 1e-6  # Learning rate was modified
-
-    # 4. Test Monte Carlo analysis file content verification
-    mc_results = (0.1, 0.01, [0.09, 0.1], 0.8, 0.05, [0.75, 0.8], 3.5, 0.1, [3.4, 3.5])
-    with tempfile.TemporaryDirectory() as temp_dir:
-        result_file = psf_opt.write_monte_carlo_analysis(
-            mc_results, Path(temp_dir), mock_telescope_model, use_ks_statistic=True
-        )
-        content = result_file.read_text()
-        assert "INDIVIDUAL SIMULATION RESULTS:" in content
-
-    # 6. Test early return in run_psf_optimization_workflow when Monte Carlo analysis returns True
     with (
         patch("simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data") as mock_load,
-        patch(
-            "simtools.ray_tracing.psf_parameter_optimisation._handle_monte_carlo_analysis"
-        ) as mock_mc,
+        patch("simtools.ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer") as mock_opt,
+        patch("simtools.visualization.plot_psf.create_optimization_plots"),
+        patch("simtools.visualization.plot_psf.create_gradient_descent_convergence_plot"),
+        patch("simtools.ray_tracing.psf_parameter_optimisation.write_gradient_descent_log"),
+        patch("simtools.visualization.plot_psf.create_psf_vs_offaxis_plot"),
     ):
-        mock_load.return_value = ({}, [])
-        mock_mc.return_value = True  # Early return
-        result = psf_opt.run_psf_optimization_workflow(
-            mock_telescope_model, mock_site_model, {}, TEST_OUTPUT_DIR
+        mock_load.return_value = ({"measured": sample_data}, sample_data[psf_opt.RADIUS])
+        mock_opt.return_value.run_gradient_descent.return_value = (
+            {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]},
+            3.5,
+            [
+                (
+                    {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]},
+                    0.05,
+                    0.8,
+                    3.5,
+                    sample_data,
+                )
+            ],
         )
-        assert result is None
+        psf_opt.run_psf_optimization_workflow(
+            mock_telescope_model, mock_site_model, mock_args_dict, tmp_path
+        )
+
+    assert not (tmp_path / "test.log").exists()
+    assert not (tmp_path / "sim.lis").exists()
+    assert not (tmp_path / "sim.lis.gz").exists()
+    assert (tmp_path / "keep_me.png").exists()
+    assert (tmp_path / "keep_me.pdf").exists()

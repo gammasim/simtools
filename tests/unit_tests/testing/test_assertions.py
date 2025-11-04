@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
+import gzip
 import logging
+import tarfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -173,19 +175,6 @@ def test_check_output_from_sim_telarray(
     assert assertions.check_output_from_sim_telarray(file, expected_output)
 
 
-@patch("eventio.simtel.simtelfile.SimTelFile")
-def test_check_output_from_sim_telarray_invalid_file_extension(mock_simtelfile_class):
-    file = Path("dummy_path.txt")
-    file_test = {
-        "expected_output": {"pe_sum": [5, 35], "trigger_time": [0.5, 3.5], "photons": [50, 350]}
-    }
-
-    with pytest.raises(
-        ValueError, match=r"Expected output file dummy_path.txt is not a zstd compressed file"
-    ):
-        assertions.check_output_from_sim_telarray(file, file_test)
-
-
 @patch("simtools.testing.assertions.read_sim_telarray_metadata")
 def test_assert_expected_simtel_metadata(mock_read_metadata):
     mock_read_metadata.return_value = (
@@ -285,3 +274,77 @@ def test_check_output_from_sim_telarray_failed_output(mock_assert_output, mock_a
     file_test = {"expected_output": {"pe_sum": [5, 35]}}
 
     assert not assertions.check_output_from_sim_telarray(file, file_test)
+
+
+def test_scan_log_file():
+    test_data = b"Test log line with pattern1\nAnother line\nLine with pattern2\n"
+    file_obj = MagicMock()
+    file_obj.read.return_value = test_data
+
+    patterns = ["pattern1", "pattern2", "pattern3"]
+    found = assertions._scan_log_file(file_obj, patterns)
+
+    assert "pattern1" in found
+    assert "pattern2" in found
+    assert "pattern3" not in found
+
+
+def test_check_simulation_logs_no_patterns():
+    file_test = {}
+    result = assertions.check_simulation_logs(Path("dummy.tar.gz"), file_test)
+    assert result
+
+
+def test_check_simulation_logs_not_tar_file(tmp_test_directory):
+    not_tar = Path(tmp_test_directory) / "not_a_tar.txt"
+    not_tar.write_text("not a tar file", encoding="utf-8")
+    file_test = {"expected_log_output": {"pattern": ["test"]}}
+
+    with pytest.raises(ValueError, match=r"is not a tar file"):
+        assertions.check_simulation_logs(not_tar, file_test)
+
+
+def test_check_simulation_logs_success(tmp_test_directory):
+    tmp_path = Path(tmp_test_directory)
+    tar_path = tmp_path / "test_logs.tar.gz"
+    log_content = b"Log line with pattern_A\nAnother line\nLine with pattern_B\n"
+
+    with tarfile.open(tar_path, "w:gz") as tar:
+        log_gz = tmp_path / "test.log.gz"
+        with gzip.open(log_gz, "wb") as gz:
+            gz.write(log_content)
+        tar.add(log_gz, arcname="test.log.gz")
+
+    file_test = {"expected_log_output": {"pattern": ["pattern_A", "pattern_B"]}}
+    result = assertions.check_simulation_logs(tar_path, file_test)
+    assert result
+
+
+def test_check_simulation_logs_missing_pattern(tmp_test_directory):
+    tmp_path = Path(tmp_test_directory)
+    tar_path = tmp_path / "test_logs.tar.gz"
+    log_content = b"Log line with pattern_A\nAnother line\n"
+
+    with tarfile.open(tar_path, "w:gz") as tar:
+        log_gz = tmp_path / "test.log.gz"
+        with gzip.open(log_gz, "wb") as gz:
+            gz.write(log_content)
+        tar.add(log_gz, arcname="test.log.gz")
+
+    file_test = {"expected_log_output": {"pattern": ["pattern_A", "missing_pattern"]}}
+    result = assertions.check_simulation_logs(tar_path, file_test)
+    assert not result
+
+
+def test_check_simulation_logs_skip_non_log_files(tmp_test_directory):
+    tmp_path = Path(tmp_test_directory)
+    tar_path = tmp_path / "test_logs.tar.gz"
+
+    with tarfile.open(tar_path, "w:gz") as tar:
+        not_log = tmp_path / "readme.txt"
+        not_log.write_text("This is not a log file", encoding="utf-8")
+        tar.add(not_log, arcname="readme.txt")
+
+    file_test = {"expected_log_output": {"pattern": ["pattern"]}}
+    result = assertions.check_simulation_logs(tar_path, file_test)
+    assert not result

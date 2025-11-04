@@ -2,7 +2,7 @@
 applications:
 - application: simtools-db-get-parameter-from-db
   configuration:
-    model_version: 6.0
+    model_version: 6.0.2
     parameter: reference_point_altitude
     site: North
   test_name: site_parameter
