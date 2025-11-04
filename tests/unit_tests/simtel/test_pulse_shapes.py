@@ -92,7 +92,6 @@ def test_time_step_and_window():
     dt = 0.1
     t, _ = generate_gauss_expconv_pulse(sigma, tau, dt_ns=dt)
     assert np.allclose(np.diff(t), dt)
-    # Window should straddle zero and provide both negative and positive times
     assert t[0] < 0
     assert t[-1] > 0
     assert np.isclose(t[0], -10.0, atol=1.5 * dt)
