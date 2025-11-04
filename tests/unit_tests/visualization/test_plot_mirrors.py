@@ -140,48 +140,6 @@ def test_plot_ring_segmentation_main(mock_db_handler, mock_save, mock_plot_ring,
         mock_save.assert_called_once_with(mock_fig, "test.png")
 
 
-@mock.patch("simtools.visualization.plot_mirrors.plot_mirror_petal_segmentation")
-@mock.patch("simtools.visualization.plot_mirrors.visualize.save_figure")
-@mock.patch("simtools.visualization.plot_mirrors.db_handler.DatabaseHandler")
-def test_plot_petal_segmentation_main(mock_db_handler, mock_save, mock_plot_petal, tmp_path):
-    """Test the main plot function with petal segmentation."""
-    config = {
-        "parameter": "secondary_mirror_segmentation",
-        "site": "North",
-        "telescope": "MSTS-01",
-        "parameter_version": "1.0.0",
-        "model_version": "6.0.0",
-    }
-
-    mock_db_instance = mock.MagicMock()
-    mock_db_handler.return_value = mock_db_instance
-    mock_db_instance.get_model_parameter.return_value = {
-        "secondary_mirror_segmentation": {"value": "secondary_petal_seg.dat"}
-    }
-
-    mock_fig = mock.MagicMock()
-    mock_plot_petal.return_value = mock_fig
-
-    petal_file = tmp_path / "secondary_petal_seg.dat"
-    petal_file.write_text("# Petal segmentation\npoly 3 0 100.0 0.0 50.0 86.6 -50.0 86.6\n")
-
-    with mock.patch("simtools.visualization.plot_mirrors.io_handler.IOHandler") as mock_io:
-        mock_io_instance = mock.MagicMock()
-        mock_io.return_value = mock_io_instance
-        mock_io_instance.get_output_directory.return_value = tmp_path
-
-        plot_mirrors.plot(config, "test.png")
-
-        expected_path = tmp_path / "secondary_petal_seg.dat"
-        mock_plot_petal.assert_called_once_with(
-            data_file_path=expected_path,
-            telescope_model_name="MSTS-01",
-            parameter_type="secondary_mirror_segmentation",
-            title=None,
-        )
-        mock_save.assert_called_once_with(mock_fig, "test.png")
-
-
 def test__create_single_mirror_patch():
     """Test patch creation for different mirror shapes."""
     x, y = 100.0, 100.0
@@ -418,14 +376,14 @@ def test__read_segmentation_file_with_short_lines(tmp_path):
 
 
 def test__create_segmentation_patches():
-    """Test creation of segmentation patches."""
+    """Test creation of segmentation patches (now using unified _create_mirror_patches)."""
     x_pos = np.array([100.0, 200.0, 300.0])
     y_pos = np.array([100.0, 200.0, 300.0])
     diameter = 150.0
     shape_type = 3
     segment_ids = [1, 1, 2]
 
-    patches, colors = plot_mirrors._create_segmentation_patches(
+    patches, colors = plot_mirrors._create_mirror_patches(
         x_pos, y_pos, diameter, shape_type, segment_ids
     )
 
@@ -498,9 +456,9 @@ def test__detect_segmentation_type(tmp_path):
     ring_file.write_text("# Ring segmentation\nring 6 100.0 200.0 0 0.0\n")
     assert plot_mirrors._detect_segmentation_type(ring_file) == "ring"
 
-    petal_file = tmp_path / "petal_seg.dat"
-    petal_file.write_text("# Petal segmentation\npoly 3 0 10.0 20.0 30.0 40.0\n")
-    assert plot_mirrors._detect_segmentation_type(petal_file) == "petal"
+    shape_file = tmp_path / "shape_seg.dat"
+    shape_file.write_text("# Shape segmentation\nhex 1 10.0 20.0 30.0 40.0\n")
+    assert plot_mirrors._detect_segmentation_type(shape_file) == "shape"
 
     standard_file = tmp_path / "standard_seg.dat"
     standard_file.write_text("100.0 200.0 150.0 2800.0 3\n")
@@ -540,15 +498,21 @@ def test__calculate_mean_outer_edge_radius():
 def test__read_ring_segmentation_data(tmp_path):
     """Test reading ring segmentation data."""
     ring_file = tmp_path / "ring_seg.dat"
-    ring_file.write_text("# Ring segmentation file\nring 6 100.0 200.0 0 15.0\n")
+    ring_file.write_text(
+        "# Ring segmentation file\nring 6 100.0 200.0 60.0 15.0\nring 12 200.0 300.0 30.0 0.0\n"
+    )
 
-    radii, phi0, nseg = plot_mirrors._read_ring_segmentation_data(ring_file)
+    rings = plot_mirrors._read_ring_segmentation_data(ring_file)
 
-    assert len(radii) == 2
-    assert radii[0] == pytest.approx(100.0)
-    assert radii[1] == pytest.approx(200.0)
-    assert phi0 == pytest.approx(15.0)
-    assert nseg == 6
+    assert len(rings) == 2
+    assert rings[0]["nseg"] == 6
+    assert rings[0]["rmin"] == pytest.approx(100.0)
+    assert rings[0]["rmax"] == pytest.approx(200.0)
+    assert rings[0]["dphi"] == pytest.approx(60.0)
+    assert rings[0]["phi0"] == pytest.approx(15.0)
+    assert rings[1]["nseg"] == 12
+    assert rings[1]["rmin"] == pytest.approx(200.0)
+    assert rings[1]["rmax"] == pytest.approx(300.0)
 
 
 @mock.patch("matplotlib.pyplot.subplots")
@@ -559,11 +523,9 @@ def test_plot_mirror_ring_segmentation(mock_subplots, tmp_path):
     mock_subplots.return_value = (mock_fig, mock_ax)
 
     ring_file = tmp_path / "ring_seg.dat"
-    ring_file.write_text("# Ring segmentation file\nring 6 100.0 200.0 0 0.0\n")
+    ring_file.write_text("# Ring segmentation file\nring 6 100.0 200.0 60.0 0.0\n")
 
     with (
-        mock.patch("matplotlib.pyplot.text"),
-        mock.patch("matplotlib.pyplot.subplots_adjust"),
         mock.patch("matplotlib.pyplot.tight_layout"),
     ):
         fig = plot_mirrors.plot_mirror_ring_segmentation(
@@ -587,12 +549,10 @@ def test_plot_mirror_ring_segmentation_small_inner_radius(mock_subplots, tmp_pat
 
     ring_file = tmp_path / "ring_seg_small.dat"
     ring_file.write_text(
-        "# Ring segmentation file with small inner radius\nring 6 10.0 200.0 0 0.0\n"
+        "# Ring segmentation file with small inner radius\nring 6 10.0 200.0 60.0 0.0\n"
     )
 
     with (
-        mock.patch("matplotlib.pyplot.text") as mock_text,
-        mock.patch("matplotlib.pyplot.subplots_adjust"),
         mock.patch("matplotlib.pyplot.tight_layout"),
     ):
         fig = plot_mirrors.plot_mirror_ring_segmentation(
@@ -605,21 +565,18 @@ def test_plot_mirror_ring_segmentation_small_inner_radius(mock_subplots, tmp_pat
         assert fig is not None
         mock_ax.set_ylim.assert_called_once()
         mock_ax.set_title.assert_called_once()
-        assert mock_text.call_count >= 2
 
 
 @mock.patch("matplotlib.pyplot.subplots")
-def test_plot_mirror_petal_segmentation(mock_subplots, tmp_path):
-    """Test petal segmentation plotting."""
+def test_plot_mirror_shape_segmentation(mock_subplots, tmp_path):
+    """Test shape segmentation plotting."""
     mock_fig = mock.MagicMock()
     mock_ax = mock.MagicMock()
     mock_subplots.return_value = (mock_fig, mock_ax)
 
-    petal_file = tmp_path / "petal_seg.dat"
-    petal_file.write_text(
-        "# Petal segmentation file\n"
-        "poly 3 0 100.0 0.0 50.0 86.6 -50.0 86.6\n"
-        "poly 3 120 100.0 0.0 50.0 86.6 -50.0 86.6\n"
+    shape_file = tmp_path / "shape_seg.dat"
+    shape_file.write_text(
+        "# Shape segmentation file\nhex 1 100.0 0.0 50.0 0.0\nhex 2 -50.0 86.6 50.0 0.0\n"
     )
 
     with (
@@ -627,13 +584,12 @@ def test_plot_mirror_petal_segmentation(mock_subplots, tmp_path):
         mock.patch("matplotlib.pyplot.xlabel"),
         mock.patch("matplotlib.pyplot.ylabel"),
         mock.patch("matplotlib.pyplot.tick_params"),
-        mock.patch("matplotlib.pyplot.tight_layout"),
     ):
-        fig = plot_mirrors.plot_mirror_petal_segmentation(
-            data_file_path=petal_file,
+        fig = plot_mirrors.plot_mirror_shape_segmentation(
+            data_file_path=shape_file,
             telescope_model_name="SCTS-01",
             parameter_type="primary_mirror_segmentation",
-            title="Test Petal",
+            title="Test Shape",
         )
 
         assert fig is not None
