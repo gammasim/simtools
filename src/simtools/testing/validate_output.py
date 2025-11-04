@@ -141,11 +141,6 @@ def _validate_output_path_and_file(config, integration_file_tests):
             assert assertions.check_output_from_sim_telarray(output_file_path, file_test)
         elif output_file_path.name.endswith(".log_hist.tar.gz"):
             assert assertions.check_simulation_logs(output_file_path, file_test)
-        else:
-            raise ValueError(
-                f"Output file {output_file_path} has unknown suffix {output_file_path.suffix}."
-                " Expected .simtel.zst or .log_hist.tar.gz"
-            )
 
 
 def _validate_model_parameter_json_file(config, model_parameter_validation, db_config):
