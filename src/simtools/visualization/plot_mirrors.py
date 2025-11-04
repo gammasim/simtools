@@ -44,7 +44,7 @@ def _detect_segmentation_type(data_file_path):
                 continue
             if line_lower.startswith("ring"):
                 return "ring"
-            if line_lower.startswith(("hex", "square", "circular", "yhex")):
+            if line_lower.startswith(("hex", "circular", "yhex")):
                 return "shape"
     return "standard"
 
@@ -56,13 +56,6 @@ def plot(config, output_file, db_config=None):
     Parameters
     ----------
     config : dict
-        Configuration dictionary containing:
-        - parameter : str, should be "mirror_list", "primary_mirror_segmentation",
-          or "secondary_mirror_segmentation"
-        - site : str, site name
-        - telescope : str, name of the telescope
-        - parameter_version: str, version of the parameter
-        - model_version: str, version of the model
     output_file : str or Path
         Path where to save the plot
     db_config : dict, optional
@@ -127,26 +120,7 @@ def plot(config, output_file, db_config=None):
 
 
 def plot_mirror_layout(mirrors, telescope_model_name, title=None):
-    """
-    Plot the mirror panel layout from a Mirrors object.
-
-    This function creates a visualization of mirror panel positions,
-    showing their spatial arrangement on the telescope dish structure.
-
-    Parameters
-    ----------
-    mirrors : Mirrors
-        Mirrors object containing mirror panel information
-    telescope_model_name : str
-        Name/model of the telescope
-    title : str, optional
-        Plot title
-
-    Returns
-    -------
-    matplotlib.figure.Figure
-        The generated figure
-    """
+    """Plot the mirror panel layout from a Mirrors object."""
     logger.info(f"Plotting mirror layout for {telescope_model_name}")
 
     fig, ax = plt.subplots(figsize=(10, 10))
@@ -193,28 +167,7 @@ def plot_mirror_layout(mirrors, telescope_model_name, title=None):
 
 
 def plot_mirror_segmentation(data_file_path, telescope_model_name, parameter_type, title=None):
-    """
-    Plot mirror segmentation layout from a segmentation file.
-
-    This function creates a visualization of mirror segments,
-    showing their spatial arrangement and grouping.
-
-    Parameters
-    ----------
-    data_file_path : Path
-        Path to the segmentation data file
-    telescope_model_name : str
-        Name/model of the telescope
-    parameter_type : str
-        Type of segmentation ("primary_mirror_segmentation" or "secondary_mirror_segmentation")
-    title : str, optional
-        Plot title
-
-    Returns
-    -------
-    matplotlib.figure.Figure
-        The generated figure
-    """
+    """Plot mirror segmentation layout from a segmentation file."""
     logger.info(f"Plotting {parameter_type} for {telescope_model_name}")
 
     segmentation_data = _read_segmentation_file(data_file_path)
@@ -272,25 +225,7 @@ def plot_mirror_segmentation(data_file_path, telescope_model_name, parameter_typ
 
 
 def _create_mirror_patches(x_pos, y_pos, diameter, shape_type, color_values):
-    """
-    Create matplotlib patches for mirror panels or segments.
-
-    Parameters
-    ----------
-    x_pos, y_pos : array-like
-        X and Y coordinates of mirror panel centers
-    diameter : float
-        Diameter of mirror panels
-    shape_type : int
-        Shape type (0: circular, 1/3: hexagonal, 2: square)
-    color_values : array-like
-        Values for each mirror panel (used for coloring, e.g., focal_lengths or segment_ids)
-
-    Returns
-    -------
-    tuple
-        (patches, colors) - list of matplotlib patches and corresponding color values
-    """
+    """Create matplotlib patches for mirror panels or segments."""
     patches = [
         _create_single_mirror_patch(x, y, diameter, shape_type) for x, y in zip(x_pos, y_pos)
     ]
@@ -298,19 +233,7 @@ def _create_mirror_patches(x_pos, y_pos, diameter, shape_type, color_values):
 
 
 def _read_segmentation_file(data_file_path):
-    """
-    Read mirror segmentation file and extract segment information.
-
-    Parameters
-    ----------
-    data_file_path : Path
-        Path to the segmentation data file
-
-    Returns
-    -------
-    dict
-        Dictionary containing x, y, diameter, shape_type, and segment_ids
-    """
+    """Read mirror segmentation file and extract segment information."""
     x_pos = []
     y_pos = []
     diameter = None
@@ -368,27 +291,7 @@ def _extract_segment_id(parts, default_id):
 
 
 def _create_single_mirror_patch(x, y, diameter, shape_type):
-    """
-    Create a single matplotlib patch for a mirror panel.
-
-    Parameters
-    ----------
-    x, y : float
-        Center coordinates of the mirror panel
-    diameter : float
-        Diameter of the mirror panel
-    shape_type : int
-        Shape type:
-        0: circular
-        1: hexagonal (flat x)
-        2: square
-        3: hexagonal (flat y)
-
-    Returns
-    -------
-    matplotlib.patches.Patch
-        The created patch object for the mirror panel
-    """
+    """Create a single matplotlib patch for a mirror panel."""
     if shape_type == 0:
         return mpatches.Circle((x, y), radius=diameter / 2)
     if shape_type in (1, 3):
@@ -407,22 +310,7 @@ def _create_single_mirror_patch(x, y, diameter, shape_type):
 
 
 def _add_mirror_labels(ax, x_pos, y_pos, mirror_ids, max_labels=20):
-    """
-    Add mirror panel ID labels to the plot.
-
-    Labels the mirrors with the lowest IDs (first few mirrors by ID number).
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        The axes to add labels to
-    x_pos, y_pos : array-like
-        X and Y coordinates of mirror panel centers
-    mirror_ids : array-like
-        Mirror panel IDs
-    max_labels : int, optional
-        Maximum number of labels to display
-    """
+    """Add mirror panel ID labels to the plot."""
     mirror_data = sorted(zip(mirror_ids, x_pos, y_pos), key=lambda item: item[0])
 
     for i, (mid, x, y) in enumerate(mirror_data):
@@ -440,25 +328,7 @@ def _add_mirror_labels(ax, x_pos, y_pos, mirror_ids, max_labels=20):
 
 
 def _configure_mirror_plot(ax, x_pos, y_pos, title, telescope_model_name):
-    """
-    Configure the mirror plot with titles, labels, and limits.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        The axes to configure
-    x_pos, y_pos : array-like
-        Arrays of x and y positions of mirror panels
-    title : str
-        Plot title
-    telescope_model_name : str
-        Name of the telescope model
-
-    Returns
-    -------
-    None
-        The function modifies the plot axes in place.
-    """
+    """Add titles, labels, and limits."""
     ax.set_aspect("equal")
 
     if len(x_pos) == 0 or len(y_pos) == 0:
@@ -490,23 +360,7 @@ def _configure_mirror_plot(ax, x_pos, y_pos, title, telescope_model_name):
 
 
 def _add_camera_frame_indicator(ax, telescope_model_name=None):
-    """
-    Add camera frame coordinate system indicator to the plot (bottom-right corner).
-
-    Shows the camera coordinate system convention based on telescope type:
-    - LST/SST: X_cam (down), Y_cam (right) - camera frame coordinates
-    - MST: North (down), West (right) - cardinal directions
-
-    This matches sim_telarray convention where mirrors are positioned
-    in the camera reference frame or cardinal directions.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        The axes to add the indicator to
-    telescope_model_name : str, optional
-        Name of the telescope model; used to determine coordinate labels.
-    """
+    """Add camera frame coordinate system indicator to the plot."""
     if telescope_model_name and "MST" in telescope_model_name.upper():
         x_label = "$North$"
         y_label = "$West$"
@@ -546,20 +400,7 @@ def _add_camera_frame_indicator(ax, telescope_model_name=None):
 
 
 def _add_mirror_statistics(ax, mirrors, x_pos, y_pos, diameter):
-    """
-    Add mirror statistics text to the plot.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        The axes to add statistics to
-    mirrors : Mirrors
-        Mirrors object containing mirror information
-    x_pos, y_pos : array-like
-        Arrays of x and y positions
-    diameter : float
-        Mirror panel diameter
-    """
+    """Add mirror statistics text to the plot."""
     n_mirrors = mirrors.number_of_mirrors
 
     max_radius = np.sqrt(np.max(x_pos**2 + y_pos**2)) / 100.0
@@ -595,21 +436,7 @@ def _add_mirror_statistics(ax, mirrors, x_pos, y_pos, diameter):
 
 
 def _get_radius_offset(diameter, shape_type):
-    """
-    Get the radius offset for a given shape type.
-
-    Parameters
-    ----------
-    diameter : float
-        Diameter of mirror panels
-    shape_type : int
-        Shape type (0: circular, 1/3: hexagonal, 2: square)
-
-    Returns
-    -------
-    float
-        Radius offset in cm
-    """
+    """Get the radius offset for a given shape type."""
     if shape_type == 0:
         return diameter / 2
     if shape_type in (1, 3):
@@ -618,42 +445,14 @@ def _get_radius_offset(diameter, shape_type):
 
 
 def _calculate_mean_outer_edge_radius(x_pos, y_pos, diameter, shape_type):
-    """
-    Calculate the mean radius of the outer edge of the mirror array.
-
-    Parameters
-    ----------
-    x_pos, y_pos : array-like
-        X and Y coordinates of mirror panel centers
-    diameter : float
-        Diameter of mirror panels
-    shape_type : int
-        Shape type (0: circular, 1/3: hexagonal, 2: square)
-
-    Returns
-    -------
-    float
-        Mean outer edge radius in cm
-    """
+    """Calculate the mean radius of the outer edge of the mirror array."""
     radius_offset = _get_radius_offset(diameter, shape_type)
     radii = np.sqrt(x_pos**2 + y_pos**2) + radius_offset
     return np.mean(radii)
 
 
 def _read_ring_segmentation_data(data_file_path):
-    """
-    Read ring segmentation data from file.
-
-    Parameters
-    ----------
-    data_file_path : Path
-        Path to the segmentation data file
-
-    Returns
-    -------
-    list of dict
-        List of ring dictionaries, each containing rmin, rmax, nseg, phi0
-    """
+    """Read ring segmentation data from file."""
     rings = []
 
     with open(data_file_path, encoding="utf-8") as f:
@@ -674,68 +473,34 @@ def _read_ring_segmentation_data(data_file_path):
     return rings
 
 
-def _plot_single_ring(ax, ring, cmap, norm, color_index):
-    """
-    Plot a single ring with its segments.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        Polar axes to plot on
-    ring : dict
-        Ring parameters (rmin, rmax, nseg, phi0, dphi)
-    cmap : matplotlib colormap
-        Colormap for segments
-    norm : matplotlib normalization
-        Color normalization
-    color_index : int
-        Base color index for this ring
-    """
-    linewidth = 2
+def _plot_single_ring(ax, ring, cmap, color_index):
+    """Plot a single ring with its segments."""
     rmin, rmax = ring["rmin"], ring["rmax"]
     nseg, phi0 = ring["nseg"], ring["phi0"]
     dphi = ring["dphi"]
 
-    # Draw inner and outer circles
-    theta_full = np.linspace(0, 2 * np.pi, 360)
-    ax.plot(theta_full, np.repeat(rmin, len(theta_full)), "-k", lw=linewidth)
-    ax.plot(theta_full, np.repeat(rmax, len(theta_full)), "-k", lw=linewidth)
+    # Angular gap between segments (in degrees) - represents the physical gaps
+    angular_gap = 0.3  # degrees
 
-    # Draw segment boundaries and fill segments
     if nseg > 1:
         dphi_rad = dphi * np.pi / 180
         phi0_rad = phi0 * np.pi / 180
+        gap_rad = angular_gap * np.pi / 180
 
         for i in range(nseg):
             theta_i = i * dphi_rad + phi0_rad
-            # Draw radial line
-            ax.plot([theta_i, theta_i], [rmin, rmax], "-k", lw=linewidth)
 
-            # Fill segment
-            n_theta = 64
-            theta_seg = np.linspace(theta_i, theta_i + dphi_rad, n_theta)
-            r_seg = np.array([rmin, rmax])
-            theta_mesh = np.repeat(theta_seg[:, np.newaxis], 2, axis=1)
-            r_mesh = np.repeat(r_seg[np.newaxis, :], n_theta, axis=0)
-            z = np.ones((n_theta, 2)) * (color_index + i % 10)
-            ax.pcolormesh(theta_mesh, r_mesh, z, cmap=cmap, norm=norm, shading="auto")
+            # Fill segment with small gap on each side
+            n_theta = 100
+            theta_seg = np.linspace(theta_i + gap_rad, theta_i + dphi_rad - gap_rad, n_theta)
+
+            color_value = (color_index + i % 10) / 20.0  # Normalize to 0-1
+            color = cmap(color_value)
+            ax.fill_between(theta_seg, rmin, rmax, color=color, alpha=0.8)
 
 
 def _add_ring_radius_label(ax, angle, radius, label_text):
-    """
-    Add a radius label at the specified angle and radius.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        Polar axes to add label to
-    angle : float
-        Angle in radians
-    radius : float
-        Radial position
-    label_text : str
-        Text to display
-    """
+    """Add a radius label at the specified angle and radius."""
     ax.text(
         angle,
         radius,
@@ -750,27 +515,7 @@ def _add_ring_radius_label(ax, angle, radius, label_text):
 
 
 def plot_mirror_ring_segmentation(data_file_path, telescope_model_name, parameter_type, title=None):
-    """
-    Plot mirror ring segmentation layout (for SCT-type telescopes).
-
-    This function creates a polar visualization of mirror segments arranged in rings.
-
-    Parameters
-    ----------
-    data_file_path : Path
-        Path to the segmentation data file
-    telescope_model_name : str
-        Name/model of the telescope
-    parameter_type : str
-        Type of segmentation ("primary_mirror_segmentation" or "secondary_mirror_segmentation")
-    title : str, optional
-        Plot title
-
-    Returns
-    -------
-    matplotlib.figure.Figure
-        The generated figure
-    """
+    """Plot mirror ring segmentation layout."""
     logger.info(f"Plotting ring {parameter_type} for {telescope_model_name}")
 
     rings = _read_ring_segmentation_data(data_file_path)
@@ -782,23 +527,50 @@ def plot_mirror_ring_segmentation(data_file_path, telescope_model_name, paramete
     fig, ax = plt.subplots(subplot_kw={"projection": "polar"}, figsize=(10, 10))
 
     cmap = mcolors.LinearSegmentedColormap.from_list("mirror_blue", ["#deebf7", "#3182bd"])
-    norm = mcolors.Normalize(vmin=1, vmax=20)
 
     for i, ring in enumerate(rings):
-        _plot_single_ring(ax, ring, cmap, norm, color_index=i * 10)
+        _plot_single_ring(ax, ring, cmap, color_index=i * 10)
 
     max_radius = max(ring["rmax"] for ring in rings)
-    ax.set_ylim([0, max_radius])
+    label_padding = max_radius * 0.04
+    ax.set_ylim([0, max_radius + label_padding])
     ax.set_yticklabels([])
+    ax.set_rgrids([])
+    ax.spines["polar"].set_visible(False)
 
     label_angle = 30 * np.pi / 180
 
     for ring in rings:
-        _add_ring_radius_label(ax, label_angle, ring["rmin"], f"{ring['rmin']:.0f}")
-        _add_ring_radius_label(ax, label_angle, ring["rmax"], f"{ring['rmax']:.0f}")
+        theta_full = np.linspace(0, 2 * np.pi, 360)
+        ax.plot(
+            theta_full,
+            np.repeat(ring["rmin"], len(theta_full)),
+            ":",
+            color="gray",
+            lw=0.8,
+            alpha=0.5,
+        )
+        ax.plot(
+            theta_full,
+            np.repeat(ring["rmax"], len(theta_full)),
+            ":",
+            color="gray",
+            lw=0.8,
+            alpha=0.5,
+        )
+
+        _add_ring_radius_label(ax, label_angle, ring["rmin"], f"{ring['rmin']:.3f}")
+        _add_ring_radius_label(ax, label_angle, ring["rmax"], f"{ring['rmax']:.3f}")
 
     ax.text(
-        label_angle, max_radius + 5, "[cm]", ha="center", va="bottom", fontsize=10, weight="bold"
+        label_angle,
+        max_radius + label_padding * 2.5,
+        "[cm]",
+        ha="center",
+        va="center",
+        fontsize=10,
+        weight="bold",
+        color="red",
     )
 
     if title:
@@ -827,7 +599,7 @@ def _parse_shape_line(line_stripped, shape_segments, segment_ids, current_segmen
     entries = line_stripped.split()
 
     if (
-        any(line_stripped.lower().startswith(s) for s in ["hex", "square", "circular", "yhex"])
+        any(line_stripped.lower().startswith(s) for s in ["hex", "circular", "yhex"])
         and len(entries) >= 5
     ):
         shape_segments.append(
@@ -876,9 +648,9 @@ def _add_segment_label(ax, x, y, label):
     ax.text(x, y, str(label), **LABEL_STYLE)
 
 
-def _create_shape_patches(shape_segments, segment_ids, ax):
+def _create_shape_patches(ax, shape_segments, segment_ids):
     """
-    Create patches for shape segments (hex, square, circular).
+    Create patches for shape segments (hex or circular).
 
     Parameters
     ----------
@@ -908,10 +680,6 @@ def _create_shape_patches(shape_segments, segment_ids, ax):
                 orientation=np.deg2rad(rot),
                 **PATCH_STYLE,
             )
-        elif "square" in shape:
-            patch = mpatches.Rectangle(
-                (x - diam / 2, y - diam / 2), diam, diam, angle=rot, **PATCH_STYLE
-            )
         else:
             patch = mpatches.Circle((x, y), radius=diam / 2, **PATCH_STYLE)
 
@@ -925,35 +693,14 @@ def _create_shape_patches(shape_segments, segment_ids, ax):
 def plot_mirror_shape_segmentation(
     data_file_path, telescope_model_name, parameter_type, title=None
 ):
-    """
-    Plot mirror shape segmentation layout.
-
-    This function creates a visualization of mirror segments defined as shapes
-    (hexagonal, square, or circular).
-
-    Parameters
-    ----------
-    data_file_path : Path
-        Path to the segmentation data file
-    telescope_model_name : str
-        Name/model of the telescope
-    parameter_type : str
-        Type of segmentation ("primary_mirror_segmentation" or "secondary_mirror_segmentation")
-    title : str, optional
-        Plot title
-
-    Returns
-    -------
-    matplotlib.figure.Figure
-        The generated figure
-    """
+    """Plot mirror shape segmentation layout."""
     logger.info(f"Plotting shape {parameter_type} for {telescope_model_name}")
 
     shape_segments, segment_ids = _read_shape_segmentation_file(data_file_path)
     fig, ax = plt.subplots(figsize=(10, 10))
 
     # Create patches for shape segments
-    all_patches, maximum_radius = _create_shape_patches(shape_segments, segment_ids, ax)
+    all_patches, maximum_radius = _create_shape_patches(ax, shape_segments, segment_ids)
 
     collection = PatchCollection(all_patches, match_original=True)
     ax.add_collection(collection)
@@ -973,7 +720,6 @@ def plot_mirror_shape_segmentation(
     if title:
         ax.set_title(title, fontsize=18, pad=20)
 
-    # Add statistics
     total_segments = len(shape_segments)
     if segment_ids and total_segments > 0:
         stats_text = f"Number of segments: {len(set(segment_ids))}"

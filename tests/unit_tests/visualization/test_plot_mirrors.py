@@ -313,25 +313,6 @@ def test__add_mirror_statistics_hexagonal():
     assert "Mirror diameter: 120.0 cm" in call_args[0][2]
 
 
-def test__add_mirror_statistics_square():
-    """Test mirror statistics with square shape."""
-    mock_ax = mock.MagicMock()
-    mock_mirrors = mock.MagicMock()
-    mock_mirrors.number_of_mirrors = 50
-    mock_mirrors.shape_type = 2  # Square shape
-
-    x_pos = np.array([300.0, -300.0, 0.0])
-    y_pos = np.array([300.0, -300.0, 0.0])
-    diameter = 100.0
-
-    plot_mirrors._add_mirror_statistics(mock_ax, mock_mirrors, x_pos, y_pos, diameter)
-
-    mock_ax.text.assert_called_once()
-    call_args = mock_ax.text.call_args
-    assert "Number of mirrors: 50" in call_args[0][2]
-    assert "Mirror diameter: 100.0 cm" in call_args[0][2]
-
-
 def test__read_segmentation_file(tmp_path):
     """Test reading segmentation file."""
     seg_file = tmp_path / "test_segmentation.dat"
@@ -484,16 +465,6 @@ def test__calculate_mean_outer_edge_radius():
     )
     assert radius_hexagonal == pytest.approx(expected_hex)
 
-    radius_square = plot_mirrors._calculate_mean_outer_edge_radius(x_pos, y_pos, diameter, 2)
-    expected_square = np.mean(
-        [
-            100.0 + diameter / np.sqrt(2),
-            100.0 + diameter / np.sqrt(2),
-            100.0 + diameter / np.sqrt(2),
-        ]
-    )
-    assert radius_square == pytest.approx(expected_square)
-
 
 def test__read_ring_segmentation_data(tmp_path):
     """Test reading ring segmentation data."""
@@ -596,3 +567,99 @@ def test_plot_mirror_shape_segmentation(mock_subplots, tmp_path):
         mock_ax.set_aspect.assert_called_once_with("equal")
         mock_ax.set_title.assert_called_once()
         mock_ax.text.assert_called()
+
+
+def test__read_segmentation_file_with_invalid_data(tmp_path):
+    """Test reading segmentation file with invalid numeric data (ValueError handling)."""
+    data_file = tmp_path / "invalid_seg.dat"
+    data_file.write_text("invalid_x invalid_y 100.0 50.0\n")
+
+    result = plot_mirrors._read_segmentation_file(data_file)
+
+    assert len(result["x"]) == 0
+    assert len(result["y"]) == 0
+
+
+def test__read_segmentation_file_empty_warning(tmp_path, caplog):
+    """Test warning when segmentation file has no valid numeric data."""
+    data_file = tmp_path / "empty_seg.dat"
+    data_file.write_text("# All comments\n% More comments\n")
+
+    plot_mirrors._read_segmentation_file(data_file)
+
+    assert "No valid numeric data found" in caplog.text
+
+
+def test_plot_mirror_ring_segmentation_empty_data(tmp_path, caplog):
+    """Test ring segmentation with empty data file."""
+    data_file = tmp_path / "empty_ring.dat"
+    data_file.write_text("# No data\n")
+
+    result = plot_mirrors.plot_mirror_ring_segmentation(
+        data_file_path=data_file,
+        telescope_model_name="SCTS-01",
+        parameter_type="primary_mirror_segmentation",
+    )
+
+    assert result is None
+    assert "No ring data found" in caplog.text
+
+
+def test__parse_segment_id_line_invalid():
+    """Test _parse_segment_id_line with invalid input."""
+    assert plot_mirrors._parse_segment_id_line("invalid line") == 0
+    assert plot_mirrors._parse_segment_id_line("") == 0
+
+
+def test__is_skippable_line():
+    """Test _is_skippable_line function."""
+    assert plot_mirrors._is_skippable_line("")
+    assert plot_mirrors._is_skippable_line("# comment")
+    assert plot_mirrors._is_skippable_line("% comment")
+    assert not plot_mirrors._is_skippable_line("valid data")
+
+
+def test__read_shape_segmentation_file_with_segment_id(tmp_path):
+    """Test reading shape segmentation file with segment ID marker."""
+    data_file = tmp_path / "shape_with_id.dat"
+    data_file.write_text("# segment id 5\nhex 1 100.0 0.0 50.0 0.0\nhex 2 200.0 0.0 50.0 0.0\n")
+
+    shape_segments, segment_ids = plot_mirrors._read_shape_segmentation_file(data_file)
+
+    assert len(shape_segments) == 2
+    assert all(sid == 5 for sid in segment_ids)
+
+
+def test__create_shape_patches_circle():
+    """Test creating circular shape patches."""
+    mock_ax = mock.MagicMock()
+    shape_segments = [
+        {"shape": "circular", "x": 0.0, "y": 0.0, "diameter": 100.0, "rotation": 0.0},
+    ]
+    segment_ids = [1]
+
+    patches, _ = plot_mirrors._create_shape_patches(mock_ax, shape_segments, segment_ids)
+
+    assert len(patches) == 1
+    assert isinstance(patches[0], mpatches.Circle)
+
+
+def test_plot_mirror_shape_segmentation_stats_variations(tmp_path):
+    """Test shape segmentation plot with different stats text variations."""
+    data_file = tmp_path / "shape_stats.dat"
+
+    data_file.write_text("hex 1 100.0 0.0 50.0 0.0\n")
+    fig1 = plot_mirrors.plot_mirror_shape_segmentation(
+        data_file_path=data_file,
+        telescope_model_name="SCTS-01",
+        parameter_type="primary_mirror_segmentation",
+    )
+    assert fig1 is not None
+
+    data_file.write_text("# No data\n")
+    fig2 = plot_mirrors.plot_mirror_shape_segmentation(
+        data_file_path=data_file,
+        telescope_model_name="SCTS-01",
+        parameter_type="primary_mirror_segmentation",
+    )
+    assert fig2 is not None
