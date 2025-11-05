@@ -183,25 +183,8 @@ def test_prepare_test_options_with_output_path(tmp_test_directory, tmp_config_st
     assert written_config["output_path"] == str(tmp_test_directory / "results")
 
 
-def test_prepare_test_options_with_data_directory(tmp_test_directory, tmp_config_string):
-    config = {"data_directory": "data"}
-    model_version = None
-
-    config_file, config_string, config_file_model_version = configuration._prepare_test_options(
-        config, tmp_test_directory, model_version
-    )
-
-    assert config_file == tmp_test_directory / tmp_config_string
-    assert config_string is None
-    assert config_file_model_version is None
-
-    with open(config_file, encoding="utf-8") as file:
-        written_config = yaml.safe_load(file)
-    assert written_config["data_directory"] == str(tmp_test_directory / "data")
-
-
 def test_prepare_test_options_with_full_config(tmp_test_directory, tmp_config_string):
-    config = {"model_version": "v1.0", "output_path": "results", "data_directory": "data"}
+    config = {"model_version": "v1.0", "output_path": "results"}
     model_version = "v2.0"
 
     config_file, config_string, config_file_model_version = configuration._prepare_test_options(
@@ -216,7 +199,6 @@ def test_prepare_test_options_with_full_config(tmp_test_directory, tmp_config_st
         written_config = yaml.safe_load(file)
     assert written_config["model_version"] == "v2.0"
     assert written_config["output_path"] == str(tmp_test_directory / "results")
-    assert written_config["data_directory"] == str(tmp_test_directory / "data")
 
 
 def test_configure_with_model_version_use_current(tmp_test_directory, mocker, tmp_config_string):
@@ -253,7 +235,7 @@ def test_configure_with_configuration(tmp_test_directory, mocker, tmp_config_str
     config = {
         "application": "test_app",
         "test_name": "test_name",
-        "configuration": {"output_path": "results", "data_directory": "data"},
+        "configuration": {"output_path": "results"},
     }
     request = mocker.Mock()
     request.config.getoption.return_value = None
@@ -272,9 +254,6 @@ def test_configure_with_configuration(tmp_test_directory, mocker, tmp_config_str
         written_config = yaml.safe_load(file)
     assert written_config["output_path"] == str(
         tmp_test_directory / "test_app-test_name" / "results"
-    )
-    assert written_config["data_directory"] == str(
-        tmp_test_directory / "test_app-test_name" / "data"
     )
 
 

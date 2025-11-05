@@ -137,7 +137,6 @@ simtools-simulate-prod \\
     --run_number $((process_id)) \\
     --run_number_offset {run_number_offset} \\
     --number_of_runs 1 \\
-    --data_directory /tmp/simtools-data \\
     --output_path /tmp/simtools-output \\
     --log_level {args_dict["log_level"]} \\
     --pack_for_grid_register simtools-output
