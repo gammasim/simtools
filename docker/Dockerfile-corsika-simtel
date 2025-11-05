@@ -46,6 +46,7 @@ ARG CORSIKA_OPT_PATCH_VERSION
 ARG AUTOCONF_VERSION
 
 ENV GCC_PATH="/usr/bin/"
+ENV CORSIKA_DIR="corsika-${CORSIKA_VERSION}"
 
 RUN yum update -y && yum install -y \
     gcc-fortran gsl-devel libgfortran \
@@ -64,16 +65,16 @@ RUN cd "autoconf-$AUTOCONF_VERSION" && \
 
 WORKDIR /workdir/sim_telarray
 ADD corsika_simtelarray.tar.gz .
-COPY --from=patches_stage /corsika-patches ./corsika-$CORSIKA_VERSION/
+COPY --from=patches_stage /corsika-patches ./${CORSIKA_DIR}/
 
-RUN tar -zxf corsika-$CORSIKA_VERSION.tar.gz && \
-    tar -zxf bernlohr-$BERNLOHR_VERSION.tar.gz -C corsika-$CORSIKA_VERSION/bernlohr && \
+RUN tar -zxf ${CORSIKA_DIR}.tar.gz && \
+    tar -zxf bernlohr-$BERNLOHR_VERSION.tar.gz -C ${CORSIKA_DIR}/bernlohr && \
     rm -f examples-with-data.tar.gz sim_telarray_config.tar.gz \
-    corsika_simtelarray.tar.gz  corsika-$CORSIKA_VERSION.tar.gz \
+    corsika_simtelarray.tar.gz  ${CORSIKA_DIR}.tar.gz \
     bernlohr-$BERNLOHR_VERSION.tar.gz
 
 # Apply patches for non-optimized / optimized CORSIKA
-WORKDIR /workdir/sim_telarray/corsika-$CORSIKA_VERSION
+WORKDIR /workdir/sim_telarray/${CORSIKA_DIR}
 RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
         patch -b -p0 src/corsika.F < "../corsika-77550.patch"; \
     fi && \
@@ -86,26 +87,25 @@ RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
 WORKDIR /workdir/sim_telarray
 # hadolint ignore=DL3003
 RUN for variant in curved ""; do \
-        (cd ./corsika-$CORSIKA_VERSION && \
+        (cd ./${CORSIKA_DIR} && \
         if [ "$AVX_FLAG" = "no_opt" ] || [ "$variant" = "curved" ]; then \
             ../corsika_build_script "$HADRONIC_MODEL" generic $variant; \
         else \
             ../corsika_build_script "$HADRONIC_MODEL" generic cerenkopt vlibm $variant; \
         fi) && \
-        make -C "corsika-$CORSIKA_VERSION" clean && rm -f ./*/*.a lib/*/*.a && \
+        make -C "${CORSIKA_DIR}" clean && rm -f ./*/*.a lib/*/*.a && \
         AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
-        AVX_EXTRA_FLAG="" && \
-        CFLAGS="" && CXXFLAGS="" && FFLAGS="" && \
+        C_SPECIFIC_FLAGS="-std=c99" && \
+        FORTRAN_SPECIFIC_FLAGS="-ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy" && \
         if [ "$AVX_FLAG" = "no_opt" ] || [ "$variant" = "curved" ]; then \
-            CFLAGS="-g  -std=c99 -O3"; \
-            CXXFLAGS="-g  -std=c99 -O3"; \
-            FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -O3"; \
+            BASE_FLAGS="-g -O3"; \
         else \
-            CFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
-            CXXFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
-            FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
+            BASE_FLAGS="-g -DCERENKOPT -DVLIBM -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
         fi && \
-        make -C "corsika-$CORSIKA_VERSION" \
+        CFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" && \
+        CXXFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" && \
+        FFLAGS="${BASE_FLAGS} ${FORTRAN_SPECIFIC_FLAGS}" && \
+        make -C "${CORSIKA_DIR}" \
             CC="${GCC_PATH}/gcc -static" \
             CXX="${GCC_PATH}/g++ -static" \
             CPP="${GCC_PATH}/gcc -static -E" \
@@ -114,32 +114,31 @@ RUN for variant in curved ""; do \
             CXXFLAGS="${CXXFLAGS}" \
             FFLAGS="${FFLAGS}" \
             install && \
-        echo "=== Listing corsika-${CORSIKA_VERSION}/run/ after install (variant: $variant) ===" && \
-        ls -la "corsika-${CORSIKA_VERSION}/run/" && \
+        echo "=== Listing ${CORSIKA_DIR}/run/ after install (variant: $variant) ===" && \
+        ls -la "${CORSIKA_DIR}/run/" && \
+        mkdir -p corsika-run && \
         if [ "$variant" = "curved" ]; then \
-            mkdir -p corsika-run && \
-            mv -v -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-run/corsika-$variant" && \
-            cp -v -f "corsika-${CORSIKA_VERSION}/src/corsikacompilefile.f" "corsika-run/corsikacompilefile_$variant.f" && \
+            mv -v -f "${CORSIKA_DIR}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-run/corsika-$variant" && \
+            cp -v -f "${CORSIKA_DIR}/src/corsikacompilefile.f" "corsika-run/corsikacompilefile_$variant.f" && \
             echo "=== After curved variant copy, corsika-run contains: ===" && \
             ls -la corsika-run/; \
         else \
-            mkdir -p corsika-run && \
-            mv -v -f "corsika-${CORSIKA_VERSION}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-run/corsika" && \
-            cp -v -f "corsika-${CORSIKA_VERSION}/src/corsikacompilefile.f" "corsika-run/corsikacompilefile.f" && \
+            mv -v -f "${CORSIKA_DIR}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-run/corsika" && \
+            cp -v -f "${CORSIKA_DIR}/src/corsikacompilefile.f" "corsika-run/corsikacompilefile.f" && \
             echo "=== After non-curved variant copy, corsika-run contains: ===" && \
             ls -la corsika-run/; \
         fi && \
         if [ "$variant" = "" ]; then \
-            if [ -d "corsika-${CORSIKA_VERSION}/run/" ]; then \
-                cp -r -v "corsika-${CORSIKA_VERSION}/run/"* corsika-run/; \
+            if [ -d "${CORSIKA_DIR}/run/" ]; then \
+                cp -r -v "${CORSIKA_DIR}/run/"* corsika-run/; \
             else \
-                echo "Skipping copy: source directory corsika-${CORSIKA_VERSION}/run/ does not exist."; \
+                echo "Skipping copy: source directory ${CORSIKA_DIR}/run/ does not exist."; \
             fi; \
         fi; \
     done
 
 # Build sim_telarray (with and without debug options)
-RUN touch corsika-$CORSIKA_VERSION.tar.gz && \
+RUN touch ${CORSIKA_DIR}.tar.gz && \
     # build with debug options; move binary to temporary location (to avoid being purged in next step)
     export NO_CORSIKA=1 EXTRA_DEFINES="${EXTRA_DEF} -DDEBUG_TRACE_99" && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl && \
     mv /workdir/sim_telarray/sim_telarray/sim_telarray \
@@ -152,7 +151,7 @@ RUN touch corsika-$CORSIKA_VERSION.tar.gz && \
 # Cleanup.
 # CORSIKA source code is removed to follow
 # the CORSIKA non-distribution policy.
-RUN rm -rf ./corsika-$CORSIKA_VERSION* && \
+RUN rm -rf ./${CORSIKA_DIR}* && \
     find . -name "*.tar.gz" -delete && \
     find . -name "doc*" -type d -exec rm -rf "{}" + 2>/dev/null && \
     find . -name "*.o" -delete && \
