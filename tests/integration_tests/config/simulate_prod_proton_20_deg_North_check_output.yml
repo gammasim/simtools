@@ -6,7 +6,6 @@ applications:
     azimuth_angle: South
     core_scatter: 5 500 m
     corsika_test_seeds: true
-    data_directory: simtools-data
     energy_range: 200 GeV 500 GeV
     label: check_output
     log_level: DEBUG
