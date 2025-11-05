@@ -2,7 +2,6 @@
 
 import gzip
 import logging
-import tarfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -291,12 +290,12 @@ def test_check_simulation_logs_not_tar_file(tmp_test_directory):
         assertions.check_simulation_logs(not_tar, file_test)
 
 
-def test_check_simulation_logs_success(tmp_test_directory):
+def test_check_simulation_logs_success(tmp_test_directory, safe_tar_open):
     tmp_path = Path(tmp_test_directory)
     tar_path = tmp_path / "test_logs.tar.gz"
     log_content = b"Log line with pattern_A\nAnother line\nLine with pattern_B\n"
 
-    with tarfile.open(tar_path, "w:gz") as tar:
+    with safe_tar_open(tar_path, "w:gz") as tar:
         log_gz = tmp_path / "test.log.gz"
         with gzip.open(log_gz, "wb") as gz:
             gz.write(log_content)
@@ -307,12 +306,12 @@ def test_check_simulation_logs_success(tmp_test_directory):
     assert result
 
 
-def test_check_simulation_logs_missing_pattern(tmp_test_directory):
+def test_check_simulation_logs_missing_pattern(tmp_test_directory, safe_tar_open):
     tmp_path = Path(tmp_test_directory)
     tar_path = tmp_path / "test_logs.tar.gz"
     log_content = b"Log line with pattern_A\nAnother line\n"
 
-    with tarfile.open(tar_path, "w:gz") as tar:
+    with safe_tar_open(tar_path, "w:gz") as tar:
         log_gz = tmp_path / "test.log.gz"
         with gzip.open(log_gz, "wb") as gz:
             gz.write(log_content)
@@ -323,11 +322,11 @@ def test_check_simulation_logs_missing_pattern(tmp_test_directory):
     assert not result
 
 
-def test_check_simulation_logs_skip_non_log_files(tmp_test_directory):
+def test_check_simulation_logs_skip_non_log_files(tmp_test_directory, safe_tar_open):
     tmp_path = Path(tmp_test_directory)
     tar_path = tmp_path / "test_logs.tar.gz"
 
-    with tarfile.open(tar_path, "w:gz") as tar:
+    with safe_tar_open(tar_path, "w:gz") as tar:
         not_log = tmp_path / "readme.txt"
         not_log.write_text("This is not a log file", encoding="utf-8")
         tar.add(not_log, arcname="readme.txt")
@@ -337,18 +336,18 @@ def test_check_simulation_logs_skip_non_log_files(tmp_test_directory):
     assert not result
 
 
-def test_read_log(tmp_test_directory):
+def test_read_log(tmp_test_directory, safe_tar_open):
     tmp_path = Path(tmp_test_directory)
     tar_path = tmp_path / "test.tar.gz"
     log_content = b"Test log content\nSecond line\n"
 
-    with tarfile.open(tar_path, "w:gz") as tar:
+    with safe_tar_open(tar_path, "w:gz") as tar:
         log_gz = tmp_path / "test.log.gz"
         with gzip.open(log_gz, "wb") as gz:
             gz.write(log_content)
         tar.add(log_gz, arcname="test.log.gz")
 
-    with tarfile.open(tar_path, "r:gz") as tar:
+    with safe_tar_open(tar_path, "r:gz") as tar:
         member = tar.getmembers()[0]
         result = assertions._read_log(member, tar)
 
@@ -367,12 +366,12 @@ def test_find_patterns():
     assert len(found) == 2
 
 
-def test_check_simulation_logs_forbidden_patterns_found(tmp_test_directory):
+def test_check_simulation_logs_forbidden_patterns_found(tmp_test_directory, safe_tar_open):
     tmp_path = Path(tmp_test_directory)
     tar_path = tmp_path / "test_logs.tar.gz"
     log_content = b"Log line with CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE\nAnother line\n"
 
-    with tarfile.open(tar_path, "w:gz") as tar:
+    with safe_tar_open(tar_path, "w:gz") as tar:
         log_gz = tmp_path / "test.log.gz"
         with gzip.open(log_gz, "wb") as gz:
             gz.write(log_content)
@@ -387,12 +386,12 @@ def test_check_simulation_logs_forbidden_patterns_found(tmp_test_directory):
     assert not result
 
 
-def test_check_simulation_logs_forbidden_patterns_not_found(tmp_test_directory):
+def test_check_simulation_logs_forbidden_patterns_not_found(tmp_test_directory, safe_tar_open):
     tmp_path = Path(tmp_test_directory)
     tar_path = tmp_path / "test_logs.tar.gz"
     log_content = b"Log line with normal content\nAnother line\n"
 
-    with tarfile.open(tar_path, "w:gz") as tar:
+    with safe_tar_open(tar_path, "w:gz") as tar:
         log_gz = tmp_path / "test.log.gz"
         with gzip.open(log_gz, "wb") as gz:
             gz.write(log_content)
@@ -403,12 +402,12 @@ def test_check_simulation_logs_forbidden_patterns_not_found(tmp_test_directory):
     assert result
 
 
-def test_check_simulation_logs_wanted_and_forbidden_both_ok(tmp_test_directory):
+def test_check_simulation_logs_wanted_and_forbidden_both_ok(tmp_test_directory, safe_tar_open):
     tmp_path = Path(tmp_test_directory)
     tar_path = tmp_path / "test_logs.tar.gz"
     log_content = b"Log line with expected_pattern\nAnother line with good content\n"
 
-    with tarfile.open(tar_path, "w:gz") as tar:
+    with safe_tar_open(tar_path, "w:gz") as tar:
         log_gz = tmp_path / "test.log.gz"
         with gzip.open(log_gz, "wb") as gz:
             gz.write(log_content)
@@ -424,12 +423,12 @@ def test_check_simulation_logs_wanted_and_forbidden_both_ok(tmp_test_directory):
     assert result
 
 
-def test_check_simulation_logs_wanted_ok_but_forbidden_found(tmp_test_directory):
+def test_check_simulation_logs_wanted_ok_but_forbidden_found(tmp_test_directory, safe_tar_open):
     tmp_path = Path(tmp_test_directory)
     tar_path = tmp_path / "test_logs.tar.gz"
     log_content = b"Log line with expected_pattern\nAnother line with ERROR\n"
 
-    with tarfile.open(tar_path, "w:gz") as tar:
+    with safe_tar_open(tar_path, "w:gz") as tar:
         log_gz = tmp_path / "test.log.gz"
         with gzip.open(log_gz, "wb") as gz:
             gz.write(log_content)
@@ -445,12 +444,12 @@ def test_check_simulation_logs_wanted_ok_but_forbidden_found(tmp_test_directory)
     assert not result
 
 
-def test_check_simulation_logs_multiple_forbidden_patterns_found(tmp_test_directory):
+def test_check_simulation_logs_multiple_forbidden_patterns_found(tmp_test_directory, safe_tar_open):
     tmp_path = Path(tmp_test_directory)
     tar_path = tmp_path / "test_logs.tar.gz"
     log_content = b"Log with ERROR\nAnother line with FATAL\nThird line with WARNING\n"
 
-    with tarfile.open(tar_path, "w:gz") as tar:
+    with safe_tar_open(tar_path, "w:gz") as tar:
         log_gz = tmp_path / "test.log.gz"
         with gzip.open(log_gz, "wb") as gz:
             gz.write(log_content)
@@ -461,12 +460,12 @@ def test_check_simulation_logs_multiple_forbidden_patterns_found(tmp_test_direct
     assert not result
 
 
-def test_check_simulation_logs_forbidden_only_empty_list(tmp_test_directory):
+def test_check_simulation_logs_forbidden_only_empty_list(tmp_test_directory, safe_tar_open):
     tmp_path = Path(tmp_test_directory)
     tar_path = tmp_path / "test_logs.tar.gz"
     log_content = b"Log line with any content\n"
 
-    with tarfile.open(tar_path, "w:gz") as tar:
+    with safe_tar_open(tar_path, "w:gz") as tar:
         log_gz = tmp_path / "test.log.gz"
         with gzip.open(log_gz, "wb") as gz:
             gz.write(log_content)
