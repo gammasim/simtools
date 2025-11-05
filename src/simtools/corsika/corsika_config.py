@@ -47,6 +47,7 @@ class CorsikaConfig:
         self.label = label
         self.zenith_angle = None
         self.azimuth_angle = None
+        self.curved_atmosphere_min_zenith_angle = None
         self._run_number = None
         self.config_file_path = None
         self.primary_particle = args_dict  # see setter for primary_particle
@@ -111,6 +112,9 @@ class CorsikaConfig:
         self.is_file_updated = False
         self.azimuth_angle = int(args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value)
         self.zenith_angle = int(args_dict.get("zenith_angle", 0.0 * u.deg).to("deg").value)
+        self.curved_atmosphere_min_zenith_angle = (
+            args_dict.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
+        )
 
         self._logger.debug(
             f"Setting CORSIKA parameters from database ({args_dict['model_version']})"
@@ -146,6 +150,12 @@ class CorsikaConfig:
         config["IACT_PARAMETERS"] = self._corsika_configuration_iact_parameters(parameters_from_db)
 
         return config
+
+    def use_curved_atmosphere(self):
+        """Check if zenith angle condition for curved atmosphere usage for CORSIKA is met."""
+        if self.curved_atmosphere_min_zenith_angle is not None:
+            return self.zenith_angle > self.curved_atmosphere_min_zenith_angle
+        return False
 
     def assert_corsika_configurations_match(self, model_versions, db_config=None):
         """
@@ -298,7 +308,8 @@ class CorsikaConfig:
                 parameters_from_db["corsika_starting_grammage"]
             )
         ]
-        parameters["TSTART"] = ["T"]
+        if not self.use_curved_atmosphere():
+            parameters["TSTART"] = ["T"]
         parameters["ECUTS"] = self._input_config_corsika_particle_kinetic_energy_cutoff(
             parameters_from_db["corsika_particle_kinetic_energy_cutoff"]
         )
