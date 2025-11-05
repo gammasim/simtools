@@ -811,13 +811,12 @@ class Simulator:
             If the number of simulated events does not match the expected number.
         """
 
-        def consistent(a, b, tol=0.001):
+        def consistent(a, b, tol):
             return abs(a - b) / max(a, b) <= tol
 
         event_errors = []
         for file in self.get_file_list(file_type="corsika_output"):
             _, _, shower_events = get_simulated_events(file)
-            print(file)
 
             if shower_events != expected_mc_events:
                 if consistent(shower_events, expected_mc_events, tol=tolerance):
