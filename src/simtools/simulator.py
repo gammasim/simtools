@@ -416,6 +416,7 @@ class Simulator:
             "input",
             "histogram",
             "corsika_log",
+            "corsika_output",
             "event_data",
         ]
         results = {key: [] for key in keys}
@@ -445,14 +446,15 @@ class Simulator:
                     )
 
             if "corsika" in self.simulation_software:
-                results["corsika_log"].append(
-                    get_file_name(
-                        "corsika_log",
-                        simulation_software="corsika",
-                        run_number=run_number,
-                        model_version_index=i,
+                for file_type in ("corsika_output", "corsika_log"):
+                    results[file_type].append(
+                        get_file_name(
+                            file_type,
+                            simulation_software="corsika",
+                            run_number=run_number,
+                            model_version_index=i,
+                        )
                     )
-                )
 
         for key in keys:
             self._results[key].extend(results[key])
@@ -784,8 +786,48 @@ class Simulator:
             self._verify_simulated_events_in_sim_telarray(
                 expected_shower_events, expected_mc_events
             )
+        if self.simulation_software == "corsika":
+            self._verify_simulated_events_corsika(expected_mc_events)
         if self.args_dict.get("save_reduced_event_lists"):
             self._verify_simulated_events_in_reduced_event_lists(expected_mc_events)
+
+    def _verify_simulated_events_corsika(self, expected_mc_events):
+        """
+        Verify the number of simulated events in CORSIKA output files.
+
+        Parameters
+        ----------
+        expected_mc_events: int
+            Expected number of simulated MC events.
+
+        Raises
+        ------
+        ValueError
+            If the number of simulated events does not match the expected number.
+        """
+        event_errors = []
+        for file in self.get_file_list(file_type="corsika_output"):
+            _, _, shower_events = get_simulated_events(file)
+            print(file)
+
+            if shower_events != expected_mc_events:
+                event_errors.append(
+                    f"Number of simulated MC events ({shower_events}) does not match "
+                    f"the expected number ({expected_mc_events}) in CORSIKA {file}."
+                )
+            else:
+                self.logger.info(
+                    f"Consistent number of events in: {file}: shower events: {shower_events}"
+                )
+
+        if event_errors:
+            self.logger.error("Inconsistent event counts found in CORSIKA output:")
+            for error in event_errors:
+                self.logger.error(f" - {error}")
+            error_message = "Inconsistent event counts found in CORSIKA output:\n" + "\n".join(
+                f" - {error}" for error in event_errors
+            )
+            raise ValueError(error_message)
 
     def _verify_simulated_events_in_sim_telarray(self, expected_shower_events, expected_mc_events):
         """
@@ -805,7 +847,7 @@ class Simulator:
         """
         event_errors = []
         for file in self.get_file_list(file_type="simtel_output"):
-            shower_events, mc_events = get_simulated_events(file)
+            shower_events, mc_events, _ = get_simulated_events(file)
 
             if (shower_events, mc_events) != (expected_shower_events, expected_mc_events):
                 event_errors.append(
