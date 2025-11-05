@@ -150,18 +150,17 @@ def main():
     simulator.simulate()
     simulator.validate_metadata()
 
-    app_context.logger.info(
-        f"Production run complete for primary {app_context.args['primary']} showers "
-        f"from {app_context.args['azimuth_angle']} azimuth and "
-        f"{app_context.args['zenith_angle']} zenith "
-        f"at {app_context.args['site']} site, using {app_context.args['model_version']} model."
-    )
     if app_context.args["save_reduced_event_lists"]:
         simulator.save_reduced_event_lists()
+
+    simulator.verify_simulations()
+
     if app_context.args.get("pack_for_grid_register"):
         simulator.pack_for_register(app_context.args["pack_for_grid_register"])
     if app_context.args["save_file_lists"]:
         simulator.save_file_lists()
+
+    simulator.report()
 
 
 if __name__ == "__main__":
