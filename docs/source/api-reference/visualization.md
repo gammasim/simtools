@@ -91,6 +91,13 @@ the visualization module.
    :members:
 ```
 
+## plot_mirrors
+
+```{eval-rst}
+.. automodule:: visualization.plot_mirrors
+   :members:
+```
+
 (plot-incident-angles)=
 
 ## plot_incident_angles
