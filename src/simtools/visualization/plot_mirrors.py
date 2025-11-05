@@ -573,6 +573,24 @@ def plot_mirror_ring_segmentation(data_file_path, telescope_model_name, paramete
         color="red",
     )
 
+    if len(rings) == 2:
+        stats_text = (
+            f"Inner ring segments: {rings[0]['nseg']}\nOuter ring segments: {rings[1]['nseg']}"
+        )
+    else:
+        stats_lines = [f"Ring {i + 1} segments: {ring['nseg']}" for i, ring in enumerate(rings)]
+        stats_text = "\n".join(stats_lines)
+
+    ax.text(
+        0.02,
+        0.98,
+        stats_text,
+        transform=ax.transAxes,
+        fontsize=11,
+        verticalalignment="top",
+        bbox=STATS_BOX_STYLE,
+    )
+
     if title:
         plt.subplots_adjust(top=0.85)
         ax.set_title(title, fontsize=18, y=1.10)
