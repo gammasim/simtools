@@ -218,3 +218,7 @@ class CorsikaSimtelRunner:
             else self.simulator_array[model_version_index]
         )
         return runner.get_file_name(file_type=file_type, run_number=run_number, mode=mode)
+
+    def get_resources(self, run_number=None):
+        """Return computing resources used."""
+        return self.corsika_runner.get_resources(run_number)

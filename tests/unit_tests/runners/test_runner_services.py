@@ -235,6 +235,8 @@ def test_get_resources(runner_service_mock_array_model, caplog):
     assert isinstance(resources, dict)
     assert "runtime" in resources
     assert resources["runtime"] == 500
+    # NSHOW from corsika_config_data fixture
+    assert resources["n_events"] == 100
 
     with open(sub_log_file, "w", encoding="utf-8") as file:
         lines_to_write = ["SOMETHING ELSE 500\n"]
