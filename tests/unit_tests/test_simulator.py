@@ -354,7 +354,7 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
         ],
     )
     mocker.patch("shutil.move")
-    mocker.patch("tarfile.open")
+    mocker.patch("tarfile.open")  # NOSONAR
     mocker.patch("pathlib.Path.exists", return_value=True)
     mocker.patch("pathlib.Path.is_file", return_value=True)
 
@@ -365,7 +365,7 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
     assert "Overwriting existing file" in caplog.text
     assert "Packing the output files for registering on the grid" in caplog.text
     assert "Output files for the grid placed in" in caplog.text
-    tarfile.open.assert_called_once()
+    tarfile.open.assert_called_once()  # NOSONAR
     shutil.move.assert_any_call(
         Path(f"output_file_{model_version}_simtel.zst"),
         directory_for_grid_upload / Path(f"output_file_{model_version}_simtel.zst"),
@@ -462,7 +462,7 @@ def test_pack_for_register_with_multiple_versions(
     mock_tar_cm = mocker.MagicMock()
     mock_tar_cm.__enter__ = mocker.MagicMock(return_value=mock_tar)
     mock_tar_cm.__exit__ = mocker.MagicMock(return_value=None)
-    mock_tarfile_open = mocker.patch("tarfile.open", return_value=mock_tar_cm)
+    mock_tarfile_open = mocker.patch("tarfile.open", return_value=mock_tar_cm)  # NOSONAR
 
     mocker.patch("pathlib.Path.is_file", return_value=True)
     mocker.patch("pathlib.Path.exists", return_value=True)
