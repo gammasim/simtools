@@ -214,7 +214,7 @@ class ReadParameters:
         markdown_output_file = output_data_path / output_file_name
 
         if not markdown_output_file.exists():
-            outpath = Path(io_handler.IOHandler().get_output_directory() / "_images")
+            outpath = io_handler.IOHandler().get_output_directory("_images")
             outpath.mkdir(parents=True, exist_ok=True)
 
             plot_names = self._generate_plots(parameter, parameter_version, input_file, outpath)
@@ -687,7 +687,7 @@ class ReadParameters:
 
     def _write_file_flag_section(self, file, parameter, comparison_data):
         """Write image/plot references when parameter entries include files."""
-        outpath = Path(io_handler.IOHandler().get_output_directory() / "_images")
+        outpath = io_handler.IOHandler().get_output_directory("_images")
         latest_parameter_version = max(
             comparison_data.get(parameter),
             key=lambda x: tuple(map(int, x["parameter_version"].split("."))),

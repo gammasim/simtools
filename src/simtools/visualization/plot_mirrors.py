@@ -56,10 +56,17 @@ def plot(config, output_file, db_config=None):
     Parameters
     ----------
     config : dict
+        Configuration dictionary containing:
+        - parameter: str, parameter name (e.g., "mirror_list", "primary_mirror_segmentation")
+        - site: str, site name (e.g., "North", "South")
+        - telescope: str, telescope name (e.g., "LSTN-01")
+        - parameter_version: str, optional, parameter version
+        - model_version: str, optional, model version
+        - title: str, optional, plot title
     output_file : str or Path
-        Path where to save the plot
+        Path where to save the plot (without extension)
     db_config : dict, optional
-        Database configuration.
+        Database configuration dictionary
 
     Returns
     -------
@@ -76,10 +83,12 @@ def plot(config, output_file, db_config=None):
         model_version=config.get("model_version"),
     )
 
-    db.export_model_files(parameters=parameters, dest=io_handler.IOHandler().get_output_directory())
+    output_path = io_handler.IOHandler().get_output_directory()
+
+    db.export_model_files(parameters=parameters, dest=output_path)
 
     mirror_file = parameters[config["parameter"]]["value"]
-    data_file_path = Path(io_handler.IOHandler().get_output_directory() / mirror_file)
+    data_file_path = Path(output_path / mirror_file)
 
     parameter_type = config["parameter"]
 
@@ -120,7 +129,24 @@ def plot(config, output_file, db_config=None):
 
 
 def plot_mirror_layout(mirrors, telescope_model_name, title=None):
-    """Plot the mirror panel layout from a Mirrors object."""
+    """
+    Plot the mirror panel layout from a Mirrors object.
+
+    Parameters
+    ----------
+    mirrors : Mirrors
+        Mirrors object containing mirror panel data including positions,
+        diameters, focal lengths, and shape types
+    telescope_model_name : str
+        Name of the telescope model (e.g., "LSTN-01", "MSTN-01")
+    title : str, optional
+        Custom title for the plot. If None, no title is displayed
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated figure object
+    """
     logger.info(f"Plotting mirror layout for {telescope_model_name}")
 
     fig, ax = plt.subplots(figsize=(10, 10))
@@ -167,7 +193,27 @@ def plot_mirror_layout(mirrors, telescope_model_name, title=None):
 
 
 def plot_mirror_segmentation(data_file_path, telescope_model_name, parameter_type, title=None):
-    """Plot mirror segmentation layout from a segmentation file."""
+    """
+    Plot mirror segmentation layout from a segmentation file.
+
+    Parameters
+    ----------
+    data_file_path : Path or str
+        Path to the segmentation data file containing mirror segment positions,
+        diameters, and shape types in standard numeric format
+    telescope_model_name : str
+        Name of the telescope model (e.g., "LSTN-01", "MSTN-01")
+    parameter_type : str
+        Type of segmentation parameter (e.g., "primary_mirror_segmentation",
+        "secondary_mirror_segmentation")
+    title : str, optional
+        Custom title for the plot. If None, no title is displayed
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated figure object
+    """
     logger.info(f"Plotting {parameter_type} for {telescope_model_name}")
 
     segmentation_data = _read_segmentation_file(data_file_path)
@@ -447,7 +493,7 @@ def _get_radius_offset(diameter, shape_type):
 def _calculate_mean_outer_edge_radius(x_pos, y_pos, diameter, shape_type):
     """Calculate the mean radius of the outer edge of the mirror array."""
     radius_offset = _get_radius_offset(diameter, shape_type)
-    radii = np.sqrt(x_pos**2 + y_pos**2) + radius_offset
+    radii = np.hypot(x_pos, y_pos) + radius_offset
     return np.mean(radii)
 
 
@@ -515,7 +561,27 @@ def _add_ring_radius_label(ax, angle, radius, label_text):
 
 
 def plot_mirror_ring_segmentation(data_file_path, telescope_model_name, parameter_type, title=None):
-    """Plot mirror ring segmentation layout."""
+    """
+    Plot mirror ring segmentation layout.
+
+    Parameters
+    ----------
+    data_file_path : Path or str
+        Path to the segmentation data file containing ring definitions with format:
+        ring <nseg> <rmin> <rmax> <dphi> <phi0>
+    telescope_model_name : str
+        Name of the telescope model (e.g., "LSTN-01", "MSTN-01")
+    parameter_type : str
+        Type of segmentation parameter (e.g., "primary_mirror_segmentation",
+        "secondary_mirror_segmentation")
+    title : str, optional
+        Custom title for the plot. If None, no title is displayed
+
+    Returns
+    -------
+    matplotlib.figure.Figure or None
+        The generated figure object, or None if no ring data found
+    """
     logger.info(f"Plotting ring {parameter_type} for {telescope_model_name}")
 
     rings = _read_ring_segmentation_data(data_file_path)
@@ -711,7 +777,27 @@ def _create_shape_patches(ax, shape_segments, segment_ids):
 def plot_mirror_shape_segmentation(
     data_file_path, telescope_model_name, parameter_type, title=None
 ):
-    """Plot mirror shape segmentation layout."""
+    """
+    Plot mirror shape segmentation layout.
+
+    Parameters
+    ----------
+    data_file_path : Path or str
+        Path to the segmentation data file containing explicit shape definitions
+        (hex, circular, yhex) with positions, diameters, and rotations
+    telescope_model_name : str
+        Name of the telescope model (e.g., "LSTN-01", "MSTN-design")
+    parameter_type : str
+        Type of segmentation parameter (e.g., "primary_mirror_segmentation",
+        "secondary_mirror_segmentation")
+    title : str, optional
+        Custom title for the plot. If None, no title is displayed
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated figure object
+    """
     logger.info(f"Plotting shape {parameter_type} for {telescope_model_name}")
 
     shape_segments, segment_ids = _read_shape_segmentation_file(data_file_path)
