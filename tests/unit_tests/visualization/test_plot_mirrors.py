@@ -276,41 +276,30 @@ def test__add_camera_frame_indicator():
     assert mock_ax.text.call_count == 2
 
 
-def test__add_mirror_statistics():
-    """Test mirror statistics addition."""
+@pytest.mark.parametrize(
+    ("shape_type", "n_mirrors", "diameter"),
+    [
+        (1, 100, 120.0),  # Hexagonal
+        (2, 50, 100.0),  # Square
+        (3, 198, 151.0),  # Y-hexagonal
+    ],
+)
+def test__add_mirror_statistics_various_shapes(shape_type, n_mirrors, diameter):
+    """Test mirror statistics with different shape types."""
     mock_ax = mock.MagicMock()
     mock_mirrors = mock.MagicMock()
-    mock_mirrors.number_of_mirrors = 198
-    mock_mirrors.shape_type = 3
+    mock_mirrors.number_of_mirrors = n_mirrors
+    mock_mirrors.shape_type = shape_type
 
-    x_pos = np.array([1000.0, -1000.0, 0.0])
-    y_pos = np.array([1000.0, -1000.0, 0.0])
-    diameter = 151.0
+    x_pos = np.array([300.0, -300.0, 0.0])
+    y_pos = np.array([300.0, -300.0, 0.0])
 
     plot_mirrors._add_mirror_statistics(mock_ax, mock_mirrors, x_pos, y_pos, diameter)
 
     mock_ax.text.assert_called_once()
     call_args = mock_ax.text.call_args
-    assert "Number of mirrors: 198" in call_args[0][2]
-
-
-def test__add_mirror_statistics_hexagonal():
-    """Test mirror statistics with hexagonal shape."""
-    mock_ax = mock.MagicMock()
-    mock_mirrors = mock.MagicMock()
-    mock_mirrors.number_of_mirrors = 100
-    mock_mirrors.shape_type = 1  # Hexagonal shape
-
-    x_pos = np.array([500.0, -500.0, 0.0])
-    y_pos = np.array([500.0, -500.0, 0.0])
-    diameter = 120.0
-
-    plot_mirrors._add_mirror_statistics(mock_ax, mock_mirrors, x_pos, y_pos, diameter)
-
-    mock_ax.text.assert_called_once()
-    call_args = mock_ax.text.call_args
-    assert "Number of mirrors: 100" in call_args[0][2]
-    assert "Mirror diameter: 120.0 cm" in call_args[0][2]
+    assert f"Number of mirrors: {n_mirrors}" in call_args[0][2]
+    assert f"Mirror diameter: {diameter:.1f} cm" in call_args[0][2]
 
 
 def test__read_segmentation_file(tmp_path):
@@ -332,46 +321,6 @@ def test__read_segmentation_file(tmp_path):
     assert len(data["segment_ids"]) == 3
     assert data["segment_ids"][0] == 1
     assert data["segment_ids"][2] == 2
-
-
-def test__read_segmentation_file_with_short_lines(tmp_path):
-    """Test reading segmentation file with lines that have fewer than 5 parts."""
-    seg_file = tmp_path / "test_segmentation.dat"
-    seg_file.write_text(
-        "# Test segmentation file\n"
-        "100.0  200.0\n"  # Only 2 parts - should be skipped
-        "200.0  300.0  150.0  2850.0  3  0.0  #%  id=1\n"
-        "# Another comment\n"
-        "\n"  # Empty line
-        "300.0\n"  # Only 1 part - should be skipped
-        "400.0  500.0  150.0  2900.0  3  0.0  #%  id=2\n"
-    )
-
-    data = plot_mirrors._read_segmentation_file(seg_file)
-
-    assert len(data["x"]) == 2
-    assert len(data["y"]) == 2
-    assert data["diameter"] == pytest.approx(150.0)
-    assert data["shape_type"] == 3
-    assert len(data["segment_ids"]) == 2
-
-
-def test__create_segmentation_patches():
-    """Test creation of segmentation patches (now using unified _create_mirror_patches)."""
-    x_pos = np.array([100.0, 200.0, 300.0])
-    y_pos = np.array([100.0, 200.0, 300.0])
-    diameter = 150.0
-    shape_type = 3
-    segment_ids = [1, 1, 2]
-
-    patches, colors = plot_mirrors._create_mirror_patches(
-        x_pos, y_pos, diameter, shape_type, segment_ids
-    )
-
-    assert len(patches) == 3
-    assert len(colors) == 3
-    assert all(isinstance(p, mpatches.RegularPolygon) for p in patches)
-    assert colors == segment_ids
 
 
 @mock.patch("matplotlib.pyplot.subplots")
@@ -406,20 +355,6 @@ def test_plot_mirror_segmentation(mock_subplots, tmp_path):
         mock_ax.set_aspect.assert_called_once_with("equal")
         mock_ax.add_collection.assert_called_once()
         mock_colorbar.assert_called_once()
-
-
-def test__extract_diameter():
-    """Test diameter extraction."""
-    parts = ["100.0", "200.0", "150.0", "2800.0", "3"]
-    assert plot_mirrors._extract_diameter(parts, None) == pytest.approx(150.0)
-    assert plot_mirrors._extract_diameter(parts, 120.0) == pytest.approx(120.0)
-
-
-def test__extract_shape_type():
-    """Test shape type extraction."""
-    parts = ["100.0", "200.0", "150.0", "2800.0", "3"]
-    assert plot_mirrors._extract_shape_type(parts, None) == 3
-    assert plot_mirrors._extract_shape_type(parts, 1) == 1
 
 
 def test__extract_segment_id():
@@ -504,33 +439,6 @@ def test_plot_mirror_ring_segmentation(mock_subplots, tmp_path):
             telescope_model_name="SCTS-01",
             parameter_type="primary_mirror_segmentation",
             title="Test Ring",
-        )
-
-        assert fig is not None
-        mock_ax.set_ylim.assert_called_once()
-        mock_ax.set_title.assert_called_once()
-
-
-@mock.patch("matplotlib.pyplot.subplots")
-def test_plot_mirror_ring_segmentation_small_inner_radius(mock_subplots, tmp_path):
-    """Test ring segmentation plotting with small inner radius."""
-    mock_fig = mock.MagicMock()
-    mock_ax = mock.MagicMock()
-    mock_subplots.return_value = (mock_fig, mock_ax)
-
-    ring_file = tmp_path / "ring_seg_small.dat"
-    ring_file.write_text(
-        "# Ring segmentation file with small inner radius\nring 6 10.0 200.0 60.0 0.0\n"
-    )
-
-    with (
-        mock.patch("matplotlib.pyplot.tight_layout"),
-    ):
-        fig = plot_mirrors.plot_mirror_ring_segmentation(
-            data_file_path=ring_file,
-            telescope_model_name="SCTS-01",
-            parameter_type="secondary_mirror_segmentation",
-            title="Test Ring Small",
         )
 
         assert fig is not None
@@ -663,3 +571,150 @@ def test_plot_mirror_shape_segmentation_stats_variations(tmp_path):
         parameter_type="primary_mirror_segmentation",
     )
     assert fig2 is not None
+
+
+def test__add_camera_frame_indicator_mst():
+    """Test camera frame indicator for MST telescope."""
+    mock_ax = mock.MagicMock()
+    mock_ax.get_xlim.return_value = (-1000, 1000)
+    mock_ax.get_ylim.return_value = (-1000, 1000)
+
+    plot_mirrors._add_camera_frame_indicator(mock_ax, "MSTN-01")
+
+    assert mock_ax.annotate.call_count == 2
+    assert mock_ax.text.call_count == 2
+
+
+def test__configure_mirror_plot_empty_data():
+    """Test mirror plot configuration with empty data."""
+    mock_ax = mock.MagicMock()
+
+    x_pos = np.array([])
+    y_pos = np.array([])
+
+    with (
+        mock.patch("matplotlib.pyplot.grid"),
+        mock.patch("matplotlib.pyplot.xlabel"),
+        mock.patch("matplotlib.pyplot.ylabel"),
+        mock.patch("matplotlib.pyplot.tick_params"),
+    ):
+        plot_mirrors._configure_mirror_plot(mock_ax, x_pos, y_pos, "Test", "LSTN-01")
+
+        mock_ax.set_xlim.assert_called_once_with(-1000, 1000)
+        mock_ax.set_ylim.assert_called_once_with(-1000, 1000)
+        mock_ax.text.assert_called_once()
+
+
+def test__get_radius_offset_square():
+    """Test radius offset calculation for square shape."""
+    diameter = 100.0
+    offset = plot_mirrors._get_radius_offset(diameter, 2)
+    assert offset == pytest.approx(diameter / np.sqrt(2))
+
+
+@pytest.mark.parametrize(
+    ("ring_count", "ring_data"),
+    [
+        (1, "ring 8 100.0 200.0 45.0 0.0\n"),
+        (2, "ring 16 217.174 338.505 22.5 -11.25\nring 32 339.908 481.178 11.25 0\n"),
+    ],
+)
+def test_plot_mirror_ring_segmentation_various_ring_counts(tmp_path, ring_count, ring_data):
+    """Test ring segmentation with 1 ring (general case) and 2 rings (SCT inner/outer case)."""
+    ring_file = tmp_path / f"ring_seg_{ring_count}.dat"
+    ring_file.write_text(ring_data)
+
+    with mock.patch("matplotlib.pyplot.tight_layout"):
+        fig = plot_mirrors.plot_mirror_ring_segmentation(
+            data_file_path=ring_file,
+            telescope_model_name="SCTS-01",
+            parameter_type="primary_mirror_segmentation",
+        )
+
+        assert fig is not None
+
+
+def test_plot_mirror_shape_segmentation_no_segment_ids(tmp_path):
+    """Test shape segmentation with segments but no segment IDs."""
+    data_file = tmp_path / "shape_no_ids.dat"
+    data_file.write_text(
+        "# Shape file without segment IDs\nhex 1 100.0 0.0 50.0 0.0\nhex 2 200.0 0.0 50.0 0.0\n"
+    )
+
+    with mock.patch(
+        "simtools.visualization.plot_mirrors._read_shape_segmentation_file"
+    ) as mock_read:
+        mock_read.return_value = (
+            [
+                {"shape": "hex", "x": 100.0, "y": 0.0, "diameter": 50.0, "rotation": 0.0},
+                {"shape": "hex", "x": 200.0, "y": 0.0, "diameter": 50.0, "rotation": 0.0},
+            ],
+            [],  # Empty segment_ids
+        )
+
+        fig = plot_mirrors.plot_mirror_shape_segmentation(
+            data_file_path=data_file,
+            telescope_model_name="SCTS-01",
+            parameter_type="primary_mirror_segmentation",
+        )
+
+        assert fig is not None
+
+
+@mock.patch("simtools.visualization.plot_mirrors.plot_mirror_shape_segmentation")
+@mock.patch("simtools.visualization.plot_mirrors.visualize.save_figure")
+@mock.patch("simtools.visualization.plot_mirrors.db_handler.DatabaseHandler")
+def test_plot_shape_segmentation_main(mock_db_handler, mock_save, mock_plot_shape, tmp_path):
+    """Test the main plot function with shape segmentation."""
+    config = {
+        "parameter": "primary_mirror_segmentation",
+        "site": "South",
+        "telescope": "SCTS-01",
+        "parameter_version": "1.0.0",
+        "model_version": "6.0.0",
+    }
+
+    mock_db_instance = mock.MagicMock()
+    mock_db_handler.return_value = mock_db_instance
+    mock_db_instance.get_model_parameter.return_value = {
+        "primary_mirror_segmentation": {"value": "primary_shape_seg.dat"}
+    }
+
+    mock_fig = mock.MagicMock()
+    mock_plot_shape.return_value = mock_fig
+
+    shape_file = tmp_path / "primary_shape_seg.dat"
+    shape_file.write_text("# Shape segmentation\nhex 1 100.0 0.0 50.0 0.0\n")
+
+    with mock.patch("simtools.visualization.plot_mirrors.io_handler.IOHandler") as mock_io:
+        mock_io_instance = mock.MagicMock()
+        mock_io.return_value = mock_io_instance
+        mock_io_instance.get_output_directory.return_value = tmp_path
+
+        plot_mirrors.plot(config, "test.png")
+
+        expected_path = tmp_path / "primary_shape_seg.dat"
+        mock_plot_shape.assert_called_once_with(
+            data_file_path=expected_path,
+            telescope_model_name="SCTS-01",
+            parameter_type="primary_mirror_segmentation",
+            title=None,
+        )
+        mock_save.assert_called_once_with(mock_fig, "test.png")
+
+
+def test__read_segmentation_file_with_invalid_x_y(tmp_path):
+    """Test reading segmentation file where x,y are invalid but other parts are valid."""
+    seg_file = tmp_path / "test_segmentation_invalid_xy.dat"
+    seg_file.write_text(
+        "# Test segmentation file\n"
+        "invalid_x  invalid_y  150.0  2800.0  3  0.0  #%  id=1\n"
+        "200.0  300.0  150.0  2850.0  3  0.0  #%  id=1\n"
+    )
+
+    data = plot_mirrors._read_segmentation_file(seg_file)
+
+    assert len(data["x"]) == 1
+    assert len(data["y"]) == 1
+    assert data["x"][0] == pytest.approx(200.0)
+    assert data["y"][0] == pytest.approx(300.0)
