@@ -329,7 +329,6 @@ def corsika_config_data(model_version):
         "nshow": 100,
         "run_number_offset": 0,
         "run_number": 1,
-        "number_of_runs": 10,
         "event_number_first_shower": 1,
         "zenith_angle": 20 * u.deg,
         "azimuth_angle": 0.0 * u.deg,

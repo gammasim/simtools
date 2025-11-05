@@ -174,7 +174,7 @@ class Simulator:
         """
         Initialize run list using the configuration values.
 
-        Uses 'run_number', 'run_number_offset' and 'number_of_runs' arguments
+        Uses 'run_number' and 'run_number_offset' arguments
         to create a list of run numbers.
 
         Returns
@@ -182,60 +182,59 @@ class Simulator:
         list
             List of run numbers.
         """
-        offset_run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
+        run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
             "run_number", 1
         )
-        if self.args_dict.get("number_of_runs", 1) <= 1:
-            return self._prepare_run_list_and_range(
-                run_list=offset_run_number,
-                run_range=None,
-            )
-        return self._prepare_run_list_and_range(
-            run_list=None,
-            run_range=[
-                offset_run_number,
-                offset_run_number + self.args_dict["number_of_runs"],
-            ],
-        )
+        return self._validate_run_list(run_number)
 
-    def _prepare_run_list_and_range(self, run_list, run_range):
+    def _validate_run_list(self, run_list):
         """
-        Prepare list of run numbers from a list or from a range.
+        Validate and normalize a run list.
 
-        If both arguments are given, they will be merged into a single list.
-
-        Attributes
+        Parameters
         ----------
-        run_list: list
-            list of runs (integers)
-        run_range:list
-            min and max of range of runs to be simulated (two list entries)
+        run_list: int, list of int, or None
+            Run number(s) to validate.
 
         Returns
         -------
-        list
-            list of unique run numbers (integers)
+        list or None
+            Sorted list of unique run numbers, or None if input is None.
+
+        Raises
+        ------
+        InvalidRunsToSimulateError
+            If run_list contains non-integer values.
         """
-        if run_list is None and run_range is None:
-            self.logger.debug("Nothing to prepare - run_list and run_range not given.")
+        if run_list is None:
+            self.logger.debug("Nothing to prepare - no run list given.")
             return None
 
-        validated_runs = []
-        if run_list is not None:
-            validated_runs = gen.ensure_iterable(run_list)
-            if not all(isinstance(r, int) for r in validated_runs):
-                raise InvalidRunsToSimulateError(f"Run list must contain only integers: {run_list}")
-
-        if run_range is not None:
-            if not all(isinstance(r, int) for r in run_range) or len(run_range) != 2:
-                raise InvalidRunsToSimulateError(
-                    f"Run_range must contain two integers only: {run_range}"
-                )
-            validated_runs.extend(range(run_range[0], run_range[1]))
+        validated_runs = gen.ensure_iterable(run_list)
+        if not all(isinstance(r, int) for r in validated_runs):
+            raise InvalidRunsToSimulateError(f"Run list must contain only integers: {run_list}")
 
         validated_runs_unique = sorted(set(validated_runs))
         self.logger.info(f"Runlist: {validated_runs_unique}")
         return validated_runs_unique
+
+    def _get_runs_to_simulate(self, run_list=None):
+        """
+        Get the list of runs to simulate.
+
+        Parameters
+        ----------
+        run_list: int, list of int, or None
+            Optional run list to override self.runs.
+
+        Returns
+        -------
+        list
+            List of run numbers to simulate (empty list if none available).
+        """
+        if run_list is None:
+            return [] if self.runs is None else self.runs
+        return self._validate_run_list(run_list)
 
     def _corsika_configuration(self):
         """
@@ -537,27 +536,6 @@ class Simulator:
             f"Computing for {self.simulation_software} Simulations: "
             f"{self._make_resources_report(input_file_list)}"
         )
-
-    def _get_runs_to_simulate(self, run_list=None, run_range=None):
-        """
-        Process run_list and run_range and return the validated list of runs.
-
-        Attributes
-        ----------
-        run_list: list
-            list of runs (integers)
-        run_range:list
-            min and max of range of runs to be simulated (two list entries)
-
-        Returns
-        -------
-        list
-            list of unique run numbers (integers)
-
-        """
-        if run_list is None and run_range is None:
-            return [] if self.runs is None else self.runs
-        return self._prepare_run_list_and_range(run_list, run_range)
 
     def save_file_lists(self):
         """Save files lists for output and log files."""
