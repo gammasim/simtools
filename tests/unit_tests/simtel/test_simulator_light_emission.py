@@ -554,38 +554,33 @@ def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_t
     """When pulse width and decay exist, a pulse table is written and used."""
 
     # Mock calibration model values including width/decay
-    def mock_get_param_with_unit(name):
-        if name == "flasher_position":
-            return [1.0 * u.cm, 2.0 * u.cm]
-        if name == "flasher_wavelength":
-            return 450.0 * u.nm
-        if name == "flasher_pulse_width":
-            return 2.0 * u.ns
-        if name == "flasher_pulse_exp_decay":
-            return 6.0 * u.ns
-        return None
-
+    params_with_unit = {
+        "flasher_position": [1.0 * u.cm, 2.0 * u.cm],
+        "flasher_wavelength": 450.0 * u.nm,
+        "flasher_pulse_width": 2.0 * u.ns,
+        "flasher_pulse_exp_decay": 6.0 * u.ns,
+    }
     simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
-        mock_get_param_with_unit
+        lambda name: params_with_unit.get(name)
     )
 
     # Provide specific returns for plain-valued params used inside the call
-    def mock_get_param(name):
-        if name == "flasher_bunch_size":
-            return 8000
-        if name == "flasher_angular_distribution":
-            return "gaussian"
-        if name == "flasher_pulse_shape":
-            return "gauss"
-        return None
-
-    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_param
+    plain_params = {
+        "flasher_bunch_size": 8000,
+        "flasher_angular_distribution": "gaussian",
+        "flasher_pulse_shape": "Gauss-Exponential",
+    }
+    simulator_instance.calibration_model.get_parameter_value.side_effect = (
+        lambda name: plain_params.get(name)
+    )
 
     # Mock telescope values
     mock_diameter = Mock()
     mock_diameter.to.return_value.value = 180.0
     simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
-    simulator_instance.telescope_model.get_parameter_value.return_value = "hexagonal"
+    simulator_instance.telescope_model.get_parameter_value.side_effect = (
+        lambda key: 40 if key == "fadc_sum_bins" else "hexagonal"
+    )
 
     # Mock distance and helpers
     with (
@@ -631,6 +626,100 @@ def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_t
         assert any(
             str(item).startswith("--lightpulse ") and str(item).endswith(".dat") for item in result
         )
+
+
+def test__add_flasher_command_options_writer_fallback(simulator_instance, tmp_test_directory):
+    """If pulse table writing fails, a warning is logged and token is used."""
+
+    # Calibration parameters include width/decay to trigger writer path
+    def mock_get_param_with_unit(name):
+        if name == "flasher_position":
+            return [1.0 * u.cm, -1.0 * u.cm]
+        if name == "flasher_wavelength":
+            return 420.0 * u.nm
+        if name == "flasher_pulse_width":
+            return 2.0 * u.ns
+        if name == "flasher_pulse_exp_decay":
+            return 6.0 * u.ns
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_param_with_unit
+    )
+
+    # Provide specific returns for plain-valued params used inside the call
+    def mock_get_param(name):
+        if name == "flasher_bunch_size":
+            return 4000
+        if name == "flasher_pulse_shape":
+            return "Gauss-Exponential"
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_param
+
+    # Telescope parameters
+    mock_diameter = Mock()
+    mock_diameter.to.return_value.value = 160.0
+    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
+    simulator_instance.telescope_model.get_parameter_value.side_effect = (
+        lambda key: 40 if key == "fadc_sum_bins" else "hexagonal"
+    )
+
+    # IO and helpers
+    pulse_dir = Path(tmp_test_directory) / "pulse_shapes"
+    pulse_dir.mkdir(parents=True, exist_ok=True)
+    io_mock = Mock()
+    io_mock.get_output_directory.return_value = pulse_dir
+    simulator_instance.io_handler = io_mock
+
+    # Distance and other string helpers
+    with (
+        patch.object(
+            simulator_instance, "calculate_distance_focal_plane_calibration_device"
+        ) as mock_distance,
+        patch(
+            "simtools.simtel.simulator_light_emission.fiducial_radius_from_shape",
+            return_value=75.0,
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_angular_distribution_string_for_sim_telarray",
+            return_value="uniform",
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_pulse_shape_string_for_sim_telarray",
+            return_value="gauss-exponential-token",
+        ),
+        patch(
+            "simtools.simtel.simulator_light_emission.SimtelConfigWriter.write_lightpulse_table_gauss_expconv",
+            side_effect=OSError("boom"),
+        ),
+    ):
+        mock_distance_value = Mock()
+        mock_distance_value.to.return_value.value = 900.0
+        mock_distance.return_value = mock_distance_value
+
+        simulator_instance.light_emission_config = {
+            "number_of_events": 5,
+            "flasher_photons": 250000,
+            "telescope": "LSTN-01",
+            "light_source": "NectarCam",
+        }
+
+        result = simulator_instance._add_flasher_command_options()
+
+        # Expect a warning via the instance logger
+        assert simulator_instance._logger.warning.called
+        assert any(
+            "Failed to write pulse shape table" in str(call.args[0])
+            for call in simulator_instance._logger.warning.mock_calls
+        )
+
+        # Fallback token should be used for --lightpulse, not a .dat file
+        lightpulse_args = [arg for arg in result if str(arg).startswith("--lightpulse ")]
+        assert len(lightpulse_args) == 1
+        assert lightpulse_args[0] == "--lightpulse gauss-exponential-token"
 
 
 def test__get_light_source_command(simulator_instance):

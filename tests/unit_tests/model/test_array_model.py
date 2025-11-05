@@ -73,9 +73,9 @@ def test_exporting_config_files(db_config, model_version):
     test_cfg = "_test.cfg"
     list_of_export_files = [
         "CTA-LST_lightguide_eff_2020-04-12_average.dat",
-        "CTA-North-LSTN-01-" + model_version + test_cfg,
-        "CTA-North-MSTN-01-" + model_version + test_cfg,
-        "CTA-test_layout-North-" + model_version + test_cfg,
+        "CTA-North-LSTN-01" + test_cfg,
+        "CTA-North-MSTN-01" + test_cfg,
+        "CTA-test_layout-North" + test_cfg,
         "NectarCAM_lightguide_efficiency_POP_131019.dat",
         "Pulse_template_nectarCam_17042020-noshift.dat",
         "array_triggers.dat",
@@ -126,11 +126,9 @@ def test_get_telescope_position_parameter(array_model_north):
     }
 
 
-def test_get_config_file(model_version, array_model_north):
+def test_get_config_file(array_model_north):
     am = array_model_north
-    assert (
-        am.config_file_path.name == "CTA-test_layout-North-" + model_version + "_test-lst-array.cfg"
-    )
+    assert am.config_file_path.name == "CTA-test_layout-North_test-lst-array.cfg"
 
 
 def test_get_config_directory(array_model_north):

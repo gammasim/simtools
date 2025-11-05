@@ -6,7 +6,7 @@ from simtools.simtel.pulse_shapes import (
     _gaussian,
     _rise_width,
     generate_gauss_expconv_pulse,
-    generate_pulse_from_risefall,
+    generate_pulse_from_rise_fall_times,
     solve_sigma_tau_from_risefall,
 )
 
@@ -28,7 +28,7 @@ def test_generate_gauss_expconv_pulse_shape():
 
 
 def test_generate_pulse_from_risefall_roundtrip():
-    t, y = generate_pulse_from_risefall(2.5, 5.0, dt_ns=0.05)
+    t, y = generate_pulse_from_rise_fall_times(2.5, 5.0, dt_ns=0.05)
     assert y.size == t.size
     assert np.isclose(y.max(), 1.0)
 
@@ -79,7 +79,7 @@ def test_pulse_matches_rise_fall_targets():
     target_rise = 2.5
     target_fall = 5.0
     dt = 0.05
-    t, y = generate_pulse_from_risefall(target_rise, target_fall, dt_ns=dt)
+    t, y = generate_pulse_from_rise_fall_times(target_rise, target_fall, dt_ns=dt)
     rise, fall = _measure_rise_fall_widths(t, y)
     atol = 5 * dt
     assert np.isclose(rise, target_rise, atol=atol)
@@ -90,13 +90,12 @@ def test_time_step_and_window():
     sigma = 1.0
     tau = 3.0
     dt = 0.1
-    duration_sigma = 8.0
-    t, _ = generate_gauss_expconv_pulse(sigma, tau, dt_ns=dt, duration_sigma=duration_sigma)
+    t, _ = generate_gauss_expconv_pulse(sigma, tau, dt_ns=dt)
     assert np.allclose(np.diff(t), dt)
-    left_expected = -duration_sigma * sigma
-    right_expected = duration_sigma * max(tau, sigma)
-    assert abs(t[0] - left_expected) <= 1.5 * dt
-    assert abs(t[-1] - right_expected) <= 1.5 * dt
+    assert t[0] < 0
+    assert t[-1] > 0
+    assert np.isclose(t[0], -10.0, atol=1.5 * dt)
+    assert np.isclose(t[-1], 25.0, atol=1.5 * dt)
 
 
 def test_parameter_sensitivity_sigma_tau():
@@ -110,3 +109,15 @@ def test_parameter_sensitivity_sigma_tau():
     _, f3 = _measure_rise_fall_widths(t3, y3)
     _, f4 = _measure_rise_fall_widths(t4, y4)
     assert f4 > f3
+
+
+def test_center_on_peak_shifts_time_to_zero():
+    t, y = generate_gauss_expconv_pulse(1.2, 3.0, dt_ns=0.05, center_on_peak=True)
+    i_max = int(np.argmax(y))
+    assert abs(t[i_max]) <= 1e-6
+
+
+def test_center_on_peak_pass_through():
+    t, y = generate_pulse_from_rise_fall_times(2.0, 4.0, dt_ns=0.05, center_on_peak=True)
+    i_max = int(np.argmax(y))
+    assert abs(t[i_max]) <= 1e-6
