@@ -109,3 +109,12 @@ Support modules for running sim_telarray.
 .. automodule:: simtel.simulator_ray_tracing
    :members:
 ```
+
+## pulse_shapes
+
+(pulse_shapes-1)=
+
+```{eval-rst}
+.. automodule:: simtel.pulse_shapes
+   :members:
+```

@@ -14,7 +14,6 @@ from simtools.io import ascii_handler
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 from simtools.utils import names
 
-# Module-level logger for class/static utilities
 logger = logging.getLogger(__name__)
 
 
@@ -27,7 +26,6 @@ def sim_telarray_random_seeds(seed, number):
     seed: int
         Seed for the random number generator.
     number: int
-        Number of random seeds to generate.
         Number of random seeds to generate.
 
     Returns
