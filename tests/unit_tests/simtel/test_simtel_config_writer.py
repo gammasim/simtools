@@ -886,6 +886,79 @@ def test_get_minimum_minsep_edge_cases(simtel_config_writer):
     assert min_minsep == pytest.approx(25.0)
 
 
+def _read_pulse_table(path: Path):
+    """Helper to read pulse table two-column file into arrays."""
+    with open(path, encoding="utf-8") as fh:
+        lines = [ln.strip() for ln in fh.readlines() if not ln.startswith("#")]
+    t_vals = []
+    y_vals = []
+    for ln in lines:
+        if not ln:
+            continue
+        t_str, y_str = ln.split()
+        t_vals.append(float(t_str))
+        y_vals.append(float(y_str))
+    return np.array(t_vals), np.array(y_vals)
+
+
+def test_write_lightpulse_table_gauss_expconv_creates_normalized_file(tmp_test_directory):
+    """Writer should create a pulse table with peak amplitude ~1 and expected window."""
+    out = Path(tmp_test_directory) / "pulse_shape_test.dat"
+    result = SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+        file_path=out,
+        width_ns=2.5,
+        exp_decay_ns=5.0,
+        dt_ns=0.2,
+        fadc_sum_bins=40,
+        time_margin_ns=5.0,
+    )
+    assert isinstance(result, Path)
+    assert out.exists()
+    t, y = _read_pulse_table(out)
+    assert y.size == t.size
+    assert y.size > 2
+    assert np.isclose(y.max(), 1.0, atol=1e-2)
+    # With centering enabled in the writer, the time axis is shifted so the peak is at ~0.
+    margin = 5.0
+    bins = 40.0
+    dt = 0.2
+    assert np.allclose(np.diff(t), dt, atol=1e-9)
+    # Peak near t=0
+    i_max = int(np.argmax(y))
+    assert abs(t[i_max]) <= dt
+    # Coverage at least bins + 2*margin (symmetric window after centering)
+    expected_span = bins + 2 * margin
+    assert (t[-1] - t[0]) >= (expected_span - dt)
+
+
+def test_write_lightpulse_table_gauss_expconv_time_spacing(tmp_test_directory):
+    """Time column should be spaced by dt_ns consistently."""
+    out = Path(tmp_test_directory) / "pulse_shape_spacing.dat"
+    dt = 0.5
+    SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+        file_path=out,
+        width_ns=3.0,
+        exp_decay_ns=6.0,
+        dt_ns=dt,
+        fadc_sum_bins=20,
+        time_margin_ns=5.0,
+    )
+    t, _ = _read_pulse_table(out)
+    assert np.allclose(np.diff(t), dt, atol=1e-9)
+
+
+def test_write_lightpulse_table_gauss_expconv_missing_params_raises(tmp_test_directory):
+    """Missing width/decay should raise ValueError."""
+    out = Path(tmp_test_directory) / "pulse_missing_params.dat"
+    with pytest.raises(ValueError, match="width_ns"):
+        SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+            file_path=out,
+            width_ns=None,
+            exp_decay_ns=5.0,
+            fadc_sum_bins=10,
+        )
+
+
 def test_process_telescope_triggers_multiple_hardstereo(simtel_config_writer):
     """Test _process_telescope_triggers with multiple hardstereo telescope types."""
     array_triggers = create_mixed_trigger_scenario()

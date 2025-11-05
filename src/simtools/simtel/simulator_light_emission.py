@@ -352,9 +352,14 @@ class SimulatorLightEmission(SimtelRunner):
         # Build pulse table for ff-1m: Gaussian rise + (Gaussian x Exponential)
         # Only apply when an exponential decay parameter exists; else fall back to token string.
         pulse_arg = self._get_pulse_shape_string_for_sim_telarray()
+        pulse_shape = self.calibration_model.get_parameter_value("flasher_pulse_shape")
         width_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
         exp_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_exp_decay")
-        if isinstance(exp_q, u.Quantity) and isinstance(width_q, u.Quantity):
+        if (
+            isinstance(exp_q, u.Quantity)
+            and isinstance(width_q, u.Quantity)
+            and pulse_shape == "Gauss-Exponential"
+        ):
             try:
                 base_dir = self.io_handler.get_output_directory("pulse_shapes")
 
@@ -367,11 +372,14 @@ class SimulatorLightEmission(SimtelRunner):
                 cal = self.light_emission_config.get("light_source") or "calibration"
                 fname = f"flasher_pulse_shape_{_sanitize_name(tel)}_{_sanitize_name(cal)}.dat"
                 table_path = base_dir / fname
+                fadc_bins = self.telescope_model.get_parameter_value("fadc_sum_bins")
 
                 SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
                     file_path=table_path,
                     width_ns=width_q.to(u.ns).value,
                     exp_decay_ns=exp_q.to(u.ns).value,
+                    fadc_sum_bins=fadc_bins,
+                    time_margin_ns=5.0,
                 )
                 pulse_arg = str(table_path)
             except (ValueError, OSError) as err:
@@ -505,9 +513,8 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The angular distribution string.
         """
-        option_string = self.calibration_model.get_parameter_value(
-            "flasher_angular_distribution"
-        ).lower()
+        opt = self.calibration_model.get_parameter_value("flasher_angular_distribution")
+        option_string = str(opt).lower() if opt is not None else ""
         width = self.calibration_model.get_parameter_value_with_unit(
             "flasher_angular_distribution_width"
         )
@@ -522,6 +529,7 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The pulse shape string.
         """
-        option_string = self.calibration_model.get_parameter_value("flasher_pulse_shape").lower()
+        opt = self.calibration_model.get_parameter_value("flasher_pulse_shape")
+        option_string = str(opt).lower() if opt is not None else ""
         width = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
         return f"{option_string}:{width.to(u.ns).value}" if width is not None else option_string

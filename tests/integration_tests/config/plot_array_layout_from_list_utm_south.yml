@@ -7,7 +7,7 @@ applications:
     - MSTS
     - SSTS
     coordinate_system: utm
-    model_version: 6.0
+    model_version: 6.0.2
     output_path: simtools-output
   integration_tests:
   - output_file: array_layout_list_South_utm.png
