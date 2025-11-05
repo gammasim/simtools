@@ -19,6 +19,8 @@ applications:
     simulation_software: corsika
     site: South
     zenith_angle: 40
+  integration_tests:
+  - output_file: corsika/data/run000007/gamma_run000007_za040deg_azm180deg_South_beta_6.0.2_test.zst
   test_name: gamma_40_deg_south_corsika_only
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
