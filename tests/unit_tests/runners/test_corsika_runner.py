@@ -119,6 +119,15 @@ def test_get_autoinputs_command(corsika_runner_mock_array_model, caplog):
     assert "--keep-seeds" in autoinputs_command_with_seeds
 
 
+def test_get_autoinputs_command_with_multipipe(corsika_runner_mock_array_model):
+    # Enable multipipe and ensure log file name is prefixed accordingly
+    corsika_runner_mock_array_model._use_multipipe = True
+    cmd = corsika_runner_mock_array_model._get_autoinputs_command(
+        run_number=7, input_tmp_file="tmp"
+    )
+    assert "multipipe_" in cmd
+
+
 def test_get_resources(corsika_runner_mock_array_model):
     with pytest.raises(FileNotFoundError):
         corsika_runner_mock_array_model.get_resources()
