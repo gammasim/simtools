@@ -728,3 +728,18 @@ def test_get_matching_grammage_values(corsika_config_mock_array_model):
         )
         == []
     )
+
+
+def test_use_curved_atmosphere(corsika_config_mock_array_model):
+    corsika_config_mock_array_model.zenith_angle = 95
+    corsika_config_mock_array_model.curved_atmosphere_min_zenith_angle = 90
+    assert corsika_config_mock_array_model.use_curved_atmosphere()
+
+    corsika_config_mock_array_model.zenith_angle = 85
+    assert not corsika_config_mock_array_model.use_curved_atmosphere()
+
+    corsika_config_mock_array_model.zenith_angle = 90
+    assert not corsika_config_mock_array_model.use_curved_atmosphere()
+
+    corsika_config_mock_array_model.curved_atmosphere_min_zenith_angle = None
+    assert not corsika_config_mock_array_model.use_curved_atmosphere()
