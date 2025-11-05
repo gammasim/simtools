@@ -63,7 +63,7 @@ class CorsikaRunner:
         self, run_number=None, extra_commands=None, input_file=None, use_pfp=True
     ):
         """
-        Get the full path of the run script file for a given run number.
+        Prepare and write CORSIKA run script.
 
         Parameters
         ----------
