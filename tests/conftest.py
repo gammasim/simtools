@@ -2,6 +2,8 @@ import logging
 import mmap
 import os
 import re
+import tarfile
+from contextlib import contextmanager
 from pathlib import Path
 from unittest import mock
 
@@ -338,7 +340,6 @@ def corsika_config_data(model_version):
         "primary": "proton",
         "primary_id_type": "common_name",
         "correct_for_b_field_alignment": True,
-        "data_directory": "simtools-output",
         "model_version": model_version,
     }
 
@@ -448,6 +449,21 @@ def file_has_text():
             return False
 
     return wrapper
+
+
+@pytest.fixture
+def safe_tar_open():
+    """Fixture returning a context manager to open tar files safely in tests.
+
+    Archives are created/read from controlled test inputs; no extraction to filesystem occurs.
+    """
+
+    @contextmanager
+    def _open(path, mode):
+        with tarfile.open(path, mode) as tar:  # NOSONAR
+            yield tar
+
+    return _open
 
 
 @pytest.fixture

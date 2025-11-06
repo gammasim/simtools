@@ -191,24 +191,15 @@ def check_output_from_sim_telarray(file, file_test):
     return assert_n_showers_and_energy_range(file=file) and assert_output and assert_metadata
 
 
-def _scan_log_file(file_obj, pattern):
-    """
-    Scan a log file object for expected patterns and return the list of found patterns.
+def _find_patterns(text, patterns):
+    """Find patterns in text."""
+    return {p for p in patterns if p in text}
 
-    Parameters
-    ----------
-    file_obj: file-like object
-        The log file object to scan.
-    pattern: list of str
-        List of patterns to search for in the log file.
 
-    Returns
-    -------
-    list of str
-        Patterns found in the log file.
-    """
-    text = file_obj.read().decode("utf-8", errors="ignore")
-    return [p for p in pattern if p in text]
+def _read_log(member, tar):
+    """Read and decode a gzipped log file from a tar archive."""
+    with tar.extractfile(member) as gz, gzip.open(gz, "rb") as f:
+        return f.read().decode("utf-8", "ignore")
 
 
 def check_simulation_logs(tar_file, file_test):
@@ -227,30 +218,34 @@ def check_simulation_logs(tar_file, file_test):
     ValueError
         If the file is not a tar file.
     """
-    patterns = file_test.get("expected_log_output", {}).get("pattern", [])
-    if not patterns:
+    expected_log = file_test.get("expected_log_output", {})
+    wanted = expected_log.get("pattern", [])
+    forbidden = expected_log.get("forbidden_pattern", [])
+
+    if not (wanted or forbidden):
         _logger.debug(f"No expected log output provided, skipping checks {file_test}")
         return True
 
     if not tarfile.is_tarfile(tar_file):
         raise ValueError(f"File {tar_file} is not a tar file.")
 
-    found_patterns = set()
+    found, bad = set(), set()
     with tarfile.open(tar_file, "r:*") as tar:
         for member in tar.getmembers():
             if not member.name.endswith(".log.gz"):
                 continue
             _logger.info(f"Scanning {member.name}")
-            with tar.extractfile(member) as gz, gzip.open(gz, "rb") as f:
-                found = _scan_log_file(f, patterns)
-                if found:
-                    _logger.debug(f"Found {found} in {member.name}")
-                    found_patterns.update(found)
+            text = _read_log(member, tar)
+            found |= _find_patterns(text, wanted)
+            bad |= _find_patterns(text, forbidden)
 
-    missing = [p for p in patterns if p not in found_patterns]
+    if bad:
+        _logger.error(f"Forbidden patterns found: {list(bad)}")
+        return False
+    missing = [p for p in wanted if p not in found]
     if missing:
         _logger.error(f"Missing expected patterns: {missing}")
         return False
 
-    _logger.debug(f"All expected patterns found: {patterns}")
+    _logger.debug(f"All expected patterns found: {wanted}")
     return True

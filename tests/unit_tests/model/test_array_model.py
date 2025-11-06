@@ -197,7 +197,7 @@ def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version
     mock_get_output_directory = MagicMock(return_value=mock_output_dir)
 
     with (
-        patch("tarfile.open", mock_tarfile_open),
+        patch("tarfile.open", mock_tarfile_open),  # NOSONAR
         patch("pathlib.Path.rglob", mock_rglob),
         patch.object(io_handler, "get_output_directory", mock_get_output_directory),
         patch("pathlib.Path.is_file", return_value=True),
@@ -209,7 +209,7 @@ def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version
 
     mock_rglob = MagicMock(return_value=[])
     with (
-        patch("tarfile.open", mock_tarfile_open),
+        patch("tarfile.open", mock_tarfile_open),  # NOSONAR
         patch("pathlib.Path.rglob", mock_rglob),
         patch.object(io_handler, "get_output_directory", mock_get_output_directory),
     ):

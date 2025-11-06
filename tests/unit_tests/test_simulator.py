@@ -443,7 +443,7 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
         ],
     )
     mocker.patch("shutil.move")
-    mocker.patch("tarfile.open")
+    mocker.patch("tarfile.open")  # NOSONAR
     mocker.patch("pathlib.Path.exists", return_value=True)
     mocker.patch("pathlib.Path.is_file", return_value=True)
 
@@ -454,7 +454,7 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
     assert "Overwriting existing file" in caplog.text
     assert "Packing the output files for registering on the grid" in caplog.text
     assert "Output files for the grid placed in" in caplog.text
-    tarfile.open.assert_called_once()
+    tarfile.open.assert_called_once()  # NOSONAR
     shutil.move.assert_any_call(
         Path(f"output_file_{model_version}_simtel.zst"),
         directory_for_grid_upload / Path(f"output_file_{model_version}_simtel.zst"),
@@ -567,7 +567,7 @@ def test_pack_for_register_with_multiple_versions(
     mock_tar_cm = mocker.MagicMock()
     mock_tar_cm.__enter__ = mocker.MagicMock(return_value=mock_tar)
     mock_tar_cm.__exit__ = mocker.MagicMock(return_value=None)
-    mock_tarfile_open = mocker.patch("tarfile.open", return_value=mock_tar_cm)
+    mock_tarfile_open = mocker.patch("tarfile.open", return_value=mock_tar_cm)  # NOSONAR
 
     mocker.patch("pathlib.Path.is_file", return_value=True)
     mocker.patch("pathlib.Path.exists", return_value=True)
@@ -832,7 +832,7 @@ def test_verify_simulated_events_in_sim_telarray(shower_array_simulator, mocker)
     mock_file_list = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
     mocker.patch.object(shower_array_simulator, "get_file_list", return_value=mock_file_list)
 
-    mocker.patch("simtools.simulator.get_simulated_events", return_value=(100, 500))
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(100, 500, 0))
 
     shower_array_simulator._verify_simulated_events_in_sim_telarray(
         expected_shower_events=100, expected_mc_events=500
@@ -843,7 +843,7 @@ def test_verify_simulated_events_in_sim_telarray_shower_mismatch(shower_array_si
     mock_file_list = ["output_file1.simtel.zst"]
     mocker.patch.object(shower_array_simulator, "get_file_list", return_value=mock_file_list)
 
-    mocker.patch("simtools.simulator.get_simulated_events", return_value=(80, 500))
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(80, 500, 0))
 
     with pytest.raises(ValueError, match="Inconsistent event counts found"):
         shower_array_simulator._verify_simulated_events_in_sim_telarray(
@@ -855,7 +855,7 @@ def test_verify_simulated_events_in_sim_telarray_mc_mismatch(shower_array_simula
     mock_file_list = ["output_file1.simtel.zst"]
     mocker.patch.object(shower_array_simulator, "get_file_list", return_value=mock_file_list)
 
-    mocker.patch("simtools.simulator.get_simulated_events", return_value=(100, 400))
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(100, 400, 0))
 
     with pytest.raises(ValueError, match="Inconsistent event counts found"):
         shower_array_simulator._verify_simulated_events_in_sim_telarray(
@@ -889,3 +889,42 @@ def test_verify_simulations_with_reduced_event_lists(shower_array_simulator, moc
     shower_array_simulator.verify_simulations()
 
     mock_verify_reduced.assert_called_once_with(500)
+
+
+def test_verify_simulated_events_corsika(shower_simulator, mocker):
+    mock_file_list = ["corsika_output_file1.zst", "corsika_output_file2.zst"]
+    mocker.patch.object(shower_simulator, "get_file_list", return_value=mock_file_list)
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(0, 0, 100))
+
+    shower_simulator._verify_simulated_events_corsika(expected_mc_events=100)
+
+
+def test_verify_simulated_events_corsika_mismatch(shower_simulator, mocker):
+    mock_file_list = ["corsika_output_file1.zst"]
+    mocker.patch.object(shower_simulator, "get_file_list", return_value=mock_file_list)
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(0, 0, 80))
+
+    with pytest.raises(ValueError, match="Inconsistent event counts found in CORSIKA output"):
+        shower_simulator._verify_simulated_events_corsika(expected_mc_events=100)
+
+
+def test_verify_simulated_events_corsika_tolerance(shower_simulator, mocker, caplog):
+    mock_file_list = ["corsika_output_file1.zst"]
+    mocker.patch.object(shower_simulator, "get_file_list", return_value=mock_file_list)
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(0, 0, 9999))
+
+    with caplog.at_level(logging.WARNING):
+        shower_simulator._verify_simulated_events_corsika(expected_mc_events=10000, tolerance=0.001)
+
+    assert "Small mismatch in number of events" in caplog.text
+
+
+def test_verify_simulations_corsika(shower_simulator, mocker):
+    shower_simulator.args_dict["nshow"] = 100
+    shower_simulator.args_dict["core_scatter"] = [5]
+
+    mock_verify_corsika = mocker.patch.object(shower_simulator, "_verify_simulated_events_corsika")
+
+    shower_simulator.verify_simulations()
+
+    mock_verify_corsika.assert_called_once_with(500)

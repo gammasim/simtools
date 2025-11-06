@@ -685,7 +685,7 @@ class CorsikaConfig:
 
         base_name = (
             f"{self.primary_particle.name}_{run_number_in_file_name}"
-            f"za{int(self.get_config_parameter('THETAP')[0]):03}deg_"
+            f"za{int(self.get_config_parameter('THETAP')[0]):02}deg_"
             f"azm{self.azimuth_angle:03}deg{view_cone}_"
             f"{self.array_model.site}_{self.array_model.layout_name}_"
             f"{self.array_model.model_version}{file_label}"
@@ -696,7 +696,7 @@ class CorsikaConfig:
         if file_type == "config":
             return f"corsika_config_{base_name}.input"
         if file_type == "output_generic":
-            return f"{base_name}.zst"
+            return f"{base_name}.corsika.zst"
         if file_type == "multipipe":
             return f"multi_cta-{self.array_model.site}-{self.array_model.layout_name}.cfg"
 
