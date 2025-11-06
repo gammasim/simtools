@@ -1,0 +1,26 @@
+---
+applications:
+- application: simtools-simulate-prod
+  configuration:
+    corsika_file: tests/resources/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst
+    array_layout_name: subsystem_lsts
+    azimuth_angle: South
+    core_scatter: 1 100 m
+    corsika_test_seeds: true
+    energy_range: 50 GeV 50 GeV
+    label: test
+    log_level: DEBUG
+    model_version: 6.0.2
+    nshow: 10
+    output_path: simtools-output
+    primary: gamma
+    run_number: 7
+    sim_telarray_instrument_seeds: 1745,290
+    simulation_software: sim_telarray
+    site: South
+    zenith_angle: 40
+  integration_tests:
+  - output_file: sim_telarray/data/run000007/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.sim_telarray.zst
+  test_name: gamma_40_deg_south_sim_telarray_only
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
