@@ -6,16 +6,37 @@ meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
 name: flasher_pulse_shape
+short_description: |-
+  Definition of flasher pulse shape.
 description: |-
-  Flasher pulse shape.
+  Definition of flasher pulse shape both shape and relevant
+  timing parameters.
 data:
   - type: string
+    description: Shape of the flasher pulse.
     default: Gauss
     allowed_values:
       - Gauss
       - TopHat
       - Exponential
       - Gauss-Exponential
+  - type: float64
+    description: |-
+     Characteristic width of the flasher pulse shape.
+     For 'TopHat', this is the pulse width, for 'Gauss' the rms width.
+     Ignored if shape is 'Exponential'.
+    unit: ns
+    default: 0
+    allowed_range:
+      min: 0
+  - type: float64
+    description: |-
+      Exponential decay time of the flasher pulse shape.
+      Only relevant if shape is 'Exponential' or 'Gauss-Exponential'.
+    unit: ns
+    default: 0
+    allowed_range:
+      min: 0
 instrument:
   class: Calibration
 activity:
@@ -27,4 +48,4 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: simtools
-    version: ">=0.21.0"
+    version: ">=0.24.1"
