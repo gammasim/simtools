@@ -224,16 +224,15 @@ def test_simulation_software(array_simulator, shower_simulator, shower_array_sim
         test_array_simulator.simulation_software = "this_simulator_is_not_there"
 
 
-def test_initialize_run_list(shower_simulator):
-    assert shower_simulator._initialize_run_list() == [1]
+def test_initialize_run_number(shower_simulator):
+    assert shower_simulator._initialize_run_number() == 1
 
 
-def test_initialize_run_list_valid_cases(shower_simulator):
-    # Test case where s <= 1
+def test_initialize_run_number_valid_cases(shower_simulator):
     shower_simulator.args_dict["run_number"] = 5
     shower_simulator.args_dict["run_number_offset"] = 10
-    result = shower_simulator._initialize_run_list()
-    assert result == [15]  # run_number_offset + run_number
+    result = shower_simulator._initialize_run_number()
+    assert result == 15  # run_number_offset + run_number
 
 
 def test_validate_run_list(shower_simulator, shower_array_simulator):
@@ -338,7 +337,7 @@ def test_fill_list_of_generated_files(
 def test_get_list_of_files(shower_simulator):
     test_shower_simulator = copy.deepcopy(shower_simulator)
     test_shower_simulator._results["simtel_output"] = ["file_name"]
-    assert len(test_shower_simulator.get_file_list("simtel_output")) == len(shower_simulator.runs)
+    assert len(test_shower_simulator.get_file_list("simtel_output")) == 1
     assert len(test_shower_simulator.get_file_list("not_a_valid_file_type")) == 0
 
 
@@ -361,21 +360,22 @@ def test_make_resources_report(shower_simulator):
         ),
     )
     test_shower_simulator = copy.deepcopy(shower_simulator)
-    test_shower_simulator.runs = [1]
+    test_shower_simulator.run_number = 1
     _resources_1 = test_shower_simulator._make_resources_report(input_file_list=log_file_name)
     assert "Mean wall time/run [sec]: 6" in _resources_1
 
-    test_shower_simulator.runs = [4]
+    test_shower_simulator.run_number = 4
     with pytest.raises(FileNotFoundError):
         test_shower_simulator._make_resources_report(input_file_list)
 
 
 def test_get_runs_to_simulate(shower_simulator):
-    assert len(shower_simulator.runs) == len(shower_simulator._get_runs_to_simulate(run_list=None))
+    assert len([shower_simulator.run_number]) == len(
+        shower_simulator._get_runs_to_simulate(run_list=None)
+    )
 
     assert 3 == len(shower_simulator._get_runs_to_simulate(run_list=[2, 5, 7]))
 
-    shower_simulator.runs = None
     assert isinstance(shower_simulator._get_runs_to_simulate(), list)
 
 

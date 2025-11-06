@@ -33,6 +33,7 @@ class Simulator:
     Simulator is managing the simulation of showers and of the array of telescopes.
 
     It interfaces with simulation software packages (e.g., CORSIKA or sim_telarray).
+    A single run is simulated per instance, possibly for multiple model versions.
 
     The configuration is set as a dict corresponding to the command line configuration groups
     (especially simulation_software, simulation_model, simulation_parameters).
@@ -70,7 +71,9 @@ class Simulator:
 
         self.io_handler = io_handler.IOHandler()
 
-        self.runs = self._initialize_run_list()
+        self.run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
+            "run_number", 1
+        )
         self._results = defaultdict(list)
         self._test = self.args_dict.get("test", False)
         self._extra_commands = extra_commands
@@ -170,72 +173,6 @@ class Simulator:
         seed = seed + (int)(self.args_dict.get("zenith_angle", 0.0 * u.deg).value) * 1000
         return seed + (int)(self.args_dict.get("azimuth_angle", 0.0 * u.deg).value)
 
-    def _initialize_run_list(self):
-        """
-        Initialize run list using the configuration values.
-
-        Uses 'run_number' and 'run_number_offset' arguments
-        to create a list of run numbers.
-
-        Returns
-        -------
-        list
-            List of run numbers.
-        """
-        run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
-            "run_number", 1
-        )
-        return self._validate_run_list(run_number)
-
-    def _validate_run_list(self, run_list):
-        """
-        Validate and normalize a run list.
-
-        Parameters
-        ----------
-        run_list: int, list of int, or None
-            Run number(s) to validate.
-
-        Returns
-        -------
-        list or None
-            Sorted list of unique run numbers, or None if input is None.
-
-        Raises
-        ------
-        InvalidRunsToSimulateError
-            If run_list contains non-integer values.
-        """
-        if run_list is None:
-            self.logger.debug("Nothing to prepare - no run list given.")
-            return None
-
-        validated_runs = gen.ensure_iterable(run_list)
-        if not all(isinstance(r, int) for r in validated_runs):
-            raise InvalidRunsToSimulateError(f"Run list must contain only integers: {run_list}")
-
-        validated_runs_unique = sorted(set(validated_runs))
-        self.logger.info(f"Runlist: {validated_runs_unique}")
-        return validated_runs_unique
-
-    def _get_runs_to_simulate(self, run_list=None):
-        """
-        Get the list of runs to simulate.
-
-        Parameters
-        ----------
-        run_list: int, list of int, or None
-            Optional run list to override self.runs.
-
-        Returns
-        -------
-        list
-            List of run numbers to simulate (empty list if none available).
-        """
-        if run_list is None:
-            return [] if self.runs is None else self.runs
-        return self._validate_run_list(run_list)
-
     def _corsika_configuration(self):
         """
         Define CORSIKA configurations based on the simulation model.
@@ -304,74 +241,29 @@ class Simulator:
 
         return runner_class(**runner_args)
 
-    def simulate(self, input_file_list=None):
+    def simulate(self):
         """
-        Submit a run script as a job.
+        Prepare and submit a run script as a job.
 
-        Parameters
-        ----------
-        input_file_list: str or list of str
-            Single file or list of files of shower simulations.
+        Writes submission scripts using the simulation runners and submits the
+        run script to the job manager. Collects generated files.
         """
-        runs_and_files_to_submit = self._get_runs_and_files_to_submit(
-            input_file_list=input_file_list
-        )
-        self.logger.info(
-            f"Starting submission for {len(runs_and_files_to_submit)} "
-            f"run{'s' if len(runs_and_files_to_submit) > 1 else ''}"
+        run_script = self._simulation_runner.prepare_run_script(
+            run_number=self.run_number, input_file=None, extra_commands=self._extra_commands
         )
 
-        for run_number, input_file in runs_and_files_to_submit.items():
-            run_script = self._simulation_runner.prepare_run_script(
-                run_number=run_number, input_file=input_file, extra_commands=self._extra_commands
-            )
+        job_manager = JobManager(test=self._test)
+        job_manager.submit(
+            run_script=run_script,
+            run_out_file=self._simulation_runner.get_file_name(
+                file_type="sub_log", run_number=self.run_number
+            ),
+            log_file=self._simulation_runner.get_file_name(
+                file_type=("log"), run_number=self.run_number
+            ),
+        )
 
-            job_manager = JobManager(test=self._test)
-            job_manager.submit(
-                run_script=run_script,
-                run_out_file=self._simulation_runner.get_file_name(
-                    file_type="sub_log", run_number=run_number
-                ),
-                log_file=self._simulation_runner.get_file_name(
-                    file_type=("log"), run_number=run_number
-                ),
-            )
-
-            self._fill_list_of_generated_files(input_file, run_number)
-
-    def _get_runs_and_files_to_submit(self, input_file_list=None):
-        """
-        Return a dictionary with run numbers and simulation files.
-
-        The latter are expected to be given for the sim_telarray simulator.
-
-        Parameters
-        ----------
-        input_file_list: str or list of str
-            Single file or list of files of shower simulations.
-
-        Returns
-        -------
-        runs_and_files: dict
-            dictionary with run number as key and (if available) simulation
-            file name as value
-
-        Raises
-        ------
-        ValueError
-            If no runs are to be submitted.
-        """
-        _runs_and_files = {}
-        self.logger.debug(f"Getting runs and files to submit ({input_file_list})")
-
-        if self.simulation_software == "sim_telarray" and self.run_mode is None:
-            input_file_list = gen.ensure_iterable(input_file_list)
-            _runs_and_files = {self._guess_run_from_file(file): file for file in input_file_list}
-        else:
-            _runs_and_files = dict.fromkeys(self._get_runs_to_simulate())
-        if len(_runs_and_files) == 0:
-            raise ValueError("No runs to submit.")
-        return _runs_and_files
+        self._fill_list_of_generated_files()
 
     def _guess_run_from_file(self, file):
         """
@@ -399,18 +291,8 @@ class Simulator:
             self.logger.warning(f"Run number could not be guessed from {file_name} using run = 1")
             return 1
 
-    def _fill_list_of_generated_files(self, file, run_number):
-        """
-        Fill a dictionary with lists of generated files.
-
-        Parameters
-        ----------
-        file: str
-            input file name
-        run_number: int
-            run number
-
-        """
+    def _fill_list_of_generated_files(self):
+        """Fill a dictionary with lists of generated files."""
         keys = [
             "simtel_output",
             "sub_out",
@@ -425,14 +307,11 @@ class Simulator:
         def get_file_name(name, **kwargs):
             return str(self._simulation_runner.get_file_name(file_type=name, **kwargs))
 
-        if "sim_telarray" in self.simulation_software:
-            results["input"].append(str(file))
-
-        results["sub_out"].append(get_file_name("sub_log", mode="out", run_number=run_number))
+        results["sub_out"].append(get_file_name("sub_log", mode="out", run_number=self.run_number))
 
         for i in range(len(self.array_models)):
             results["simtel_output"].append(
-                get_file_name("simtel_output", run_number=run_number, model_version_index=i)
+                get_file_name("simtel_output", run_number=self.run_number, model_version_index=i)
             )
 
             if "sim_telarray" in self.simulation_software:
@@ -441,7 +320,7 @@ class Simulator:
                         get_file_name(
                             file_type,
                             simulation_software="sim_telarray",
-                            run_number=run_number,
+                            run_number=self.run_number,
                             model_version_index=i,
                         )
                     )
@@ -451,7 +330,7 @@ class Simulator:
                     get_file_name(
                         "corsika_log",
                         simulation_software="corsika",
-                        run_number=run_number,
+                        run_number=self.run_number,
                         model_version_index=i,
                     )
                 )
@@ -459,11 +338,12 @@ class Simulator:
         for key in keys:
             self._results[key].extend(results[key])
 
+        print("AAAA", self._results)
+
     def get_file_list(self, file_type="simtel_output"):
         """
         Get list of files generated by simulations.
 
-        Options are "input", "simtel_output", "histogram", "log", "corsika_log".
         Not all file types are available for all simulation types.
         Returns an empty list for an unknown file type.
 
@@ -501,10 +381,9 @@ class Simulator:
         runtime = []
 
         _resources = {}
-        for run in self.runs:
-            _resources = self._simulation_runner.get_resources(run_number=run)
-            if _resources.get("runtime"):
-                runtime.append(_resources["runtime"])
+        _resources = self._simulation_runner.get_resources(run_number=self.run_number)
+        if _resources.get("runtime"):
+            runtime.append(_resources["runtime"])
 
         mean_runtime = np.mean(runtime)
 
