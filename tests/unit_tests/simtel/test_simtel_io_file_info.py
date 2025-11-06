@@ -27,6 +27,6 @@ def test_get_corsika_run_header(sim_telarray_file_gamma):
 
 
 def test_get_simulated_events(sim_telarray_file_gamma):
-    n_showers, n_events = get_simulated_events(sim_telarray_file_gamma)
+    n_showers, n_events, _ = get_simulated_events(sim_telarray_file_gamma)
     assert n_showers > 0
     assert n_events >= n_showers
