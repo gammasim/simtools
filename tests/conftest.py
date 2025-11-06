@@ -340,7 +340,6 @@ def corsika_config_data(model_version):
         "primary": "proton",
         "primary_id_type": "common_name",
         "correct_for_b_field_alignment": True,
-        "data_directory": "simtools-output",
         "model_version": model_version,
     }
 
