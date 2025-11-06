@@ -204,7 +204,7 @@ def _prepare_test_options(config, output_path, model_version=None):
     if model_version and "model_version" in config:
         config.update({"model_version": model_version})
 
-    for key in ["output_path", "data_directory", "pack_for_grid_register"]:
+    for key in ["output_path", "pack_for_grid_register"]:
         if key in config:
             config[key] = str(Path(output_path).joinpath(config[key]))
 
