@@ -11,7 +11,7 @@ from unittest import mock
 import pytest
 from astropy import units as u
 
-from simtools.simulator import InvalidRunsToSimulateError, Simulator
+from simtools.simulator import Simulator
 
 logger = logging.getLogger()
 
@@ -20,16 +20,6 @@ INITIALIZE_RUN_LIST_ERROR_MSG = (
     "Error in initializing run list "
     "(missing 'run_number', 'run_number_offset' or 'number_of_runs')."
 )
-
-
-@pytest.fixture
-def input_file_list():
-    return ["run1", "abc_run22", "def_run02_and"]
-
-
-@pytest.fixture
-def corsika_file():
-    return "run1_proton_za20deg_azm0deg_North_1LST_test.corsika.zst"
 
 
 @pytest.fixture
@@ -224,36 +214,6 @@ def test_simulation_software(array_simulator, shower_simulator, shower_array_sim
         test_array_simulator.simulation_software = "this_simulator_is_not_there"
 
 
-def test_initialize_run_number(shower_simulator):
-    assert shower_simulator._initialize_run_number() == 1
-
-
-def test_initialize_run_number_valid_cases(shower_simulator):
-    shower_simulator.args_dict["run_number"] = 5
-    shower_simulator.args_dict["run_number_offset"] = 10
-    result = shower_simulator._initialize_run_number()
-    assert result == 15  # run_number_offset + run_number
-
-
-def test_validate_run_list(shower_simulator, shower_array_simulator):
-    for simulator_now in [shower_simulator, shower_array_simulator]:
-        assert not simulator_now._validate_run_list(None)
-
-        run_list = [1, 24, 3]
-
-        assert simulator_now._validate_run_list(run_list=5) == [5]
-        assert simulator_now._validate_run_list(run_list=run_list) == [
-            1,
-            3,
-            24,
-        ]
-
-        with pytest.raises(InvalidRunsToSimulateError):
-            simulator_now._validate_run_list(run_list=[1, "a", 4])
-
-        assert simulator_now._validate_run_list(run_list=None) is None
-
-
 def test_simulate_shower_simulator(shower_simulator, io_handler):
     shower_simulator._test = True
     shower_simulator.simulate()
@@ -265,9 +225,9 @@ def test_simulate_shower_simulator(shower_simulator, io_handler):
     assert Path(run_script).exists()
 
 
-def test_simulate_array_simulator(array_simulator, corsika_file):
+def test_simulate_array_simulator(array_simulator):
     array_simulator._test = True
-    array_simulator.simulate(input_file_list=corsika_file)
+    array_simulator.simulate()
 
     assert len(array_simulator._results["simtel_output"]) > 0
     assert len(array_simulator._results["sub_out"]) > 0
@@ -279,24 +239,6 @@ def test_simulate_shower_array_simulator(shower_array_simulator):
 
     assert len(shower_array_simulator._results["simtel_output"]) > 0
     assert len(shower_array_simulator._results["sub_out"]) > 0
-
-
-def test_get_runs_and_files_to_submit(
-    array_simulator, shower_simulator, shower_array_simulator, input_file_list
-):
-    with pytest.raises(ValueError, match=r"No runs to submit."):
-        array_simulator._get_runs_and_files_to_submit(input_file_list=None)
-
-    assert array_simulator._get_runs_and_files_to_submit(input_file_list=input_file_list) == {
-        1: "run1",
-        2: "def_run02_and",
-        22: "abc_run22",
-    }
-
-    for simulator_now in [shower_simulator, shower_array_simulator]:
-        assert simulator_now._get_runs_and_files_to_submit(input_file_list=None) == {
-            1: None,
-        }
 
 
 def test_guess_run_from_file(array_simulator, caplog):
@@ -314,21 +256,15 @@ def test_guess_run_from_file(array_simulator, caplog):
     assert "Run number could not be guessed from abc-ran12345_bla_ble using run = 1" in caplog.text
 
 
-def test_fill_list_of_generated_files(
-    array_simulator, shower_simulator, shower_array_simulator, input_file_list
-):
+def test_fill_list_of_generated_files(array_simulator, shower_simulator, shower_array_simulator):
     for simulator_now in [array_simulator, shower_array_simulator]:
-        for run_number in [1, 2, 22]:
-            simulator_now._fill_list_of_generated_files(input_file_list[1], run_number=run_number)
-        assert len(simulator_now.get_file_list("simtel_output")) == 3
-        assert len(simulator_now._results["sub_out"]) == 3
-        assert len(simulator_now.get_file_list("log")) == 3
-        assert len(simulator_now.get_file_list("input")) == 3
-        assert len(simulator_now.get_file_list("histogram")) == 3
-        logger.error(simulator_now.get_file_list("input"))
-        assert simulator_now.get_file_list("input")[1] == "abc_run22"
+        simulator_now._fill_list_of_generated_files()
+        assert len(simulator_now.get_file_list("simtel_output")) == 1
+        assert len(simulator_now._results["sub_out"]) == 1
+        assert len(simulator_now.get_file_list("log")) == 1
+        assert len(simulator_now.get_file_list("histogram")) == 1
 
-    shower_simulator._fill_list_of_generated_files(input_file_list[1], run_number=5)
+    shower_simulator._fill_list_of_generated_files()
     assert len(shower_simulator.get_file_list("simtel_output")) == 1
     assert len(shower_simulator.get_file_list("corsika_log")) == 1
     assert len(shower_simulator.get_file_list("histogram")) == 0
@@ -365,18 +301,6 @@ def test_make_resources_report(shower_simulator):
     assert "Mean wall time/run [sec]: 6" in _resources_1
 
     test_shower_simulator.run_number = 4
-    with pytest.raises(FileNotFoundError):
-        test_shower_simulator._make_resources_report(input_file_list)
-
-
-def test_get_runs_to_simulate(shower_simulator):
-    assert len([shower_simulator.run_number]) == len(
-        shower_simulator._get_runs_to_simulate(run_list=None)
-    )
-
-    assert 3 == len(shower_simulator._get_runs_to_simulate(run_list=[2, 5, 7]))
-
-    assert isinstance(shower_simulator._get_runs_to_simulate(), list)
 
 
 def test_save_file_lists(shower_simulator, mocker, caplog):

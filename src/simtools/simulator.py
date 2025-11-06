@@ -24,10 +24,6 @@ from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
 from simtools.version import semver_to_int
 
 
-class InvalidRunsToSimulateError(Exception):
-    """Exception for invalid runs to simulate."""
-
-
 class Simulator:
     """
     Simulator is managing the simulation of showers and of the array of telescopes.
@@ -337,8 +333,6 @@ class Simulator:
 
         for key in keys:
             self._results[key].extend(results[key])
-
-        print("AAAA", self._results)
 
     def get_file_list(self, file_type="simtel_output"):
         """
