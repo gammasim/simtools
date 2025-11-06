@@ -1,0 +1,18 @@
+---
+applications:
+- application: simtools-derive-pulse-shape-parameters
+  configuration:
+    rise_width_ns: 2.5
+    fall_width_ns: 5.0
+    rise_range: [0.1, 0.9]
+    fall_range: [0.9, 0.1]
+    dt_ns: 0.1
+    t_start_ns: -25.0
+    t_stop_ns: 25.0
+    output_path: simtools-output
+    output_prefix: derive_pulse_test
+  integration_tests:
+  - output_file: derive_pulse_test_pulse_parameters.json
+  test_name: derive_pulse_shape_parameters_basic
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

@@ -177,7 +177,6 @@ class SimtelConfigWriter:
             f"Generating lightpulse table with rise10-90={width_ns} ns, "
             f"fall90-10={exp_decay_ns} ns, dt={dt_ns} ns"
         )
-
         width = float(fadc_sum_bins)
         t_start_ns = -abs(time_margin_ns + width)
         t_stop_ns = +abs(time_margin_ns + width)
@@ -192,6 +191,11 @@ class SimtelConfigWriter:
             center_on_peak=True,
         )
 
+        return SimtelConfigWriter._write_ascii_pulse_table(file_path, t, y)
+
+    @staticmethod
+    def _write_ascii_pulse_table(file_path, t, y):
+        """Write two-column ASCII pulse table."""
         with open(file_path, "w", encoding="utf-8") as fh:
             fh.write("# time[ns] amplitude\n")
             for ti, yi in zip(t, y):
