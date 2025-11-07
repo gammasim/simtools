@@ -51,6 +51,7 @@ class CorsikaConfig:
         self._run_number = None
         self.config_file_path = None
         self.primary_particle = args_dict  # see setter for primary_particle
+        self.use_curved_atmosphere = args_dict  # see setter for use_curved_atmosphere
         self.dummy_simulations = dummy_simulations
 
         self.io_handler = io_handler.IOHandler()
@@ -78,6 +79,23 @@ class CorsikaConfig:
             Configuration dictionary
         """
         self._primary_particle = self._set_primary_particle(args_dict)
+
+    @property
+    def use_curved_atmosphere(self):
+        """Check if zenith angle condition for curved atmosphere usage for CORSIKA is met."""
+        return self._use_curved_atmosphere
+
+    @use_curved_atmosphere.setter
+    def use_curved_atmosphere(self, args):
+        """Check if zenith angle condition for curved atmosphere usage for CORSIKA is met."""
+        self._use_curved_atmosphere = False
+        if isinstance(args, bool):
+            self._use_curved_atmosphere = args
+        elif isinstance(args, dict):
+            self._use_curved_atmosphere = (
+                args.get("zenith_angle", 0.0 * u.deg).to("deg").value
+                > args.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
+            )
 
     def _fill_corsika_configuration(self, args_dict, db_config=None):
         """
@@ -116,7 +134,6 @@ class CorsikaConfig:
                 gen.ensure_iterable(args_dict.get("model_version")), db_config
             )
         )
-
         return config
 
     def _fill_corsika_configuration_from_db(self, model_versions, db_config):
@@ -152,9 +169,11 @@ class CorsikaConfig:
 
         """
         try:
-            self.azimuth_angle = int(
-                0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1])
+            az = self._rotate_azimuth_by_180deg(
+                0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1]),
+                invert_operation=True,
             )  # average azimuth angle
+            self.azimuth_angle = round(az)
         except KeyError:
             self.azimuth_angle = int(args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value)
         try:
@@ -168,12 +187,6 @@ class CorsikaConfig:
         self.curved_atmosphere_min_zenith_angle = (
             args_dict.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
         )
-
-    def use_curved_atmosphere(self):
-        """Check if zenith angle condition for curved atmosphere usage for CORSIKA is met."""
-        if self.curved_atmosphere_min_zenith_angle is not None:
-            return self.zenith_angle > self.curved_atmosphere_min_zenith_angle
-        return False
 
     def assert_corsika_configurations_match(self, model_versions, db_config=None):
         """
@@ -373,7 +386,7 @@ class CorsikaConfig:
                 parameters_from_db["corsika_starting_grammage"]
             )
         ]
-        if not self.use_curved_atmosphere():
+        if not self.use_curved_atmosphere:
             parameters["TSTART"] = ["T"]
         parameters["ECUTS"] = self._input_config_corsika_particle_kinetic_energy_cutoff(
             parameters_from_db["corsika_particle_kinetic_energy_cutoff"]
@@ -520,7 +533,9 @@ class CorsikaConfig:
             return f"{int(value)}MB"
         return f"{int(entry['value'] * u.Unit(entry['unit']).to('byte'))}"
 
-    def _rotate_azimuth_by_180deg(self, az, correct_for_geomagnetic_field_alignment=True):
+    def _rotate_azimuth_by_180deg(
+        self, az, correct_for_geomagnetic_field_alignment=True, invert_operation=False
+    ):
         """
         Convert azimuth angle to the CORSIKA coordinate system.
 
@@ -539,6 +554,8 @@ class CorsikaConfig:
         b_field_declination = 0
         if correct_for_geomagnetic_field_alignment:
             b_field_declination = self.array_model.site_model.get_parameter_value("geomag_rotation")
+        if invert_operation:
+            return (az - 180 - b_field_declination) % 360
         return (az + 180 + b_field_declination) % 360
 
     @property
