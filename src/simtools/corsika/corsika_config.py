@@ -121,7 +121,7 @@ class CorsikaConfig:
 
         config = {}
         if self.dummy_simulations:
-            config["USER_INPUT"] = self._corsika_configuration_for_dummy_simulations()
+            config["USER_INPUT"] = self._corsika_configuration_for_dummy_simulations(args_dict)
         elif args_dict.get("corsika_file", None) is not None:
             config["USER_INPUT"] = self._corsika_configuration_from_corsika_file(
                 args_dict["corsika_file"]
@@ -240,7 +240,7 @@ class CorsikaConfig:
                         f"Values are {current_value} and {next_value} respectively."
                     )
 
-    def _corsika_configuration_for_dummy_simulations(self):
+    def _corsika_configuration_for_dummy_simulations(self, args_dict):
         """
         Return CORSIKA configuration for dummy simulations.
 
@@ -252,14 +252,15 @@ class CorsikaConfig:
         dict
             Dictionary with CORSIKA parameters for dummy simulations.
         """
+        theta, phi = self._get_corsika_theta_phi(args_dict)
         return {
             "EVTNR": [1],
             "NSHOW": [1],
             "PRMPAR": [1],  # CORSIKA ID 1 for primary gamma
             "ESLOPE": [-2.0],
             "ERANGE": [0.1, 0.1],
-            "THETAP": [20.0, 20.0],
-            "PHIP": [0.0, 0.0],
+            "THETAP": [theta, theta],
+            "PHIP": [phi, phi],
             "VIEWCONE": [0.0, 0.0],
             "CSCAT": [1, 0.0, 10.0],
         }
@@ -325,6 +326,7 @@ class CorsikaConfig:
         dict
             Dictionary with CORSIKA parameters.
         """
+        theta, phi = self._get_corsika_theta_phi(args_dict)
         return {
             "EVTNR": [args_dict["event_number_first_shower"]],
             "NSHOW": [args_dict["nshow"]],
@@ -334,24 +336,8 @@ class CorsikaConfig:
                 args_dict["energy_range"][0].to("GeV").value,
                 args_dict["energy_range"][1].to("GeV").value,
             ],
-            "THETAP": [
-                float(args_dict["zenith_angle"].to("deg").value),
-                float(args_dict["zenith_angle"].to("deg").value),
-            ],
-            "PHIP": [
-                self._rotate_azimuth_by_180deg(
-                    args_dict["azimuth_angle"].to("deg").value,
-                    correct_for_geomagnetic_field_alignment=args_dict[
-                        "correct_for_b_field_alignment"
-                    ],
-                ),
-                self._rotate_azimuth_by_180deg(
-                    args_dict["azimuth_angle"].to("deg").value,
-                    correct_for_geomagnetic_field_alignment=args_dict[
-                        "correct_for_b_field_alignment"
-                    ],
-                ),
-            ],
+            "THETAP": [theta, theta],
+            "PHIP": [phi, phi],
             "VIEWCONE": [
                 args_dict["view_cone"][0].to("deg").value,
                 args_dict["view_cone"][1].to("deg").value,
@@ -362,6 +348,17 @@ class CorsikaConfig:
                 0.0,
             ],
         }
+
+    def _get_corsika_theta_phi(self, args_dict):
+        """Get CORSIKA theta and phi angles from args_dict."""
+        theta = args_dict.get("zenith_angle", 20.0 * u.deg).to("deg").value
+        phi = self._rotate_azimuth_by_180deg(
+            args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value,
+            correct_for_geomagnetic_field_alignment=args_dict.get(
+                "correct_for_b_field_alignment", True
+            ),
+        )
+        return theta, phi
 
     def _corsika_configuration_interaction_flags(self, parameters_from_db):
         """
