@@ -1,7 +1,6 @@
 """Base class for running sim_telarray simulations."""
 
 import logging
-import stat
 import subprocess
 from pathlib import Path
 
@@ -51,56 +50,6 @@ class SimtelRunner:
             "corsika_sim_telarray" if use_multipipe else "sim_telarray"
         )
 
-    def __repr__(self):
-        """Return a string representation of the SimtelRunner object."""
-        return f"SimtelRunner(label={self.label})\n"
-
-    def prepare_run_script(self, test=False, input_file=None, run_number=None, extra_commands=None):
-        """
-        Build and return the full path of the bash run script containing the sim_telarray command.
-
-        Parameters
-        ----------
-        test: bool
-            Test flag for faster execution.
-        input_file: str or Path
-            Full path of the input CORSIKA file.
-        run_number: int
-            Run number.
-        extra_commands: str
-            Additional commands for running simulations given in config.yml.
-
-        Returns
-        -------
-        Path
-            Full path of the run script.
-        """
-        script_file_path = self.get_file_name(file_type="sub_script", run_number=run_number)
-        self._logger.debug(f"Run bash script - {script_file_path}")
-        self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
-
-        command = self._make_run_command(run_number=run_number, input_file=input_file)
-        with script_file_path.open("w", encoding="utf-8") as file:
-            file.write("#!/usr/bin/env bash\n\n")
-            file.write("set -e\n")
-            file.write("set -o pipefail\n")
-            file.write("\nSECONDS=0\n")
-
-            if extra_commands is not None:
-                file.write("# Writing extras\n")
-                for line in extra_commands:
-                    file.write(f"{line}\n")
-                file.write("# End of extras\n\n")
-
-            n = 1 if test else self.runs_per_set
-            for _ in range(n):
-                file.write(f"{command}\n\n")
-
-            file.write('\necho "RUNTIME: $SECONDS"\n')
-
-        script_file_path.chmod(script_file_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
-        return script_file_path
-
     def run(self, test=False, input_file=None, run_number=None):
         """
         Make run command and run sim_telarray.
@@ -148,8 +97,6 @@ class SimtelRunner:
             msg = gen.get_log_excerpt(self._log_file)
         else:
             msg = "Simtel log file does not exist."
-
-        self._logger.error(msg)
         raise SimtelExecutionError(msg)
 
     def _run_simtel_and_check_output(self, command, stdout_file, stderr_file):
