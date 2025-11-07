@@ -7,11 +7,15 @@ applications:
     rise_range: [0.1, 0.9]
     fall_range: [0.9, 0.1]
     dt_ns: 0.1
-    t_start_ns: -25.0
-    t_stop_ns: 25.0
+    time_margin_ns: 5.0
+    telescope: LSTN-01
+    model_version: 7.0
     output_path: simtools-output
   integration_tests:
-  - output_file: derive_pulse_shape_parameters_pulse_parameters.json
+  - output_file: flasher_pulse_width.json
+    parameter: flasher_pulse_width
+  - output_file: flasher_pulse_exp_decay.json
+    parameter: flasher_pulse_exp_decay
   test_name: derive_pulse_shape_parameters_basic
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
