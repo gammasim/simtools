@@ -9,6 +9,7 @@ from astropy import units as u
 from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.io import eventio_handler, io_handler
 from simtools.model.model_parameter import ModelParameter
+from simtools.utils import general as gen
 
 
 class InvalidCorsikaInputError(Exception):
@@ -45,8 +46,7 @@ class CorsikaConfig:
         self._logger.debug("Init CorsikaConfig")
 
         self.label = label
-        self.zenith_angle = None
-        self.azimuth_angle = None
+        self.zenith_angle = self.azimuth_angle = None
         self.curved_atmosphere_min_zenith_angle = None
         self._run_number = None
         self.config_file_path = None
@@ -55,16 +55,9 @@ class CorsikaConfig:
 
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
-        self.config = self.fill_corsika_configuration(args_dict, db_config)
+        self.config = self._fill_corsika_configuration(args_dict, db_config)
+        self._initialize_from_config(args_dict)
         self.is_file_updated = False
-
-    def __repr__(self):
-        """CorsikaConfig class representation."""
-        return (
-            f"<class {self.__class__.__name__}> "
-            f"(site={self.array_model.site}, "
-            f"layout={self.array_model.layout_name}, label={self.label})"
-        )
 
     @property
     def primary_particle(self):
@@ -86,13 +79,12 @@ class CorsikaConfig:
         """
         self._primary_particle = self._set_primary_particle(args_dict)
 
-    def fill_corsika_configuration(self, args_dict, db_config=None):
+    def _fill_corsika_configuration(self, args_dict, db_config=None):
         """
         Fill CORSIKA configuration.
 
-        Dictionary keys are CORSIKA parameter names.
-        Values are converted to CORSIKA-consistent units.
-
+        Dictionary keys are CORSIKA parameter names. Values are converted to
+        CORSIKA-consistent units.
 
         Parameters
         ----------
@@ -109,17 +101,6 @@ class CorsikaConfig:
         if args_dict is None:
             return {}
 
-        self.is_file_updated = False
-        self.azimuth_angle = int(args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value)
-        self.zenith_angle = int(args_dict.get("zenith_angle", 0.0 * u.deg).to("deg").value)
-        self.curved_atmosphere_min_zenith_angle = (
-            args_dict.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
-        )
-
-        self._logger.debug(
-            f"Setting CORSIKA parameters from database ({args_dict['model_version']})"
-        )
-
         config = {}
         if self.dummy_simulations:
             config["USER_INPUT"] = self._corsika_configuration_for_dummy_simulations()
@@ -127,21 +108,28 @@ class CorsikaConfig:
             config["USER_INPUT"] = self._corsika_configuration_from_corsika_file(
                 args_dict["corsika_file"]
             )
-            raise ValueError(f"{config['USER_INPUT']}")
         else:
             config["USER_INPUT"] = self._corsika_configuration_from_user_input(args_dict)
 
+        config.update(
+            self._fill_corsika_configuration_from_db(
+                gen.ensure_iterable(args_dict.get("model_version")), db_config
+            )
+        )
+
+        return config
+
+    def _fill_corsika_configuration_from_db(self, model_versions, db_config):
+        """Fill CORSIKA configuration from database."""
+        config = {}
         if db_config is None:  # all following parameter require DB
             return config
 
-        # If the user provided multiple model versions, we take the first one
-        # because for CORSIKA config we need only one and it doesn't matter which
-        model_versions = args_dict.get("model_version", None)
-        if not isinstance(model_versions, list):
-            model_versions = [model_versions]
+        # For multiple model versions, check that CORSIKA parameters are identical
         self.assert_corsika_configurations_match(model_versions, db_config=db_config)
         model_version = model_versions[0]
-        self._logger.debug(f"Using model version {model_version} for CORSIKA parameters")
+
+        self._logger.debug(f"Using model version {model_version} for CORSIKA parameters from DB")
         db_model_parameters = ModelParameter(db_config=db_config, model_version=model_version)
         parameters_from_db = db_model_parameters.get_simulation_software_parameters("corsika")
 
@@ -153,8 +141,33 @@ class CorsikaConfig:
         )
         config["DEBUGGING_OUTPUT_PARAMETERS"] = self._corsika_configuration_debugging_parameters()
         config["IACT_PARAMETERS"] = self._corsika_configuration_iact_parameters(parameters_from_db)
-
         return config
+
+    def _initialize_from_config(self, args_dict):
+        """
+        Initialize additional parameters either from command line args or from derived config.
+
+        Takes into account that in the case of a given CORSIKA input file, some parameters are read
+        from the file instead of the command line args.
+
+        """
+        try:
+            self.azimuth_angle = int(
+                0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1])
+            )  # average azimuth angle
+        except KeyError:
+            self.azimuth_angle = int(args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value)
+        try:
+            self.zenith_angle = int(
+                0.5
+                * (self.config["USER_INPUT"]["THETAP"][0] + self.config["USER_INPUT"]["THETAP"][1])
+            )  # average zenith angle
+        except KeyError:
+            self.zenith_angle = int(args_dict.get("zenith_angle", 0.0 * u.deg).to("deg").value)
+
+        self.curved_atmosphere_min_zenith_angle = (
+            args_dict.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
+        )
 
     def use_curved_atmosphere(self):
         """Check if zenith angle condition for curved atmosphere usage for CORSIKA is met."""
@@ -238,8 +251,7 @@ class CorsikaConfig:
             "CSCAT": [1, 0.0, 10.0],
         }
 
-    @staticmethod
-    def _corsika_configuration_from_corsika_file(corsika_input_file):
+    def _corsika_configuration_from_corsika_file(self, corsika_input_file):
         """
         Get CORSIKA configuration run header of provided input files.
 
@@ -260,6 +272,7 @@ class CorsikaConfig:
         run_header, event_header = eventio_handler.get_corsika_run_and_event_headers(
             corsika_input_file
         )
+        self._logger.debug(f"CORSIKA run header from {corsika_input_file}")
 
         def to_float32(value):
             """Convert value to numpy float32."""

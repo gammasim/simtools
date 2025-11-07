@@ -110,9 +110,13 @@ class Simulator:
             ),
             "seed_file_name": "sim_telarray_instrument_seeds.txt",  # name only; no directory
         }
-        self.run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
-            "run_number", 1
-        )
+
+        if self.args_dict.get("corsika_file"):
+            self.run_number = eventio_handler.get_corsika_run_number(self.args_dict["corsika_file"])
+        else:
+            self.run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
+                "run_number", 1
+            )
 
     def _initialize_array_models(self):
         """
@@ -280,32 +284,6 @@ class Simulator:
         if self.simulation_software == "sim_telarray":
             return self.args_dict.get("corsika_file", None)
         return None
-
-    def _guess_run_from_file(self, file):
-        """
-        Extract the run number from the given file name.
-
-        Input file names can follow any pattern with the
-        string 'run' followed by the run number.
-
-        Parameters
-        ----------
-        file: Path
-            Simulation file name
-
-        Returns
-        -------
-        int
-            The extracted run number. If extraction fails, returns 1 and logs a warning.
-        """
-        file_name = str(Path(file).name)
-
-        try:
-            run_str = re.search(r"run\d*", file_name).group()
-            return int(run_str[3:])
-        except (ValueError, AttributeError):
-            self.logger.warning(f"Run number could not be guessed from {file_name} using run = 1")
-            return 1
 
     def _fill_list_of_generated_files(self):
         """Fill a dictionary with lists of generated files."""
