@@ -48,15 +48,13 @@ Derive trigger rates for the South Alpha layout:
       --t_stop_ns 25
 """
 
-from __future__ import annotations
-
 import json
 import logging
 from pathlib import Path
 
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.simtel.pulse_shapes import solve_sigma_tau_from_risefall
+from simtools.simtel.pulse_shapes import solve_sigma_tau_from_rise_fall
 
 
 def _parse():
@@ -85,7 +83,7 @@ def _parse():
         help="Fractional amplitudes (low high) for rise width, e.g. 0.1 0.9",
         type=float,
         nargs=2,
-        default=(0.1, 0.9),
+        default=[0.1, 0.9],
         required=False,
     )
     config.parser.add_argument(
@@ -93,7 +91,7 @@ def _parse():
         help="Fractional amplitudes (high low) for fall width, e.g. 0.9 0.1",
         type=float,
         nargs=2,
-        default=(0.9, 0.1),
+        default=[0.9, 0.1],
         required=False,
     )
     config.parser.add_argument(
@@ -123,23 +121,22 @@ def _parse():
 
 def main():
     """Run parameter derivation and write results."""
-    app = startup_application(_parse)
+    app_context = startup_application(_parse)
     log = logging.getLogger(__name__)
 
-    rise_width_ns = float(app.args["rise_width_ns"])
-    fall_width_ns = float(app.args["fall_width_ns"])
-    rise_range = tuple(app.args["rise_range"])
-    fall_range = tuple(app.args["fall_range"])
-    dt_ns = float(app.args["dt_ns"])
-    t_start_ns = float(app.args["t_start_ns"])
-    t_stop_ns = float(app.args["t_stop_ns"])
+    rise_width_ns = float(app_context.args["rise_width_ns"])
+    fall_width_ns = float(app_context.args["fall_width_ns"])
+    rise_range = tuple(app_context.args["rise_range"])
+    fall_range = tuple(app_context.args["fall_range"])
+    dt_ns = float(app_context.args["dt_ns"])
+    t_start_ns = float(app_context.args["t_start_ns"])
+    t_stop_ns = float(app_context.args["t_stop_ns"])
 
-    sigma_ns, tau_ns = solve_sigma_tau_from_risefall(
+    sigma_ns, tau_ns = solve_sigma_tau_from_rise_fall(
         rise_width_ns=rise_width_ns,
         fall_width_ns=fall_width_ns,
         dt_ns=dt_ns,
         rise_range=rise_range,
-        fall_range=fall_range,
         t_start_ns=t_start_ns,
         t_stop_ns=t_stop_ns,
     )
@@ -149,12 +146,11 @@ def main():
         f"(rise={rise_width_ns} ns @ {rise_range}, fall={fall_width_ns} ns @ {fall_range})"
     )
 
-    out_dir = app.io_handler.get_output_directory()
-    prefix = app.args.get("output_prefix")
-    base = prefix or app.args.get("label", get_application_label(__file__))
+    out_dir = app_context.io_handler.get_output_directory()
+    base = app_context.args.get("label") or get_application_label(__file__)
     out_path = Path(out_dir) / f"{base}_pulse_parameters.json"
 
-    payload = {
+    parameters = {
         "sigma_ns": sigma_ns,
         "tau_ns": tau_ns,
         "inputs": {
@@ -167,7 +163,7 @@ def main():
             "t_stop_ns": t_stop_ns,
         },
     }
-    out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    out_path.write_text(json.dumps(parameters, indent=2), encoding="utf-8")
     log.info(f"Wrote derived parameters to {out_path}")
 
 

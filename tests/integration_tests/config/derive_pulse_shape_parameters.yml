@@ -10,9 +10,8 @@ applications:
     t_start_ns: -25.0
     t_stop_ns: 25.0
     output_path: simtools-output
-    output_prefix: derive_pulse_test
   integration_tests:
-  - output_file: derive_pulse_test_pulse_parameters.json
+  - output_file: derive_pulse_shape_parameters_pulse_parameters.json
   test_name: derive_pulse_shape_parameters_basic
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

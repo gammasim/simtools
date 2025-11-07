@@ -145,7 +145,7 @@ def generate_gauss_expconv_pulse(
     return t, y
 
 
-def solve_sigma_tau_from_risefall(
+def solve_sigma_tau_from_rise_fall(
     rise_width_ns,
     fall_width_ns,
     dt_ns=0.1,
@@ -248,7 +248,7 @@ def generate_pulse_from_rise_fall_times(
     are solved via least-squares such that the resulting pulse matches the requested rise and
     fall times measured on monotonic segments relative to the peak.
     """
-    sigma, tau = solve_sigma_tau_from_risefall(
+    sigma, tau = solve_sigma_tau_from_rise_fall(
         rise_width_ns,
         fall_width_ns,
         dt_ns=dt_ns,
