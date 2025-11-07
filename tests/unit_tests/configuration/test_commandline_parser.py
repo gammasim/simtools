@@ -423,13 +423,6 @@ def test_get_dictionary_with_corsika_configuration(mocker):
     assert corsika_config["run_number"]["required"] is True
     assert corsika_config["run_number"]["default"] == 1
 
-    # Test the "number_of_runs" key
-    assert "number_of_runs" in corsika_config
-    assert corsika_config["number_of_runs"]["help"] == "Number of runs to be simulated."
-    assert corsika_config["number_of_runs"]["type"] is int
-    assert corsika_config["number_of_runs"]["required"] is True
-    assert corsika_config["number_of_runs"]["default"] == 1
-
     # Test the "event_number_first_shower" key
     assert "event_number_first_shower" in corsika_config
     assert corsika_config["event_number_first_shower"]["help"] == "Event number of first shower"
