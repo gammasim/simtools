@@ -482,6 +482,15 @@ def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
 
 
 @pytest.fixture
+def corsika_file_gamma():
+    """Gamma corsika file for testing."""
+    return (
+        "tests/resources/"
+        "gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst"
+    )
+
+
+@pytest.fixture
 def sim_telarray_file_gamma():
     """Gamma sim_telarray file for testing."""
     return (

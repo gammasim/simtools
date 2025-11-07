@@ -18,7 +18,7 @@ FAILED_TO_READ_FILE_ERROR = r"^Failed to read file"
 url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
 
-def test_collect_dict_data(io_handler) -> None:
+def test_collect_dict_data(io_handler, corsika_file_gamma):
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
     test_yaml_file = io_handler.get_output_file(file_name="test_collect_dict_data.yml")
     if not Path(test_yaml_file).exists():
@@ -52,9 +52,7 @@ def test_collect_dict_data(io_handler) -> None:
 
     # document type not supported
     with pytest.raises(TypeError, match=FAILED_TO_READ_FILE_ERROR):
-        ascii_handler.collect_data_from_file(
-            "tests/resources/run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst"
-        )
+        ascii_handler.collect_data_from_file(corsika_file_gamma)
 
 
 def test_collect_data_from_file_exceptions(io_handler) -> None:
