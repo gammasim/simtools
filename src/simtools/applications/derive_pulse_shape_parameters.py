@@ -27,20 +27,21 @@ Command line arguments
 - dt_ns (float, optional)
     Time sampling step in ns used by the solver (default: 0.1 ns).
 - t_start_ns (float, optional)
-    Explicit start time of the internal sampling window (ns) (default: -10 ns).
+    Explicit start time of the internal sampling window (ns) (default: -25 ns).
 - t_stop_ns (float, optional)
     Explicit stop time of the internal sampling window (ns) (default: 25 ns).
 
 Example
 -------
 
-Derive trigger rates for the South Alpha layout:
+Derive the pulse shape parameters for a pulse with 2.5 ns rise time (10%-90%)
+ and 5 ns fall time (90%-10%):
 
 .. code-block:: console
 
     simtools-derive-pulse-shape-parameters \
-      --rise_width_ns 2.0 \
-      --fall_width_ns 6.0 \
+      --rise_width_ns 2.5 \
+      --fall_width_ns 5.0 \
       --rise_range 0.1 0.9 \
       --fall_range 0.9 0.1 \
       --dt_ns 0.1 \
@@ -105,7 +106,7 @@ def _parse():
         "--t_start_ns",
         help="Explicit start time of the internal sampling window (ns).",
         type=float,
-        default=-10.0,
+        default=-25.0,
         required=False,
     )
     config.parser.add_argument(
