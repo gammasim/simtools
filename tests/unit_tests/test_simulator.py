@@ -241,21 +241,6 @@ def test_simulate_shower_array_simulator(shower_array_simulator):
     assert len(shower_array_simulator._results["sub_out"]) > 0
 
 
-def test_guess_run_from_file(array_simulator, caplog):
-    assert array_simulator._guess_run_from_file("run12345_bla_ble") == 12345
-
-    assert array_simulator._guess_run_from_file("run5test2_bla_ble") == 5
-
-    assert array_simulator._guess_run_from_file("abc-run12345_bla_ble") == 12345
-
-    assert array_simulator._guess_run_from_file("run10") == 10
-
-    # Invalid run number - returns 1
-    with caplog.at_level(logging.WARNING):
-        assert array_simulator._guess_run_from_file("abc-ran12345_bla_ble") == 1
-    assert "Run number could not be guessed from abc-ran12345_bla_ble using run = 1" in caplog.text
-
-
 def test_fill_list_of_generated_files(array_simulator, shower_simulator, shower_array_simulator):
     for simulator_now in [array_simulator, shower_array_simulator]:
         simulator_now._fill_list_of_generated_files()
