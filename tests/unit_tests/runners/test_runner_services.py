@@ -118,10 +118,7 @@ def test_load_corsika_data_directories(runner_service_config_only):
         assert isinstance(item, pathlib.Path)
 
 
-def test_has_file(io_handler, runner_service, file_base_name):
-    corsika_file = io_handler.get_test_data_file(
-        file_name="run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst"
-    )
+def test_has_file(io_handler, runner_service, file_base_name, corsika_file_gamma):
     # Copying the corsika file to the expected location and
     # changing its name for the sake of this test.
     # This should not affect the efficiency of this test.
@@ -130,7 +127,7 @@ def test_has_file(io_handler, runner_service, file_base_name):
     )
     output_directory.mkdir(parents=True, exist_ok=True)
     shutil.copy(
-        corsika_file,
+        corsika_file_gamma,
         output_directory.joinpath(f"{file_base_name}.corsika.zst"),
     )
     assert runner_service.has_file(file_type="corsika_output", run_number=1)
