@@ -12,13 +12,12 @@ from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.io import io_handler, table_handler
+from simtools.io import eventio_handler, io_handler, table_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
-from simtools.simtel.simtel_io_file_info import get_simulated_events
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
 from simtools.version import semver_to_int
@@ -67,20 +66,12 @@ class Simulator:
 
         self.io_handler = io_handler.IOHandler()
 
-        self.run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
-            "run_number", 1
-        )
+        self.run_number = None
         self._results = defaultdict(list)
-        self._test = self.args_dict.get("test", False)
+        self._test = None
         self._extra_commands = extra_commands
-
-        self.sim_telarray_seeds = {
-            "seed": self.args_dict.get("sim_telarray_instrument_seeds"),
-            "random_instrument_instances": self.args_dict.get(
-                "sim_telarray_random_instrument_instances"
-            ),
-            "seed_file_name": "sim_telarray_instrument_seeds.txt",  # name only; no directory
-        }
+        self.sim_telarray_seeds = None
+        self._initialize_from_tool_configuration()
         self.array_models = self._initialize_array_models()
         self._simulation_runner = self._initialize_simulation_runner()
 
@@ -108,6 +99,20 @@ class Simulator:
         if simulation_software not in ["sim_telarray", "corsika", "corsika_sim_telarray"]:
             raise ValueError(f"Invalid simulation software: {simulation_software}")
         self._simulation_software = simulation_software.lower()
+
+    def _initialize_from_tool_configuration(self):
+        """Initialize simulator from tool configuration."""
+        self._test = self.args_dict.get("test", False)
+        self.sim_telarray_seeds = {
+            "seed": self.args_dict.get("sim_telarray_instrument_seeds"),
+            "random_instrument_instances": self.args_dict.get(
+                "sim_telarray_random_instrument_instances"
+            ),
+            "seed_file_name": "sim_telarray_instrument_seeds.txt",  # name only; no directory
+        }
+        self.run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
+            "run_number", 1
+        )
 
     def _initialize_array_models(self):
         """
@@ -245,7 +250,9 @@ class Simulator:
         run script to the job manager. Collects generated files.
         """
         run_script = self._simulation_runner.prepare_run_script(
-            run_number=self.run_number, input_file=None, extra_commands=self._extra_commands
+            run_number=self.run_number,
+            input_file=self._get_corsika_file(),
+            extra_commands=self._extra_commands,
         )
 
         job_manager = JobManager(test=self._test)
@@ -260,6 +267,19 @@ class Simulator:
         )
 
         self._fill_list_of_generated_files()
+
+    def _get_corsika_file(self):
+        """
+        Get the CORSIKA input file if applicable (for sim_telarray simulations).
+
+        Returns
+        -------
+        Path, None
+            Path to the CORSIKA input file.
+        """
+        if self.simulation_software == "sim_telarray":
+            return self.args_dict.get("corsika_file", None)
+        return None
 
     def _guess_run_from_file(self, file):
         """
@@ -667,7 +687,7 @@ class Simulator:
 
         event_errors = []
         for file in self.get_file_list(file_type="corsika_output"):
-            _, _, shower_events = get_simulated_events(file)
+            shower_events, _ = eventio_handler.get_simulated_events(file)
 
             if shower_events != expected_mc_events:
                 if consistent(shower_events, expected_mc_events, tol=tolerance):
@@ -712,7 +732,7 @@ class Simulator:
         """
         event_errors = []
         for file in self.get_file_list(file_type="simtel_output"):
-            shower_events, mc_events, _ = get_simulated_events(file)
+            shower_events, mc_events = eventio_handler.get_simulated_events(file)
 
             if (shower_events, mc_events) != (expected_shower_events, expected_mc_events):
                 event_errors.append(

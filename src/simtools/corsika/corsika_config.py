@@ -7,7 +7,7 @@ import numpy as np
 from astropy import units as u
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.io import io_handler
+from simtools.io import eventio_handler, io_handler
 from simtools.model.model_parameter import ModelParameter
 
 
@@ -123,6 +123,11 @@ class CorsikaConfig:
         config = {}
         if self.dummy_simulations:
             config["USER_INPUT"] = self._corsika_configuration_for_dummy_simulations()
+        elif args_dict.get("corsika_file", None) is not None:
+            config["USER_INPUT"] = self._corsika_configuration_from_corsika_file(
+                args_dict["corsika_file"]
+            )
+            raise ValueError(f"{config['USER_INPUT']}")
         else:
             config["USER_INPUT"] = self._corsika_configuration_from_user_input(args_dict)
 
@@ -231,6 +236,53 @@ class CorsikaConfig:
             "PHIP": [0.0, 0.0],
             "VIEWCONE": [0.0, 0.0],
             "CSCAT": [1, 0.0, 10.0],
+        }
+
+    @staticmethod
+    def _corsika_configuration_from_corsika_file(corsika_input_file):
+        """
+        Get CORSIKA configuration run header of provided input files.
+
+        Reads configuration from the run and event headers from the CORSIKA input file
+        (unfortunately quite fine tuned to the pycorsikaio run and event
+        header implementation).
+
+        Parameters
+        ----------
+        corsika_input_file : str, path
+            Path to the CORSIKA input file.
+
+        Returns
+        -------
+        dict
+            Dictionary with CORSIKA parameters from input file.
+        """
+        run_header, event_header = eventio_handler.get_corsika_run_and_event_headers(
+            corsika_input_file
+        )
+
+        def to_float32(value):
+            """Convert value to numpy float32."""
+            return np.float32(value) if value is not None else 0.0
+
+        def to_int32(value):
+            """Convert value to numpy int32."""
+            return np.int32(value) if value is not None else 0
+
+        return {
+            "EVTNR": [to_int32(event_header[2])],
+            "NSHOW": [to_int32(run_header[21])],
+            "PRMPAR": [to_int32(event_header[2])],
+            "ESLOPE": [to_float32(run_header[6])],
+            "ERANGE": [to_float32(run_header[7]), to_float32(run_header[8])],
+            "THETAP": [to_float32(event_header[42]), to_float32(event_header[43])],
+            "PHIP": [to_float32(event_header[44]), to_float32(event_header[45])],
+            "VIEWCONE": [to_float32(event_header[106]), to_float32(event_header[107])],
+            "CSCAT": [
+                to_float32(event_header[59]),
+                to_float32(run_header[25]),
+                to_float32(run_header[26]),
+            ],
         }
 
     def _corsika_configuration_from_user_input(self, args_dict):

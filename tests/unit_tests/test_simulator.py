@@ -722,7 +722,7 @@ def test_verify_simulated_events_in_sim_telarray(shower_array_simulator, mocker)
     mock_file_list = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
     mocker.patch.object(shower_array_simulator, "get_file_list", return_value=mock_file_list)
 
-    mocker.patch("simtools.simulator.get_simulated_events", return_value=(100, 500, 0))
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(100, 500))
 
     shower_array_simulator._verify_simulated_events_in_sim_telarray(
         expected_shower_events=100, expected_mc_events=500
@@ -733,7 +733,7 @@ def test_verify_simulated_events_in_sim_telarray_shower_mismatch(shower_array_si
     mock_file_list = ["output_file1.simtel.zst"]
     mocker.patch.object(shower_array_simulator, "get_file_list", return_value=mock_file_list)
 
-    mocker.patch("simtools.simulator.get_simulated_events", return_value=(80, 500, 0))
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(80, 500))
 
     with pytest.raises(ValueError, match="Inconsistent event counts found"):
         shower_array_simulator._verify_simulated_events_in_sim_telarray(
@@ -745,7 +745,7 @@ def test_verify_simulated_events_in_sim_telarray_mc_mismatch(shower_array_simula
     mock_file_list = ["output_file1.simtel.zst"]
     mocker.patch.object(shower_array_simulator, "get_file_list", return_value=mock_file_list)
 
-    mocker.patch("simtools.simulator.get_simulated_events", return_value=(100, 400, 0))
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(100, 400))
 
     with pytest.raises(ValueError, match="Inconsistent event counts found"):
         shower_array_simulator._verify_simulated_events_in_sim_telarray(
@@ -784,7 +784,7 @@ def test_verify_simulations_with_reduced_event_lists(shower_array_simulator, moc
 def test_verify_simulated_events_corsika(shower_simulator, mocker):
     mock_file_list = ["corsika_output_file1.zst", "corsika_output_file2.zst"]
     mocker.patch.object(shower_simulator, "get_file_list", return_value=mock_file_list)
-    mocker.patch("simtools.simulator.get_simulated_events", return_value=(0, 0, 100))
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(100, 0))
 
     shower_simulator._verify_simulated_events_corsika(expected_mc_events=100)
 
@@ -792,7 +792,7 @@ def test_verify_simulated_events_corsika(shower_simulator, mocker):
 def test_verify_simulated_events_corsika_mismatch(shower_simulator, mocker):
     mock_file_list = ["corsika_output_file1.zst"]
     mocker.patch.object(shower_simulator, "get_file_list", return_value=mock_file_list)
-    mocker.patch("simtools.simulator.get_simulated_events", return_value=(0, 0, 80))
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(80, 0))
 
     with pytest.raises(ValueError, match="Inconsistent event counts found in CORSIKA output"):
         shower_simulator._verify_simulated_events_corsika(expected_mc_events=100)
@@ -801,7 +801,7 @@ def test_verify_simulated_events_corsika_mismatch(shower_simulator, mocker):
 def test_verify_simulated_events_corsika_tolerance(shower_simulator, mocker, caplog):
     mock_file_list = ["corsika_output_file1.zst"]
     mocker.patch.object(shower_simulator, "get_file_list", return_value=mock_file_list)
-    mocker.patch("simtools.simulator.get_simulated_events", return_value=(0, 0, 9999))
+    mocker.patch("simtools.simulator.get_simulated_events", return_value=(9999, 0))
 
     with caplog.at_level(logging.WARNING):
         shower_simulator._verify_simulated_events_corsika(expected_mc_events=10000, tolerance=0.001)
