@@ -5,6 +5,7 @@ import pathlib
 import re
 
 import pytest
+from astropy import units as u
 
 logger = logging.getLogger()
 
@@ -132,6 +133,11 @@ def test_get_autoinputs_command_flat_atmosphere(corsika_runner_mock_array_model,
 def test_get_autoinputs_command_curved_atmosphere(corsika_runner_mock_array_model, caplog):
     corsika_runner_mock_array_model.corsika_config.zenith_angle = 70
     corsika_runner_mock_array_model.corsika_config.curved_atmosphere_min_zenith_angle = 65
+    # Trigger a re-evaluation of use_curved_atmosphere
+    corsika_runner_mock_array_model.corsika_config.use_curved_atmosphere = {
+        "zenith_angle": 70 * u.deg,
+        "curved_atmosphere_min_zenith_angle": 65 * u.deg,
+    }
     with caplog.at_level("DEBUG"):
         autoinputs_command = corsika_runner_mock_array_model._get_autoinputs_command(
             run_number=3, input_tmp_file="tmp_file"
