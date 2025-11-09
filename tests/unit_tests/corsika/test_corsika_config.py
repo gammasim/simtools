@@ -490,7 +490,7 @@ def test_generate_corsika_input_file_with_test_seeds(corsika_config_mock_array_m
 
 def test_get_corsika_config_file_name(corsika_config_mock_array_model, model_version):
     file_name = (
-        "proton_run000001_za020deg_azm000deg_cone0-10_South_"
+        "proton_run000001_za20deg_azm000deg_cone0-10_South_"
         f"test_layout_{model_version}_test-corsika-config"
     )
 
@@ -512,7 +512,7 @@ def test_get_corsika_config_file_name(corsika_config_mock_array_model, model_ver
     # that is the way we get the run number later in the CORSIKA input file with zero padding.
     output_file_name = file_name.replace("run000001", "runXXXXXX")
     assert corsika_config_mock_array_model.get_corsika_config_file_name("output_generic") == (
-        f"{output_file_name}.zst"
+        f"{output_file_name}.corsika.zst"
     )
     assert (
         corsika_config_mock_array_model.get_corsika_config_file_name("multipipe")
@@ -526,8 +526,8 @@ def test_set_output_file_and_directory(corsika_config_mock_array_model, model_ve
     cc = corsika_config_mock_array_model
     output_file = cc.set_output_file_and_directory()
     assert str(output_file) == (
-        "proton_runXXXXXX_za020deg_azm000deg_cone0-10_South_test_layout_"
-        f"{model_version}_test-corsika-config.zst"
+        "proton_runXXXXXX_za20deg_azm000deg_cone0-10_South_test_layout_"
+        f"{model_version}_test-corsika-config.corsika.zst"
     )
     assert isinstance(cc.config_file_path, pathlib.Path)
 
@@ -728,3 +728,18 @@ def test_get_matching_grammage_values(corsika_config_mock_array_model):
         )
         == []
     )
+
+
+def test_use_curved_atmosphere(corsika_config_mock_array_model):
+    corsika_config_mock_array_model.zenith_angle = 95
+    corsika_config_mock_array_model.curved_atmosphere_min_zenith_angle = 90
+    assert corsika_config_mock_array_model.use_curved_atmosphere()
+
+    corsika_config_mock_array_model.zenith_angle = 85
+    assert not corsika_config_mock_array_model.use_curved_atmosphere()
+
+    corsika_config_mock_array_model.zenith_angle = 90
+    assert not corsika_config_mock_array_model.use_curved_atmosphere()
+
+    corsika_config_mock_array_model.curved_atmosphere_min_zenith_angle = None
+    assert not corsika_config_mock_array_model.use_curved_atmosphere()
