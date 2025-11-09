@@ -636,7 +636,7 @@ def test_plot_mirror_layout_mst_mirror_ids(tmp_path):
 
         plot_mirrors.plot_mirror_layout(
             mirrors=mock_mirrors,
-            mirror_file_path="/tmp/test_mirror_list.dat",
+            mirror_file_path=tmp_path / "test_mirror_list.dat",
             telescope_model_name="MSTN-01",
         )
 
