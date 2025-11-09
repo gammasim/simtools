@@ -337,12 +337,12 @@ def test_validate_reference_output_file(mocker, output_path, test_path):
 
 def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check_output):
     config = {
-        "configuration": {"output_path": output_path, "data_directory": "/path/to/data"},
+        "configuration": {"output_path": output_path},
         "integration_tests": [{"expected_output": "expected_output"}],
     }
     integration_test = [
         {
-            "path_descriptor": "data_directory",
+            "path_descriptor": "output_path",
             "file": "output_file.simtel.zst",
             "expected_output": {},
         }
@@ -352,9 +352,9 @@ def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check
 
     mock_path_exists.assert_called()
     mock_check_output.assert_called_once_with(
-        Path(config["configuration"]["data_directory"]).joinpath(integration_test[0]["file"]),
+        Path(config["configuration"]["output_path"]).joinpath(integration_test[0]["file"]),
         {
-            "path_descriptor": "data_directory",
+            "path_descriptor": "output_path",
             "file": "output_file.simtel.zst",
             "expected_output": {},
         },
@@ -371,11 +371,11 @@ def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check
 
 def test_validate_output_path_and_file_log_archive(output_path, mock_path_exists):
     config = {
-        "configuration": {"output_path": output_path, "data_directory": "/path/to/data"},
+        "configuration": {"output_path": output_path},
     }
     integration_test = [
         {
-            "path_descriptor": "data_directory",
+            "path_descriptor": "output_path",
             "file": "test.log_hist.tar.gz",
             "expected_log_output": {"pattern": ["test"]},
         }

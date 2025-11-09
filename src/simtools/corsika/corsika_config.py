@@ -47,6 +47,7 @@ class CorsikaConfig:
         self.label = label
         self.zenith_angle = None
         self.azimuth_angle = None
+        self.curved_atmosphere_min_zenith_angle = None
         self._run_number = None
         self.config_file_path = None
         self.primary_particle = args_dict  # see setter for primary_particle
@@ -111,6 +112,9 @@ class CorsikaConfig:
         self.is_file_updated = False
         self.azimuth_angle = int(args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value)
         self.zenith_angle = int(args_dict.get("zenith_angle", 0.0 * u.deg).to("deg").value)
+        self.curved_atmosphere_min_zenith_angle = (
+            args_dict.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
+        )
 
         self._logger.debug(
             f"Setting CORSIKA parameters from database ({args_dict['model_version']})"
@@ -146,6 +150,12 @@ class CorsikaConfig:
         config["IACT_PARAMETERS"] = self._corsika_configuration_iact_parameters(parameters_from_db)
 
         return config
+
+    def use_curved_atmosphere(self):
+        """Check if zenith angle condition for curved atmosphere usage for CORSIKA is met."""
+        if self.curved_atmosphere_min_zenith_angle is not None:
+            return self.zenith_angle > self.curved_atmosphere_min_zenith_angle
+        return False
 
     def assert_corsika_configurations_match(self, model_versions, db_config=None):
         """
@@ -298,7 +308,8 @@ class CorsikaConfig:
                 parameters_from_db["corsika_starting_grammage"]
             )
         ]
-        parameters["TSTART"] = ["T"]
+        if not self.use_curved_atmosphere():
+            parameters["TSTART"] = ["T"]
         parameters["ECUTS"] = self._input_config_corsika_particle_kinetic_energy_cutoff(
             parameters_from_db["corsika_particle_kinetic_energy_cutoff"]
         )
@@ -674,7 +685,7 @@ class CorsikaConfig:
 
         base_name = (
             f"{self.primary_particle.name}_{run_number_in_file_name}"
-            f"za{int(self.get_config_parameter('THETAP')[0]):03}deg_"
+            f"za{int(self.get_config_parameter('THETAP')[0]):02}deg_"
             f"azm{self.azimuth_angle:03}deg{view_cone}_"
             f"{self.array_model.site}_{self.array_model.layout_name}_"
             f"{self.array_model.model_version}{file_label}"
@@ -685,7 +696,7 @@ class CorsikaConfig:
         if file_type == "config":
             return f"corsika_config_{base_name}.input"
         if file_type == "output_generic":
-            return f"{base_name}.zst"
+            return f"{base_name}.corsika.zst"
         if file_type == "multipipe":
             return f"multi_cta-{self.array_model.site}-{self.array_model.layout_name}.cfg"
 

@@ -64,13 +64,15 @@ def test_get_version_string_success(
     get_build_options_literal,
 ):
     monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
+    monkeypatch.setenv("SIMTOOLS_CORSIKA_PATH", fake_path)
 
     mock_sim_telarray_result = mock.Mock()
     mock_sim_telarray_result.stdout = "Release: 2024.271.0 from 2024-09-27"
     mock_sim_telarray_result.stderr = ""
 
     mock_corsika_process = mock.Mock()
-    mock_corsika_process.stdout.readline.side_effect = [
+    # Iterable stdout as expected by get_corsika_version
+    mock_corsika_process.stdout = [
         corsika_version_string,
         corsika_request_for_input,
         "",
@@ -184,7 +186,8 @@ def test_get_corsika_version_success(
 ):
     monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
     mock_process = mock.Mock()
-    mock_process.stdout.readline.side_effect = [
+    # Iterable stdout for version then steering prompt
+    mock_process.stdout = [
         corsika_version_string,
         corsika_request_for_input,
         "",
@@ -213,7 +216,7 @@ def test_get_corsika_version_no_version(
 ):
     monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
     mock_process = mock.Mock()
-    mock_process.stdout.readline.side_effect = [
+    mock_process.stdout = [
         "Some other output\n",
         corsika_request_for_input,
         "",
@@ -226,7 +229,7 @@ def test_get_corsika_version_no_version(
 
             assert "Getting the CORSIKA version from the build options." in caplog.text
 
-            assert dependencies.get_corsika_version("podman run") == "7.7"
+            assert dependencies.get_corsika_version(["podman", "run"]) == "7.7"
 
 
 def test_get_corsika_version_no_build_opts(
@@ -239,7 +242,7 @@ def test_get_corsika_version_no_build_opts(
 ):
     monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
     mock_process = mock.Mock()
-    mock_process.stdout.readline.side_effect = [
+    mock_process.stdout = [
         "Some other output\n",
         corsika_request_for_input,
         "",
@@ -262,17 +265,14 @@ def test_get_corsika_version_empty_line(
     # process has finished.
     monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
     mock_process = mock.Mock()
-    mock_process.stdout.readline.side_effect = [
-        "",  # Empty line first
-        corsika_version_string,  # This should not be reached due to break
+    # Simulate process finishing immediately with no useful output
+    mock_process.stdout = [
+        "",  # Empty line first (signals no version)
     ]
 
     with mock.patch(subprocess_popen, return_value=mock_process):
         with mock.patch(get_build_options_literal, return_value={"corsika_version": "7.7"}):
             assert dependencies.get_corsika_version() == "7.7"
-
-    # Verify readline was called only once before breaking
-    assert mock_process.stdout.readline.call_count == 1
 
 
 def test_get_build_options_no_env_var(monkeypatch):
