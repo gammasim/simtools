@@ -10,17 +10,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import PatchCollection
 
-from simtools.db import db_handler
 from simtools.io import io_handler
 from simtools.model.mirrors import Mirrors
+from simtools.model.telescope_model import TelescopeModel
 from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
 
-# Common style constants
 PATCH_STYLE = {"alpha": 0.8, "edgecolor": "black", "facecolor": "dodgerblue"}
 LABEL_STYLE = {"ha": "center", "va": "center", "fontsize": 10, "color": "white", "weight": "bold"}
 STATS_BOX_STYLE = {"boxstyle": "round", "facecolor": "wheat", "alpha": 0.8}
+OBSERVER_TEXT = "for an observer facing the mirrors"
 
 
 def _detect_segmentation_type(data_file_path):
@@ -44,7 +44,7 @@ def _detect_segmentation_type(data_file_path):
                 continue
             if line_lower.startswith("ring"):
                 return "ring"
-            if line_lower.startswith(("hex", "circular", "yhex")):
+            if line_lower.startswith(("hex", "yhex")):
                 return "shape"
     return "standard"
 
@@ -73,21 +73,21 @@ def plot(config, output_file, db_config=None):
     None
         The function saves the plot to the specified output file.
     """
-    db = db_handler.DatabaseHandler(db_config=db_config)
-
-    parameters = db.get_model_parameter(
-        config["parameter"],
-        config["site"],
-        config.get("telescope"),
-        parameter_version=config.get("parameter_version"),
+    tel_model = TelescopeModel(
+        site=config["site"],
+        telescope_name=config["telescope"],
         model_version=config.get("model_version"),
+        db_config=db_config,
+        ignore_software_version=True,
     )
 
     output_path = io_handler.IOHandler().get_output_directory()
 
-    db.export_model_files(parameters=parameters, dest=output_path)
+    parameter_name = config["parameter"]
+    parameter_value = tel_model.get_parameter_value(parameter_name)
+    tel_model.export_model_files(destination_path=output_path)
 
-    mirror_file = parameters[config["parameter"]]["value"]
+    mirror_file = parameter_value
     data_file_path = Path(output_path / mirror_file)
 
     parameter_type = config["parameter"]
@@ -100,35 +100,32 @@ def plot(config, output_file, db_config=None):
                 data_file_path=data_file_path,
                 telescope_model_name=config["telescope"],
                 parameter_type=parameter_type,
-                title=config.get("title"),
             )
         elif segmentation_type == "shape":
             fig = plot_mirror_shape_segmentation(
                 data_file_path=data_file_path,
                 telescope_model_name=config["telescope"],
                 parameter_type=parameter_type,
-                title=config.get("title"),
             )
         else:
             fig = plot_mirror_segmentation(
                 data_file_path=data_file_path,
                 telescope_model_name=config["telescope"],
                 parameter_type=parameter_type,
-                title=config.get("title"),
             )
     else:
         mirrors = Mirrors(mirror_list_file=data_file_path)
         fig = plot_mirror_layout(
             mirrors=mirrors,
+            mirror_file_path=data_file_path,
             telescope_model_name=config["telescope"],
-            title=config.get("title"),
         )
 
     visualize.save_figure(fig, output_file)
     plt.close(fig)
 
 
-def plot_mirror_layout(mirrors, telescope_model_name, title=None):
+def plot_mirror_layout(mirrors, mirror_file_path, telescope_model_name):
     """
     Plot the mirror panel layout from a Mirrors object.
 
@@ -137,10 +134,10 @@ def plot_mirror_layout(mirrors, telescope_model_name, title=None):
     mirrors : Mirrors
         Mirrors object containing mirror panel data including positions,
         diameters, focal lengths, and shape types
+    mirror_file_path : Path or str
+        Path to the mirror list file
     telescope_model_name : str
         Name of the telescope model (e.g., "LSTN-01", "MSTN-01")
-    title : str, optional
-        Custom title for the plot. If None, no title is displayed
 
     Returns
     -------
@@ -153,6 +150,7 @@ def plot_mirror_layout(mirrors, telescope_model_name, title=None):
 
     x_pos = mirrors.mirror_table["mirror_x"].to("cm").value
     y_pos = mirrors.mirror_table["mirror_y"].to("cm").value
+    x_pos, y_pos = y_pos, -x_pos
     diameter = mirrors.mirror_diameter.to("cm").value
     shape_type = mirrors.shape_type
     focal_lengths = mirrors.mirror_table["focal_length"].to("cm").value
@@ -162,6 +160,11 @@ def plot_mirror_layout(mirrors, telescope_model_name, title=None):
         if "mirror_panel_id" in mirrors.mirror_table.colnames
         else list(range(len(x_pos)))
     )
+
+    # MST mirrors are numbered from 1 at the bottom to N at the top
+    if telescope_model_name and "MST" in telescope_model_name.upper():
+        n_mirrors = len(mirror_ids)
+        mirror_ids = [n_mirrors - mid for mid in mirror_ids]
 
     patches, colors = _create_mirror_patches(x_pos, y_pos, diameter, shape_type, focal_lengths)
 
@@ -176,23 +179,17 @@ def plot_mirror_layout(mirrors, telescope_model_name, title=None):
 
     _add_mirror_labels(ax, x_pos, y_pos, mirror_ids, max_labels=20)
 
-    _configure_mirror_plot(
-        ax,
-        x_pos,
-        y_pos,
-        title=title,
-        telescope_model_name=telescope_model_name,
-    )
+    _configure_mirror_plot(ax, x_pos, y_pos)
 
     cbar = plt.colorbar(collection, ax=ax, pad=0.02)
     cbar.set_label("Focal length [cm]", fontsize=14)
 
-    _add_mirror_statistics(ax, mirrors, x_pos, y_pos, diameter)
+    _add_mirror_statistics(ax, mirrors, mirror_file_path, x_pos, y_pos, diameter)
 
     return fig
 
 
-def plot_mirror_segmentation(data_file_path, telescope_model_name, parameter_type, title=None):
+def plot_mirror_segmentation(data_file_path, telescope_model_name, parameter_type):
     """
     Plot mirror segmentation layout from a segmentation file.
 
@@ -206,8 +203,6 @@ def plot_mirror_segmentation(data_file_path, telescope_model_name, parameter_typ
     parameter_type : str
         Type of segmentation parameter (e.g., "primary_mirror_segmentation",
         "secondary_mirror_segmentation")
-    title : str, optional
-        Custom title for the plot. If None, no title is displayed
 
     Returns
     -------
@@ -222,6 +217,7 @@ def plot_mirror_segmentation(data_file_path, telescope_model_name, parameter_typ
 
     x_pos = segmentation_data["x"]
     y_pos = segmentation_data["y"]
+    x_pos, y_pos = y_pos, -x_pos
     diameter = segmentation_data["diameter"]
     shape_type = segmentation_data["shape_type"]
     segment_ids = segmentation_data["segment_ids"]
@@ -239,13 +235,7 @@ def plot_mirror_segmentation(data_file_path, telescope_model_name, parameter_typ
 
     _add_mirror_labels(ax, x_pos, y_pos, segment_ids, max_labels=30)
 
-    _configure_mirror_plot(
-        ax,
-        x_pos,
-        y_pos,
-        title=title,
-        telescope_model_name=telescope_model_name,
-    )
+    _configure_mirror_plot(ax, x_pos, y_pos)
 
     cbar = plt.colorbar(collection, ax=ax, pad=0.02)
     cbar.set_label("Segment ID", fontsize=14)
@@ -337,21 +327,16 @@ def _extract_segment_id(parts, default_id):
 
 
 def _create_single_mirror_patch(x, y, diameter, shape_type):
-    """Create a single matplotlib patch for a mirror panel."""
-    if shape_type == 0:
-        return mpatches.Circle((x, y), radius=diameter / 2)
-    if shape_type in (1, 3):
-        orientation = 0 if shape_type == 1 else np.pi / 2
-        return mpatches.RegularPolygon(
-            (x, y),
-            numVertices=6,
-            radius=diameter / np.sqrt(3),
-            orientation=orientation,
-        )
-    return mpatches.Rectangle(
-        (x - diameter / 2, y - diameter / 2),
-        width=diameter,
-        height=diameter,
+    """Create a single matplotlib patch for a mirror panel (hexagonal only)."""
+    base_orientation = 0 if shape_type == 1 else np.pi / 2
+    # Rotate hexagon counter-clockwise to compensate for clockwise coordinate rotation
+    orientation = base_orientation - np.pi / 2
+
+    return mpatches.RegularPolygon(
+        (x, y),
+        numVertices=6,
+        radius=diameter / np.sqrt(3),
+        orientation=orientation,
     )
 
 
@@ -373,7 +358,7 @@ def _add_mirror_labels(ax, x_pos, y_pos, mirror_ids, max_labels=20):
             )
 
 
-def _configure_mirror_plot(ax, x_pos, y_pos, title, telescope_model_name):
+def _configure_mirror_plot(ax, x_pos, y_pos):
     """Add titles, labels, and limits."""
     ax.set_aspect("equal")
 
@@ -393,80 +378,80 @@ def _configure_mirror_plot(ax, x_pos, y_pos, title, telescope_model_name):
     ax.set_xlim(x_min - x_padding, x_max + x_padding)
     ax.set_ylim(y_min - y_padding, y_max + y_padding)
 
+    plt.xlabel("X position [cm]", fontsize=14)
+    plt.ylabel("Y position [cm]", fontsize=14)
     plt.grid(True, alpha=0.3)
-    ax.set_axisbelow(True)
+    plt.tick_params(axis="both", which="major", labelsize=12)
 
-    plt.xlabel("X position [cm]", fontsize=16)
-    plt.ylabel("Y position [cm]", fontsize=16)
-    if title:
-        ax.set_title(title, fontsize=18, pad=20)
-    plt.tick_params(axis="both", which="major", labelsize=14)
+    ax.text(
+        0.02,
+        0.02,
+        OBSERVER_TEXT,
+        transform=ax.transAxes,
+        fontsize=10,
+        ha="left",
+        va="bottom",
+        style="italic",
+        color="black",
+    )
 
-    _add_camera_frame_indicator(ax, telescope_model_name)
+
+def _extract_float_after_keyword(line, keyword):
+    """Extract first float value after keyword in line."""
+    if keyword not in line:
+        return None
+    try:
+        part = line.split(keyword, 1)[1] if keyword == "=" else line.split(keyword)[-1]
+        return float(part.strip().split()[0])
+    except (ValueError, IndexError):
+        return None
 
 
-def _add_camera_frame_indicator(ax, telescope_model_name=None):
-    """Add camera frame coordinate system indicator to the plot."""
-    if telescope_model_name and "MST" in telescope_model_name.upper():
-        x_label = "$North$"
-        y_label = "$West$"
-    else:
-        x_label = "$X_{cam}$"
-        y_label = "$Y_{cam}$"
-
-    arrow_props = {"arrowstyle": "->", "lw": 2.0, "color": "darkblue"}
-    text_props = {
-        "fontsize": 12,
-        "color": "darkblue",
-        "weight": "bold",
-        "ha": "center",
-        "va": "center",
-    }
-
-    x_lim = ax.get_xlim()
-    y_lim = ax.get_ylim()
-    arrow_length = min(x_lim[1] - x_lim[0], y_lim[1] - y_lim[0]) * 0.08
-
-    x_origin = x_lim[1] - (x_lim[1] - x_lim[0]) * 0.15
-    y_origin = y_lim[0] + (y_lim[1] - y_lim[0]) * 0.12
-
-    arrows = [
-        (0.0, -arrow_length, x_label, 1.3),  # Down arrow
-        (arrow_length, 0.0, y_label, 1.5),  # Right arrow
+def _read_mirror_file_metadata(mirror_file_path):
+    """Read metadata from mirror .dat file header (Rmax and total surface area)."""
+    metadata = {}
+    patterns = [
+        (("Total surface area:", "Total mirror surface area:"), ":", "total_surface_area"),
+        (("Rmax =", "Rmax="), "=", "rmax"),
+        (("mirrors are inside a radius of",), "of", "rmax"),
     ]
 
-    for dx, dy, label, text_mult in arrows:
-        ax.annotate(
-            "",
-            xy=(x_origin + dx, y_origin + dy),
-            xytext=(x_origin, y_origin),
-            arrowprops=arrow_props,
-        )
-        ax.text(x_origin + dx * text_mult, y_origin + dy * 1.3, label, **text_props)
+    try:
+        with open(mirror_file_path, encoding="utf-8") as f:
+            for line in f:
+                if not line.startswith("#"):
+                    break
+                for triggers, keyword, key in patterns:
+                    if key not in metadata and any(t in line for t in triggers):
+                        if (val := _extract_float_after_keyword(line, keyword)) is not None:
+                            metadata[key] = val
+                            break
+    except OSError as e:
+        logger.warning(f"Could not read mirror file metadata: {e}")
+
+    return metadata
 
 
-def _add_mirror_statistics(ax, mirrors, x_pos, y_pos, diameter):
+def _add_mirror_statistics(ax, mirrors, mirror_file_path, x_pos, y_pos, diameter):
     """Add mirror statistics text to the plot."""
     n_mirrors = mirrors.number_of_mirrors
 
-    max_radius = np.sqrt(np.max(x_pos**2 + y_pos**2)) / 100.0
-    mean_outer_edge_radius = (
-        _calculate_mean_outer_edge_radius(x_pos, y_pos, diameter, mirrors.shape_type) / 100.0
-    )
+    metadata = _read_mirror_file_metadata(mirror_file_path)
+    max_radius = metadata.get("rmax")
+    total_area = metadata.get("total_surface_area")
 
-    panel_area = np.pi * (diameter / 200.0) ** 2
-    if mirrors.shape_type in (1, 3):
+    # Calculate values if not available from file
+    if max_radius is None:
+        max_radius = np.sqrt(np.max(x_pos**2 + y_pos**2)) / 100.0
+
+    if total_area is None:
         panel_area = 3 * np.sqrt(3) / 2 * (diameter / 200.0) ** 2
-    elif mirrors.shape_type == 2:
-        panel_area = (diameter / 100.0) ** 2
-
-    total_area = n_mirrors * panel_area
+        total_area = n_mirrors * panel_area
 
     stats_text = (
         f"Number of mirrors: {n_mirrors}\n"
         f"Mirror diameter: {diameter:.1f} cm\n"
         f"Max radius: {max_radius:.2f} m\n"
-        f"Mean outer edge radius: {mean_outer_edge_radius:.2f} m\n"
         f"Total surface area: {total_area:.2f} $m^{2}$"
     )
 
@@ -479,22 +464,6 @@ def _add_mirror_statistics(ax, mirrors, x_pos, y_pos, diameter):
         verticalalignment="top",
         bbox=STATS_BOX_STYLE,
     )
-
-
-def _get_radius_offset(diameter, shape_type):
-    """Get the radius offset for a given shape type."""
-    if shape_type == 0:
-        return diameter / 2
-    if shape_type in (1, 3):
-        return diameter / np.sqrt(3)
-    return diameter / np.sqrt(2)
-
-
-def _calculate_mean_outer_edge_radius(x_pos, y_pos, diameter, shape_type):
-    """Calculate the mean radius of the outer edge of the mirror array."""
-    radius_offset = _get_radius_offset(diameter, shape_type)
-    radii = np.hypot(x_pos, y_pos) + radius_offset
-    return np.mean(radii)
 
 
 def _read_ring_segmentation_data(data_file_path):
@@ -560,7 +529,7 @@ def _add_ring_radius_label(ax, angle, radius, label_text):
     )
 
 
-def plot_mirror_ring_segmentation(data_file_path, telescope_model_name, parameter_type, title=None):
+def plot_mirror_ring_segmentation(data_file_path, telescope_model_name, parameter_type):
     """
     Plot mirror ring segmentation layout.
 
@@ -574,8 +543,6 @@ def plot_mirror_ring_segmentation(data_file_path, telescope_model_name, paramete
     parameter_type : str
         Type of segmentation parameter (e.g., "primary_mirror_segmentation",
         "secondary_mirror_segmentation")
-    title : str, optional
-        Custom title for the plot. If None, no title is displayed
 
     Returns
     -------
@@ -657,9 +624,18 @@ def plot_mirror_ring_segmentation(data_file_path, telescope_model_name, paramete
         bbox=STATS_BOX_STYLE,
     )
 
-    if title:
-        plt.subplots_adjust(top=0.85)
-        ax.set_title(title, fontsize=18, y=1.10)
+    ax.text(
+        0.02,
+        0.02,
+        OBSERVER_TEXT,
+        transform=ax.transAxes,
+        fontsize=10,
+        ha="left",
+        va="bottom",
+        style="italic",
+        color="black",
+    )
+
     plt.tight_layout()
 
     return fig
@@ -682,10 +658,7 @@ def _parse_shape_line(line_stripped, shape_segments, segment_ids, current_segmen
     """Parse and append a single shape segmentation line."""
     entries = line_stripped.split()
 
-    if (
-        any(line_stripped.lower().startswith(s) for s in ["hex", "circular", "yhex"])
-        and len(entries) >= 5
-    ):
+    if any(line_stripped.lower().startswith(s) for s in ["hex", "yhex"]) and len(entries) >= 5:
         shape_segments.append(
             {
                 "shape": entries[0].lower(),
@@ -734,7 +707,7 @@ def _add_segment_label(ax, x, y, label):
 
 def _create_shape_patches(ax, shape_segments, segment_ids):
     """
-    Create patches for shape segments (hex or circular).
+    Create patches for shape segments (hexagons).
 
     Parameters
     ----------
@@ -753,19 +726,16 @@ def _create_shape_patches(ax, shape_segments, segment_ids):
     patches, maximum_radius = [], 0
 
     for i_seg, seg in enumerate(shape_segments):
-        x, y, diam, rot, shape = seg["x"], seg["y"], seg["diameter"], seg["rotation"], seg["shape"]
+        x, y, diam, rot = seg["x"], seg["y"], seg["diameter"], seg["rotation"]
         maximum_radius = max(maximum_radius, abs(x) + diam / 2, abs(y) + diam / 2)
 
-        if "hex" in shape:
-            patch = mpatches.RegularPolygon(
-                (x, y),
-                numVertices=6,
-                radius=diam / np.sqrt(3),
-                orientation=np.deg2rad(rot),
-                **PATCH_STYLE,
-            )
-        else:
-            patch = mpatches.Circle((x, y), radius=diam / 2, **PATCH_STYLE)
+        patch = mpatches.RegularPolygon(
+            (x, y),
+            numVertices=6,
+            radius=diam / np.sqrt(3),
+            orientation=np.deg2rad(rot),
+            **PATCH_STYLE,
+        )
 
         patches.append(patch)
         label = segment_ids[i_seg] if i_seg < len(segment_ids) else i_seg + 1
@@ -774,9 +744,7 @@ def _create_shape_patches(ax, shape_segments, segment_ids):
     return patches, maximum_radius
 
 
-def plot_mirror_shape_segmentation(
-    data_file_path, telescope_model_name, parameter_type, title=None
-):
+def plot_mirror_shape_segmentation(data_file_path, telescope_model_name, parameter_type):
     """
     Plot mirror shape segmentation layout.
 
@@ -784,14 +752,12 @@ def plot_mirror_shape_segmentation(
     ----------
     data_file_path : Path or str
         Path to the segmentation data file containing explicit shape definitions
-        (hex, circular, yhex) with positions, diameters, and rotations
+        (hex, yhex) with positions, diameters, and rotations
     telescope_model_name : str
         Name of the telescope model (e.g., "LSTN-01", "MSTN-design")
     parameter_type : str
         Type of segmentation parameter (e.g., "primary_mirror_segmentation",
         "secondary_mirror_segmentation")
-    title : str, optional
-        Custom title for the plot. If None, no title is displayed
 
     Returns
     -------
@@ -801,6 +767,13 @@ def plot_mirror_shape_segmentation(
     logger.info(f"Plotting shape {parameter_type} for {telescope_model_name}")
 
     shape_segments, segment_ids = _read_shape_segmentation_file(data_file_path)
+
+    # Apply 90 degrees clockwise rotation: (x, y) -> (y, -x)
+    for seg in shape_segments:
+        x, y = seg["x"], seg["y"]
+        seg["x"], seg["y"] = y, -x
+        seg["rotation"] = seg["rotation"] - 90
+
     fig, ax = plt.subplots(figsize=(10, 10))
 
     # Create patches for shape segments
@@ -809,20 +782,27 @@ def plot_mirror_shape_segmentation(
     collection = PatchCollection(all_patches, match_original=True)
     ax.add_collection(collection)
 
-    # Configure plot
     ax.set_aspect("equal")
     padding = maximum_radius * 0.1 if maximum_radius > 0 else 100
     ax.set_xlim(-maximum_radius - padding, maximum_radius + padding)
     ax.set_ylim(-maximum_radius - padding, maximum_radius + padding)
 
+    plt.xlabel("X position [cm]", fontsize=14)
+    plt.ylabel("Y position [cm]", fontsize=14)
     plt.grid(True, alpha=0.3)
-    ax.set_axisbelow(True)
-    plt.xlabel("X position [cm]", fontsize=16)
-    plt.ylabel("Y position [cm]", fontsize=16)
-    plt.tick_params(axis="both", which="major", labelsize=14)
+    plt.tick_params(axis="both", which="major", labelsize=12)
 
-    if title:
-        ax.set_title(title, fontsize=18, pad=20)
+    ax.text(
+        0.02,
+        0.02,
+        OBSERVER_TEXT,
+        transform=ax.transAxes,
+        fontsize=10,
+        ha="left",
+        va="bottom",
+        style="italic",
+        color="black",
+    )
 
     total_segments = len(shape_segments)
     if segment_ids and total_segments > 0:
