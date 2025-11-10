@@ -143,7 +143,6 @@ def test_assert_model_parameters():
         ]
 
         result = _assert_model_parameters(metadata, model_mock)
-        print("AAAAA", result)
         assert len(result) == 0
 
 
