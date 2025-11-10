@@ -343,8 +343,7 @@ def test_initialize_array_models_with_single_version(
     assert len(array_models) == 1
     assert array_models[0] is not None
     assert array_models[0] == mock_array_model
-    assert len(corsika_configurations) == 1
-    assert corsika_configurations[0] is not None
+    assert corsika_configurations is not None
 
 
 def test_initialize_from_tool_configuration_with_corsika_file(shower_simulator, mocker):
@@ -377,7 +376,8 @@ def test_initialize_array_models_with_multiple_versions(shower_simulator, mocker
 
     mocker.patch("simtools.simulator.ArrayModel", side_effect=mock_models)
     shower_simulator.args_dict["model_version"] = model_versions
-    array_models = shower_simulator._initialize_array_models()
+    shower_simulator.model_version = model_versions
+    array_models, _ = shower_simulator._initialize_array_models()
     assert len(array_models) == 2
     for i, model_version in enumerate(model_versions):
         assert array_models[i] is not None
@@ -772,6 +772,11 @@ def test_verify_simulations(shower_array_simulator, mocker):
     shower_array_simulator.args_dict["nshow"] = 100
     shower_array_simulator.args_dict["core_scatter"] = [5]
 
+    mock_corsika_config = mocker.MagicMock()
+    mock_corsika_config.shower_events = 100
+    mock_corsika_config.mc_events = 500
+    shower_array_simulator.corsika_configurations = [mock_corsika_config]
+
     mock_verify_simtel = mocker.patch.object(
         shower_array_simulator, "_verify_simulated_events_in_sim_telarray"
     )
@@ -785,6 +790,11 @@ def test_verify_simulations_with_reduced_event_lists(shower_array_simulator, moc
     shower_array_simulator.args_dict["nshow"] = 100
     shower_array_simulator.args_dict["core_scatter"] = [5]
     shower_array_simulator.args_dict["save_reduced_event_lists"] = True
+
+    mock_corsika_config = mocker.MagicMock()
+    mock_corsika_config.shower_events = 100
+    mock_corsika_config.mc_events = 500
+    shower_array_simulator.corsika_configurations = [mock_corsika_config]
 
     mocker.patch.object(shower_array_simulator, "_verify_simulated_events_in_sim_telarray")
     mock_verify_reduced = mocker.patch.object(
@@ -828,8 +838,31 @@ def test_verify_simulations_corsika(shower_simulator, mocker):
     shower_simulator.args_dict["nshow"] = 100
     shower_simulator.args_dict["core_scatter"] = [5]
 
+    mock_corsika_config = mocker.MagicMock()
+    mock_corsika_config.shower_events = 100
+    mock_corsika_config.mc_events = 500
+    shower_simulator.corsika_configurations = mock_corsika_config
+
     mock_verify_corsika = mocker.patch.object(shower_simulator, "_verify_simulated_events_corsika")
 
     shower_simulator.verify_simulations()
 
     mock_verify_corsika.assert_called_once_with(500)
+
+
+def test_get_seed_for_random_instrument_instances_with_unknown_site(shower_simulator):
+    shower_simulator.sim_telarray_seeds["seed"] = None
+    shower_simulator.site = "UnknownSite"
+    seed = shower_simulator._get_seed_for_random_instrument_instances(
+        shower_simulator.sim_telarray_seeds["seed"],
+        model_version="6.0.1",
+        zenith_angle=20.0,
+        azimuth_angle=180.0,
+    )
+    assert seed == 600010000000 + 1000000 + 20 * 1000 + 180
+
+
+def test_get_first_corsika_config_error(shower_simulator):
+    shower_simulator.corsika_configurations = []
+    with pytest.raises(ValueError, match="CORSIKA configuration not found for verification"):
+        shower_simulator._get_first_corsika_config()
