@@ -7,6 +7,14 @@ levels (e.g. 0.1-0.9 rise, 0.9-0.1 fall).
 
 Command line arguments
 ----------------------
+site (str, required)
+        North or South.
+telescope (str, required)
+        Telescope model name.
+model_version (str, required)
+        Model version.
+parameter_version (str, required)
+    Parameter version.
 rise_width_ns (float, required)
     Rising-edge width between rise_range fractions (ns).
 fall_width_ns (float, required)
@@ -20,6 +28,7 @@ dt_ns (float, optional)
 time_margin_ns (float, optional)
     Margin added at both ends of readout window. Default: 5.
 
+
 Example
 -------
 Derive parameters for a pulse with 2.5 ns rise (10-90%) and
@@ -28,14 +37,16 @@ Derive parameters for a pulse with 2.5 ns rise (10-90%) and
 .. code-block:: console
 
     simtools-derive-pulse-shape-parameters \
-        --telescope LSTN-01 \
-        --model_version 7.0 \
-        --rise_width_ns 2.5 \
-        --fall_width_ns 5.0 \
-        --rise_range 0.1 0.9 \
-        --fall_range 0.9 0.1 \
-        --dt_ns 0.1 \
-        --time_margin_ns 10
+    --site North \
+    --telescope MSTx-NectarCam \
+    --model_version 7.0 \
+    --parameter_version 1.0.0 \
+    --rise_width_ns 2.5 \
+    --fall_width_ns 5.0 \
+    --rise_range 0.1 0.9 \
+    --fall_range 0.9 0.1 \
+    --dt_ns 0.1 \
+    --time_margin_ns 10
 """
 
 import logging
@@ -45,7 +56,6 @@ from simtools.application_control import get_application_label, startup_applicat
 from simtools.configuration import configurator
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.pulse_shapes import solve_sigma_tau_from_rise_fall
-from simtools.utils import names
 
 
 def _parse():
@@ -104,7 +114,9 @@ def _parse():
     )
 
     return config.initialize(
-        db_config=True, simulation_model=["telescope", "model_version"], output=True
+        db_config=True,
+        simulation_model=["site", "telescope", "model_version", "parameter_version"],
+        output=True,
     )
 
 
@@ -119,7 +131,7 @@ def main():
     fall_range = tuple(app_context.args["fall_range"])
     dt_ns = app_context.args["dt_ns"]
     time_margin_ns = app_context.args["time_margin_ns"]
-    site = names.get_site_from_array_element_name(app_context.args["telescope"])
+    site = app_context.args["site"]
     label = app_context.args.get("label") or get_application_label(__file__)
     telescope_model, _, _ = initialize_simulation_models(
         label=label,
@@ -142,6 +154,9 @@ def main():
         t_start_ns=t_start_ns,
         t_stop_ns=t_stop_ns,
     )
+    # Apply reasonable rounding for output precision.
+    sigma_ns = round(sigma_ns, 4)
+    tau_ns = round(tau_ns, 4)
 
     log.info(
         f"Derived pulse parameters: sigma={sigma_ns:.6g} ns, tau={tau_ns:.6g} ns "
@@ -150,7 +165,7 @@ def main():
 
     output_path = app_context.args.get("output_path")
     instrument = app_context.args.get("telescope")
-    parameter_version = app_context.args.get("model_version")
+    parameter_version = app_context.args.get("parameter_version")
 
     writer.ModelDataWriter.dump_model_parameter(
         parameter_name="flasher_pulse_width",
