@@ -46,6 +46,8 @@ class CorsikaConfig:
         self._logger.debug("Init CorsikaConfig")
 
         self.label = label
+        self.shower_events = None
+        self.mc_events = None
         self.zenith_angle = self.azimuth_angle = None
         self.curved_atmosphere_min_zenith_angle = None
         self._run_number = None
@@ -78,7 +80,11 @@ class CorsikaConfig:
         args_dict: dict
             Configuration dictionary
         """
-        self._primary_particle = self._set_primary_particle(args_dict)
+        if not args_dict or args_dict.get("primary_id_type") is None:
+            self._primary_particle = PrimaryParticle()
+        self._primary_particle = PrimaryParticle(
+            particle_id_type=args_dict.get("primary_id_type"), particle_id=args_dict.get("primary")
+        )
 
     @property
     def use_curved_atmosphere(self):
@@ -168,6 +174,8 @@ class CorsikaConfig:
         from the file instead of the command line args.
 
         """
+        self.shower_events = int(self.config["USER_INPUT"]["NSHOW"][0])
+        self.mc_events = int(self.shower_events * self.config["USER_INPUT"]["CSCAT"][0])
         try:
             az = self._rotate_azimuth_by_180deg(
                 0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1]),
@@ -306,7 +314,7 @@ class CorsikaConfig:
             "PHIP": [to_float32(event_header[44]), to_float32(event_header[45])],
             "VIEWCONE": [to_float32(event_header[106]), to_float32(event_header[107])],
             "CSCAT": [
-                to_float32(event_header[59]),
+                to_int32(event_header[59]),
                 to_float32(run_header[25]),
                 to_float32(run_header[26]),
             ],
@@ -559,27 +567,6 @@ class CorsikaConfig:
     def primary(self):
         """Primary particle name."""
         return self.primary_particle.name
-
-    def _set_primary_particle(self, args_dict):
-        """
-        Set primary particle from input dictionary.
-
-        Parameters
-        ----------
-        args_dict: dict
-            Input dictionary.
-
-        Returns
-        -------
-        PrimaryParticle
-            Primary particle.
-
-        """
-        if not args_dict or args_dict.get("primary_id_type") is None:
-            return PrimaryParticle()
-        return PrimaryParticle(
-            particle_id_type=args_dict.get("primary_id_type"), particle_id=args_dict.get("primary")
-        )
 
     def get_config_parameter(self, par_name):
         """
