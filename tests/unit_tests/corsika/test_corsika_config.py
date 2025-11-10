@@ -17,14 +17,37 @@ MUON_PLUS_PARTICLE = "muon+"
 PROTON_PARTICLE = "proton"
 
 
+def create_mock_array_model(mocker, geomag_rotation=0):
+    """Helper function to create a mock array model with site model."""
+    mock_array_model = mocker.MagicMock()
+    mock_site_model = mocker.MagicMock()
+    mock_site_model.get_parameter_value.return_value = geomag_rotation
+    mock_array_model.site_model = mock_site_model
+    return mock_array_model
+
+
+def get_standard_corsika_parameters(gcm2="g/cm2"):
+    """Helper function to return standard CORSIKA configuration parameters."""
+    return {
+        "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
+        "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
+        "corsika_cherenkov_photon_wavelength_range": {"value": [240.0, 1000.0], "unit": "nm"},
+        "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
+        "corsika_particle_kinetic_energy_cutoff": {
+            "value": [0.3, 0.1, 0.020, 0.020],
+            "unit": "GeV",
+        },
+        "corsika_longitudinal_shower_development": {"value": 20.0, "unit": gcm2},
+        "corsika_iact_split_auto": {"value": 15000000, "unit": None},
+        "corsika_starting_grammage": {"value": 0.0, "unit": gcm2},
+        "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
+    }
+
+
 @pytest.fixture
 def corsika_config_no_array_model(corsika_config_data, mocker):
     """Fixture for corsika config with no array model."""
-    # Create a minimal mock array_model with site_model
-    mock_array_model = mocker.MagicMock()
-    mock_site_model = mocker.MagicMock()
-    mock_site_model.get_parameter_value.return_value = 0  # geomag_rotation
-    mock_array_model.site_model = mock_site_model
+    mock_array_model = create_mock_array_model(mocker)
 
     modified_data = {
         "correct_for_b_field_alignment": False,
@@ -54,20 +77,7 @@ def gcm2():
 
 @pytest.fixture
 def corsika_configuration_parameters(gcm2):
-    return {
-        "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
-        "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
-        "corsika_cherenkov_photon_wavelength_range": {"value": [240.0, 1000.0], "unit": "nm"},
-        "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
-        "corsika_particle_kinetic_energy_cutoff": {
-            "value": [0.3, 0.1, 0.020, 0.020],
-            "unit": "GeV",
-        },
-        "corsika_longitudinal_shower_development": {"value": 20.0, "unit": gcm2},
-        "corsika_iact_split_auto": {"value": 15000000, "unit": None},
-        "corsika_starting_grammage": {"value": 0.0, "unit": gcm2},
-        "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
-    }
+    return get_standard_corsika_parameters(gcm2)
 
 
 @pytest.fixture
@@ -124,11 +134,7 @@ def corsika_configuration_parameters_teltype_grammage(gcm2, corsika_configuratio
 
 def test_fill_corsika_configuration(corsika_config_mock_array_model, mocker):
     """Test CORSIKA configuration with and without args_dict."""
-    # Create minimal mock array_model for empty config test
-    mock_array_model = mocker.MagicMock()
-    mock_site_model = mocker.MagicMock()
-    mock_site_model.get_parameter_value.return_value = 0  # geomag_rotation
-    mock_array_model.site_model = mock_site_model
+    mock_array_model = create_mock_array_model(mocker)
 
     args_dict = {
         "azimuth_angle": 0 * u.deg,
@@ -180,20 +186,8 @@ def test_fill_corsika_configuration_model_version(corsika_config_mock_array_mode
 
     with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
         mock_params = Mock()
-        mock_params.get_simulation_software_parameters.return_value = {
-            "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
-            "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
-            "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
-            "corsika_starting_grammage": {"value": 0.0, "unit": gcm2},
-            "corsika_longitudinal_shower_development": {"value": 20.0, "unit": gcm2},
-            "corsika_cherenkov_photon_wavelength_range": {"value": [240.0, 1000.0], "unit": "nm"},
-            "corsika_iact_split_auto": {"value": 15000000, "unit": None},
-            "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
-            "corsika_particle_kinetic_energy_cutoff": {
-                "value": [0.3, 0.1, 0.020, 0.020],
-                "unit": "GeV",
-            },
-        }
+        params = get_standard_corsika_parameters(gcm2)
+        mock_params.get_simulation_software_parameters.return_value = params
         mock_model_parameter.return_value = mock_params
 
         args_dict = {
@@ -915,20 +909,8 @@ def test_fill_corsika_configuration_variations(
     # Test DB config with parameters
     with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
         mock_params = Mock()
-        mock_params.get_simulation_software_parameters.return_value = {
-            "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
-            "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
-            "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
-            "corsika_starting_grammage": {"value": 0.0, "unit": gcm2},
-            "corsika_longitudinal_shower_development": {"value": 20.0, "unit": gcm2},
-            "corsika_cherenkov_photon_wavelength_range": {"value": [240.0, 1000.0], "unit": "nm"},
-            "corsika_iact_split_auto": {"value": 15000000, "unit": None},
-            "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
-            "corsika_particle_kinetic_energy_cutoff": {
-                "value": [0.3, 0.1, 0.020, 0.020],
-                "unit": "GeV",
-            },
-        }
+        params = get_standard_corsika_parameters(gcm2)
+        mock_params.get_simulation_software_parameters.return_value = params
         mock_model_parameter.return_value = mock_params
         result = corsika_config_mock_array_model._fill_corsika_configuration_from_db(
             ["5.0.0"], db_config={}
@@ -946,11 +928,7 @@ def test_fill_corsika_configuration_variations(
 
 def test_corsika_file_initialization(mocker, tmp_path):
     """Test CORSIKA file initialization with different configurations."""
-    # Common setup
-    mock_array_model = mocker.MagicMock()
-    mock_site_model = mocker.MagicMock()
-    mock_site_model.get_parameter_value.return_value = 0
-    mock_array_model.site_model = mock_site_model
+    mock_array_model = create_mock_array_model(mocker)
 
     test_cases = [
         {
@@ -973,7 +951,7 @@ def test_corsika_file_initialization(mocker, tmp_path):
     for case in test_cases:
         with patch("simtools.io.eventio_handler.get_corsika_run_and_event_headers") as mock_headers:
             run_header = [0] * 50
-            run_header[21] = 100  # Only needed for some tests
+            run_header[21] = 100
             event_header = [0] * 120
             event_header[2] = 14  # PRMPAR (proton)
             event_header[42] = 30.0  # THETAP
@@ -995,13 +973,8 @@ def test_corsika_file_initialization(mocker, tmp_path):
 
 def test_initialize_from_config_values(mocker):
     """Test initialization with default and custom values."""
-    # Common setup
-    mock_array_model = mocker.MagicMock()
-    mock_site_model = mocker.MagicMock()
-    mock_site_model.get_parameter_value.return_value = 0
-    mock_array_model.site_model = mock_site_model
+    mock_array_model = create_mock_array_model(mocker)
 
-    # Test cases
     cases = [
         {
             # Default values
