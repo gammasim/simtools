@@ -46,39 +46,114 @@ def test_assert_sim_telarray_metadata(sim_telarray_file_gamma):
         assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_mock)
 
 
-def test_assert_sim_telarray_metadata_using_array_model(sim_telarray_file_gamma, array_model_north):
+def test_assert_sim_telarray_metadata_using_array_model(sim_telarray_file_gamma):
     """Test assert_sim_telarray_metadata with different number of telescopes."""
-
-    assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_north) is None
-
-    # rename one telescope
-    array_model_north_renamed_telescope = copy.deepcopy(array_model_north)
-    array_model_north_renamed_telescope.telescope_models = {
-        f"tel_{old_key}": model
-        for old_key, model in array_model_north_renamed_telescope.telescope_models.items()
+    # Create a mock array model matching the actual file values
+    array_model_mock = MagicMock()
+    array_model_mock.site_model.parameters = {
+        "altitude": {"value": 2147.0, "type": "float"},
+        "atmospheric_transmission": {
+            "value": "atm_trans_2156_1_3_2_0_0_0.1_0.1.dat",
+            "type": "string",
+        },
     }
 
-    with pytest.raises(
-        ValueError, match=re.escape("Telescope tel_LSTN-01 not found in sim_telarray file metadata")
-    ):
-        assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_north_renamed_telescope)
+    # Create telescopes matching the test file - 4 LSTN and 9 MSTN
+    array_model_mock.telescope_models = {}
+    lstn_names = ["LSTN-01", "LSTN-02", "LSTN-03", "LSTN-04"]
+    mstn_names = [
+        "MSTN-01",
+        "MSTN-02",
+        "MSTN-03",
+        "MSTN-04",
+        "MSTN-05",
+        "MSTN-06",
+        "MSTN-07",
+        "MSTN-10",
+        "MSTN-15",
+    ]
+    for tel_name in lstn_names:
+        array_model_mock.telescope_models[tel_name] = MagicMock(
+            parameters={
+                "random_mono_probability": {"value": 0.01, "type": "float"},
+                "mirror_area": {"value": 386.97, "type": "float"},
+            }
+        )
+    for tel_name in mstn_names:
+        array_model_mock.telescope_models[tel_name] = MagicMock(
+            parameters={
+                "random_mono_probability": {"value": 0.01, "type": "float"},
+                "mirror_area": {"value": 106.26, "type": "float"},
+            }
+        )
+
+    # Test with matching parameters
+    assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_mock) is None
+
+    # Test with renamed telescope (adding different_ prefix)
+    array_model_renamed = copy.deepcopy(array_model_mock)
+    array_model_renamed.telescope_models = {
+        f"different_{key}": model for key, model in array_model_mock.telescope_models.items()
+    }
+    error_msg = "Telescope different_LSTN-01 not found in sim_telarray file metadata"
+    with pytest.raises(ValueError, match=re.escape(error_msg)):
+        assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_renamed)
 
 
-def test_assert_sim_telarray_metadata_with_mismatched_parameters(
-    sim_telarray_file_gamma, array_model_north
-):
+def test_assert_sim_telarray_metadata_with_mismatched_parameters(sim_telarray_file_gamma):
     """Test assert_sim_telarray_metadata with mismatched parameters."""
-    array_model_mismatched_site = copy.deepcopy(array_model_north)
-    array_model_mismatched_site.site_model.parameters["atmospheric_transmission"]["value"] = (
+    # Create base mock array model matching file
+    array_model_mock = MagicMock()
+    array_model_mock.site_model.parameters = {
+        "altitude": {"value": 2147.0, "type": "float"},
+        "atmospheric_transmission": {
+            "value": "atm_trans_2156_1_3_2_0_0_0.1_0.1.dat",
+            "type": "string",
+        },
+    }
+
+    # Create telescopes matching the test file - 4 LSTN and 9 MSTN
+    array_model_mock.telescope_models = {}
+    lstn_names = ["LSTN-01", "LSTN-02", "LSTN-03", "LSTN-04"]
+    mstn_names = [
+        "MSTN-01",
+        "MSTN-02",
+        "MSTN-03",
+        "MSTN-04",
+        "MSTN-05",
+        "MSTN-06",
+        "MSTN-07",
+        "MSTN-10",
+        "MSTN-15",
+    ]
+    for tel_name in lstn_names:
+        array_model_mock.telescope_models[tel_name] = MagicMock(
+            parameters={
+                "random_mono_probability": {"value": 0.01, "type": "float"},
+                "mirror_area": {"value": 386.97, "type": "float"},
+            }
+        )
+    for tel_name in mstn_names:
+        array_model_mock.telescope_models[tel_name] = MagicMock(
+            parameters={
+                "random_mono_probability": {"value": 0.01, "type": "float"},
+                "mirror_area": {"value": 106.26, "type": "float"},
+            }
+        )
+
+    # Test with mismatched site parameter
+    array_model_mismatched = copy.deepcopy(array_model_mock)
+    array_model_mismatched.site_model.parameters["atmospheric_transmission"]["value"] = (
         "wrong_file.dat"
     )
 
-    mismatch_message = r"^Telescope or site model parameters do not match sim_telarray "
+    mismatch_message = r"^Telescope or site model parameters do not match sim_telarray"
     with pytest.raises(ValueError, match=mismatch_message):
-        assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_mismatched_site)
+        assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_mismatched)
 
-    array_model_mismatched_telescope = copy.deepcopy(array_model_north)
-    array_model_mismatched_telescope.telescope_models["LSTN-02"].parameters[
+    # Test with mismatched telescope parameter
+    array_model_mismatched_telescope = copy.deepcopy(array_model_mock)
+    array_model_mismatched_telescope.telescope_models["MSTN-01"].parameters[
         "random_mono_probability"
     ]["value"] = 0.99
 
@@ -140,19 +215,56 @@ def test_assert_sim_telarray_seed(caplog):
     assert _assert_sim_telarray_seed(metadata, None) is None
 
 
-def test_assert_sim_telarray_metadata_seed_mismatch(sim_telarray_file_gamma, array_model_north):
+def test_assert_sim_telarray_metadata_seed_mismatch(sim_telarray_file_gamma):
     """Test assert_sim_telarray_metadata with mismatched seeds."""
-    array_model_mismatched_seed = copy.deepcopy(array_model_north)
-    array_model_mismatched_seed.sim_telarray_seeds = {"seed": "54321"}
+    # Create a mock array model
+    array_model_mock = MagicMock()
+    array_model_mock.site_model.parameters = {
+        "altitude": {"value": 2147.0, "type": "float"},
+        "atmospheric_transmission": {
+            "value": "atm_trans_2156_1_3_2_0_0_0.1_0.1.dat",
+            "type": "string",
+        },
+    }
+
+    # Create telescopes matching the test file - 4 LSTN and 9 MSTN
+    array_model_mock.telescope_models = {}
+    lstn_names = ["LSTN-01", "LSTN-02", "LSTN-03", "LSTN-04"]
+    mstn_names = [
+        "MSTN-01",
+        "MSTN-02",
+        "MSTN-03",
+        "MSTN-04",
+        "MSTN-05",
+        "MSTN-06",
+        "MSTN-07",
+        "MSTN-10",
+        "MSTN-15",
+    ]
+    for tel_name in lstn_names:
+        array_model_mock.telescope_models[tel_name] = MagicMock(
+            parameters={
+                "random_mono_probability": {"value": 0.01, "type": "float"},
+                "mirror_area": {"value": 386.97, "type": "float"},
+            }
+        )
+    for tel_name in mstn_names:
+        array_model_mock.telescope_models[tel_name] = MagicMock(
+            parameters={
+                "random_mono_probability": {"value": 0.01, "type": "float"},
+                "mirror_area": {"value": 106.26, "type": "float"},
+            }
+        )
+
+    array_model_mock.sim_telarray_seeds = {"seed": "54321"}
 
     with patch(
         "simtools.testing.sim_telarray_metadata._assert_sim_telarray_seed",
         return_value="Parameter sim_telarray_seeds mismatch",
     ):
-        with pytest.raises(
-            ValueError, match=r"^Telescope or site model parameters do not match sim_telarray "
-        ):
-            assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_mismatched_seed)
+        mismatch_msg = "^Telescope or site model parameters do not match sim_telarray"
+        with pytest.raises(ValueError, match=mismatch_msg):
+            assert_sim_telarray_metadata(sim_telarray_file_gamma, array_model_mock)
 
 
 def test_assert_sim_telarray_seed_with_rng_select_seed(caplog):
