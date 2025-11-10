@@ -959,6 +959,27 @@ def test_write_lightpulse_table_gauss_expconv_missing_params_raises(tmp_test_dir
         )
 
 
+def test_write_ascii_pulse_table_writes_header_and_values(tmp_test_directory):
+    """_write_ascii_pulse_table should create a two-column file with a header and values."""
+    out = Path(tmp_test_directory) / "pulse_ascii.dat"
+    t = np.array([0.0, 0.1, 0.2])
+    y = np.array([0.25, 1.0, 0.5])
+
+    result = SimtelConfigWriter._write_ascii_pulse_table(out, t, y)
+    assert result == out
+    assert out.exists()
+
+    # First line is a header starting with '#'
+    with open(out, encoding="utf-8") as fh:
+        first_line = fh.readline()
+    assert first_line.startswith("#")
+
+    # Data lines parse back to the same arrays
+    t_read, y_read = _read_pulse_table(out)
+    assert np.allclose(t_read, t)
+    assert np.allclose(y_read, y)
+
+
 def test_process_telescope_triggers_multiple_hardstereo(simtel_config_writer):
     """Test _process_telescope_triggers with multiple hardstereo telescope types."""
     array_triggers = create_mixed_trigger_scenario()

@@ -7,12 +7,12 @@ from simtools.simtel.pulse_shapes import (
     _rise_width,
     generate_gauss_expconv_pulse,
     generate_pulse_from_rise_fall_times,
-    solve_sigma_tau_from_risefall,
+    solve_sigma_tau_from_rise_fall,
 )
 
 
 def test_solve_sigma_tau_basic():
-    sigma, tau = solve_sigma_tau_from_risefall(2.5, 5.0, dt_ns=0.1)
+    sigma, tau = solve_sigma_tau_from_rise_fall(2.5, 5.0, dt_ns=0.1)
     assert sigma > 0
     assert tau > 0
     assert np.isclose(sigma, 1.294, atol=0.05)
