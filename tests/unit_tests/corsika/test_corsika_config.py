@@ -18,10 +18,32 @@ PROTON_PARTICLE = "proton"
 
 
 @pytest.fixture
-def corsika_config_no_array_model(corsika_config_data):
-    corsika_config_data["correct_for_b_field_alignment"] = False
+def corsika_config_no_array_model(corsika_config_data, mocker):
+    """Fixture for corsika config with no array model."""
+    # Create a minimal mock array_model with site_model
+    mock_array_model = mocker.MagicMock()
+    mock_site_model = mocker.MagicMock()
+    mock_site_model.get_parameter_value.return_value = 0  # geomag_rotation
+    mock_array_model.site_model = mock_site_model
+
+    modified_data = {
+        "correct_for_b_field_alignment": False,
+        "azimuth_angle": 0 * u.deg,
+        "zenith_angle": 20 * u.deg,
+        "event_number_first_shower": 1,
+        "nshow": 100,
+        "energy_range": (10 * u.GeV, 10 * u.TeV),
+        "view_cone": (0 * u.deg, 0 * u.deg),
+        "core_scatter": (10, 1400 * u.m),
+        "primary": "proton",
+        "primary_id_type": "common_name",
+        "eslope": -2,
+    }
     return CorsikaConfig(
-        array_model=None, label="test-corsika-config", args_dict=corsika_config_data, db_config=None
+        array_model=mock_array_model,
+        label="test-corsika-config",
+        args_dict=modified_data,
+        db_config=None,
     )
 
 
@@ -100,15 +122,36 @@ def corsika_configuration_parameters_teltype_grammage(gcm2, corsika_configuratio
     return params
 
 
-def test_repr(corsika_config_mock_array_model):
-    assert "site" in repr(corsika_config_mock_array_model)
+def test_fill_corsika_configuration(corsika_config_mock_array_model, mocker):
+    """Test CORSIKA configuration with and without args_dict."""
+    # Create minimal mock array_model for empty config test
+    mock_array_model = mocker.MagicMock()
+    mock_site_model = mocker.MagicMock()
+    mock_site_model.get_parameter_value.return_value = 0  # geomag_rotation
+    mock_array_model.site_model = mock_site_model
 
+    args_dict = {
+        "azimuth_angle": 0 * u.deg,
+        "zenith_angle": 20 * u.deg,
+        "event_number_first_shower": 1,
+        "nshow": 100,
+        "energy_range": (10 * u.GeV, 10 * u.TeV),
+        "view_cone": (0 * u.deg, 0 * u.deg),
+        "core_scatter": (10, 1400 * u.m),
+        "primary": "proton",
+        "primary_id_type": "common_name",
+        "eslope": -2,
+        "correct_for_b_field_alignment": False,
+    }
 
-def test_fill_corsika_configuration(corsika_config_mock_array_model):
-    empty_config = CorsikaConfig(
-        array_model=None, label="test-corsika-config", args_dict=None, db_config=None
+    config_none_args = CorsikaConfig(
+        array_model=mock_array_model,
+        label="test-corsika-config",
+        args_dict=args_dict,
+        db_config=None,
     )
-    assert empty_config.config == {}
+    assert isinstance(config_none_args.config, dict)
+    assert "USER_INPUT" in config_none_args.config
 
     assert corsika_config_mock_array_model.get_config_parameter("NSHOW") == 100
     assert corsika_config_mock_array_model.get_config_parameter("THETAP") == [20, 20]
@@ -165,7 +208,9 @@ def test_fill_corsika_configuration_model_version(corsika_config_mock_array_mode
             "core_scatter": [10, 140000 * u.cm],
             "correct_for_b_field_alignment": True,
         }
-        config = corsika_config_mock_array_model.fill_corsika_configuration(args_dict, db_config={})
+        config = corsika_config_mock_array_model._fill_corsika_configuration(
+            args_dict, db_config={}
+        )
 
         # Verify ModelParameter was instantiated with the correct model (the first one)
         mock_model_parameter.assert_called_with(db_config={}, model_version="5.0.0")
@@ -374,42 +419,26 @@ def test_corsika_configuration_debugging_parameters(corsika_config_mock_array_mo
     assert len(corsika_config_mock_array_model._corsika_configuration_debugging_parameters()) == 4
 
 
-def test_rotate_azimuth_by_180deg_no_correct_for_geomagnetic_field_alignment(
-    corsika_config_mock_array_model,
-):
-    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-        0.0, correct_for_geomagnetic_field_alignment=False
-    ) == pytest.approx(180.0)
-    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-        360.0, correct_for_geomagnetic_field_alignment=False
-    ) == pytest.approx(180.0)
-    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-        450.0, correct_for_geomagnetic_field_alignment=False
-    ) == pytest.approx(270.0)
-    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-        180.0, correct_for_geomagnetic_field_alignment=False
-    ) == pytest.approx(0.0)
-    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-        -180.0, correct_for_geomagnetic_field_alignment=False
-    ) == pytest.approx(0.0)
-
-
 def test_rotate_azimuth_by_180deg(corsika_config_mock_array_model):
-    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-        0.0, correct_for_geomagnetic_field_alignment=True
-    ) == pytest.approx(175.467)
-    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-        360.0, correct_for_geomagnetic_field_alignment=True
-    ) == pytest.approx(175.467)
-    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-        450.0, correct_for_geomagnetic_field_alignment=True
-    ) == pytest.approx(265.467)
-    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-        180.0, correct_for_geomagnetic_field_alignment=True
-    ) == pytest.approx(355.467)
-    assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
-        -180.0, correct_for_geomagnetic_field_alignment=True
-    ) == pytest.approx(355.467)
+    """Test azimuth angle rotation with and without geomagnetic field alignment."""
+    test_cases = [
+        # (input_angle, with_correction, expected_result)
+        (0.0, False, 180.0),
+        (360.0, False, 180.0),
+        (450.0, False, 270.0),
+        (180.0, False, 0.0),
+        (-180.0, False, 0.0),
+        (0.0, True, 175.467),
+        (360.0, True, 175.467),
+        (450.0, True, 265.467),
+        (180.0, True, 355.467),
+        (-180.0, True, 355.467),
+    ]
+
+    for input_angle, with_correction, expected_result in test_cases:
+        assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+            input_angle, correct_for_geomagnetic_field_alignment=with_correction
+        ) == pytest.approx(expected_result)
 
 
 def test_set_primary_particle(corsika_config_mock_array_model):
@@ -560,12 +589,31 @@ def test_write_seeds_use_test_seeds(corsika_config_mock_array_model):
         assert _call == (f"SEED {expected_seeds.pop(0)} 0 0\n")
 
 
-@pytest.mark.uses_model_database
-def test_get_corsika_telescope_list(corsika_config):
-    cc = corsika_config
-    telescope_list_str = cc.get_corsika_telescope_list()
-    assert telescope_list_str.count("TELESCOPE") > 0
-    assert telescope_list_str.count("LSTS") > 0
+def test_get_corsika_telescope_list(corsika_config_mock_array_model):
+    # Create mock telescopes
+    mock_telescope1 = MagicMock()
+    mock_telescope1.get_parameter_value_with_unit.side_effect = lambda x: {
+        "array_element_position_ground": [100 * u.cm, 200 * u.cm, 0 * u.cm],
+        "telescope_sphere_radius": 10 * u.cm,
+    }[x]
+
+    mock_telescope2 = MagicMock()
+    mock_telescope2.get_parameter_value_with_unit.side_effect = lambda x: {
+        "array_element_position_ground": [300 * u.cm, 400 * u.cm, 0 * u.cm],
+        "telescope_sphere_radius": 10 * u.cm,
+    }[x]
+
+    # Mock array_model with telescope_models
+    mock_array_model = MagicMock()
+    mock_array_model.telescope_models = {"LSTS-01": mock_telescope1, "LSTS-02": mock_telescope2}
+    corsika_config_mock_array_model.array_model = mock_array_model
+
+    telescope_list_str = corsika_config_mock_array_model.get_corsika_telescope_list()
+    assert "TELESCOPE" in telescope_list_str
+    assert "LSTS-01" in telescope_list_str
+    assert "LSTS-02" in telescope_list_str
+    assert "100.000" in telescope_list_str  # x position of first telescope
+    assert "300.000" in telescope_list_str  # x position of second telescope
 
 
 def test_run_number(corsika_config_no_array_model):
@@ -731,15 +779,288 @@ def test_get_matching_grammage_values(corsika_config_mock_array_model):
 
 
 def test_use_curved_atmosphere(corsika_config_mock_array_model):
-    corsika_config_mock_array_model.zenith_angle = 95
-    corsika_config_mock_array_model.curved_atmosphere_min_zenith_angle = 90
-    assert corsika_config_mock_array_model.use_curved_atmosphere()
+    corsika_config_mock_array_model.use_curved_atmosphere = {
+        "curved_atmosphere_min_zenith_angle": 90 * u.deg,
+        "zenith_angle": 95 * u.deg,
+    }
+    assert corsika_config_mock_array_model.use_curved_atmosphere
 
-    corsika_config_mock_array_model.zenith_angle = 85
-    assert not corsika_config_mock_array_model.use_curved_atmosphere()
+    corsika_config_mock_array_model.use_curved_atmosphere = {
+        "curved_atmosphere_min_zenith_angle": 90 * u.deg,
+        "zenith_angle": 85 * u.deg,
+    }
+    assert not corsika_config_mock_array_model.use_curved_atmosphere
 
-    corsika_config_mock_array_model.zenith_angle = 90
-    assert not corsika_config_mock_array_model.use_curved_atmosphere()
+    corsika_config_mock_array_model.use_curved_atmosphere = {
+        "curved_atmosphere_min_zenith_angle": 90 * u.deg,
+        "zenith_angle": 90 * u.deg,
+    }
+    assert not corsika_config_mock_array_model.use_curved_atmosphere
 
-    corsika_config_mock_array_model.curved_atmosphere_min_zenith_angle = None
-    assert not corsika_config_mock_array_model.use_curved_atmosphere()
+    corsika_config_mock_array_model.use_curved_atmosphere = None
+    assert not corsika_config_mock_array_model.use_curved_atmosphere
+
+    corsika_config_mock_array_model.use_curved_atmosphere = False
+    assert not corsika_config_mock_array_model.use_curved_atmosphere
+
+    corsika_config_mock_array_model.use_curved_atmosphere = True
+    assert corsika_config_mock_array_model.use_curved_atmosphere
+
+
+def test_corsika_configuration_from_corsika_file(corsika_config_mock_array_model, mocker, tmp_path):
+    """Test CORSIKA configuration from corsika file."""
+    mock_run_header = [0] * 50
+    mock_run_header[21] = 100  # NSHOW
+    mock_run_header[6] = -2.0  # ESLOPE
+    mock_run_header[7] = 10.0  # ERANGE min
+    mock_run_header[8] = 1000.0  # ERANGE max
+    mock_run_header[25] = 1400.0  # core scatter
+    mock_run_header[26] = 0.0
+
+    mock_event_header = [0] * 120
+    mock_event_header[2] = 14  # PRMPAR (proton)
+    mock_event_header[42] = 20.0  # THETAP min
+    mock_event_header[43] = 20.0  # THETAP max
+    mock_event_header[44] = 180.0  # PHIP min
+    mock_event_header[45] = 180.0  # PHIP max
+    mock_event_header[106] = 0.0  # VIEWCONE min
+    mock_event_header[107] = 10.0  # VIEWCONE max
+    mock_event_header[59] = 10  # CSCAT scatter
+
+    mock_get_headers = mocker.patch(
+        "simtools.io.eventio_handler.get_corsika_run_and_event_headers",
+        return_value=(mock_run_header, mock_event_header),
+    )
+
+    test_file = tmp_path / "test.corsika"
+    test_file.touch()
+
+    config = corsika_config_mock_array_model._corsika_configuration_from_corsika_file(test_file)
+
+    mock_get_headers.assert_called_once_with(test_file)
+    assert config["NSHOW"] == [100]
+    assert config["PRMPAR"] == [14]
+    assert config["ESLOPE"] == [-2.0]
+    assert config["ERANGE"] == [10.0, 1000.0]
+    assert config["THETAP"] == [20.0, 20.0]
+    assert config["PHIP"] == [180.0, 180.0]
+    assert config["VIEWCONE"] == [0.0, 10.0]
+    assert config["CSCAT"] == [10, 1400.0, 0.0]
+
+
+def test_corsika_configuration_for_dummy_simulations(corsika_config_no_array_model):
+    """Test CORSIKA configuration for dummy simulations."""
+    args_dict = {
+        "zenith_angle": 30 * u.deg,
+        "azimuth_angle": 45 * u.deg,
+        "correct_for_b_field_alignment": False,
+    }
+
+    config = corsika_config_no_array_model._corsika_configuration_for_dummy_simulations(args_dict)
+
+    assert isinstance(config, dict)
+    assert config["EVTNR"] == [1]
+    assert config["NSHOW"] == [1]
+    assert config["PRMPAR"] == [1]
+    assert config["ESLOPE"] == [-2.0]
+    assert config["ERANGE"] == [0.1, 0.1]
+    assert config["THETAP"] == [30.0, 30.0]
+    assert config["PHIP"] == [225.0, 225.0]
+    assert config["VIEWCONE"] == [0.0, 0.0]
+    assert config["CSCAT"] == [1, 0.0, 10.0]
+
+
+def test_initialize_from_config(corsika_config_mock_array_model, corsika_config_data):
+    """Test initialization of parameters from config."""
+    # Test normal initialization
+    assert corsika_config_mock_array_model.azimuth_angle == 0
+    assert corsika_config_mock_array_model.zenith_angle == 20
+    assert corsika_config_mock_array_model.curved_atmosphere_min_zenith_angle == pytest.approx(90.0)
+
+    # Test missing PHIP in USER_INPUT
+    test_config = {
+        "USER_INPUT": {
+            "THETAP": [20, 20],
+        }
+    }
+    corsika_config_mock_array_model.config = test_config
+    corsika_config_mock_array_model._initialize_from_config(corsika_config_data)
+    assert corsika_config_mock_array_model.azimuth_angle == 0
+
+    # Test missing THETAP in USER_INPUT
+    test_config = {
+        "USER_INPUT": {
+            "PHIP": [175.467, 175.467],
+        }
+    }
+    corsika_config_mock_array_model.config = test_config
+    corsika_config_mock_array_model._initialize_from_config(corsika_config_data)
+    assert corsika_config_mock_array_model.zenith_angle == 20
+
+    # Test completely missing USER_INPUT section
+    test_config = {}
+    corsika_config_mock_array_model.config = test_config
+    corsika_config_mock_array_model._initialize_from_config(corsika_config_data)
+    assert corsika_config_mock_array_model.azimuth_angle == 0
+    assert corsika_config_mock_array_model.zenith_angle == 20
+
+
+def test_fill_corsika_configuration_variations(
+    corsika_config_no_array_model, corsika_config_mock_array_model, mocker, tmp_path, gcm2
+):
+    """Test various configuration scenarios for CORSIKA."""
+    # Test None args_dict
+    config = corsika_config_no_array_model._fill_corsika_configuration(None)
+    assert config == {}
+
+    # Test dummy simulations
+    args_dict = {
+        "zenith_angle": 20 * u.deg,
+        "azimuth_angle": 0 * u.deg,
+        "correct_for_b_field_alignment": False,
+    }
+    corsika_config_no_array_model.dummy_simulations = True
+    config = corsika_config_no_array_model._fill_corsika_configuration(args_dict)
+    assert "USER_INPUT" in config
+    assert config["USER_INPUT"]["NSHOW"] == [1]
+    assert config["USER_INPUT"]["PRMPAR"] == [1]
+
+    # Test empty DB config
+    result = corsika_config_no_array_model._fill_corsika_configuration_from_db(["5.0.0"], None)
+    assert result == {}
+
+    # Test DB config with parameters
+    with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
+        mock_params = Mock()
+        mock_params.get_simulation_software_parameters.return_value = {
+            "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
+            "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
+            "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
+            "corsika_starting_grammage": {"value": 0.0, "unit": gcm2},
+            "corsika_longitudinal_shower_development": {"value": 20.0, "unit": gcm2},
+            "corsika_cherenkov_photon_wavelength_range": {"value": [240.0, 1000.0], "unit": "nm"},
+            "corsika_iact_split_auto": {"value": 15000000, "unit": None},
+            "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
+            "corsika_particle_kinetic_energy_cutoff": {
+                "value": [0.3, 0.1, 0.020, 0.020],
+                "unit": "GeV",
+            },
+        }
+        mock_model_parameter.return_value = mock_params
+        result = corsika_config_mock_array_model._fill_corsika_configuration_from_db(
+            ["5.0.0"], db_config={}
+        )
+        assert all(
+            key in result
+            for key in [
+                "INTERACTION_FLAGS",
+                "CHERENKOV_EMISSION_PARAMETERS",
+                "DEBUGGING_OUTPUT_PARAMETERS",
+                "IACT_PARAMETERS",
+            ]
+        )
+
+
+def test_corsika_file_initialization(mocker, tmp_path):
+    """Test CORSIKA file initialization with different configurations."""
+    # Common setup
+    mock_array_model = mocker.MagicMock()
+    mock_site_model = mocker.MagicMock()
+    mock_site_model.get_parameter_value.return_value = 0
+    mock_array_model.site_model = mock_site_model
+
+    test_cases = [
+        {
+            "args": {
+                "corsika_file": tmp_path / "test.corsika",
+                "curved_atmosphere_min_zenith_angle": 85.0 * u.deg,
+            },
+            "expected": {"zenith": 30, "azimuth": 270, "curved_atm": 85.0},
+        },
+        {
+            "args": {
+                "corsika_file": str(tmp_path / "dummy.corsika"),
+                "correct_for_b_field_alignment": False,
+                "curved_atmosphere_min_zenith_angle": 80 * u.deg,
+            },
+            "expected": {"zenith": 30, "azimuth": 270, "curved_atm": 80.0},
+        },
+    ]
+
+    for case in test_cases:
+        with patch("simtools.io.eventio_handler.get_corsika_run_and_event_headers") as mock_headers:
+            run_header = [0] * 50
+            run_header[21] = 100  # Only needed for some tests
+            event_header = [0] * 120
+            event_header[42] = 30.0  # THETAP
+            event_header[43] = 30.0
+            event_header[44] = 90.0  # PHIP
+            event_header[45] = 90.0
+            mock_headers.return_value = (run_header, event_header)
+
+            config = CorsikaConfig(
+                array_model=mock_array_model, label="test", args_dict=case["args"], db_config=None
+            )
+
+            assert config.zenith_angle == case["expected"]["zenith"]
+            assert config.azimuth_angle == case["expected"]["azimuth"]
+            assert config.curved_atmosphere_min_zenith_angle == pytest.approx(
+                case["expected"]["curved_atm"]
+            )
+
+
+def test_initialize_from_config_values(mocker):
+    """Test initialization with default and custom values."""
+    # Common setup
+    mock_array_model = mocker.MagicMock()
+    mock_site_model = mocker.MagicMock()
+    mock_site_model.get_parameter_value.return_value = 0
+    mock_array_model.site_model = mock_site_model
+
+    # Test cases
+    cases = [
+        {
+            # Default values
+            "args": {
+                "azimuth_angle": 0 * u.deg,
+                "zenith_angle": 20 * u.deg,
+                "curved_atmosphere_min_zenith_angle": 90 * u.deg,
+                "event_number_first_shower": 1,
+                "nshow": 100,
+                "energy_range": (10 * u.GeV, 10 * u.TeV),
+                "view_cone": (0 * u.deg, 0 * u.deg),
+                "core_scatter": (10, 1400 * u.m),
+                "primary": "proton",
+                "primary_id_type": "common_name",
+                "eslope": -2,
+                "correct_for_b_field_alignment": False,
+            },
+            "expected": {"azimuth": 0, "zenith": 20, "curved_atm": 90.0},
+        },
+        {
+            # Custom values
+            "args": {
+                "azimuth_angle": 45 * u.deg,
+                "zenith_angle": 60 * u.deg,
+                "event_number_first_shower": 1,
+                "nshow": 10,
+                "energy_range": (10 * u.GeV, 100 * u.GeV),
+                "view_cone": (0 * u.deg, 5 * u.deg),
+                "core_scatter": (10, 1000 * u.m),
+                "primary": "proton",
+                "primary_id_type": "common_name",
+                "eslope": -2,
+                "correct_for_b_field_alignment": False,
+            },
+            "expected": {"azimuth": 45, "zenith": 60, "curved_atm": 90.0},
+        },
+    ]
+
+    for case in cases:
+        config = CorsikaConfig(
+            array_model=mock_array_model, label="test", args_dict=case["args"], db_config=None
+        )
+        assert config.azimuth_angle == case["expected"]["azimuth"]
+        assert config.zenith_angle == case["expected"]["zenith"]
+        expected_curved_atm = case["expected"]["curved_atm"]
+        assert config.curved_atmosphere_min_zenith_angle == pytest.approx(expected_curved_atm)
