@@ -68,23 +68,32 @@ class CorsikaConfig:
         return self._primary_particle
 
     @primary_particle.setter
-    def primary_particle(self, args_dict):
+    def primary_particle(self, args):
         """
-        Set primary particle from input dictionary.
+        Set primary particle from input dictionary or CORSIKA 7 particle ID.
 
         This is to make sure that when setting the primary particle,
         we get the full PrimaryParticle object expected.
 
         Parameters
         ----------
-        args_dict: dict
+        args: dict, corsika particle ID, or None
             Configuration dictionary
         """
-        if not args_dict or args_dict.get("primary_id_type") is None:
+        if (
+            isinstance(args, dict)
+            and args.get("primary_id_type") is not None
+            and args.get("primary") is not None
+        ):
+            self._primary_particle = PrimaryParticle(
+                particle_id_type=args.get("primary_id_type"), particle_id=args.get("primary")
+            )
+        elif isinstance(args, int):
+            self._primary_particle = PrimaryParticle(
+                particle_id_type="corsika7_id", particle_id=args
+            )
+        else:
             self._primary_particle = PrimaryParticle()
-        self._primary_particle = PrimaryParticle(
-            particle_id_type=args_dict.get("primary_id_type"), particle_id=args_dict.get("primary")
-        )
 
     @property
     def use_curved_atmosphere(self):
@@ -174,8 +183,11 @@ class CorsikaConfig:
         from the file instead of the command line args.
 
         """
-        self.shower_events = int(self.config["USER_INPUT"]["NSHOW"][0])
-        self.mc_events = int(self.shower_events * self.config["USER_INPUT"]["CSCAT"][0])
+        self.primary_particle = int(self.config.get("USER_INPUT", {}).get("PRMPAR", [1])[0])
+        self.shower_events = int(self.config.get("USER_INPUT", {}).get("NSHOW", [0])[0])
+        self.mc_events = int(
+            self.shower_events * self.config.get("USER_INPUT", {}).get("CSCAT", [0])[0]
+        )
         try:
             az = self._rotate_azimuth_by_180deg(
                 0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1]),

@@ -204,12 +204,12 @@ class Simulator:
 
         def key_index(key):
             try:
-                return list(names.site_names()).index(key)
+                return list(names.site_names()).index(key) + 1
             except ValueError:
-                return 0
+                return 1
 
         seed = semver_to_int(model_version) * 10000000
-        seed = seed + key_index(self.site) * 100000
+        seed = seed + key_index(self.site) * 1000000
         seed = seed + (int)(zenith_angle) * 1000
         return seed + (int)(azimuth_angle)
 
