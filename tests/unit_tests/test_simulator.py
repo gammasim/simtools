@@ -9,7 +9,6 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-from astropy import units as u
 
 from simtools.io import eventio_handler
 from simtools.simulator import Simulator
@@ -340,10 +339,12 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
 def test_initialize_array_models_with_single_version(
     shower_simulator, model_version, mock_array_model
 ):
-    array_models = shower_simulator._initialize_array_models()
+    array_models, corsika_configurations = shower_simulator._initialize_array_models()
     assert len(array_models) == 1
     assert array_models[0] is not None
     assert array_models[0] == mock_array_model
+    assert len(corsika_configurations) == 1
+    assert corsika_configurations[0] is not None
 
 
 def test_initialize_from_tool_configuration_with_corsika_file(shower_simulator, mocker):
@@ -578,25 +579,33 @@ def test_get_seed_for_random_instrument_instances(shower_simulator):
     # Test with a seed provided in the configuration
     shower_simulator.sim_telarray_seeds["seed"] = "12345, 67890"
     seed = shower_simulator._get_seed_for_random_instrument_instances(
-        shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
+        shower_simulator.sim_telarray_seeds["seed"],
+        model_version="6.0.1",
+        zenith_angle=20.0,
+        azimuth_angle=180.0,
     )
     assert seed == 12345
 
     # Test without a seed provided in the configuration
     shower_simulator.sim_telarray_seeds["seed"] = None
-    shower_simulator.args_dict["site"] = "North"
-    shower_simulator.args_dict["zenith_angle"] = 20 * u.deg
-    shower_simulator.args_dict["azimuth_angle"] = 180 * u.deg
+    shower_simulator.model_version = "6.0.1"
+    shower_simulator.site = "North"
     seed = shower_simulator._get_seed_for_random_instrument_instances(
-        shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
-    )
-    assert seed == 600010000000 + 2000000 + 20 * 1000 + 180
-
-    shower_simulator.args_dict["site"] = "South"
-    seed = shower_simulator._get_seed_for_random_instrument_instances(
-        shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
+        shower_simulator.sim_telarray_seeds["seed"],
+        model_version="6.0.1",
+        zenith_angle=20.0,
+        azimuth_angle=180.0,
     )
     assert seed == 600010000000 + 1000000 + 20 * 1000 + 180
+
+    shower_simulator.site = "South"
+    seed = shower_simulator._get_seed_for_random_instrument_instances(
+        shower_simulator.sim_telarray_seeds["seed"],
+        model_version="6.0.1",
+        zenith_angle=20.0,
+        azimuth_angle=180.0,
+    )
+    assert seed == 600010000000 + 2000000 + 20 * 1000 + 180
 
 
 def test_initialize_simulation_runner_with_corsika(shower_simulator):

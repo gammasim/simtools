@@ -441,29 +441,6 @@ def test_rotate_azimuth_by_180deg(corsika_config_mock_array_model):
         ) == pytest.approx(expected_result)
 
 
-def test_set_primary_particle(corsika_config_mock_array_model):
-    from simtools.corsika.primary_particle import PrimaryParticle
-
-    cc = corsika_config_mock_array_model
-    assert isinstance(cc._set_primary_particle(args_dict=None), PrimaryParticle)
-    assert isinstance(
-        cc._set_primary_particle(args_dict={"primary_id_type": None}), PrimaryParticle
-    )
-
-    p_common_name = cc._set_primary_particle(
-        args_dict={"primary": PROTON_PARTICLE, "primary_id_type": "common_name"}
-    )
-    assert p_common_name.name == PROTON_PARTICLE
-
-    p_corsika7_id = cc._set_primary_particle(
-        args_dict={"primary": 14, "primary_id_type": "corsika7_id"}
-    )
-    assert p_corsika7_id.name == PROTON_PARTICLE
-
-    p_pdg_id = cc._set_primary_particle(args_dict={"primary": 2212, "primary_id_type": "pdg_id"})
-    assert p_pdg_id.name == PROTON_PARTICLE
-
-
 def test_get_config_parameter(corsika_config_mock_array_model):
     cc = corsika_config_mock_array_model
     assert isinstance(cc.get_config_parameter("NSHOW"), int)
@@ -881,6 +858,9 @@ def test_initialize_from_config(corsika_config_mock_array_model, corsika_config_
     test_config = {
         "USER_INPUT": {
             "THETAP": [20, 20],
+            "PRMPAR": [14],
+            "NSHOW": [100],
+            "CSCAT": [10, 1400.0, 0.0],
         }
     }
     corsika_config_mock_array_model.config = test_config
@@ -891,6 +871,9 @@ def test_initialize_from_config(corsika_config_mock_array_model, corsika_config_
     test_config = {
         "USER_INPUT": {
             "PHIP": [175.467, 175.467],
+            "PRMPAR": [14],
+            "NSHOW": [100],
+            "CSCAT": [10, 1400.0, 0.0],
         }
     }
     corsika_config_mock_array_model.config = test_config
@@ -992,6 +975,7 @@ def test_corsika_file_initialization(mocker, tmp_path):
             run_header = [0] * 50
             run_header[21] = 100  # Only needed for some tests
             event_header = [0] * 120
+            event_header[2] = 14  # PRMPAR (proton)
             event_header[42] = 30.0  # THETAP
             event_header[43] = 30.0
             event_header[44] = 90.0  # PHIP
@@ -1064,3 +1048,33 @@ def test_initialize_from_config_values(mocker):
         assert config.zenith_angle == case["expected"]["zenith"]
         expected_curved_atm = case["expected"]["curved_atm"]
         assert config.curved_atmosphere_min_zenith_angle == pytest.approx(expected_curved_atm)
+
+
+def test_primary_particle_setter_from_dict(corsika_config_no_array_model):
+    """Test setting primary particle from dictionary."""
+    test_dict = {
+        "primary": "proton",
+        "primary_id_type": "common_name",
+    }
+    corsika_config_no_array_model.primary_particle = test_dict
+    assert corsika_config_no_array_model.primary_particle.name == "proton"
+    assert corsika_config_no_array_model.primary == "proton"
+
+
+def test_primary_particle_setter_from_corsika_id(corsika_config_no_array_model):
+    """Test setting primary particle from CORSIKA 7 ID."""
+    corsika_config_no_array_model.primary_particle = 14
+    assert corsika_config_no_array_model.primary_particle.corsika7_id == 14
+    assert corsika_config_no_array_model.primary == "proton"
+
+
+def test_primary_particle_setter_from_none(corsika_config_no_array_model):
+    """Test setting primary particle from None."""
+    corsika_config_no_array_model.primary_particle = None
+    assert corsika_config_no_array_model.primary_particle is not None
+
+
+def test_primary_particle_getter(corsika_config_mock_array_model):
+    """Test getting primary particle."""
+    assert corsika_config_mock_array_model.primary == "proton"
+    assert corsika_config_mock_array_model.primary_particle.corsika7_id == 14
