@@ -70,7 +70,7 @@ def _parse():
             "Path to the CORSIKA input file (only relevant for simulation software 'sim_telarray')."
         ),
         type=str,
-        required=True,
+        required=False,
     )
     config.parser.add_argument(
         "--pack_for_grid_register",

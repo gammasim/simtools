@@ -12,7 +12,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module=r"corsikaio\.subb
 
 def get_corsika_run_number(file):
     """
-    Return the CORSIKA run number from an eventio file.
+    Return the CORSIKA run number from an eventio (CORSIKA IACT or sim_telarray) file.
 
     Parameters
     ----------
