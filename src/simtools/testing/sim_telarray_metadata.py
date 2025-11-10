@@ -85,9 +85,8 @@ def _assert_model_parameters(metadata, model):
         if sim_telarray_name in metadata.keys():
             parameter_type = model.parameters[param]["type"]
             if parameter_type not in ("string", "dict", "boolean"):
-                metadata_value = str(metadata[sim_telarray_name]).split()[0]
                 value, _ = config_reader.extract_value_from_sim_telarray_column(
-                    [metadata_value], parameter_type
+                    [metadata[sim_telarray_name]], parameter_type
                 )
             else:
                 value = metadata[sim_telarray_name]
