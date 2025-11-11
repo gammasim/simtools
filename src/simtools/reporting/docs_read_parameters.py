@@ -17,7 +17,7 @@ from simtools.io import ascii_handler, io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 from simtools.version import sort_versions
-from simtools.visualization import plot_pixels, plot_tables
+from simtools.visualization import plot_mirrors, plot_pixels, plot_tables
 
 logger = logging.getLogger()
 MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
@@ -72,6 +72,12 @@ class ReadParameters:
 
         if parameter == "camera_config_file":
             plot_names = self._plot_camera_config(parameter, parameter_version, input_file, outpath)
+        elif parameter in (
+            "mirror_list",
+            "primary_mirror_segmentation",
+            "secondary_mirror_segmentation",
+        ):
+            plot_names = self._plot_mirror_config(parameter, parameter_version, input_file, outpath)
         elif parameter_version:
             plot_names = self._plot_parameter_tables(
                 parameter,
@@ -109,6 +115,39 @@ class ReadParameters:
         else:
             logger.info(
                 "Camera configuration file plot already exists: %s",
+                plot_path,
+            )
+            plot_names.append(plot_name)
+
+        return plot_names
+
+    def _plot_mirror_config(self, parameter, parameter_version, input_file, outpath):
+        """Generate plots for mirror configuration files."""
+        if not parameter_version:
+            return []
+
+        plot_names = []
+        plot_name = input_file.stem.replace(".", "-")
+        plot_path = Path(f"{outpath}/{plot_name}").with_suffix(".png")
+
+        if not plot_path.exists():
+            plot_config = {
+                "parameter": parameter,
+                "telescope": self.array_element,
+                "parameter_version": parameter_version,
+                "site": self.site,
+                "model_version": self.model_version,
+            }
+
+            plot_mirrors.plot(
+                config=plot_config,
+                output_file=Path(f"{outpath}/{plot_name}"),
+                db_config=self.db_config,
+            )
+            plot_names.append(plot_name)
+        else:
+            logger.info(
+                "Mirror configuration file plot already exists: %s",
                 plot_path,
             )
             plot_names.append(plot_name)
@@ -175,7 +214,7 @@ class ReadParameters:
         markdown_output_file = output_data_path / output_file_name
 
         if not markdown_output_file.exists():
-            outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
+            outpath = io_handler.IOHandler().get_output_directory("_images")
             outpath.mkdir(parents=True, exist_ok=True)
 
             plot_names = self._generate_plots(parameter, parameter_version, input_file, outpath)
@@ -648,7 +687,7 @@ class ReadParameters:
 
     def _write_file_flag_section(self, file, parameter, comparison_data):
         """Write image/plot references when parameter entries include files."""
-        outpath = Path(io_handler.IOHandler().get_output_directory().parent / "_images")
+        outpath = io_handler.IOHandler().get_output_directory("_images")
         latest_parameter_version = max(
             comparison_data.get(parameter),
             key=lambda x: tuple(map(int, x["parameter_version"].split("."))),
@@ -664,13 +703,25 @@ class ReadParameters:
 
         file.write("The latest parameter version is plotted below.\n\n")
 
-        if parameter != "camera_config_file":
-            plot_name = f"{parameter}_{latest_parameter_version}_{self.site}_{tel}"
-            image_path = outpath / f"{plot_name}.png"
-            file.write(f"![Parameter plot.]({image_path.as_posix()})")
+        if parameter in (
+            "camera_config_file",
+            "mirror_list",
+            "primary_mirror_segmentation",
+            "secondary_mirror_segmentation",
+        ):
+            self._write_file_based_plot(
+                file, parameter, comparison_data, latest_model_version, outpath
+            )
             return
 
-        # camera_config_file: find latest value and convert markdown link to png filename
+        plot_name = f"{parameter}_{latest_parameter_version}_{self.site}_{tel}"
+        image_path = outpath / f"{plot_name}.png"
+        file.write(f"![Parameter plot.]({image_path.as_posix()})")
+
+    def _write_file_based_plot(
+        self, file, parameter, comparison_data, latest_model_version, outpath
+    ):
+        """Write plot reference for file-based parameters."""
         latest_value = None
         for item in comparison_data.get(parameter):
             if latest_model_version in item["model_version"].split(", "):
@@ -686,7 +737,16 @@ class ReadParameters:
 
         filename_png = Path(match.group(1)).with_suffix(".png").name
         image_path = outpath / filename_png
-        file.write(f"![Camera configuration plot.]({image_path.as_posix()})")
+
+        plot_descriptions = {
+            "camera_config_file": "Camera configuration plot",
+            "mirror_list": "Mirror panel layout",
+            "primary_mirror_segmentation": "Primary mirror segmentation",
+            "secondary_mirror_segmentation": "Secondary mirror segmentation",
+        }
+
+        description = plot_descriptions.get(parameter, "Parameter plot")
+        file.write(f"![{description}.]({image_path.as_posix()})")
 
     def _write_array_layouts_section(self, file, layouts):
         """Write the array layouts section of the report."""
