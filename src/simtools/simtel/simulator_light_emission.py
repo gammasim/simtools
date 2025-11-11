@@ -349,8 +349,7 @@ class SimulatorLightEmission(SimtelRunner):
         dist_cm = self.calculate_distance_focal_plane_calibration_device().to(u.cm).value
         angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
 
-        # Build pulse table for ff-1m: Gaussian rise + (Gaussian x Exponential)
-        # Only apply when an exponential decay parameter exists; else fall back to token string.
+        # Build pulse table for ff-1m using model width/exp parameters; else use token.
         pulse_arg = self._get_pulse_shape_string_for_sim_telarray()
         pulse_shape = self.calibration_model.get_parameter_value("flasher_pulse_shape")
         width_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
