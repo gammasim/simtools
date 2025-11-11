@@ -23,6 +23,20 @@ STATS_BOX_STYLE = {"boxstyle": "round", "facecolor": "wheat", "alpha": 0.8}
 OBSERVER_TEXT = "for an observer facing the mirrors"
 
 
+def _rotate_coordinates_clockwise_90(x_pos, y_pos):
+    """
+    Rotate coordinates 90 degrees clockwise for observer-facing view.
+
+    Plots are rotated by 90 degrees clockwise to present the point of view of a
+    person standing on the camera platform.
+
+    Important: Any transformation applied to one mirror list must be applied consistently to
+    all (primary) mirror lists. Inconsistent transformations would result in incorrect mirror
+    configurations when running sim_telarray simulations.
+    """
+    return y_pos, -x_pos
+
+
 def _detect_segmentation_type(data_file_path):
     """
     Detect the type of segmentation file (ring, shape, or standard).
@@ -150,7 +164,7 @@ def plot_mirror_layout(mirrors, mirror_file_path, telescope_model_name):
 
     x_pos = mirrors.mirror_table["mirror_x"].to("cm").value
     y_pos = mirrors.mirror_table["mirror_y"].to("cm").value
-    x_pos, y_pos = y_pos, -x_pos
+    x_pos, y_pos = _rotate_coordinates_clockwise_90(x_pos, y_pos)
     diameter = mirrors.mirror_diameter.to("cm").value
     shape_type = mirrors.shape_type
     focal_lengths = mirrors.mirror_table["focal_length"].to("cm").value
@@ -217,7 +231,7 @@ def plot_mirror_segmentation(data_file_path, telescope_model_name, parameter_typ
 
     x_pos = segmentation_data["x"]
     y_pos = segmentation_data["y"]
-    x_pos, y_pos = y_pos, -x_pos
+    x_pos, y_pos = _rotate_coordinates_clockwise_90(x_pos, y_pos)
     diameter = segmentation_data["diameter"]
     shape_type = segmentation_data["shape_type"]
     segment_ids = segmentation_data["segment_ids"]
@@ -768,10 +782,8 @@ def plot_mirror_shape_segmentation(data_file_path, telescope_model_name, paramet
 
     shape_segments, segment_ids = _read_shape_segmentation_file(data_file_path)
 
-    # Apply 90 degrees clockwise rotation: (x, y) -> (y, -x)
     for seg in shape_segments:
-        x, y = seg["x"], seg["y"]
-        seg["x"], seg["y"] = y, -x
+        seg["x"], seg["y"] = _rotate_coordinates_clockwise_90(seg["x"], seg["y"])
         seg["rotation"] = seg["rotation"] - 90
 
     fig, ax = plt.subplots(figsize=(10, 10))
