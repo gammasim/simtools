@@ -48,7 +48,7 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: simtools
-    version: ">=0.24.1"
+    version: ">0.24.0"
 ---
 title: Schema for flasher_pulse_shape model parameter
 schema_version: 0.1.0
