@@ -1,12 +1,8 @@
 """Pulse shape computations for light emission simulations for flasher."""
 
-import logging
-
 import numpy as np
 from scipy.optimize import least_squares
 from scipy.signal import fftconvolve
-
-_logger = logging.getLogger(__name__)
 
 
 def _rise_width(t, y, y_low=0.1, y_high=0.9):
@@ -149,7 +145,7 @@ def generate_gauss_expconv_pulse(
     return t, y
 
 
-def solve_sigma_tau_from_risefall(
+def solve_sigma_tau_from_rise_fall(
     rise_width_ns,
     fall_width_ns,
     dt_ns=0.1,
@@ -204,7 +200,6 @@ def solve_sigma_tau_from_risefall(
 
     res = least_squares(residuals, x0=[0.3, 10.0], bounds=(1e-6, 500))
     sigma, tau = float(res.x[0]), float(res.x[1])
-    _logger.info(f"Solved pulse parameters (LSQ): sigma={sigma:.6g}, tau={tau:.6g}")
     return sigma, tau
 
 
@@ -253,7 +248,7 @@ def generate_pulse_from_rise_fall_times(
     are solved via least-squares such that the resulting pulse matches the requested rise and
     fall times measured on monotonic segments relative to the peak.
     """
-    sigma, tau = solve_sigma_tau_from_risefall(
+    sigma, tau = solve_sigma_tau_from_rise_fall(
         rise_width_ns,
         fall_width_ns,
         dt_ns=dt_ns,
