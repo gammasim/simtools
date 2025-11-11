@@ -57,6 +57,13 @@ def _parse():
         description="Prepare simulations production for HT Condor job submission",
     )
     config.parser.add_argument(
+        "--number_of_runs",
+        help="Number of runs to be simulated.",
+        type=int,
+        required=True,
+        default=1,
+    )
+    config.parser.add_argument(
         "--apptainer_image",
         help="Apptainer image to use for the simulation (full path).",
         type=str,

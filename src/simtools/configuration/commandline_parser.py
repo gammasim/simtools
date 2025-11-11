@@ -377,12 +377,6 @@ class CommandLineParser(argparse.ArgumentParser):
                 "required": True,
                 "default": 1,
             },
-            "number_of_runs": {
-                "help": "Number of runs to be simulated.",
-                "type": int,
-                "required": True,
-                "default": 1,
-            },
             "event_number_first_shower": {
                 "help": "Event number of first shower",
                 "type": int,
