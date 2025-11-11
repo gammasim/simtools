@@ -59,7 +59,6 @@ db.createUser({
     { role: 'readWriteAnyDatabase', db: 'admin' },
     { role: 'dbAdminAnyDatabase', db: 'admin' },
     { role: 'userAdminAnyDatabase', db: 'admin' },
-    { role: 'clusterMonitor', db: 'admin' },
   ]
 });
 "; then
