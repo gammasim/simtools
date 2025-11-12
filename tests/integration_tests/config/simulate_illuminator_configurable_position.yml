@@ -11,7 +11,7 @@ applications:
     - 0.
     - 0.
     - -1.
-    model_version: 6.0.2
+    model_version: 7.0
     output_path: simtools-output/illuminator-variable
     site: North
     telescope: MSTN-04

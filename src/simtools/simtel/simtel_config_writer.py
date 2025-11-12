@@ -257,28 +257,24 @@ class SimtelConfigWriter:
             Model parameters in sim_telarray format including flasher parameters.
 
         """
-        if "flasher_pulse_shape" not in parameters and "flasher_pulse_width" not in parameters:
+        if "flasher_pulse_shape" not in parameters:
             return simtel_par
 
         mapping = {
             "gauss": "laser_pulse_sigtime",
             "tophat": "laser_pulse_twidth",
+            "gauss-exponential": "laser_pulse_sigtime",
         }
 
-        shape = parameters.get("flasher_pulse_shape", {}).get("value", "").lower()
-        if "exponential" in shape:
-            simtel_par["laser_pulse_exptime"] = parameters.get("flasher_pulse_exp_decay", {}).get(
-                "value", 0.0
-            )
-        else:
-            simtel_par["laser_pulse_exptime"] = 0.0
+        shape_value = parameters.get("flasher_pulse_shape", {}).get("value")
+        shape = shape_value[0].lower()
+        width = shape_value[1]
+        exp_decay = shape_value[2]
 
-        width = parameters.get("flasher_pulse_width", {}).get("value", 0.0)
+        simtel_par["laser_pulse_exptime"] = exp_decay if ("exponential" in shape) else 0.0
 
         simtel_par.update(dict.fromkeys(mapping.values(), 0.0))
-        if shape == "gauss-exponential":
-            simtel_par["laser_pulse_sigtime"] = width
-        elif shape in mapping:
+        if shape in mapping:
             simtel_par[mapping[shape]] = width
         else:
             self._logger.warning(f"Flasher pulse shape '{shape}' without width definition")
