@@ -1,6 +1,8 @@
 %YAML 1.2
 ---
 title: Schema for flasher_pulse_exp_decay model parameter
+deprecated: true
+deprecation_note: "Replaced by updated definition of flasher_pulse_shape"
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
