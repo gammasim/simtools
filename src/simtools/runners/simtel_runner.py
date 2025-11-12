@@ -33,15 +33,25 @@ class SimtelRunner:
         CORSIKA configuration.
     use_multipipe: bool
         Use multipipe to run CORSIKA and sim_telarray.
+    calibration_run_mode: str
+        Calibration run mode.
     """
 
-    def __init__(self, simtel_path, label=None, corsika_config=None, use_multipipe=False):
+    def __init__(
+        self,
+        simtel_path,
+        label=None,
+        corsika_config=None,
+        use_multipipe=False,
+        calibration_run_mode=None,
+    ):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
         self._simtel_path = Path(simtel_path)
         self.label = label
         self._base_directory = None
+        self.calibration_run_mode = calibration_run_mode
 
         self.runs_per_set = 1
 
@@ -202,4 +212,5 @@ class SimtelRunner:
             run_number=run_number,
             mode=mode,
             _model_version_index=model_version_index,
+            calibration_run_mode=self.calibration_run_mode,
         )
