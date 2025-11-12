@@ -43,6 +43,7 @@ class SimulatorArray(SimtelRunner):
             simtel_path=simtel_path,
             corsika_config=corsika_config,
             use_multipipe=use_multipipe,
+            calibration_run_mode=calibration_config.get("run_mode") if calibration_config else None,
         )
 
         self.sim_telarray_seeds = sim_telarray_seeds

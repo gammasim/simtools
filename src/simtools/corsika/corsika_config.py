@@ -42,8 +42,7 @@ class CorsikaConfig:
         self._logger.debug("Init CorsikaConfig")
 
         self.label = label
-        self.shower_events = None
-        self.mc_events = None
+        self.shower_events = self.mc_events = None
         self.zenith_angle = self.azimuth_angle = None
         self.curved_atmosphere_min_zenith_angle = None
         self._run_number = None
