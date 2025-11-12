@@ -416,7 +416,7 @@ def test__add_flasher_command_options(simulator_instance):
         if name == "flasher_bunch_size":
             return 10000
         if name == "flasher_pulse_shape":
-            return ["Gauss"]
+            return ["Gauss", 0.0, 0.0]
         return None
 
     simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_param
