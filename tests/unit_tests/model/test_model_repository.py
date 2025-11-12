@@ -259,7 +259,7 @@ def test_get_latest_model_parameter_file_no_files(mock_path):
     mock_directory.glob.return_value = []
 
     with pytest.raises(FileNotFoundError, match="No JSON files found for parameter 'parameter'"):
-        model_repository._get_latest_model_parameter_file("mock_directory", "parameter")
+        model_repository._get_latest_model_parameter_file("mock_directory", "parameter", "1.0.0")
 
 
 @patch("simtools.model.model_repository.Path")
@@ -276,9 +276,25 @@ def test_get_latest_model_parameter_file_unsorted_versions(mock_path):
     mock_file_3.stem = "parameter-2.0.0"
     mock_directory.glob.return_value = [mock_file_1, mock_file_3, mock_file_2]
 
-    result = model_repository._get_latest_model_parameter_file("mock_directory", "parameter")
+    result = model_repository._get_latest_model_parameter_file(
+        "mock_directory", "parameter", "10.0.0"
+    )
 
     assert result == str(mock_file_2)
+
+
+@patch("simtools.model.model_repository.Path")
+def test_get_latest_model_parameter_file_no_files_within_max_version(mock_path):
+    """Test error when no files exist within max_version constraint."""
+    mock_directory = Mock()
+    mock_path.return_value = mock_directory
+
+    mock_file = Mock()
+    mock_file.stem = "parameter-2.0.0"
+    mock_directory.glob.return_value = [mock_file]
+
+    with pytest.raises(FileNotFoundError, match=r"with version <= 1\.0\.0"):
+        model_repository._get_latest_model_parameter_file("mock_directory", "parameter", "1.0.0")
 
 
 def test_update_parameters_dict_new_function():
@@ -707,6 +723,7 @@ def test_create_new_model_parameter_entry_simple(mock_dump, mock_get_latest, tmp
         output_path=model_parameters_dir / telescope / param,
         unit=None,
         meta_parameter=False,
+        model_parameter_schema_version=None,
     )
 
 
