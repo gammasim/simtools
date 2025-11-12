@@ -568,23 +568,21 @@ def test_write_single_mirror_list_file(simtel_config_writer, tmp_test_directory,
 
 
 @pytest.mark.parametrize(
-    ("shape", "width", "expected_sigtime", "expected_twidth", "expected_exptime"),
+    ("shape", "width", "exp", "expected_sigtime", "expected_twidth", "expected_exptime"),
     [
-        ("gauss", 2.5, 2.5, 0.0, 0.0),
-        ("tophat", 5.0, 0.0, 5.0, 0.0),
-        ("exponential", 3.2, 0.0, 0.0, 3.2),
-        ("gauss-exponential", 3.2, 3.2, 0.0, 3.2),
-        ("GAUSS", 1.5, 1.5, 0.0, 0.0),  # case insensitive
+        ("gauss", 2.5, 0.0, 2.5, 0.0, 0.0),
+        ("tophat", 5.0, 0.0, 0.0, 5.0, 0.0),
+        ("exponential", 0.0, 3.2, 0.0, 0.0, 3.2),
+        ("gauss-exponential", 3.2, 3.2, 3.2, 0.0, 3.2),
+        ("GAUSS", 1.5, 0.0, 1.5, 0.0, 0.0),  # case insensitive
     ],
 )
 def test_get_flasher_parameters_for_sim_telarray_valid_shapes(
-    simtel_config_writer, shape, width, expected_sigtime, expected_twidth, expected_exptime
+    simtel_config_writer, shape, width, exp, expected_sigtime, expected_twidth, expected_exptime
 ):
-    """Test _get_flasher_parameters_for_sim_telarray with valid pulse shapes."""
+    """Test _get_flasher_parameters_for_sim_telarray with valid pulse shapes (unified list)."""
     parameters = {
-        "flasher_pulse_shape": {"value": shape},
-        "flasher_pulse_width": {"value": width},
-        "flasher_pulse_exp_decay": {"value": width},
+        "flasher_pulse_shape": {"value": [shape, width, exp]},
     }
     result = simtel_config_writer._get_flasher_parameters_for_sim_telarray(parameters, {})
 
@@ -599,8 +597,8 @@ def test_get_flasher_parameters_for_sim_telarray_invalid_shapes(
 ):
     """Test _get_flasher_parameters_for_sim_telarray with invalid shapes - covers warning case."""
     parameters = {
-        "flasher_pulse_shape": {"value": shape},
-        "flasher_pulse_width": {"value": 1.0},
+        # Provide unified list but with an invalid shape token
+        "flasher_pulse_shape": {"value": [shape, 0.0, 0.0]},
     }
 
     with caplog.at_level(logging.WARNING):
@@ -622,11 +620,8 @@ def test_get_flasher_parameters_for_sim_telarray_missing_params(simtel_config_wr
     assert result == simtel_par
 
     simtel_par = {"existing_param": "existing_value"}
-
-    parameters = {
-        "flasher_pulse_width": {"value": 0.0},
-        "flasher_pulse_shape": {"value": "bad_shape"},
-    }
+    # Provide unified list with invalid shape token; expect warning and zeroed flasher params
+    parameters = {"flasher_pulse_shape": {"value": ["bad_shape", 0.0, 0.0]}}
 
     with caplog.at_level(logging.WARNING):
         result = simtel_config_writer._get_flasher_parameters_for_sim_telarray(
@@ -640,6 +635,7 @@ def test_get_flasher_parameters_for_sim_telarray_missing_params(simtel_config_wr
         result[key] == pytest.approx(0.0)
         for key in ["laser_pulse_sigtime", "laser_pulse_twidth", "laser_pulse_exptime"]
     )
+    assert result["existing_param"] == "existing_value"
 
 
 def test_write_array_triggers_file_mixed_hardstereo(simtel_config_writer, tmp_test_directory):
