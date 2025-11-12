@@ -351,8 +351,6 @@ class SimulatorLightEmission(SimtelRunner):
 
         # Build pulse table for ff-1m using unified list parameter [shape, width, exp]
         pulse_shape_value = self.calibration_model.get_parameter_value("flasher_pulse_shape")
-        if not isinstance(pulse_shape_value, (list, tuple)) or len(pulse_shape_value) == 0:
-            raise ValueError("flasher_pulse_shape must be a list like ['Gauss', width_ns, exp_ns]")
         shape_name = pulse_shape_value[0]
         width_ns = pulse_shape_value[1]
         exp_ns = pulse_shape_value[2]
@@ -529,8 +527,6 @@ class SimulatorLightEmission(SimtelRunner):
             The pulse shape string.
         """
         opt = self.calibration_model.get_parameter_value("flasher_pulse_shape")
-        if not isinstance(opt, (list, tuple)) or len(opt) == 0:
-            raise ValueError("flasher_pulse_shape must be a list [shape, width_ns, exp_ns]")
         shape = opt[0].lower()
         width = opt[1]
         expv = opt[2]
