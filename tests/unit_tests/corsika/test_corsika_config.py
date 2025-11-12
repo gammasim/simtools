@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from astropy import units as u
 
-from simtools.corsika.corsika_config import CorsikaConfig, InvalidCorsikaInputError
+from simtools.corsika.corsika_config import CorsikaConfig
 
 logger = logging.getLogger()
 
@@ -646,7 +646,7 @@ def test_assert_corsika_configurations_match_failure(corsika_config_mock_array_m
         }
         mock_model_parameter.side_effect = [mock_params_1, mock_params_2]
 
-        with pytest.raises(InvalidCorsikaInputError, match="CORSIKA parameter 'param2' differs"):
+        with pytest.raises(ValueError, match="CORSIKA parameter 'param2' differs"):
             corsika_config_mock_array_model.assert_corsika_configurations_match(
                 model_versions=["5.0.0", "6.0.0"], db_config={}
             )

@@ -12,10 +12,6 @@ from simtools.model.model_parameter import ModelParameter
 from simtools.utils import general as gen
 
 
-class InvalidCorsikaInputError(Exception):
-    """Exception for invalid corsika input."""
-
-
 class CorsikaConfig:
     """
     Configuration for the CORSIKA air shower simulation software.
@@ -254,7 +250,7 @@ class CorsikaConfig:
                         f"  {model_versions[i]}: {current_value}\n"
                         f"  {model_versions[i + 1]}: {next_value}"
                     )
-                    raise InvalidCorsikaInputError(
+                    raise ValueError(
                         f"CORSIKA parameter '{key}' differs between model versions "
                         f"{model_versions[i]} and {model_versions[i + 1]}. "
                         f"Values are {current_value} and {next_value} respectively."
