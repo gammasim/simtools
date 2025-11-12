@@ -15,6 +15,7 @@ logger = logging.getLogger()
 CORSIKA_CONFIG_MODE_PARAMETER = "simtools.corsika.corsika_config.ModelParameter"
 MUON_PLUS_PARTICLE = "muon+"
 PROTON_PARTICLE = "proton"
+G_CM2 = "g/cm2"
 
 
 def create_mock_array_model(mocker, geomag_rotation=0):
@@ -26,7 +27,8 @@ def create_mock_array_model(mocker, geomag_rotation=0):
     return mock_array_model
 
 
-def get_standard_corsika_parameters(gcm2="g/cm2"):
+@pytest.fixture
+def get_standard_corsika_parameters():
     """Helper function to return standard CORSIKA configuration parameters."""
     return {
         "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
@@ -37,9 +39,9 @@ def get_standard_corsika_parameters(gcm2="g/cm2"):
             "value": [0.3, 0.1, 0.020, 0.020],
             "unit": "GeV",
         },
-        "corsika_longitudinal_shower_development": {"value": 20.0, "unit": gcm2},
+        "corsika_longitudinal_shower_development": {"value": 20.0, "unit": G_CM2},
         "corsika_iact_split_auto": {"value": 15000000, "unit": None},
-        "corsika_starting_grammage": {"value": 0.0, "unit": gcm2},
+        "corsika_starting_grammage": {"value": 0.0, "unit": G_CM2},
         "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
     }
 
@@ -71,19 +73,9 @@ def corsika_config_no_array_model(corsika_config_data, mocker):
 
 
 @pytest.fixture
-def gcm2():
-    return "g/cm2"
-
-
-@pytest.fixture
-def corsika_configuration_parameters(gcm2):
-    return get_standard_corsika_parameters(gcm2)
-
-
-@pytest.fixture
-def corsika_configuration_parameters_muon_grammage(gcm2, corsika_configuration_parameters):
+def get_standard_corsika_parameters_muon_grammage(get_standard_corsika_parameters):
     """Fixture for CORSIKA configuration parameters with muon grammage."""
-    params = corsika_configuration_parameters.copy()
+    params = get_standard_corsika_parameters.copy()
     params["corsika_starting_grammage"] = {
         "value": [
             {
@@ -95,15 +87,15 @@ def corsika_configuration_parameters_muon_grammage(gcm2, corsika_configuration_p
                 "value": 0.0,
             },
         ],
-        "unit": gcm2,
+        "unit": G_CM2,
     }
     return params
 
 
 @pytest.fixture
-def corsika_configuration_parameters_teltype_grammage(gcm2, corsika_configuration_parameters):
+def get_standard_corsika_parameters_teltype_grammage(get_standard_corsika_parameters):
     """Fixture for CORSIKA configuration parameters with muon grammage."""
-    params = corsika_configuration_parameters.copy()
+    params = get_standard_corsika_parameters.copy()
     params["corsika_starting_grammage"] = {
         "value": [
             {
@@ -127,7 +119,7 @@ def corsika_configuration_parameters_teltype_grammage(gcm2, corsika_configuratio
                 "value": 2.0,  # default values are set to non-standard values for testing
             },
         ],
-        "unit": gcm2,
+        "unit": G_CM2,
     }
     return params
 
@@ -181,13 +173,16 @@ def test_fill_corsika_configuration(corsika_config_mock_array_model, mocker):
         assert key in corsika_config_mock_array_model.config
 
 
-def test_fill_corsika_configuration_model_version(corsika_config_mock_array_model, gcm2):
+def test_fill_corsika_configuration_model_version(
+    corsika_config_mock_array_model, get_standard_corsika_parameters
+):
     """Test handling a list of model versions as input, taking the first one only."""
 
     with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
         mock_params = Mock()
-        params = get_standard_corsika_parameters(gcm2)
-        mock_params.get_simulation_software_parameters.return_value = params
+        mock_params.get_simulation_software_parameters.return_value = (
+            get_standard_corsika_parameters
+        )
         mock_model_parameter.return_value = mock_params
 
         args_dict = {
@@ -226,13 +221,13 @@ def test_corsika_configuration_from_user_input(
 
 
 def test_corsika_configuration_interaction_flags(
-    corsika_config_mock_array_model, corsika_configuration_parameters
+    corsika_config_mock_array_model, get_standard_corsika_parameters
 ):
     with pytest.raises(KeyError):
         corsika_config_mock_array_model._corsika_configuration_interaction_flags({})
 
     parameters = corsika_config_mock_array_model._corsika_configuration_interaction_flags(
-        corsika_configuration_parameters
+        get_standard_corsika_parameters
     )
     assert isinstance(parameters, dict)
     assert "ECUTS" in parameters
@@ -254,10 +249,10 @@ def test_primary_particle(corsika_config_mock_array_model):
     assert corsika_config_mock_array_model.primary == "proton"
 
 
-def test_input_config_corsika_starting_grammage(corsika_config_mock_array_model, gcm2):
+def test_input_config_corsika_starting_grammage(corsika_config_mock_array_model):
     assert (
         corsika_config_mock_array_model._input_config_corsika_starting_grammage(
-            {"value": 0.0, "unit": gcm2}
+            {"value": 0.0, "unit": G_CM2}
         )
         == "0.0"
     )
@@ -271,13 +266,13 @@ def test_input_config_corsika_starting_grammage(corsika_config_mock_array_model,
 
 def test_input_config_corsika_starting_grammage_muon_grammage(
     corsika_config_mock_array_model,
-    corsika_configuration_parameters_muon_grammage,
-    corsika_configuration_parameters_teltype_grammage,
+    get_standard_corsika_parameters_muon_grammage,
+    get_standard_corsika_parameters_teltype_grammage,
 ):
     # default behavior with proton as primary
     assert (
         corsika_config_mock_array_model._input_config_corsika_starting_grammage(
-            corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
+            get_standard_corsika_parameters_muon_grammage["corsika_starting_grammage"]
         )
         == "0.0"
     )
@@ -289,7 +284,7 @@ def test_input_config_corsika_starting_grammage_muon_grammage(
     }
     assert (
         corsika_config_mock_array_model_muon._input_config_corsika_starting_grammage(
-            corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
+            get_standard_corsika_parameters_muon_grammage["corsika_starting_grammage"]
         )
         == "10.0"
     )
@@ -299,7 +294,7 @@ def test_input_config_corsika_starting_grammage_muon_grammage(
     }
     assert (
         corsika_config_mock_array_model_muon._input_config_corsika_starting_grammage(
-            corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
+            get_standard_corsika_parameters_muon_grammage["corsika_starting_grammage"]
         )
         == "0.0"
     )
@@ -328,7 +323,7 @@ def test_input_config_corsika_starting_grammage_muon_grammage(
 
     assert (
         corsika_config_mock_array_model_teltype._input_config_corsika_starting_grammage(
-            corsika_configuration_parameters_teltype_grammage["corsika_starting_grammage"]
+            get_standard_corsika_parameters_teltype_grammage["corsika_starting_grammage"]
         )
         == "10.0"
     )
@@ -339,7 +334,7 @@ def test_input_config_corsika_starting_grammage_muon_grammage(
     }
     assert (
         corsika_config_mock_array_model_teltype._input_config_corsika_starting_grammage(
-            corsika_configuration_parameters_teltype_grammage["corsika_starting_grammage"]
+            get_standard_corsika_parameters_teltype_grammage["corsika_starting_grammage"]
         )
         == "2.0"
     )
@@ -354,9 +349,9 @@ def test_input_config_corsika_particle_kinetic_energy_cutoff(corsika_config_mock
     ) == ["300.0 100.0 20.0 20.0"]
 
 
-def test_input_config_corsika_longitudinal_parameters(corsika_config_mock_array_model, gcm2):
+def test_input_config_corsika_longitudinal_parameters(corsika_config_mock_array_model):
     assert corsika_config_mock_array_model._input_config_corsika_longitudinal_parameters(
-        {"value": 20.0, "unit": gcm2}
+        {"value": 20.0, "unit": G_CM2}
     ) == ["T", "20.0", "F", "F"]
     assert corsika_config_mock_array_model._input_config_corsika_longitudinal_parameters(
         {"value": 10.0, "unit": "kg/cm2"}
@@ -364,10 +359,10 @@ def test_input_config_corsika_longitudinal_parameters(corsika_config_mock_array_
 
 
 def test_corsika_configuration_cherenkov_parameters(
-    corsika_config_mock_array_model, corsika_configuration_parameters
+    corsika_config_mock_array_model, get_standard_corsika_parameters
 ):
     cherenk_dict = corsika_config_mock_array_model._corsika_configuration_cherenkov_parameters(
-        corsika_configuration_parameters
+        get_standard_corsika_parameters
     )
     assert isinstance(cherenk_dict, dict)
     assert "CERSIZ" in cherenk_dict
@@ -381,10 +376,10 @@ def test_input_config_corsika_cherenkov_wavelength(corsika_config_mock_array_mod
 
 
 def test_corsika_configuration_iact_parameters(
-    corsika_config_mock_array_model, corsika_configuration_parameters
+    corsika_config_mock_array_model, get_standard_corsika_parameters
 ):
     iact_dict = corsika_config_mock_array_model._corsika_configuration_iact_parameters(
-        corsika_configuration_parameters
+        get_standard_corsika_parameters
     )
     assert isinstance(iact_dict, dict)
     assert "MAX_BUNCHES" in iact_dict
@@ -883,7 +878,11 @@ def test_initialize_from_config(corsika_config_mock_array_model, corsika_config_
 
 
 def test_fill_corsika_configuration_variations(
-    corsika_config_no_array_model, corsika_config_mock_array_model, mocker, tmp_path, gcm2
+    corsika_config_no_array_model,
+    corsika_config_mock_array_model,
+    mocker,
+    tmp_path,
+    get_standard_corsika_parameters,
 ):
     """Test various configuration scenarios for CORSIKA."""
     # Test None args_dict
@@ -909,8 +908,9 @@ def test_fill_corsika_configuration_variations(
     # Test DB config with parameters
     with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
         mock_params = Mock()
-        params = get_standard_corsika_parameters(gcm2)
-        mock_params.get_simulation_software_parameters.return_value = params
+        mock_params.get_simulation_software_parameters.return_value = (
+            get_standard_corsika_parameters
+        )
         mock_model_parameter.return_value = mock_params
         result = corsika_config_mock_array_model._fill_corsika_configuration_from_db(
             ["5.0.0"], db_config={}
