@@ -23,8 +23,8 @@ data:
   - type: float64
     description: |-
      Characteristic width of the flasher pulse shape.
-     For 'TopHat', this is the pulse width, for 'Gauss' the rms width.
-     Ignored if shape is 'Exponential'.
+     For 'TopHat', this is the pulse width, for 'Gauss' and 'Gauss-Exponential'
+     the rms width. Ignored if shape is 'Exponential'.
     unit: ns
     default: 0
     allowed_range:
