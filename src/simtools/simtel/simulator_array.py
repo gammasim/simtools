@@ -64,7 +64,7 @@ class SimulatorArray(SimtelRunner):
             Full path of the input CORSIKA file.
         run_number: int
             Run number.
-        extra_commands: str
+        extra_commands: list[str]
             Additional commands for running simulations given in config.yml.
 
         Returns
@@ -83,7 +83,7 @@ class SimulatorArray(SimtelRunner):
             file.write("set -o pipefail\n")
             file.write("\nSECONDS=0\n")
 
-            if extra_commands is not None:
+            if extra_commands:
                 file.write("# Writing extras\n")
                 for line in extra_commands:
                     file.write(f"{line}\n")

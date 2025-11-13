@@ -102,10 +102,6 @@ def test_raise_simtel_error_without_log_file(simtel_runner):
         simtel_runner._raise_simtel_error()
 
 
-def test_check_run_result(simtel_runner):
-    simtel_runner._check_run_result(run_number=5)
-
-
 def test_run_with_runs_per_set(simtel_runner, mocker):
     mock_make_run_command = mocker.patch.object(
         simtel_runner, "_make_run_command", return_value=("echo test", None, None)

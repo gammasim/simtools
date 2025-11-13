@@ -169,6 +169,7 @@ class Simulator:
                 "seed_file_name": self.sim_telarray_seeds["seed_file_name"],
             }
 
+        #  'corsika_sim_telarray' allows for multiple model versions (multipipe option)
         corsika_configurations = (
             corsika_configurations
             if self.simulation_software == "corsika_sim_telarray"
