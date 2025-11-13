@@ -1,0 +1,159 @@
+# syntax=docker/dockerfile:1.4
+# Dockerfile for base CORSIKA7
+#
+# Contains CORSIKA (possibly optimized; with and without curved atmosphere)
+#
+
+# Shared build arguments
+ARG CORSIKA_VERSION="78010"
+ARG CORSIKA_OPT_PATCH_VERSION="v1.1.0"
+ARG HADRONIC_MODEL="qgs3"
+ARG AVX_FLAG="avx2"
+ARG BERNLOHR_VERSION="1.70"
+ARG AUTOCONF_VERSION="2.71"
+
+# hadolint global ignore=DL3013,DL3033,DL3041,SC1091
+# - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)
+# - SC1091: ignore warning about not being able to source the bashrc
+
+# -----------------------------------------------------------------------------
+# STAGE 1: source_preparation
+# Centralizes all source code preparation and extraction.
+# -----------------------------------------------------------------------------
+FROM almalinux:9.5 AS source_preparation
+ARG CORSIKA_VERSION
+ARG CORSIKA_OPT_PATCH_VERSION
+ARG CORSIKA_OPT_PATCH_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git"
+ARG BERNLOHR_VERSION
+ARG AUTOCONF_VERSION
+ARG HADRONIC_MODEL
+
+RUN yum update -y --setopt=tsflags=nodocs && \
+    yum install -y git tar gzip && \
+    yum clean all && \
+    rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
+
+WORKDIR /src
+ENV CORSIKA_DIR="corsika-${CORSIKA_VERSION}"
+
+# TODO - add configuration files to CTAO gitlab
+COPY config_${CORSIKA_VERSION}_${HADRONIC_MODEL}_*.h .
+
+# TODO - clone CORSIKA from KIT gitlab
+# TODO - address how to use newest IACT version (part of sim_telarray; could also clone from gitlab)
+ADD corsika_simtelarray.tar.gz .
+RUN tar -zxf ${CORSIKA_DIR}.tar.gz && \
+    tar -zxf bernlohr-$BERNLOHR_VERSION.tar.gz -C ${CORSIKA_DIR}/bernlohr && \
+    rm -f examples-with-data.tar.gz sim_telarray_config.tar.gz \
+    corsika_simtelarray.tar.gz  ${CORSIKA_DIR}.tar.gz \
+    bernlohr-$BERNLOHR_VERSION.tar.gz sim_telarray.tar.gz \
+    corsikaOptPatch-77410_2022-09-12.tar.gz
+
+RUN --mount=type=secret,id=opt_patches_token \
+    git config --global advice.detachedHead false && \
+    git clone --depth 1 --branch "${CORSIKA_OPT_PATCH_VERSION}" "https://oauth2:$(cat /run/secrets/opt_patches_token)@${CORSIKA_OPT_PATCH_REPO}" && \
+    cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION ${CORSIKA_DIR}/corsika-patches/ && \
+    rm -rf corsika-opt-patches
+
+ADD autoconf.tar.gz .
+RUN mv autoconf-${AUTOCONF_VERSION} ./autoconf
+
+# -----------------------------------------------------------------------------
+# STAGE 2: build_image
+# Installs necessary build dependencies and performs the compilation.
+# -----------------------------------------------------------------------------
+FROM almalinux:9.5 AS build_image
+ARG HADRONIC_MODEL
+ARG AVX_FLAG
+ARG CORSIKA_VERSION
+ARG BERNLOHR_VERSION
+ARG CORSIKA_OPT_PATCH_VERSION
+ARG AUTOCONF_VERSION
+ARG C_SPECIFIC_FLAGS="-std=c99"
+ARG FORTRAN_SPECIFIC_FLAGS="-ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy"
+
+ENV GCC_PATH="/usr/bin/"
+ENV CORSIKA_DIR="corsika-${CORSIKA_VERSION}"
+
+RUN yum update -y --setopt=tsflags=nodocs && \
+    yum install -y \
+    bzip2 csh m4 perl gcc-fortran && \
+    yum clean all && \
+    rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
+
+WORKDIR /workdir/simulation_software
+COPY --from=source_preparation /src .
+
+# autoconf 2.71 is need to re-generate the configure script after applying patches
+WORKDIR /workdir/simulation_software/autoconf
+RUN ./configure --prefix=/usr && \
+    make && make install && \
+    rm -rf /workdir/simulation_software/autoconf
+
+WORKDIR /workdir/simulation_software/${CORSIKA_DIR}
+
+# Apply patches for non-optimized / optimized CORSIKA
+RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
+        patch -b -p0 src/corsika.F < "../corsika-77550.patch"; \
+    fi && \
+    if [ "$AVX_FLAG" != "no_opt" ]; then \
+        ./corsika_opt_patching.sh && \
+        autoreconf; \
+    fi
+
+# Build non-optimized / optimized CORSIKA
+RUN for variant in curved flat; do \
+        ./coconut -d && rm -f ./*/*.a lib/*/*.a included/* && \
+        # CORSIKA configuration
+        cp -v ../config_${CORSIKA_VERSION}_${HADRONIC_MODEL}_${variant}.h include/config.h; \
+        # compilation flags
+        AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
+        if [ "$AVX_FLAG" = "no_opt" ] || [ "$variant" = "curved" ]; then \
+            BASE_FLAGS="-g -O3"; \
+        else \
+            BASE_FLAGS="-g -DCERENKOPT -DVLIBM -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
+        fi && \
+        CFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" \
+        CXXFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" \
+        FFLAGS="${BASE_FLAGS} ${FORTRAN_SPECIFIC_FLAGS}" \
+        # compile using the coconut script
+        CORSIKA_USER_COMP=1 ./coconut --expert --without-root --without-COASTUSERLIB --without-conex < /dev/null; \
+        # move built corsika binary and compile file to a separate directory
+        CORSIKA_RUN_DIR="/workdir/corsika-run" && \
+        mkdir -p ${CORSIKA_RUN_DIR} && \
+        mv -v -f "./run/corsika${CORSIKA_VERSION}Linux_"* "${CORSIKA_RUN_DIR}/corsika-$variant" && \
+        cp -r -v "./run/"* ${CORSIKA_RUN_DIR}/; \
+    done
+
+# Use QGSJet tables downloaded externally (overwrite any existing copies)
+WORKDIR /workdir/corsika-run
+COPY qgsdat-II-04.bz2 .
+COPY qgsdat-III.bz2 .
+RUN if [ "$HADRONIC_MODEL" = "qgs3" ]; then \
+        if [ -f qgsdat-III.bz2 ]; then \
+            bzip2 -vdq qgsdat-III.bz2; \
+        fi; \
+    fi && \
+    if [ "$HADRONIC_MODEL" = "qgs2" ]; then \
+        if [ -f qgsdat-II-04.bz2 ]; then \
+            bzip2 -vdq qgsdat-II-04.bz2; \
+        fi; \
+    fi && \
+    rm -f -v qgsdat*.bz2
+
+
+# -----------------------------------------------------------------------------
+# STAGE 3: Final Image (Runtime)
+# -----------------------------------------------------------------------------
+FROM almalinux:9.5-minimal
+WORKDIR /workdir/simulation_software
+ARG CORSIKA=corsika-77500
+COPY --from=build_image /workdir/corsika-run /workdir/simulation_software/corsika-run
+
+RUN microdnf update -y && microdnf install -y \
+    gcc-fortran && \
+    microdnf clean all && \
+    rm -rf /var/cache/dnf/* /tmp/* /var/tmp/*
+
+SHELL ["/bin/bash", "-c"]
+WORKDIR /workdir/simulation_software/corsika-run
