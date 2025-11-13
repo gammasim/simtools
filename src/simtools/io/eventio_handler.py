@@ -29,7 +29,7 @@ def get_corsika_run_number(file):
         return run_header["run"]
     run_header, _ = get_corsika_run_and_event_headers(file)
     try:
-        return int(run_header[1])
+        return int(run_header["run_number"])
     except (TypeError, KeyError, ValueError):
         return None
 

@@ -102,10 +102,13 @@ class CorsikaConfig:
         if isinstance(args, bool):
             self._use_curved_atmosphere = args
         elif isinstance(args, dict):
-            self._use_curved_atmosphere = (
-                args.get("zenith_angle", 0.0 * u.deg).to("deg").value
-                > args.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
-            )
+            try:
+                self._use_curved_atmosphere = (
+                    args.get("zenith_angle", 0.0 * u.deg).to("deg").value
+                    > args["curved_atmosphere_min_zenith_angle"].to("deg").value
+                )
+            except KeyError:
+                self._use_curved_atmosphere = False
 
     def _fill_corsika_configuration(self, args_dict, db_config=None):
         """
@@ -181,7 +184,7 @@ class CorsikaConfig:
         self.primary_particle = int(self.config.get("USER_INPUT", {}).get("PRMPAR", [1])[0])
         self.shower_events = int(self.config.get("USER_INPUT", {}).get("NSHOW", [0])[0])
         self.mc_events = int(
-            self.shower_events * self.config.get("USER_INPUT", {}).get("CSCAT", [0])[0]
+            self.shower_events * self.config.get("USER_INPUT", {}).get("CSCAT", [1])[0]
         )
         try:
             az = self._rotate_azimuth_by_180deg(
@@ -312,18 +315,24 @@ class CorsikaConfig:
             return np.int32(value) if value is not None else 0
 
         return {
-            "EVTNR": [to_int32(event_header[2])],
-            "NSHOW": [to_int32(run_header[21])],
-            "PRMPAR": [to_int32(event_header[2])],
-            "ESLOPE": [to_float32(run_header[6])],
-            "ERANGE": [to_float32(run_header[7]), to_float32(run_header[8])],
-            "THETAP": [to_float32(event_header[42]), to_float32(event_header[43])],
-            "PHIP": [to_float32(event_header[44]), to_float32(event_header[45])],
-            "VIEWCONE": [to_float32(event_header[106]), to_float32(event_header[107])],
+            "EVTNR": [to_int32(event_header["event_number"])],
+            "NSHOW": [to_int32(run_header["n_showers"])],
+            "PRMPAR": [to_int32(event_header["particle_id"])],
+            "ESLOPE": [to_float32(run_header["energy_spectrum_slope"])],
+            "ERANGE": [to_float32(run_header["energy_min"]), to_float32(run_header["energy_max"])],
+            "THETAP": [
+                to_float32(event_header["theta_min"]),
+                to_float32(event_header["theta_max"]),
+            ],
+            "PHIP": [to_float32(event_header["phi_min"]), to_float32(event_header["phi_max"])],
+            "VIEWCONE": [
+                to_float32(event_header["viewcone_inner_angle"]),
+                to_float32(event_header["viewcone_outer_angle"]),
+            ],
             "CSCAT": [
-                to_int32(event_header[59]),
-                to_float32(run_header[25]),
-                to_float32(run_header[26]),
+                to_int32(event_header["n_reuse"]),
+                to_float32(event_header["reuse_x"]),
+                to_float32(event_header["reuse_y"]),
             ],
         }
 
@@ -551,12 +560,17 @@ class CorsikaConfig:
         """
         Convert azimuth angle to the CORSIKA coordinate system.
 
+        Corresponds to a rotation by 180 degrees, and optionally a correction for the
+        for the differences between the geographic and geomagnetic north pole.
+
         Parameters
         ----------
         az: float
             Azimuth angle in degrees.
         correct_for_geomagnetic_field_alignment: bool
             Whether to correct for the geomagnetic field alignment.
+        invert_operation: bool
+            Whether to invert the operation (i.e., convert from CORSIKA to geographic system).
 
         Returns
         -------

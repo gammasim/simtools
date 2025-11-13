@@ -775,27 +775,34 @@ def test_use_curved_atmosphere(corsika_config_mock_array_model):
 
 def test_corsika_configuration_from_corsika_file(corsika_config_mock_array_model, mocker, tmp_path):
     """Test CORSIKA configuration from corsika file."""
-    mock_run_header = [0] * 50
-    mock_run_header[21] = 100  # NSHOW
-    mock_run_header[6] = -2.0  # ESLOPE
-    mock_run_header[7] = 10.0  # ERANGE min
-    mock_run_header[8] = 1000.0  # ERANGE max
-    mock_run_header[25] = 1400.0  # core scatter
-    mock_run_header[26] = 0.0
-
-    mock_event_header = [0] * 120
-    mock_event_header[2] = 14  # PRMPAR (proton)
-    mock_event_header[42] = 20.0  # THETAP min
-    mock_event_header[43] = 20.0  # THETAP max
-    mock_event_header[44] = 180.0  # PHIP min
-    mock_event_header[45] = 180.0  # PHIP max
-    mock_event_header[106] = 0.0  # VIEWCONE min
-    mock_event_header[107] = 10.0  # VIEWCONE max
-    mock_event_header[59] = 10  # CSCAT scatter
+    # Direct dict-based headers (simpler than list->dict mapping).
+    run_header_dict = {
+        "n_showers": 100,
+        "energy_spectrum_slope": -2.0,
+        "energy_min": 10.0,
+        "energy_max": 1000.0,
+        # core scatter coordinates used later for reuse_x/reuse_y compatibility
+        "reuse_x": 1400.0,
+        "reuse_y": 0.0,
+    }
+    event_header_dict = {
+        "event_number": None,
+        "particle_id": 14,
+        "theta_min": 20.0,
+        "theta_max": 20.0,
+        "phi_min": 180.0,
+        "phi_max": 180.0,
+        "viewcone_inner_angle": 0.0,
+        "viewcone_outer_angle": 10.0,
+        "n_reuse": 10,
+        # reuse coords mirrored here for compatibility with earlier tests
+        "reuse_x": 1400.0,
+        "reuse_y": 0.0,
+    }
 
     mock_get_headers = mocker.patch(
         "simtools.io.eventio_handler.get_corsika_run_and_event_headers",
-        return_value=(mock_run_header, mock_event_header),
+        return_value=(run_header_dict, event_header_dict),
     )
 
     test_file = tmp_path / "test.corsika"
@@ -950,15 +957,26 @@ def test_corsika_file_initialization(mocker, tmp_path):
 
     for case in test_cases:
         with patch("simtools.io.eventio_handler.get_corsika_run_and_event_headers") as mock_headers:
-            run_header = [0] * 50
-            run_header[21] = 100
-            event_header = [0] * 120
-            event_header[2] = 14  # PRMPAR (proton)
-            event_header[42] = 30.0  # THETAP
-            event_header[43] = 30.0
-            event_header[44] = 90.0  # PHIP
-            event_header[45] = 90.0
-            mock_headers.return_value = (run_header, event_header)
+            run_header_dict = {
+                "n_showers": 100,
+                "energy_spectrum_slope": None,
+                "energy_min": None,
+                "energy_max": None,
+            }
+            event_header_dict = {
+                "event_number": None,
+                "particle_id": 14,
+                "theta_min": 30.0,
+                "theta_max": 30.0,
+                "phi_min": 90.0,
+                "phi_max": 90.0,
+                "viewcone_inner_angle": None,
+                "viewcone_outer_angle": None,
+                "n_reuse": None,
+                "reuse_x": None,
+                "reuse_y": None,
+            }
+            mock_headers.return_value = (run_header_dict, event_header_dict)
 
             config = CorsikaConfig(
                 array_model=mock_array_model, label="test", args_dict=case["args"], db_config=None
