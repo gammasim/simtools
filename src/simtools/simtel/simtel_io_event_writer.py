@@ -17,7 +17,7 @@ from eventio.simtel import (
 )
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.simtel.simtel_io_file_info import get_corsika_run_header
+from simtools.io.eventio_handler import get_combined_corsika_run_header
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
     read_sim_telarray_metadata,
@@ -158,7 +158,7 @@ class SimtelIOEventDataWriter:
 
     def _process_file_info(self, file_id, file):
         """Process file information and append to file info list."""
-        run_info = get_corsika_run_header(file)
+        run_info = get_combined_corsika_run_header(file)
         self.telescope_id_to_name = get_sim_telarray_telescope_id_to_telescope_name_mapping(file)
         particle = PrimaryParticle(
             particle_id_type="eventio_id", particle_id=run_info.get("primary_id", 1)
