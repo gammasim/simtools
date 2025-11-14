@@ -65,6 +65,14 @@ def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(description="Run simulations for productions")
     config.parser.add_argument(
+        "--corsika_file",
+        help=(
+            "Path to the CORSIKA input file (only relevant for simulation software 'sim_telarray')."
+        ),
+        type=str,
+        required=False,
+    )
+    config.parser.add_argument(
         "--pack_for_grid_register",
         help="Directory for a tarball for registering the output files on the grid.",
         type=str,
