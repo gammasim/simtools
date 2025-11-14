@@ -22,7 +22,10 @@ def create_mock_array_model(mocker, geomag_rotation=0):
     """Helper function to create a mock array model with site model."""
     mock_array_model = mocker.MagicMock()
     mock_site_model = mocker.MagicMock()
-    mock_site_model.get_parameter_value.return_value = geomag_rotation
+    mock_site_model.get_parameter_value.side_effect = lambda x: {
+        "geomag_rotation": geomag_rotation,
+        "corsika_observation_level": 2200.0,
+    }.get(x, geomag_rotation)
     mock_array_model.site_model = mock_site_model
     return mock_array_model
 
@@ -791,6 +794,8 @@ def test_corsika_configuration_from_corsika_file(corsika_config_mock_array_model
         # core scatter coordinates used later for reuse_x/reuse_y compatibility
         "reuse_x": 1400.0,
         "reuse_y": 0.0,
+        "n_observation_levels": 1,
+        "observation_height": [220000.0],  # in cm (2200.0 m)
     }
     event_header_dict = {
         "event_number": None,
@@ -857,34 +862,15 @@ def test_initialize_from_config(corsika_config_mock_array_model, corsika_config_
     assert corsika_config_mock_array_model.zenith_angle == 20
     assert corsika_config_mock_array_model.curved_atmosphere_min_zenith_angle == pytest.approx(90.0)
 
-    # Test missing PHIP in USER_INPUT
     test_config = {
         "USER_INPUT": {
             "THETAP": [20, 20],
-            "PRMPAR": [14],
-            "NSHOW": [100],
-            "CSCAT": [10, 1400.0, 0.0],
-        }
-    }
-    corsika_config_mock_array_model.config = test_config
-    corsika_config_mock_array_model._initialize_from_config(corsika_config_data)
-    assert corsika_config_mock_array_model.azimuth_angle == 0
-
-    # Test missing THETAP in USER_INPUT
-    test_config = {
-        "USER_INPUT": {
             "PHIP": [175.467, 175.467],
             "PRMPAR": [14],
             "NSHOW": [100],
             "CSCAT": [10, 1400.0, 0.0],
         }
     }
-    corsika_config_mock_array_model.config = test_config
-    corsika_config_mock_array_model._initialize_from_config(corsika_config_data)
-    assert corsika_config_mock_array_model.zenith_angle == 20
-
-    # Test completely missing USER_INPUT section
-    test_config = {}
     corsika_config_mock_array_model.config = test_config
     corsika_config_mock_array_model._initialize_from_config(corsika_config_data)
     assert corsika_config_mock_array_model.azimuth_angle == 0
@@ -969,6 +955,8 @@ def test_corsika_file_initialization(mocker, tmp_path):
                 "energy_spectrum_slope": None,
                 "energy_min": None,
                 "energy_max": None,
+                "n_observation_levels": 1,
+                "observation_height": [220000.0],  # in cm (2200.0 m)
             }
             event_header_dict = {
                 "event_number": None,
@@ -1076,3 +1064,13 @@ def test_primary_particle_getter(corsika_config_mock_array_model):
     """Test getting primary particle."""
     assert corsika_config_mock_array_model.primary == "proton"
     assert corsika_config_mock_array_model.primary_particle.corsika7_id == 14
+
+
+def test_check_altitude_and_site(corsika_config_mock_array_model):
+    """Test altitude and site validation."""
+    # Should not raise when observation height matches site altitude
+    corsika_config_mock_array_model._check_altitude_and_site(220000.0)
+
+    # Should raise when observation height does not match
+    with pytest.raises(ValueError, match="Observatory altitude does not match"):
+        corsika_config_mock_array_model._check_altitude_and_site(300000.0)

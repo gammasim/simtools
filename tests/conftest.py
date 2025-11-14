@@ -363,7 +363,10 @@ def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data, 
     array_model.layout_name = "test_layout"
     array_model.corsika_config.primary = "proton"
     array_model.site_model = mock.MagicMock()
-    array_model.site_model._parameters = {"geomag_rotation": -4.533}
+    array_model.site_model._parameters = {
+        "geomag_rotation": -4.533,
+        "corsika_observation_level": 2200.0,
+    }
     array_model.model_version = model_version
 
     # Define get_parameter_value() to behave as expected
