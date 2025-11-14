@@ -186,21 +186,15 @@ class CorsikaConfig:
         self.mc_events = int(
             self.shower_events * self.config.get("USER_INPUT", {}).get("CSCAT", [1])[0]
         )
-        try:
-            az = self._rotate_azimuth_by_180deg(
-                0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1]),
-                invert_operation=True,
-            )  # average azimuth angle
-            self.azimuth_angle = round(az)
-        except KeyError:
-            self.azimuth_angle = int(args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value)
-        try:
-            self.zenith_angle = int(
-                0.5
-                * (self.config["USER_INPUT"]["THETAP"][0] + self.config["USER_INPUT"]["THETAP"][1])
-            )  # average zenith angle
-        except KeyError:
-            self.zenith_angle = int(args_dict.get("zenith_angle", 0.0 * u.deg).to("deg").value)
+
+        az = self._rotate_azimuth_by_180deg(
+            0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1]),
+            invert_operation=True,
+        )  # average azimuth angle
+        self.azimuth_angle = round(az)
+        self.zenith_angle = int(
+            0.5 * (self.config["USER_INPUT"]["THETAP"][0] + self.config["USER_INPUT"]["THETAP"][1])
+        )  # average zenith angle
 
         self.curved_atmosphere_min_zenith_angle = (
             args_dict.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
@@ -314,6 +308,9 @@ class CorsikaConfig:
             """Convert value to numpy int32."""
             return np.int32(value) if value is not None else 0
 
+        if run_header["n_observation_levels"] > 0:
+            self._check_altitude_and_site(run_header["observation_height"][0])
+
         return {
             "EVTNR": [to_int32(event_header["event_number"])],
             "NSHOW": [to_int32(run_header["n_showers"])],
@@ -372,6 +369,15 @@ class CorsikaConfig:
                 0.0,
             ],
         }
+
+    def _check_altitude_and_site(self, observation_height):
+        """Check that observation height from CORSIKA file matches site model."""
+        site_altitude = self.array_model.site_model.get_parameter_value("corsika_observation_level")
+        if not np.isclose(observation_height / 1.0e2, site_altitude, atol=1.0):
+            raise ValueError(
+                "Observatory altitude does not match CORSIKA file observation height: "
+                f"{site_altitude} m (site model) != {observation_height} m (CORSIKA file)"
+            )
 
     def _get_corsika_theta_phi(self, args_dict):
         """Get CORSIKA theta and phi angles from args_dict."""
