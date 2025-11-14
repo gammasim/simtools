@@ -132,6 +132,19 @@ def args_dict_site(tmp_test_directory, simtel_path, data_path):
     )
 
 
+@pytest.fixture(scope="session", autouse=True)
+def mongo_db_logger_settings():
+    """Suppress MongoDB 'IdleConnectionMonitor' DEBUG logs during tests."""
+    monitor_logger = logging.getLogger("IdleConnectionMonitor")
+    monitor_logger.setLevel(logging.INFO)
+    logger.info("\n[TEST SETUP] Suppressing MongoDB 'IdleConnectionMonitor' DEBUG logs.")
+
+
+# Note: You might also want to set the pymongo logger level (as mentioned before)
+# just in case other pymongo logs are contributing to the issue.
+# logging.getLogger("pymongo").setLevel(logging.WARNING)
+
+
 @pytest.fixture
 def db_config():
     """DB configuration from .env file."""
