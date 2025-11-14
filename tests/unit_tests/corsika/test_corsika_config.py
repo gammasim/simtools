@@ -429,6 +429,13 @@ def test_rotate_azimuth_by_180deg(corsika_config_mock_array_model):
             input_angle, correct_for_geomagnetic_field_alignment=with_correction
         ) == pytest.approx(expected_result)
 
+    for input_angle, with_correction, expected_result in test_cases:
+        assert corsika_config_mock_array_model._rotate_azimuth_by_180deg(
+            expected_result,
+            correct_for_geomagnetic_field_alignment=with_correction,
+            invert_operation=True,
+        ) == pytest.approx(input_angle % 360)
+
 
 def test_get_config_parameter(corsika_config_mock_array_model):
     cc = corsika_config_mock_array_model
