@@ -598,8 +598,8 @@ class Simulator:
         """
         return run_mode in [
             "pedestals",
-            "dark_pedestals",
-            "nsb_only_pedestals",
+            "pedestals_dark",
+            "pedestals_nsb_only",
             "direct_injection",
         ]
 

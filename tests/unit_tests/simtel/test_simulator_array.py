@@ -129,8 +129,8 @@ def test_check_run_result_file_exists(simtel_runner, tmp_path):
     assert simtel_runner._check_run_result(run_number=1) is True
 
 
-def test_nsb_only_pedestals_command(simtel_runner):
-    command = simtel_runner._nsb_only_pedestals_command()
+def test_pedestals_nsb_only_command(simtel_runner):
+    command = simtel_runner._pedestals_nsb_only_command()
     assert "-C fadc_err_pedestal=0.0" in command
     assert "-C fadc_lg_err_pedestal=-1.0" in command
 
@@ -149,17 +149,17 @@ def test_make_run_command_for_calibration_simulations(simtel_runner):
     assert "-C stars=stars.txt" in run_command
     assert "-C pedestal_events=100" in run_command
 
-    simtel_runner.calibration_config["run_mode"] = "nsb_only_pedestals"
+    simtel_runner.calibration_config["run_mode"] = "pedestals_nsb_only"
     run_command = simtel_runner._make_run_command_for_calibration_simulations()
-    assert "-C fadc_err_pedestal=0.0" in run_command  # From _nsb_only_pedestals_command
+    assert "-C fadc_err_pedestal=0.0" in run_command  # From _pedestals_nsb_only_command
 
 
 def test_make_run_command_for_calibration_simulations_additional_modes(simtel_runner):
     """Test additional run modes for calibration simulations."""
 
-    # Test dark_pedestals mode
+    # Test pedestals_dark mode
     simtel_runner.calibration_config = {
-        "run_mode": "dark_pedestals",
+        "run_mode": "pedestals_dark",
         "number_of_events": 50,
         "number_of_dark_events": 75,
     }
