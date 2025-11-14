@@ -159,12 +159,12 @@ class SimulatorArray(SimtelRunner):
                 command += super().get_config_option(key, cfg[key])
 
         run_mode = cfg.get("run_mode")
-        if run_mode in ("pedestals", "nsb_only_pedestals"):
+        if run_mode in ("pedestals", "pedestals_nsb_only"):
             n_events = cfg.get("number_of_pedestal_events", cfg["number_of_events"])
             command += super().get_config_option("pedestal_events", n_events)
-        if run_mode == "nsb_only_pedestals":
-            command += self._nsb_only_pedestals_command()
-        if run_mode == "dark_pedestals":
+        if run_mode == "pedestals_nsb_only":
+            command += self._pedestals_nsb_only_command()
+        if run_mode == "pedestals_dark":
             n_events = cfg.get("number_of_dark_events", cfg["number_of_events"])
             command += super().get_config_option("dark_events", n_events)
         if run_mode == "direct_injection":
@@ -203,7 +203,7 @@ class SimulatorArray(SimtelRunner):
 
         return command
 
-    def _nsb_only_pedestals_command(self):
+    def _pedestals_nsb_only_command(self):
         """
         Generate the command to run sim_telarray for nsb-only pedestal simulations.
 
