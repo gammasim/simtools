@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+import stat
 from pathlib import Path
 
 import pytest
@@ -173,3 +174,82 @@ def test_make_run_command_for_calibration_simulations_additional_modes(simtel_ru
     }
     run_command = simtel_runner._make_run_command_for_calibration_simulations()
     assert "-C laser_events=200" in run_command
+
+
+def test_prepare_run_script(simtel_runner, tmp_path):
+    """Test prepare_run_script generates correct bash script."""
+    input_file = tmp_path / "test_input.corsika"
+    input_file.touch()
+
+    script_path = simtel_runner.prepare_run_script(
+        test=False, input_file=str(input_file), run_number=1
+    )
+
+    assert script_path.exists()
+    assert script_path.stat().st_mode & stat.S_IXUSR
+
+    content = script_path.read_text()
+    assert "#!/usr/bin/env bash" in content
+    assert "set -e" in content
+    assert "set -o pipefail" in content
+    assert "SECONDS=0" in content
+    assert "RUNTIME: $SECONDS" in content
+    assert "sim_telarray" in content
+
+
+def test_prepare_run_script_test_mode(simtel_runner, tmp_path):
+    """Test prepare_run_script in test mode generates single run."""
+    input_file = tmp_path / "test_input.corsika"
+    input_file.touch()
+
+    script_path = simtel_runner.prepare_run_script(
+        test=True, input_file=str(input_file), run_number=1
+    )
+
+    content = script_path.read_text()
+    # Count unique command lines containing sim_telarray
+    sim_tel_lines = [
+        line
+        for line in content.splitlines()
+        if line.strip().startswith("SIM_TELARRAY_CONFIG_PATH=''")
+    ]
+    assert len(sim_tel_lines) == 1
+
+
+def test_prepare_run_script_with_extra_commands(simtel_runner, tmp_path):
+    """Test prepare_run_script with extra commands."""
+    input_file = tmp_path / "test_input.corsika"
+    input_file.touch()
+
+    extra_commands = ["export TEST_VAR=1", "echo 'Starting simulation'"]
+
+    script_path = simtel_runner.prepare_run_script(
+        test=True, input_file=str(input_file), run_number=1, extra_commands=extra_commands
+    )
+
+    content = script_path.read_text()
+    assert "# Writing extras" in content
+    assert "export TEST_VAR=1" in content
+    assert "echo 'Starting simulation'" in content
+    assert "# End of extras" in content
+
+
+def test_prepare_run_script_multiple_runs(simtel_runner, tmp_path):
+    """Test prepare_run_script generates multiple run commands."""
+    input_file = tmp_path / "test_input.corsika"
+    input_file.touch()
+
+    simtel_runner.runs_per_set = 3
+
+    script_path = simtel_runner.prepare_run_script(
+        test=False, input_file=str(input_file), run_number=1
+    )
+
+    content = script_path.read_text()
+    # Count unique command lines containing sim_telarray
+    sim_tel_lines = [
+        line
+        for line in content.splitlines()
+        if line.strip().startswith("SIM_TELARRAY_CONFIG_PATH=''")
+    ]
+    assert len(sim_tel_lines) == 3
