@@ -52,7 +52,7 @@ RUN tar -zxf ${CORSIKA_DIR}.tar.gz && \
 RUN --mount=type=secret,id=opt_patches_token \
     git config --global advice.detachedHead false && \
     git clone --depth 1 --branch "${CORSIKA_OPT_PATCH_VERSION}" "https://oauth2:$(cat /run/secrets/opt_patches_token)@${CORSIKA_OPT_PATCH_REPO}" && \
-    cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION ${CORSIKA_DIR}/corsika-patches/ && \
+    cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/* ${CORSIKA_DIR}/ && \
     rm -rf corsika-opt-patches
 
 ADD autoconf.tar.gz .
@@ -77,14 +77,14 @@ ENV CORSIKA_DIR="corsika-${CORSIKA_VERSION}"
 
 RUN yum update -y --setopt=tsflags=nodocs && \
     yum install -y \
-    bzip2 csh m4 perl gcc-fortran && \
+    automake bzip2 csh gcc-fortran libtool m4 patch perl && \
     yum clean all && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
 WORKDIR /workdir/simulation_software
 COPY --from=source_preparation /src .
 
-# autoconf 2.71 is need to re-generate the configure script after applying patches
+# autoconf 2.71 required to re-generate the configure script after applying patches
 WORKDIR /workdir/simulation_software/autoconf
 RUN ./configure --prefix=/usr && \
     make && make install && \
@@ -112,6 +112,8 @@ RUN for variant in curved flat; do \
             BASE_FLAGS="-g -O3"; \
         else \
             BASE_FLAGS="-g -DCERENKOPT -DVLIBM -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
+            echo "#define __CERENKOPT__ 1" >> include/config.h; \
+            echo "#define __VLIBM__ 1" >> include/config.h; \
         fi && \
         CFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" \
         CXXFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" \
