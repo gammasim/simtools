@@ -187,14 +187,20 @@ class CorsikaConfig:
             self.shower_events * self.config.get("USER_INPUT", {}).get("CSCAT", [1])[0]
         )
 
-        az = self._rotate_azimuth_by_180deg(
-            0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1]),
-            invert_operation=True,
-        )  # average azimuth angle
-        self.azimuth_angle = round(az)
-        self.zenith_angle = int(
-            0.5 * (self.config["USER_INPUT"]["THETAP"][0] + self.config["USER_INPUT"]["THETAP"][1])
-        )  # average zenith angle
+        if args_dict.get("corsika_file", None) is not None:
+            azimuth = self._rotate_azimuth_by_180deg(
+                0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1]),
+                invert_operation=True,
+            )
+            zenith = 0.5 * (
+                self.config["USER_INPUT"]["THETAP"][0] + self.config["USER_INPUT"]["THETAP"][1]
+            )
+        else:
+            azimuth = args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value
+            zenith = args_dict.get("zenith_angle", 20.0 * u.deg).to("deg").value
+
+        self.azimuth_angle = round(azimuth)
+        self.zenith_angle = round(zenith)
 
         self.curved_atmosphere_min_zenith_angle = (
             args_dict.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
