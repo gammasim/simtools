@@ -202,7 +202,7 @@ class CorsikaRunner:
         str
             autoinputs command.
         """
-        if self.corsika_config.use_curved_atmosphere():
+        if self.corsika_config.use_curved_atmosphere:
             corsika_bin_path = self._simtel_path.joinpath("corsika-run/corsika-curved")
             self._logger.debug("Using curved-atmosphere CORSIKA binary.")
         else:

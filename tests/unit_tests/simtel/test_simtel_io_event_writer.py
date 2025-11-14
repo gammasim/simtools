@@ -33,8 +33,10 @@ def lookup_table_generator(mock_eventio_file):
 
 @pytest.fixture
 def mock_corsika_run_header(mocker):
-    """Mock the get_corsika_run_header."""
-    mock_get_header = mocker.patch("simtools.simtel.simtel_io_event_writer.get_corsika_run_header")
+    """Mock the get_combined_corsika_run_header."""
+    mock_get_header = mocker.patch(
+        "simtools.simtel.simtel_io_event_writer.get_combined_corsika_run_header"
+    )
     mock_get_header.return_value = {
         "direction": [0.0, 70.0 / 57.3],
         "particle_id": 1,
