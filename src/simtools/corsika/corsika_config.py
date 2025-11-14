@@ -376,7 +376,7 @@ class CorsikaConfig:
         if not np.isclose(observation_height / 1.0e2, site_altitude, atol=1.0):
             raise ValueError(
                 "Observatory altitude does not match CORSIKA file observation height: "
-                f"{site_altitude} m (site model) != {observation_height} m (CORSIKA file)"
+                f"{site_altitude} m (site model) != {observation_height / 1.0e2} m (CORSIKA file)"
             )
 
     def _get_corsika_theta_phi(self, args_dict):
