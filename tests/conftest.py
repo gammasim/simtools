@@ -132,6 +132,14 @@ def args_dict_site(tmp_test_directory, simtel_path, data_path):
     )
 
 
+@pytest.fixture(scope="session", autouse=True)
+def mongo_db_logger_settings():
+    """Suppress MongoDB 'IdleConnectionMonitor' DEBUG logs during tests."""
+    monitor_logger = logging.getLogger("IdleConnectionMonitor")
+    monitor_logger.setLevel(logging.INFO)
+    logger.info("[TEST SETUP] Suppressing MongoDB 'IdleConnectionMonitor' DEBUG logs.")
+
+
 @pytest.fixture
 def db_config():
     """DB configuration from .env file."""
