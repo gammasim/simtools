@@ -371,7 +371,7 @@ class SimulatorLightEmission(SimtelRunner):
                 table_path = base_dir / fname
                 fadc_bins = self.telescope_model.get_parameter_value("fadc_sum_bins")
 
-                SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+                SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
                     file_path=table_path,
                     width_ns=width_ns,
                     exp_decay_ns=exp_ns,

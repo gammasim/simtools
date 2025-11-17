@@ -897,10 +897,10 @@ def _read_pulse_table(path: Path):
     return np.array(t_vals), np.array(y_vals)
 
 
-def test_write_lightpulse_table_gauss_expconv_creates_normalized_file(tmp_test_directory):
+def test_write_light_pulse_table_gauss_exp_conv_creates_normalized_file(tmp_test_directory):
     """Writer should create a pulse table with peak amplitude ~1 and expected window."""
     out = Path(tmp_test_directory) / "pulse_shape_test.dat"
-    result = SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+    result = SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
         file_path=out,
         width_ns=2.5,
         exp_decay_ns=5.0,
@@ -927,11 +927,11 @@ def test_write_lightpulse_table_gauss_expconv_creates_normalized_file(tmp_test_d
     assert (t[-1] - t[0]) >= (expected_span - dt)
 
 
-def test_write_lightpulse_table_gauss_expconv_time_spacing(tmp_test_directory):
+def test_write_light_pulse_table_gauss_exp_conv_time_spacing(tmp_test_directory):
     """Time column should be spaced by dt_ns consistently."""
     out = Path(tmp_test_directory) / "pulse_shape_spacing.dat"
     dt = 0.5
-    SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+    SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
         file_path=out,
         width_ns=3.0,
         exp_decay_ns=6.0,
@@ -943,11 +943,11 @@ def test_write_lightpulse_table_gauss_expconv_time_spacing(tmp_test_directory):
     assert np.allclose(np.diff(t), dt, atol=1e-9)
 
 
-def test_write_lightpulse_table_gauss_expconv_missing_params_raises(tmp_test_directory):
+def test_write_light_pulse_table_gauss_exp_conv_missing_params_raises(tmp_test_directory):
     """Missing width/decay should raise ValueError."""
     out = Path(tmp_test_directory) / "pulse_missing_params.dat"
     with pytest.raises(ValueError, match="width_ns"):
-        SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+        SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
             file_path=out,
             width_ns=None,
             exp_decay_ns=5.0,
