@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -451,8 +451,8 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.db.db_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatabaseHandler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.version</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -487,6 +487,33 @@
 
 
 
+<div class="viewcode-block" id="get_software_version">
+<a class="viewcode-back" href="../api-reference/dependencies.html#dependencies.get_software_version">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_software_version</span><span class="p">(</span><span class="n">software</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the version of the specified software package.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    software : str</span>
+<span class="sd">        Name of the software package.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Version of the specified software package.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">software</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;simtools&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">__version__</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">version_call</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;get_</span><span class="si">{</span><span class="n">software</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">_version&quot;</span>
+        <span class="k">return</span> <span class="nb">globals</span><span class="p">()[</span><span class="n">version_call</span><span class="p">]()</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown software: </span><span class="si">{</span><span class="n">software</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
+
+
 <div class="viewcode-block" id="get_database_version_or_name">
 <a class="viewcode-back" href="../api-reference/dependencies.html#dependencies.get_database_version_or_name">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_database_version_or_name</span><span class="p">(</span><span class="n">db_config</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -506,20 +533,19 @@
 <span class="sd">        Version or name of the simulation model data base used.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">db_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="n">db</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">db_config</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">db</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">&quot;db_simulation_model_version&quot;</span> <span class="k">if</span> <span class="n">version</span> <span class="k">else</span> <span class="s2">&quot;db_simulation_model&quot;</span>
-    <span class="p">)</span></div>
+    <span class="k">if</span> <span class="n">version</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">db_config</span> <span class="ow">and</span> <span class="n">db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model_version&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">db_config</span> <span class="ow">and</span> <span class="n">db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="get_sim_telarray_version">
 <a class="viewcode-back" href="../api-reference/dependencies.html#dependencies.get_sim_telarray_version">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_sim_telarray_version</span><span class="p">(</span><span class="n">run_time</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_sim_telarray_version</span><span class="p">(</span><span class="n">run_time</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the version of the sim_telarray package using &#39;sim_telarray --version&#39;.</span>
+
+<span class="sd">    Version strings for sim_telarray are of the form &quot;2024.271.0&quot; (year.day_of_year.patch).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -562,6 +588,8 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the version of the CORSIKA package.</span>
 
+<span class="sd">    Version strings for CORSIKA are of the form &quot;7.7550&quot; (major.minor with 4-digit minor).</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    run_time : list, optional</span>
@@ -572,12 +600,11 @@
 <span class="sd">    str</span>
 <span class="sd">        Version of the CORSIKA package.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">version</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">sim_telarray_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SIMTOOLS_SIMTEL_PATH&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">sim_telarray_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">corsika_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SIMTOOLS_SIMTEL_PATH&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">corsika_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Environment variable SIMTOOLS_SIMTEL_PATH is not set.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
-    <span class="n">corsika_command</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">sim_telarray_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;corsika-run&quot;</span> <span class="o">/</span> <span class="s2">&quot;corsika&quot;</span>
+    <span class="n">corsika_command</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">corsika_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;corsika-run&quot;</span> <span class="o">/</span> <span class="s2">&quot;corsika&quot;</span>
 
     <span class="k">if</span> <span class="n">run_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">command</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">corsika_command</span><span class="p">)]</span>
@@ -594,11 +621,8 @@
         <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="c1"># Capture output until it waits for input</span>
-    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-        <span class="n">line</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
-            <span class="k">break</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">process</span><span class="o">.</span><span class="n">stdout</span><span class="p">:</span>
         <span class="c1"># Extract the version from the line &quot;NUMBER OF VERSION :  7.7550&quot;</span>
         <span class="k">if</span> <span class="s2">&quot;NUMBER OF VERSION&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
             <span class="n">version</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>

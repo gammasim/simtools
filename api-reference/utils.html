@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Trigger simulations." href="trigger.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -1633,7 +1633,7 @@ Returns the parameter name if no simulation software name is found.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.names.simtel_config_file_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">simtel_config_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#simtel_config_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.simtel_config_file_name" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">simtel_config_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#simtel_config_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.simtel_config_file_name" title="Link to this definition">#</a></dt>
 <dd><p>sim_telarray config file name for a telescope.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1641,8 +1641,6 @@ Returns the parameter name if no simulation software name is found.</p>
 <dt><strong>site: str</strong></dt><dd><p>South or North.</p>
 </dd>
 <dt><strong>telescope_model_name: str</strong></dt><dd><p>LST-1, MST-FlashCam, …</p>
-</dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
 </dd>
@@ -1855,7 +1853,7 @@ Take into account also the case where the value is a numpy type.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>u.UnitConversionError</dt><dd><p>If the value cannot be converted to the given unit.</p>
+<dt>ValueError</dt><dd><p>If the value cannot be converted to the given unit.</p>
 </dd>
 </dl>
 </dd>

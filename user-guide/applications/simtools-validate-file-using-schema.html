@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="simtools-validate-cumulative-psf" href="simtools-validate-cumulative-psf.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -413,6 +413,7 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-pulse-shape-parameters.html">simtools-derive-pulse-shape-parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-trigger-rates.html">simtools-derive-trigger-rates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
@@ -519,33 +520,42 @@
   <section id="module-validate_file_using_schema">
 <span id="simtools-validate-file-using-schema"></span><h1>simtools-validate-file-using-schema<a class="headerlink" href="#module-validate_file_using_schema" title="Link to this heading">#</a></h1>
 <p>Validate a file or files in a directory using a schema.</p>
-<p>Input files can be metadata, schema, or data files in yaml, json, or ecsv format.</p>
+<p>Input files can be metadata, schema, or data files in yaml, json, or ecsv format.
+For model parameters, the schema files are taken from the simtools model parameter
+schema directory by default.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
 <dt>file_name (str)</dt><dd><p>input file to be validated</p>
 </dd>
-<dt>model_parameters_directory (str)</dt><dd><p>directory with json files of model parameters to be validated</p>
+<dt>file_directory (str)</dt><dd><p>directory with json files of model parameters to be validated</p>
 </dd>
 <dt>schema (str)</dt><dd><p>schema file (jsonschema format) used for validation</p>
 </dd>
-<dt>data_type (str)</dt><dd><p>type of input data (allowed types: metadata, schema, data)</p>
-</dd>
-</dl>
-</section>
-<section id="raises">
-<h2>Raises<a class="headerlink" href="#raises" title="Link to this heading">#</a></h2>
-<dl class="simple">
-<dt>FileNotFoundError</dt><dd><p>if file to be validated is not found</p>
+<dt>data_type (str)</dt><dd><p>type of input data (allowed types: metadata, schema, data, model_parameter)</p>
 </dd>
 </dl>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
+<p>Validate metadata of a file:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-file-using-schema \\</span>
 <span class="go"> --file_name tests/resources/MLTdata-preproduction.meta.yml \\</span>
 <span class="go"> --schema simtools/schemas/metadata.metaschema.yml \\</span>
 <span class="go"> --data_type metadata</span>
+</pre></div>
+</div>
+<p>Validate schema of a file:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-file-using-schema \\</span>
+<span class="go"> --file_name tests/resources/model_parameters/schema-0.3.0/num_gains-1.0.0.json \\</span>
+<span class="go"> --schema src/simtools/schemas/model_parameter.metaschema.yml \\</span>
+<span class="go"> --data_type schema</span>
+</pre></div>
+</div>
+<p>Validate all model parameter files in a directory:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-file-using-schema \\</span>
+<span class="go"> --file_directory tests/resources/model_parameters \\</span>
+<span class="go"> --data_type model_parameter</span>
 </pre></div>
 </div>
 </section>
@@ -553,33 +563,6 @@
 <dt class="sig sig-object py" id="validate_file_using_schema.main">
 <span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/validate_file_using_schema.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.main" title="Link to this definition">#</a></dt>
 <dd><p>Validate a file or files in a directory using a schema.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="validate_file_using_schema.validate_data_file">
-<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_data_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/validate_file_using_schema.html#validate_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_data_file" title="Link to this definition">#</a></dt>
-<dd><p>Validate a data file (e.g., in ecsv, json, yaml format).</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="validate_file_using_schema.validate_data_files">
-<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_data_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/validate_file_using_schema.html#validate_data_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_data_files" title="Link to this definition">#</a></dt>
-<dd><p>Validate data files.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="validate_file_using_schema.validate_dict_using_schema">
-<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_dict_using_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/validate_file_using_schema.html#validate_dict_using_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_dict_using_schema" title="Link to this definition">#</a></dt>
-<dd><p>Validate a schema file (or several files) given in yaml or json format.</p>
-<p>This function validate all documents in a multi-document YAML file.
-Schema is either given as command line argument, read from the meta_schema_url or from
-the metadata section of the data dictionary.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="validate_file_using_schema.validate_metadata">
-<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/validate_file_using_schema.html#validate_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_metadata" title="Link to this definition">#</a></dt>
-<dd><p>Validate metadata.</p>
 </dd></dl>
 
 </section>
@@ -632,13 +615,8 @@ the metadata section of the data dictionary.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#raises">Raises</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_data_file"><code class="docutils literal notranslate"><span class="pre">validate_data_file()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_data_files"><code class="docutils literal notranslate"><span class="pre">validate_data_files()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_dict_using_schema"><code class="docutils literal notranslate"><span class="pre">validate_dict_using_schema()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_metadata"><code class="docutils literal notranslate"><span class="pre">validate_metadata()</span></code></a></li>
 </ul>
   </nav></div>
 

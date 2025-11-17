@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -438,25 +438,24 @@
 <span class="sd">    Validate a file or files in a directory using a schema.</span>
 
 <span class="sd">    Input files can be metadata, schema, or data files in yaml, json, or ecsv format.</span>
+<span class="sd">    For model parameters, the schema files are taken from the simtools model parameter</span>
+<span class="sd">    schema directory by default.</span>
 
 <span class="sd">    Command line arguments</span>
 <span class="sd">    ----------------------</span>
 <span class="sd">    file_name (str)</span>
 <span class="sd">      input file to be validated</span>
-<span class="sd">    model_parameters_directory (str)</span>
+<span class="sd">    file_directory (str)</span>
 <span class="sd">        directory with json files of model parameters to be validated</span>
 <span class="sd">    schema (str)</span>
 <span class="sd">      schema file (jsonschema format) used for validation</span>
 <span class="sd">    data_type (str)</span>
-<span class="sd">        type of input data (allowed types: metadata, schema, data)</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    FileNotFoundError</span>
-<span class="sd">      if file to be validated is not found</span>
+<span class="sd">        type of input data (allowed types: metadata, schema, data, model_parameter)</span>
 
 <span class="sd">    Example</span>
 <span class="sd">    -------</span>
+
+<span class="sd">    Validate metadata of a file:</span>
 
 <span class="sd">    .. code-block:: console</span>
 
@@ -465,16 +464,29 @@
 <span class="sd">         --schema simtools/schemas/metadata.metaschema.yml \\</span>
 <span class="sd">         --data_type metadata</span>
 
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate schema of a file:</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="sd">    .. code-block:: console</span>
+
+<span class="sd">        simtools-validate-file-using-schema \\</span>
+<span class="sd">         --file_name tests/resources/model_parameters/schema-0.3.0/num_gains-1.0.0.json \\</span>
+<span class="sd">         --schema src/simtools/schemas/model_parameter.metaschema.yml \\</span>
+<span class="sd">         --data_type schema</span>
+
+<span class="sd">    Validate all model parameter files in a directory:</span>
+
+<span class="sd">    .. code-block:: console</span>
+
+<span class="sd">        simtools-validate-file-using-schema \\</span>
+<span class="sd">         --file_directory tests/resources/model_parameters \\</span>
+<span class="sd">         --data_type model_parameter</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.application_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_application_label</span><span class="p">,</span> <span class="n">startup_application</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">MODEL_PARAMETER_SCHEMA_PATH</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">metadata_collector</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">validate_data</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">():</span>
@@ -497,7 +509,7 @@
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">MODEL_PARAMETER_SCHEMA_PATH</span><span class="si">}</span><span class="s2">.&quot;</span>
         <span class="p">),</span>
     <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--schema&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Json schema file&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--schema&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Schema file&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--data_type&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Type of input data&quot;</span><span class="p">,</span>
@@ -505,7 +517,7 @@
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--require_exact_data_type&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--check_exact_data_type&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Require exact data type for validation&quot;</span><span class="p">,</span>
         <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
     <span class="p">)</span>
@@ -517,135 +529,37 @@
     <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">paths</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_get_schema_file_name</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">data_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get schema file name from metadata, data dict, or from command line argument.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    args_dict (dict)</span>
-<span class="sd">        command line arguments</span>
-<span class="sd">    data_dict (dict)</span>
-<span class="sd">        dictionary with metaschema information</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    schema_file: str</span>
-<span class="sd">        schema file name</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">schema_file</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;schema&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">schema_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">data_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">schema_file</span> <span class="o">=</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;meta_schema_url&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">schema_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata_collector</span><span class="o">.</span><span class="n">MetadataCollector</span><span class="p">(</span>
-            <span class="kc">None</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">]</span>
-        <span class="p">)</span>
-        <span class="n">schema_file</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get_data_model_schema_file_name</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">schema_file</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_get_file_list</span><span class="p">(</span><span class="n">file_directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;*.json&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return list of files in a directory.&quot;&quot;&quot;</span>
-    <span class="n">file_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">file_directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">file_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">file_directory</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="n">file_name</span><span class="p">))</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_list</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No files found in </span><span class="si">{</span><span class="n">file_directory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">file_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">file_name</span><span class="p">]</span>
-
-    <span class="k">return</span> <span class="n">file_list</span>
-
-
-<div class="viewcode-block" id="validate_dict_using_schema">
-<a class="viewcode-back" href="../user-guide/applications/simtools-validate-file-using-schema.html#validate_file_using_schema.validate_dict_using_schema">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">validate_dict_using_schema</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate a schema file (or several files) given in yaml or json format.</span>
-
-<span class="sd">    This function validate all documents in a multi-document YAML file.</span>
-<span class="sd">    Schema is either given as command line argument, read from the meta_schema_url or from</span>
-<span class="sd">    the metadata section of the data dictionary.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">_get_file_list</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file_directory&quot;</span><span class="p">),</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file_name&quot;</span><span class="p">)):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading schema file from </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">data</span><span class="p">]</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">data_dict</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-                <span class="n">schema</span><span class="o">.</span><span class="n">validate_dict_using_schema</span><span class="p">(</span>
-                    <span class="n">data_dict</span><span class="p">,</span>
-                    <span class="n">_get_schema_file_name</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">),</span>
-                    <span class="n">ignore_software_version</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ignore_software_version&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-                <span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation of file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> failed&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successful validation of file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="validate_data_files">
-<a class="viewcode-back" href="../user-guide/applications/simtools-validate-file-using-schema.html#validate_file_using_schema.validate_data_files">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">validate_data_files</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate data files.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file_directory&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">tmp_args_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">_get_file_list</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file_directory&quot;</span><span class="p">)):</span>
-            <span class="n">tmp_args_dict</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_name</span>
-            <span class="n">parameter_name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;-\d+\.\d+\.\d+&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
-            <span class="n">schema_file</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">get_model_parameter_schema_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">tmp_args_dict</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema_file</span>
-            <span class="n">tmp_args_dict</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;model_parameter&quot;</span>
-            <span class="n">tmp_args_dict</span><span class="p">[</span><span class="s2">&quot;require_exact_data_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;require_exact_data_type&quot;</span><span class="p">]</span>
-            <span class="n">validate_data_file</span><span class="p">(</span><span class="n">tmp_args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">validate_data_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="validate_data_file">
-<a class="viewcode-back" href="../user-guide/applications/simtools-validate-file-using-schema.html#validate_file_using_schema.validate_data_file">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">validate_data_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate a data file (e.g., in ecsv, json, yaml format).&quot;&quot;&quot;</span>
-    <span class="n">data_validator</span> <span class="o">=</span> <span class="n">validate_data</span><span class="o">.</span><span class="n">DataValidator</span><span class="p">(</span>
-        <span class="n">schema_file</span><span class="o">=</span><span class="n">_get_schema_file_name</span><span class="p">(</span><span class="n">args_dict</span><span class="p">),</span>
-        <span class="n">data_file</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">],</span>
-        <span class="n">check_exact_data_type</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;require_exact_data_type&quot;</span><span class="p">],</span>
-    <span class="p">)</span>
-    <span class="n">data_validator</span><span class="o">.</span><span class="n">validate_and_transform</span><span class="p">(</span>
-        <span class="n">is_model_parameter</span><span class="o">=</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;model_parameter&quot;</span><span class="p">)</span>
-    <span class="p">)</span>
-
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successful validation of data file </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;file_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="validate_metadata">
-<a class="viewcode-back" href="../user-guide/applications/simtools-validate-file-using-schema.html#validate_file_using_schema.validate_metadata">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">validate_metadata</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate metadata.&quot;&quot;&quot;</span>
-    <span class="c1"># metadata_collector runs the metadata validation by default, no need to do anything else</span>
-    <span class="n">metadata_collector</span><span class="o">.</span><span class="n">MetadataCollector</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">])</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successful validation of metadata </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;file_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
-
-
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../user-guide/applications/simtools-validate-file-using-schema.html#validate_file_using_schema.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate a file or files in a directory using a schema.&quot;&quot;&quot;</span>
     <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;metadata&quot;</span><span class="p">:</span>
-        <span class="n">validate_metadata</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;schema&quot;</span><span class="p">:</span>
-        <span class="n">validate_dict_using_schema</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file_name&quot;</span><span class="p">)</span>
+    <span class="n">file_directory</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file_directory&quot;</span><span class="p">)</span>
+    <span class="n">schema_file</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;schema&quot;</span><span class="p">)</span>
+    <span class="n">data_type</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data_type&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;metadata&quot;</span><span class="p">:</span>
+        <span class="c1"># metadata_collector runs the metadata validation by default, no need to do anything else</span>
+        <span class="n">metadata_collector</span><span class="o">.</span><span class="n">MetadataCollector</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata_file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successful validation of metadata </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;schema&quot;</span><span class="p">:</span>
+        <span class="n">schema</span><span class="o">.</span><span class="n">validate_schema_from_files</span><span class="p">(</span>
+            <span class="n">file_directory</span><span class="o">=</span><span class="n">file_directory</span><span class="p">,</span>
+            <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span>
+            <span class="n">schema_file</span><span class="o">=</span><span class="n">schema_file</span><span class="p">,</span>
+            <span class="n">ignore_software_version</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ignore_software_version&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">validate_data_files</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="p">)</span></div>
+        <span class="n">validate_data</span><span class="o">.</span><span class="n">DataValidator</span><span class="o">.</span><span class="n">validate_data_files</span><span class="p">(</span>
+            <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span>
+            <span class="n">file_directory</span><span class="o">=</span><span class="n">file_directory</span><span class="p">,</span>
+            <span class="n">is_model_parameter</span><span class="o">=</span><span class="p">(</span><span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;model_parameter&quot;</span><span class="p">),</span>
+            <span class="n">check_exact_data_type</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;check_exact_data_type&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="n">schema_file</span><span class="o">=</span><span class="n">schema_file</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 

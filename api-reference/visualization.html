@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Utilities" href="utils.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -962,7 +962,7 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>telescope_type</strong><span class="classifier">str</span></dt><dd><p>The type of the telescope (e.g., “LSTN”, “MSTS”).</p>
+<dt><strong>telescope_type</strong><span class="classifier">str, None</span></dt><dd><p>The type of the telescope (e.g., “LSTN”, “MSTS”).</p>
 </dd>
 </dl>
 </dd>
@@ -979,6 +979,34 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 <section id="module-visualization.plot_array_layout">
 <span id="id2"></span><span id="plot-array-layout"></span><h2>plot_array_layout<a class="headerlink" href="#module-visualization.plot_array_layout" title="Link to this heading">#</a></h2>
 <p>Plot array elements for a layout.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="visualization.plot_array_layout.PlotBounds">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">PlotBounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_lim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#tuple" title="(in Python v3.12)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_lim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#tuple" title="(in Python v3.12)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#PlotBounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.PlotBounds" title="Link to this definition">#</a></dt>
+<dd><p>Axis-aligned bounds for the layout in meters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x_lim</strong><span class="classifier">tuple[float, float]</span></dt><dd><p>Min/max for x (meters).</p>
+</dd>
+<dt><strong>y_lim</strong><span class="classifier">tuple[float, float]</span></dt><dd><p>Min/max for y (meters).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="visualization.plot_array_layout.PlotBounds.x_lim">
+<span class="sig-name descname"><span class="pre">x_lim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#tuple" title="(in Python v3.12)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#visualization.plot_array_layout.PlotBounds.x_lim" title="Link to this definition">#</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="visualization.plot_array_layout.PlotBounds.y_lim">
+<span class="sig-name descname"><span class="pre">y_lim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#tuple" title="(in Python v3.12)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#visualization.plot_array_layout.PlotBounds.y_lim" title="Link to this definition">#</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_array_layout.create_patches">
 <span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">create_patches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescopes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayed_out_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlighted_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#create_patches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.create_patches" title="Link to this definition">#</a></dt>
@@ -1015,13 +1043,13 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_array_layout.finalize_plot">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">finalize_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patches</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlighted_patches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#finalize_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.finalize_plot" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">finalize_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patches</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_lim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_lim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlighted_patches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#finalize_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.finalize_plot" title="Link to this definition">#</a></dt>
 <dd><p>Finalize plot appearance and limits.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_array_layout.get_patches">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">get_patches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescopes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_tel_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker_scaling</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayed_out_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlighted_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#get_patches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.get_patches" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">get_patches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescopes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_tel_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker_scaling</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayed_out_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlighted_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_x_lim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_y_lim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#get_patches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.get_patches" title="Link to this definition">#</a></dt>
 <dd><p>Get plot patches and axis range.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1046,9 +1074,11 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 <dd class="field-even"><dl class="simple">
 <dt><strong>patches</strong><span class="classifier">list</span></dt><dd><p>List of telescope patches.</p>
 </dd>
-<dt><strong>axes_range</strong><span class="classifier">float</span></dt><dd><p>Calculated or input axis range.</p>
+<dt><strong>axes_range</strong><span class="classifier">float</span></dt><dd><p>Calculated or input symmetric axis range (meters).</p>
 </dd>
 <dt><strong>highlighted_patches</strong><span class="classifier">list</span></dt><dd><p>List of highlighted telescope patches.</p>
+</dd>
+<dt><strong>bounds</strong><span class="classifier">PlotBounds</span></dt><dd><p>Min/max for x and y in meters.</p>
 </dd>
 </dl>
 </dd>
@@ -1100,12 +1130,12 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_array_layout.get_telescope_patch">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">get_telescope_patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_grayed_out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#get_telescope_patch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.get_telescope_patch" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">get_telescope_patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_grayed_out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#get_telescope_patch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.get_telescope_patch" title="Link to this definition">#</a></dt>
 <dd><p>Create patch for a telescope.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>name</strong><span class="classifier">str</span></dt><dd><p>Telescope name.</p>
+<dt><strong>tel_type: str</strong></dt><dd><p>Telescope type.</p>
 </dd>
 <dt><strong>x</strong><span class="classifier">Quantity</span></dt><dd><p>X position.</p>
 </dd>
@@ -1128,7 +1158,7 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 
 <dl class="py function">
 <dt class="sig sig-object py" id="visualization.plot_array_layout.plot_array_layout">
-<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">plot_array_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescopes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_tel_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background_telescopes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayed_out_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlighted_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'best'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#plot_array_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.plot_array_layout" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_array_layout.</span></span><span class="sig-name descname"><span class="pre">plot_array_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescopes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_tel_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background_telescopes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayed_out_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlighted_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'best'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'exact'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_lim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_lim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_array_layout.html#plot_array_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_array_layout.plot_array_layout" title="Link to this definition">#</a></dt>
 <dd><p>Plot telescope array layout.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1154,6 +1184,18 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt><strong>fig</strong><span class="classifier">Figure</span></dt><dd><p>Matplotlib figure object.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Other Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bounds_mode</strong><span class="classifier">{“symmetric”, “exact”}</span></dt><dd><p>Controls axis limits calculation. “symmetric” uses +-R where R is the padded
+maximum extent (default), while “exact” uses individual x/y min/max bounds.</p>
+</dd>
+<dt><strong>padding</strong><span class="classifier">float</span></dt><dd><p>Fractional padding applied around computed extents (used for both modes).</p>
+</dd>
+<dt><strong>x_lim, y_lim</strong><span class="classifier">tuple(float, float), optional</span></dt><dd><p>Explicit axis limits in meters. If provided, these override axes_range and bounds_mode
+for the respective axis. If only one is provided, the other axis is derived per mode.</p>
 </dd>
 </dl>
 </dd>
@@ -2147,6 +2189,143 @@ optimization. Returns None if plotting is not requested via the plot_all flag.</
 </dd></dl>
 
 </section>
+<section id="module-visualization.plot_mirrors">
+<span id="plot-mirrors"></span><h2>plot_mirrors<a class="headerlink" href="#module-visualization.plot_mirrors" title="Link to this heading">#</a></h2>
+<p>Functions for plotting mirror panel layout information.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_mirrors.plot">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_mirrors.</span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_mirrors.html#plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_mirrors.plot" title="Link to this definition">#</a></dt>
+<dd><p>Plot mirror panel layout based on configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config</strong><span class="classifier">dict</span></dt><dd><p>Configuration dictionary containing:
+- parameter: str, parameter name (e.g., “mirror_list”, “primary_mirror_segmentation”)
+- site: str, site name (e.g., “North”, “South”)
+- telescope: str, telescope name (e.g., “LSTN-01”)
+- parameter_version: str, optional, parameter version
+- model_version: str, optional, model version
+- title: str, optional, plot title</p>
+</dd>
+<dt><strong>output_file</strong><span class="classifier">str or Path</span></dt><dd><p>Path where to save the plot (without extension)</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict, optional</span></dt><dd><p>Database configuration dictionary</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd><p>The function saves the plot to the specified output file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_mirrors.plot_mirror_layout">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_mirrors.</span></span><span class="sig-name descname"><span class="pre">plot_mirror_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mirrors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_mirrors.html#plot_mirror_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_mirrors.plot_mirror_layout" title="Link to this definition">#</a></dt>
+<dd><p>Plot the mirror panel layout from a Mirrors object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mirrors</strong><span class="classifier">Mirrors</span></dt><dd><p>Mirrors object containing mirror panel data including positions,
+diameters, focal lengths, and shape types</p>
+</dd>
+<dt><strong>mirror_file_path</strong><span class="classifier">Path or str</span></dt><dd><p>Path to the mirror list file</p>
+</dd>
+<dt><strong>telescope_model_name</strong><span class="classifier">str</span></dt><dd><p>Name of the telescope model (e.g., “LSTN-01”, “MSTN-01”)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure</dt><dd><p>The generated figure object</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_mirrors.plot_mirror_ring_segmentation">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_mirrors.</span></span><span class="sig-name descname"><span class="pre">plot_mirror_ring_segmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_mirrors.html#plot_mirror_ring_segmentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_mirrors.plot_mirror_ring_segmentation" title="Link to this definition">#</a></dt>
+<dd><p>Plot mirror ring segmentation layout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data_file_path</strong><span class="classifier">Path or str</span></dt><dd><p>Path to the segmentation data file containing ring definitions with format:
+ring &lt;nseg&gt; &lt;rmin&gt; &lt;rmax&gt; &lt;dphi&gt; &lt;phi0&gt;</p>
+</dd>
+<dt><strong>telescope_model_name</strong><span class="classifier">str</span></dt><dd><p>Name of the telescope model (e.g., “LSTN-01”, “MSTN-01”)</p>
+</dd>
+<dt><strong>parameter_type</strong><span class="classifier">str</span></dt><dd><p>Type of segmentation parameter (e.g., “primary_mirror_segmentation”,
+“secondary_mirror_segmentation”)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure or None</dt><dd><p>The generated figure object, or None if no ring data found</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_mirrors.plot_mirror_segmentation">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_mirrors.</span></span><span class="sig-name descname"><span class="pre">plot_mirror_segmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_mirrors.html#plot_mirror_segmentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_mirrors.plot_mirror_segmentation" title="Link to this definition">#</a></dt>
+<dd><p>Plot mirror segmentation layout from a segmentation file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data_file_path</strong><span class="classifier">Path or str</span></dt><dd><p>Path to the segmentation data file containing mirror segment positions,
+diameters, and shape types in standard numeric format</p>
+</dd>
+<dt><strong>telescope_model_name</strong><span class="classifier">str</span></dt><dd><p>Name of the telescope model (e.g., “LSTN-01”, “MSTN-01”)</p>
+</dd>
+<dt><strong>parameter_type</strong><span class="classifier">str</span></dt><dd><p>Type of segmentation parameter (e.g., “primary_mirror_segmentation”,
+“secondary_mirror_segmentation”)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure</dt><dd><p>The generated figure object</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_mirrors.plot_mirror_shape_segmentation">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_mirrors.</span></span><span class="sig-name descname"><span class="pre">plot_mirror_shape_segmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_mirrors.html#plot_mirror_shape_segmentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_mirrors.plot_mirror_shape_segmentation" title="Link to this definition">#</a></dt>
+<dd><p>Plot mirror shape segmentation layout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data_file_path</strong><span class="classifier">Path or str</span></dt><dd><p>Path to the segmentation data file containing explicit shape definitions
+(hex, yhex) with positions, diameters, and rotations</p>
+</dd>
+<dt><strong>telescope_model_name</strong><span class="classifier">str</span></dt><dd><p>Name of the telescope model (e.g., “LSTN-01”, “MSTN-design”)</p>
+</dd>
+<dt><strong>parameter_type</strong><span class="classifier">str</span></dt><dd><p>Type of segmentation parameter (e.g., “primary_mirror_segmentation”,
+“secondary_mirror_segmentation”)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure</dt><dd><p>The generated figure object</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="module-visualization.plot_incident_angles">
 <span id="id5"></span><span id="plot-incident-angles"></span><h2>plot_incident_angles<a class="headerlink" href="#module-visualization.plot_incident_angles" title="Link to this heading">#</a></h2>
 <p>Plot incident angle histograms for focal, primary, and secondary mirrors.</p>
@@ -2275,6 +2454,11 @@ optimization. Returns None if plotting is not requested via the plot_all flag.</
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_array_layout">plot_array_layout</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.PlotBounds"><code class="docutils literal notranslate"><span class="pre">PlotBounds</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.PlotBounds.x_lim"><code class="docutils literal notranslate"><span class="pre">PlotBounds.x_lim</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.PlotBounds.y_lim"><code class="docutils literal notranslate"><span class="pre">PlotBounds.y_lim</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.create_patches"><code class="docutils literal notranslate"><span class="pre">create_patches()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.finalize_plot"><code class="docutils literal notranslate"><span class="pre">finalize_plot()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_array_layout.get_patches"><code class="docutils literal notranslate"><span class="pre">get_patches()</span></code></a></li>
@@ -2349,6 +2533,14 @@ optimization. Returns None if plotting is not requested via the plot_all flag.</
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_psf.get_psf_diameter_label"><code class="docutils literal notranslate"><span class="pre">get_psf_diameter_label()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_psf.get_significance_label"><code class="docutils literal notranslate"><span class="pre">get_significance_label()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_psf.setup_pdf_plotting"><code class="docutils literal notranslate"><span class="pre">setup_pdf_plotting()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_mirrors">plot_mirrors</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_mirrors.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_mirrors.plot_mirror_layout"><code class="docutils literal notranslate"><span class="pre">plot_mirror_layout()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_mirrors.plot_mirror_ring_segmentation"><code class="docutils literal notranslate"><span class="pre">plot_mirror_ring_segmentation()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_mirrors.plot_mirror_segmentation"><code class="docutils literal notranslate"><span class="pre">plot_mirror_segmentation()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_mirrors.plot_mirror_shape_segmentation"><code class="docutils literal notranslate"><span class="pre">plot_mirror_shape_segmentation()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_incident_angles">plot_incident_angles</a></li>

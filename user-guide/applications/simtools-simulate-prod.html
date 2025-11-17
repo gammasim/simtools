@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="simtools-simulate-pedestals" href="simtools-simulate-pedestals.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -413,6 +413,7 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-pulse-shape-parameters.html">simtools-derive-pulse-shape-parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-trigger-rates.html">simtools-derive-trigger-rates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
@@ -555,10 +556,6 @@ It allows the transformation system to keep using sequential run numbers without
 </dd>
 <dt>run (int, required)</dt><dd><p>Run number (actual run number will be ‘start_run’ + ‘run’).</p>
 </dd>
-<dt>data_directory (str, optional)</dt><dd><p>The location of the output directories corsika-data and simtel-data.
-the label is added to the data_directory, such that the output
-will be written to data_directory/label/simtel-data.</p>
-</dd>
 <dt>pack_for_grid_register (str, optional)</dt><dd><p>Set whether to prepare a tarball for registering the output files on the grid.
 The files are written to the specified directory.</p>
 </dd>
@@ -574,12 +571,6 @@ The files are written to the specified directory.</p>
 <span class="go">--zenith_angle 20 --start_run 0 --run 1</span>
 </pre></div>
 </div>
-<p>By default the configuration is saved in simtools-output/test-production
-together with the actual simulation output in corsika-data and simtel-data within.
-The location of the latter directories can be set
-to a different location via the option –data_directory,
-but the label is always added to the data_directory, such that the output
-will be written to data_directory/label/simtel-data.</p>
 </section>
 <dl class="py function">
 <dt class="sig sig-object py" id="simulate_prod.main">

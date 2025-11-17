@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -497,6 +497,17 @@
 <span class="sd">    List of array elements to plot with red circles around them.</span>
 <span class="sd">legend_location : str, optional</span>
 <span class="sd">    Location of the legend (default &quot;best&quot;).</span>
+<span class="sd">bounds : str, optional</span>
+<span class="sd">    Axis bounds mode. Use &quot;symmetric&quot; for +-R with padding (default) or &quot;exact&quot; for</span>
+<span class="sd">    per-axis min/max bounds.</span>
+<span class="sd">padding : float, optional</span>
+<span class="sd">    Fractional padding applied around computed extents in both modes (default 0.1).</span>
+<span class="sd">x_lim : tuple(float, float), optional</span>
+<span class="sd">    Explicit x-axis limits [xmin, xmax] in meters. When provided, overrides derived limits</span>
+<span class="sd">    and filters plotted elements by x.</span>
+<span class="sd">y_lim : tuple(float, float), optional</span>
+<span class="sd">    Explicit y-axis limits [ymin, ymax] in meters. When provided, overrides derived limits</span>
+<span class="sd">    and filters plotted elements by y.</span>
 
 <span class="sd">Examples</span>
 <span class="sd">--------</span>
@@ -523,6 +534,20 @@
 
 <span class="sd">    simtools-plot-array-layout</span>
 <span class="sd">        --array_layout_file tests/resources/telescope_positions-North-ground.ecsv</span>
+
+<span class="sd">Use exact bounds with default padding:</span>
+
+<span class="sd">.. code-block:: console</span>
+
+<span class="sd">    simtools-plot-array-layout --array_layout_name alpha \</span>
+<span class="sd">        --site North --model_version 6.0.0 --bounds exact</span>
+
+<span class="sd">Use symmetric bounds with custom padding:</span>
+
+<span class="sd">.. code-block:: console</span>
+
+<span class="sd">    simtools-plot-array-layout --array_layout_name alpha \</span>
+<span class="sd">        --site North --model_version 6.0.0 --bounds symmetric --padding 0.15</span>
 
 <span class="sd">Plot layout from a parameter file with a list of telescopes:</span>
 
@@ -609,6 +634,24 @@
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--x_lim&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Explicit x-axis limits [xmin xmax] in meters.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;XMIN&quot;</span><span class="p">,</span> <span class="s2">&quot;XMAX&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--y_lim&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Explicit y-axis limits [ymin ymax] in meters.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;YMIN&quot;</span><span class="p">,</span> <span class="s2">&quot;YMAX&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--array_layout_name_background&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the background layout array (e.g., test_layout, alpha, 4mst, etc.).&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
@@ -636,11 +679,26 @@
         <span class="n">help</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">&quot;Location of the legend (e.g., &#39;best&#39;, &#39;upper right&#39;, &#39;upper left&#39;, &quot;</span>
             <span class="s2">&quot;&#39;lower left&#39;, &#39;lower right&#39;, &#39;right&#39;, &#39;center left&#39;, &#39;center right&#39;, &quot;</span>
-            <span class="s2">&quot;&#39;lower center&#39;, &#39;upper center&#39;, &#39;center&#39;).&quot;</span>
+            <span class="s2">&quot;&#39;lower center&#39;, &#39;upper center&#39;, &#39;center&#39;, &#39;no_legend&#39;).&quot;</span>
         <span class="p">),</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--bounds&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Axis bounds mode: &#39;symmetric&#39; uses +-R with padding, &#39;exact&#39; uses per-axis min/max&quot;</span><span class="p">),</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;symmetric&quot;</span><span class="p">,</span> <span class="s2">&quot;exact&quot;</span><span class="p">],</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;symmetric&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--padding&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Fractional padding applied around computed extents (used for both modes).&quot;</span><span class="p">),</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
         <span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -745,6 +803,10 @@
             <span class="n">grayed_out_elements</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;grayed_out_array_elements&quot;</span><span class="p">],</span>
             <span class="n">highlighted_elements</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;highlighted_array_elements&quot;</span><span class="p">],</span>
             <span class="n">legend_location</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;legend_location&quot;</span><span class="p">],</span>
+            <span class="n">bounds_mode</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;bounds&quot;</span><span class="p">],</span>
+            <span class="n">padding</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;padding&quot;</span><span class="p">],</span>
+            <span class="n">x_lim</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;x_lim&quot;</span><span class="p">])</span> <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;x_lim&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">y_lim</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;y_lim&quot;</span><span class="p">])</span> <span class="k">if</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;y_lim&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">site_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">if</span> <span class="n">layout</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

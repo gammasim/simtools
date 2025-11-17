@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -435,70 +435,16 @@
   <h1>Source code for db.db_handler</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Module to handle interaction with DB.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">threading</span><span class="w"> </span><span class="kn">import</span> <span class="n">Lock</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">gridfs</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">jsonschema</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">bson.objectid</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObjectId</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pymongo</span><span class="w"> </span><span class="kn">import</span> <span class="n">MongoClient</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_data</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span><span class="p">,</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.db.mongo_db</span><span class="w"> </span><span class="kn">import</span> <span class="n">MongoDBHandler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel</span><span class="w"> </span><span class="kn">import</span> <span class="n">simtel_table_reader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span><span class="p">,</span> <span class="n">value_conversion</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.version</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_version_to_latest_patch</span>
-
-<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;pymongo&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
-
-
-<span class="c1"># pylint: disable=unsubscriptable-object</span>
-<span class="c1"># The above comment is because pylint does not know that DatabaseHandler.db_client is subscriptable</span>
-
-
-<span class="n">jsonschema_db_dict</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;https://json-schema.org/draft/2020-12/schema#&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;MongoDB configuration&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;db_server&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;DB server address&quot;</span><span class="p">},</span>
-        <span class="s2">&quot;db_api_port&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-            <span class="s2">&quot;maximum&quot;</span><span class="p">:</span> <span class="mi">65535</span><span class="p">,</span>
-            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span>
-            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Port to use&quot;</span><span class="p">,</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;db_api_user&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;API username&quot;</span><span class="p">},</span>
-        <span class="s2">&quot;db_api_pw&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Password for the API user&quot;</span><span class="p">},</span>
-        <span class="s2">&quot;db_api_authentication_database&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;null&quot;</span><span class="p">],</span>
-            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;admin&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;DB with user info (optional)&quot;</span><span class="p">,</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;db_simulation_model&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Name of simulation model database&quot;</span><span class="p">,</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;db_simulation_model_version&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Version of simulation model database&quot;</span><span class="p">,</span>
-        <span class="p">},</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="s2">&quot;db_server&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;db_api_port&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;db_api_user&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;db_api_pw&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;db_simulation_model&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;db_simulation_model_version&quot;</span><span class="p">,</span>
-    <span class="p">],</span>
-<span class="p">}</span>
 
 
 <div class="viewcode-block" id="DatabaseHandler">
@@ -509,46 +455,37 @@
 
 <span class="sd">    Note the two types of version variables used in this class:</span>
 
-<span class="sd">    - db_simulation_model_version (from mongo_db_config): version of the simulation model database</span>
+<span class="sd">    - db_simulation_model_version (from db_config): version of the simulation model database</span>
 <span class="sd">    - model_version (from production_tables): version of the model contained in the database</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    mongo_db_config: dict</span>
-<span class="sd">        Dictionary with the MongoDB configuration (see jsonschema_db_dict for details).</span>
+<span class="sd">    db_config: dict</span>
+<span class="sd">        Dictionary with the DB configuration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">ALLOWED_FILE_EXTENSIONS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;.lis&quot;</span><span class="p">,</span> <span class="s2">&quot;.cfg&quot;</span><span class="p">,</span> <span class="s2">&quot;.yml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;.ecsv&quot;</span><span class="p">]</span>
 
-    <span class="n">db_client</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">production_table_cached</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">model_parameters_cached</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">model_versions_cached</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the DatabaseHandler class.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_mongo_db_config</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_config</span> <span class="o">=</span> <span class="n">MongoDBHandler</span><span class="o">.</span><span class="n">validate_db_config</span><span class="p">(</span><span class="n">db_config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span> <span class="o">=</span> <span class="n">MongoDBHandler</span><span class="p">(</span><span class="n">db_config</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_config</span> <span class="k">else</span> <span class="kc">None</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_up_connection</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">get_db_name</span><span class="p">(</span>
-                <span class="n">db_simulation_model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model_version&quot;</span><span class="p">),</span>
-                <span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">),</span>
+            <span class="n">MongoDBHandler</span><span class="o">.</span><span class="n">get_db_name</span><span class="p">(</span>
+                <span class="n">db_simulation_model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model_version&quot;</span><span class="p">),</span>
+                <span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model&quot;</span><span class="p">),</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_config</span>
             <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_set_up_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Open the connection to MongoDB.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="ow">and</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
-            <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
-                <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_open_mongo_db</span><span class="p">()</span>
 
 <div class="viewcode-block" id="DatabaseHandler.get_db_name">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_db_name">[docs]</a>
@@ -557,24 +494,23 @@
         <span class="k">if</span> <span class="n">db_name</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">db_name</span>
         <span class="k">if</span> <span class="n">db_simulation_model_version</span> <span class="ow">and</span> <span class="n">model_name</span><span class="p">:</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">db_simulation_model_version</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">if</span> <span class="n">db_simulation_model_version</span> <span class="ow">or</span> <span class="n">model_name</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="p">(</span><span class="n">db_simulation_model_version</span> <span class="ow">or</span> <span class="n">model_name</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span></div>
+            <span class="k">return</span> <span class="n">MongoDBHandler</span><span class="o">.</span><span class="n">get_db_name</span><span class="p">(</span>
+                <span class="n">db_simulation_model_version</span><span class="o">=</span><span class="n">db_simulation_model_version</span><span class="p">,</span>
+                <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">db_simulation_model_version</span> <span class="ow">or</span> <span class="n">model_name</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="DatabaseHandler.print_connection_info">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.print_connection_info">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">print_connection_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print the connection information.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Connected to MongoDB at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s1">&#39;db_server&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">:&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s1">&#39;db_api_port&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;using database: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">print_connection_info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No MongoDB configuration provided.&quot;</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No database defined.&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DatabaseHandler.is_remote_database">
@@ -590,56 +526,8 @@
 <span class="sd">        bool</span>
 <span class="sd">            True if the database is remote, False otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">:</span>
-            <span class="n">db_server</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">]</span>
-            <span class="n">domain_pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$&quot;</span>
-            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">domain_pattern</span><span class="p">,</span> <span class="n">db_server</span><span class="p">))</span>
-        <span class="k">return</span> <span class="kc">False</span></div>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">is_remote_database</span><span class="p">())</span></div>
 
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_mongo_db_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate the MongoDB configuration.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">mongo_db_config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">mongo_db_config</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">jsonschema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">jsonschema_db_dict</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">mongo_db_config</span>
-        <span class="k">except</span> <span class="n">jsonschema</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid MongoDB configuration&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_open_mongo_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Open a connection to MongoDB and return the client to read/write to the DB with.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        A PyMongo DB client</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        KeyError</span>
-<span class="sd">            If the DB configuration is invalid</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">direct_connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span>
-            <span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;simtools-mongodb&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;mongodb&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">MongoClient</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">],</span>
-            <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_port&quot;</span><span class="p">],</span>
-            <span class="n">username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_user&quot;</span><span class="p">],</span>
-            <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_pw&quot;</span><span class="p">],</span>
-            <span class="n">authSource</span><span class="o">=</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_api_authentication_database&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_api_authentication_database&quot;</span><span class="p">)</span>
-                <span class="k">else</span> <span class="s2">&quot;admin&quot;</span>
-            <span class="p">),</span>
-            <span class="n">directConnection</span><span class="o">=</span><span class="n">direct_connection</span><span class="p">,</span>
-            <span class="n">ssl</span><span class="o">=</span><span class="ow">not</span> <span class="n">direct_connection</span><span class="p">,</span>
-            <span class="n">tlsallowinvalidhostnames</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">tlsallowinvalidcertificates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
 
 <div class="viewcode-block" id="DatabaseHandler.generate_compound_indexes_for_databases">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.generate_compound_indexes_for_databases">[docs]</a>
@@ -657,56 +545,10 @@
 <span class="sd">            Name of the simulation model.</span>
 <span class="sd">        db_simulation_model_version: str</span>
 <span class="sd">            Version of the simulation model.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            If the requested database is not found.</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">databases</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_client</span><span class="o">.</span><span class="n">list_database_names</span><span class="p">()</span> <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">,</span> <span class="s2">&quot;local&quot;</span><span class="p">)</span>
-        <span class="p">]</span>
-        <span class="n">requested</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_db_name</span><span class="p">(</span>
-            <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span><span class="p">,</span>
-            <span class="n">db_simulation_model_version</span><span class="o">=</span><span class="n">db_simulation_model_version</span><span class="p">,</span>
-            <span class="n">model_name</span><span class="o">=</span><span class="n">db_simulation_model</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">requested</span> <span class="o">!=</span> <span class="s2">&quot;all&quot;</span> <span class="ow">and</span> <span class="n">requested</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">databases</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Requested database &#39;</span><span class="si">{</span><span class="n">requested</span><span class="si">}</span><span class="s2">&#39; not found. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Following databases are available: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">databases</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-
-        <span class="n">databases</span> <span class="o">=</span> <span class="n">databases</span> <span class="k">if</span> <span class="n">requested</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="k">else</span> <span class="p">[</span><span class="n">requested</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">dbs</span> <span class="ow">in</span> <span class="n">databases</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating compound indexes for database: </span><span class="si">{</span><span class="n">dbs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">generate_compound_indexes</span><span class="p">(</span><span class="n">db_name</span><span class="o">=</span><span class="n">dbs</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="DatabaseHandler.generate_compound_indexes">
-<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.generate_compound_indexes">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_compound_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate compound indexes for the MongoDB collections.</span>
-
-<span class="sd">        Indexes based on the typical query patterns.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
-        <span class="n">collection_names</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s2">&quot;telescopes&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;sites&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;configuration_corsika&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;calibration_devices&quot;</span><span class="p">,</span>
-        <span class="p">]</span>
-        <span class="k">for</span> <span class="n">collection_name</span> <span class="ow">in</span> <span class="n">collection_names</span><span class="p">:</span>
-            <span class="n">db_collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">collection_name</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span><span class="p">)</span>
-            <span class="n">db_collection</span><span class="o">.</span><span class="n">create_index</span><span class="p">(</span>
-                <span class="p">[(</span><span class="s2">&quot;instrument&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;parameter&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
-            <span class="p">)</span>
-        <span class="n">db_collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="s2">&quot;production_tables&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span><span class="p">)</span>
-        <span class="n">db_collection</span><span class="o">.</span><span class="n">create_index</span><span class="p">([(</span><span class="s2">&quot;collection&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">generate_compound_indexes_for_databases</span><span class="p">(</span>
+            <span class="n">db_name</span><span class="p">,</span> <span class="n">db_simulation_model</span><span class="p">,</span> <span class="n">db_simulation_model_version</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DatabaseHandler.get_model_parameter">
@@ -752,9 +594,7 @@
             <span class="n">model_version</span> <span class="o">=</span> <span class="n">resolve_version_to_latest_patch</span><span class="p">(</span>
                 <span class="n">model_version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_versions</span><span class="p">(</span><span class="n">collection_name</span><span class="p">)</span>
             <span class="p">)</span>
-            <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_mongo_db</span><span class="p">(</span>
-                <span class="n">collection_name</span><span class="p">,</span> <span class="n">model_version</span>
-            <span class="p">)</span>
+            <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_db</span><span class="p">(</span><span class="n">collection_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
             <span class="n">array_element_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_element_list</span><span class="p">(</span>
                 <span class="n">array_element_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">production_table</span><span class="p">,</span> <span class="n">collection_name</span>
             <span class="p">)</span>
@@ -774,7 +614,7 @@
             <span class="n">query</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">array_element_name</span>
         <span class="k">if</span> <span class="n">site</span><span class="p">:</span>
             <span class="n">query</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">site</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_mongo_db</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span> <span class="n">collection_name</span><span class="o">=</span><span class="n">collection_name</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_db</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span> <span class="n">collection_name</span><span class="o">=</span><span class="n">collection_name</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DatabaseHandler.get_model_parameters">
@@ -804,7 +644,7 @@
         <span class="n">model_version</span> <span class="o">=</span> <span class="n">resolve_version_to_latest_patch</span><span class="p">(</span>
             <span class="n">model_version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_versions</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
         <span class="n">array_element_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_element_list</span><span class="p">(</span>
             <span class="n">array_element_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">production_table</span><span class="p">,</span> <span class="n">collection</span>
         <span class="p">)</span>
@@ -875,7 +715,7 @@
             <span class="n">parameter_version_table</span> <span class="o">=</span> <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">][</span><span class="n">array_element</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>  <span class="c1"># allow missing array elements (parameter dict is checked later)</span>
             <span class="k">return</span> <span class="p">{}</span>
-        <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_parameters_cached</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_mongo_db</span><span class="p">(</span>
+        <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_parameters_cached</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_db</span><span class="p">(</span>
             <span class="n">query</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_query_from_parameter_version_table</span><span class="p">(</span>
                 <span class="n">parameter_version_table</span><span class="p">,</span> <span class="n">array_element</span><span class="p">,</span> <span class="n">site</span>
             <span class="p">),</span>
@@ -902,7 +742,7 @@
 <span class="sd">            The collection from the DB.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
-        <span class="k">return</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">][</span><span class="n">collection_name</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">collection_name</span><span class="p">,</span> <span class="n">db_name</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DatabaseHandler.get_collections">
@@ -922,17 +762,10 @@
 <span class="sd">        -------</span>
 <span class="sd">        list</span>
 <span class="sd">            List of collection names</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
-        <span class="k">if</span> <span class="n">db_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span><span class="p">[</span><span class="n">db_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span>
-                <span class="n">db_name</span>
-            <span class="p">]</span><span class="o">.</span><span class="n">list_collection_names</span><span class="p">()</span>
-        <span class="n">collections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span><span class="p">[</span><span class="n">db_name</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">model_collections_only</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[</span><span class="n">collection</span> <span class="k">for</span> <span class="n">collection</span> <span class="ow">in</span> <span class="n">collections</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">collection</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;fs.&quot;</span><span class="p">)]</span>
-        <span class="k">return</span> <span class="n">collections</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">get_collections</span><span class="p">(</span>
+            <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">,</span> <span class="n">model_collections_only</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DatabaseHandler.export_model_file">
@@ -1027,8 +860,8 @@
             <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
                 <span class="n">instance_ids</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;file exists&quot;</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">file_path_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file_mongo_db</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_write_file_from_mongo_to_disk</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">file_path_instance</span><span class="p">)</span>
+                <span class="n">file_path_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">get_file_from_db</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_write_file_from_db_to_disk</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">file_path_instance</span><span class="p">)</span>
                 <span class="n">instance_ids</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_path_instance</span><span class="o">.</span><span class="n">_id</span>  <span class="c1"># pylint: disable=protected-access</span>
         <span class="k">return</span> <span class="n">instance_ids</span></div>
 
@@ -1050,7 +883,7 @@
             <span class="n">query_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">site</span>
         <span class="k">return</span> <span class="n">query_dict</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_read_mongo_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Query MongoDB.</span>
 
@@ -1070,22 +903,19 @@
 <span class="sd">        ValueError</span>
 <span class="sd">            if query returned no results.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">collection_name</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
-        <span class="n">posts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">))</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">posts</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The following query for </span><span class="si">{</span><span class="n">collection_name</span><span class="si">}</span><span class="s2"> returned zero results: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2"> &quot;</span>
-            <span class="p">)</span>
+        <span class="n">posts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">query_db</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
         <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">posts</span><span class="p">:</span>
             <span class="n">par_now</span> <span class="o">=</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]</span>
             <span class="n">parameters</span><span class="p">[</span><span class="n">par_now</span><span class="p">]</span> <span class="o">=</span> <span class="n">post</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="n">par_now</span><span class="p">][</span><span class="s2">&quot;entry_date&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ObjectId</span><span class="p">(</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;_id&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">generation_time</span>
+            <span class="n">parameters</span><span class="p">[</span><span class="n">par_now</span><span class="p">][</span><span class="s2">&quot;entry_date&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">get_entry_date_from_document</span><span class="p">(</span>
+                <span class="n">post</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">parameters</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">parameters</span><span class="p">)}</span>
 
-<div class="viewcode-block" id="DatabaseHandler.read_production_table_from_mongo_db">
-<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.read_production_table_from_mongo_db">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">read_production_table_from_mongo_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+<div class="viewcode-block" id="DatabaseHandler.read_production_table_from_db">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.read_production_table_from_db">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_production_table_from_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read production table for the given collection from MongoDB.</span>
 
@@ -1112,8 +942,7 @@
             <span class="k">pass</span>
 
         <span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;model_version&quot;</span><span class="p">:</span> <span class="n">model_version</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">collection_name</span><span class="p">}</span>
-        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="s2">&quot;production_tables&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
-        <span class="n">post</span> <span class="o">=</span> <span class="n">collection</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="n">post</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="s2">&quot;production_tables&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">post</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The following query returned zero results: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -1122,7 +951,7 @@
             <span class="s2">&quot;model_version&quot;</span><span class="p">:</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
             <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">],</span>
             <span class="s2">&quot;design_model&quot;</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;design_model&quot;</span><span class="p">,</span> <span class="p">{}),</span>
-            <span class="s2">&quot;entry_date&quot;</span><span class="p">:</span> <span class="n">ObjectId</span><span class="p">(</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;_id&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">generation_time</span><span class="p">,</span>
+            <span class="s2">&quot;entry_date&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">get_entry_date_from_document</span><span class="p">(</span><span class="n">post</span><span class="p">),</span>
         <span class="p">}</span></div>
 
 
@@ -1172,7 +1001,7 @@
         <span class="n">model_version</span> <span class="o">=</span> <span class="n">resolve_version_to_latest_patch</span><span class="p">(</span>
             <span class="n">model_version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_versions</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">entry</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;-design&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">])</span></div>
 
 
@@ -1200,7 +1029,7 @@
         <span class="n">model_version</span> <span class="o">=</span> <span class="n">resolve_version_to_latest_patch</span><span class="p">(</span>
             <span class="n">model_version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_versions</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;design_model&quot;</span><span class="p">][</span><span class="n">array_element_name</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -1234,7 +1063,7 @@
         <span class="n">model_version</span> <span class="o">=</span> <span class="n">resolve_version_to_latest_patch</span><span class="p">(</span>
             <span class="n">model_version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_versions</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
         <span class="n">all_array_elements</span> <span class="o">=</span> <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
             <span class="p">[</span>
@@ -1294,38 +1123,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown simulation software: </span><span class="si">{</span><span class="n">simulation_software</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_file_mongo_db</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Extract a file from MongoDB and return GridFS file instance.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        db_name: str</span>
-<span class="sd">            the name of the DB with files of tabulated data</span>
-<span class="sd">        file_name: str</span>
-<span class="sd">            The name of the file requested</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        GridOut</span>
-<span class="sd">            A file instance returned by GridFS find_one</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        FileNotFoundError</span>
-<span class="sd">            If the desired file is not found.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">]</span>
-        <span class="n">file_system</span> <span class="o">=</span> <span class="n">gridfs</span><span class="o">.</span><span class="n">GridFS</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">file_system</span><span class="o">.</span><span class="n">exists</span><span class="p">({</span><span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="n">file_name</span><span class="p">}):</span>
-            <span class="k">return</span> <span class="n">file_system</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="n">file_name</span><span class="p">})</span>
-
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> does not exist in the database </span><span class="si">{</span><span class="n">db_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_write_file_from_mongo_to_disk</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_file_from_db_to_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Extract a file from MongoDB and write it to disk.</span>
 
@@ -1338,10 +1136,7 @@
 <span class="sd">        file: GridOut</span>
 <span class="sd">            A file instance returned by GridFS find_one</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">]</span>
-        <span class="n">fs_output</span> <span class="o">=</span> <span class="n">gridfs</span><span class="o">.</span><span class="n">GridFSBucket</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="p">),</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output_file</span><span class="p">:</span>
-            <span class="n">fs_output</span><span class="o">.</span><span class="n">download_to_stream_by_name</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">write_file_from_db_to_disk</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DatabaseHandler.get_ecsv_file_as_astropy_table">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_ecsv_file_as_astropy_table">[docs]</a>
@@ -1363,16 +1158,9 @@
 <span class="sd">        astropy.table.Table</span>
 <span class="sd">            The contents of the ECSV file as an Astropy Table.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">]</span>
-        <span class="n">fs</span> <span class="o">=</span> <span class="n">gridfs</span><span class="o">.</span><span class="n">GridFSBucket</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
-
-        <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">fs</span><span class="o">.</span><span class="n">download_to_stream_by_name</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">buf</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">gridfs</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">NoFile</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ECSV file &#39;</span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&#39; not found in DB.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-        <span class="n">buf</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">get_ecsv_file_as_astropy_table</span><span class="p">(</span>
+            <span class="n">file_name</span><span class="p">,</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DatabaseHandler.add_production_table">
@@ -1388,10 +1176,10 @@
 <span class="sd">        db_name: str</span>
 <span class="sd">            the name of the DB.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
-        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="s2">&quot;production_tables&quot;</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding production for </span><span class="si">{</span><span class="n">production_table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;collection&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> to the DB&quot;</span><span class="p">)</span>
-        <span class="n">collection</span><span class="o">.</span><span class="n">insert_one</span><span class="p">(</span><span class="n">production_table</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">insert_one</span><span class="p">(</span>
+            <span class="n">production_table</span><span class="p">,</span> <span class="s2">&quot;production_tables&quot;</span><span class="p">,</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
+        <span class="p">)</span>
         <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">production_table_cached</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_versions_cached</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
 
@@ -1425,7 +1213,6 @@
         <span class="n">par_dict</span> <span class="o">=</span> <span class="n">validate_data</span><span class="o">.</span><span class="n">DataValidator</span><span class="o">.</span><span class="n">validate_model_parameter</span><span class="p">(</span><span class="n">par_dict</span><span class="p">)</span>
 
         <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
-        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">collection_name</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span><span class="p">)</span>
 
         <span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">_base_unit</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">value_conversion</span><span class="o">.</span><span class="n">get_value_unit_type</span><span class="p">(</span>
             <span class="n">value</span><span class="o">=</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">unit_str</span><span class="o">=</span><span class="n">par_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -1440,14 +1227,12 @@
                     <span class="sa">f</span><span class="s2">&quot;corresponding to the </span><span class="si">{</span><span class="n">par_dict</span><span class="p">[</span><span class="s1">&#39;parameter&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> parameter, must be provided.&quot;</span>
                 <span class="p">)</span>
             <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_prefix</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">is_utf8_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File is not UTF-8 encoded: </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">files_to_add_to_db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Adding a new entry to DB </span><span class="si">{</span><span class="n">db_name</span><span class="si">}</span><span class="s2"> and collection </span><span class="si">{</span><span class="n">collection_name</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">par_dict</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
-        <span class="n">collection</span><span class="o">.</span><span class="n">insert_one</span><span class="p">(</span><span class="n">par_dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">insert_one</span><span class="p">(</span><span class="n">par_dict</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">,</span> <span class="n">db_name</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">file_to_insert_now</span> <span class="ow">in</span> <span class="n">files_to_add_to_db</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Will also add the file </span><span class="si">{</span><span class="n">file_to_insert_now</span><span class="si">}</span><span class="s2"> to the DB&quot;</span><span class="p">)</span>
@@ -1458,7 +1243,7 @@
 
 <div class="viewcode-block" id="DatabaseHandler.insert_file_to_db">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.insert_file_to_db">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">insert_file_to_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">insert_file_to_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Insert a file to the DB.</span>
 
@@ -1468,35 +1253,14 @@
 <span class="sd">            The name of the file to insert (full path).</span>
 <span class="sd">        db_name: str</span>
 <span class="sd">            the name of the DB</span>
-<span class="sd">        **kwargs (optional): keyword arguments for file creation.</span>
-<span class="sd">            The full list of arguments can be found in, \</span>
-<span class="sd">            https://www.mongodb.com/docs/manual/core/gridfs/</span>
-<span class="sd">            mostly these are unnecessary though.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        file_iD: GridOut._id</span>
-<span class="sd">            If the file exists, return its GridOut._id, otherwise insert the file and return its&quot;</span>
-<span class="sd">            &quot;newly created DB GridOut._id.</span>
-
+<span class="sd">        file_id: GridOut._id</span>
+<span class="sd">            If the file exists, return its GridOut._id, otherwise insert the file and return</span>
+<span class="sd">            its newly created DB GridOut._id.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span>
-        <span class="n">db</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">]</span>
-        <span class="n">file_system</span> <span class="o">=</span> <span class="n">gridfs</span><span class="o">.</span><span class="n">GridFS</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
-
-        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;content_type&quot;</span><span class="p">,</span> <span class="s2">&quot;ascii/dat&quot;</span><span class="p">)</span>
-        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;filename&quot;</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">file_system</span><span class="o">.</span><span class="n">exists</span><span class="p">({</span><span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]}):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The file </span><span class="si">{</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> exists in the DB. Returning its ID&quot;</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="n">file_system</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span>  <span class="c1"># pylint: disable=protected-access</span>
-                <span class="p">{</span><span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]}</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">_id</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing file to DB: </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">data_file</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">file_system</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">insert_file_to_db</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">db_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_cache_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">array_element_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1588,7 +1352,7 @@
             <span class="k">return</span> <span class="p">[</span><span class="n">array_element_name</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">collection</span> <span class="o">==</span> <span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">:</span>
             <span class="c1"># get design model from &#39;telescope&#39; or &#39;calibration_device&#39; production tables</span>
-            <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_mongo_db</span><span class="p">(</span>
+            <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_production_table_from_db</span><span class="p">(</span>
                 <span class="n">names</span><span class="o">.</span><span class="n">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">),</span>
                 <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
             <span class="p">)</span>

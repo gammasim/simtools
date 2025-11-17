@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -469,10 +469,12 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Inspect databases.&quot;&quot;&quot;</span>
     <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">,</span> <span class="n">setup_io_handler</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">db_config</span><span class="p">)</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">db_config</span><span class="p">)</span>
     <span class="c1"># databases without internal databases we don&#39;t have rights to modify</span>
     <span class="n">databases</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">db_client</span><span class="o">.</span><span class="n">list_database_names</span><span class="p">()</span> <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">,</span> <span class="s2">&quot;local&quot;</span><span class="p">)</span>
+        <span class="n">d</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">mongo_db_handler</span><span class="o">.</span><span class="n">db_client</span><span class="o">.</span><span class="n">list_database_names</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">,</span> <span class="s2">&quot;local&quot;</span><span class="p">)</span>
     <span class="p">]</span>
     <span class="n">requested</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;db_name&quot;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">requested</span> <span class="o">!=</span> <span class="s2">&quot;all&quot;</span> <span class="ow">and</span> <span class="n">requested</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">databases</span><span class="p">:</span>

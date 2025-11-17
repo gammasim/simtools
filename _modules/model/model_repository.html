@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -808,7 +808,7 @@
         <span class="n">_version_changes</span><span class="p">,</span> <span class="n">base_model_version</span> <span class="o">=</span> <span class="n">_get_changes_to_production</span><span class="p">(</span>
             <span class="n">_changes_dict</span><span class="p">,</span> <span class="n">simulation_models_path</span><span class="p">,</span> <span class="n">update_type</span><span class="o">=</span><span class="s2">&quot;full_update&quot;</span>
         <span class="p">)</span>
-        <span class="n">changes</span> <span class="o">=</span> <span class="n">_update_two_levels_in_changes_dict</span><span class="p">(</span><span class="n">changes</span><span class="p">,</span> <span class="n">_version_changes</span><span class="p">)</span>
+        <span class="n">changes</span> <span class="o">=</span> <span class="n">_update_two_levels_in_changes_dict</span><span class="p">(</span><span class="n">_version_changes</span><span class="p">,</span> <span class="n">changes</span><span class="p">)</span>
         <span class="c1"># stop iterative loop after reaching first full version of production tables</span>
         <span class="k">if</span> <span class="n">_changes_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_update&quot;</span><span class="p">,</span> <span class="s2">&quot;full_update&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;full_update&quot;</span><span class="p">:</span>
             <span class="k">break</span>
@@ -908,7 +908,7 @@
 
     <span class="n">param_dir</span> <span class="o">=</span> <span class="n">telescope_dir</span> <span class="o">/</span> <span class="n">param</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">latest_file</span> <span class="o">=</span> <span class="n">_get_latest_model_parameter_file</span><span class="p">(</span><span class="n">param_dir</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+        <span class="n">latest_file</span> <span class="o">=</span> <span class="n">_get_latest_model_parameter_file</span><span class="p">(</span><span class="n">param_dir</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">])</span>
     <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
         <span class="n">latest_file</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -931,10 +931,11 @@
         <span class="n">output_path</span><span class="o">=</span><span class="n">param_dir</span><span class="p">,</span>
         <span class="n">unit</span><span class="o">=</span><span class="n">param_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">),</span>
         <span class="n">meta_parameter</span><span class="o">=</span><span class="n">param_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;meta_parameter&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="n">model_parameter_schema_version</span><span class="o">=</span><span class="n">param_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_parameter_schema_version&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
     <span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_get_latest_model_parameter_file</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">parameter</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_latest_model_parameter_file</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">max_version</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the latest model parameter JSON file for a parameter in the given directory.</span>
 
@@ -946,11 +947,14 @@
 <span class="sd">        Path to the directory containing parameter JSON files.</span>
 <span class="sd">    parameter: str</span>
 <span class="sd">        Name of the parameter to find.</span>
+<span class="sd">    max_version: str</span>
+<span class="sd">        Maximum version to consider (inclusive). Files with versions greater than</span>
+<span class="sd">        this will be excluded.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    str</span>
-<span class="sd">        Path to the latest JSON file for the parameter.</span>
+<span class="sd">        Path to the latest JSON file for the parameter with version &lt;= max_version.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -968,7 +972,16 @@
         <span class="c1"># version is part after first &#39;-&#39;</span>
         <span class="k">return</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="n">latest_file</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">extract_version</span><span class="p">)</span>
+    <span class="n">max_ver</span> <span class="o">=</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">max_version</span><span class="p">)</span>
+    <span class="n">filtered_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">extract_version</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">max_ver</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">filtered_files</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;No JSON files found for parameter &#39;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">&#39; with version &lt;= </span><span class="si">{</span><span class="n">max_version</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;in directory &#39;</span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">latest_file</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">filtered_files</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">extract_version</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">latest_file</span><span class="p">)</span>
 
 

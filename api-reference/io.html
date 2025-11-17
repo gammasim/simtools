@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Database support" href="db_handler.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -724,6 +724,96 @@
 </dd></dl>
 
 </section>
+<section id="eventio-handler">
+<span id="id1"></span><h2>eventio_handler<a class="headerlink" href="#eventio-handler" title="Link to this heading">#</a></h2>
+<p id="module-simtools.io.eventio_handler">Read file info and run headers from eventio (CORSIKA IACT, sim_telarray) files.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.eventio_handler.get_combined_corsika_run_header">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.eventio_handler.</span></span><span class="sig-name descname"><span class="pre">get_combined_corsika_run_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_telarray_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/eventio_handler.html#get_combined_corsika_run_header"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.eventio_handler.get_combined_corsika_run_header" title="Link to this definition">#</a></dt>
+<dd><p>Return the CORSIKA run header information from an sim_telarray file.</p>
+<p>Reads both RunHeader and MCRunHeader object from file and returns a merged dictionary.
+Adds primary id from the first event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sim_telarray_file: str</strong></dt><dd><p>Path to the sim_telarray file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict, None</dt><dd><p>CORSIKA run header. Returns None if not found.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.eventio_handler.get_corsika_run_and_event_headers">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.eventio_handler.</span></span><span class="sig-name descname"><span class="pre">get_corsika_run_and_event_headers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_iact_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/eventio_handler.html#get_corsika_run_and_event_headers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.eventio_handler.get_corsika_run_and_event_headers" title="Link to this definition">#</a></dt>
+<dd><p>Return the CORSIKA run and event headers from a CORSIKA IACT eventio file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>corsika_iact_file: str, Path</strong></dt><dd><p>Path to the CORSIKA IACT eventio file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple</dt><dd><p>CORSIKA run header and event header as dictionaries.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.eventio_handler.get_corsika_run_number">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.eventio_handler.</span></span><span class="sig-name descname"><span class="pre">get_corsika_run_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/eventio_handler.html#get_corsika_run_number"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.eventio_handler.get_corsika_run_number" title="Link to this definition">#</a></dt>
+<dd><p>Return the CORSIKA run number from an eventio (CORSIKA IACT or sim_telarray) file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file: str</strong></dt><dd><p>Path to the eventio file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>int, None</dt><dd><p>CORSIKA run number. Returns None if not found.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.eventio_handler.get_simulated_events">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.eventio_handler.</span></span><span class="sig-name descname"><span class="pre">get_simulated_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_io_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/eventio_handler.html#get_simulated_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.eventio_handler.get_simulated_events" title="Link to this definition">#</a></dt>
+<dd><p>Return the number of shower and MC events from a simulation (eventio) file.</p>
+<p>For a sim_telarray file, the number of simulated showers and MC events is
+determined by counting the number of MCShower (type id 2020) and MCEvent
+objects (type id 2021). For a CORSIKA IACT file, the number of simulated
+showers is determined by counting the number of IACTShower (type id 1202).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>event_io_file: str, Path</strong></dt><dd><p>Path to the eventio file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple</dt><dd><p>Number of showers and number of MC events (MC events for sim_telarray files only).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="module-simtools.io.table_handler">
 <span id="table-handler"></span><span id="io-table-handler"></span><h2>table_handler<a class="headerlink" href="#module-simtools.io.table_handler" title="Link to this heading">#</a></h2>
 <p>IO operations on astropy tables.</p>
@@ -967,7 +1057,7 @@ in the hdf5 file.</p>
 
 </section>
 <section id="module-simtools.io.legacy_data_handler">
-<span id="id1"></span><span id="legacy-data-handler"></span><h2>legacy_data_handler<a class="headerlink" href="#module-simtools.io.legacy_data_handler" title="Link to this heading">#</a></h2>
+<span id="id2"></span><span id="legacy-data-handler"></span><h2>legacy_data_handler<a class="headerlink" href="#module-simtools.io.legacy_data_handler" title="Link to this heading">#</a></h2>
 <p>Reading of legacy data files (expect that this will be obsolete in future).</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="simtools.io.legacy_data_handler.read_legacy_data_as_table">
@@ -1090,6 +1180,13 @@ in the hdf5 file.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.ascii_handler.is_utf8_file"><code class="docutils literal notranslate"><span class="pre">is_utf8_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.ascii_handler.read_file_encoded_in_utf_or_latin"><code class="docutils literal notranslate"><span class="pre">read_file_encoded_in_utf_or_latin()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.ascii_handler.write_data_to_file"><code class="docutils literal notranslate"><span class="pre">write_data_to_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#eventio-handler">eventio_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.eventio_handler.get_combined_corsika_run_header"><code class="docutils literal notranslate"><span class="pre">get_combined_corsika_run_header()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.eventio_handler.get_corsika_run_and_event_headers"><code class="docutils literal notranslate"><span class="pre">get_corsika_run_and_event_headers()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.eventio_handler.get_corsika_run_number"><code class="docutils literal notranslate"><span class="pre">get_corsika_run_number()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.eventio_handler.get_simulated_events"><code class="docutils literal notranslate"><span class="pre">get_simulated_events()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simtools.io.table_handler">table_handler</a><ul class="nav section-nav flex-column">

@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Application, dependency and version management." href="dependencies.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -476,17 +476,17 @@
 <p id="module-db.db_handler"><span id="db-handler-class"></span>Module to handle interaction with DB.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">db.db_handler.</span></span><span class="sig-name descname"><span class="pre">DatabaseHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">db.db_handler.</span></span><span class="sig-name descname"><span class="pre">DatabaseHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler" title="Link to this definition">#</a></dt>
 <dd><p>DatabaseHandler provides the interface to the DB.</p>
 <p>Note the two types of version variables used in this class:</p>
 <ul class="simple">
-<li><p>db_simulation_model_version (from mongo_db_config): version of the simulation model database</p></li>
+<li><p>db_simulation_model_version (from db_config): version of the simulation model database</p></li>
 <li><p>model_version (from production_tables): version of the model contained in the database</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>mongo_db_config: dict</strong></dt><dd><p>Dictionary with the MongoDB configuration (see jsonschema_db_dict for details).</p>
+<dt><strong>db_config: dict</strong></dt><dd><p>Dictionary with the DB configuration.</p>
 </dd>
 </dl>
 </dd>
@@ -588,13 +588,6 @@ using the parameters dictionary.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.generate_compound_indexes">
-<span class="sig-name descname"><span class="pre">generate_compound_indexes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.generate_compound_indexes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.generate_compound_indexes" title="Link to this definition">#</a></dt>
-<dd><p>Generate compound indexes for the MongoDB collections.</p>
-<p>Indexes based on the typical query patterns.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.generate_compound_indexes_for_databases">
 <span class="sig-name descname"><span class="pre">generate_compound_indexes_for_databases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.generate_compound_indexes_for_databases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.generate_compound_indexes_for_databases" title="Link to this definition">#</a></dt>
 <dd><p>Generate compound indexes for several databases.</p>
@@ -606,12 +599,6 @@ using the parameters dictionary.</p>
 <dt><strong>db_simulation_model: str</strong></dt><dd><p>Name of the simulation model.</p>
 </dd>
 <dt><strong>db_simulation_model_version: str</strong></dt><dd><p>Version of the simulation model.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>ValueError</dt><dd><p>If the requested database is not found.</p>
 </dd>
 </dl>
 </dd>
@@ -896,7 +883,7 @@ as it each call queries the database.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.insert_file_to_db">
-<span class="sig-name descname"><span class="pre">insert_file_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.insert_file_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.insert_file_to_db" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">insert_file_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.insert_file_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.insert_file_to_db" title="Link to this definition">#</a></dt>
 <dd><p>Insert a file to the DB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -905,15 +892,12 @@ as it each call queries the database.</p>
 </dd>
 <dt><strong>db_name: str</strong></dt><dd><p>the name of the DB</p>
 </dd>
-<dt><strong>**kwargs (optional): keyword arguments for file creation.</strong></dt><dd><p>The full list of arguments can be found in,             <a class="reference external" href="https://www.mongodb.com/docs/manual/core/gridfs/">https://www.mongodb.com/docs/manual/core/gridfs/</a>
-mostly these are unnecessary though.</p>
-</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>file_iD: GridOut._id</dt><dd><p>If the file exists, return its GridOut._id, otherwise insert the file and return its”
-“newly created DB GridOut._id.</p>
+<dt>file_id: GridOut._id</dt><dd><p>If the file exists, return its GridOut._id, otherwise insert the file and return
+its newly created DB GridOut._id.</p>
 </dd>
 </dl>
 </dd>
@@ -942,8 +926,8 @@ mostly these are unnecessary though.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.read_production_table_from_mongo_db">
-<span class="sig-name descname"><span class="pre">read_production_table_from_mongo_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.read_production_table_from_mongo_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.read_production_table_from_mongo_db" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.read_production_table_from_db">
+<span class="sig-name descname"><span class="pre">read_production_table_from_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.read_production_table_from_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.read_production_table_from_db" title="Link to this definition">#</a></dt>
 <dd><p>Read production table for the given collection from MongoDB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -957,6 +941,469 @@ mostly these are unnecessary though.</p>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>ValueError</dt><dd><p>if query returned no results.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="mongo-db">
+<h2>mongo_db<a class="headerlink" href="#mongo-db" title="Link to this heading">#</a></h2>
+<p id="module-db.mongo_db"><span id="mongo-db-class"></span>MongoDB database handler for direct database operations.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">db.mongo_db.</span></span><span class="sig-name descname"><span class="pre">IdleConnectionMonitor</span></span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor" title="Link to this definition">#</a></dt>
+<dd><p>A listener to track MongoDB connection pool activity.</p>
+<p>Used to monitor idle connections and log connection events.
+Switched on in debug mode.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_check_out_failed">
+<span class="sig-name descname"><span class="pre">connection_check_out_failed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_check_out_failed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_check_out_failed" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection check out failure event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_check_out_started">
+<span class="sig-name descname"><span class="pre">connection_check_out_started</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_check_out_started"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_check_out_started" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection check out started event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_checked_in">
+<span class="sig-name descname"><span class="pre">connection_checked_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_checked_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_checked_in" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection checked in event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_checked_out">
+<span class="sig-name descname"><span class="pre">connection_checked_out</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_checked_out"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_checked_out" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection checked out event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_closed">
+<span class="sig-name descname"><span class="pre">connection_closed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_closed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_closed" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection closure event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_created">
+<span class="sig-name descname"><span class="pre">connection_created</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_created"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_created" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection creation event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_ready">
+<span class="sig-name descname"><span class="pre">connection_ready</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_ready"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_ready" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection ready event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.pool_cleared">
+<span class="sig-name descname"><span class="pre">pool_cleared</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.pool_cleared"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.pool_cleared" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection pool cleared event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.pool_closed">
+<span class="sig-name descname"><span class="pre">pool_closed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.pool_closed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.pool_closed" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection pool closure event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.pool_created">
+<span class="sig-name descname"><span class="pre">pool_created</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.pool_created"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.pool_created" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection pool creation event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.pool_ready">
+<span class="sig-name descname"><span class="pre">pool_ready</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.pool_ready"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.pool_ready" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection pool ready event.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">db.mongo_db.</span></span><span class="sig-name descname"><span class="pre">MongoDBHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler" title="Link to this definition">#</a></dt>
+<dd><p>MongoDBHandler provides low-level interface to MongoDB operations.</p>
+<p>This class handles direct MongoDB operations including connection management,
+database queries, file operations via GridFS, and index generation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_config: dict</strong></dt><dd><p>Dictionary with the MongoDB configuration (see jsonschema_db_dict for details).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.find_one">
+<span class="sig-name descname"><span class="pre">find_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.find_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.find_one" title="Link to this definition">#</a></dt>
+<dd><p>Query MongoDB and return first result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>query: dict</strong></dt><dd><p>Query to execute.</p>
+</dd>
+<dt><strong>collection_name: str</strong></dt><dd><p>Collection name.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>Database name.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict or None</dt><dd><p>First document matching the query or None.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.generate_compound_indexes">
+<span class="sig-name descname"><span class="pre">generate_compound_indexes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.generate_compound_indexes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.generate_compound_indexes" title="Link to this definition">#</a></dt>
+<dd><p>Generate compound indexes for the MongoDB collections.</p>
+<p>Indexes based on the typical query patterns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>Name of the database.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.generate_compound_indexes_for_databases">
+<span class="sig-name descname"><span class="pre">generate_compound_indexes_for_databases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.generate_compound_indexes_for_databases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.generate_compound_indexes_for_databases" title="Link to this definition">#</a></dt>
+<dd><p>Generate compound indexes for several databases.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>Name of the database.</p>
+</dd>
+<dt><strong>db_simulation_model: str</strong></dt><dd><p>Name of the simulation model.</p>
+</dd>
+<dt><strong>db_simulation_model_version: str</strong></dt><dd><p>Version of the simulation model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the requested database is not found.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.get_collection">
+<span class="sig-name descname"><span class="pre">get_collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.get_collection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.get_collection" title="Link to this definition">#</a></dt>
+<dd><p>Get a collection from the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>collection_name: str</strong></dt><dd><p>Name of the collection.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>Name of the DB.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>pymongo.collection.Collection</dt><dd><p>The collection from the DB.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.get_collections">
+<span class="sig-name descname"><span class="pre">get_collections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_collections_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.get_collections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.get_collections" title="Link to this definition">#</a></dt>
+<dd><p>List of collections in the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>Database name.</p>
+</dd>
+<dt><strong>model_collections_only: bool</strong></dt><dd><p>If True, only return model collections (i.e. exclude fs.files, fs.chunks)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of collection names</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.get_db_name">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_db_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.get_db_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.get_db_name" title="Link to this definition">#</a></dt>
+<dd><p>Build DB name from configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>Direct database name (if provided, returns this).</p>
+</dd>
+<dt><strong>db_simulation_model_version: str</strong></dt><dd><p>Version of the simulation model.</p>
+</dd>
+<dt><strong>model_name: str</strong></dt><dd><p>Name of the simulation model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str or None</dt><dd><p>Database name.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.get_ecsv_file_as_astropy_table">
+<span class="sig-name descname"><span class="pre">get_ecsv_file_as_astropy_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.get_ecsv_file_as_astropy_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.get_ecsv_file_as_astropy_table" title="Link to this definition">#</a></dt>
+<dd><p>Read contents of an ECSV file from the database and return it as an Astropy Table.</p>
+<p>Files are not written to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str</strong></dt><dd><p>The name of the ECSV file.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>The name of the database.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.table.Table</dt><dd><p>The contents of the ECSV file as an Astropy Table.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.get_entry_date_from_document">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_entry_date_from_document</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">document</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.get_entry_date_from_document"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.get_entry_date_from_document" title="Link to this definition">#</a></dt>
+<dd><p>Extract entry date from a MongoDB document’s ObjectId.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>document: dict</strong></dt><dd><p>MongoDB document with ‘_id’ field.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>datetime.datetime</dt><dd><p>The generation time of the document’s ObjectId.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.get_file_from_db">
+<span class="sig-name descname"><span class="pre">get_file_from_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.get_file_from_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.get_file_from_db" title="Link to this definition">#</a></dt>
+<dd><p>Extract a file from MongoDB and return GridFS file instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>The name of the DB with files of tabulated data</p>
+</dd>
+<dt><strong>file_name: str</strong></dt><dd><p>The name of the file requested</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>GridOut</dt><dd><p>A file instance returned by GridFS find_one</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>FileNotFoundError</dt><dd><p>If the desired file is not found.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.insert_file_to_db">
+<span class="sig-name descname"><span class="pre">insert_file_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.insert_file_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.insert_file_to_db" title="Link to this definition">#</a></dt>
+<dd><p>Insert a file to the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str or Path</strong></dt><dd><p>The name of the file to insert (full path).</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>The name of the DB</p>
+</dd>
+<dt><strong>**kwargs (optional): keyword arguments for file creation.</strong></dt><dd><p>The full list of arguments can be found in
+<a class="reference external" href="https://www.mongodb.com/docs/manual/core/gridfs/">https://www.mongodb.com/docs/manual/core/gridfs/</a></p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>file_id: GridOut._id</dt><dd><p>If the file exists, return its GridOut._id, otherwise insert the file and return
+its newly created DB GridOut._id.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.insert_one">
+<span class="sig-name descname"><span class="pre">insert_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">document</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.insert_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.insert_one" title="Link to this definition">#</a></dt>
+<dd><p>Insert a document into a collection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>document: dict</strong></dt><dd><p>Document to insert.</p>
+</dd>
+<dt><strong>collection_name: str</strong></dt><dd><p>Collection name.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>Database name.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>InsertOneResult</dt><dd><p>Result of the insert operation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.is_remote_database">
+<span class="sig-name descname"><span class="pre">is_remote_database</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.is_remote_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.is_remote_database" title="Link to this definition">#</a></dt>
+<dd><p>Check if the database is remote.</p>
+<p>Check for domain pattern like “cta-simpipe-protodb.zeuthen.desy.de”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>bool</dt><dd><p>True if the database is remote, False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.list_database_names">
+<span class="sig-name descname"><span class="pre">list_database_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.list_database_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.list_database_names" title="Link to this definition">#</a></dt>
+<dd><p>Get list of database names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list</dt><dd><p>List of database names.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.print_connection_info">
+<span class="sig-name descname"><span class="pre">print_connection_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.print_connection_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.print_connection_info" title="Link to this definition">#</a></dt>
+<dd><p>Print the connection information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>Name of the database.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.query_db">
+<span class="sig-name descname"><span class="pre">query_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.query_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.query_db" title="Link to this definition">#</a></dt>
+<dd><p>Query MongoDB and return results as list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>query: dict</strong></dt><dd><p>Query to execute.</p>
+</dd>
+<dt><strong>collection_name: str</strong></dt><dd><p>Collection name.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>Database name.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of documents matching the query.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>if query returned no results.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.validate_db_config">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_db_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.validate_db_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.validate_db_config" title="Link to this definition">#</a></dt>
+<dd><p>Validate the MongoDB configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_config: dict</strong></dt><dd><p>Dictionary with the MongoDB configuration.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict or None</dt><dd><p>Validated MongoDB configuration or None if no valid config provided.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the MongoDB configuration is invalid.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.write_file_from_db_to_disk">
+<span class="sig-name descname"><span class="pre">write_file_from_db_to_disk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.write_file_from_db_to_disk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.write_file_from_db_to_disk" title="Link to this definition">#</a></dt>
+<dd><p>Extract a file from MongoDB and write it to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>The name of the DB with files of tabulated data</p>
+</dd>
+<dt><strong>path: str or Path</strong></dt><dd><p>The path to write the file to</p>
+</dd>
+<dt><strong>file: GridOut</strong></dt><dd><p>A file instance returned by GridFS find_one</p>
 </dd>
 </dl>
 </dd>
@@ -1136,7 +1583,6 @@ tables of all array elements, sites, and configuration parameters.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_production_table"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_production_table()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_file"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_files"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.generate_compound_indexes"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.generate_compound_indexes()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.generate_compound_indexes_for_databases"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.generate_compound_indexes_for_databases()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_elements"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_elements()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_elements_of_type()</span></code></a></li>
@@ -1153,7 +1599,44 @@ tables of all array elements, sites, and configuration parameters.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.insert_file_to_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.insert_file_to_db()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.is_remote_database"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.is_remote_database()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.print_connection_info"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.print_connection_info()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.read_production_table_from_mongo_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.read_production_table_from_mongo_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.read_production_table_from_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.read_production_table_from_db()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mongo-db">mongo_db</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_check_out_failed"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_check_out_failed()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_check_out_started"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_check_out_started()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_checked_in"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_checked_in()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_checked_out"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_checked_out()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_closed"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_closed()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_created"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_created()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_ready"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_ready()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.pool_cleared"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.pool_cleared()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.pool_closed"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.pool_closed()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.pool_created"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.pool_created()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.pool_ready"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.pool_ready()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.find_one"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.find_one()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.generate_compound_indexes"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.generate_compound_indexes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.generate_compound_indexes_for_databases"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.generate_compound_indexes_for_databases()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.get_collection"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.get_collection()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.get_collections"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.get_collections()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.get_db_name"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.get_db_name()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.get_ecsv_file_as_astropy_table"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.get_ecsv_file_as_astropy_table()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.get_entry_date_from_document"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.get_entry_date_from_document()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.get_file_from_db"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.get_file_from_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.insert_file_to_db"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.insert_file_to_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.insert_one"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.insert_one()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.is_remote_database"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.is_remote_database()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.list_database_names"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.list_database_names()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.print_connection_info"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.print_connection_info()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.query_db"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.query_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.validate_db_config"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.validate_db_config()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.write_file_from_db_to_disk"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.write_file_from_db_to_disk()</span></code></a></li>
 </ul>
 </li>
 </ul>

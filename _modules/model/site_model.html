@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -449,49 +449,66 @@
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.site_model.SiteModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SiteModel</span><span class="p">(</span><span class="n">ModelParameter</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    SiteModel represents the MC model of an observatory site.</span>
+<span class="sd">    Representation of an observatory site model.</span>
+
+<span class="sd">    The site model includes (among others):</span>
+
+<span class="sd">    - Reference point coordinates</span>
+<span class="sd">    - Array elements</span>
+<span class="sd">    - Geomagnetic field parameters</span>
+<span class="sd">    - Atmospheric parameters</span>
+<span class="sd">    - NSB parameters</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    site: str</span>
 <span class="sd">        Site name (e.g., South or North).</span>
-<span class="sd">    mongo_db_config: dict</span>
-<span class="sd">        MongoDB configuration.</span>
+<span class="sd">    db_config: dict</span>
+<span class="sd">        Database configuration.</span>
 <span class="sd">    model_version: str or list</span>
 <span class="sd">        Model version or list of model versions (in which case only the first one is used).</span>
 <span class="sd">    label: str, optional</span>
-<span class="sd">        Instance label. Important for output file naming.</span>
+<span class="sd">        Instance label.</span>
+<span class="sd">    overwrite_model_parameters: str, optional</span>
+<span class="sd">        File name to overwrite model parameters from DB with provided values.</span>
+<span class="sd">    ignore_software_version: bool, optional</span>
+<span class="sd">        If True, ignore software version checks for deprecated parameters.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">site</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">mongo_db_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">site</span><span class="p">,</span>
+        <span class="n">db_config</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">overwrite_model_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">ignore_software_version</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SiteModel.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init SiteModel for site </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">site</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span>
-            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span>
+            <span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
             <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
-            <span class="n">db</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
             <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;sites&quot;</span><span class="p">,</span>
+            <span class="n">overwrite_model_parameters</span><span class="o">=</span><span class="n">overwrite_model_parameters</span><span class="p">,</span>
+            <span class="n">ignore_software_version</span><span class="o">=</span><span class="n">ignore_software_version</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="SiteModel.get_reference_point">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.site_model.SiteModel.get_reference_point">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_reference_point</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_reference_point</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get reference point coordinates as dict.</span>
+<span class="sd">        Get reference point coordinates.</span>
+
+<span class="sd">        Ground coordinates are calculated relative to this point.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
-<span class="sd">            Reference point coordinates as dict</span>
+<span class="sd">            Reference point coordinates.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;center_altitude&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;reference_point_altitude&quot;</span><span class="p">),</span>
@@ -503,13 +520,12 @@
 
 <div class="viewcode-block" id="SiteModel.get_corsika_site_parameters">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.site_model.SiteModel.get_corsika_site_parameters">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_corsika_site_parameters</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">config_file_style</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">model_directory</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_corsika_site_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file_style</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">model_directory</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get site-related CORSIKA parameters as dict.</span>
+<span class="sd">        Get site-related CORSIKA parameters.</span>
 
-<span class="sd">        Parameters are returned with units wherever possible.</span>
+<span class="sd">        Parameters are returned with units wherever possible (&#39;config_file_style=False&#39;)</span>
+<span class="sd">        or in CORSIKA-expected coordinates.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -521,7 +537,7 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
-<span class="sd">            Site-related CORSIKA parameters as dict</span>
+<span class="sd">            Site-related CORSIKA parameters.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">config_file_style</span><span class="p">:</span>
             <span class="n">model_directory</span> <span class="o">=</span> <span class="n">model_directory</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">()</span>
@@ -553,7 +569,7 @@
 
 <div class="viewcode-block" id="SiteModel.get_array_elements_for_layout">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.site_model.SiteModel.get_array_elements_for_layout">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_array_elements_for_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layout_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_array_elements_for_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layout_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return list of array elements for a given array layout.</span>
 
@@ -574,9 +590,32 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Array layout &#39;</span><span class="si">{</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">&#39; not found in &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">&#39; site model.&quot;</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="SiteModel.get_array_elements_of_type">
+<a class="viewcode-back" href="../../api-reference/mc_model.html#model.site_model.SiteModel.get_array_elements_of_type">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_array_elements_of_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_element_type</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get all array elements of a given type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array_element_type : str</span>
+<span class="sd">            Type of the array element (e.g. LSTN, MSTS)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dict with array elements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_array_elements_of_type</span><span class="p">(</span>
+            <span class="n">array_element_type</span><span class="o">=</span><span class="n">array_element_type</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
+            <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="SiteModel.get_list_of_array_layouts">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.site_model.SiteModel.get_list_of_array_layouts">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_list_of_array_layouts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_list_of_array_layouts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get list of available array layouts.</span>
 
@@ -590,13 +629,9 @@
 
 <div class="viewcode-block" id="SiteModel.export_atmospheric_transmission_file">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.site_model.SiteModel.export_atmospheric_transmission_file">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">export_atmospheric_transmission_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_atmospheric_transmission_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_directory</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Export atmospheric transmission file.</span>
-
-<span class="sd">        This method is needed because when CORSIKA is not piped to sim_telarray,</span>
-<span class="sd">        the atmospheric transmission file is not written out to the model directory.</span>
-<span class="sd">        This method allows to export it explicitly.</span>
+<span class="sd">        Export atmospheric transmission file from database to the given directory.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>

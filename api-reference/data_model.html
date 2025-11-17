@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="CORSIKA" href="corsika.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -871,7 +871,7 @@ metadata file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.dump_model_parameter">
-<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_model_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrument</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_input_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.dump_model_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.dump_model_parameter" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_model_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrument</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_input_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_parameter_schema_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.dump_model_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.dump_model_parameter" title="Link to this definition">#</a></dt>
 <dd><p>Generate DB-style model parameter dict and write it to json file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -894,6 +894,10 @@ metadata file.</p>
 </dd>
 <dt><strong>unit: str</strong></dt><dd><p>Unit of the parameter value (if applicable and value is not of type astropy Quantity).</p>
 </dd>
+<dt><strong>meta_parameter: bool</strong></dt><dd><p>Setting for meta parameter flag.</p>
+</dd>
+<dt><strong>model_parameter_schema_version: str, None</strong></dt><dd><p>Version of the model parameter schema (if None, use schema version from schema dict).</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -907,7 +911,7 @@ metadata file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.get_validated_parameter_dict">
-<span class="sig-name descname"><span class="pre">get_validated_parameter_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrument</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.get_validated_parameter_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.get_validated_parameter_dict" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_validated_parameter_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrument</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_parameter_schema_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.get_validated_parameter_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.get_validated_parameter_dict" title="Link to this definition">#</a></dt>
 <dd><p>Get validated parameter dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -927,6 +931,8 @@ metadata file.</p>
 <dt><strong>unit: str</strong></dt><dd><p>Unit of the parameter value (if applicable and value is not an astropy Quantity).</p>
 </dd>
 <dt><strong>meta_parameter: bool</strong></dt><dd><p>Setting for meta parameter flag.</p>
+</dd>
+<dt><strong>model_parameter_schema_version: str, None</strong></dt><dd><p>Version of the model parameter schema (if None, use schema version from schema dict).</p>
 </dd>
 </dl>
 </dd>
@@ -1139,8 +1145,26 @@ Replace list of equal units with single unit string.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="data_model.schema.validate_deprecation_and_version">
+<span class="sig-prename descclassname"><span class="pre">data_model.schema.</span></span><span class="sig-name descname"><span class="pre">validate_deprecation_and_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">software_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_software_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/schema.html#validate_deprecation_and_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.schema.validate_deprecation_and_version" title="Link to this definition">#</a></dt>
+<dd><p>Check if data contains deprecated parameters or version mismatches.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data: dict</strong></dt><dd><p>Data dictionary to check.</p>
+</dd>
+<dt><strong>software_name: str or None</strong></dt><dd><p>Name of the software to check version against. If None, use complete list</p>
+</dd>
+<dt><strong>ignore_software_version: bool</strong></dt><dd><p>If True, ignore software version check.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="data_model.schema.validate_dict_using_schema">
-<span class="sig-prename descclassname"><span class="pre">data_model.schema.</span></span><span class="sig-name descname"><span class="pre">validate_dict_using_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_schema</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_software_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/schema.html#validate_dict_using_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.schema.validate_dict_using_schema" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">data_model.schema.</span></span><span class="sig-name descname"><span class="pre">validate_dict_using_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_schema</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_software_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/schema.html#validate_dict_using_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.schema.validate_dict_using_schema" title="Link to this definition">#</a></dt>
 <dd><p>Validate a data dictionary against a schema.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1158,6 +1182,29 @@ Replace list of equal units with single unit string.</p>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>jsonschema.exceptions.ValidationError</dt><dd><p>if validation fails</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_model.schema.validate_schema_from_files">
+<span class="sig-prename descclassname"><span class="pre">data_model.schema.</span></span><span class="sig-name descname"><span class="pre">validate_schema_from_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_software_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/schema.html#validate_schema_from_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.schema.validate_schema_from_files" title="Link to this definition">#</a></dt>
+<dd><p>Validate a schema file or several files in a directory.</p>
+<p>Files to be validated are taken from file_directory and file_name pattern.
+The schema is either given as command line argument, read from the meta_schema_url or from
+the metadata section of the data dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_directory</strong><span class="classifier">str or Path, optional</span></dt><dd><p>Directory with files to be validated.</p>
+</dd>
+<dt><strong>file_name</strong><span class="classifier">str or Path, optional</span></dt><dd><p>File name pattern to be validated.</p>
+</dd>
+<dt><strong>schema_file</strong><span class="classifier">str, optional</span></dt><dd><p>Schema file name provided directly.</p>
+</dd>
+<dt><strong>ignore_software_version</strong><span class="classifier">bool</span></dt><dd><p>If True, ignore software version check.</p>
 </dd>
 </dl>
 </dd>
@@ -1226,6 +1273,26 @@ Replace list of equal units with single unit string.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>is_model_parameter: bool</strong></dt><dd><p>This is a model parameter file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_model.validate_data.DataValidator.validate_data_files">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_data_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_model_parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_exact_data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/validate_data.html#DataValidator.validate_data_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_data_files" title="Link to this definition">#</a></dt>
+<dd><p>Validate data or model parameters in files in a directory or a single file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_directory: str or Path</strong></dt><dd><p>Directory with files to be validated.</p>
+</dd>
+<dt><strong>file_name: str or Path</strong></dt><dd><p>Name of the file to be validated.</p>
+</dd>
+<dt><strong>is_model_parameter: bool</strong></dt><dd><p>This is a model parameter (add some data preparation).</p>
+</dd>
+<dt><strong>check_exact_data_type: bool</strong></dt><dd><p>Require exact data type for validation.</p>
 </dd>
 </dl>
 </dd>
@@ -1367,13 +1434,16 @@ Replace list of equal units with single unit string.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.get_model_parameter_schema_version"><code class="docutils literal notranslate"><span class="pre">get_model_parameter_schema_version()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.get_schema_version_from_data"><code class="docutils literal notranslate"><span class="pre">get_schema_version_from_data()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.load_schema"><code class="docutils literal notranslate"><span class="pre">load_schema()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.validate_deprecation_and_version"><code class="docutils literal notranslate"><span class="pre">validate_deprecation_and_version()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.validate_dict_using_schema"><code class="docutils literal notranslate"><span class="pre">validate_dict_using_schema()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.validate_schema_from_files"><code class="docutils literal notranslate"><span class="pre">validate_schema_from_files()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-data_model.validate_data">validate_data</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator"><code class="docutils literal notranslate"><span class="pre">DataValidator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator.validate_and_transform"><code class="docutils literal notranslate"><span class="pre">DataValidator.validate_and_transform()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator.validate_data_file"><code class="docutils literal notranslate"><span class="pre">DataValidator.validate_data_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator.validate_data_files"><code class="docutils literal notranslate"><span class="pre">DataValidator.validate_data_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator.validate_model_parameter"><code class="docutils literal notranslate"><span class="pre">DataValidator.validate_model_parameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator.validate_parameter_and_file_name"><code class="docutils literal notranslate"><span class="pre">DataValidator.validate_parameter_and_file_name()</span></code></a></li>
 </ul>

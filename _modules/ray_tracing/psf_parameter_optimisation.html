@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -446,6 +446,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -455,6 +456,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">model_data_writer</span> <span class="k">as</span> <span class="n">writer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.ray_tracing.ray_tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">RayTracing</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">general</span> <span class="k">as</span> <span class="n">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_psf</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization.plot_psf</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_FRACTION</span><span class="p">,</span> <span class="n">get_psf_diameter_label</span>
 
@@ -465,6 +467,793 @@
 <span class="n">RADIUS</span> <span class="o">=</span> <span class="s2">&quot;Radius&quot;</span>
 <span class="n">CUMULATIVE_PSF</span> <span class="o">=</span> <span class="s2">&quot;Cumulative PSF&quot;</span>
 <span class="n">KS_STATISTIC_NAME</span> <span class="o">=</span> <span class="s2">&quot;KS statistic&quot;</span>
+
+
+<div class="viewcode-block" id="GradientStepResult">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.GradientStepResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GradientStepResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Result from a gradient descent step attempt.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    params : dict or None</span>
+<span class="sd">        Updated parameter values, None if step failed.</span>
+<span class="sd">    psf_diameter : float or None</span>
+<span class="sd">        PSF containment diameter in cm, None if step failed.</span>
+<span class="sd">    metric : float or None</span>
+<span class="sd">        Optimization metric value (RMSD or KS statistic), None if step failed.</span>
+<span class="sd">    p_value : float or None</span>
+<span class="sd">        P-value from KS test (None if using RMSD or if step failed).</span>
+<span class="sd">    simulated_data : numpy.ndarray or None</span>
+<span class="sd">        Simulated PSF data, None if step failed.</span>
+<span class="sd">    step_accepted : bool</span>
+<span class="sd">        True if the step improved the metric, False otherwise.</span>
+<span class="sd">    learning_rate : float</span>
+<span class="sd">        Final learning rate after adjustments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">psf_diameter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">metric</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">p_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">simulated_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">step_accepted</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">learning_rate</span><span class="p">:</span> <span class="nb">float</span></div>
+
+
+
+<div class="viewcode-block" id="PSFParameterOptimizer">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PSFParameterOptimizer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gradient descent optimizer for PSF parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tel_model : TelescopeModel</span>
+<span class="sd">        Telescope model object containing parameter configurations.</span>
+<span class="sd">    site_model : SiteModel</span>
+<span class="sd">        Site model object with environmental conditions.</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing simulation configuration arguments.</span>
+<span class="sd">    data_to_plot : dict</span>
+<span class="sd">        Dictionary containing measured PSF data under &quot;measured&quot; key.</span>
+<span class="sd">    radius : numpy.ndarray</span>
+<span class="sd">        Radius values in cm for PSF evaluation.</span>
+<span class="sd">    output_dir : Path</span>
+<span class="sd">        Directory for saving optimization results and plots.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    simulation_cache : dict</span>
+<span class="sd">        Cache for simulation results to avoid redundant ray tracing simulations.</span>
+<span class="sd">        Key: frozenset of (param_name, tuple(values)) items</span>
+<span class="sd">        Value: (psf_diameter, metric, p_value, simulated_data)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Learning rate adjustment constants</span>
+    <span class="n">LR_REDUCTION_FACTOR</span> <span class="o">=</span> <span class="mf">0.7</span>
+    <span class="n">LR_INCREASE_FACTOR</span> <span class="o">=</span> <span class="mf">2.0</span>
+    <span class="n">LR_MINIMUM_THRESHOLD</span> <span class="o">=</span> <span class="mf">1e-6</span>
+    <span class="n">LR_MAXIMUM_THRESHOLD</span> <span class="o">=</span> <span class="mf">0.01</span>
+    <span class="n">LR_RESET_VALUE</span> <span class="o">=</span> <span class="mf">0.0001</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the PSF parameter optimizer.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tel_model</span> <span class="o">=</span> <span class="n">tel_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span> <span class="o">=</span> <span class="n">site_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="o">=</span> <span class="n">args_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_to_plot</span> <span class="o">=</span> <span class="n">data_to_plot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="n">radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="n">output_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_ks_statistic</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ks_statistic&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fraction</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="n">DEFAULT_FRACTION</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulation_cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache_hits</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache_misses</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_params_to_cache_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert parameters dict to a hashable cache key.&quot;&quot;&quot;</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_reduce_learning_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_lr</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reduce learning rate with minimum threshold and reset.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        current_lr : float</span>
+<span class="sd">            Current learning rate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Reduced learning rate, reset to LR_RESET_VALUE if below threshold.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_lr</span> <span class="o">=</span> <span class="n">current_lr</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">LR_REDUCTION_FACTOR</span>
+        <span class="k">if</span> <span class="n">new_lr</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">LR_MINIMUM_THRESHOLD</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">LR_RESET_VALUE</span>
+        <span class="k">return</span> <span class="n">new_lr</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_increase_learning_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_lr</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Increase learning rate.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        current_lr : float</span>
+<span class="sd">            Current learning rate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Increased learning rate, capped at LR_MAXIMUM_THRESHOLD.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_lr</span> <span class="o">=</span> <span class="n">current_lr</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">LR_INCREASE_FACTOR</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">new_lr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">LR_MAXIMUM_THRESHOLD</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PSFParameterOptimizer.get_initial_parameters">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.get_initial_parameters">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_initial_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get current PSF parameter values from the telescope model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary of current parameter values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">get_previous_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tel_model</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PSFParameterOptimizer.run_simulation">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_simulation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_simulation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_best</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run PSF simulation for given parameters with optional caching.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pars : dict</span>
+<span class="sd">            Dictionary of parameter values to test.</span>
+<span class="sd">        pdf_pages : PdfPages, optional</span>
+<span class="sd">            PDF pages object for saving plots.</span>
+<span class="sd">        is_best : bool, optional</span>
+<span class="sd">            Flag indicating if this is the best parameter set.</span>
+<span class="sd">        use_cache : bool, optional</span>
+<span class="sd">            If True, use cached results if available.</span>
+<span class="sd">        use_ks_statistic : bool, optional</span>
+<span class="sd">            If provided, override self.use_ks_statistic for this simulation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            (psf_diameter, metric, p_value, simulated_data)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Determine which statistic to use</span>
+        <span class="n">ks_stat</span> <span class="o">=</span> <span class="n">use_ks_statistic</span> <span class="k">if</span> <span class="n">use_ks_statistic</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_ks_statistic</span>
+
+        <span class="k">if</span> <span class="n">use_cache</span> <span class="ow">and</span> <span class="n">pdf_pages</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_best</span><span class="p">:</span>
+            <span class="n">cache_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params_to_cache_key</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cache_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_cache</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cache_hits</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cache_misses</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">run_psf_simulation</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tel_model</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">,</span>
+            <span class="n">pars</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_to_plot</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">,</span>
+            <span class="n">pdf_pages</span><span class="p">,</span>
+            <span class="n">is_best</span><span class="p">,</span>
+            <span class="n">ks_stat</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Cache the result if caching is enabled and not plotting</span>
+        <span class="k">if</span> <span class="n">use_cache</span> <span class="ow">and</span> <span class="n">pdf_pages</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_best</span><span class="p">:</span>
+            <span class="n">cache_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params_to_cache_key</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulation_cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="PSFParameterOptimizer.calculate_gradient">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.calculate_gradient">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_params</span><span class="p">,</span> <span class="n">current_metric</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate numerical gradients for all optimization parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        current_params : dict</span>
+<span class="sd">            Dictionary of current parameter values.</span>
+<span class="sd">        current_metric : float</span>
+<span class="sd">            Current RMSD or KS statistic value.</span>
+<span class="sd">        epsilon : float, optional</span>
+<span class="sd">            Perturbation value for finite difference calculation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict or None</span>
+<span class="sd">            Dictionary mapping parameter names to their gradient values.</span>
+<span class="sd">            Returns None if gradient calculation fails for any parameter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gradients</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_values</span> <span class="ow">in</span> <span class="n">current_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">param_gradient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_param_gradient</span><span class="p">(</span>
+                <span class="n">current_params</span><span class="p">,</span>
+                <span class="n">current_metric</span><span class="p">,</span>
+                <span class="n">param_name</span><span class="p">,</span>
+                <span class="n">param_values</span><span class="p">,</span>
+                <span class="n">epsilon</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">param_gradient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">gradients</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_gradient</span>
+
+        <span class="k">return</span> <span class="n">gradients</span></div>
+
+
+<div class="viewcode-block" id="PSFParameterOptimizer.apply_gradient_step">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.apply_gradient_step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_gradient_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_params</span><span class="p">,</span> <span class="n">gradients</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply gradient descent step to update parameters while preserving constraints.</span>
+
+<span class="sd">        This function applies the standard gradient descent update and preserves</span>
+<span class="sd">        zenith angle components (index 1) for mirror alignment parameters.</span>
+
+<span class="sd">        Note: Use _are_all_parameters_within_allowed_range() to validate the result before</span>
+<span class="sd">        accepting the step.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        current_params : dict</span>
+<span class="sd">            Dictionary of current parameter values.</span>
+<span class="sd">        gradients : dict</span>
+<span class="sd">            Dictionary of gradient values for each parameter.</span>
+<span class="sd">        learning_rate : float</span>
+<span class="sd">            Step size for the gradient descent update.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary of updated parameter values after applying the gradient step.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_values</span> <span class="ow">in</span> <span class="n">current_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">param_gradients</span> <span class="o">=</span> <span class="n">gradients</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">updated_values</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">gradient</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">param_values</span><span class="p">,</span> <span class="n">param_gradients</span><span class="p">)):</span>
+                    <span class="c1"># Apply gradient descent update</span>
+                    <span class="n">new_value</span> <span class="o">=</span> <span class="n">value</span> <span class="o">-</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">gradient</span>
+
+                    <span class="c1"># Enforce constraint: preserve zenith angle (index 1) for mirror alignment</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="n">param_name</span>
+                        <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;mirror_align_random_horizontal&quot;</span><span class="p">,</span> <span class="s2">&quot;mirror_align_random_vertical&quot;</span><span class="p">]</span>
+                        <span class="ow">and</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span>
+                    <span class="p">):</span>
+                        <span class="n">new_value</span> <span class="o">=</span> <span class="n">value</span>  <span class="c1"># Keep original zenith angle value</span>
+
+                    <span class="n">updated_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span>
+
+                <span class="n">new_params</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated_values</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_value</span> <span class="o">=</span> <span class="n">param_values</span> <span class="o">-</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">param_gradients</span>
+                <span class="n">new_params</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_value</span>
+
+        <span class="k">return</span> <span class="n">new_params</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_param_gradient</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">current_params</span><span class="p">,</span> <span class="n">current_metric</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_values</span><span class="p">,</span> <span class="n">epsilon</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate numerical gradient for a single parameter using finite differences.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        current_params : dict</span>
+<span class="sd">            Dictionary of current parameter values for all optimization parameters.</span>
+<span class="sd">        current_metric : float</span>
+<span class="sd">            Current RMSD or KS statistic value.</span>
+<span class="sd">        param_name : str</span>
+<span class="sd">            Name of the parameter for which to calculate the gradient.</span>
+<span class="sd">        param_values : float or list</span>
+<span class="sd">            Current value(s) of the parameter.</span>
+<span class="sd">        epsilon : float</span>
+<span class="sd">            Small perturbation value for finite difference calculation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float or list or None</span>
+<span class="sd">            Gradient value(s) for the parameter.</span>
+<span class="sd">            Returns None if simulation fails for any component.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">param_gradients</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">values_list</span> <span class="o">=</span> <span class="n">param_values</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">param_values</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values_list</span><span class="p">):</span>
+            <span class="n">perturbed_params</span> <span class="o">=</span> <span class="n">_create_perturbed_params</span><span class="p">(</span>
+                <span class="n">current_params</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_values</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">epsilon</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Calculate gradient for this parameter component using cached simulations</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">perturbed_metric</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_simulation</span><span class="p">(</span><span class="n">perturbed_params</span><span class="p">,</span> <span class="n">use_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">gradient</span> <span class="o">=</span> <span class="p">(</span><span class="n">perturbed_metric</span> <span class="o">-</span> <span class="n">current_metric</span><span class="p">)</span> <span class="o">/</span> <span class="n">epsilon</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simulation failed for </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">] gradient calculation: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="n">param_gradients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gradient</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">param_gradients</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">param_gradients</span>
+
+<div class="viewcode-block" id="PSFParameterOptimizer.perform_gradient_step_with_retries">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.perform_gradient_step_with_retries">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">perform_gradient_step_with_retries</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">current_params</span><span class="p">,</span> <span class="n">current_metric</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">,</span> <span class="n">max_retries</span><span class="o">=</span><span class="mi">3</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Attempt gradient descent step with adaptive learning rate reduction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        current_params : dict</span>
+<span class="sd">            Dictionary of current parameter values.</span>
+<span class="sd">        current_metric : float</span>
+<span class="sd">            Current optimization metric value.</span>
+<span class="sd">        learning_rate : float</span>
+<span class="sd">            Initial learning rate for the gradient descent step.</span>
+<span class="sd">        max_retries : int, optional</span>
+<span class="sd">            Maximum number of attempts with learning rate reduction.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        GradientStepResult</span>
+<span class="sd">            Result object containing updated parameters and step status.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">current_lr</span> <span class="o">=</span> <span class="n">learning_rate</span>
+
+        <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_retries</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">gradients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_gradient</span><span class="p">(</span><span class="n">current_params</span><span class="p">,</span> <span class="n">current_metric</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">gradients</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Gradient calculation failed on attempt </span><span class="si">{</span><span class="n">attempt</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">, skipping step&quot;</span>
+                    <span class="p">)</span>
+                    <span class="k">return</span> <span class="n">GradientStepResult</span><span class="p">(</span>
+                        <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">psf_diameter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">p_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">simulated_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">step_accepted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">learning_rate</span><span class="o">=</span><span class="n">current_lr</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                <span class="n">new_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_gradient_step</span><span class="p">(</span><span class="n">current_params</span><span class="p">,</span> <span class="n">gradients</span><span class="p">,</span> <span class="n">current_lr</span><span class="p">)</span>
+
+                <span class="c1"># Validate that all parameters are within allowed ranges</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">_are_all_parameters_within_allowed_range</span><span class="p">(</span><span class="n">new_params</span><span class="p">):</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Step rejected: parameters would go out of bounds with learning rate &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">current_lr</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">, reducing to </span><span class="si">{</span><span class="n">current_lr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">LR_REDUCTION_FACTOR</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">current_lr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reduce_learning_rate</span><span class="p">(</span><span class="n">current_lr</span><span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="n">new_psf_diameter</span><span class="p">,</span> <span class="n">new_metric</span><span class="p">,</span> <span class="n">new_p_value</span><span class="p">,</span> <span class="n">new_simulated_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_simulation</span><span class="p">(</span>
+                    <span class="n">new_params</span><span class="p">,</span> <span class="n">use_cache</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">new_metric</span> <span class="o">&lt;</span> <span class="n">current_metric</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">GradientStepResult</span><span class="p">(</span>
+                        <span class="n">params</span><span class="o">=</span><span class="n">new_params</span><span class="p">,</span>
+                        <span class="n">psf_diameter</span><span class="o">=</span><span class="n">new_psf_diameter</span><span class="p">,</span>
+                        <span class="n">metric</span><span class="o">=</span><span class="n">new_metric</span><span class="p">,</span>
+                        <span class="n">p_value</span><span class="o">=</span><span class="n">new_p_value</span><span class="p">,</span>
+                        <span class="n">simulated_data</span><span class="o">=</span><span class="n">new_simulated_data</span><span class="p">,</span>
+                        <span class="n">step_accepted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">learning_rate</span><span class="o">=</span><span class="n">current_lr</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Step rejected (RMSD </span><span class="si">{</span><span class="n">current_metric</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">new_metric</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">), &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;reducing learning rate to </span><span class="si">{</span><span class="n">current_lr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">LR_REDUCTION_FACTOR</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="n">current_lr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reduce_learning_rate</span><span class="p">(</span><span class="n">current_lr</span><span class="p">)</span>
+
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simulation failed on attempt </span><span class="si">{</span><span class="n">attempt</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+        <span class="k">return</span> <span class="n">GradientStepResult</span><span class="p">(</span>
+            <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">psf_diameter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">p_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">simulated_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">step_accepted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">learning_rate</span><span class="o">=</span><span class="n">current_lr</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_step_plot</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">pdf_pages</span><span class="p">,</span>
+        <span class="n">current_params</span><span class="p">,</span>
+        <span class="n">new_psf_diameter</span><span class="p">,</span>
+        <span class="n">new_metric</span><span class="p">,</span>
+        <span class="n">new_p_value</span><span class="p">,</span>
+        <span class="n">new_simulated_data</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create plot for an accepted gradient step.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">pdf_pages</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_all&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">new_simulated_data</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_simulated_data</span>
+        <span class="n">plot_psf</span><span class="o">.</span><span class="n">create_psf_parameter_plot</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_to_plot</span><span class="p">,</span>
+            <span class="n">current_params</span><span class="p">,</span>
+            <span class="n">new_psf_diameter</span><span class="p">,</span>
+            <span class="n">new_metric</span><span class="p">,</span>
+            <span class="kc">False</span><span class="p">,</span>
+            <span class="n">pdf_pages</span><span class="p">,</span>
+            <span class="n">fraction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fraction</span><span class="p">,</span>
+            <span class="n">p_value</span><span class="o">=</span><span class="n">new_p_value</span><span class="p">,</span>
+            <span class="n">use_ks_statistic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_ks_statistic</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_final_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">best_psf_diameter</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create final plot for best parameters.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pdf_pages</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">best_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating final plot for best parameters with both RMSD and KS statistic...&quot;</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">best_ks_stat</span><span class="p">,</span> <span class="n">best_p_value</span><span class="p">,</span> <span class="n">best_simulated_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_simulation</span><span class="p">(</span>
+            <span class="n">best_params</span><span class="p">,</span>
+            <span class="n">pdf_pages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">is_best</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">use_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">best_rmsd</span> <span class="o">=</span> <span class="n">calculate_rmsd</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;measured&quot;</span><span class="p">][</span><span class="n">CUMULATIVE_PSF</span><span class="p">],</span> <span class="n">best_simulated_data</span><span class="p">[</span><span class="n">CUMULATIVE_PSF</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">best_simulated_data</span>
+        <span class="n">plot_psf</span><span class="o">.</span><span class="n">create_psf_parameter_plot</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_to_plot</span><span class="p">,</span>
+            <span class="n">best_params</span><span class="p">,</span>
+            <span class="n">best_psf_diameter</span><span class="p">,</span>
+            <span class="n">best_rmsd</span><span class="p">,</span>
+            <span class="kc">True</span><span class="p">,</span>
+            <span class="n">pdf_pages</span><span class="p">,</span>
+            <span class="n">fraction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fraction</span><span class="p">,</span>
+            <span class="n">p_value</span><span class="o">=</span><span class="n">best_p_value</span><span class="p">,</span>
+            <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">second_metric</span><span class="o">=</span><span class="n">best_ks_stat</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span>
+        <span class="n">pdf_pages</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Cumulative PSF plots saved&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PSFParameterOptimizer.run_gradient_descent">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_gradient_descent">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_gradient_descent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rmsd_threshold</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run gradient descent optimization to minimize PSF fitting metric.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        rmsd_threshold : float</span>
+<span class="sd">            Convergence threshold for RMSD improvement.</span>
+<span class="sd">        learning_rate : float</span>
+<span class="sd">            Initial learning rate for gradient descent steps.</span>
+<span class="sd">        max_iterations : int, optional</span>
+<span class="sd">            Maximum number of optimization iterations.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            (best_params, best_psf_diameter, results)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_to_plot</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No PSF measurement data provided. Cannot run optimization.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[]</span>
+
+        <span class="n">current_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_initial_parameters</span><span class="p">()</span>
+        <span class="n">pdf_pages</span> <span class="o">=</span> <span class="n">plot_psf</span><span class="o">.</span><span class="n">setup_pdf_plotting</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span>
+        <span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Evaluate initial parameters</span>
+        <span class="n">current_psf_diameter</span><span class="p">,</span> <span class="n">current_metric</span><span class="p">,</span> <span class="n">current_p_value</span><span class="p">,</span> <span class="n">simulated_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_simulation</span><span class="p">(</span>
+            <span class="n">current_params</span><span class="p">,</span>
+            <span class="n">pdf_pages</span><span class="o">=</span><span class="n">pdf_pages</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_all&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">is_best</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">current_params</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                <span class="n">current_metric</span><span class="p">,</span>
+                <span class="n">current_p_value</span><span class="p">,</span>
+                <span class="n">current_psf_diameter</span><span class="p">,</span>
+                <span class="n">simulated_data</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">best_metric</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">best_psf_diameter</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">current_metric</span><span class="p">,</span>
+            <span class="n">current_params</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="n">current_psf_diameter</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initial RMSD: </span><span class="si">{</span><span class="n">current_metric</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">, PSF diameter: </span><span class="si">{</span><span class="n">current_psf_diameter</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> cm&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">iteration</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">current_lr</span> <span class="o">=</span> <span class="n">learning_rate</span>
+
+        <span class="k">while</span> <span class="n">iteration</span> <span class="o">&lt;</span> <span class="n">max_iterations</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">current_metric</span> <span class="o">&lt;=</span> <span class="n">rmsd_threshold</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Optimization converged: RMSD </span><span class="si">{</span><span class="n">current_metric</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> &lt;= &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;threshold </span><span class="si">{</span><span class="n">rmsd_threshold</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">break</span>
+
+            <span class="n">iteration</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Gradient descent iteration </span><span class="si">{</span><span class="n">iteration</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">step_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perform_gradient_step_with_retries</span><span class="p">(</span>
+                <span class="n">current_params</span><span class="p">,</span>
+                <span class="n">current_metric</span><span class="p">,</span>
+                <span class="n">current_lr</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">step_result</span><span class="o">.</span><span class="n">step_accepted</span> <span class="ow">or</span> <span class="n">step_result</span><span class="o">.</span><span class="n">params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">current_lr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_increase_learning_rate</span><span class="p">(</span><span class="n">current_lr</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No step accepted, increasing learning rate to </span><span class="si">{</span><span class="n">current_lr</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Step was accepted - update state</span>
+            <span class="n">current_params</span> <span class="o">=</span> <span class="n">step_result</span><span class="o">.</span><span class="n">params</span>
+            <span class="n">current_metric</span> <span class="o">=</span> <span class="n">step_result</span><span class="o">.</span><span class="n">metric</span>
+            <span class="n">current_psf_diameter</span> <span class="o">=</span> <span class="n">step_result</span><span class="o">.</span><span class="n">psf_diameter</span>
+            <span class="n">current_lr</span> <span class="o">=</span> <span class="n">step_result</span><span class="o">.</span><span class="n">learning_rate</span>
+
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">current_params</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                    <span class="n">current_metric</span><span class="p">,</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">current_psf_diameter</span><span class="p">,</span>
+                    <span class="n">step_result</span><span class="o">.</span><span class="n">simulated_data</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">current_metric</span> <span class="o">&lt;</span> <span class="n">best_metric</span><span class="p">:</span>
+                <span class="n">best_metric</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">best_psf_diameter</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">current_metric</span><span class="p">,</span>
+                    <span class="n">current_params</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                    <span class="n">current_psf_diameter</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_step_plot</span><span class="p">(</span>
+                <span class="n">pdf_pages</span><span class="p">,</span>
+                <span class="n">current_params</span><span class="p">,</span>
+                <span class="n">step_result</span><span class="o">.</span><span class="n">psf_diameter</span><span class="p">,</span>
+                <span class="n">step_result</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span>
+                <span class="n">step_result</span><span class="o">.</span><span class="n">p_value</span><span class="p">,</span>
+                <span class="n">step_result</span><span class="o">.</span><span class="n">simulated_data</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Accepted step: improved to </span><span class="si">{</span><span class="n">step_result</span><span class="o">.</span><span class="n">metric</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_final_plot</span><span class="p">(</span><span class="n">pdf_pages</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">best_psf_diameter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">best_psf_diameter</span><span class="p">,</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="PSFParameterOptimizer.analyze_monte_carlo_error">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.analyze_monte_carlo_error">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">analyze_monte_carlo_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_simulations</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Analyze Monte Carlo uncertainty in PSF optimization metrics.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_simulations : int, optional</span>
+<span class="sd">            Number of Monte Carlo simulations to run.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            Monte Carlo analysis results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_to_plot</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No PSF measurement data provided. Cannot analyze Monte Carlo error.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[]</span>
+
+        <span class="n">initial_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_initial_parameters</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_values</span> <span class="ow">in</span> <span class="n">initial_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">param_values</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">metric_values</span><span class="p">,</span> <span class="n">p_values</span><span class="p">,</span> <span class="n">psf_diameter_values</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_simulations</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">psf_diameter</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_simulation</span><span class="p">(</span>
+                    <span class="n">initial_params</span><span class="p">,</span>
+                    <span class="n">use_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">metric_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+                <span class="n">psf_diameter_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">psf_diameter</span><span class="p">)</span>
+                <span class="n">p_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p_value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WARNING: Simulation </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">metric_values</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;All Monte Carlo simulations failed.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[]</span>
+
+        <span class="n">mean_metric</span><span class="p">,</span> <span class="n">std_metric</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">metric_values</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">metric_values</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">mean_psf_diameter</span><span class="p">,</span> <span class="n">std_psf_diameter</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">psf_diameter_values</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">psf_diameter_values</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_ks_statistic</span><span class="p">:</span>
+            <span class="n">valid_p_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">p_values</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">mean_p_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">valid_p_values</span><span class="p">)</span> <span class="k">if</span> <span class="n">valid_p_values</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">std_p_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">valid_p_values</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">valid_p_values</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mean_p_value</span> <span class="o">=</span> <span class="n">std_p_value</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">mean_metric</span><span class="p">,</span>
+            <span class="n">std_metric</span><span class="p">,</span>
+            <span class="n">metric_values</span><span class="p">,</span>
+            <span class="n">mean_p_value</span><span class="p">,</span>
+            <span class="n">std_p_value</span><span class="p">,</span>
+            <span class="n">p_values</span><span class="p">,</span>
+            <span class="n">mean_psf_diameter</span><span class="p">,</span>
+            <span class="n">std_psf_diameter</span><span class="p">,</span>
+            <span class="n">psf_diameter_values</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_parameter_within_allowed_range</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">param_index</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if a parameter value is within the allowed range defined in its schema.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    param_name : str</span>
+<span class="sd">        Name of the parameter to check.</span>
+<span class="sd">    param_index : int</span>
+<span class="sd">        Index within the parameter array (for multi-component parameters).</span>
+<span class="sd">    value : float</span>
+<span class="sd">        The parameter value to check.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the parameter is within allowed range, False otherwise.</span>
+<span class="sd">        Returns True if no range constraints are defined for the parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">param_schema</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">param_schema</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">param_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">param_index</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">param_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">param_index</span><span class="p">]</span>
+        <span class="n">allowed_range</span> <span class="o">=</span> <span class="n">param_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;allowed_range&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">allowed_range</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">min_val</span> <span class="o">=</span> <span class="n">allowed_range</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;min&quot;</span><span class="p">)</span>
+        <span class="n">max_val</span> <span class="o">=</span> <span class="n">allowed_range</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">min_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">min_val</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">max_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="n">max_val</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading schema for </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">param_index</span><span class="si">}</span><span class="s2">]: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_are_all_parameters_within_allowed_range</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if all parameters in the parameter dictionary are within allowed ranges.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    params : dict</span>
+<span class="sd">        Dictionary of parameter values to validate.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if all parameters are within allowed ranges, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">values</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_parameter_within_allowed_range</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">]=</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> out of range&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_perturbed_params</span><span class="p">(</span><span class="n">current_params</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_values</span><span class="p">,</span> <span class="n">param_index</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create parameter dictionary with one parameter perturbed by epsilon.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    current_params : dict</span>
+<span class="sd">        Dictionary of current parameter values.</span>
+<span class="sd">    param_name : str</span>
+<span class="sd">        Name of the parameter to perturb.</span>
+<span class="sd">    param_values : float or list</span>
+<span class="sd">        Current parameter values.</span>
+<span class="sd">    param_index : int</span>
+<span class="sd">        Index of the parameter to perturb (for list parameters).</span>
+<span class="sd">    value : float</span>
+<span class="sd">        Current value of the specific parameter component.</span>
+<span class="sd">    epsilon : float</span>
+<span class="sd">        Perturbation amount.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        New parameter dictionary with the specified parameter perturbed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">perturbed_params</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">current_params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">perturbed_params</span><span class="p">[</span><span class="n">param_name</span><span class="p">][</span><span class="n">param_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span> <span class="o">+</span> <span class="n">epsilon</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">perturbed_params</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span> <span class="o">+</span> <span class="n">epsilon</span>
+
+    <span class="k">return</span> <span class="n">perturbed_params</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_create_log_header_and_format_value</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">additional_info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -539,7 +1328,7 @@
     <span class="k">if</span> <span class="n">pars</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No best parameters found&quot;</span><span class="p">)</span>
 
-    <span class="n">tel_model</span><span class="o">.</span><span class="n">change_multiple_parameters</span><span class="p">(</span><span class="o">**</span><span class="n">pars</span><span class="p">)</span>
+    <span class="n">tel_model</span><span class="o">.</span><span class="n">overwrite_parameters</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
     <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="p">(</span>
         <span class="n">telescope_model</span><span class="o">=</span><span class="n">tel_model</span><span class="p">,</span>
         <span class="n">site_model</span><span class="o">=</span><span class="n">site_model</span><span class="p">,</span>
@@ -583,7 +1372,7 @@
 <span class="sd">        Dictionary of parameter values to test in the simulation.</span>
 <span class="sd">    data_to_plot : dict</span>
 <span class="sd">        Dictionary containing measured PSF data under &quot;measured&quot; key.</span>
-<span class="sd">    radius : array-like</span>
+<span class="sd">    radius : numpy.ndarray</span>
 <span class="sd">        Radius values in cm for PSF evaluation.</span>
 <span class="sd">    pdf_pages : PdfPages, optional</span>
 <span class="sd">        PDF pages object for saving plots (default: None).</span>
@@ -795,7 +1584,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">psf_pars_with_units</span> <span class="o">=</span> <span class="n">_add_units_to_psf_parameters</span><span class="p">(</span><span class="n">best_pars</span><span class="p">)</span>
-        <span class="n">parameter_output_path</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">telescope</span>
+        <span class="n">parameter_output_path</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">telescope</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">parameter_name</span><span class="p">,</span> <span class="n">parameter_value</span> <span class="ow">in</span> <span class="n">psf_pars_with_units</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">writer</span><span class="o">.</span><span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump_model_parameter</span><span class="p">(</span>
                 <span class="n">parameter_name</span><span class="o">=</span><span class="n">parameter_name</span><span class="p">,</span>
@@ -809,543 +1598,6 @@
 
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error exporting simulation parameters: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_calculate_param_gradient</span><span class="p">(</span>
-    <span class="n">tel_model</span><span class="p">,</span>
-    <span class="n">site_model</span><span class="p">,</span>
-    <span class="n">args_dict</span><span class="p">,</span>
-    <span class="n">current_params</span><span class="p">,</span>
-    <span class="n">data_to_plot</span><span class="p">,</span>
-    <span class="n">radius</span><span class="p">,</span>
-    <span class="n">current_rmsd</span><span class="p">,</span>
-    <span class="n">param_name</span><span class="p">,</span>
-    <span class="n">param_values</span><span class="p">,</span>
-    <span class="n">epsilon</span><span class="p">,</span>
-    <span class="n">use_ks_statistic</span><span class="p">,</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculate numerical gradient for a single parameter using finite differences.</span>
-
-<span class="sd">    The gradient is calculated using forward finite differences:</span>
-<span class="sd">    gradient = (f(x + epsilon) - f(x)) / epsilon</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    tel_model : TelescopeModel</span>
-<span class="sd">        The telescope model object containing the current parameter configuration.</span>
-<span class="sd">    site_model : SiteModel</span>
-<span class="sd">        The site model object with environmental conditions.</span>
-<span class="sd">    args_dict : dict</span>
-<span class="sd">        Dictionary containing simulation arguments and configuration options.</span>
-<span class="sd">    current_params : dict</span>
-<span class="sd">        Dictionary of current parameter values for all optimization parameters.</span>
-<span class="sd">    data_to_plot : dict</span>
-<span class="sd">        Dictionary containing measured PSF data with &quot;measured&quot; key.</span>
-<span class="sd">    radius : array-like</span>
-<span class="sd">        Radius values in cm for PSF evaluation.</span>
-<span class="sd">    current_rmsd : float</span>
-<span class="sd">        Current RMSD at the current parameter configuration.</span>
-<span class="sd">    param_name : str</span>
-<span class="sd">        Name of the parameter for which to calculate the gradient.</span>
-<span class="sd">    param_values : float or list</span>
-<span class="sd">        Current value(s) of the parameter. Can be a single value or list of values.</span>
-<span class="sd">    epsilon : float</span>
-<span class="sd">        Small perturbation value for finite difference calculation.</span>
-<span class="sd">    use_ks_statistic : bool</span>
-<span class="sd">        If True, calculate gradient with respect to KS statistic; if False, use RMSD.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    float or list</span>
-<span class="sd">        Gradient value(s) for the parameter. Returns a single float if param_values</span>
-<span class="sd">        is a single value, or a list of gradients if param_values is a list.</span>
-
-<span class="sd">    If a simulation fails during gradient calculation, a gradient of 0.0 is assigned</span>
-<span class="sd">    for that component to ensure the optimization can continue.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">param_gradients</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">values_list</span> <span class="o">=</span> <span class="n">param_values</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">param_values</span><span class="p">]</span>
-
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values_list</span><span class="p">):</span>
-        <span class="n">perturbed_params</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">current_params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="p">}</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">perturbed_params</span><span class="p">[</span><span class="n">param_name</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span> <span class="o">+</span> <span class="n">epsilon</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">perturbed_params</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span> <span class="o">+</span> <span class="n">epsilon</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">perturbed_rmsd</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">run_psf_simulation</span><span class="p">(</span>
-                <span class="n">tel_model</span><span class="p">,</span>
-                <span class="n">site_model</span><span class="p">,</span>
-                <span class="n">args_dict</span><span class="p">,</span>
-                <span class="n">perturbed_params</span><span class="p">,</span>
-                <span class="n">data_to_plot</span><span class="p">,</span>
-                <span class="n">radius</span><span class="p">,</span>
-                <span class="n">pdf_pages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">is_best</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">use_ks_statistic</span><span class="o">=</span><span class="n">use_ks_statistic</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">param_gradients</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">perturbed_rmsd</span> <span class="o">-</span> <span class="n">current_rmsd</span><span class="p">)</span> <span class="o">/</span> <span class="n">epsilon</span><span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">):</span>
-            <span class="n">param_gradients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">param_gradients</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">param_gradients</span>
-
-
-<div class="viewcode-block" id="calculate_gradient">
-<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.calculate_gradient">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">calculate_gradient</span><span class="p">(</span>
-    <span class="n">tel_model</span><span class="p">,</span>
-    <span class="n">site_model</span><span class="p">,</span>
-    <span class="n">args_dict</span><span class="p">,</span>
-    <span class="n">current_params</span><span class="p">,</span>
-    <span class="n">data_to_plot</span><span class="p">,</span>
-    <span class="n">radius</span><span class="p">,</span>
-    <span class="n">current_rmsd</span><span class="p">,</span>
-    <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">,</span>
-    <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculate numerical gradients for all optimization parameters.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    tel_model : TelescopeModel</span>
-<span class="sd">        Telescope model object for simulations.</span>
-<span class="sd">    site_model : SiteModel</span>
-<span class="sd">        Site model object with environmental conditions.</span>
-<span class="sd">    args_dict : dict</span>
-<span class="sd">        Dictionary containing simulation configuration arguments.</span>
-<span class="sd">    current_params : dict</span>
-<span class="sd">        Dictionary of current parameter values for all optimization parameters.</span>
-<span class="sd">    data_to_plot : dict</span>
-<span class="sd">        Dictionary containing measured PSF data.</span>
-<span class="sd">    radius : array-like</span>
-<span class="sd">        Radius values in cm for PSF evaluation.</span>
-<span class="sd">    current_rmsd : float</span>
-<span class="sd">        Current RMSD or KS statistic value.</span>
-<span class="sd">    epsilon : float, optional</span>
-<span class="sd">        Perturbation value for finite difference calculation (default: 0.0005).</span>
-<span class="sd">    use_ks_statistic : bool, optional</span>
-<span class="sd">        If True, calculate gradients for KS statistic; if False, use RMSD (default: False).</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        Dictionary mapping parameter names to their gradient values.</span>
-<span class="sd">        For parameters with multiple components, gradients are returned as lists.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">gradients</span> <span class="o">=</span> <span class="p">{}</span>
-
-    <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_values</span> <span class="ow">in</span> <span class="n">current_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">gradients</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_calculate_param_gradient</span><span class="p">(</span>
-            <span class="n">tel_model</span><span class="p">,</span>
-            <span class="n">site_model</span><span class="p">,</span>
-            <span class="n">args_dict</span><span class="p">,</span>
-            <span class="n">current_params</span><span class="p">,</span>
-            <span class="n">data_to_plot</span><span class="p">,</span>
-            <span class="n">radius</span><span class="p">,</span>
-            <span class="n">current_rmsd</span><span class="p">,</span>
-            <span class="n">param_name</span><span class="p">,</span>
-            <span class="n">param_values</span><span class="p">,</span>
-            <span class="n">epsilon</span><span class="p">,</span>
-            <span class="n">use_ks_statistic</span><span class="p">,</span>
-        <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">gradients</span></div>
-
-
-
-<div class="viewcode-block" id="apply_gradient_step">
-<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.apply_gradient_step">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">apply_gradient_step</span><span class="p">(</span><span class="n">current_params</span><span class="p">,</span> <span class="n">gradients</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Apply gradient descent step to update parameters.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    current_params : dict</span>
-<span class="sd">        Dictionary of current parameter values.</span>
-<span class="sd">    gradients : dict</span>
-<span class="sd">        Dictionary of gradient values for each parameter.</span>
-<span class="sd">    learning_rate : float</span>
-<span class="sd">        Step size for the gradient descent update.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        Dictionary of updated parameter values after applying the gradient step.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">new_params</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_values</span> <span class="ow">in</span> <span class="n">current_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">param_gradients</span> <span class="o">=</span> <span class="n">gradients</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">new_params</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">value</span> <span class="o">-</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">gradient</span>
-                <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">gradient</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">param_values</span><span class="p">,</span> <span class="n">param_gradients</span><span class="p">)</span>
-            <span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">new_params</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_values</span> <span class="o">-</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">param_gradients</span>
-
-    <span class="k">return</span> <span class="n">new_params</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_perform_gradient_step_with_retries</span><span class="p">(</span>
-    <span class="n">tel_model</span><span class="p">,</span>
-    <span class="n">site_model</span><span class="p">,</span>
-    <span class="n">args_dict</span><span class="p">,</span>
-    <span class="n">current_params</span><span class="p">,</span>
-    <span class="n">current_metric</span><span class="p">,</span>
-    <span class="n">data_to_plot</span><span class="p">,</span>
-    <span class="n">radius</span><span class="p">,</span>
-    <span class="n">learning_rate</span><span class="p">,</span>
-    <span class="n">max_retries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Attempt gradient descent step with adaptive learning rate reduction on rejection.</span>
-
-<span class="sd">    The learning rate reduction strategy follows these rules:</span>
-<span class="sd">    - If step is rejected: learning_rate *= 0.7</span>
-<span class="sd">    - If attempt number &lt; number of max retries then try again</span>
-<span class="sd">    - If learning_rate drops below 1e-5: reset to 0.001</span>
-<span class="sd">    - If all retries fail: returns None values with step_accepted=False</span>
-
-<span class="sd">    This adaptive approach helps navigate local minima and ensures robust convergence</span>
-<span class="sd">    by automatically adjusting the step size based on optimization progress.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    tel_model : TelescopeModel</span>
-<span class="sd">        Telescope model object containing the current parameter configuration.</span>
-<span class="sd">    site_model : SiteModel</span>
-<span class="sd">        Site model object with environmental conditions for ray tracing simulations.</span>
-<span class="sd">    args_dict : dict</span>
-<span class="sd">        Dictionary containing simulation configuration arguments and settings.</span>
-<span class="sd">    current_params : dict</span>
-<span class="sd">        Dictionary of current parameter values for all optimization parameters.</span>
-<span class="sd">    current_metric : float</span>
-<span class="sd">        Current optimization metric value (RMSD or KS statistic) to improve upon.</span>
-<span class="sd">    data_to_plot : dict</span>
-<span class="sd">        Dictionary containing measured PSF data under &quot;measured&quot; key for comparison.</span>
-<span class="sd">    radius : array-like</span>
-<span class="sd">        Radius values in cm for PSF evaluation and comparison.</span>
-<span class="sd">    learning_rate : float</span>
-<span class="sd">        Initial learning rate for the gradient descent step.</span>
-<span class="sd">    max_retries : int, optional</span>
-<span class="sd">        Maximum number of attempts with learning rate reduction (default: 3).</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    tuple of (dict, float, float, float or None, array, bool, float)</span>
-<span class="sd">        - new_params: Updated parameter dictionary if step accepted, None if rejected</span>
-<span class="sd">        - new_psf_diameter: PSF containment diameter in cm for new parameters, None if step rejected</span>
-<span class="sd">        - new_metric: New optimization metric value, None if step rejected</span>
-<span class="sd">        - new_p_value: p-value from KS test if applicable, None otherwise</span>
-<span class="sd">        - new_simulated_data: Simulated PSF data array, None if step rejected</span>
-<span class="sd">        - step_accepted: Boolean indicating if any step was accepted</span>
-<span class="sd">        - final_learning_rate: Learning rate after potential reductions</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">current_lr</span> <span class="o">=</span> <span class="n">learning_rate</span>
-
-    <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_retries</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">gradients</span> <span class="o">=</span> <span class="n">calculate_gradient</span><span class="p">(</span>
-                <span class="n">tel_model</span><span class="p">,</span>
-                <span class="n">site_model</span><span class="p">,</span>
-                <span class="n">args_dict</span><span class="p">,</span>
-                <span class="n">current_params</span><span class="p">,</span>
-                <span class="n">data_to_plot</span><span class="p">,</span>
-                <span class="n">radius</span><span class="p">,</span>
-                <span class="n">current_metric</span><span class="p">,</span>
-                <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">new_params</span> <span class="o">=</span> <span class="n">apply_gradient_step</span><span class="p">(</span><span class="n">current_params</span><span class="p">,</span> <span class="n">gradients</span><span class="p">,</span> <span class="n">current_lr</span><span class="p">)</span>
-
-            <span class="n">new_psf_diameter</span><span class="p">,</span> <span class="n">new_metric</span><span class="p">,</span> <span class="n">new_p_value</span><span class="p">,</span> <span class="n">new_simulated_data</span> <span class="o">=</span> <span class="n">run_psf_simulation</span><span class="p">(</span>
-                <span class="n">tel_model</span><span class="p">,</span>
-                <span class="n">site_model</span><span class="p">,</span>
-                <span class="n">args_dict</span><span class="p">,</span>
-                <span class="n">new_params</span><span class="p">,</span>
-                <span class="n">data_to_plot</span><span class="p">,</span>
-                <span class="n">radius</span><span class="p">,</span>
-                <span class="n">pdf_pages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">is_best</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">new_metric</span> <span class="o">&lt;</span> <span class="n">current_metric</span><span class="p">:</span>
-                <span class="k">return</span> <span class="p">(</span>
-                    <span class="n">new_params</span><span class="p">,</span>
-                    <span class="n">new_psf_diameter</span><span class="p">,</span>
-                    <span class="n">new_metric</span><span class="p">,</span>
-                    <span class="n">new_p_value</span><span class="p">,</span>
-                    <span class="n">new_simulated_data</span><span class="p">,</span>
-                    <span class="kc">True</span><span class="p">,</span>
-                    <span class="n">current_lr</span><span class="p">,</span>
-                <span class="p">)</span>
-
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Step rejected (RMSD </span><span class="si">{</span><span class="n">current_metric</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">new_metric</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">), &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;reducing learning rate </span><span class="si">{</span><span class="n">current_lr</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">current_lr</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.7</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="n">current_lr</span> <span class="o">*=</span> <span class="mf">0.7</span>
-
-            <span class="k">if</span> <span class="n">current_lr</span> <span class="o">&lt;</span> <span class="mf">1e-5</span><span class="p">:</span>
-                <span class="n">current_lr</span> <span class="o">=</span> <span class="mf">0.001</span>
-
-        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simulation failed on attempt </span><span class="si">{</span><span class="n">attempt</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">continue</span>
-
-    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">current_lr</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_create_step_plot</span><span class="p">(</span>
-    <span class="n">pdf_pages</span><span class="p">,</span>
-    <span class="n">args_dict</span><span class="p">,</span>
-    <span class="n">data_to_plot</span><span class="p">,</span>
-    <span class="n">current_params</span><span class="p">,</span>
-    <span class="n">new_psf_diameter</span><span class="p">,</span>
-    <span class="n">new_metric</span><span class="p">,</span>
-    <span class="n">new_p_value</span><span class="p">,</span>
-    <span class="n">new_simulated_data</span><span class="p">,</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create plot for an accepted gradient step.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">pdf_pages</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_all&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">or</span> <span class="n">new_simulated_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span>
-
-    <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_simulated_data</span>
-    <span class="n">plot_psf</span><span class="o">.</span><span class="n">create_psf_parameter_plot</span><span class="p">(</span>
-        <span class="n">data_to_plot</span><span class="p">,</span>
-        <span class="n">current_params</span><span class="p">,</span>
-        <span class="n">new_psf_diameter</span><span class="p">,</span>
-        <span class="n">new_metric</span><span class="p">,</span>
-        <span class="kc">False</span><span class="p">,</span>
-        <span class="n">pdf_pages</span><span class="p">,</span>
-        <span class="n">fraction</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="n">DEFAULT_FRACTION</span><span class="p">),</span>
-        <span class="n">p_value</span><span class="o">=</span><span class="n">new_p_value</span><span class="p">,</span>
-        <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">del</span> <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_create_final_plot</span><span class="p">(</span>
-    <span class="n">pdf_pages</span><span class="p">,</span>
-    <span class="n">tel_model</span><span class="p">,</span>
-    <span class="n">site_model</span><span class="p">,</span>
-    <span class="n">args_dict</span><span class="p">,</span>
-    <span class="n">best_params</span><span class="p">,</span>
-    <span class="n">data_to_plot</span><span class="p">,</span>
-    <span class="n">radius</span><span class="p">,</span>
-    <span class="n">best_psf_diameter</span><span class="p">,</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create final plot for best parameters.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">pdf_pages</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">best_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span>
-
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating final plot for best parameters with both RMSD and KS statistic...&quot;</span><span class="p">)</span>
-    <span class="n">_</span><span class="p">,</span> <span class="n">best_ks_stat</span><span class="p">,</span> <span class="n">best_p_value</span><span class="p">,</span> <span class="n">best_simulated_data</span> <span class="o">=</span> <span class="n">run_psf_simulation</span><span class="p">(</span>
-        <span class="n">tel_model</span><span class="p">,</span>
-        <span class="n">site_model</span><span class="p">,</span>
-        <span class="n">args_dict</span><span class="p">,</span>
-        <span class="n">best_params</span><span class="p">,</span>
-        <span class="n">data_to_plot</span><span class="p">,</span>
-        <span class="n">radius</span><span class="p">,</span>
-        <span class="n">pdf_pages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">is_best</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">best_rmsd</span> <span class="o">=</span> <span class="n">calculate_rmsd</span><span class="p">(</span>
-        <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;measured&quot;</span><span class="p">][</span><span class="n">CUMULATIVE_PSF</span><span class="p">],</span> <span class="n">best_simulated_data</span><span class="p">[</span><span class="n">CUMULATIVE_PSF</span><span class="p">]</span>
-    <span class="p">)</span>
-
-    <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">best_simulated_data</span>
-    <span class="n">plot_psf</span><span class="o">.</span><span class="n">create_psf_parameter_plot</span><span class="p">(</span>
-        <span class="n">data_to_plot</span><span class="p">,</span>
-        <span class="n">best_params</span><span class="p">,</span>
-        <span class="n">best_psf_diameter</span><span class="p">,</span>
-        <span class="n">best_rmsd</span><span class="p">,</span>
-        <span class="kc">True</span><span class="p">,</span>
-        <span class="n">pdf_pages</span><span class="p">,</span>
-        <span class="n">fraction</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="n">DEFAULT_FRACTION</span><span class="p">),</span>
-        <span class="n">p_value</span><span class="o">=</span><span class="n">best_p_value</span><span class="p">,</span>
-        <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">second_metric</span><span class="o">=</span><span class="n">best_ks_stat</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">del</span> <span class="n">data_to_plot</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span>
-    <span class="n">pdf_pages</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Cumulative PSF plots saved&quot;</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="run_gradient_descent_optimization">
-<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.run_gradient_descent_optimization">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">run_gradient_descent_optimization</span><span class="p">(</span>
-    <span class="n">tel_model</span><span class="p">,</span>
-    <span class="n">site_model</span><span class="p">,</span>
-    <span class="n">args_dict</span><span class="p">,</span>
-    <span class="n">data_to_plot</span><span class="p">,</span>
-    <span class="n">radius</span><span class="p">,</span>
-    <span class="n">rmsd_threshold</span><span class="p">,</span>
-    <span class="n">learning_rate</span><span class="p">,</span>
-    <span class="n">output_dir</span><span class="p">,</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Run gradient descent optimization to minimize PSF fitting metric.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    tel_model : TelescopeModel</span>
-<span class="sd">        Telescope model object to be optimized.</span>
-<span class="sd">    site_model : SiteModel</span>
-<span class="sd">        Site model object with environmental conditions.</span>
-<span class="sd">    args_dict : dict</span>
-<span class="sd">        Dictionary containing simulation configuration arguments.</span>
-<span class="sd">    data_to_plot : dict</span>
-<span class="sd">        Dictionary containing measured PSF data under &quot;measured&quot; key.</span>
-<span class="sd">    radius : array-like</span>
-<span class="sd">        Radius values in cm for PSF evaluation.</span>
-<span class="sd">    rmsd_threshold : float</span>
-<span class="sd">        Convergence threshold for RMSD improvement.</span>
-<span class="sd">    learning_rate : float</span>
-<span class="sd">        Initial learning rate for gradient descent steps.</span>
-<span class="sd">    output_dir : Path</span>
-<span class="sd">        Directory for saving optimization plots and results.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    tuple of (dict, float, list)</span>
-<span class="sd">        - best_params: Dictionary of optimized parameter values</span>
-<span class="sd">        - best_psf_diameter: PSF containment diameter in cm for the best parameters</span>
-<span class="sd">        - results: List of (params, metric, p_value, psf_diameter, simulated_data)</span>
-<span class="sd">          for each iteration</span>
-
-<span class="sd">    Returns None values if optimization fails or no measurement data is provided.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">data_to_plot</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No PSF measurement data provided. Cannot run optimization.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[]</span>
-
-    <span class="n">current_params</span> <span class="o">=</span> <span class="n">get_previous_values</span><span class="p">(</span><span class="n">tel_model</span><span class="p">)</span>
-    <span class="n">pdf_pages</span> <span class="o">=</span> <span class="n">plot_psf</span><span class="o">.</span><span class="n">setup_pdf_plotting</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="c1"># Evaluate initial parameters</span>
-    <span class="n">current_psf_diameter</span><span class="p">,</span> <span class="n">current_metric</span><span class="p">,</span> <span class="n">current_p_value</span><span class="p">,</span> <span class="n">simulated_data</span> <span class="o">=</span> <span class="n">run_psf_simulation</span><span class="p">(</span>
-        <span class="n">tel_model</span><span class="p">,</span>
-        <span class="n">site_model</span><span class="p">,</span>
-        <span class="n">args_dict</span><span class="p">,</span>
-        <span class="n">current_params</span><span class="p">,</span>
-        <span class="n">data_to_plot</span><span class="p">,</span>
-        <span class="n">radius</span><span class="p">,</span>
-        <span class="n">pdf_pages</span><span class="o">=</span><span class="n">pdf_pages</span> <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_all&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">is_best</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-        <span class="p">(</span>
-            <span class="n">current_params</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
-            <span class="n">current_metric</span><span class="p">,</span>
-            <span class="n">current_p_value</span><span class="p">,</span>
-            <span class="n">current_psf_diameter</span><span class="p">,</span>
-            <span class="n">simulated_data</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">best_metric</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">best_psf_diameter</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">current_metric</span><span class="p">,</span>
-        <span class="n">current_params</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
-        <span class="n">current_psf_diameter</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initial RMSD: </span><span class="si">{</span><span class="n">current_metric</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">, PSF diameter: </span><span class="si">{</span><span class="n">current_psf_diameter</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> cm&quot;</span><span class="p">)</span>
-
-    <span class="n">iteration</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">max_total_iterations</span> <span class="o">=</span> <span class="mi">100</span>
-
-    <span class="k">while</span> <span class="n">iteration</span> <span class="o">&lt;</span> <span class="n">max_total_iterations</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">current_metric</span> <span class="o">&lt;=</span> <span class="n">rmsd_threshold</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Optimization converged: RMSD </span><span class="si">{</span><span class="n">current_metric</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> &lt;= &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;threshold </span><span class="si">{</span><span class="n">rmsd_threshold</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="k">break</span>
-
-        <span class="n">iteration</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Gradient descent iteration </span><span class="si">{</span><span class="n">iteration</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="n">step_result</span> <span class="o">=</span> <span class="n">_perform_gradient_step_with_retries</span><span class="p">(</span>
-            <span class="n">tel_model</span><span class="p">,</span>
-            <span class="n">site_model</span><span class="p">,</span>
-            <span class="n">args_dict</span><span class="p">,</span>
-            <span class="n">current_params</span><span class="p">,</span>
-            <span class="n">current_metric</span><span class="p">,</span>
-            <span class="n">data_to_plot</span><span class="p">,</span>
-            <span class="n">radius</span><span class="p">,</span>
-            <span class="n">learning_rate</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="p">(</span>
-            <span class="n">new_params</span><span class="p">,</span>
-            <span class="n">new_psf_diameter</span><span class="p">,</span>
-            <span class="n">new_metric</span><span class="p">,</span>
-            <span class="n">new_p_value</span><span class="p">,</span>
-            <span class="n">new_simulated_data</span><span class="p">,</span>
-            <span class="n">step_accepted</span><span class="p">,</span>
-            <span class="n">learning_rate</span><span class="p">,</span>
-        <span class="p">)</span> <span class="o">=</span> <span class="n">step_result</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">step_accepted</span> <span class="ow">or</span> <span class="n">new_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">learning_rate</span> <span class="o">*=</span> <span class="mf">2.0</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No step accepted, increasing learning rate to </span><span class="si">{</span><span class="n">learning_rate</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">continue</span>
-
-        <span class="c1"># Step was accepted - update state</span>
-        <span class="n">current_params</span><span class="p">,</span> <span class="n">current_metric</span><span class="p">,</span> <span class="n">current_psf_diameter</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">new_params</span><span class="p">,</span>
-            <span class="n">new_metric</span><span class="p">,</span>
-            <span class="n">new_psf_diameter</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">current_params</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">current_metric</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">current_psf_diameter</span><span class="p">,</span> <span class="n">new_simulated_data</span><span class="p">)</span>
-        <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">current_metric</span> <span class="o">&lt;</span> <span class="n">best_metric</span><span class="p">:</span>
-            <span class="n">best_metric</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">best_psf_diameter</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">current_metric</span><span class="p">,</span>
-                <span class="n">current_params</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
-                <span class="n">current_psf_diameter</span><span class="p">,</span>
-            <span class="p">)</span>
-
-        <span class="n">_create_step_plot</span><span class="p">(</span>
-            <span class="n">pdf_pages</span><span class="p">,</span>
-            <span class="n">args_dict</span><span class="p">,</span>
-            <span class="n">data_to_plot</span><span class="p">,</span>
-            <span class="n">current_params</span><span class="p">,</span>
-            <span class="n">new_psf_diameter</span><span class="p">,</span>
-            <span class="n">new_metric</span><span class="p">,</span>
-            <span class="n">new_p_value</span><span class="p">,</span>
-            <span class="n">new_simulated_data</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Accepted step: improved to </span><span class="si">{</span><span class="n">new_metric</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-    <span class="n">_create_final_plot</span><span class="p">(</span>
-        <span class="n">pdf_pages</span><span class="p">,</span>
-        <span class="n">tel_model</span><span class="p">,</span>
-        <span class="n">site_model</span><span class="p">,</span>
-        <span class="n">args_dict</span><span class="p">,</span>
-        <span class="n">best_params</span><span class="p">,</span>
-        <span class="n">data_to_plot</span><span class="p">,</span>
-        <span class="n">radius</span><span class="p">,</span>
-        <span class="n">best_psf_diameter</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">best_psf_diameter</span><span class="p">,</span> <span class="n">results</span></div>
 
 
 
@@ -1495,106 +1747,6 @@
 
 
 
-<div class="viewcode-block" id="analyze_monte_carlo_error">
-<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.analyze_monte_carlo_error">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">analyze_monte_carlo_error</span><span class="p">(</span>
-    <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">n_simulations</span><span class="o">=</span><span class="mi">500</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Analyze Monte Carlo uncertainty in PSF optimization metrics.</span>
-
-<span class="sd">    Runs multiple simulations with the same parameters to quantify the</span>
-<span class="sd">    statistical uncertainty in the optimization metric due to Monte Carlo</span>
-<span class="sd">    noise in the ray tracing simulations. Returns None values if no</span>
-<span class="sd">    measurement data is provided or all simulations fail.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    tel_model : TelescopeModel</span>
-<span class="sd">        Telescope model object with current parameter configuration.</span>
-<span class="sd">    site_model : SiteModel</span>
-<span class="sd">        Site model object with environmental conditions.</span>
-<span class="sd">    args_dict : dict</span>
-<span class="sd">        Dictionary containing simulation configuration arguments.</span>
-<span class="sd">    data_to_plot : dict</span>
-<span class="sd">        Dictionary containing measured PSF data under &quot;measured&quot; key.</span>
-<span class="sd">    radius : array-like</span>
-<span class="sd">        Radius values in cm for PSF evaluation.</span>
-<span class="sd">    n_simulations : int, optional</span>
-<span class="sd">        Number of Monte Carlo simulations to run (default: 500).</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    tuple of (float, float, list, float, float, list, float, float, list)</span>
-<span class="sd">        - mean_metric: Mean RMSD or KS statistic value</span>
-<span class="sd">        - std_metric: Standard deviation of metric values</span>
-<span class="sd">        - metric_values: List of all metric values from simulations</span>
-<span class="sd">        - mean_p_value: Mean p-value (None if using RMSD)</span>
-<span class="sd">        - std_p_value: Standard deviation of p-values (None if using RMSD)</span>
-<span class="sd">        - p_values: List of all p-values from simulations</span>
-<span class="sd">        - mean_psf_diameter: Mean PSF containment diameter in cm</span>
-<span class="sd">        - std_psf_diameter: Standard deviation of PSF diameter values</span>
-<span class="sd">        - psf_diameter_values: List of all PSF diameter values from simulations</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">data_to_plot</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No PSF measurement data provided. Cannot analyze Monte Carlo error.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[]</span>
-
-    <span class="n">initial_params</span> <span class="o">=</span> <span class="n">get_previous_values</span><span class="p">(</span><span class="n">tel_model</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_values</span> <span class="ow">in</span> <span class="n">initial_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">param_values</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-    <span class="n">use_ks_statistic</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ks_statistic&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-    <span class="n">metric_values</span><span class="p">,</span> <span class="n">p_values</span><span class="p">,</span> <span class="n">psf_diameter_values</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_simulations</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">psf_diameter</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">run_psf_simulation</span><span class="p">(</span>
-                <span class="n">tel_model</span><span class="p">,</span>
-                <span class="n">site_model</span><span class="p">,</span>
-                <span class="n">args_dict</span><span class="p">,</span>
-                <span class="n">initial_params</span><span class="p">,</span>
-                <span class="n">data_to_plot</span><span class="p">,</span>
-                <span class="n">radius</span><span class="p">,</span>
-                <span class="n">use_ks_statistic</span><span class="o">=</span><span class="n">use_ks_statistic</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">metric_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
-            <span class="n">psf_diameter_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">psf_diameter</span><span class="p">)</span>
-            <span class="n">p_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p_value</span><span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WARNING: Simulation </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">metric_values</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;All Monte Carlo simulations failed.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[]</span>
-
-    <span class="n">mean_metric</span><span class="p">,</span> <span class="n">std_metric</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">metric_values</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">metric_values</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">mean_psf_diameter</span><span class="p">,</span> <span class="n">std_psf_diameter</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">psf_diameter_values</span><span class="p">),</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">psf_diameter_values</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">use_ks_statistic</span><span class="p">:</span>
-        <span class="n">valid_p_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">p_values</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
-        <span class="n">mean_p_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">valid_p_values</span><span class="p">)</span> <span class="k">if</span> <span class="n">valid_p_values</span> <span class="k">else</span> <span class="kc">None</span>
-        <span class="n">std_p_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">valid_p_values</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">valid_p_values</span> <span class="k">else</span> <span class="kc">None</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">mean_p_value</span> <span class="o">=</span> <span class="n">std_p_value</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="k">return</span> <span class="p">(</span>
-        <span class="n">mean_metric</span><span class="p">,</span>
-        <span class="n">std_metric</span><span class="p">,</span>
-        <span class="n">metric_values</span><span class="p">,</span>
-        <span class="n">mean_p_value</span><span class="p">,</span>
-        <span class="n">std_p_value</span><span class="p">,</span>
-        <span class="n">p_values</span><span class="p">,</span>
-        <span class="n">mean_psf_diameter</span><span class="p">,</span>
-        <span class="n">std_psf_diameter</span><span class="p">,</span>
-        <span class="n">psf_diameter_values</span><span class="p">,</span>
-    <span class="p">)</span></div>
-
-
-
 <div class="viewcode-block" id="write_monte_carlo_analysis">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.write_monte_carlo_analysis">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">write_monte_carlo_analysis</span><span class="p">(</span>
@@ -1695,12 +1847,7 @@
             <span class="nb">zip</span><span class="p">(</span><span class="n">metric_values</span><span class="p">,</span> <span class="n">p_values</span><span class="p">,</span> <span class="n">psf_diameter_values</span><span class="p">)</span>
         <span class="p">):</span>
             <span class="k">if</span> <span class="n">use_ks_statistic</span> <span class="ow">and</span> <span class="n">p_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">p_value</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>
-                    <span class="n">significance</span> <span class="o">=</span> <span class="s2">&quot;GOOD&quot;</span>
-                <span class="k">elif</span> <span class="n">p_value</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">:</span>
-                    <span class="n">significance</span> <span class="o">=</span> <span class="s2">&quot;FAIR&quot;</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">significance</span> <span class="o">=</span> <span class="s2">&quot;POOR&quot;</span>
+                <span class="n">significance</span> <span class="o">=</span> <span class="n">plot_psf</span><span class="o">.</span><span class="n">get_significance_label</span><span class="p">(</span><span class="n">p_value</span><span class="p">)</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Simulation </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">:</span><span class="s2">2d</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">metric_name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">metric_val</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">, &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;p_value=</span><span class="si">{</span><span class="n">p_value</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">significance</span><span class="si">}</span><span class="s2">), </span><span class="si">{</span><span class="n">psf_label</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">psf_diameter</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> cm</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -1715,65 +1862,76 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_handle_monte_carlo_analysis</span><span class="p">(</span>
-    <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">use_ks_statistic</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle Monte Carlo analysis if requested.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;monte_carlo_analysis&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-        <span class="k">return</span> <span class="kc">False</span>
+<div class="viewcode-block" id="cleanup_intermediate_files">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.cleanup_intermediate_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cleanup_intermediate_files</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove intermediate log and list files from the output directory.</span>
 
-    <span class="n">mc_results</span> <span class="o">=</span> <span class="n">analyze_monte_carlo_error</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">mc_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">mc_file</span> <span class="o">=</span> <span class="n">write_monte_carlo_analysis</span><span class="p">(</span>
-            <span class="n">mc_results</span><span class="p">,</span>
-            <span class="n">output_dir</span><span class="p">,</span>
-            <span class="n">tel_model</span><span class="p">,</span>
-            <span class="n">use_ks_statistic</span><span class="p">,</span>
-            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="n">DEFAULT_FRACTION</span><span class="p">),</span>
-        <span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Monte Carlo analysis results written to </span><span class="si">{</span><span class="n">mc_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">mc_plot_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;monte_carlo_uncertainty_</span><span class="si">{</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.pdf&quot;</span><span class="p">)</span>
-        <span class="n">plot_psf</span><span class="o">.</span><span class="n">create_monte_carlo_uncertainty_plot</span><span class="p">(</span>
-            <span class="n">mc_results</span><span class="p">,</span> <span class="n">mc_plot_file</span><span class="p">,</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="n">DEFAULT_FRACTION</span><span class="p">),</span> <span class="n">use_ks_statistic</span>
-        <span class="p">)</span>
-    <span class="k">return</span> <span class="kc">True</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    output_dir : Path</span>
+<span class="sd">        Directory containing output files to clean up.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">patterns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;*.log&quot;</span><span class="p">,</span> <span class="s2">&quot;*.lis*&quot;</span><span class="p">]</span>
+    <span class="n">files_removed</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+            <span class="n">file_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+            <span class="n">files_removed</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Removed: </span><span class="si">{</span><span class="n">file_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">files_removed</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cleanup: removed </span><span class="si">{</span><span class="n">files_removed</span><span class="si">}</span><span class="s2"> intermediate files&quot;</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="run_psf_optimization_workflow">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.psf_parameter_optimisation.run_psf_optimization_workflow">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_psf_optimization_workflow</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the complete PSF parameter optimization workflow using gradient descent.&quot;&quot;&quot;</span>
-    <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span> <span class="o">=</span> <span class="n">load_and_process_data</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
-    <span class="n">use_ks_statistic</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ks_statistic&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run the complete PSF parameter optimization workflow using gradient descent.</span>
 
-    <span class="k">if</span> <span class="n">_handle_monte_carlo_analysis</span><span class="p">(</span>
-        <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">use_ks_statistic</span>
-    <span class="p">):</span>
+<span class="sd">    This function creates a PSFParameterOptimizer instance and orchestrates</span>
+<span class="sd">    the optimization process.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span> <span class="o">=</span> <span class="n">load_and_process_data</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+
+    <span class="c1"># Create optimizer instance to encapsulate state and methods</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">PSFParameterOptimizer</span><span class="p">(</span>
+        <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">output_dir</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Handle Monte Carlo analysis if requested</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;monte_carlo_analysis&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">mc_results</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">analyze_monte_carlo_error</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">mc_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mc_file</span> <span class="o">=</span> <span class="n">write_monte_carlo_analysis</span><span class="p">(</span>
+                <span class="n">mc_results</span><span class="p">,</span>
+                <span class="n">output_dir</span><span class="p">,</span>
+                <span class="n">tel_model</span><span class="p">,</span>
+                <span class="n">optimizer</span><span class="o">.</span><span class="n">use_ks_statistic</span><span class="p">,</span>
+                <span class="n">optimizer</span><span class="o">.</span><span class="n">fraction</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Monte Carlo analysis results written to </span><span class="si">{</span><span class="n">mc_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">mc_plot_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;monte_carlo_uncertainty_</span><span class="si">{</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.pdf&quot;</span><span class="p">)</span>
+            <span class="n">plot_psf</span><span class="o">.</span><span class="n">create_monte_carlo_uncertainty_plot</span><span class="p">(</span>
+                <span class="n">mc_results</span><span class="p">,</span> <span class="n">mc_plot_file</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">fraction</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">use_ks_statistic</span>
+            <span class="p">)</span>
         <span class="k">return</span>
 
     <span class="c1"># Run gradient descent optimization</span>
     <span class="n">threshold</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rmsd_threshold&quot;</span><span class="p">)</span>
     <span class="n">learning_rate</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">)</span>
 
-    <span class="n">best_pars</span><span class="p">,</span> <span class="n">best_psf_diameter</span><span class="p">,</span> <span class="n">gd_results</span> <span class="o">=</span> <span class="n">run_gradient_descent_optimization</span><span class="p">(</span>
-        <span class="n">tel_model</span><span class="p">,</span>
-        <span class="n">site_model</span><span class="p">,</span>
-        <span class="n">args_dict</span><span class="p">,</span>
-        <span class="n">data_to_plot</span><span class="p">,</span>
-        <span class="n">radius</span><span class="p">,</span>
-        <span class="n">rmsd_threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
-        <span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span>
-        <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
+    <span class="n">best_pars</span><span class="p">,</span> <span class="n">best_psf_diameter</span><span class="p">,</span> <span class="n">gd_results</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">run_gradient_descent</span><span class="p">(</span>
+        <span class="n">threshold</span><span class="p">,</span> <span class="n">learning_rate</span>
     <span class="p">)</span>
 
     <span class="c1"># Check if optimization was successful</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">gd_results</span> <span class="ow">or</span> <span class="n">best_pars</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Gradient descent optimization failed. No valid results found.&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="s2">&quot;Possible cause: No PSF measurement data provided. &quot;</span>
-                <span class="s2">&quot;Use --data argument to provide PSF data.&quot;</span>
-            <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Gradient descent optimization failed to produce results.&quot;</span><span class="p">)</span>
         <span class="k">return</span>
 
     <span class="n">plot_psf</span><span class="o">.</span><span class="n">create_optimization_plots</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">gd_results</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">)</span>
@@ -1785,8 +1943,8 @@
         <span class="n">gd_results</span><span class="p">,</span>
         <span class="n">threshold</span><span class="p">,</span>
         <span class="n">convergence_plot_file</span><span class="p">,</span>
-        <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="n">DEFAULT_FRACTION</span><span class="p">),</span>
-        <span class="n">use_ks_statistic</span><span class="p">,</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">fraction</span><span class="p">,</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">use_ks_statistic</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">param_file</span> <span class="o">=</span> <span class="n">write_gradient_descent_log</span><span class="p">(</span>
@@ -1795,8 +1953,8 @@
         <span class="n">best_psf_diameter</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">,</span>
         <span class="n">tel_model</span><span class="p">,</span>
-        <span class="n">use_ks_statistic</span><span class="p">,</span>
-        <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="n">DEFAULT_FRACTION</span><span class="p">),</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">use_ks_statistic</span><span class="p">,</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">fraction</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Gradient descent progression written to </span><span class="si">{</span><span class="n">param_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -1806,7 +1964,10 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Exporting best parameters as model files...&quot;</span><span class="p">)</span>
         <span class="n">export_psf_parameters</span><span class="p">(</span>
             <span class="n">best_pars</span><span class="p">,</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;telescope&quot;</span><span class="p">),</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">),</span> <span class="n">output_dir</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cleanup&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">cleanup_intermediate_files</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span></div>
 
 </pre></div>
 

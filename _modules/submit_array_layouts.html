@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -436,9 +436,11 @@
 <span></span><span class="ch">#!/usr/bin/python3</span>
 
 <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Submit array-layouts definition and corresponding metadata and validate list of telescopes.</span>
+<span class="sd">    Read array layouts from file, validate with telescopes in DB, and prepare for submission.</span>
 
-<span class="sd">    Includes validation that all defined telescope exists.</span>
+<span class="sd">    Validates that all telescope defined in the array layouts exist in the database for the</span>
+<span class="sd">    specified model version. Prepares both JSON-style model parameters and corresponding</span>
+<span class="sd">    metadata for submission.</span>
 
 <span class="sd">    Command line arguments</span>
 <span class="sd">    ----------------------</span>
@@ -454,7 +456,7 @@
 <span class="sd">    Example</span>
 <span class="sd">    -------</span>
 
-<span class="sd">    Submit a new array layout dictionary:</span>
+<span class="sd">    Submit and validate a new array layout dictionary:</span>
 
 <span class="sd">    .. code-block:: console</span>
 
@@ -510,10 +512,10 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Submit and validate array layouts.&quot;&quot;&quot;</span>
     <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">)</span>
 
-    <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">db_config</span><span class="p">)</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">db_config</span><span class="p">)</span>
 
     <span class="n">array_layouts</span> <span class="o">=</span> <span class="n">validate_array_layouts_with_db</span><span class="p">(</span>
-        <span class="n">production_table</span><span class="o">=</span><span class="n">db</span><span class="o">.</span><span class="n">read_production_table_from_mongo_db</span><span class="p">(</span>
+        <span class="n">production_table</span><span class="o">=</span><span class="n">db</span><span class="o">.</span><span class="n">read_production_table_from_db</span><span class="p">(</span>
             <span class="n">collection_name</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span> <span class="n">model_version</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]</span>
         <span class="p">),</span>
         <span class="n">array_layouts</span><span class="o">=</span><span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;array_layouts&quot;</span><span class="p">]),</span>

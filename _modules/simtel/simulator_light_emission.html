@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -447,6 +447,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">initialize_simulation_models</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.simtel_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelRunner</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_config_writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelConfigWriter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="kn">import</span> <span class="n">clear_default_sim_telarray_cfg_directories</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">fiducial_radius_from_shape</span>
 
@@ -778,17 +779,53 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_add_flasher_command_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add flasher options for all telescope types (ff-1m style).&quot;&quot;&quot;</span>
         <span class="n">flasher_xyz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;flasher_position&quot;</span><span class="p">)</span>
-        <span class="n">camera_radius</span> <span class="o">=</span> <span class="n">fiducial_radius_from_shape</span><span class="p">(</span>
+        <span class="n">camera_diam_cm</span> <span class="o">=</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;camera_body_diameter&quot;</span><span class="p">)</span>
             <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">value</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;camera_body_shape&quot;</span><span class="p">),</span>
+            <span class="o">.</span><span class="n">value</span>
         <span class="p">)</span>
+        <span class="n">camera_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;camera_body_shape&quot;</span><span class="p">)</span>
+        <span class="n">camera_radius</span> <span class="o">=</span> <span class="n">fiducial_radius_from_shape</span><span class="p">(</span><span class="n">camera_diam_cm</span><span class="p">,</span> <span class="n">camera_shape</span><span class="p">)</span>
         <span class="n">flasher_wavelength</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
             <span class="s2">&quot;flasher_wavelength&quot;</span>
         <span class="p">)</span>
         <span class="n">dist_cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_distance_focal_plane_calibration_device</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
         <span class="n">angular_distribution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_angular_distribution_string_for_sim_telarray</span><span class="p">()</span>
+
+        <span class="c1"># Build pulse table for ff-1m using model width/exp parameters; else use token.</span>
+        <span class="n">pulse_arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pulse_shape_string_for_sim_telarray</span><span class="p">()</span>
+        <span class="n">pulse_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_shape&quot;</span><span class="p">)</span>
+        <span class="n">width_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_width&quot;</span><span class="p">)</span>
+        <span class="n">exp_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_exp_decay&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">exp_q</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">width_q</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">pulse_shape</span> <span class="o">==</span> <span class="s2">&quot;Gauss-Exponential&quot;</span>
+        <span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">base_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="s2">&quot;pulse_shapes&quot;</span><span class="p">)</span>
+
+                <span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_name</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="n">ch</span> <span class="k">if</span> <span class="p">(</span><span class="n">ch</span><span class="o">.</span><span class="n">isalnum</span><span class="p">()</span> <span class="ow">or</span> <span class="n">ch</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">))</span> <span class="k">else</span> <span class="s2">&quot;_&quot;</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+                <span class="n">tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;telescope&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;telescope&quot;</span>
+                <span class="n">cal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;light_source&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;calibration&quot;</span>
+                <span class="n">fname</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;flasher_pulse_shape_</span><span class="si">{</span><span class="n">_sanitize_name</span><span class="p">(</span><span class="n">tel</span><span class="p">)</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">_sanitize_name</span><span class="p">(</span><span class="n">cal</span><span class="p">)</span><span class="si">}</span><span class="s2">.dat&quot;</span>
+                <span class="n">table_path</span> <span class="o">=</span> <span class="n">base_dir</span> <span class="o">/</span> <span class="n">fname</span>
+                <span class="n">fadc_bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;fadc_sum_bins&quot;</span><span class="p">)</span>
+
+                <span class="n">SimtelConfigWriter</span><span class="o">.</span><span class="n">write_lightpulse_table_gauss_expconv</span><span class="p">(</span>
+                    <span class="n">file_path</span><span class="o">=</span><span class="n">table_path</span><span class="p">,</span>
+                    <span class="n">width_ns</span><span class="o">=</span><span class="n">width_q</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">ns</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="n">exp_decay_ns</span><span class="o">=</span><span class="n">exp_q</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">ns</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="n">fadc_sum_bins</span><span class="o">=</span><span class="n">fadc_bins</span><span class="p">,</span>
+                    <span class="n">time_margin_ns</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">pulse_arg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">table_path</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to write pulse shape table, using token: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">[</span>
             <span class="sa">f</span><span class="s2">&quot;--events </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;number_of_events&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
@@ -798,7 +835,7 @@
             <span class="sa">f</span><span class="s2">&quot;--distance </span><span class="si">{</span><span class="n">dist_cm</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="sa">f</span><span class="s2">&quot;--camera-radius </span><span class="si">{</span><span class="n">camera_radius</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="sa">f</span><span class="s2">&quot;--spectrum </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">flasher_wavelength</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">nm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;--lightpulse </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_pulse_shape_string_for_sim_telarray</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;--lightpulse </span><span class="si">{</span><span class="n">pulse_arg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="sa">f</span><span class="s2">&quot;--angular-distribution </span><span class="si">{</span><span class="n">angular_distribution</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="p">]</span>
 
@@ -921,9 +958,8 @@
 <span class="sd">        str</span>
 <span class="sd">            The angular distribution string.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">option_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span>
-            <span class="s2">&quot;flasher_angular_distribution&quot;</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;flasher_angular_distribution&quot;</span><span class="p">)</span>
+        <span class="n">option_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">opt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
         <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span>
             <span class="s2">&quot;flasher_angular_distribution_width&quot;</span>
         <span class="p">)</span>
@@ -938,7 +974,8 @@
 <span class="sd">        str</span>
 <span class="sd">            The pulse shape string.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">option_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_shape&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_shape&quot;</span><span class="p">)</span>
+        <span class="n">option_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">opt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
         <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_width&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">option_string</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">width</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">ns</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">width</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">option_string</span></div>
 

@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="simtools-merge-tables" href="simtools-merge-tables.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -413,6 +413,7 @@
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-pulse-shape-parameters.html">simtools-derive-pulse-shape-parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-derive-trigger-rates.html">simtools-derive-trigger-rates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
@@ -571,6 +572,17 @@ Use ‘plot_all’ to plot all layouts from the database for the given site and 
 </dd>
 <dt>legend_location<span class="classifier">str, optional</span></dt><dd><p>Location of the legend (default “best”).</p>
 </dd>
+<dt>bounds<span class="classifier">str, optional</span></dt><dd><p>Axis bounds mode. Use “symmetric” for +-R with padding (default) or “exact” for
+per-axis min/max bounds.</p>
+</dd>
+<dt>padding<span class="classifier">float, optional</span></dt><dd><p>Fractional padding applied around computed extents in both modes (default 0.1).</p>
+</dd>
+<dt>x_lim<span class="classifier">tuple(float, float), optional</span></dt><dd><p>Explicit x-axis limits [xmin, xmax] in meters. When provided, overrides derived limits
+and filters plotted elements by x.</p>
+</dd>
+<dt>y_lim<span class="classifier">tuple(float, float), optional</span></dt><dd><p>Explicit y-axis limits [ymin, ymax] in meters. When provided, overrides derived limits
+and filters plotted elements by y.</p>
+</dd>
 </dl>
 </section>
 <section id="examples">
@@ -591,6 +603,14 @@ Use ‘plot_all’ to plot all layouts from the database for the given site and 
 <p>Plot layout from a file with a list of telescopes:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-array-layout</span>
 <span class="go">    --array_layout_file tests/resources/telescope_positions-North-ground.ecsv</span>
+</pre></div>
+</div>
+<p>Use exact bounds with default padding:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-array-layout --array_layout_name alpha         --site North --model_version 6.0.0 --bounds exact</span>
+</pre></div>
+</div>
+<p>Use symmetric bounds with custom padding:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-plot-array-layout --array_layout_name alpha         --site North --model_version 6.0.0 --bounds symmetric --padding 0.15</span>
 </pre></div>
 </div>
 <p>Plot layout from a parameter file with a list of telescopes:</p>

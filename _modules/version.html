@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -439,6 +439,9 @@
 <span class="c1"># which is adapted from https://github.com/astropy/astropy/blob/master/astropy/version.py</span>
 <span class="c1"># see https://github.com/astropy/astropy/pull/10774 for a discussion on why this needed.</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">packaging.specifiers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SpecifierSet</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">packaging.version</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidVersion</span><span class="p">,</span> <span class="n">Version</span>
 
 <span class="n">MAJOR_MINOR_PATCH</span> <span class="o">=</span> <span class="s2">&quot;major.minor.patch&quot;</span>
@@ -638,6 +641,70 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown level: </span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">ver1</span> <span class="o">&gt;</span> <span class="n">ver2</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">ver1</span> <span class="o">&lt;</span> <span class="n">ver2</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="is_valid_semantic_version">
+<a class="viewcode-back" href="../api-reference/dependencies.html#version.is_valid_semantic_version">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_valid_semantic_version</span><span class="p">(</span><span class="n">version_string</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if a string is a valid semantic version.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    version_string : str</span>
+<span class="sd">        The version string to validate (e.g., &quot;6.0.2&quot;, &quot;1.0.0-alpha&quot;).</span>
+<span class="sd">    strict : bool, optional</span>
+<span class="sd">        If True, use PEP 440 validation (packaging.version.Version).</span>
+<span class="sd">        If False, use SemVer 2.0.0 regex pattern (allows more flexible pre-release identifiers).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the version string is valid, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">version_string</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">strict</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">Version</span><span class="p">(</span><span class="n">version_string</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="n">InvalidVersion</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">semver_regex</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">r</span><span class="s2">&quot;^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)&quot;</span>  <span class="c1"># major.minor.patch</span>
+            <span class="sa">r</span><span class="s2">&quot;(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?&quot;</span>  <span class="c1"># pre-release</span>
+            <span class="sa">r</span><span class="s2">&quot;(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$&quot;</span>  <span class="c1"># build metadata</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">semver_regex</span><span class="p">,</span> <span class="n">version_string</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="check_version_constraint">
+<a class="viewcode-back" href="../api-reference/dependencies.html#version.check_version_constraint">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_version_constraint</span><span class="p">(</span><span class="n">version_string</span><span class="p">,</span> <span class="n">constraint</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if a version satisfies a constraint.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    version_string : str</span>
+<span class="sd">        The version string to check (e.g., &quot;6.0.2&quot;).</span>
+<span class="sd">    constraint : str</span>
+<span class="sd">        The version constraint to check against (e.g., &quot;&gt;=6.0.0&quot;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the version satisfies the constraint, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">SpecifierSet</span><span class="p">(</span><span class="n">constraint</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">prereleases</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ver</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="n">version_string</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ver</span> <span class="ow">in</span> <span class="n">spec</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
 
 </pre></div>
 

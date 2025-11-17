@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -436,7 +436,6 @@
 <span></span><span class="sd">&quot;&quot;&quot;Base class for running sim_telarray simulations.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">stat</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
@@ -477,15 +476,25 @@
 <span class="sd">        CORSIKA configuration.</span>
 <span class="sd">    use_multipipe: bool</span>
 <span class="sd">        Use multipipe to run CORSIKA and sim_telarray.</span>
+<span class="sd">    calibration_run_mode: str</span>
+<span class="sd">        Calibration run mode.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simtel_path</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">corsika_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">simtel_path</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">corsika_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">calibration_run_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelRunner.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">simtel_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_base_directory</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calibration_run_mode</span> <span class="o">=</span> <span class="n">calibration_run_mode</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">runs_per_set</span> <span class="o">=</span> <span class="mi">1</span>
 
@@ -493,59 +502,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">runner_service</span><span class="o">.</span><span class="n">load_data_directories</span><span class="p">(</span>
             <span class="s2">&quot;corsika_sim_telarray&quot;</span> <span class="k">if</span> <span class="n">use_multipipe</span> <span class="k">else</span> <span class="s2">&quot;sim_telarray&quot;</span>
         <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a string representation of the SimtelRunner object.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;SimtelRunner(label=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
-
-<div class="viewcode-block" id="SimtelRunner.prepare_run_script">
-<a class="viewcode-back" href="../../api-reference/runners.html#runners.simtel_runner.SimtelRunner.prepare_run_script">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">prepare_run_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_commands</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Build and return the full path of the bash run script containing the sim_telarray command.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        test: bool</span>
-<span class="sd">            Test flag for faster execution.</span>
-<span class="sd">        input_file: str or Path</span>
-<span class="sd">            Full path of the input CORSIKA file.</span>
-<span class="sd">        run_number: int</span>
-<span class="sd">            Run number.</span>
-<span class="sd">        extra_commands: str</span>
-<span class="sd">            Additional commands for running simulations given in config.yml.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        Path</span>
-<span class="sd">            Full path of the run script.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">script_file_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;sub_script&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Run bash script - </span><span class="si">{</span><span class="n">script_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Extra commands to be added to the run script </span><span class="si">{</span><span class="n">extra_commands</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_run_command</span><span class="p">(</span><span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="n">input_file</span><span class="p">)</span>
-        <span class="k">with</span> <span class="n">script_file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#!/usr/bin/env bash</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;set -e</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;set -o pipefail</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">SECONDS=0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">extra_commands</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# Writing extras</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">extra_commands</span><span class="p">:</span>
-                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# End of extras</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-            <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">test</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs_per_set</span>
-            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">echo &quot;RUNTIME: $SECONDS&quot;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-
-        <span class="n">script_file_path</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">script_file_path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mode</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IXUSR</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IXGRP</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">script_file_path</span></div>
-
 
 <div class="viewcode-block" id="SimtelRunner.run">
 <a class="viewcode-back" href="../../api-reference/runners.html#runners.simtel_runner.SimtelRunner.run">[docs]</a>
@@ -597,8 +553,6 @@
             <span class="n">msg</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">get_log_excerpt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Simtel log file does not exist.&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">SimtelExecutionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_run_simtel_and_check_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">stdout_file</span><span class="p">,</span> <span class="n">stderr_file</span><span class="p">):</span>
@@ -712,6 +666,7 @@
             <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
             <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
             <span class="n">_model_version_index</span><span class="o">=</span><span class="n">model_version_index</span><span class="p">,</span>
+            <span class="n">calibration_run_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">calibration_run_mode</span><span class="p">,</span>
         <span class="p">)</span></div>
 </div>
 

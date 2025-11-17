@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Production Configuration" href="production_configuration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -856,7 +856,11 @@ scattering area was not set).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>**kwargs:</strong></dt><dd><p>image_* for the histogram plot and psf_* for the psf circle.</p>
+<dt><strong>file_name: str</strong></dt><dd><p>Name of the file to save the plot to.</p>
+</dd>
+<dt><strong>d80: float</strong></dt><dd><p>d80 value to be marked in the plot (in cm).</p>
+</dd>
+<dt><strong>**kwargs:</strong></dt><dd><p>Customization of line plot (e.g., color, linestyle, linewidth).</p>
 </dd>
 </dl>
 </dd>
@@ -959,18 +963,40 @@ telescope model.
 PSF (Point Spread Function) describes how a point source of light is spread out by the
 optical system, and RMSD (Root Mean Squared Deviation) is used as the optimization metric
 to quantify the difference between measured and simulated PSF curves.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.analyze_monte_carlo_error">
-<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">analyze_monte_carlo_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_to_plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_simulations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#analyze_monte_carlo_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.analyze_monte_carlo_error" title="Link to this definition">#</a></dt>
-<dd><p>Analyze Monte Carlo uncertainty in PSF optimization metrics.</p>
-<p>Runs multiple simulations with the same parameters to quantify the
-statistical uncertainty in the optimization metric due to Monte Carlo
-noise in the ray tracing simulations. Returns None values if no
-measurement data is provided or all simulations fail.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.GradientStepResult">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">GradientStepResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf_diameter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulated_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_accepted</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#GradientStepResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.GradientStepResult" title="Link to this definition">#</a></dt>
+<dd><p>Result from a gradient descent step attempt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>params</strong><span class="classifier">dict or None</span></dt><dd><p>Updated parameter values, None if step failed.</p>
+</dd>
+<dt><strong>psf_diameter</strong><span class="classifier">float or None</span></dt><dd><p>PSF containment diameter in cm, None if step failed.</p>
+</dd>
+<dt><strong>metric</strong><span class="classifier">float or None</span></dt><dd><p>Optimization metric value (RMSD or KS statistic), None if step failed.</p>
+</dd>
+<dt><strong>p_value</strong><span class="classifier">float or None</span></dt><dd><p>P-value from KS test (None if using RMSD or if step failed).</p>
+</dd>
+<dt><strong>simulated_data</strong><span class="classifier">numpy.ndarray or None</span></dt><dd><p>Simulated PSF data, None if step failed.</p>
+</dd>
+<dt><strong>step_accepted</strong><span class="classifier">bool</span></dt><dd><p>True if the step improved the metric, False otherwise.</p>
+</dd>
+<dt><strong>learning_rate</strong><span class="classifier">float</span></dt><dd><p>Final learning rate after adjustments.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">PSFParameterOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_to_plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer" title="Link to this definition">#</a></dt>
+<dd><p>Gradient descent optimizer for PSF parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>tel_model</strong><span class="classifier">TelescopeModel</span></dt><dd><p>Telescope model object with current parameter configuration.</p>
+<dt><strong>tel_model</strong><span class="classifier">TelescopeModel</span></dt><dd><p>Telescope model object containing parameter configurations.</p>
 </dd>
 <dt><strong>site_model</strong><span class="classifier">SiteModel</span></dt><dd><p>Site model object with environmental conditions.</p>
 </dd>
@@ -978,35 +1004,49 @@ measurement data is provided or all simulations fail.</p>
 </dd>
 <dt><strong>data_to_plot</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing measured PSF data under “measured” key.</p>
 </dd>
-<dt><strong>radius</strong><span class="classifier">array-like</span></dt><dd><p>Radius values in cm for PSF evaluation.</p>
+<dt><strong>radius</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>Radius values in cm for PSF evaluation.</p>
 </dd>
-<dt><strong>n_simulations</strong><span class="classifier">int, optional</span></dt><dd><p>Number of Monte Carlo simulations to run (default: 500).</p>
+<dt><strong>output_dir</strong><span class="classifier">Path</span></dt><dd><p>Directory for saving optimization results and plots.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>simulation_cache</strong><span class="classifier">dict</span></dt><dd><p>Cache for simulation results to avoid redundant ray tracing simulations.
+Key: frozenset of (param_name, tuple(values)) items
+Value: (psf_diameter, metric, p_value, simulated_data)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.analyze_monte_carlo_error">
+<span class="sig-name descname"><span class="pre">analyze_monte_carlo_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_simulations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.analyze_monte_carlo_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.analyze_monte_carlo_error" title="Link to this definition">#</a></dt>
+<dd><p>Analyze Monte Carlo uncertainty in PSF optimization metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n_simulations</strong><span class="classifier">int, optional</span></dt><dd><p>Number of Monte Carlo simulations to run.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>tuple of (float, float, list, float, float, list, float, float, list)</dt><dd><ul class="simple">
-<li><p>mean_metric: Mean RMSD or KS statistic value</p></li>
-<li><p>std_metric: Standard deviation of metric values</p></li>
-<li><p>metric_values: List of all metric values from simulations</p></li>
-<li><p>mean_p_value: Mean p-value (None if using RMSD)</p></li>
-<li><p>std_p_value: Standard deviation of p-values (None if using RMSD)</p></li>
-<li><p>p_values: List of all p-values from simulations</p></li>
-<li><p>mean_psf_diameter: Mean PSF containment diameter in cm</p></li>
-<li><p>std_psf_diameter: Standard deviation of PSF diameter values</p></li>
-<li><p>psf_diameter_values: List of all PSF diameter values from simulations</p></li>
-</ul>
+<dt>tuple</dt><dd><p>Monte Carlo analysis results.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.apply_gradient_step">
-<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">apply_gradient_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#apply_gradient_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.apply_gradient_step" title="Link to this definition">#</a></dt>
-<dd><p>Apply gradient descent step to update parameters.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.apply_gradient_step">
+<span class="sig-name descname"><span class="pre">apply_gradient_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.apply_gradient_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.apply_gradient_step" title="Link to this definition">#</a></dt>
+<dd><p>Apply gradient descent step to update parameters while preserving constraints.</p>
+<p>This function applies the standard gradient descent update and preserves
+zenith angle components (index 1) for mirror alignment parameters.</p>
+<p>Note: Use _are_all_parameters_within_allowed_range() to validate the result before
+accepting the step.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1027,41 +1067,123 @@ measurement data is provided or all simulations fail.</p>
 </dl>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.calculate_gradient">
-<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">calculate_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_to_plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_rmsd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_ks_statistic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#calculate_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.calculate_gradient" title="Link to this definition">#</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.calculate_gradient">
+<span class="sig-name descname"><span class="pre">calculate_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0005</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.calculate_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.calculate_gradient" title="Link to this definition">#</a></dt>
 <dd><p>Calculate numerical gradients for all optimization parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>tel_model</strong><span class="classifier">TelescopeModel</span></dt><dd><p>Telescope model object for simulations.</p>
+<dt><strong>current_params</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of current parameter values.</p>
 </dd>
-<dt><strong>site_model</strong><span class="classifier">SiteModel</span></dt><dd><p>Site model object with environmental conditions.</p>
+<dt><strong>current_metric</strong><span class="classifier">float</span></dt><dd><p>Current RMSD or KS statistic value.</p>
 </dd>
-<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing simulation configuration arguments.</p>
-</dd>
-<dt><strong>current_params</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of current parameter values for all optimization parameters.</p>
-</dd>
-<dt><strong>data_to_plot</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing measured PSF data.</p>
-</dd>
-<dt><strong>radius</strong><span class="classifier">array-like</span></dt><dd><p>Radius values in cm for PSF evaluation.</p>
-</dd>
-<dt><strong>current_rmsd</strong><span class="classifier">float</span></dt><dd><p>Current RMSD or KS statistic value.</p>
-</dd>
-<dt><strong>epsilon</strong><span class="classifier">float, optional</span></dt><dd><p>Perturbation value for finite difference calculation (default: 0.0005).</p>
-</dd>
-<dt><strong>use_ks_statistic</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, calculate gradients for KS statistic; if False, use RMSD (default: False).</p>
+<dt><strong>epsilon</strong><span class="classifier">float, optional</span></dt><dd><p>Perturbation value for finite difference calculation.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>Dictionary mapping parameter names to their gradient values.
-For parameters with multiple components, gradients are returned as lists.</p>
+<dt>dict or None</dt><dd><p>Dictionary mapping parameter names to their gradient values.
+Returns None if gradient calculation fails for any parameter.</p>
 </dd>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.get_initial_parameters">
+<span class="sig-name descname"><span class="pre">get_initial_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.get_initial_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.get_initial_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Get current PSF parameter values from the telescope model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary of current parameter values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.perform_gradient_step_with_retries">
+<span class="sig-name descname"><span class="pre">perform_gradient_step_with_retries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.perform_gradient_step_with_retries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.perform_gradient_step_with_retries" title="Link to this definition">#</a></dt>
+<dd><p>Attempt gradient descent step with adaptive learning rate reduction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>current_params</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of current parameter values.</p>
+</dd>
+<dt><strong>current_metric</strong><span class="classifier">float</span></dt><dd><p>Current optimization metric value.</p>
+</dd>
+<dt><strong>learning_rate</strong><span class="classifier">float</span></dt><dd><p>Initial learning rate for the gradient descent step.</p>
+</dd>
+<dt><strong>max_retries</strong><span class="classifier">int, optional</span></dt><dd><p>Maximum number of attempts with learning rate reduction.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>GradientStepResult</dt><dd><p>Result object containing updated parameters and step status.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_gradient_descent">
+<span class="sig-name descname"><span class="pre">run_gradient_descent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rmsd_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.run_gradient_descent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_gradient_descent" title="Link to this definition">#</a></dt>
+<dd><p>Run gradient descent optimization to minimize PSF fitting metric.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>rmsd_threshold</strong><span class="classifier">float</span></dt><dd><p>Convergence threshold for RMSD improvement.</p>
+</dd>
+<dt><strong>learning_rate</strong><span class="classifier">float</span></dt><dd><p>Initial learning rate for gradient descent steps.</p>
+</dd>
+<dt><strong>max_iterations</strong><span class="classifier">int, optional</span></dt><dd><p>Maximum number of optimization iterations.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple</dt><dd><p>(best_params, best_psf_diameter, results)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_simulation">
+<span class="sig-name descname"><span class="pre">run_simulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf_pages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_best</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_ks_statistic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.run_simulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_simulation" title="Link to this definition">#</a></dt>
+<dd><p>Run PSF simulation for given parameters with optional caching.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pars</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of parameter values to test.</p>
+</dd>
+<dt><strong>pdf_pages</strong><span class="classifier">PdfPages, optional</span></dt><dd><p>PDF pages object for saving plots.</p>
+</dd>
+<dt><strong>is_best</strong><span class="classifier">bool, optional</span></dt><dd><p>Flag indicating if this is the best parameter set.</p>
+</dd>
+<dt><strong>use_cache</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, use cached results if available.</p>
+</dd>
+<dt><strong>use_ks_statistic</strong><span class="classifier">bool, optional</span></dt><dd><p>If provided, override self.use_ks_statistic for this simulation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple</dt><dd><p>(psf_diameter, metric, p_value, simulated_data)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py function">
@@ -1074,6 +1196,20 @@ For parameters with multiple components, gradients are returned as lists.</p>
 <dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.calculate_rmsd">
 <span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">calculate_rmsd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#calculate_rmsd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.calculate_rmsd" title="Link to this definition">#</a></dt>
 <dd><p>Calculate RMSD between measured and simulated cumulative PSF curves.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.cleanup_intermediate_files">
+<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">cleanup_intermediate_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#cleanup_intermediate_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.cleanup_intermediate_files" title="Link to this definition">#</a></dt>
+<dd><p>Remove intermediate log and list files from the output directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>output_dir</strong><span class="classifier">Path</span></dt><dd><p>Directory containing output files to clean up.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -1160,49 +1296,11 @@ of radius and cumulative PSF data</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.run_gradient_descent_optimization">
-<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">run_gradient_descent_optimization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_to_plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rmsd_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#run_gradient_descent_optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.run_gradient_descent_optimization" title="Link to this definition">#</a></dt>
-<dd><p>Run gradient descent optimization to minimize PSF fitting metric.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>tel_model</strong><span class="classifier">TelescopeModel</span></dt><dd><p>Telescope model object to be optimized.</p>
-</dd>
-<dt><strong>site_model</strong><span class="classifier">SiteModel</span></dt><dd><p>Site model object with environmental conditions.</p>
-</dd>
-<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing simulation configuration arguments.</p>
-</dd>
-<dt><strong>data_to_plot</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing measured PSF data under “measured” key.</p>
-</dd>
-<dt><strong>radius</strong><span class="classifier">array-like</span></dt><dd><p>Radius values in cm for PSF evaluation.</p>
-</dd>
-<dt><strong>rmsd_threshold</strong><span class="classifier">float</span></dt><dd><p>Convergence threshold for RMSD improvement.</p>
-</dd>
-<dt><strong>learning_rate</strong><span class="classifier">float</span></dt><dd><p>Initial learning rate for gradient descent steps.</p>
-</dd>
-<dt><strong>output_dir</strong><span class="classifier">Path</span></dt><dd><p>Directory for saving optimization plots and results.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>tuple of (dict, float, list)</dt><dd><ul class="simple">
-<li><p>best_params: Dictionary of optimized parameter values</p></li>
-<li><p>best_psf_diameter: PSF containment diameter in cm for the best parameters</p></li>
-<li><p>results: List of (params, metric, p_value, psf_diameter, simulated_data)
-for each iteration</p></li>
-</ul>
-</dd>
-<dt>Returns None values if optimization fails or no measurement data is provided.</dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.run_psf_optimization_workflow">
 <span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">run_psf_optimization_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#run_psf_optimization_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.run_psf_optimization_workflow" title="Link to this definition">#</a></dt>
 <dd><p>Run the complete PSF parameter optimization workflow using gradient descent.</p>
+<p>This function creates a PSFParameterOptimizer instance and orchestrates
+the optimization process.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -1222,7 +1320,7 @@ for each iteration</p></li>
 </dd>
 <dt><strong>data_to_plot</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing measured PSF data under “measured” key.</p>
 </dd>
-<dt><strong>radius</strong><span class="classifier">array-like</span></dt><dd><p>Radius values in cm for PSF evaluation.</p>
+<dt><strong>radius</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>Radius values in cm for PSF evaluation.</p>
 </dd>
 <dt><strong>pdf_pages</strong><span class="classifier">PdfPages, optional</span></dt><dd><p>PDF pages object for saving plots (default: None).</p>
 </dd>
@@ -1499,15 +1597,23 @@ The first entry of the table is the best fit result.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-ray_tracing.psf_parameter_optimisation">psf_parameter_optimisation</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.analyze_monte_carlo_error"><code class="docutils literal notranslate"><span class="pre">analyze_monte_carlo_error()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.apply_gradient_step"><code class="docutils literal notranslate"><span class="pre">apply_gradient_step()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.calculate_gradient"><code class="docutils literal notranslate"><span class="pre">calculate_gradient()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.GradientStepResult"><code class="docutils literal notranslate"><span class="pre">GradientStepResult</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.analyze_monte_carlo_error"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.analyze_monte_carlo_error()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.apply_gradient_step"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.apply_gradient_step()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.calculate_gradient"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.calculate_gradient()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.get_initial_parameters"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.get_initial_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.perform_gradient_step_with_retries"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.perform_gradient_step_with_retries()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_gradient_descent"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.run_gradient_descent()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_simulation"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.run_simulation()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.calculate_ks_statistic"><code class="docutils literal notranslate"><span class="pre">calculate_ks_statistic()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.calculate_rmsd"><code class="docutils literal notranslate"><span class="pre">calculate_rmsd()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.cleanup_intermediate_files"><code class="docutils literal notranslate"><span class="pre">cleanup_intermediate_files()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.export_psf_parameters"><code class="docutils literal notranslate"><span class="pre">export_psf_parameters()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.get_previous_values"><code class="docutils literal notranslate"><span class="pre">get_previous_values()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.load_and_process_data"><code class="docutils literal notranslate"><span class="pre">load_and_process_data()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.run_gradient_descent_optimization"><code class="docutils literal notranslate"><span class="pre">run_gradient_descent_optimization()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.run_psf_optimization_workflow"><code class="docutils literal notranslate"><span class="pre">run_psf_optimization_workflow()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.run_psf_simulation"><code class="docutils literal notranslate"><span class="pre">run_psf_simulation()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.write_gradient_descent_log"><code class="docutils literal notranslate"><span class="pre">write_gradient_descent_log()</span></code></a></li>

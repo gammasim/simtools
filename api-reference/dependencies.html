@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Data Model" href="data_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -498,6 +498,12 @@
 </dl>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">get_application_label</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+    <span class="c1"># label will be the filename without .py extension</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -535,6 +541,25 @@ This should be the application’s _parse() function.</p>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<p>Basic usage in an application:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">)</span>
+
+    <span class="c1"># Application-specific code follows</span>
+    <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting application&quot;</span><span class="p">)</span>
+    <span class="c1"># ... rest of application logic</span>
+</pre></div>
+</div>
+<p>Usage without IOHandler:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">,</span> <span class="n">setup_io_handler</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Application-specific code follows</span>
+    <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting application&quot;</span><span class="p">)</span>
+    <span class="c1"># ... rest of application logic</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>
@@ -571,6 +596,7 @@ This should be the application’s _parse() function.</p>
 <dt class="sig sig-object py" id="dependencies.get_corsika_version">
 <span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_corsika_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_corsika_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_corsika_version" title="Link to this definition">#</a></dt>
 <dd><p>Get the version of the CORSIKA package.</p>
+<p>Version strings for CORSIKA are of the form “7.7550” (major.minor with 4-digit minor).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -611,8 +637,9 @@ This should be the application’s _parse() function.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="dependencies.get_sim_telarray_version">
-<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_sim_telarray_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_sim_telarray_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_sim_telarray_version" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_sim_telarray_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_sim_telarray_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_sim_telarray_version" title="Link to this definition">#</a></dt>
 <dd><p>Get the version of the sim_telarray package using ‘sim_telarray –version’.</p>
+<p>Version strings for sim_telarray are of the form “2024.271.0” (year.day_of_year.patch).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -623,6 +650,26 @@ This should be the application’s _parse() function.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>str</dt><dd><p>Version of the sim_telarray package.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dependencies.get_software_version">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_software_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">software</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_software_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_software_version" title="Link to this definition">#</a></dt>
+<dd><p>Return the version of the specified software package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>software</strong><span class="classifier">str</span></dt><dd><p>Name of the software package.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Version of the specified software package.</p>
 </dd>
 </dl>
 </dd>
@@ -656,6 +703,28 @@ This should be the application’s _parse() function.</p>
 <span id="id3"></span><h2>version<a class="headerlink" href="#version" title="Link to this heading">#</a></h2>
 <p id="module-version">Software version setting.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="version.check_version_constraint">
+<span class="sig-prename descclassname"><span class="pre">version.</span></span><span class="sig-name descname"><span class="pre">check_version_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraint</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/version.html#check_version_constraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#version.check_version_constraint" title="Link to this definition">#</a></dt>
+<dd><p>Check if a version satisfies a constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>version_string</strong><span class="classifier">str</span></dt><dd><p>The version string to check (e.g., “6.0.2”).</p>
+</dd>
+<dt><strong>constraint</strong><span class="classifier">str</span></dt><dd><p>The version constraint to check against (e.g., “&gt;=6.0.0”).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if the version satisfies the constraint, False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="version.compare_versions">
 <span class="sig-prename descclassname"><span class="pre">version.</span></span><span class="sig-name descname"><span class="pre">compare_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version_string_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version_string_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'major.minor.patch'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/version.html#compare_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#version.compare_versions" title="Link to this definition">#</a></dt>
 <dd><p>Compare two versions at the given level: “major”, “major.minor”, “major.minor.patch”.</p>
@@ -677,6 +746,29 @@ This should be the application’s _parse() function.</p>
 1 if version_string_1 &gt; version_string_2</p>
 </dd>
 </dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="version.is_valid_semantic_version">
+<span class="sig-prename descclassname"><span class="pre">version.</span></span><span class="sig-name descname"><span class="pre">is_valid_semantic_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/version.html#is_valid_semantic_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#version.is_valid_semantic_version" title="Link to this definition">#</a></dt>
+<dd><p>Check if a string is a valid semantic version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>version_string</strong><span class="classifier">str</span></dt><dd><p>The version string to validate (e.g., “6.0.2”, “1.0.0-alpha”).</p>
+</dd>
+<dt><strong>strict</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, use PEP 440 validation (packaging.version.Version).
+If False, use SemVer 2.0.0 regex pattern (allows more flexible pre-release identifiers).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if the version string is valid, False otherwise.</p>
 </dd>
 </dl>
 </dd>
@@ -848,11 +940,14 @@ finds the latest patch version that matches the major.minor pattern.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_corsika_version"><code class="docutils literal notranslate"><span class="pre">get_corsika_version()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_database_version_or_name"><code class="docutils literal notranslate"><span class="pre">get_database_version_or_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_sim_telarray_version"><code class="docutils literal notranslate"><span class="pre">get_sim_telarray_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_software_version"><code class="docutils literal notranslate"><span class="pre">get_software_version()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_version_string"><code class="docutils literal notranslate"><span class="pre">get_version_string()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version">version</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version.check_version_constraint"><code class="docutils literal notranslate"><span class="pre">check_version_constraint()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version.compare_versions"><code class="docutils literal notranslate"><span class="pre">compare_versions()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version.is_valid_semantic_version"><code class="docutils literal notranslate"><span class="pre">is_valid_semantic_version()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version.resolve_version_to_latest_patch"><code class="docutils literal notranslate"><span class="pre">resolve_version_to_latest_patch()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version.semver_to_int"><code class="docutils literal notranslate"><span class="pre">semver_to_int()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version.sort_versions"><code class="docutils literal notranslate"><span class="pre">sort_versions()</span></code></a></li>

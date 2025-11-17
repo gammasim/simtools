@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Simulator" href="simulators.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -491,6 +491,22 @@
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="testing.assertions.assert_expected_simtel_metadata">
+<span class="sig-prename descclassname"><span class="pre">testing.assertions.</span></span><span class="sig-name descname"><span class="pre">assert_expected_simtel_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_metadata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/assertions.html#assert_expected_simtel_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.assertions.assert_expected_simtel_metadata" title="Link to this definition">#</a></dt>
+<dd><p>Assert that expected metadata is present in the sim_telarray file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file: Path</strong></dt><dd><p>Path to the sim_telarray file.</p>
+</dd>
+<dt><strong>expected_metadata: dict</strong></dt><dd><p>Expected metadata values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="testing.assertions.assert_file_type">
 <span class="sig-prename descclassname"><span class="pre">testing.assertions.</span></span><span class="sig-name descname"><span class="pre">assert_file_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/assertions.html#assert_file_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.assertions.assert_file_type" title="Link to this definition">#</a></dt>
 <dd><p>Assert that the file is of the given type.</p>
@@ -524,20 +540,42 @@ and the energies simulated are required to be within the configured ones.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="testing.assertions.check_output_from_sim_telarray">
-<span class="sig-prename descclassname"><span class="pre">testing.assertions.</span></span><span class="sig-name descname"><span class="pre">check_output_from_sim_telarray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_output</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/assertions.html#check_output_from_sim_telarray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.assertions.check_output_from_sim_telarray" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">testing.assertions.</span></span><span class="sig-name descname"><span class="pre">check_output_from_sim_telarray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_test</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/assertions.html#check_output_from_sim_telarray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.assertions.check_output_from_sim_telarray" title="Link to this definition">#</a></dt>
 <dd><p>Check that the sim_telarray simulation result is reasonable and matches the expected output.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>file: Path</strong></dt><dd><p>Path to the sim_telarray file.</p>
 </dd>
-<dt><strong>expected_output: dict</strong></dt><dd><p>Expected output values.</p>
+<dt><strong>file_test: dict</strong></dt><dd><p>File test description including expected output and metadata.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>ValueError</dt><dd><p>If the file is not a zstd compressed file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="testing.assertions.check_simulation_logs">
+<span class="sig-prename descclassname"><span class="pre">testing.assertions.</span></span><span class="sig-name descname"><span class="pre">check_simulation_logs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tar_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_test</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/assertions.html#check_simulation_logs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.assertions.check_simulation_logs" title="Link to this definition">#</a></dt>
+<dd><p>Check log files of CORSIKA and sim_telarray for expected output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tar_file: Path</strong></dt><dd><p>Path to a log file tar package.</p>
+</dd>
+<dt><strong>file_test: dict</strong></dt><dd><p>File test description including expected log output.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the file is not a tar file.</p>
 </dd>
 </dl>
 </dd>
@@ -899,9 +937,11 @@ equals the model version from the configuration file.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.assertions">assertions</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.assertions.assert_expected_output"><code class="docutils literal notranslate"><span class="pre">assert_expected_output()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.assertions.assert_expected_simtel_metadata"><code class="docutils literal notranslate"><span class="pre">assert_expected_simtel_metadata()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.assertions.assert_file_type"><code class="docutils literal notranslate"><span class="pre">assert_file_type()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.assertions.assert_n_showers_and_energy_range"><code class="docutils literal notranslate"><span class="pre">assert_n_showers_and_energy_range()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.assertions.check_output_from_sim_telarray"><code class="docutils literal notranslate"><span class="pre">check_output_from_sim_telarray()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.assertions.check_simulation_logs"><code class="docutils literal notranslate"><span class="pre">check_simulation_logs()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.sim_telarray_metadata">sim_telarray_metadata</a><ul class="nav section-nav flex-column">

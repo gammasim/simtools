@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -518,10 +518,10 @@
             <span class="n">mirror_list_file</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">find_file</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_path&quot;</span><span class="p">]</span>
             <span class="p">)</span>
-            <span class="n">tel_model</span><span class="o">.</span><span class="n">change_parameter</span><span class="p">(</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">])</span>
-            <span class="n">tel_model</span><span class="o">.</span><span class="n">export_parameter_file</span><span class="p">(</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">,</span> <span class="n">mirror_list_file</span><span class="p">)</span>
+            <span class="n">tel_model</span><span class="o">.</span><span class="n">overwrite_model_parameter</span><span class="p">(</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">])</span>
+            <span class="n">tel_model</span><span class="o">.</span><span class="n">overwrite_model_file</span><span class="p">(</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">,</span> <span class="n">mirror_list_file</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;random_focal_length&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">tel_model</span><span class="o">.</span><span class="n">change_parameter</span><span class="p">(</span>
+            <span class="n">tel_model</span><span class="o">.</span><span class="n">overwrite_model_parameter</span><span class="p">(</span>
                 <span class="s2">&quot;random_focal_length&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;random_focal_length&quot;</span><span class="p">])</span>
             <span class="p">)</span>
 
@@ -663,7 +663,7 @@
 <span class="sd">        sig_d80: float</span>
 <span class="sd">            Standard deviation of D80 in cm.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">change_parameter</span><span class="p">(</span><span class="s2">&quot;mirror_reflection_random_angle&quot;</span><span class="p">,</span> <span class="n">rnda</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">overwrite_model_parameter</span><span class="p">(</span><span class="s2">&quot;mirror_reflection_random_angle&quot;</span><span class="p">,</span> <span class="n">rnda</span><span class="p">)</span>
         <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="p">(</span>
             <span class="n">telescope_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span>
             <span class="n">site_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span>

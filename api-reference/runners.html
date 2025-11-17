@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Reporting" href="reporting.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -545,7 +545,7 @@
 <p id="module-runners.corsika_runner"><span id="corsika-runner-1"></span>Generate run scripts and directories for CORSIKA simulations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="runners.corsika_runner.CorsikaRunner">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">runners.corsika_runner.</span></span><span class="sig-name descname"><span class="pre">CorsikaRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/corsika_runner.html#CorsikaRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.corsika_runner.CorsikaRunner" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">runners.corsika_runner.</span></span><span class="sig-name descname"><span class="pre">CorsikaRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curved_atmosphere_min_zenith_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/corsika_runner.html#CorsikaRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.corsika_runner.CorsikaRunner" title="Link to this definition">#</a></dt>
 <dd><p>Generate run scripts and directories for CORSIKA simulations. Run simulations if requested.</p>
 <p>CorsikaRunner is responsible for configuring and running CORSIKA, using corsika_autoinputs
 provided by the sim_telarray package. CorsikaRunner generates shell scripts to be run
@@ -563,6 +563,8 @@ externally or by the simulator module simulator.</p>
 <dt><strong>keep_seeds: bool</strong></dt><dd><p>Use seeds based on run number and primary particle. If False, use sim_telarray seeds.</p>
 </dd>
 <dt><strong>use_multipipe: bool</strong></dt><dd><p>Use multipipe to run CORSIKA and sim_telarray.</p>
+</dd>
+<dt><strong>curved_atmosphere_min_zenith_angle: Quantity</strong></dt><dd><p>Minimum zenith angle for which to use the curved-atmosphere CORSIKA binary.</p>
 </dd>
 </dl>
 </dd>
@@ -604,7 +606,7 @@ multiple array models are simulated.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="runners.corsika_runner.CorsikaRunner.prepare_run_script">
 <span class="sig-name descname"><span class="pre">prepare_run_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_commands</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pfp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/corsika_runner.html#CorsikaRunner.prepare_run_script"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.corsika_runner.CorsikaRunner.prepare_run_script" title="Link to this definition">#</a></dt>
-<dd><p>Get the full path of the run script file for a given run number.</p>
+<dd><p>Prepare and write CORSIKA run script.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -651,7 +653,7 @@ multiple array models are simulated.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="runners.simtel_runner.SimtelRunner">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">runners.simtel_runner.</span></span><span class="sig-name descname"><span class="pre">SimtelRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/simtel_runner.html#SimtelRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.simtel_runner.SimtelRunner" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">runners.simtel_runner.</span></span><span class="sig-name descname"><span class="pre">SimtelRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_run_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/simtel_runner.html#SimtelRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.simtel_runner.SimtelRunner" title="Link to this definition">#</a></dt>
 <dd><p>Base class for running simulations based on the sim_telarray software stack.</p>
 <p>The sim_telarray software stack includes sim_telarray itself and e.g., testeff,
 LightEmission, and other software packages.</p>
@@ -665,6 +667,8 @@ LightEmission, and other software packages.</p>
 <dt><strong>corsika_config: CorsikaConfig</strong></dt><dd><p>CORSIKA configuration.</p>
 </dd>
 <dt><strong>use_multipipe: bool</strong></dt><dd><p>Use multipipe to run CORSIKA and sim_telarray.</p>
+</dd>
+<dt><strong>calibration_run_mode: str</strong></dt><dd><p>Calibration run mode.</p>
 </dd>
 </dl>
 </dd>
@@ -728,32 +732,6 @@ multiple array models are simulated.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="runners.simtel_runner.SimtelRunner.prepare_run_script">
-<span class="sig-name descname"><span class="pre">prepare_run_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_commands</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/simtel_runner.html#SimtelRunner.prepare_run_script"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.simtel_runner.SimtelRunner.prepare_run_script" title="Link to this definition">#</a></dt>
-<dd><p>Build and return the full path of the bash run script containing the sim_telarray command.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>test: bool</strong></dt><dd><p>Test flag for faster execution.</p>
-</dd>
-<dt><strong>input_file: str or Path</strong></dt><dd><p>Full path of the input CORSIKA file.</p>
-</dd>
-<dt><strong>run_number: int</strong></dt><dd><p>Run number.</p>
-</dd>
-<dt><strong>extra_commands: str</strong></dt><dd><p>Additional commands for running simulations given in config.yml.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>Path</dt><dd><p>Full path of the run script.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="runners.simtel_runner.SimtelRunner.run">
 <span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/simtel_runner.html#SimtelRunner.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.simtel_runner.SimtelRunner.run" title="Link to this definition">#</a></dt>
 <dd><p>Make run command and run sim_telarray.</p>
@@ -779,7 +757,7 @@ multiple array models are simulated.</p>
 <p id="module-runners.corsika_simtel_runner"><span id="corsika-simtel-runner-1"></span>Run simulations with CORSIKA and pipe it to sim_telarray using the multipipe functionality.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="runners.corsika_simtel_runner.CorsikaSimtelRunner">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">runners.corsika_simtel_runner.</span></span><span class="sig-name descname"><span class="pre">CorsikaSimtelRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_telarray_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequential</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/corsika_simtel_runner.html#CorsikaSimtelRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.corsika_simtel_runner.CorsikaSimtelRunner" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">runners.corsika_simtel_runner.</span></span><span class="sig-name descname"><span class="pre">CorsikaSimtelRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_telarray_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequential</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curved_atmosphere_min_zenith_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/corsika_simtel_runner.html#CorsikaSimtelRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.corsika_simtel_runner.CorsikaSimtelRunner" title="Link to this definition">#</a></dt>
 <dd><p>Run simulations with CORSIKA and pipe it to sim_telarray using the multipipe functionality.</p>
 <p>Uses CorsikaConfig to manage the CORSIKA configuration and SimulatorArray
 for the sim_telarray configuration.</p>
@@ -835,6 +813,12 @@ in case multiple array models are simulated.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="runners.corsika_simtel_runner.CorsikaSimtelRunner.get_resources">
+<span class="sig-name descname"><span class="pre">get_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/corsika_simtel_runner.html#CorsikaSimtelRunner.get_resources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.corsika_simtel_runner.CorsikaSimtelRunner.get_resources" title="Link to this definition">#</a></dt>
+<dd><p>Return computing resources used.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="runners.corsika_simtel_runner.CorsikaSimtelRunner.prepare_run_script">
 <span class="sig-name descname"><span class="pre">prepare_run_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_commands</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pfp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/corsika_simtel_runner.html#CorsikaSimtelRunner.prepare_run_script"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.corsika_simtel_runner.CorsikaSimtelRunner.prepare_run_script" title="Link to this definition">#</a></dt>
 <dd><p>Get the full path of the run script file for a given run number.</p>
@@ -878,7 +862,7 @@ in case multiple array models are simulated.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="runners.runner_services.RunnerServices.get_file_name">
-<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_model_version_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/runner_services.html#RunnerServices.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.runner_services.RunnerServices.get_file_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_run_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_model_version_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/runner_services.html#RunnerServices.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.runner_services.RunnerServices.get_file_name" title="Link to this definition">#</a></dt>
 <dd><p>Get a CORSIKA/sim_telarray style file name for various log and data file types.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -888,6 +872,8 @@ in case multiple array models are simulated.</p>
 <dt><strong>run_number</strong><span class="classifier">int</span></dt><dd><p>Run number.</p>
 </dd>
 <dt><strong>mode: str</strong></dt><dd><p>out or err (optional, relevant only for sub_log).</p>
+</dd>
+<dt><strong>calibration_run_mode: str</strong></dt><dd><p>Calibration run mode.</p>
 </dd>
 <dt><strong>model_version_index: int</strong></dt><dd><p>Index of the model version.
 This is not used here, but in other implementations of this function is
@@ -1042,7 +1028,6 @@ multiple array models are simulated.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.simtel_runner.SimtelRunner.get_config_option"><code class="docutils literal notranslate"><span class="pre">SimtelRunner.get_config_option()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.simtel_runner.SimtelRunner.get_file_name"><code class="docutils literal notranslate"><span class="pre">SimtelRunner.get_file_name()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.simtel_runner.SimtelRunner.get_resources"><code class="docutils literal notranslate"><span class="pre">SimtelRunner.get_resources()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.simtel_runner.SimtelRunner.prepare_run_script"><code class="docutils literal notranslate"><span class="pre">SimtelRunner.prepare_run_script()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.simtel_runner.SimtelRunner.run"><code class="docutils literal notranslate"><span class="pre">SimtelRunner.run()</span></code></a></li>
 </ul>
 </li>
@@ -1051,6 +1036,7 @@ multiple array models are simulated.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-simtel-runner">corsika_simtel_runner</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.corsika_simtel_runner.CorsikaSimtelRunner"><code class="docutils literal notranslate"><span class="pre">CorsikaSimtelRunner</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.corsika_simtel_runner.CorsikaSimtelRunner.get_file_name"><code class="docutils literal notranslate"><span class="pre">CorsikaSimtelRunner.get_file_name()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.corsika_simtel_runner.CorsikaSimtelRunner.get_resources"><code class="docutils literal notranslate"><span class="pre">CorsikaSimtelRunner.get_resources()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#runners.corsika_simtel_runner.CorsikaSimtelRunner.prepare_run_script"><code class="docutils literal notranslate"><span class="pre">CorsikaSimtelRunner.prepare_run_script()</span></code></a></li>
 </ul>
 </li>

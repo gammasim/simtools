@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Configuration" href="configuration_module.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -521,30 +521,6 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.fill_corsika_configuration">
-<span class="sig-name descname"><span class="pre">fill_corsika_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig.fill_corsika_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.fill_corsika_configuration" title="Link to this definition">#</a></dt>
-<dd><p>Fill CORSIKA configuration.</p>
-<p>Dictionary keys are CORSIKA parameter names.
-Values are converted to CORSIKA-consistent units.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Configuration dictionary.</p>
-</dd>
-<dt><strong>db_config: dict</strong></dt><dd><p>Database configuration.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>Dictionary with CORSIKA parameters.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.generate_corsika_input_file">
 <span class="sig-name descname"><span class="pre">generate_corsika_input_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_test_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig.generate_corsika_input_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.generate_corsika_input_file" title="Link to this definition">#</a></dt>
 <dd><p>Generate a CORSIKA input file.</p>
@@ -677,6 +653,12 @@ the output directly to sim_telarray. Defines directory names.</p>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.use_curved_atmosphere">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">use_curved_atmosphere</span></span><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.use_curved_atmosphere" title="Link to this definition">#</a></dt>
+<dd><p>Check if zenith angle condition for curved atmosphere usage for CORSIKA is met.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.validate_run_number">
 <span class="sig-name descname"><span class="pre">validate_run_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig.validate_run_number"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.validate_run_number" title="Link to this definition">#</a></dt>
@@ -703,12 +685,6 @@ the output directly to sim_telarray. Defines directory names.</p>
 </dl>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="corsika.corsika_config.InvalidCorsikaInputError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.corsika_config.</span></span><span class="sig-name descname"><span class="pre">InvalidCorsikaInputError</span></span><a class="reference internal" href="../_modules/corsika/corsika_config.html#InvalidCorsikaInputError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.InvalidCorsikaInputError" title="Link to this definition">#</a></dt>
-<dd><p>Exception for invalid corsika input.</p>
 </dd></dl>
 
 </section>
@@ -1612,7 +1588,6 @@ spherical representation of the telescopes.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-config">corsika_config</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.assert_corsika_configurations_match"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.assert_corsika_configurations_match()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.fill_corsika_configuration"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.fill_corsika_configuration()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.generate_corsika_input_file"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.generate_corsika_input_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.get_config_parameter"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.get_config_parameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.get_corsika_config_file_name"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.get_corsika_config_file_name()</span></code></a></li>
@@ -1621,10 +1596,10 @@ spherical representation of the telescopes.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.primary_particle"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.primary_particle</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.run_number"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.run_number</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.set_output_file_and_directory"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.set_output_file_and_directory()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.use_curved_atmosphere"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.use_curved_atmosphere</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.validate_run_number"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.validate_run_number()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.InvalidCorsikaInputError"><code class="docutils literal notranslate"><span class="pre">InvalidCorsikaInputError</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-corsika.primary_particle">primary_particle</a><ul class="nav section-nav flex-column">

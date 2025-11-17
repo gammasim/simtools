@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -448,6 +448,22 @@
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
+<span class="c1"># Keys to ignore when comparing sim_telarray configuration files</span>
+<span class="c1"># (e.g., version numbers, system dependent parameters, CORSIKA options)</span>
+<span class="n">cfg_ignore_keys</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;config_release&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Label&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simtools_version&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simtools_model_production_version&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simtools_build_opt&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simtools_extra_def&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simtools_hadronic_model&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simtools_avx_flag&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simtools_corsika_version&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simtools_corsika_opt_patch_version&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simtools_bernlohr_version&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
 
 <div class="viewcode-block" id="validate_application_output">
 <a class="viewcode-back" href="../../api-reference/testing.html#testing.validate_output.validate_application_output">[docs]</a>
@@ -476,6 +492,10 @@
 
     <span class="k">for</span> <span class="n">integration_test</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;integration_tests&quot;</span><span class="p">]:</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Testing application output: </span><span class="si">{</span><span class="n">integration_test</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Model version from command line: </span><span class="si">{</span><span class="n">from_command_line</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;from config file: </span><span class="si">{</span><span class="n">from_config_file</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">from_command_line</span> <span class="o">==</span> <span class="n">from_config_file</span><span class="p">:</span>
             <span class="n">_validate_output_files</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">,</span> <span class="n">db_config</span><span class="p">)</span>
@@ -555,11 +575,10 @@
         <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output file </span><span class="si">{</span><span class="n">output_file_path</span><span class="si">}</span><span class="s2"> does not exist. &quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
-        <span class="k">if</span> <span class="s2">&quot;expected_output&quot;</span> <span class="ow">in</span> <span class="n">file_test</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="n">assertions</span><span class="o">.</span><span class="n">check_output_from_sim_telarray</span><span class="p">(</span>
-                <span class="n">output_file_path</span><span class="p">,</span>
-                <span class="n">file_test</span><span class="p">[</span><span class="s2">&quot;expected_output&quot;</span><span class="p">],</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">output_file_path</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.simtel.zst&quot;</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">assertions</span><span class="o">.</span><span class="n">check_output_from_sim_telarray</span><span class="p">(</span><span class="n">output_file_path</span><span class="p">,</span> <span class="n">file_test</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">output_file_path</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.log_hist.tar.gz&quot;</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">assertions</span><span class="o">.</span><span class="n">check_simulation_logs</span><span class="p">(</span><span class="n">output_file_path</span><span class="p">,</span> <span class="n">file_test</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_validate_model_parameter_json_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">model_parameter_validation</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
@@ -577,7 +596,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking model parameter json file: </span><span class="si">{</span><span class="n">model_parameter_validation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">)</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">)</span>
 
     <span class="n">reference_parameter_name</span> <span class="o">=</span> <span class="n">model_parameter_validation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reference_parameter_name&quot;</span><span class="p">)</span>
 
@@ -793,7 +812,7 @@
         <span class="sa">f</span><span class="s2">&quot;Comparing simtel cfg files: </span><span class="si">{</span><span class="n">reference_file</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">test_file</span><span class="si">}</span><span class="s2"> &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;for model version </span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;configuration&#39;</span><span class="p">][</span><span class="s1">&#39;model_version&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">_compare_simtel_cfg_files</span><span class="p">(</span><span class="n">reference_file</span><span class="p">,</span> <span class="n">test_file</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">_compare_simtel_cfg_files</span><span class="p">(</span><span class="n">reference_file</span><span class="p">,</span> <span class="n">test_file</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_compare_simtel_cfg_files</span><span class="p">(</span><span class="n">reference_file</span><span class="p">,</span> <span class="n">test_file</span><span class="p">):</span>
@@ -801,8 +820,8 @@
 <span class="sd">    Compare two sim_telarray configuration files.</span>
 
 <span class="sd">    Line-by-line string comparison. Requires similar sequence of</span>
-<span class="sd">    parameters in the files. Ignore lines containing &#39;config_release&#39;</span>
-<span class="sd">    (as it contains the simtools package version).</span>
+<span class="sd">    parameters in the files. Ignore lines listed in cfg_ignore_keys</span>
+<span class="sd">    (e.g., simtools package versions or hadronic interaction model strings).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -821,16 +840,28 @@
         <span class="n">reference_cfg</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f1</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
         <span class="n">test_cfg</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f2</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
 
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reference_cfg</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_cfg</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">filter_ignored</span><span class="p">(</span><span class="n">cfg_lines</span><span class="p">,</span> <span class="n">file_label</span><span class="p">):</span>
+        <span class="n">filtered</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">cfg_lines</span><span class="p">:</span>
+            <span class="n">ignored_key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">ignore</span> <span class="k">for</span> <span class="n">ignore</span> <span class="ow">in</span> <span class="n">cfg_ignore_keys</span> <span class="k">if</span> <span class="n">ignore</span> <span class="ow">in</span> <span class="n">line</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ignored_key</span><span class="p">:</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ignoring line in </span><span class="si">{</span><span class="n">file_label</span><span class="si">}</span><span class="s2"> due to key &#39;</span><span class="si">{</span><span class="n">ignored_key</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">filtered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">filtered</span>
+
+    <span class="n">reference_cfg_filtered</span> <span class="o">=</span> <span class="n">filter_ignored</span><span class="p">(</span><span class="n">reference_cfg</span><span class="p">,</span> <span class="s2">&quot;reference file&quot;</span><span class="p">)</span>
+    <span class="n">test_cfg_filtered</span> <span class="o">=</span> <span class="n">filter_ignored</span><span class="p">(</span><span class="n">test_cfg</span><span class="p">,</span> <span class="s2">&quot;test file&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reference_cfg_filtered</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_cfg_filtered</span><span class="p">):</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Line counts differ: </span><span class="si">{</span><span class="n">reference_file</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">reference_cfg</span><span class="p">)</span><span class="si">}</span><span class="s2"> lines), &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">test_file</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">test_cfg</span><span class="p">)</span><span class="si">}</span><span class="s2"> lines).&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Line counts differ after filtering: </span><span class="si">{</span><span class="n">reference_file</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">reference_cfg_filtered</span><span class="p">)</span><span class="si">}</span><span class="s2"> lines), &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">test_file</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">test_cfg_filtered</span><span class="p">)</span><span class="si">}</span><span class="s2"> lines).&quot;</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">for</span> <span class="n">ref_line</span><span class="p">,</span> <span class="n">test_line</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">reference_cfg</span><span class="p">,</span> <span class="n">test_cfg</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">ignore</span> <span class="ow">in</span> <span class="n">ref_line</span> <span class="k">for</span> <span class="n">ignore</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;config_release&quot;</span><span class="p">,</span> <span class="s2">&quot;Label&quot;</span><span class="p">)):</span>
-            <span class="k">continue</span>
+    <span class="k">for</span> <span class="n">ref_line</span><span class="p">,</span> <span class="n">test_line</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">reference_cfg_filtered</span><span class="p">,</span> <span class="n">test_cfg_filtered</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">ref_line</span> <span class="o">!=</span> <span class="n">test_line</span><span class="p">:</span>
             <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Configuration files </span><span class="si">{</span><span class="n">reference_file</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">test_file</span><span class="si">}</span><span class="s2"> do not match: &quot;</span>

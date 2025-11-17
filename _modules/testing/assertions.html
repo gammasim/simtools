@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -435,13 +435,17 @@
   <h1>Source code for testing.assertions</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Functions asserting certain conditions are met (used e.g., in integration tests).&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_sim_telarray_metadata</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -568,9 +572,40 @@
 
 
 
+<div class="viewcode-block" id="assert_expected_simtel_metadata">
+<a class="viewcode-back" href="../../api-reference/testing.html#testing.assertions.assert_expected_simtel_metadata">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">assert_expected_simtel_metadata</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">expected_metadata</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assert that expected metadata is present in the sim_telarray file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file: Path</span>
+<span class="sd">        Path to the sim_telarray file.</span>
+<span class="sd">    expected_metadata: dict</span>
+<span class="sd">        Expected metadata values.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">global_meta</span><span class="p">,</span> <span class="n">telescope_meta</span> <span class="o">=</span> <span class="n">read_sim_telarray_metadata</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">expected_metadata</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">global_meta</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">telescope_meta</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metadata key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> not found in sim_telarray file </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">global_meta</span> <span class="ow">and</span> <span class="n">global_meta</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Metadata key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> has value </span><span class="si">{</span><span class="n">global_meta</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2"> instead of expected </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metadata key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> matches expected value </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
 <div class="viewcode-block" id="check_output_from_sim_telarray">
 <a class="viewcode-back" href="../../api-reference/testing.html#testing.assertions.check_output_from_sim_telarray">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">check_output_from_sim_telarray</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">expected_output</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_output_from_sim_telarray</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_test</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Check that the sim_telarray simulation result is reasonable and matches the expected output.</span>
 
@@ -578,23 +613,94 @@
 <span class="sd">    ----------</span>
 <span class="sd">    file: Path</span>
 <span class="sd">        Path to the sim_telarray file.</span>
-<span class="sd">    expected_output: dict</span>
-<span class="sd">        Expected output values.</span>
+<span class="sd">    file_test: dict</span>
+<span class="sd">        File test description including expected output and metadata.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If the file is not a zstd compressed file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">!=</span> <span class="s2">&quot;.zst&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Expected output file </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> is not a zstd compressed file &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;(i.e., a sim_telarray file).&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;expected_output&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">file_test</span> <span class="ow">and</span> <span class="s2">&quot;expected_simtel_metadata&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">file_test</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No expected output or metadata provided, skipping checks </span><span class="si">{</span><span class="n">file_test</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">assert_output</span> <span class="o">=</span> <span class="n">assert_metadata</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="s2">&quot;expected_output&quot;</span> <span class="ow">in</span> <span class="n">file_test</span><span class="p">:</span>
+        <span class="n">assert_output</span> <span class="o">=</span> <span class="n">assert_expected_output</span><span class="p">(</span>
+            <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="n">expected_output</span><span class="o">=</span><span class="n">file_test</span><span class="p">[</span><span class="s2">&quot;expected_output&quot;</span><span class="p">]</span>
         <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">assert_n_showers_and_energy_range</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span> <span class="ow">and</span> <span class="n">assert_expected_output</span><span class="p">(</span>
-        <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="n">expected_output</span><span class="o">=</span><span class="n">expected_output</span>
-    <span class="p">)</span></div>
+    <span class="k">if</span> <span class="s2">&quot;expected_simtel_metadata&quot;</span> <span class="ow">in</span> <span class="n">file_test</span><span class="p">:</span>
+        <span class="n">assert_metadata</span> <span class="o">=</span> <span class="n">assert_expected_simtel_metadata</span><span class="p">(</span>
+            <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="n">expected_metadata</span><span class="o">=</span><span class="n">file_test</span><span class="p">[</span><span class="s2">&quot;expected_simtel_metadata&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">assert_n_showers_and_energy_range</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span> <span class="ow">and</span> <span class="n">assert_output</span> <span class="ow">and</span> <span class="n">assert_metadata</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_patterns</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">patterns</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find patterns in text.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patterns</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">text</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_log</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="n">tar</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read and decode a gzipped log file from a tar archive.&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">tar</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="n">member</span><span class="p">)</span> <span class="k">as</span> <span class="n">gz</span><span class="p">,</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">gz</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="check_simulation_logs">
+<a class="viewcode-back" href="../../api-reference/testing.html#testing.assertions.check_simulation_logs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_simulation_logs</span><span class="p">(</span><span class="n">tar_file</span><span class="p">,</span> <span class="n">file_test</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check log files of CORSIKA and sim_telarray for expected output.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tar_file: Path</span>
+<span class="sd">        Path to a log file tar package.</span>
+<span class="sd">    file_test: dict</span>
+<span class="sd">        File test description including expected log output.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the file is not a tar file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">expected_log</span> <span class="o">=</span> <span class="n">file_test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;expected_log_output&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">wanted</span> <span class="o">=</span> <span class="n">expected_log</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pattern&quot;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">forbidden</span> <span class="o">=</span> <span class="n">expected_log</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;forbidden_pattern&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">wanted</span> <span class="ow">or</span> <span class="n">forbidden</span><span class="p">):</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No expected log output provided, skipping checks </span><span class="si">{</span><span class="n">file_test</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">is_tarfile</span><span class="p">(</span><span class="n">tar_file</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">tar_file</span><span class="si">}</span><span class="s2"> is not a tar file.&quot;</span><span class="p">)</span>
+
+    <span class="n">found</span><span class="p">,</span> <span class="n">bad</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tar_file</span><span class="p">,</span> <span class="s2">&quot;r:*&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">tar</span><span class="o">.</span><span class="n">getmembers</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.log.gz&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Scanning </span><span class="si">{</span><span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">_read_log</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="n">tar</span><span class="p">)</span>
+            <span class="n">found</span> <span class="o">|=</span> <span class="n">_find_patterns</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">wanted</span><span class="p">)</span>
+            <span class="n">bad</span> <span class="o">|=</span> <span class="n">_find_patterns</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">forbidden</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">bad</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Forbidden patterns found: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">bad</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">wanted</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing expected patterns: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;All expected patterns found: </span><span class="si">{</span><span class="n">wanted</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
 
 </pre></div>
 

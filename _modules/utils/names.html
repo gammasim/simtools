@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=71eff813"></script>
+    <script src="../../_static/documentation_options.js?v=a1c324a2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge8957bd70" />
+  <meta name="docsearch:version" content="0.1.dev1+g5253b4942" />
   </head>
   
   
@@ -1016,6 +1016,8 @@
 <span class="sd">        Site name(s).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>  <span class="c1"># e.g. instrument is &#39;North&#39; as given for the site parameters</span>
+        <span class="k">if</span> <span class="n">array_element_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;OBS&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">validate_site_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">validate_site_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># e.g. instrument is &#39;LSTN&#39; as given for the array element types</span>
         <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)][</span><span class="s2">&quot;site&quot;</span><span class="p">]</span></div>
@@ -1142,7 +1144,6 @@
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.names.simtel_config_file_name">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">simtel_config_file_name</span><span class="p">(</span>
     <span class="n">site</span><span class="p">,</span>
-    <span class="n">model_version</span><span class="p">,</span>
     <span class="n">array_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">telescope_model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1157,8 +1158,6 @@
 <span class="sd">        South or North.</span>
 <span class="sd">    telescope_model_name: str</span>
 <span class="sd">        LST-1, MST-FlashCam, ...</span>
-<span class="sd">    model_version: str</span>
-<span class="sd">        Version of the model.</span>
 <span class="sd">    label: str</span>
 <span class="sd">        Instance label.</span>
 <span class="sd">    extra_label: str</span>
@@ -1173,7 +1172,6 @@
     <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;-</span><span class="si">{</span><span class="n">array_name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">array_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
     <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;-</span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">telescope_model_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;-</span><span class="si">{</span><span class="n">model_version</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
     <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">extra_label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">extra_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
     <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;.cfg&quot;</span>
