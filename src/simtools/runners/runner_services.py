@@ -28,7 +28,7 @@ class RunnerServices:
         self.corsika_config = corsika_config
         self.directory = {}
 
-    def _get_info_for_file_name(self, run_number):
+    def _get_info_for_file_name(self, run_number, calibration_run_mode=None):
         """
         Return dictionary for building names for simulation output files.
 
@@ -36,6 +36,8 @@ class RunnerServices:
         ----------
         run_number : int
             Run number.
+        calibration_run_mode: str
+            Calibration run mode.
 
         Returns
         -------
@@ -43,9 +45,12 @@ class RunnerServices:
             Dictionary with the keys or building the file names for simulation output files.
         """
         _vc_high = self.corsika_config.get_config_parameter("VIEWCONE")[1]
-        primary_name = self.corsika_config.primary
-        if primary_name == "gamma" and _vc_high > 0:
-            primary_name = "gamma_diffuse"
+        if calibration_run_mode is not None and calibration_run_mode != "":
+            primary_name = calibration_run_mode
+        else:
+            primary_name = self.corsika_config.primary
+            if primary_name == "gamma" and _vc_high > 0:
+                primary_name = "gamma_diffuse"
         return {
             "run_number": self.corsika_config.validate_run_number(run_number),
             "primary": primary_name,
@@ -119,7 +124,7 @@ class RunnerServices:
         _logger.debug(f"Checking if {run_sub_file} exists")
         return Path(run_sub_file).is_file()
 
-    def _get_file_basename(self, run_number):
+    def _get_file_basename(self, run_number, calibration_run_mode):
         """
         Get the base name for the simulation files.
 
@@ -127,13 +132,15 @@ class RunnerServices:
         ----------
         run_number: int
             Run number.
+        calibration_run_mode: str
+            Calibration run mode.
 
         Returns
         -------
         str
             Base name for the simulation files.
         """
-        info_for_file_name = self._get_info_for_file_name(run_number)
+        info_for_file_name = self._get_info_for_file_name(run_number, calibration_run_mode)
         file_label = f"_{info_for_file_name['label']}" if info_for_file_name.get("label") else ""
         zenith = self.corsika_config.get_config_parameter("THETAP")[0]
         azimuth = self.corsika_config.azimuth_angle
@@ -232,6 +239,7 @@ class RunnerServices:
         file_type,
         run_number=None,
         mode=None,
+        calibration_run_mode=None,
         _model_version_index=0,
     ):  # pylint: disable=unused-argument
         """
@@ -245,6 +253,8 @@ class RunnerServices:
             Run number.
         mode: str
             out or err (optional, relevant only for sub_log).
+        calibration_run_mode: str
+            Calibration run mode.
         model_version_index: int
             Index of the model version.
             This is not used here, but in other implementations of this function is
@@ -261,7 +271,7 @@ class RunnerServices:
         ValueError
             If file_type is unknown.
         """
-        file_name = self._get_file_basename(run_number)
+        file_name = self._get_file_basename(run_number, calibration_run_mode)
 
         if file_type in ["log", "histogram", "corsika_log"]:
             return self._get_log_file_path(file_type, file_name)
