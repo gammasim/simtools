@@ -129,10 +129,10 @@ class SimtelConfigWriter:
         file_path,
         width_ns,
         exp_decay_ns,
+        fadc_sum_bins,
         dt_ns=0.1,
         rise_range=(0.1, 0.9),
         fall_range=(0.9, 0.1),
-        fadc_sum_bins=None,
         time_margin_ns=10.0,
     ):
         """Write a pulse table for a Gaussian convolved with a causal exponential.
@@ -145,15 +145,15 @@ class SimtelConfigWriter:
             Target rise time in ns between the fractional levels defined by ``rise_range``.
         exp_decay_ns : float
             Target fall time in ns between the fractional levels defined by ``fall_range``.
+        fadc_sum_bins : int
+            Length of the FADC integration window (treated as ns here) used to derive
+            the internal time sampling window of the solver as [-(margin), bins + margin].
         dt_ns : float, optional
             Time sampling step in ns for the generated pulse table.
         rise_range : tuple[float, float], optional
             Fractional amplitude bounds (low, high) for rise-time definition.
         fall_range : tuple[float, float], optional
             Fractional amplitude bounds (high, low) for fall-time definition.
-        fadc_sum_bins : int
-            Length of the FADC integration window (treated as ns here) used to derive
-            the internal time sampling window of the solver as [-(margin), bins + margin].
         time_margin_ns : float, optional
             Margin in ns to add to both ends of the FADC window when ``fadc_sum_bins`` is given.
 

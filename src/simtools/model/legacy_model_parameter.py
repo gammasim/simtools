@@ -30,17 +30,14 @@ def register_update(name):
 def apply_legacy_updates_to_parameters(parameters, legacy_updates):
     """Apply legacy updates to model parameters.
 
+    Modifies the parameters dictionary in-place.
+
     Parameters
     ----------
     parameters: dict
         Dictionary of model parameters (all parameters).
     legacy_updates: dict
         Dictionary of legacy updates to apply.
-
-    Returns
-    -------
-    dict
-        Updated model parameters.
     """
     for par_name, legacy_data in legacy_updates.items():
         if legacy_data is None or par_name not in parameters:
@@ -50,8 +47,6 @@ def apply_legacy_updates_to_parameters(parameters, legacy_updates):
                 parameters[par_name][key] = legacy_data[key]
         if legacy_data.get("remove_parameter", False):
             parameters.pop(par_name)
-
-    return parameters
 
 
 def update_parameter(par_name, parameters, schema_version):

@@ -367,9 +367,7 @@ class ModelParameter:
                         )
                     )
 
-        parameters = legacy_model_parameter.apply_legacy_updates_to_parameters(
-            parameters, _legacy_updates
-        )
+        legacy_model_parameter.apply_legacy_updates_to_parameters(parameters, _legacy_updates)
 
     def overwrite_model_parameter(self, par_name, value, parameter_version=None):
         """
