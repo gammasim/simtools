@@ -1,16 +1,13 @@
 """Mirror panel PSF calculation."""
 
 import logging
+from pathlib import Path
 
-import astropy.units as u
-import numpy as np
-from astropy.table import QTable, Table
-
-import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
-from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.model.model_utils import initialize_simulation_models
+from simtools.ray_tracing import psf_parameter_optimisation as psf_opt
 from simtools.ray_tracing.ray_tracing import RayTracing
+from simtools.visualization import plot_psf
 
 
 class MirrorPanelPSF:
@@ -41,20 +38,12 @@ class MirrorPanelPSF:
         self.telescope_model, self.site_model = self._define_telescope_model(label, db_config)
 
         if self.args_dict["test"]:
-            self.args_dict["number_of_mirrors_to_test"] = 2
+            self.args_dict["number_of_mirrors_to_test"] = 10
 
-        if self.args_dict["psf_measurement"]:
-            self._get_psf_containment()
-        if not self.args_dict["psf_measurement_containment_mean"]:
-            raise ValueError("Missing PSF measurement")
-
-        self.mean_d80 = None
-        self.sig_d80 = None
-        self.rnda_start = self._get_starting_value()
+        self.rnda_start = self.telescope_model.get_parameter_value("mirror_reflection_random_angle")
         self.rnda_opt = None
-        self.results_rnda = []
-        self.results_mean = []
-        self.results_sig = []
+        self.gd_optimizer = None
+        self.final_rmsd = None
 
     def _define_telescope_model(self, label, db_config):
         """
@@ -77,133 +66,80 @@ class MirrorPanelPSF:
             telescope_name=self.args_dict["telescope"],
             model_version=self.args_dict["model_version"],
         )
-        if self.args_dict["mirror_list"] is not None:
+        if self.args_dict["mirror_list"]:
             mirror_list_file = gen.find_file(
                 name=self.args_dict["mirror_list"], loc=self.args_dict["model_path"]
             )
             tel_model.overwrite_model_parameter("mirror_list", self.args_dict["mirror_list"])
             tel_model.overwrite_model_file("mirror_list", mirror_list_file)
-        if self.args_dict["random_focal_length"] is not None:
+        if self.args_dict["random_focal_length"]:
             tel_model.overwrite_model_parameter(
                 "random_focal_length", str(self.args_dict["random_focal_length"])
             )
 
         return tel_model, site_model
 
-    def _get_psf_containment(self):
-        """Read measured single-mirror point-spread function from file and return mean and sigma."""
-        # If this is a test, read just the first few lines since we only simulate those mirrors
-        data_end = (
-            self.args_dict["number_of_mirrors_to_test"] + 1 if self.args_dict["test"] else None
+    def optimize_with_gradient_descent(self):
+        """Use the generalized PSF parameter optimizer for gradient descent optimization."""
+        # Prepare args_dict compatible with PSFParameterOptimizer
+        optimizer_args = self.args_dict.copy()
+        optimizer_args["single_mirror_mode"] = True
+        optimizer_args["mirror_numbers"] = (
+            list(range(1, self.args_dict["number_of_mirrors_to_test"] + 1))
+            if self.args_dict["test"]
+            else "all"
         )
-        _psf_list = Table.read(
-            self.args_dict["psf_measurement"], format="ascii.ecsv", data_end=data_end
+        optimizer_args["use_random_focal_length"] = self.args_dict.get(
+            "use_random_focal_length", False
         )
-        try:
-            self.args_dict["psf_measurement_containment_mean"] = np.nanmean(
-                np.array(_psf_list["psf_opt"].to("cm").value)
-            )
-            self.args_dict["psf_measurement_containment_sigma"] = np.nanstd(
-                np.array(_psf_list["psf_opt"].to("cm").value)
-            )
-        except KeyError as exc:
-            raise KeyError(
-                f"Missing column psf measurement (psf_opt) in {self.args_dict['psf_measurement']}"
-            ) from exc
+        if self.args_dict.get("random_focal_length_seed") is not None:
+            optimizer_args["random_focal_length_seed"] = self.args_dict["random_focal_length_seed"]
+
+        data_to_plot, radius = psf_opt.load_and_process_data(optimizer_args)
+        output_dir = Path(self.args_dict.get("output_path"))
+
+        # Create optimizer for mirror_reflection_random_angle
+        self.gd_optimizer = psf_opt.PSFParameterOptimizer(
+            tel_model=self.telescope_model,
+            site_model=self.site_model,
+            args_dict=optimizer_args,
+            data_to_plot=data_to_plot,
+            radius=radius,
+            output_dir=output_dir,
+            optimize_only=["mirror_reflection_random_angle"],
+        )
+
+        threshold = self.args_dict.get("threshold")
+        learning_rate = self.args_dict.get("learning_rate")
+        epsilon = 0.00005
+
+        best_params, _, gd_results = self.gd_optimizer.run_gradient_descent(
+            rmsd_threshold=threshold, learning_rate=learning_rate, epsilon=epsilon
+        )
+
+        if best_params is None:
+            raise ValueError("Gradient descent optimization failed")
+
+        self.rnda_opt = best_params["mirror_reflection_random_angle"]
+        self.final_rmsd = gd_results[-1][1] if gd_results else None
 
         self._logger.info(
-            f"Determined PSF containment to {self.args_dict['psf_measurement_containment_mean']:.4}"
-            f" +- {self.args_dict['psf_measurement_containment_sigma']:.4} cm"
+            f"Optimization complete. RMSD: {self.final_rmsd:.6f}, Optimized values: {self.rnda_opt}"
         )
 
-    def derive_random_reflection_angle(self, save_figures=False):
-        """
-        Minimize the difference between measured and simulated PSF for reflection angle.
+        final_simulated_data = gd_results[-1][4] if gd_results else None
 
-        Main loop of the optimization process. The method iterates over different values of the
-        random reflection angle until the difference in the mean value of the D80 containment
-        is minimal.
-        """
-        if self.args_dict["no_tuning"]:
-            self.rnda_opt = self.rnda_start
-        else:
-            self._optimize_reflection_angle()
+        if final_simulated_data is not None:
+            plot_psf.create_final_psf_comparison_plot(
+                tel_model=self.telescope_model,
+                optimized_params=best_params,
+                data_to_plot=data_to_plot,
+                output_dir=output_dir,
+                final_rmsd=self.final_rmsd,
+                simulated_data=final_simulated_data,
+            )
 
-        self.mean_d80, self.sig_d80 = self.run_simulations_and_analysis(
-            self.rnda_opt, save_figures=save_figures
-        )
-
-    def _optimize_reflection_angle(self, step_size=0.1, max_iteration=100):
-        """
-        Optimize the random reflection angle to minimize the difference in D80 containment.
-
-        Parameters
-        ----------
-        step_size: float
-            Initial step size for optimization.
-        max_iteration: int
-            Maximum number of iterations.
-
-        Raises
-        ------
-        ValueError
-            If the optimization reaches the maximum number of iterations without converging.
-
-        """
-        relative_tolerance_d80 = self.args_dict["rtol_psf_containment"]
-        self._logger.info(
-            "Optimizing random reflection angle "
-            f"(relative tolerance = {relative_tolerance_d80}, "
-            f"step size = {step_size}, max iteration = {max_iteration})"
-        )
-
-        def collect_results(rnda, mean, sig):
-            self.results_rnda.append(rnda)
-            self.results_mean.append(mean)
-            self.results_sig.append(sig)
-
-        reference_d80 = self.args_dict["psf_measurement_containment_mean"]
-        rnda = self.rnda_start
-        prev_error_d80 = float("inf")
-        iteration = 0
-
-        while True:
-            mean_d80, sig_d80 = self.run_simulations_and_analysis(rnda)
-            error_d80 = abs(1 - mean_d80 / reference_d80)
-            collect_results(rnda, mean_d80, sig_d80)
-
-            if error_d80 < relative_tolerance_d80:
-                break
-
-            if mean_d80 < reference_d80:
-                rnda += step_size * self.rnda_start
-            else:
-                rnda -= step_size * self.rnda_start
-
-            if error_d80 >= prev_error_d80:
-                step_size = step_size / 2
-            prev_error_d80 = error_d80
-            iteration += 1
-            if iteration > max_iteration:
-                raise ValueError(
-                    f"Maximum iterations ({max_iteration}) reached without convergence."
-                )
-
-        self.rnda_opt = rnda
-
-    def _get_starting_value(self):
-        """Get optimization starting value from command line or previous model."""
-        if self.args_dict["rnda"] != 0:
-            rnda_start = self.args_dict["rnda"]
-        else:
-            rnda_start = self.telescope_model.get_parameter_value("mirror_reflection_random_angle")[
-                0
-            ]
-
-        self._logger.info(f"Start value for mirror_reflection_random_angle: {rnda_start} deg")
-        return rnda_start
-
-    def run_simulations_and_analysis(self, rnda, save_figures=False):
+    def run_simulations_and_analysis(self, rnda):
         """
         Run ray tracing simulations and analysis for one given value of rnda.
 
@@ -211,15 +147,6 @@ class MirrorPanelPSF:
         ----------
         rnda: float
             Random reflection angle in degrees.
-        save_figures: bool
-            Save figures.
-
-        Returns
-        -------
-        mean_d80: float
-            Mean value of D80 in cm.
-        sig_d80: float
-            Standard deviation of D80 in cm.
         """
         self.telescope_model.overwrite_model_parameter("mirror_reflection_random_angle", rnda)
         ray = RayTracing(
@@ -235,63 +162,34 @@ class MirrorPanelPSF:
             use_random_focal_length=self.args_dict["use_random_focal_length"],
             random_focal_length_seed=self.args_dict.get("random_focal_length_seed"),
         )
-        ray.simulate(test=self.args_dict["test"], force=True)  # force has to be True, always
+        ray.simulate(test=self.args_dict["test"], force=True)
         ray.analyze(force=True)
-        if save_figures:
-            ray.plot("d80_cm", save=True, d80=self.args_dict["psf_measurement_containment_mean"])
-
-        return (
-            ray.get_mean("d80_cm").to(u.cm).value,
-            ray.get_std_dev("d80_cm").to(u.cm).value,
-        )
 
     def print_results(self):
         """Print results to stdout."""
-        containment_fraction_percent = int(self.args_dict["containment_fraction"] * 100)
+        print("\nOptimization Results (RMSD-based):")
+        if hasattr(self, "final_rmsd") and self.final_rmsd is not None:
+            print(f"RMSD (full PSF curve): {self.final_rmsd:.6f}")
 
-        print(f"\nMeasured D{containment_fraction_percent}:")
-        if self.args_dict["psf_measurement_containment_sigma"] is not None:
-            print(
-                f"Mean = {self.args_dict['psf_measurement_containment_mean']:.3f} cm, "
-                f"StdDev = {self.args_dict['psf_measurement_containment_sigma']:.3f} cm"
-            )
-        else:
-            print(f"Mean = {self.args_dict['psf_measurement_containment_mean']:.3f} cm")
-        print(f"\nSimulated D{containment_fraction_percent}:")
-        print(f"Mean = {self.mean_d80:.3f} cm, StdDev = {self.sig_d80:.3f} cm")
-        print("\nmirror_random_reflection_angle")
-        print(f"Previous value = {self.rnda_start:.6f}")
-        print(f"New value = {self.rnda_opt:.6f}\n")
+        print("\nmirror_reflection_random_angle [sigma1, fraction2, sigma2]")
+        print(f"Previous values = {[f'{x:.6f}' for x in self.rnda_start]}")
+        print(f"Optimized values = {[f'{x:.6f}' for x in self.rnda_opt]}\n")
 
     def write_optimization_data(self):
         """
-        Write optimization results to an astropy table (ecsv file).
+        Write optimization results as a JSON model parameter file.
 
-        Used mostly for debugging of the optimization process.
-        The first entry of the table is the best fit result.
+        Writes the optimized mirror_reflection_random_angle parameter.
         """
-        containment_fraction_percent = int(self.args_dict["containment_fraction"] * 100)
+        output_dir = Path(self.args_dict.get("output_path"))
+        best_params = {"mirror_reflection_random_angle": self.rnda_opt}
 
-        result_table = QTable(
-            [
-                [True] + [False] * len(self.results_rnda),
-                [self.rnda_opt, *self.results_rnda] * u.deg,
-                ([0.0] * (len(self.results_rnda) + 1)),
-                ([0.0] * (len(self.results_rnda) + 1)) * u.deg,
-                [self.mean_d80, *self.results_mean] * u.cm,
-                [self.sig_d80, *self.results_sig] * u.cm,
-            ],
-            names=(
-                "best_fit",
-                "mirror_reflection_random_angle_sigma1",
-                "mirror_reflection_random_angle_fraction2",
-                "mirror_reflection_random_angle_sigma2",
-                f"containment_radius_D{containment_fraction_percent}",
-                f"containment_radius_sigma_D{containment_fraction_percent}",
-            ),
-        )
-        writer.ModelDataWriter.dump(
-            args_dict=self.args_dict,
-            metadata=MetadataCollector(args_dict=self.args_dict),
-            product_data=result_table,
+        # Use "0.0.0" as default if parameter_version is not provided
+        parameter_version = self.args_dict.get("parameter_version") or "0.0.0"
+
+        psf_opt.export_psf_parameters(
+            best_pars=best_params,
+            telescope=self.args_dict.get("telescope"),
+            parameter_version=parameter_version,
+            output_dir=output_dir,
         )
