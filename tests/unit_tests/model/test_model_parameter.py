@@ -414,15 +414,15 @@ def test_get_parameter_version(telescope_model_lst):
     assert len(version.split(".")) == 3
 
 
-def test_check_model_parameter_software_versions_no_schema(telescope_model_lst, mocker):
-    """Test _check_model_parameter_software_versions when parameter not in schema."""
+def test_check_model_parameter_versions_no_schema(telescope_model_lst, mocker):
+    """Test _check_model_parameter_versions when parameter not in schema."""
     tel_model = copy.deepcopy(telescope_model_lst)
 
     # Mock names.model_parameters to return empty dict
     mocker.patch("simtools.model.model_parameter.names.model_parameters", return_value={})
 
     # Should not raise any error
-    tel_model._check_model_parameter_software_versions(["num_gains"])
+    tel_model._check_model_parameter_versions(["num_gains"])
 
 
 def test_overwrite_model_parameter_with_parameter_version(telescope_model_lst, mocker):
@@ -515,7 +515,7 @@ def test_overwrite_parameters_with_version_dict(telescope_model_lst):
 
 
 def test_overwrite_parameters_with_simple_value(telescope_model_lst):
-    """Test overwrite_parameters with simple value (not a dict) - line 470."""
+    """Test overwrite_parameters with simple value (not a dict)."""
     tel_model = copy.deepcopy(telescope_model_lst)
 
     # Simple value (not a dict with 'value' or 'version' keys)
@@ -527,7 +527,7 @@ def test_overwrite_parameters_with_simple_value(telescope_model_lst):
 
 
 def test_overwrite_parameters_from_file_with_changes(telescope_model_lst, tmp_path):
-    """Test overwrite_parameters_from_file when changes exist - line 442."""
+    """Test overwrite_parameters_from_file when changes exist."""
     tel_model = copy.deepcopy(telescope_model_lst)
 
     # Create a valid file with changes for this model
@@ -555,7 +555,7 @@ def test_overwrite_parameters_from_file_with_changes(telescope_model_lst, tmp_pa
 def test_check_model_parameter_with_overwrite_file(
     db_config, io_handler, model_version, tmp_path, mocker
 ):
-    """Test _check_model_parameter_software_versions with overwrite_model_parameters - line 349."""
+    """Test _check_model_parameter_versions with overwrite_model_parameters."""
 
     # Create a temporary overwrite file
     overwrite_file = tmp_path / "overwrite.yml"
