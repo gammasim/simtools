@@ -1722,6 +1722,15 @@ def test_optimizer_with_custom_optimize_only(mock_telescope_model, mock_site_mod
     assert optimizer.optimize_only == custom_params
 
 
+def _setup_ray_tracing_mock():
+    """Helper function to set up common RayTracing mock objects."""
+    mock_instance = MagicMock()
+    mock_im = MagicMock()
+    mock_instance.images.return_value = [mock_im]
+    mock_im.get_psf.return_value = {"psf_d80": 0.1}
+    return mock_instance
+
+
 def test_run_ray_tracing_simulation_single_mirror_mode(mock_telescope_model, mock_site_model):
     """Test _run_ray_tracing_simulation in single mirror mode."""
     args_dict = {
@@ -1736,11 +1745,7 @@ def test_run_ray_tracing_simulation_single_mirror_mode(mock_telescope_model, moc
     params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
 
     with patch("simtools.ray_tracing.psf_parameter_optimisation.RayTracing") as mock_rt:
-        mock_instance = MagicMock()
-        mock_im = MagicMock()
-        mock_instance.images.return_value = [mock_im]
-        mock_im.get_psf.return_value = {"psf_d80": 0.1}
-        mock_rt.return_value = mock_instance
+        mock_rt.return_value = _setup_ray_tracing_mock()
 
         result, _ = psf_opt._run_ray_tracing_simulation(
             mock_telescope_model, mock_site_model, args_dict, params
@@ -1749,7 +1754,6 @@ def test_run_ray_tracing_simulation_single_mirror_mode(mock_telescope_model, moc
         assert result == {"psf_d80": 0.1}
         mock_telescope_model.overwrite_parameters.assert_called_once_with(params)
 
-        # Verify RayTracing was called with single mirror mode parameters
         mock_rt.assert_called_once()
         call_kwargs = mock_rt.call_args[1]
         assert call_kwargs["single_mirror_mode"] is True
@@ -1771,11 +1775,7 @@ def test_run_ray_tracing_simulation_full_telescope_mode(mock_telescope_model, mo
     params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
 
     with patch("simtools.ray_tracing.psf_parameter_optimisation.RayTracing") as mock_rt:
-        mock_instance = MagicMock()
-        mock_im = MagicMock()
-        mock_instance.images.return_value = [mock_im]
-        mock_im.get_psf.return_value = {"psf_d80": 0.1}
-        mock_rt.return_value = mock_instance
+        mock_rt.return_value = _setup_ray_tracing_mock()
 
         result, _ = psf_opt._run_ray_tracing_simulation(
             mock_telescope_model, mock_site_model, args_dict, params
@@ -1784,7 +1784,6 @@ def test_run_ray_tracing_simulation_full_telescope_mode(mock_telescope_model, mo
         assert result == {"psf_d80": 0.1}
         mock_telescope_model.overwrite_parameters.assert_called_once_with(params)
 
-        # Verify RayTracing was called with full telescope mode parameters
         mock_rt.assert_called_once()
         call_kwargs = mock_rt.call_args[1]
         assert "zenith_angle" in call_kwargs

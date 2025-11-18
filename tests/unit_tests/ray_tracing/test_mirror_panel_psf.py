@@ -388,15 +388,6 @@ def test_optimize_with_gradient_descent_with_random_focal_length(
             sample_data,
         )
 
-        _setup_mirror_panel_psf_for_gd_test(
-            mock_load,
-            mock_optimizer_class,
-            mock_best_params,
-            final_psf,
-            mock_gd_results,
-            sample_data,
-        )
-
         mirror_psf.optimize_with_gradient_descent()
 
         # Check random focal length settings

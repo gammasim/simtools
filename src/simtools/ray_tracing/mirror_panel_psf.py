@@ -111,10 +111,9 @@ class MirrorPanelPSF:
 
         threshold = self.args_dict.get("threshold")
         learning_rate = self.args_dict.get("learning_rate")
-        epsilon = 0.00005
 
         best_params, _, gd_results = self.gd_optimizer.run_gradient_descent(
-            rmsd_threshold=threshold, learning_rate=learning_rate, epsilon=epsilon
+            rmsd_threshold=threshold, learning_rate=learning_rate
         )
 
         if best_params is None:
