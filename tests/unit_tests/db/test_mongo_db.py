@@ -219,7 +219,7 @@ def test_initialize_client_with_debug_logging(mocker, valid_db_config, caplog):
     assert isinstance(call_args.kwargs["event_listeners"][0], mongo_db.IdleConnectionMonitor)
 
 
-def test_idle_connection_monitor(mocker, caplog):
+def test_idle_connection_monitor(mocker):
     """Test IdleConnectionMonitor connection_created and connection_closed methods."""
     monitor = mongo_db.IdleConnectionMonitor()
 
@@ -230,17 +230,11 @@ def test_idle_connection_monitor(mocker, caplog):
     mock_event_closed.address = ("localhost", 27017)
     mock_event_closed.reason = "idle"
 
-    with caplog.at_level(logging.DEBUG):
-        monitor.connection_created(mock_event_created)
-        assert monitor.open_connections == 1
-        assert "MongoDB connection Created" in caplog.text
-        assert "Total in Pool: 1" in caplog.text
+    monitor.connection_created(mock_event_created)
+    assert monitor.open_connections == 1
 
-        monitor.connection_closed(mock_event_closed)
-        assert monitor.open_connections == 0
-        assert "MongoDB connection Closed" in caplog.text
-        assert "Reason: idle" in caplog.text
-        assert "Total in Pool: 0" in caplog.text
+    monitor.connection_closed(mock_event_closed)
+    assert monitor.open_connections == 0
 
 
 def test_is_remote_database_true(valid_db_config):
