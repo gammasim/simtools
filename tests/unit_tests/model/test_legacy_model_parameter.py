@@ -140,11 +140,11 @@ def test_apply_legacy_updates_to_parameters():
         "param4": {"value": 40},
     }
 
-    result = apply_legacy_updates_to_parameters(parameters, legacy_updates)
+    apply_legacy_updates_to_parameters(parameters, legacy_updates)
 
-    assert result["param1"]["value"] == 100
-    assert "param2" not in result
-    assert result["param3"]["value"] == 30
+    assert parameters["param1"]["value"] == 100
+    assert "param2" not in parameters
+    assert parameters["param3"]["value"] == 30
 
 
 def test_update_flasher_pulse_shape_unsupported_version():
