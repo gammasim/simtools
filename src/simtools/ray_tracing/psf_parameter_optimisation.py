@@ -608,14 +608,18 @@ class PSFParameterOptimizer:
                 logger.info(f"No step accepted, reducing learning rate to {current_lr:.6f}")
                 continue
 
-            # Step was accepted - update state and potentially increase learning rate
+            # Step was accepted - update state
             current_params = step_result.params
             current_metric = step_result.metric
             current_psf_diameter = step_result.psf_diameter
-            current_lr = step_result.learning_rate
 
-            # Increase learning rate after successful step to accelerate convergence
-            current_lr = self._increase_learning_rate(current_lr)
+            # Only increase learning rate if step succeeded without needing retries
+            # (i.e., the returned LR equals the input LR, meaning no reduction occurred)
+            if step_result.learning_rate == current_lr:
+                current_lr = self._increase_learning_rate(current_lr)
+            else:
+                # Step succeeded but needed retries, use the reduced LR from retries
+                current_lr = step_result.learning_rate
 
             results.append(
                 (

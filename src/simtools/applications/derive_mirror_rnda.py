@@ -179,10 +179,11 @@ def main():
 
     # Only write JSON file if optimization converged below threshold
     threshold = app_context.args.get("threshold")
-    if panel_psf.final_rmsd <= threshold:
+    tolerance = 0.0001
+    if panel_psf.final_rmsd <= threshold + tolerance:
         panel_psf.write_optimization_data()
     else:
-        print(
+        app_context.logger.info(
             f"\nSkipping parameter export: "
             f"RMSD {panel_psf.final_rmsd:.6f} > threshold {threshold:.6f}"
         )
