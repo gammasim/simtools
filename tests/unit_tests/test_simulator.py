@@ -179,7 +179,7 @@ def calibration_simulator(
     args_dict["simulation_software"] = "corsika_sim_telarray"
     args_dict["label"] = "test-calibration-shower-array-simulator"
     args_dict["sequential"] = True
-    args_dict["run_mode"] = "nsb_only_pedestals"
+    args_dict["run_mode"] = "pedestals_nsb_only"
 
     patch_simulator_core()
     mock_runner = mocker.patch("simtools.simulator.CorsikaSimtelRunner")
@@ -689,7 +689,7 @@ def test_save_reduced_event_lists_no_output_files(array_simulator, mocker):
 
 
 def test_is_calibration_run():
-    assert Simulator._is_calibration_run("nsb_only_pedestals") is True
+    assert Simulator._is_calibration_run("pedestals_nsb_only") is True
     assert Simulator._is_calibration_run(None) is False
     assert Simulator._is_calibration_run("not_a_calibration_run") is False
 
