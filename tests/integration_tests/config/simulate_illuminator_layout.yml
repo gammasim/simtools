@@ -3,7 +3,7 @@ applications:
 - application: simtools-simulate-illuminator
   configuration:
     light_source: ILLN-01
-    model_version: 7.0
+    model_version: 7.0.0
     output_path: simtools-output
     site: North
     telescope: MSTN-04
