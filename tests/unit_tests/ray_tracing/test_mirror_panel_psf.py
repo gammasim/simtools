@@ -83,6 +83,56 @@ def mock_mirror_panel_psf(
         yield mirror_panel_psf
 
 
+@pytest.fixture
+def mock_gradient_descent_setup():
+    """Factory fixture for common gradient descent setup patches."""
+
+    def _create_patches(best_params=None, final_metric=0.020, gd_results=None, sample_data=None):
+        """Create mock patches for gradient descent optimization tests.
+
+        Parameters
+        ----------
+        best_params : dict, optional
+            Best parameters from optimization
+        final_metric : float, optional
+            Final RMSD metric
+        gd_results : list, optional
+            List of gradient descent results
+        sample_data : np.ndarray, optional
+            Sample PSF data
+
+        Returns
+        -------
+        tuple
+            (best_params, final_psf_diameter, gd_results)
+        """
+        if sample_data is None:
+            sample_data = _create_sample_psf_data()
+
+        if best_params is None:
+            best_params = {"mirror_reflection_random_angle": [0.008, 0.18, 0.025]}
+
+        if gd_results is None:
+            gd_results = [(best_params, final_metric, None, 3.4, sample_data)]
+
+        return best_params, 3.4, gd_results
+
+    return _create_patches
+
+
+def _setup_mirror_panel_psf_for_gd_test(
+    mock_load, mock_optimizer_class, best_params, final_psf, gd_results, sample_data
+):
+    """Helper to set up common mocks for gradient descent tests."""
+    mock_load.return_value = ({"measured": sample_data}, sample_data["Radius [cm]"])
+
+    mock_optimizer = MagicMock()
+    mock_optimizer_class.return_value = mock_optimizer
+    mock_optimizer.run_gradient_descent.return_value = (best_params, final_psf, gd_results)
+
+    return mock_optimizer
+
+
 def test_define_telescope_model(
     mock_args_dict, mock_telescope_model_string, mock_find_file_string, dummy_tel
 ):
@@ -160,13 +210,14 @@ def test_init_with_test_mode(mock_args_dict, mock_telescope_model_string, dummy_
         assert mirror_panel_psf.final_rmsd is None
 
 
-def test_optimize_with_gradient_descent_success(mock_mirror_panel_psf):
+def test_optimize_with_gradient_descent_success(mock_mirror_panel_psf, mock_gradient_descent_setup):
     """Test successful gradient descent optimization."""
     mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
 
-    # Mock data
     sample_data = _create_sample_psf_data()
-    mock_best_params = {"mirror_reflection_random_angle": [0.008, 0.18, 0.025]}
+    mock_best_params, final_psf, mock_gd_results = mock_gradient_descent_setup(
+        sample_data=sample_data
+    )
     mock_gd_results = [
         (mock_best_params, 0.025, None, 3.5, sample_data),
         (mock_best_params, 0.020, None, 3.4, sample_data),
@@ -181,14 +232,13 @@ def test_optimize_with_gradient_descent_success(mock_mirror_panel_psf):
             "simtools.ray_tracing.mirror_panel_psf.plot_psf.create_final_psf_comparison_plot"
         ) as mock_plot,
     ):
-        mock_load.return_value = ({"measured": sample_data}, sample_data["Radius [cm]"])
-
-        mock_optimizer = MagicMock()
-        mock_optimizer_class.return_value = mock_optimizer
-        mock_optimizer.run_gradient_descent.return_value = (
+        mock_optimizer = _setup_mirror_panel_psf_for_gd_test(
+            mock_load,
+            mock_optimizer_class,
             mock_best_params,
-            3.4,
+            final_psf,
             mock_gd_results,
+            sample_data,
         )
 
         mirror_psf.optimize_with_gradient_descent()
@@ -235,15 +285,18 @@ def test_optimize_with_gradient_descent_failure(mock_mirror_panel_psf):
             mirror_psf.optimize_with_gradient_descent()
 
 
-def test_optimize_with_gradient_descent_test_mode(mock_mirror_panel_psf):
+def test_optimize_with_gradient_descent_test_mode(
+    mock_mirror_panel_psf, mock_gradient_descent_setup
+):
     """Test gradient descent uses correct mirror numbers in test mode."""
     mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
     mirror_psf.args_dict["test"] = True
     mirror_psf.args_dict["number_of_mirrors_to_test"] = 10
 
     sample_data = _create_sample_psf_data()
-    mock_best_params = {"mirror_reflection_random_angle": [0.008, 0.18, 0.025]}
-    mock_gd_results = [(mock_best_params, 0.020, None, 3.4, sample_data)]
+    mock_best_params, final_psf, mock_gd_results = mock_gradient_descent_setup(
+        sample_data=sample_data
+    )
 
     with (
         patch("simtools.ray_tracing.mirror_panel_psf.psf_opt.load_and_process_data") as mock_load,
@@ -252,14 +305,13 @@ def test_optimize_with_gradient_descent_test_mode(mock_mirror_panel_psf):
         ) as mock_optimizer_class,
         patch("simtools.ray_tracing.mirror_panel_psf.plot_psf.create_final_psf_comparison_plot"),
     ):
-        mock_load.return_value = ({"measured": sample_data}, sample_data["Radius [cm]"])
-
-        mock_optimizer = MagicMock()
-        mock_optimizer_class.return_value = mock_optimizer
-        mock_optimizer.run_gradient_descent.return_value = (
+        _setup_mirror_panel_psf_for_gd_test(
+            mock_load,
+            mock_optimizer_class,
             mock_best_params,
-            3.4,
+            final_psf,
             mock_gd_results,
+            sample_data,
         )
 
         mirror_psf.optimize_with_gradient_descent()
@@ -271,14 +323,17 @@ def test_optimize_with_gradient_descent_test_mode(mock_mirror_panel_psf):
         assert optimizer_args["mirror_numbers"] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 
-def test_optimize_with_gradient_descent_production_mode(mock_mirror_panel_psf):
+def test_optimize_with_gradient_descent_production_mode(
+    mock_mirror_panel_psf, mock_gradient_descent_setup
+):
     """Test gradient descent uses 'all' mirrors in production mode."""
     mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
     mirror_psf.args_dict["test"] = False
 
     sample_data = _create_sample_psf_data()
-    mock_best_params = {"mirror_reflection_random_angle": [0.008, 0.18, 0.025]}
-    mock_gd_results = [(mock_best_params, 0.020, None, 3.4, sample_data)]
+    mock_best_params, final_psf, mock_gd_results = mock_gradient_descent_setup(
+        sample_data=sample_data
+    )
 
     with (
         patch("simtools.ray_tracing.mirror_panel_psf.psf_opt.load_and_process_data") as mock_load,
@@ -287,14 +342,13 @@ def test_optimize_with_gradient_descent_production_mode(mock_mirror_panel_psf):
         ) as mock_optimizer_class,
         patch("simtools.ray_tracing.mirror_panel_psf.plot_psf.create_final_psf_comparison_plot"),
     ):
-        mock_load.return_value = ({"measured": sample_data}, sample_data["Radius [cm]"])
-
-        mock_optimizer = MagicMock()
-        mock_optimizer_class.return_value = mock_optimizer
-        mock_optimizer.run_gradient_descent.return_value = (
+        _setup_mirror_panel_psf_for_gd_test(
+            mock_load,
+            mock_optimizer_class,
             mock_best_params,
-            3.4,
+            final_psf,
             mock_gd_results,
+            sample_data,
         )
 
         mirror_psf.optimize_with_gradient_descent()
@@ -305,15 +359,18 @@ def test_optimize_with_gradient_descent_production_mode(mock_mirror_panel_psf):
         assert optimizer_args["mirror_numbers"] == "all"
 
 
-def test_optimize_with_gradient_descent_with_random_focal_length(mock_mirror_panel_psf):
+def test_optimize_with_gradient_descent_with_random_focal_length(
+    mock_mirror_panel_psf, mock_gradient_descent_setup
+):
     """Test gradient descent with random focal length settings."""
     mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
     mirror_psf.args_dict["use_random_focal_length"] = True
     mirror_psf.args_dict["random_focal_length_seed"] = 42
 
     sample_data = _create_sample_psf_data()
-    mock_best_params = {"mirror_reflection_random_angle": [0.008, 0.18, 0.025]}
-    mock_gd_results = [(mock_best_params, 0.020, None, 3.4, sample_data)]
+    mock_best_params, final_psf, mock_gd_results = mock_gradient_descent_setup(
+        sample_data=sample_data
+    )
 
     with (
         patch("simtools.ray_tracing.mirror_panel_psf.psf_opt.load_and_process_data") as mock_load,
@@ -322,14 +379,22 @@ def test_optimize_with_gradient_descent_with_random_focal_length(mock_mirror_pan
         ) as mock_optimizer_class,
         patch("simtools.ray_tracing.mirror_panel_psf.plot_psf.create_final_psf_comparison_plot"),
     ):
-        mock_load.return_value = ({"measured": sample_data}, sample_data["Radius [cm]"])
-
-        mock_optimizer = MagicMock()
-        mock_optimizer_class.return_value = mock_optimizer
-        mock_optimizer.run_gradient_descent.return_value = (
+        _setup_mirror_panel_psf_for_gd_test(
+            mock_load,
+            mock_optimizer_class,
             mock_best_params,
-            3.4,
+            final_psf,
             mock_gd_results,
+            sample_data,
+        )
+
+        _setup_mirror_panel_psf_for_gd_test(
+            mock_load,
+            mock_optimizer_class,
+            mock_best_params,
+            final_psf,
+            mock_gd_results,
+            sample_data,
         )
 
         mirror_psf.optimize_with_gradient_descent()
@@ -341,12 +406,14 @@ def test_optimize_with_gradient_descent_with_random_focal_length(mock_mirror_pan
         assert optimizer_args["random_focal_length_seed"] == 42
 
 
-def test_optimize_with_gradient_descent_no_simulated_data(mock_mirror_panel_psf):
+def test_optimize_with_gradient_descent_no_simulated_data(
+    mock_mirror_panel_psf, mock_gradient_descent_setup
+):
     """Test gradient descent when final result has no simulated data."""
     mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
 
     sample_data = _create_sample_psf_data()
-    mock_best_params = {"mirror_reflection_random_angle": [0.008, 0.18, 0.025]}
+    mock_best_params, final_psf, _ = mock_gradient_descent_setup(sample_data=sample_data)
     # Last result has None for simulated data
     mock_gd_results = [(mock_best_params, 0.020, None, 3.4, None)]
 
@@ -359,14 +426,13 @@ def test_optimize_with_gradient_descent_no_simulated_data(mock_mirror_panel_psf)
             "simtools.ray_tracing.mirror_panel_psf.plot_psf.create_final_psf_comparison_plot"
         ) as mock_plot,
     ):
-        mock_load.return_value = ({"measured": sample_data}, sample_data["Radius [cm]"])
-
-        mock_optimizer = MagicMock()
-        mock_optimizer_class.return_value = mock_optimizer
-        mock_optimizer.run_gradient_descent.return_value = (
+        _setup_mirror_panel_psf_for_gd_test(
+            mock_load,
+            mock_optimizer_class,
             mock_best_params,
-            3.4,
+            final_psf,
             mock_gd_results,
+            sample_data,
         )
 
         mirror_psf.optimize_with_gradient_descent()
