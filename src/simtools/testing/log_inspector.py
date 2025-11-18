@@ -17,7 +17,7 @@ ERROR_PATTERNS = [
 
 IGNORE_PATTERNS = [
     re.compile(r"Falling back to 'utf-8' with errors='ignore'", re.IGNORECASE),
-    re.compile(r"Failed to get user name.*getpwuid.*setting it to UNKNOWN_USER", re.IGNORECASE),
+    re.compile(r"Failed to get user name.*setting it to UNKNOWN_USER", re.IGNORECASE),
 ]
 
 
