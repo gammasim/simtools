@@ -14,6 +14,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+UPDATE_HANDLERS = {}
+
+
+def register_update(name):
+    """Register update handler for legacy model parameter."""
+
+    def deco(func):
+        UPDATE_HANDLERS[name] = func
+        return func
+
+    return deco
+
+
 def apply_legacy_updates_to_parameters(parameters, _legacy_updates):
     """Apply legacy updates to model parameters.
 
@@ -55,22 +68,22 @@ def update_parameter(par_name, parameters, schema_version):
 
     Returns
     -------
-    None
+    dict
+        Updated model parameter.
     """
-    try:
-        return globals()[f"_update_{par_name}"](par_name, parameters, schema_version)
-    except KeyError as exc:
-        raise ValueError(
-            _get_unsupported_update_message(parameters[par_name], schema_version)
-        ) from exc
+    handler = UPDATE_HANDLERS.get(par_name)
+    if handler is None:
+        raise ValueError(_get_unsupported_update_message(parameters[par_name], schema_version))
+    return handler(parameters, schema_version)
 
 
-def _update_dsum_threshold(par_name, parameters, schema_version):
+@register_update("dsum_threshold")
+def _update_dsum_threshold(parameters, schema_version):
     """Update legacy dsum_threshold parameter."""
-    para_data = parameters[par_name]
+    para_data = parameters["dsum_threshold"]
     if para_data["model_parameter_schema_version"] == "0.1.0" and schema_version == "0.2.0":
         logger.info(
-            f"Updating legacy model parameter {para_data['parameter']} from schema version "
+            "Updating legacy model parameter dsum_threshold from schema version "
             f"{para_data['model_parameter_schema_version']} to {schema_version}"
         )
         return {
@@ -82,20 +95,22 @@ def _update_dsum_threshold(par_name, parameters, schema_version):
     raise ValueError(_get_unsupported_update_message(para_data, schema_version))
 
 
-def _update_corsika_starting_grammage(par_name, parameters, schema_version):
+@register_update("corsika_starting_grammage")
+def _update_corsika_starting_grammage(parameters, schema_version):
     """Update legacy corsika_starting_grammage parameter (dummy function until model is updated)."""
-    logger.debug("No fix applied to %s to schema version %s", par_name, schema_version)
+    logger.debug(f"No fix applied to corsika_starting_grammage to schema version {schema_version}")
     return {
-        parameters[par_name]["parameter"]: None,
+        parameters["corsika_starting_grammage"]["parameter"]: None,
     }
 
 
-def _update_flasher_pulse_shape(par_name, parameters, schema_version):
+@register_update("flasher_pulse_shape")
+def _update_flasher_pulse_shape(parameters, schema_version):
     """Update legacy flasher_pulse_shape parameter."""
-    para_data = parameters[par_name]
+    para_data = parameters["flasher_pulse_shape"]
     if para_data["model_parameter_schema_version"] == "0.1.0" and schema_version == "0.2.0":
         logger.info(
-            f"Updating legacy model parameter {para_data['parameter']} from schema version "
+            f"Updating legacy model parameter flasher_pulse_shape from schema version "
             f"{para_data['model_parameter_schema_version']} to {schema_version}"
         )
         return {
