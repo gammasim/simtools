@@ -49,7 +49,7 @@ class GradientStepResult:
         Optimization metric value (RMSD or KS statistic), None if step failed.
     p_value : float or None
         P-value from KS test (None if using RMSD or if step failed).
-    simulated_data : numpy.ndarray or None
+    simulated_data : np.ndarray or None
         Simulated PSF data, None if step failed.
     step_accepted : bool
         True if the step improved the metric, False otherwise.
@@ -80,7 +80,7 @@ class PSFParameterOptimizer:
         Dictionary containing simulation configuration arguments.
     data_to_plot : dict
         Dictionary containing measured PSF data under "measured" key.
-    radius : numpy.ndarray
+    radius : np.ndarray
         Radius values in cm for PSF evaluation.
     output_dir : Path
         Directory for saving optimization results and plots.
@@ -932,7 +932,7 @@ def run_psf_simulation(
         Dictionary of parameter values to test in the simulation.
     data_to_plot : dict
         Dictionary containing measured PSF data under "measured" key.
-    radius : numpy.ndarray
+    radius : np.ndarray
         Radius values in cm for PSF evaluation.
     pdf_pages : PdfPages, optional
         PDF pages object for saving plots (default: None).
