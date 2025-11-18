@@ -15,6 +15,19 @@ from simtools.model.telescope_model import TelescopeModel
 logger = logging.getLogger()
 
 
+@pytest.fixture
+def num_gains_dict():
+    """Fixture for num_gains parameter dictionary."""
+    return {
+        "num_gains": {
+            "value": 999,
+            "parameter_version": "2.0.0",
+            "type": "int64",
+            "file": False,
+        }
+    }
+
+
 def test_get_parameter_type(telescope_model_lst, caplog):
     assert telescope_model_lst.get_parameter_type("num_gains") == "int64"
     telescope_model_copy = copy.deepcopy(telescope_model_lst)
@@ -414,7 +427,7 @@ def test_get_parameter_version(telescope_model_lst):
     assert len(version.split(".")) == 3
 
 
-def test_check_model_parameter_versions_no_schema(telescope_model_lst, mocker):
+def test_check_model_parameter_versions_no_schema(telescope_model_lst, mocker, num_gains_dict):
     """Test _check_model_parameter_versions when parameter not in schema."""
     tel_model = copy.deepcopy(telescope_model_lst)
 
@@ -422,23 +435,17 @@ def test_check_model_parameter_versions_no_schema(telescope_model_lst, mocker):
     mocker.patch("simtools.model.model_parameter.names.model_parameters", return_value={})
 
     # Should not raise any error
-    tel_model._check_model_parameter_versions(["num_gains"])
+    tel_model._check_model_parameter_versions(num_gains_dict)
 
 
-def test_overwrite_model_parameter_with_parameter_version(telescope_model_lst, mocker):
+def test_overwrite_model_parameter_with_parameter_version(
+    telescope_model_lst, mocker, num_gains_dict
+):
     """Test overwrite_model_parameter with parameter_version but no value."""
     tel_model = copy.deepcopy(telescope_model_lst)
 
     # Mock get_model_parameter to return parameter dict
-    mock_param_dict = {
-        "num_gains": {
-            "value": 999,
-            "parameter_version": "2.0.0",
-            "type": "int64",
-            "file": False,
-        }
-    }
-    mocker.patch.object(tel_model.db, "get_model_parameter", return_value=mock_param_dict)
+    mocker.patch.object(tel_model.db, "get_model_parameter", return_value=num_gains_dict)
 
     # Call with only parameter_version (no value)
     tel_model.overwrite_model_parameter("num_gains", value=None, parameter_version="2.0.0")
