@@ -56,7 +56,7 @@ def corsika_simtel_runner_calibration(corsika_config_mock_array_model, simtel_pa
         label="test-corsika-simtel-runner",
         use_multipipe=True,
         calibration_config={
-            "run_mode": "nsb_only_pedestals",
+            "run_mode": "pedestals_nsb_only",
             "number_of_events": 500,
             "nsb_scaling_factor": 1.0,
             "stars": "stars.txt",
