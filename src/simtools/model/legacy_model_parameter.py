@@ -27,14 +27,14 @@ def register_update(name):
     return deco
 
 
-def apply_legacy_updates_to_parameters(parameters, _legacy_updates):
+def apply_legacy_updates_to_parameters(parameters, legacy_updates):
     """Apply legacy updates to model parameters.
 
     Parameters
     ----------
     parameters: dict
         Dictionary of model parameters (all parameters).
-    _legacy_updates: dict
+    legacy_updates: dict
         Dictionary of legacy updates to apply.
 
     Returns
@@ -42,7 +42,7 @@ def apply_legacy_updates_to_parameters(parameters, _legacy_updates):
     dict
         Updated model parameters.
     """
-    for par_name, legacy_data in _legacy_updates.items():
+    for par_name, legacy_data in legacy_updates.items():
         if legacy_data is None or par_name not in parameters:
             continue
         for key in parameters[par_name].keys():
