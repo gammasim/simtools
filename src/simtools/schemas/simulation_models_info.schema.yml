@@ -74,6 +74,8 @@ $defs:
           - type: string
           - type: array
           - type: "null"
+      model_parameter_schema_version:
+        $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
     required:
       - version
     additionalProperties: false

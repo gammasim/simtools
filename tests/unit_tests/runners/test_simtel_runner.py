@@ -18,33 +18,6 @@ def simtel_runner(simtel_path, corsika_config_mock_array_model):
     )
 
 
-def test_repr(simtel_runner):
-    assert repr(simtel_runner) == "SimtelRunner(label=test)\n"
-
-
-def test_prepare_run_script(simtel_runner, tmp_test_directory):
-    simtel_runner._base_directory = Path(tmp_test_directory)
-    script_file = simtel_runner.prepare_run_script(
-        test=True, input_file="test", run_number=1, extra_commands=None
-    )
-    assert script_file.exists()
-    with open(script_file) as f:
-        script_content = f.read()
-        assert "/usr/bin/env bash" in script_content
-        assert "RUNTIME" in script_content
-        assert "test-1" in script_content
-
-    simtel_runner.runs_per_set = 5
-    script_file = simtel_runner.prepare_run_script(
-        test=False, input_file="test", run_number=5, extra_commands="extra"
-    )
-    with open(script_file) as f:
-        script_content = f.read()
-        assert "test-5" in script_content
-        assert script_content.count("test-5") == 5
-        assert "extra" in script_content
-
-
 def test_run(simtel_runner, caplog):
     with caplog.at_level(logging.INFO):
         with pytest.raises(SimtelExecutionError):
@@ -108,3 +81,65 @@ def test_get_file_name(simtel_runner):
         ),
         Path,
     )
+
+
+def test_raise_simtel_error_with_log_file(simtel_runner, tmp_path, mocker):
+    log_file = tmp_path / "test.log"
+    log_file.write_text("Line 1\nLine 2\nLine 3\nError occurred\n")
+    simtel_runner._log_file = log_file
+
+    mocker.patch("simtools.utils.general.get_log_excerpt", return_value="Error occurred")
+
+    with pytest.raises(SimtelExecutionError, match=r"Error occurred"):
+        simtel_runner._raise_simtel_error()
+
+
+def test_raise_simtel_error_without_log_file(simtel_runner):
+    if hasattr(simtel_runner, "_log_file"):
+        delattr(simtel_runner, "_log_file")
+
+    with pytest.raises(SimtelExecutionError, match=r"Simtel log file does not exist."):
+        simtel_runner._raise_simtel_error()
+
+
+def test_run_with_runs_per_set(simtel_runner, mocker):
+    mock_make_run_command = mocker.patch.object(
+        simtel_runner, "_make_run_command", return_value=("echo test", None, None)
+    )
+    mock_run_simtel = mocker.patch.object(
+        simtel_runner, "_run_simtel_and_check_output", return_value=0
+    )
+    mock_check_result = mocker.patch.object(simtel_runner, "_check_run_result")
+
+    simtel_runner.runs_per_set = 3
+    simtel_runner.run(test=False, input_file="test_input", run_number=10)
+
+    mock_make_run_command.assert_called_once_with(run_number=10, input_file="test_input")
+    assert mock_run_simtel.call_count == 3
+    mock_check_result.assert_called_once_with(run_number=10)
+
+
+def test_run_with_test_mode(simtel_runner, mocker):
+    mock_make_run_command = mocker.patch.object(
+        simtel_runner, "_make_run_command", return_value=("echo test", None, None)
+    )
+    mock_run_simtel = mocker.patch.object(
+        simtel_runner, "_run_simtel_and_check_output", return_value=0
+    )
+    mock_check_result = mocker.patch.object(simtel_runner, "_check_run_result")
+
+    simtel_runner.run(test=True, input_file="test_input", run_number=7)
+
+    mock_make_run_command.assert_called_once_with(run_number=7, input_file="test_input")
+    mock_run_simtel.assert_called_once_with("echo test", None, None)
+    mock_check_result.assert_called_once_with(run_number=7)
+
+
+def test_run_calls_check_run_result(simtel_runner, mocker):
+    mocker.patch.object(simtel_runner, "_make_run_command", return_value=("echo test", None, None))
+    mocker.patch.object(simtel_runner, "_run_simtel_and_check_output", return_value=0)
+    mock_check_result = mocker.patch.object(simtel_runner, "_check_run_result")
+
+    simtel_runner.run(test=True, input_file="test", run_number=15)
+
+    mock_check_result.assert_called_once_with(run_number=15)

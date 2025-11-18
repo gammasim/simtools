@@ -10,7 +10,7 @@ import gridfs
 import jsonschema
 from astropy.table import Table
 from bson.objectid import ObjectId
-from pymongo import MongoClient
+from pymongo import MongoClient, monitoring
 
 from simtools.io import ascii_handler
 
@@ -57,6 +57,61 @@ jsonschema_db_dict = {
 }
 
 
+class IdleConnectionMonitor(monitoring.ConnectionPoolListener):
+    """
+    A listener to track MongoDB connection pool activity.
+
+    Used to monitor idle connections and log connection events.
+    Switched on in debug mode.
+    """
+
+    def __init__(self):
+        self._logger = logging.getLogger("IdleConnectionMonitor")
+        self.open_connections = 0
+
+    def connection_created(self, event):
+        """Handle connection creation event."""
+        self.open_connections += 1
+        self._logger.debug(
+            f"MongoDB connection Created: {event.address}. Total in Pool: {self.open_connections}"
+        )
+
+    def connection_closed(self, event):
+        """Handle connection closure event."""
+        self.open_connections -= 1
+        self._logger.debug(
+            f"MongoDB connection Closed: {event.address}. Reason: {event.reason}. "
+            f"Total in Pool: {self.open_connections}"
+        )
+
+    def connection_check_out_started(self, event):
+        """Handle connection check out started event."""
+
+    def connection_check_out_failed(self, event):
+        """Handle connection check out failure event."""
+
+    def connection_checked_out(self, event):
+        """Handle connection checked out event."""
+
+    def connection_checked_in(self, event):
+        """Handle connection checked in event."""
+
+    def connection_ready(self, event):
+        """Handle connection ready event."""
+
+    def pool_created(self, event):
+        """Handle connection pool creation event."""
+
+    def pool_ready(self, event):
+        """Handle connection pool ready event."""
+
+    def pool_cleared(self, event):
+        """Handle connection pool cleared event."""
+
+    def pool_closed(self, event):
+        """Handle connection pool closure event."""
+
+
 class MongoDBHandler:  # pylint: disable=unsubscriptable-object
     """
     MongoDBHandler provides low-level interface to MongoDB operations.
@@ -70,19 +125,90 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         Dictionary with the MongoDB configuration (see jsonschema_db_dict for details).
     """
 
-    db_client: MongoClient | None = None
+    db_client: MongoClient = None
     _lock = Lock()
+    _logger = logging.getLogger(__name__)
 
     def __init__(self, db_config=None):
         """Initialize the MongoDBHandler class."""
-        self._logger = logging.getLogger(__name__)
         self.db_config = MongoDBHandler.validate_db_config(db_config)
         self.list_of_collections = {}
 
-        if self.db_config and MongoDBHandler.db_client is None:
-            with MongoDBHandler._lock:
-                if MongoDBHandler.db_client is None:
-                    MongoDBHandler.db_client = self._open_db()
+        if self.db_config:
+            self._initialize_client(self.db_config)
+
+    @classmethod
+    def _initialize_client(cls, db_config):
+        """
+        Initialize the MongoDB client in a thread-safe manner.
+
+        Only initializes if it hasn't been done yet. Uses double-checked locking
+        to ensure thread safety.
+
+        Parameters
+        ----------
+        db_config: dict
+            Dictionary with the MongoDB configuration.
+        """
+        if cls.db_client is not None:
+            return
+        with cls._lock:
+            if cls.db_client is None:
+                try:
+                    uri = cls._build_uri(db_config)
+                    client_kwargs = {"maxIdleTimeMS": 10000}
+
+                    if cls._logger.isEnabledFor(logging.DEBUG):
+                        client_kwargs["event_listeners"] = [IdleConnectionMonitor()]
+
+                    cls.db_client = MongoClient(uri, **client_kwargs)
+                    cls._logger.debug("MongoDB client initialized successfully.")
+                except Exception as e:
+                    cls._logger.error(f"Failed to initialize MongoDB client: {e}")
+                    raise
+
+    @staticmethod
+    def _build_uri(db_config):
+        """
+        Build MongoDB URI from configuration.
+
+        Parameters
+        ----------
+        db_config: dict
+            Dictionary with the MongoDB configuration.
+
+        Returns
+        -------
+        str
+            MongoDB connection URI.
+        """
+        direct_connection = db_config["db_server"] in (
+            "localhost",
+            "simtools-mongodb",
+            "mongodb",
+        )
+        auth_source = (
+            db_config.get("db_api_authentication_database")
+            if db_config.get("db_api_authentication_database")
+            else "admin"
+        )
+
+        username = db_config["db_api_user"]
+        password = db_config["db_api_pw"]
+        server = db_config["db_server"]
+        port = db_config["db_api_port"]
+
+        uri_base = f"mongodb://{username}:{password}@{server}:{port}/"
+        params = [f"authSource={auth_source}"]
+
+        if direct_connection:
+            params.append("directConnection=true")
+        else:
+            params.append("ssl=true")
+            params.append("tlsAllowInvalidHostnames=true")
+            params.append("tlsAllowInvalidCertificates=true")
+
+        return f"{uri_base}?{'&'.join(params)}"
 
     @staticmethod
     def validate_db_config(db_config):
@@ -111,41 +237,6 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
             return db_config
         except jsonschema.exceptions.ValidationError as err:
             raise ValueError("Invalid MongoDB configuration") from err
-
-    def _open_db(self):
-        """
-        Open a connection to MongoDB and return the client.
-
-        Returns
-        -------
-        MongoClient
-            A PyMongo DB client
-
-        Raises
-        ------
-        KeyError
-            If the DB configuration is invalid
-        """
-        direct_connection = self.db_config["db_server"] in (
-            "localhost",
-            "simtools-mongodb",
-            "mongodb",
-        )
-        return MongoClient(
-            self.db_config["db_server"],
-            port=self.db_config["db_api_port"],
-            username=self.db_config["db_api_user"],
-            password=self.db_config["db_api_pw"],
-            authSource=(
-                self.db_config.get("db_api_authentication_database")
-                if self.db_config.get("db_api_authentication_database")
-                else "admin"
-            ),
-            directConnection=direct_connection,
-            ssl=not direct_connection,
-            tlsallowinvalidhostnames=True,
-            tlsallowinvalidcertificates=True,
-        )
 
     @staticmethod
     def get_db_name(db_name=None, db_simulation_model_version=None, model_name=None):

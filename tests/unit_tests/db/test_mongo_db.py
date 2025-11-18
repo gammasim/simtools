@@ -123,50 +123,118 @@ def test_init_with_none_config():
     assert handler.db_config is None
 
 
-def test_open_db_direct_connection(mocker, valid_db_config):
-    """Test _open_db with direct connection."""
+def test_build_uri_direct_connection(valid_db_config):
+    """Test _build_uri with direct connection."""
     valid_db_config["db_server"] = "localhost"
-    handler = mongo_db.MongoDBHandler(valid_db_config)
 
-    mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient", return_value="mock_client")
+    uri = mongo_db.MongoDBHandler._build_uri(valid_db_config)
 
-    client = handler._open_db()
-
-    assert client == "mock_client"
-    mock_mongo_client.assert_called_once_with(
-        "localhost",
-        port=27017,
-        username="test_user",
-        password="test_password",
-        authSource="admin",
-        directConnection=True,
-        ssl=False,
-        tlsallowinvalidhostnames=True,
-        tlsallowinvalidcertificates=True,
-    )
+    assert "mongodb://test_user:test_password@localhost:27017/" in uri
+    assert "authSource=admin" in uri
+    assert "directConnection=true" in uri
+    assert "ssl=" not in uri
 
 
-def test_open_db_remote_connection(mocker, valid_db_config):
-    """Test _open_db with remote connection."""
+def test_build_uri_remote_connection(valid_db_config):
+    """Test _build_uri with remote connection."""
     valid_db_config["db_server"] = "remote.server.com"
-    handler = mongo_db.MongoDBHandler(valid_db_config)
 
-    mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient", return_value="mock_client")
+    uri = mongo_db.MongoDBHandler._build_uri(valid_db_config)
 
-    client = handler._open_db()
+    assert "mongodb://test_user:test_password@remote.server.com:27017/" in uri
+    assert "authSource=admin" in uri
+    assert "ssl=true" in uri
+    assert "tlsAllowInvalidHostnames=true" in uri
+    assert "tlsAllowInvalidCertificates=true" in uri
+    assert "directConnection=true" not in uri
 
-    assert client == "mock_client"
-    mock_mongo_client.assert_called_once_with(
-        "remote.server.com",
-        port=27017,
-        username="test_user",
-        password="test_password",
-        authSource="admin",
-        directConnection=False,
-        ssl=True,
-        tlsallowinvalidhostnames=True,
-        tlsallowinvalidcertificates=True,
-    )
+
+def test_initialize_client(mocker, valid_db_config):
+    """Test _initialize_client method."""
+    mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient")
+    mock_client_instance = mocker.MagicMock()
+    mock_mongo_client.return_value = mock_client_instance
+
+    mongo_db.MongoDBHandler._initialize_client(valid_db_config)
+
+    assert mongo_db.MongoDBHandler.db_client == mock_client_instance
+    mock_mongo_client.assert_called_once()
+    call_args = mock_mongo_client.call_args
+    assert "maxIdleTimeMS" in call_args.kwargs
+    assert call_args.kwargs["maxIdleTimeMS"] == 10000
+
+
+def test_initialize_client_thread_safety(mocker, valid_db_config):
+    """Test that _initialize_client is thread-safe and only creates one client."""
+    mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient")
+    mock_client_instance = mocker.MagicMock()
+    mock_mongo_client.return_value = mock_client_instance
+
+    mongo_db.MongoDBHandler._initialize_client(valid_db_config)
+    first_client = mongo_db.MongoDBHandler.db_client
+
+    mongo_db.MongoDBHandler._initialize_client(valid_db_config)
+    second_client = mongo_db.MongoDBHandler.db_client
+
+    assert first_client is second_client
+    mock_mongo_client.assert_called_once()
+
+
+def test_initialize_client_early_return(mocker, valid_db_config):
+    """Test that _initialize_client returns early if client already exists."""
+    mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient")
+    mock_client_instance = mocker.MagicMock()
+    mock_mongo_client.return_value = mock_client_instance
+
+    mongo_db.MongoDBHandler.db_client = mock_client_instance
+
+    mongo_db.MongoDBHandler._initialize_client(valid_db_config)
+
+    mock_mongo_client.assert_not_called()
+
+
+def test_initialize_client_failure(mocker, valid_db_config, caplog):
+    """Test _initialize_client handles MongoClient initialization failure."""
+    mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient")
+    mock_mongo_client.side_effect = Exception("Connection failed")
+
+    with pytest.raises(Exception, match="Connection failed"):
+        mongo_db.MongoDBHandler._initialize_client(valid_db_config)
+
+    assert "Failed to initialize MongoDB client" in caplog.text
+
+
+def test_initialize_client_with_debug_logging(mocker, valid_db_config, caplog):
+    """Test _initialize_client with DEBUG logging enables IdleConnectionMonitor."""
+    mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient")
+    mock_client_instance = mocker.MagicMock()
+    mock_mongo_client.return_value = mock_client_instance
+
+    with caplog.at_level(logging.DEBUG):
+        mongo_db.MongoDBHandler._initialize_client(valid_db_config)
+
+    call_args = mock_mongo_client.call_args
+    assert "event_listeners" in call_args.kwargs
+    assert len(call_args.kwargs["event_listeners"]) == 1
+    assert isinstance(call_args.kwargs["event_listeners"][0], mongo_db.IdleConnectionMonitor)
+
+
+def test_idle_connection_monitor(mocker):
+    """Test IdleConnectionMonitor connection_created and connection_closed methods."""
+    monitor = mongo_db.IdleConnectionMonitor()
+
+    mock_event_created = mocker.MagicMock()
+    mock_event_created.address = ("localhost", 27017)
+
+    mock_event_closed = mocker.MagicMock()
+    mock_event_closed.address = ("localhost", 27017)
+    mock_event_closed.reason = "idle"
+
+    monitor.connection_created(mock_event_created)
+    assert monitor.open_connections == 1
+
+    monitor.connection_closed(mock_event_closed)
+    assert monitor.open_connections == 0
 
 
 def test_is_remote_database_true(valid_db_config):
