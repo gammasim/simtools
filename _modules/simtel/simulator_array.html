@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=53991ad1"></script>
+    <script src="../../_static/documentation_options.js?v=8dca235f"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g330bb423e" />
+  <meta name="docsearch:version" content="0.1.dev1+g78a347073" />
   </head>
   
   
@@ -602,12 +602,12 @@
                 <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">cfg</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
 
         <span class="n">run_mode</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_mode&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">run_mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;pedestals&quot;</span><span class="p">,</span> <span class="s2">&quot;nsb_only_pedestals&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">run_mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;pedestals&quot;</span><span class="p">,</span> <span class="s2">&quot;pedestals_nsb_only&quot;</span><span class="p">):</span>
             <span class="n">n_events</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;number_of_pedestal_events&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;number_of_events&quot;</span><span class="p">])</span>
             <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;pedestal_events&quot;</span><span class="p">,</span> <span class="n">n_events</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">run_mode</span> <span class="o">==</span> <span class="s2">&quot;nsb_only_pedestals&quot;</span><span class="p">:</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nsb_only_pedestals_command</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">run_mode</span> <span class="o">==</span> <span class="s2">&quot;dark_pedestals&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">run_mode</span> <span class="o">==</span> <span class="s2">&quot;pedestals_nsb_only&quot;</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pedestals_nsb_only_command</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">run_mode</span> <span class="o">==</span> <span class="s2">&quot;pedestals_dark&quot;</span><span class="p">:</span>
             <span class="n">n_events</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;number_of_dark_events&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;number_of_events&quot;</span><span class="p">])</span>
             <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;dark_events&quot;</span><span class="p">,</span> <span class="n">n_events</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">run_mode</span> <span class="o">==</span> <span class="s2">&quot;direct_injection&quot;</span><span class="p">:</span>
@@ -646,7 +646,7 @@
 
         <span class="k">return</span> <span class="n">command</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_nsb_only_pedestals_command</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pedestals_nsb_only_command</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate the command to run sim_telarray for nsb-only pedestal simulations.</span>
 
