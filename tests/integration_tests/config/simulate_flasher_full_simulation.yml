@@ -4,10 +4,10 @@ applications:
   configuration:
     run_mode: full_simulation
     light_source: MSFx-NectarCam
-    model_version: 7.0
+    model_version: 7.0.0
     output_path: simtools-output
-    site: South
-    telescope: MSTS-04
+    site: North
+    telescope: MSTN-04
     test: true
     log_level: DEBUG
   integration_tests:
