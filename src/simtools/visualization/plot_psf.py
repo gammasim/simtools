@@ -6,6 +6,7 @@ including parameter comparison plots, convergence plots, and PSF diameter vs off
 """
 
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -141,22 +142,27 @@ def _create_base_plot_figure(data_to_plot, simulated_data=None):
 
 
 def _build_parameter_title(pars, is_best):
-    """Build parameter title string for plots."""
+    """Build parameter title string for plots, handling optional parameter groups."""
     title_prefix = "* " if is_best else ""
-    return (
-        f"{title_prefix}reflection = "
-        f"{pars['mirror_reflection_random_angle'][0]:.5f}, "
-        f"{pars['mirror_reflection_random_angle'][1]:.5f}, "
-        f"{pars['mirror_reflection_random_angle'][2]:.5f}\n"
-        f"align_vertical = {pars['mirror_align_random_vertical'][0]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][1]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][2]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][3]:.5f}\n"
-        f"align_horizontal = {pars['mirror_align_random_horizontal'][0]:.5f}, "
-        f"{pars['mirror_align_random_horizontal'][1]:.5f}, "
-        f"{pars['mirror_align_random_horizontal'][2]:.5f}, "
-        f"{pars['mirror_align_random_horizontal'][3]:.5f}"
-    )
+    title_lines = []
+
+    if "mirror_reflection_random_angle" in pars:
+        refl = pars["mirror_reflection_random_angle"]
+        title_lines.append(f"reflection = {refl[0]:.5f}, {refl[1]:.5f}, {refl[2]:.5f}")
+
+    if "mirror_align_random_vertical" in pars:
+        vert = pars["mirror_align_random_vertical"]
+        title_lines.append(
+            f"align_vertical = {vert[0]:.5f}, {vert[1]:.5f}, {vert[2]:.5f}, {vert[3]:.5f}"
+        )
+
+    if "mirror_align_random_horizontal" in pars:
+        horiz = pars["mirror_align_random_horizontal"]
+        title_lines.append(
+            f"align_horizontal = {horiz[0]:.5f}, {horiz[1]:.5f}, {horiz[2]:.5f}, {horiz[3]:.5f}"
+        )
+
+    return title_prefix + "\n".join(title_lines)
 
 
 def _add_metric_text_box(ax, metrics_text, is_best):
@@ -773,3 +779,77 @@ def create_optimization_plots(args_dict, gd_results, tel_model, data_to_plot, ou
                 use_ks_statistic=False,
             )
     pdf_pages.close()
+
+
+def create_final_psf_comparison_plot(
+    tel_model, optimized_params, data_to_plot, output_dir, final_rmsd, simulated_data
+):
+    """
+    Create a standalone plot comparing measured vs simulated PSF with optimized parameters.
+
+    This creates a single plot showing the final cumulative PSF comparison,
+    making it easy to visually assess the quality of the fit (RMSD).
+
+    Parameters
+    ----------
+    tel_model : TelescopeModel
+        Telescope model with optimized parameters
+    optimized_params : dict
+        Dictionary of optimized parameter values
+    data_to_plot : dict
+        Measured PSF data
+    output_dir : Path
+        Directory for output files
+    final_rmsd : float
+        Final RMSD value from optimization
+    simulated_data : dict
+        Final simulated PSF data
+
+    Returns
+    -------
+    Path
+        Path to the created plot file
+    """
+    fig, ax = _create_base_plot_figure(data_to_plot, simulated_data)
+
+    title_lines = ["Final Optimized Parameters:"]
+    if "mirror_reflection_random_angle" in optimized_params:
+        refl = optimized_params["mirror_reflection_random_angle"]
+        title_lines.append(
+            f"mirror_reflection_random_angle = [{refl[0]:.6f}, {refl[1]:.6f}, {refl[2]:.6f}]"
+        )
+
+    if "mirror_align_random_vertical" in optimized_params:
+        vert = optimized_params["mirror_align_random_vertical"]
+        title_lines.append(
+            f"mirror_align_random_vertical = "
+            f"[{vert[0]:.6f}, {vert[1]:.6f}, {vert[2]:.6f}, {vert[3]:.6f}]"
+        )
+
+    if "mirror_align_random_horizontal" in optimized_params:
+        horiz = optimized_params["mirror_align_random_horizontal"]
+        title_lines.append(
+            f"mirror_align_random_horizontal = "
+            f"[{horiz[0]:.6f}, {horiz[1]:.6f}, {horiz[2]:.6f}, {horiz[3]:.6f}]"
+        )
+
+    ax.set_title("\n".join(title_lines), fontsize=9, loc="left")
+
+    rmsd_text = f"RMSD = {final_rmsd:.4f} ({final_rmsd * 100:.2f}%)"
+    ax.text(
+        0.98,
+        0.02,
+        rmsd_text,
+        transform=ax.transAxes,
+        fontsize=12,
+        verticalalignment="bottom",
+        horizontalalignment="right",
+        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.8},
+    )
+
+    output_file = Path(output_dir) / f"{tel_model.name}_final_psf_comparison.png"
+    fig.savefig(output_file, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+    logger.info(f"Final PSF comparison plot saved to {output_file}")
+    return output_file
