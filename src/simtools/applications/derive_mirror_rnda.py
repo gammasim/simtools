@@ -36,11 +36,6 @@ r"""
           (3-component: sigma1, fraction2, sigma2)
         * JSON model parameter file (if RMSD converges below threshold)
 
-    This application uses the following software tools:
-
-        - sim_telarray/bin/sim_telarray
-        - sim_telarray/bin/rx (optional)
-
     Command line arguments
     ----------------------
     site (str, required)
