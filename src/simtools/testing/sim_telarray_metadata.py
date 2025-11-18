@@ -4,9 +4,9 @@ import logging
 
 import numpy as np
 
+from simtools.io.eventio_handler import get_corsika_run_number
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 from simtools.simtel.simtel_config_writer import sim_telarray_random_seeds
-from simtools.simtel.simtel_io_file_info import get_corsika_run_number
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id,
     read_sim_telarray_metadata,

@@ -132,6 +132,14 @@ def args_dict_site(tmp_test_directory, simtel_path, data_path):
     )
 
 
+@pytest.fixture(scope="session", autouse=True)
+def mongo_db_logger_settings():
+    """Suppress MongoDB 'IdleConnectionMonitor' DEBUG logs during tests."""
+    monitor_logger = logging.getLogger("IdleConnectionMonitor")
+    monitor_logger.setLevel(logging.INFO)
+    logger.info("[TEST SETUP] Suppressing MongoDB 'IdleConnectionMonitor' DEBUG logs.")
+
+
 @pytest.fixture
 def db_config():
     """DB configuration from .env file."""
@@ -363,7 +371,10 @@ def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data, 
     array_model.layout_name = "test_layout"
     array_model.corsika_config.primary = "proton"
     array_model.site_model = mock.MagicMock()
-    array_model.site_model._parameters = {"geomag_rotation": -4.533}
+    array_model.site_model._parameters = {
+        "geomag_rotation": -4.533,
+        "corsika_observation_level": 2200.0,
+    }
     array_model.model_version = model_version
 
     # Define get_parameter_value() to behave as expected
@@ -478,6 +489,15 @@ def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
         },
         db_config=db_config,
         label="validate_camera_efficiency",
+    )
+
+
+@pytest.fixture
+def corsika_file_gamma():
+    """Gamma corsika file for testing."""
+    return (
+        "tests/resources/"
+        "gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst"
     )
 
 

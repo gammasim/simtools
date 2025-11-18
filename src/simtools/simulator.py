@@ -10,17 +10,16 @@ from pathlib import Path
 import numpy as np
 from astropy import units as u
 
-import simtools.utils.general as gen
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.io import io_handler, table_handler
+from simtools.io import eventio_handler, io_handler, table_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
-from simtools.simtel.simtel_io_file_info import get_simulated_events
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
+from simtools.utils import general, names
 from simtools.version import semver_to_int
 
 
@@ -60,6 +59,8 @@ class Simulator:
 
         self.args_dict = args_dict
         self.db_config = db_config
+        self.site = self.args_dict.get("site", None)
+        self.model_version = self.args_dict.get("model_version", None)
 
         self.simulation_software = self.args_dict.get("simulation_software", "corsika_sim_telarray")
         self.logger.debug(f"Init Simulator {self.simulation_software}")
@@ -67,21 +68,13 @@ class Simulator:
 
         self.io_handler = io_handler.IOHandler()
 
-        self.run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
-            "run_number", 1
-        )
+        self.run_number = None
         self._results = defaultdict(list)
-        self._test = self.args_dict.get("test", False)
+        self._test = None
         self._extra_commands = extra_commands
-
-        self.sim_telarray_seeds = {
-            "seed": self.args_dict.get("sim_telarray_instrument_seeds"),
-            "random_instrument_instances": self.args_dict.get(
-                "sim_telarray_random_instrument_instances"
-            ),
-            "seed_file_name": "sim_telarray_instrument_seeds.txt",  # name only; no directory
-        }
-        self.array_models = self._initialize_array_models()
+        self.sim_telarray_seeds = None
+        self._initialize_from_tool_configuration()
+        self.array_models, self.corsika_configurations = self._initialize_array_models()
         self._simulation_runner = self._initialize_simulation_runner()
 
     @property
@@ -109,43 +102,85 @@ class Simulator:
             raise ValueError(f"Invalid simulation software: {simulation_software}")
         self._simulation_software = simulation_software.lower()
 
+    def _initialize_from_tool_configuration(self):
+        """Initialize simulator from tool configuration."""
+        self._test = self.args_dict.get("test", False)
+        self.sim_telarray_seeds = {
+            "seed": self.args_dict.get("sim_telarray_instrument_seeds"),
+            "random_instrument_instances": self.args_dict.get(
+                "sim_telarray_random_instrument_instances"
+            ),
+            "seed_file_name": "sim_telarray_instrument_seeds.txt",  # name only; no directory
+        }
+
+        if self.args_dict.get("corsika_file"):
+            self.run_number = eventio_handler.get_corsika_run_number(self.args_dict["corsika_file"])
+        else:
+            self.run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
+                "run_number", 1
+            )
+
     def _initialize_array_models(self):
         """
-        Initialize array simulation models (one per model version).
+        Initialize array simulation models and CORSIKA config (one per model version).
 
         Returns
         -------
         list
             List of ArrayModel objects.
         """
-        versions = gen.ensure_iterable(self.args_dict.get("model_version", []))
+        versions = general.ensure_iterable(self.model_version)
 
-        return [
-            ArrayModel(
-                label=self.label,
-                site=self.args_dict.get("site"),
-                layout_name=self.args_dict.get("array_layout_name"),
-                db_config=self.db_config,
-                model_version=version,
-                sim_telarray_seeds={
-                    "seed": self._get_seed_for_random_instrument_instances(
-                        self.sim_telarray_seeds["seed"], version
-                    ),
-                    "random_instrument_instances": self.sim_telarray_seeds[
-                        "random_instrument_instances"
-                    ],
-                    "seed_file_name": self.sim_telarray_seeds["seed_file_name"],
-                },
-                simtel_path=self.args_dict.get("simtel_path", None),
-                calibration_device_types=self._get_calibration_device_types(
-                    self.args_dict.get("run_mode")
-                ),
-                overwrite_model_parameters=self.args_dict.get("overwrite_model_parameters", None),
+        array_model = []
+        corsika_configurations = []
+
+        for version in versions:
+            array_model.append(
+                ArrayModel(
+                    label=self.label,
+                    site=self.site,
+                    layout_name=self.args_dict.get("array_layout_name"),
+                    db_config=self.db_config,
+                    model_version=version,
+                    calibration_device_types=self._get_calibration_device_types(self.run_mode),
+                    overwrite_model_parameters=self.args_dict.get("overwrite_model_parameters"),
+                    simtel_path=self.args_dict.get("simtel_path"),
+                )
             )
-            for version in versions
-        ]
+            corsika_configurations.append(
+                CorsikaConfig(
+                    array_model=array_model[-1],
+                    label=self.label,
+                    args_dict=self.args_dict,
+                    db_config=self.db_config,
+                    dummy_simulations=self._is_calibration_run(self.run_mode),
+                )
+            )
+            array_model[-1].sim_telarray_seeds = {
+                "seed": self._get_seed_for_random_instrument_instances(
+                    self.sim_telarray_seeds["seed"],
+                    version,
+                    corsika_configurations[-1].zenith_angle,
+                    corsika_configurations[-1].azimuth_angle,
+                ),
+                "random_instrument_instances": self.sim_telarray_seeds[
+                    "random_instrument_instances"
+                ],
+                "seed_file_name": self.sim_telarray_seeds["seed_file_name"],
+            }
 
-    def _get_seed_for_random_instrument_instances(self, seed, model_version):
+        #  'corsika_sim_telarray' allows for multiple model versions (multipipe option)
+        corsika_configurations = (
+            corsika_configurations
+            if self.simulation_software == "corsika_sim_telarray"
+            else corsika_configurations[0]
+        )
+
+        return array_model, corsika_configurations
+
+    def _get_seed_for_random_instrument_instances(
+        self, seed, model_version, zenith_angle, azimuth_angle
+    ):
         """
         Generate seed for random instances of the instrument.
 
@@ -155,6 +190,10 @@ class Simulator:
             Seed string given through configuration.
         model_version: str
             Model version.
+        zenith_angle: float
+            Zenith angle of the observation (in degrees).
+        azimuth_angle: float
+            Azimuth angle of the observation (in degrees).
 
         Returns
         -------
@@ -164,39 +203,16 @@ class Simulator:
         if seed:
             return int(seed.split(",")[0].strip())
 
+        def key_index(key):
+            try:
+                return list(names.site_names()).index(key) + 1
+            except ValueError:
+                return 1
+
         seed = semver_to_int(model_version) * 10000000
-        seed = seed + 1000000 if self.args_dict.get("site") != "North" else seed + 2000000
-        seed = seed + (int)(self.args_dict.get("zenith_angle", 0.0 * u.deg).value) * 1000
-        return seed + (int)(self.args_dict.get("azimuth_angle", 0.0 * u.deg).value)
-
-    def _corsika_configuration(self):
-        """
-        Define CORSIKA configurations based on the simulation model.
-
-        For 'corsika_sim_telarray', this is a list since multiple configurations
-        might be defined to run in a single job using multipipe.
-
-        Returns
-        -------
-        CorsikaConfig or list of CorsikaConfig
-            CORSIKA configuration(s) based on the simulation model.
-        """
-        corsika_configurations = []
-        for array_model in self.array_models:
-            corsika_configurations.append(
-                CorsikaConfig(
-                    array_model=array_model,
-                    label=self.label,
-                    args_dict=self.args_dict,
-                    db_config=self.db_config,
-                    dummy_simulations=self._is_calibration_run(self.run_mode),
-                )
-            )
-        return (
-            corsika_configurations
-            if self.simulation_software == "corsika_sim_telarray"
-            else corsika_configurations[0]
-        )
+        seed = seed + key_index(self.site) * 1000000
+        seed = seed + (int)(zenith_angle) * 1000
+        return seed + (int)(azimuth_angle)
 
     def _initialize_simulation_runner(self):
         """
@@ -207,8 +223,6 @@ class Simulator:
         CorsikaRunner or SimulatorArray or CorsikaSimtelRunner
             Simulation runner object.
         """
-        corsika_configurations = self._corsika_configuration()
-
         runner_class = {
             "corsika": CorsikaRunner,
             "sim_telarray": SimulatorArray,
@@ -217,7 +231,7 @@ class Simulator:
 
         runner_args = {
             "label": self.label,
-            "corsika_config": corsika_configurations,
+            "corsika_config": self.corsika_configurations,
             "simtel_path": self.args_dict.get("simtel_path"),
             "use_multipipe": runner_class is CorsikaSimtelRunner,
         }
@@ -245,7 +259,9 @@ class Simulator:
         run script to the job manager. Collects generated files.
         """
         run_script = self._simulation_runner.prepare_run_script(
-            run_number=self.run_number, input_file=None, extra_commands=self._extra_commands
+            run_number=self.run_number,
+            input_file=self._get_corsika_file(),
+            extra_commands=self._extra_commands,
         )
 
         job_manager = JobManager(test=self._test)
@@ -261,31 +277,18 @@ class Simulator:
 
         self._fill_list_of_generated_files()
 
-    def _guess_run_from_file(self, file):
+    def _get_corsika_file(self):
         """
-        Extract the run number from the given file name.
-
-        Input file names can follow any pattern with the
-        string 'run' followed by the run number.
-
-        Parameters
-        ----------
-        file: Path
-            Simulation file name
+        Get the CORSIKA input file if applicable (for sim_telarray simulations).
 
         Returns
         -------
-        int
-            The extracted run number. If extraction fails, returns 1 and logs a warning.
+        Path, None
+            Path to the CORSIKA input file.
         """
-        file_name = str(Path(file).name)
-
-        try:
-            run_str = re.search(r"run\d*", file_name).group()
-            return int(run_str[3:])
-        except (ValueError, AttributeError):
-            self.logger.warning(f"Run number could not be guessed from {file_name} using run = 1")
-            return 1
+        if self.simulation_software == "sim_telarray":
+            return self.args_dict.get("corsika_file", None)
+        return None
 
     def _fill_list_of_generated_files(self):
         """Fill a dictionary with lists of generated files."""
@@ -401,11 +404,12 @@ class Simulator:
             Single file or list of files of shower simulations.
 
         """
+        _corsika_config = self._get_first_corsika_config()
         self.logger.info(
-            f"Production run complete for primary {self.args_dict['primary']} showers "
-            f"from {self.args_dict['azimuth_angle']} azimuth and "
-            f"{self.args_dict['zenith_angle']} zenith "
-            f"at {self.args_dict['site']} site, using {self.args_dict['model_version']} model."
+            f"Production run complete for primary {_corsika_config.primary_particle} showers "
+            f"from {_corsika_config.azimuth_angle} azimuth and "
+            f"{_corsika_config.zenith_angle} zenith "
+            f"at {self.site} site, using {self.model_version} model."
         )
         self.logger.info(
             f"Computing for {self.simulation_software} Simulations: "
@@ -488,7 +492,7 @@ class Simulator:
         # Group files by model version
         for model in self.array_models:
             model_version = model.model_version
-            model_files = gen.ensure_iterable(model.pack_model_files())
+            model_files = general.ensure_iterable(model.pack_model_files())
 
             # Filter files for this model version
             model_logs = [f for f in log_files if model_version in f]
@@ -500,7 +504,7 @@ class Simulator:
                 tar_file_path = directory_for_grid_upload.joinpath(tar_file_name)
                 # Add all relevant model, log, histogram, and CORSIKA log files to the tarball
                 files_to_tar = model_logs + model_hists + model_corsika_logs + model_files
-                gen.pack_tar_file(tar_file_path, files_to_tar)
+                general.pack_tar_file(tar_file_path, files_to_tar)
 
         for file_to_move in output_files + reduced_event_files:
             source_file = Path(file_to_move)
@@ -594,8 +598,8 @@ class Simulator:
         """
         return run_mode in [
             "pedestals",
-            "dark_pedestals",
-            "nsb_only_pedestals",
+            "pedestals_dark",
+            "pedestals_nsb_only",
             "direct_injection",
         ]
 
@@ -618,6 +622,27 @@ class Simulator:
             return ["flat_fielding"]
         return []
 
+    def _get_first_corsika_config(self):
+        """
+        Return first instance from list of CORSIKA configurations.
+
+        Most values stored in the CORSIKA configurations are identical,
+        with the exception of the simulation model version dependent parameters.
+
+        Returns
+        -------
+        CorsikaConfig
+            First CORSIKA configuration instance.
+        """
+        try:
+            return (
+                self.corsika_configurations[0]
+                if isinstance(self.corsika_configurations, list)
+                else self.corsika_configurations
+            )
+        except (IndexError, TypeError) as exc:
+            raise ValueError("CORSIKA configuration not found for verification.") from exc
+
     def verify_simulations(self):
         """
         Verify simulations.
@@ -627,15 +652,14 @@ class Simulator:
         """
         self.logger.info("Verifying simulations.")
 
-        expected_shower_events = self.args_dict.get("nshow", 0)
-        # core scatter is a list: first element is the usage factor
-        expected_mc_events = expected_shower_events * self.args_dict.get("core_scatter", [0])[0]
+        _corsika_config = self._get_first_corsika_config()
+        expected_shower_events = _corsika_config.shower_events
+        expected_mc_events = _corsika_config.mc_events
 
         self.logger.info(
             f"Expected number of shower events: {expected_shower_events}, "
             f"expected number of MC events: {expected_mc_events}"
         )
-
         if self.simulation_software in ["corsika_sim_telarray", "sim_telarray"]:
             self._verify_simulated_events_in_sim_telarray(
                 expected_shower_events, expected_mc_events
@@ -667,7 +691,7 @@ class Simulator:
 
         event_errors = []
         for file in self.get_file_list(file_type="corsika_output"):
-            _, _, shower_events = get_simulated_events(file)
+            shower_events, _ = eventio_handler.get_simulated_events(file)
 
             if shower_events != expected_mc_events:
                 if consistent(shower_events, expected_mc_events, tol=tolerance):
@@ -712,7 +736,7 @@ class Simulator:
         """
         event_errors = []
         for file in self.get_file_list(file_type="simtel_output"):
-            shower_events, mc_events, _ = get_simulated_events(file)
+            shower_events, mc_events = eventio_handler.get_simulated_events(file)
 
             if (shower_events, mc_events) != (expected_shower_events, expected_mc_events):
                 event_errors.append(
