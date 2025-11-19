@@ -1,8 +1,11 @@
 # syntax=docker/dockerfile:1.4
-# Dockerfile for base CORSIKA7
+# Dockerfile for CORSIKA7
 #
-# Contains CORSIKA (possibly optimized; with and without curved atmosphere)
+# Contains different versions of CORSIKA (possibly optimized; with and without curved atmosphere)
 #
+# Pending tasks:
+# - use almalinux:10 to replace autorecon 2.71 installation
+# - updates to iact code?
 
 # Shared build arguments
 ARG CORSIKA_VERSION="78010"
@@ -10,8 +13,6 @@ ARG CORSIKA_OPT_PATCH_VERSION="v1.1.0"
 ARG HADRONIC_MODEL="qgs3"
 ARG HADRONIC_MODEL_LE="urqmd"
 ARG AVX_FLAG="avx2"
-ARG BERNLOHR_VERSION="1.70"
-ARG AUTOCONF_VERSION="2.71"
 
 # hadolint global ignore=DL3013,DL3033,DL3041,SC1091
 # - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)
@@ -21,22 +22,17 @@ ARG AUTOCONF_VERSION="2.71"
 # STAGE 1: source_preparation
 # Centralizes all source code preparation and extraction.
 # -----------------------------------------------------------------------------
-FROM almalinux:9.5 AS source_preparation
+FROM almalinux:9.5-minimal AS source_preparation
 ARG CORSIKA_VERSION
 ARG CORSIKA_REPO="gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git"
 ARG CORSIKA_OPT_PATCH_VERSION
 ARG CORSIKA_OPT_PATCH_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git"
 ARG CORSIKA_CONFIG_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git"
-ARG BERNLOHR_VERSION
-ARG AUTOCONF_VERSION
-ARG HADRONIC_MODEL
 
-RUN yum update -y --setopt=tsflags=nodocs && \
-    yum install -y git && \
-    yum clean all
+RUN microdnf update -y && microdnf install -y git && \
+    microdnf clean all
 
 WORKDIR /src
-ENV CORSIKA_DIR="corsika7"
 
 # Clone CORSIKA configuration files from CTAO gitlab
 RUN git config --global advice.detachedHead false && \
@@ -54,21 +50,20 @@ RUN --mount=type=secret,id=corsika7_token \
 RUN --mount=type=secret,id=opt_patches_token \
     git config --global advice.detachedHead false && \
     git clone --depth 1 --branch "${CORSIKA_OPT_PATCH_VERSION}" "https://${CORSIKA_OPT_PATCH_REPO}" && \
-    cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/* ${CORSIKA_DIR}/ && \
+    cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/* corsika7/ && \
     rm -rf corsika-opt-patches
+
+ADD autoconf.tar.gz .
+RUN mv autoconf-2.71 ./autoconf
 
 # -----------------------------------------------------------------------------
 # STAGE 2: build_image
-# Installs necessary build dependencies and performs the compilation.
 # -----------------------------------------------------------------------------
 FROM almalinux:9.5 AS build_image
 ARG HADRONIC_MODEL
 ARG HADRONIC_MODEL_LE
 ARG AVX_FLAG
 ARG CORSIKA_VERSION
-ARG BERNLOHR_VERSION
-ARG CORSIKA_OPT_PATCH_VERSION
-ARG AUTOCONF_VERSION
 ARG C_SPECIFIC_FLAGS="-std=c99"
 ARG FORTRAN_SPECIFIC_FLAGS="-ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy"
 
@@ -77,11 +72,18 @@ ENV CORSIKA_DIR="corsika7"
 
 RUN yum update -y --setopt=tsflags=nodocs && \
     yum install -y \
-    autoconf271 automake diffutils csh gcc gcc-c++ gcc-fortran libtool m4 patch && \
+    automake diffutils csh gcc gcc-c++ gcc-fortran libtool m4 patch && \
     yum clean all
 
 WORKDIR /workdir/simulation_software
 COPY --from=source_preparation /src .
+
+# autoconf 2.71 required to re-generate the configure script after applying patches
+WORKDIR /workdir/simulation_software/autoconf
+RUN ./configure --prefix=/usr && \
+    make && make install && \
+    rm -rf /workdir/simulation_software/autoconf
+
 WORKDIR /workdir/simulation_software/${CORSIKA_DIR}
 
 # Apply patches for non-optimized / optimized CORSIKA
@@ -95,9 +97,9 @@ RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
 
 # Build non-optimized / optimized CORSIKA
 RUN for variant in curved flat; do \
-        ./coconut -d && rm -f ./*/*.a lib/*/*.a included/* && \
+        ./coconut -d && rm -f ./*/*.a lib/*/*.a include/*.h && \
         # CTAO specific CORSIKA configuration
-        cp -v ../config_${CORSIKA_VERSION}_${HADRONIC_MODEL_LE}_${HADRONIC_MODEL}_${variant}.h include/config.h; \
+        cp -v ../config_${HADRONIC_MODEL}_${HADRONIC_MODEL_LE}_${variant}.h include/config.h; \
         # compilation flags (with or without optimization)
         AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
         if [ "$AVX_FLAG" = "no_opt" ] || [ "$variant" = "curved" ]; then \
@@ -112,7 +114,8 @@ RUN for variant in curved flat; do \
         FFLAGS="${BASE_FLAGS} ${FORTRAN_SPECIFIC_FLAGS}" \
         # compile using the coconut script
         CORSIKA_USER_COMP=1 ./coconut --expert --without-root --without-COASTUSERLIB --without-conex < /dev/null; \
-        # move built corsika binary and compile file to a separate directory
+        # cleanup and move built corsika binary and compile file to a separate directory
+        rm -f ./run/qgsdat-II-04 && \
         CORSIKA_RUN_DIR="/workdir/corsika-run" && \
         mkdir -p ${CORSIKA_RUN_DIR} && \
         mv -v -f "./run/corsika${CORSIKA_VERSION}Linux_"* "${CORSIKA_RUN_DIR}/corsika-$variant" && \
@@ -127,7 +130,8 @@ WORKDIR /workdir/simulation_software
 COPY --from=build_image /workdir/corsika-run /workdir/simulation_software/corsika
 
 RUN microdnf update -y && microdnf install -y \
-    gcc-fortran && \
+#    gcc-fortran && \
+    libgfortran libquadmath && \
     microdnf clean all
 
 WORKDIR /workdir/simulation_software/corsika
