@@ -186,7 +186,8 @@ def _read_production_tables(model_path):
     models = [model_path.name]
     if (model_path / "info.yml").exists():
         info = ascii_handler.collect_data_from_file(file_name=model_path / "info.yml")
-        models.extend(info.get("model_version_history", []))
+        if info.get("model_update") == "patch_update":
+            models.extend(info.get("model_version_history", []))
     # sort oldest --> newest
     models = sorted(set(models), key=Version, reverse=False)
     for model in models:
