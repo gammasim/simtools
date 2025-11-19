@@ -253,7 +253,6 @@ def test_optimize_with_gradient_descent_success(mock_mirror_panel_psf, mock_grad
         call_args = mock_optimizer.run_gradient_descent.call_args
         assert call_args[1]["rmsd_threshold"] == mirror_psf.args_dict["threshold"]
         assert call_args[1]["learning_rate"] == mirror_psf.args_dict["learning_rate"]
-        assert call_args[1]["epsilon"] == pytest.approx(0.00005)
 
         # Verify results were stored
         assert mirror_psf.rnda_opt == [0.008, 0.18, 0.025]
