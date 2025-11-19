@@ -208,6 +208,11 @@ def test_serialize_quantity(grid_gen, caplog):
     assert str(type(value)) in caplog.text
 
 
+@pytest.mark.xfail(
+    reason="May fail due to IERS data download timeout",
+    raises=(TimeoutError, ConnectionError),
+    strict=False,
+)
 def test_convert_altaz_to_radec_and_coordinates(grid_gen):
     # Case 1: Valid AltAz to RA/Dec conversion
     alt, az = 45.0 * u.deg, 30.0 * u.deg
