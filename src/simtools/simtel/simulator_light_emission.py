@@ -501,8 +501,11 @@ class SimulatorLightEmission(SimtelRunner):
         )
         return focal_length - flasher_z
 
-    def _generate_lambertian_angular_distribution_table(self, width):
-        """Generate Lambertian angular distribution table via config writer and return path."""
+    def _generate_lambertian_angular_distribution_table(self):
+        """Generate Lambertian angular distribution table via config writer and return path.
+
+        Uses a pure cosine profile normalized to 1 at 0 deg and spans 0..90 deg by default.
+        """
         base_dir = self.io_handler.get_output_directory("angular_distributions")
 
         def _sanitize_name(value):
@@ -512,9 +515,10 @@ class SimulatorLightEmission(SimtelRunner):
         cal = self.light_emission_config.get("light_source") or "calibration"
         fname = f"flasher_angular_distribution_{_sanitize_name(tel)}_{_sanitize_name(cal)}.dat"
         table_path = base_dir / fname
-        max_angle_deg = float(width.to(u.deg).value)
         SimtelConfigWriter.write_angular_distribution_table_lambertian(
-            file_path=table_path, max_angle_deg=max_angle_deg, n_samples=100
+            file_path=table_path,
+            max_angle_deg=90.0,
+            n_samples=100,
         )
         return str(table_path)
 
@@ -529,20 +533,19 @@ class SimulatorLightEmission(SimtelRunner):
         """
         opt = self.calibration_model.get_parameter_value("flasher_angular_distribution")
         option_string = str(opt).lower() if opt is not None else ""
+        if option_string == "lambertian":
+            try:
+                return self._generate_lambertian_angular_distribution_table()
+            except (OSError, ValueError) as err:
+                self._logger.warning(
+                    f"Failed to write Lambertian angular distribution table: {err};"
+                    f" using token instead."
+                )
+                return option_string
+
         width = self.calibration_model.get_parameter_value_with_unit(
             "flasher_angular_distribution_width"
         )
-
-        # if option_string and width is not None:
-        if option_string == "Lambertian" and width is not None:
-            try:
-                return self._generate_lambertian_angular_distribution_table(width)
-            except (OSError, ValueError) as err:
-                self._logger.warning(
-                    f"Failed to write Lambertian angular distribution table: {err}; "
-                    f"using token instead."
-                )
-
         return f"{option_string}:{width.to(u.deg).value}" if width is not None else option_string
 
     def _get_pulse_shape_string_for_sim_telarray(self):
