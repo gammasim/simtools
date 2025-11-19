@@ -15,8 +15,6 @@ applications:
   - test_output_files:
     - file: LSTN-01_final_psf_comparison.png
       path_descriptor: output_path
-    - file: LSTN-01/mirror_reflection_random_angle-0.0.0.json
-      path_descriptor: output_path
   test_name: psf_random_flen
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
