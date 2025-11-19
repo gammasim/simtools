@@ -15,7 +15,10 @@ ERROR_PATTERNS = [
     re.compile(r"segmentation fault", re.IGNORECASE),
 ]
 
-IGNORE_PATTERNS = [re.compile(r"Falling back to 'utf-8' with errors='ignore'", re.IGNORECASE)]
+IGNORE_PATTERNS = [
+    re.compile(r"Falling back to 'utf-8' with errors='ignore'", re.IGNORECASE),
+    re.compile(r"Failed to get user name[^\n]*setting it to UNKNOWN_USER", re.IGNORECASE),
+]
 
 
 def inspect(log_text):
