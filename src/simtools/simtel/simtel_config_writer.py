@@ -198,7 +198,7 @@ class SimtelConfigWriter:
         max_angle_deg,
         n_samples=100,
     ):
-        """Write a Lambertian angular distribution table (I(θ) ~ cos θ).
+        """Write a Lambertian angular distribution table (I(t) ~ cos(t)).
 
         Parameters
         ----------
