@@ -1,18 +1,19 @@
 ---
 applications:
-- application: simtools-simulate-illuminator
+- application: simtools-simulate-flasher
   configuration:
-    light_source: ILLN-01
-    model_version: 7.0.0
+    run_mode: full_simulation
+    light_source: MSFx-FlashCam
+    model_version: 6.0.2
     output_path: simtools-output
-    site: North
-    telescope: MSTN-04
+    site: South
+    telescope: MSTS-04
     test: true
     log_level: DEBUG
   integration_tests:
   - output_file: logfile.log
-  - output_file: xyzls.simtel.zst
+  - output_file: ff-1m.simtel.zst
   model_version_use_current: true
-  test_name: run-layout
+  test_name: full-simulation-msfx-flashcam
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
