@@ -1,0 +1,1190 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>visualization.visualize &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=d8dd0411"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/visualization/visualize';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.25.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">visualization.visualize</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for visualization.visualize</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="sd">&quot;&quot;&quot;Module for visualization.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">QTable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cycler</span><span class="w"> </span><span class="kn">import</span> <span class="n">cycler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">gridspec</span>
+
+<span class="n">COLORS</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">COLORS</span><span class="p">[</span><span class="s2">&quot;classic&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;#ba2c54&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#5B90DC&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#FFAB44&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#0C9FB3&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#57271B&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#3B507D&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#794D88&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#FD6989&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#8A978E&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#3B507D&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#D8153C&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#cc9214&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">COLORS</span><span class="p">[</span><span class="s2">&quot;modified classic&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;#D6088F&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#424D9C&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#178084&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#AF99DA&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#F58D46&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#634B5B&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#0C9FB3&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#7C438A&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#328cd6&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#8D0F25&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#8A978E&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#ffcb3d&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">COLORS</span><span class="p">[</span><span class="s2">&quot;autumn&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;#A9434D&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#4E615D&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#3C8DAB&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#A4657A&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#424D9C&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#DC575A&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#1D2D38&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#634B5B&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#56276D&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#577580&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#134663&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#196096&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">COLORS</span><span class="p">[</span><span class="s2">&quot;purples&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;#a57bb7&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#343D80&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#EA60BF&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#B7308E&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#E099C3&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#7C438A&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#AF99DA&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#4D428E&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#56276D&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#CC4B93&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#DC4E76&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#5C4AE4&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">COLORS</span><span class="p">[</span><span class="s2">&quot;greens&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;#268F92&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#abc14d&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#8A978E&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#0C9FB3&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#BDA962&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#B0CB9E&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#769168&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#5E93A5&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#178084&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#B7BBAD&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#163317&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;#76A63F&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">COLORS</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">COLORS</span><span class="p">[</span><span class="s2">&quot;classic&quot;</span><span class="p">]</span>
+
+<span class="n">MARKERS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;^&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;P&quot;</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;h&quot;</span><span class="p">]</span>
+<span class="n">LINES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">()),</span>  <span class="c1"># solid</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>  <span class="c1"># densely dotted</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>  <span class="c1"># densely dashdotted</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>  <span class="c1"># dashed</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>  <span class="c1"># densely dashdotdotted</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>  <span class="c1"># densely dashed</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>  <span class="c1"># dotted</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>  <span class="c1"># dashdotted</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>  <span class="c1"># dashdotdotted</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">)),</span>  <span class="c1"># loosely dashed</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)),</span>  <span class="c1"># loosely dotted</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)),</span>  <span class="c1"># loosely dashdotted</span>
+<span class="p">]</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_unit</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">array</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add a unit to &quot;title&quot; (presumably an axis title).</span>
+
+<span class="sd">    The unit is extracted from the unit field of the array, in case array is an astropy quantity.</span>
+<span class="sd">    If a unit is found, it is added to title in the form [unit]. If a unit already is present in</span>
+<span class="sd">    title (in the same form), a warning is printed and no unit is added. The function assumes</span>
+<span class="sd">    array not to be empty and returns the modified title.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    title: str</span>
+<span class="sd">    array: astropy.Quantity</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Title with units.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">title</span> <span class="ow">and</span> <span class="s2">&quot;[&quot;</span> <span class="ow">in</span> <span class="n">title</span> <span class="ow">and</span> <span class="s2">&quot;]&quot;</span> <span class="ow">in</span> <span class="n">title</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Tried to add a unit from astropy.unit, &quot;</span>
+            <span class="s2">&quot;but axis already has an explicit unit. Left axis title as is.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">title</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">title</span>
+
+    <span class="n">unit</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+    <span class="n">unit_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; [</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">]&quot;</span>
+    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\d&quot;</span><span class="p">,</span> <span class="n">unit_str</span><span class="p">):</span>
+        <span class="n">unit_str</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\d)&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;^\1&quot;</span><span class="p">,</span> <span class="n">unit_str</span><span class="p">)</span>
+        <span class="n">unit_str</span> <span class="o">=</span> <span class="n">unit_str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;[&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;[$&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;]&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$]&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}{</span><span class="n">unit_str</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+<div class="viewcode-block" id="set_style">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.set_style">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_style</span><span class="p">(</span><span class="n">palette</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">big_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set the plotting style to homogenize plot style across the framework.</span>
+
+<span class="sd">    The function receives the colour palette name and whether it is a big plot or not.\</span>
+<span class="sd">    The latter sets the fonts and marker to be bigger in case it is a big plot. The available \</span>
+<span class="sd">    colour palettes are as follows:</span>
+
+<span class="sd">    - classic (default): A classic colorful palette with strong colors and contrast.</span>
+<span class="sd">    - modified classic: Similar to the classic, with slightly different colors.</span>
+<span class="sd">    - autumn: A slightly darker autumn style colour palette.</span>
+<span class="sd">    - purples: A pseudo sequential purple colour palette (not great for contrast).</span>
+<span class="sd">    - greens: A pseudo sequential green colour palette (not great for contrast).</span>
+
+<span class="sd">    To use the function, simply call it before plotting anything. The function is made public, so \</span>
+<span class="sd">    that it can be used outside the visualize module. However, it is highly recommended to create\</span>
+<span class="sd">    plots only through the visualize module.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    palette: str</span>
+<span class="sd">        Colour palette.</span>
+<span class="sd">    big_plot: bool</span>
+<span class="sd">        Flag to set fonts and marker bigger. If True, it sets them bigger.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    KeyError</span>
+<span class="sd">        if provided palette does not exist.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">palette</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">COLORS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;palette must be one of </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">COLORS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">fontsize</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">17</span><span class="p">,</span> <span class="s2">&quot;big_plot&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">}</span>
+    <span class="n">markersize</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span> <span class="s2">&quot;big_plot&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">}</span>
+    <span class="n">plot_size</span> <span class="o">=</span> <span class="s2">&quot;big_plot&quot;</span> <span class="k">if</span> <span class="n">big_plot</span> <span class="k">else</span> <span class="s2">&quot;default&quot;</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s2">&quot;lines&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="n">markersize</span><span class="p">[</span><span class="n">plot_size</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span>
+        <span class="s2">&quot;axes&quot;</span><span class="p">,</span>
+        <span class="n">prop_cycle</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">cycler</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">COLORS</span><span class="p">[</span><span class="n">palette</span><span class="p">])</span> <span class="o">+</span> <span class="n">cycler</span><span class="p">(</span><span class="n">linestyle</span><span class="o">=</span><span class="n">LINES</span><span class="p">)</span> <span class="o">+</span> <span class="n">cycler</span><span class="p">(</span><span class="n">marker</span><span class="o">=</span><span class="n">MARKERS</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">titlesize</span><span class="o">=</span><span class="n">fontsize</span><span class="p">[</span><span class="n">plot_size</span><span class="p">],</span>
+        <span class="n">labelsize</span><span class="o">=</span><span class="n">fontsize</span><span class="p">[</span><span class="n">plot_size</span><span class="p">],</span>
+        <span class="n">labelpad</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">grid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">axisbelow</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s2">&quot;xtick&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="n">fontsize</span><span class="p">[</span><span class="n">plot_size</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s2">&quot;ytick&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="n">fontsize</span><span class="p">[</span><span class="n">plot_size</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s2">&quot;legend&quot;</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">,</span> <span class="n">shadow</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="s2">&quot;medium&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s2">&quot;font&quot;</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="s2">&quot;serif&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">fontsize</span><span class="p">[</span><span class="n">plot_size</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="get_colors">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.get_colors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_colors</span><span class="p">(</span><span class="n">palette</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the colour list of the palette requested.</span>
+
+<span class="sd">    If no palette is provided, the default is returned.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    palette: str</span>
+<span class="sd">        Colour palette.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        Colour list.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    KeyError</span>
+<span class="sd">        if provided palette does not exist.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">palette</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">COLORS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;palette must be one of </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">COLORS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">COLORS</span><span class="p">[</span><span class="n">palette</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="get_markers">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.get_markers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_markers</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the marker list used in this module.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List with markers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">MARKERS</span></div>
+
+
+
+<div class="viewcode-block" id="get_lines">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.get_lines">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_lines</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the line style list used in this module.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List with line styles.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">LINES</span></div>
+
+
+
+<div class="viewcode-block" id="filter_plot_kwargs">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.filter_plot_kwargs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">filter_plot_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Filter out kwargs that are not valid for plt.plot.&quot;&quot;&quot;</span>
+    <span class="n">valid_keys</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;color&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;linestyle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;linewidth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;marker&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;markersize&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;markerfacecolor&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;markeredgecolor&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;markeredgewidth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;alpha&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;zorder&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;dashes&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;gapcolor&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;solid_capstyle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;solid_joinstyle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;dash_capstyle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;dash_joinstyle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;antialiased&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_keys</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="plot_1d">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.plot_1d">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_1d</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produce a high contrast one dimensional plot from multiple data sets.</span>
+
+<span class="sd">    A ratio plot can be added at the bottom to allow easy comparison. Additional options,</span>
+<span class="sd">    such as plot title, plot legend, etc., are given in kwargs. Any option that can be</span>
+<span class="sd">    changed after plotting (e.g., axes limits, log scale, etc.) should be done using the</span>
+<span class="sd">    returned plt instance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data: numpy structured array or a dictionary of structured arrays</span>
+<span class="sd">          Each structured array has two columns, the first is the x-axis and the second the y-axis.</span>
+<span class="sd">          The titles of the columns are set as the axes titles.</span>
+<span class="sd">          The labels of each dataset set are given in the dictionary keys</span>
+<span class="sd">          and will be used in the legend.</span>
+<span class="sd">    **kwargs:</span>
+<span class="sd">        * palette: string</span>
+<span class="sd">          Choose a colour palette (see set_style for additional information).</span>
+<span class="sd">        * title: string</span>
+<span class="sd">          Set a plot title.</span>
+<span class="sd">        * no_legend: bool</span>
+<span class="sd">          Do not print a legend for the plot.</span>
+<span class="sd">        * big_plot: bool</span>
+<span class="sd">          Increase marker and font sizes (like in a wide light curve).</span>
+<span class="sd">        * no_markers: bool</span>
+<span class="sd">          Do not print markers.</span>
+<span class="sd">        * empty_markers: bool</span>
+<span class="sd">          Print empty (hollow) markers</span>
+<span class="sd">        * plot_ratio: bool</span>
+<span class="sd">          Add a ratio plot at the bottom. The first entry in the data dictionary</span>
+<span class="sd">          is used as the reference for the ratio.</span>
+<span class="sd">          If data dictionary is not an OrderedDict, the reference will be random.</span>
+<span class="sd">        * plot_difference: bool</span>
+<span class="sd">          Add a difference plot at the bottom. The first entry in the data dictionary</span>
+<span class="sd">          is used as the reference for the difference.</span>
+<span class="sd">          If data dictionary is not an OrderedDict, the reference will be random.</span>
+<span class="sd">        * Any additional kwargs for plt.plot</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pyplot.figure</span>
+<span class="sd">        Instance of pyplot.figure in which the plot was produced</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        if asked to plot a ratio or difference with just one set of data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="n">handle_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">data_dict</span><span class="p">,</span> <span class="n">plot_ratio</span><span class="p">,</span> <span class="n">plot_difference</span> <span class="o">=</span> <span class="n">prepare_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span><span class="p">,</span> <span class="n">gs</span> <span class="o">=</span> <span class="n">setup_plot</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">plot_ratio</span><span class="p">,</span> <span class="n">plot_difference</span><span class="p">)</span>
+    <span class="n">plot_args</span> <span class="o">=</span> <span class="n">filter_plot_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">plot_main_data</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">plot_args</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">plot_ratio</span> <span class="ow">or</span> <span class="n">plot_difference</span><span class="p">:</span>
+        <span class="n">plot_ratio_difference</span><span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">,</span> <span class="n">plot_ratio</span><span class="p">,</span> <span class="n">gs</span><span class="p">,</span> <span class="n">plot_args</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">plot_ratio</span> <span class="ow">or</span> <span class="n">plot_difference</span><span class="p">):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+
+<div class="viewcode-block" id="handle_kwargs">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.handle_kwargs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">handle_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract and handle keyword arguments.&quot;&quot;&quot;</span>
+    <span class="n">kwargs_defaults</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;palette&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;big_plot&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;no_legend&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">&quot;no_markers&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">&quot;empty_markers&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">&quot;plot_ratio&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">&quot;plot_difference&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">&quot;xscale&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;yscale&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;xlim&quot;</span><span class="p">:</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">&quot;ylim&quot;</span><span class="p">:</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">&quot;xtitle&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;ytitle&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span> <span class="ow">in</span> <span class="n">kwargs_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;no_markers&quot;</span><span class="p">]:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;marker&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;None&quot;</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;linewidth&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;empty_markers&quot;</span><span class="p">]:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;markerfacecolor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;None&quot;</span>
+
+    <span class="k">return</span> <span class="n">kwargs</span></div>
+
+
+
+<div class="viewcode-block" id="prepare_data">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.prepare_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">prepare_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepare data for plotting.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;_default&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data_dict</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;plot_ratio&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;plot_difference&quot;</span><span class="p">])</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_dict</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Asked to plot a ratio or difference with just one set of data&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data_dict</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;plot_ratio&quot;</span><span class="p">],</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;plot_difference&quot;</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="setup_plot">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.setup_plot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">setup_plot</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">plot_ratio</span><span class="p">,</span> <span class="n">plot_difference</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set up the plot style, figure, and gridspec.&quot;&quot;&quot;</span>
+    <span class="n">set_style</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;palette&quot;</span><span class="p">],</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;big_plot&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">plot_ratio</span> <span class="ow">or</span> <span class="n">plot_difference</span><span class="p">:</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">height_ratios</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+        <span class="n">gs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span><span class="p">,</span> <span class="n">gs</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_error_plots</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">data_now</span><span class="p">,</span> <span class="n">x_col</span><span class="p">,</span> <span class="n">y_col</span><span class="p">,</span> <span class="n">x_err_col</span><span class="p">,</span> <span class="n">y_err_col</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot error plots.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;error_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;fill_between&quot;</span> <span class="ow">and</span> <span class="n">y_err_col</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+            <span class="n">data_now</span><span class="p">[</span><span class="n">x_col</span><span class="p">],</span>
+            <span class="n">data_now</span><span class="p">[</span><span class="n">y_col</span><span class="p">]</span> <span class="o">-</span> <span class="n">data_now</span><span class="p">[</span><span class="n">y_err_col</span><span class="p">],</span>
+            <span class="n">data_now</span><span class="p">[</span><span class="n">y_col</span><span class="p">]</span> <span class="o">+</span> <span class="n">data_now</span><span class="p">[</span><span class="n">y_err_col</span><span class="p">],</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;error_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;errorbar&quot;</span> <span class="ow">and</span> <span class="p">(</span><span class="n">x_err_col</span> <span class="ow">or</span> <span class="n">y_err_col</span><span class="p">):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span>
+            <span class="n">data_now</span><span class="p">[</span><span class="n">x_col</span><span class="p">],</span>
+            <span class="n">data_now</span><span class="p">[</span><span class="n">y_col</span><span class="p">],</span>
+            <span class="n">xerr</span><span class="o">=</span><span class="n">data_now</span><span class="p">[</span><span class="n">x_err_col</span><span class="p">]</span> <span class="k">if</span> <span class="n">x_err_col</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">yerr</span><span class="o">=</span><span class="n">data_now</span><span class="p">[</span><span class="n">y_err_col</span><span class="p">]</span> <span class="k">if</span> <span class="n">y_err_col</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_data_columns</span><span class="p">(</span><span class="n">data_now</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return data columns depending on availability.&quot;&quot;&quot;</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="n">data_now</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Input array must have at least two columns with titles.&quot;</span>
+    <span class="n">x_col</span><span class="p">,</span> <span class="n">y_col</span> <span class="o">=</span> <span class="n">columns</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">x_err_col</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">y_err_col</span> <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">x_err_col</span> <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">y_err_col</span> <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x_err_col</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">y_err_col</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">x_col</span><span class="p">,</span> <span class="n">y_col</span><span class="p">,</span> <span class="n">x_err_col</span><span class="p">,</span> <span class="n">y_err_col</span>
+
+
+<div class="viewcode-block" id="plot_main_data">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.plot_main_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_main_data</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">plot_args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot the main data.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">data_now</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">x_col</span><span class="p">,</span> <span class="n">y_col</span><span class="p">,</span> <span class="n">x_err_col</span><span class="p">,</span> <span class="n">y_err_col</span> <span class="o">=</span> <span class="n">_get_data_columns</span><span class="p">(</span><span class="n">data_now</span><span class="p">)</span>
+
+        <span class="n">x_title</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xtitle&quot;</span><span class="p">,</span> <span class="n">x_col</span><span class="p">)</span>
+        <span class="n">y_title</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ytitle&quot;</span><span class="p">,</span> <span class="n">y_col</span><span class="p">)</span>
+
+        <span class="n">x_title_unit</span> <span class="o">=</span> <span class="n">_add_unit</span><span class="p">(</span><span class="n">x_title</span><span class="p">,</span> <span class="n">data_now</span><span class="p">[</span><span class="n">x_col</span><span class="p">])</span>
+        <span class="n">y_title_unit</span> <span class="o">=</span> <span class="n">_add_unit</span><span class="p">(</span><span class="n">y_title</span><span class="p">,</span> <span class="n">data_now</span><span class="p">[</span><span class="n">y_col</span><span class="p">])</span>
+
+        <span class="p">(</span><span class="n">line</span><span class="p">,)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">data_now</span><span class="p">[</span><span class="n">x_col</span><span class="p">],</span> <span class="n">data_now</span><span class="p">[</span><span class="n">y_col</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_args</span><span class="p">)</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>
+
+        <span class="n">_plot_error_plots</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">data_now</span><span class="p">,</span> <span class="n">x_col</span><span class="p">,</span> <span class="n">y_col</span><span class="p">,</span> <span class="n">x_err_col</span><span class="p">,</span> <span class="n">y_err_col</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;xscale&quot;</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;yscale&quot;</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;xlim&quot;</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;ylim&quot;</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">y_title_unit</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;plot_ratio&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;plot_difference&quot;</span><span class="p">]):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">x_title_unit</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.02</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;_default&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data_dict</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;no_legend&quot;</span><span class="p">]:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="plot_ratio_difference">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.plot_ratio_difference">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_ratio_difference</span><span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">,</span> <span class="n">plot_ratio</span><span class="p">,</span> <span class="n">gs</span><span class="p">,</span> <span class="n">plot_args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot the ratio or difference plot.&quot;&quot;&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sharex</span><span class="o">=</span><span class="n">ax1</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[])</span>  <span class="c1"># Advance cycler for consistent colors/styles</span>
+
+    <span class="n">data_ref_name</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">data_dict</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">data_now</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="n">data_ref_name</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">x_title</span><span class="p">,</span> <span class="n">y_title</span> <span class="o">=</span> <span class="n">data_now</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data_now</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">x_title_unit</span> <span class="o">=</span> <span class="n">_add_unit</span><span class="p">(</span><span class="n">x_title</span><span class="p">,</span> <span class="n">data_now</span><span class="p">[</span><span class="n">x_title</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">plot_ratio</span><span class="p">:</span>
+            <span class="n">y_values</span> <span class="o">=</span> <span class="n">data_now</span><span class="p">[</span><span class="n">y_title</span><span class="p">]</span> <span class="o">/</span> <span class="n">data_dict</span><span class="p">[</span><span class="n">data_ref_name</span><span class="p">][</span><span class="n">y_title</span><span class="p">]</span>
+            <span class="n">y_title_ratio</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Ratio to </span><span class="si">{</span><span class="n">data_ref_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">y_values</span> <span class="o">=</span> <span class="n">data_now</span><span class="p">[</span><span class="n">y_title</span><span class="p">]</span> <span class="o">-</span> <span class="n">data_dict</span><span class="p">[</span><span class="n">data_ref_name</span><span class="p">][</span><span class="n">y_title</span><span class="p">]</span>
+            <span class="n">y_title_ratio</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Difference to </span><span class="si">{</span><span class="n">data_ref_name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">data_now</span><span class="p">[</span><span class="n">x_title</span><span class="p">],</span> <span class="n">y_values</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_args</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">x_title_unit</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_title_ratio</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">20</span> <span class="ow">and</span> <span class="n">plot_ratio</span><span class="p">:</span>
+        <span class="n">y_title_ratio</span> <span class="o">=</span> <span class="s2">&quot;Ratio&quot;</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">y_title_ratio</span><span class="p">)</span>
+    <span class="n">ylim</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>
+    <span class="n">nbins</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">((</span><span class="n">ylim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ylim</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">0.05</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">locator_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="n">nbins</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_table">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.plot_table">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">y_title</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produce a high contrast one dimensional plot from the data in an astropy.Table.</span>
+
+<span class="sd">    A ratio plot can be added at the bottom to allow easy comparison. Additional options, such</span>
+<span class="sd">    as plot title, plot legend, etc., are given in kwargs. Any option that can be changed after</span>
+<span class="sd">    plotting (e.g., axes limits, log scale, etc.) should be done using the returned plt instance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    table: astropy.Table or astropy.QTable</span>
+<span class="sd">           The first column of the table is the x-axis and the second column is the y-axis. Any \</span>
+<span class="sd">           additional columns will be treated as additional data to plot. The column titles are \</span>
+<span class="sd">           used in the legend (except for the first column).</span>
+<span class="sd">    y_title: str</span>
+<span class="sd">           The y-axis title.</span>
+
+<span class="sd">    **kwargs:</span>
+<span class="sd">        * palette: choose a colour palette (see set_style for additional information).</span>
+<span class="sd">        * title: set a plot title.</span>
+<span class="sd">        * no_legend: do not print a legend for the plot.</span>
+<span class="sd">        * big_plot: increase marker and font sizes (like in a wide light curve).</span>
+<span class="sd">        * no_markers: do not print markers.</span>
+<span class="sd">        * empty_markers: print empty (hollow) markers</span>
+<span class="sd">        * plot_ratio: bool</span>
+<span class="sd">          Add a ratio plot at the bottom. The first entry in the data dictionary is used as the \</span>
+<span class="sd">          reference for the ratio. If data dictionary is not an OrderedDict, the reference will be\</span>
+<span class="sd">          random.</span>
+<span class="sd">        * plot_difference: bool</span>
+<span class="sd">          Add a difference plot at the bottom. The first entry in the data dictionary is used as \</span>
+<span class="sd">          the reference for the difference. If data dictionary is not an OrderedDict, the reference\</span>
+<span class="sd">          will be random.</span>
+<span class="sd">        * Any additional kwargs for plt.plot</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pyplot.fig</span>
+<span class="sd">        Instance of pyplot.fig.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        if table has less than two columns.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Table has to have at least two columns&quot;</span><span class="p">)</span>
+
+    <span class="n">x_axis</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">keys</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">data_dict</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">keys</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="n">data_dict</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">QTable</span><span class="p">([</span><span class="n">table</span><span class="p">[</span><span class="n">x_axis</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="n">column</span><span class="p">]],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">y_title</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">plot_1d</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_hist_2d">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.plot_hist_2d">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_hist_2d</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produce a two dimensional histogram plot.</span>
+
+<span class="sd">    Any option that can be changed after plotting (e.g., axes limits, log scale, etc.)</span>
+<span class="sd">    should be done using the returned plt instance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data: numpy structured array</span>
+<span class="sd">          The columns of the structured array are used as the x-axis and y-axis titles.</span>
+<span class="sd">    **kwargs:</span>
+<span class="sd">        * title: set a plot title.</span>
+<span class="sd">        * Any additional kwargs for plt.hist2d</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pyplot.figure</span>
+<span class="sd">        Instance of pyplot.figure in which the plot was produced.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">gist_heat_r</span>
+    <span class="k">if</span> <span class="s2">&quot;title&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="c1"># Set default style since the usual options do not affect 2d plots (for now).</span>
+    <span class="n">set_style</span><span class="p">()</span>
+
+    <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+    <span class="c1">##########################################################################################</span>
+    <span class="c1"># Plot the data</span>
+    <span class="c1">##########################################################################################</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Input array must have two columns with titles.&quot;</span>
+    <span class="n">x_title</span><span class="p">,</span> <span class="n">y_title</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">x_title_unit</span> <span class="o">=</span> <span class="n">_add_unit</span><span class="p">(</span><span class="n">x_title</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">x_title</span><span class="p">])</span>
+    <span class="n">y_title_unit</span> <span class="o">=</span> <span class="n">_add_unit</span><span class="p">(</span><span class="n">y_title</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">y_title</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">hist2d</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">x_title</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="n">y_title</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">x_title_unit</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">y_title_unit</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">,</span> <span class="n">adjustable</span><span class="o">=</span><span class="s2">&quot;datalim&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">title</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.02</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+
+<div class="viewcode-block" id="save_figure">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.visualize.save_figure">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_figure</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">figure_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="s2">&quot;figure&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Save figure to output file(s).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fig: plt.figure</span>
+<span class="sd">        Figure to save.</span>
+<span class="sd">    output_file: Path, str</span>
+<span class="sd">        Path to save the figure (without suffix).</span>
+<span class="sd">    figure_format: list</span>
+<span class="sd">        List of formats to save the figure.</span>
+<span class="sd">    title: str</span>
+<span class="sd">        Title of the figure to be added to the log message.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">figure_format</span> <span class="o">=</span> <span class="n">figure_format</span> <span class="ow">or</span> <span class="p">[</span><span class="s2">&quot;pdf&quot;</span><span class="p">,</span> <span class="s2">&quot;png&quot;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">fmt</span> <span class="ow">in</span> <span class="n">figure_format</span><span class="p">:</span>
+        <span class="n">_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">fmt</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">_file</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">fmt</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saved plot </span><span class="si">{</span><span class="n">log_title</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

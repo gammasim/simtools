@@ -1,0 +1,807 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>generate_corsika_histograms &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=d8dd0411"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/generate_corsika_histograms';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.25.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">generate_corsika_histograms</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for generate_corsika_histograms</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+
+<span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a set of histograms Cherenkov photon distributions from CORSIKA output.</span>
+
+<span class="sd">    The Cherenkov photons (from observation level) are read from a CORSIKA IACT</span>
+<span class="sd">    output file provided as input.</span>
+
+<span class="sd">    The histograms can be saved both into pdfs and in a hdf5 file.</span>
+
+<span class="sd">    The following 2D histograms are generated:</span>
+<span class="sd">        - Number of Cherenkov photons on the ground;</span>
+<span class="sd">        - Density of Cherenkov photons on the ground;</span>
+<span class="sd">        - Incoming direction (directive cosines) of the Cherenkov photons;</span>
+<span class="sd">        - Time of arrival (ns) vs altitude of production (km);</span>
+<span class="sd">        - Number of Cherenkov photons per event per telescope.</span>
+
+<span class="sd">    The following 1D histograms are generated:</span>
+<span class="sd">        - Wavelength;</span>
+<span class="sd">        - Counts;</span>
+<span class="sd">        - Density;</span>
+<span class="sd">        - Time of arrival;</span>
+<span class="sd">        - Altitude of production;</span>
+<span class="sd">        - Number of photons per telescope;</span>
+<span class="sd">        - Number of photons per event.</span>
+
+<span class="sd">    Histograms for the distribution of CORSIKA event header elements can also be generated by using</span>
+<span class="sd">    the --event_1d_histograms and --event_2d_histograms arguments. The accepted arguments (keys)</span>
+<span class="sd">    are to be found in the CORSIKA manual, e.g., &quot;total_energy&quot;, &quot;zenith&quot;, &quot;azimuth&quot;.</span>
+
+<span class="sd">    Command line arguments</span>
+<span class="sd">    ----------------------</span>
+<span class="sd">    iact_file (str, required)</span>
+<span class="sd">        The name of the CORSIKA IACT file resulted from the CORSIKA simulation.</span>
+
+<span class="sd">    telescope_indices (list, optional)</span>
+<span class="sd">        The list with the telescope indices to be considered in the generation of the histograms.</span>
+<span class="sd">        Telescopes that are not in the list will not contribute with photons to the histograms.</span>
+<span class="sd">        If the argument is not given, all telescopes are considered.</span>
+
+<span class="sd">    individual_telescopes (bool, optional)</span>
+<span class="sd">        Indicates whether single histograms are generated for the individual telescopes, or if</span>
+<span class="sd">        a master histogram is generated for all the telescopes together.</span>
+<span class="sd">        If the argument is not given, the Cherenkov photons from the given telescopes are considered</span>
+<span class="sd">        together in the same histograms.</span>
+
+<span class="sd">    hist_config (hdf5 or dict, optional)</span>
+<span class="sd">        The configuration used for generating the histograms.</span>
+<span class="sd">        It includes information about the bin sizes, the ranges, scale of the plot and units.</span>
+<span class="sd">        By construction, three major histograms are created to start with:</span>
+<span class="sd">        - hist_direction (2D): Directive cosines (x and y) for the incoming photons;</span>
+<span class="sd">        - hist_position (3D): position x, position y, and wavelength;</span>
+<span class="sd">        - hist_time_altitude (2D): time of arrival and altitude of emission;</span>
+
+<span class="sd">    If the argument is not given, the default configuration is generated:</span>
+
+<span class="sd">    .. code-block:: console</span>
+
+<span class="sd">        hist_direction:</span>
+<span class="sd">            x axis: {bins: 100, scale: linear, start: -1, stop: 1}</span>
+<span class="sd">            y axis: {bins: 100, scale: linear, start: -1, stop: 1}</span>
+
+<span class="sd">        hist_position:</span>
+<span class="sd">            x axis:</span>
+<span class="sd">                bins: 100</span>
+<span class="sd">                scale: linear</span>
+<span class="sd">                start: !astropy.units.Quantity</span>
+<span class="sd">                    unit: &amp;id001 m</span>
+<span class="sd">                    value: -1000.0</span>
+<span class="sd">                stop: &amp;id002 !astropy.units.Quantity</span>
+<span class="sd">                    unit: *id001</span>
+<span class="sd">                    value: 1000.0</span>
+<span class="sd">            y axis:</span>
+<span class="sd">                bins: 100</span>
+<span class="sd">                scale: linear</span>
+<span class="sd">                start: !astropy.units.Quantity</span>
+<span class="sd">                    unit: *id001</span>
+<span class="sd">                    value: -1000.0</span>
+<span class="sd">                stop: *id002</span>
+<span class="sd">            z axis:</span>
+<span class="sd">                bins: 80</span>
+<span class="sd">                scale: linear</span>
+<span class="sd">                start: !astropy.units.Quantity</span>
+<span class="sd">                    unit: nm</span>
+<span class="sd">                    value: 200.0</span>
+<span class="sd">                stop: !astropy.units.Quantity</span>
+<span class="sd">                    unit: *id003</span>
+<span class="sd">                    value: 1000.0</span>
+<span class="sd">        hist_time_altitude:</span>
+<span class="sd">            x axis:</span>
+<span class="sd">                bins: 100</span>
+<span class="sd">                scale: linear</span>
+<span class="sd">                start: !astropy.units.Quantity</span>
+<span class="sd">                    unit: ns</span>
+<span class="sd">                    value: -2000.0</span>
+<span class="sd">                stop: !astropy.units.Quantity</span>
+<span class="sd">                    unit: *id004</span>
+<span class="sd">                    value: 2000.0</span>
+<span class="sd">            y axis:</span>
+<span class="sd">                bins: 100</span>
+<span class="sd">                scale: linear</span>
+<span class="sd">                start: !astropy.units.Quantity</span>
+<span class="sd">                    unit: km</span>
+<span class="sd">                    value: 120.0</span>
+<span class="sd">                stop: !astropy.units.Quantity</span>
+<span class="sd">                    unit: *id005</span>
+<span class="sd">                    value: 0.0</span>
+
+
+<span class="sd">    pdf (bool, optional)</span>
+<span class="sd">        If set, histograms are saved into pdf files.</span>
+<span class="sd">        One pdf file contains all the histograms for the Cherenkov photons.</span>
+<span class="sd">        The name of the file is controlled via hdf5_file_name.</span>
+<span class="sd">        If event_1d_histograms and event_2d_histograms are used, two separate pdf files might be</span>
+<span class="sd">        created to accommodate the histograms for the CORSIKA event header elements. The core names</span>
+<span class="sd">        of these output pdf files are also given by hdf5_file_name argument with the addition of</span>
+<span class="sd">        &#39;event_1d_histograms&#39; and &#39;event_2d_histograms&#39;.</span>
+
+
+<span class="sd">    hdf5 (bool, optional)</span>
+<span class="sd">        If set, histograms are saved into hdf5 files.</span>
+
+<span class="sd">    hdf5_file_name (str, optional)</span>
+<span class="sd">        The name of the output hdf5 data (without the path).</span>
+<span class="sd">        It requires the --hdf5 flag.</span>
+<span class="sd">        If not given, hdf5_file_name takes the name from the input IACT file (input_file).</span>
+<span class="sd">        If the output hdf5_file_name file already exists, the tables associated to the chosen</span>
+<span class="sd">        flags (e.g. hdf5, event_1d_histograms, event_2d_histograms) will be overwritten. The</span>
+<span class="sd">        remaining tables, if any, will stay untouched.</span>
+
+
+<span class="sd">    event_1d_histograms (str, optional)</span>
+<span class="sd">        Generate 1D histograms for elements given in --event_1d_histograms from the CORSIKA event</span>
+<span class="sd">        header and save into hdf5/pdf files.</span>
+<span class="sd">        It allows more than one argument, separated by simple spaces.</span>
+<span class="sd">        Usage: --event_1d_histograms first_interaction_height total_energy.</span>
+
+<span class="sd">    event_2d_histograms (str, optional)</span>
+<span class="sd">        Generate 2D histograms for elements given in --event_2d_histograms from the CORSIKA event</span>
+<span class="sd">        header and save into hdf5/pdf files.</span>
+<span class="sd">        It allows more than one argument, separated by simple spaces.</span>
+<span class="sd">        The elements are grouped into pairs and the 2D histograms are generated always for two</span>
+<span class="sd">        subsequent elements.</span>
+<span class="sd">        For example, --event_2d_histograms first_interaction_height total_energy zenith azimuth</span>
+<span class="sd">        will generate one 2D histogram for first_interaction_height total_energy and another 2D</span>
+<span class="sd">        histogram for zenith and azimuth.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    Generate the histograms for a test IACT file:</span>
+
+<span class="sd">     .. code-block:: console</span>
+
+<span class="sd">        simtools-generate-corsika-histograms --iact_file /workdir/external/simtools/\\</span>
+<span class="sd">        tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio \\</span>
+<span class="sd">            --pdf --hdf5 \\</span>
+<span class="sd">            --event_2d_histograms zenith azimuth --event_1d_histograms total_energy</span>
+
+<span class="sd">    Expected final print-out message:</span>
+
+<span class="sd">    .. code-block:: console</span>
+
+<span class="sd">        INFO::generate_corsika_histograms(l358)::main::Finalizing the application.</span>
+<span class="sd">        Total time needed: 8s.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.application_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_application_label</span><span class="p">,</span> <span class="n">startup_application</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.corsika.corsika_histograms</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorsikaHistograms</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse command line configuration.&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">get_application_label</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--iact_file&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the CORSIKA IACT file from which to generate the histograms.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--telescope_indices&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of telescope indices to be considered in the generation of the histograms&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--individual_telescopes&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;if False, the histograms are filled for all given telescopes together, otherwise&quot;</span>
+        <span class="s2">&quot;one histogram is set for each telescope separately.&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--hist_config&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;hdf5 file with the configuration parameters to create the histograms.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--pdf&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Save histograms into a pdf file.&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--hdf5&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Save histograms into hdf5 files.&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--hdf5_file_name&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the hdf5 file where to save the histograms.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--event_1d_histograms&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The keys from the CORSIKA event header to be used for the generation of 1D &quot;</span>
+        <span class="s2">&quot;histograms. The available choices can been found in the all_event_keys attribute of&quot;</span>
+        <span class="s2">&quot;the CorsikaHistograms.&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--event_2d_histograms&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The keys from the CORSIKA event header to be used for the generation of 2D &quot;</span>
+        <span class="s2">&quot;histograms. The available choices can been found in the all_event_keys attribute of&quot;</span>
+        <span class="s2">&quot;the CorsikaHistograms.&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">config_parser</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">paths</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="ow">not</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;pdf&quot;</span><span class="p">]</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;hdf5&quot;</span><span class="p">]</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;event_1d_histograms&quot;</span><span class="p">]</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;event_2d_histograms&quot;</span><span class="p">]</span>
+    <span class="p">):</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s2">&quot;At least one argument is required: --pdf, --hdf5, --event_1d_histograms, or &quot;</span>
+            <span class="s2">&quot;--event_2d_histograms.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">config_parser</span><span class="p">,</span> <span class="n">_</span>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../user-guide/applications/simtools-generate-corsika-histograms.html#generate_corsika_histograms.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a set of histograms for the Cherenkov photons saved in the CORSIKA IACT file.&quot;&quot;&quot;</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">)</span>
+
+    <span class="n">initial_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="n">corsika_histograms_instance</span> <span class="o">=</span> <span class="n">CorsikaHistograms</span><span class="p">(</span>
+        <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;iact_file&quot;</span><span class="p">],</span>
+        <span class="n">output_path</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span>
+        <span class="n">hdf5_file_name</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;hdf5_file_name&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">corsika_histograms_instance</span><span class="o">.</span><span class="n">run_export_pipeline</span><span class="p">(</span>
+        <span class="n">individual_telescopes</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;individual_telescopes&quot;</span><span class="p">],</span>
+        <span class="n">hist_config</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;hist_config&quot;</span><span class="p">],</span>
+        <span class="n">indices_arg</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;telescope_indices&quot;</span><span class="p">],</span>
+        <span class="n">write_pdf</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;pdf&quot;</span><span class="p">],</span>
+        <span class="n">write_hdf5</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;hdf5&quot;</span><span class="p">],</span>
+        <span class="n">event1d</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;event_1d_histograms&quot;</span><span class="p">],</span>
+        <span class="n">event2d</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;event_2d_histograms&quot;</span><span class="p">],</span>
+        <span class="n">test</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="n">final_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Finalizing the application. Total time needed: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">final_time</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">initial_time</span><span class="p">)</span><span class="si">}</span><span class="s2">s.&quot;</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

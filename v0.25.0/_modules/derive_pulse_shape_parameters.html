@@ -1,0 +1,707 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>derive_pulse_shape_parameters &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=d8dd0411"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/derive_pulse_shape_parameters';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.25.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">derive_pulse_shape_parameters</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for derive_pulse_shape_parameters</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sa">r</span><span class="sd">&quot;&quot;&quot;Derive Gaussian sigma and exponential tau from specified rise/fall widths.</span>
+
+<span class="sd">Solve (sigma, tau) for a Gaussian convolved with a causal exponential so the</span>
+<span class="sd">pulse matches user-provided rise and fall widths between fractional amplitude</span>
+<span class="sd">levels (e.g. 0.1-0.9 rise, 0.9-0.1 fall).</span>
+
+<span class="sd">Command line arguments</span>
+<span class="sd">----------------------</span>
+<span class="sd">site (str, required)</span>
+<span class="sd">        North or South.</span>
+<span class="sd">telescope (str, required)</span>
+<span class="sd">        Telescope model name.</span>
+<span class="sd">model_version (str, required)</span>
+<span class="sd">        Model version.</span>
+<span class="sd">parameter_version (str, required)</span>
+<span class="sd">    Parameter version.</span>
+<span class="sd">rise_width_ns (float, required)</span>
+<span class="sd">    Rising-edge width between rise_range fractions (ns).</span>
+<span class="sd">fall_width_ns (float, required)</span>
+<span class="sd">    Falling-edge width between fall_range fractions (ns).</span>
+<span class="sd">rise_range (float float, optional)</span>
+<span class="sd">    Fractional amplitudes (low high) for rise width (default: 0.1 0.9).</span>
+<span class="sd">fall_range (float float, optional)</span>
+<span class="sd">    Fractional amplitudes (high low) for fall width (default: 0.9 0.1).</span>
+<span class="sd">dt_ns (float, optional)</span>
+<span class="sd">    Time sampling step (ns). Default: 0.1.</span>
+<span class="sd">time_margin_ns (float, optional)</span>
+<span class="sd">    Margin added at both ends of readout window. Default: 5.</span>
+
+
+<span class="sd">Example</span>
+<span class="sd">-------</span>
+<span class="sd">Derive parameters for a pulse with 2.5 ns rise (10-90%) and</span>
+<span class="sd"> 5 ns fall (90-10%) for LSTN-01:</span>
+
+<span class="sd">.. code-block:: console</span>
+
+<span class="sd">    simtools-derive-pulse-shape-parameters \</span>
+<span class="sd">    --site North \</span>
+<span class="sd">    --telescope MSTx-NectarCam \</span>
+<span class="sd">    --model_version 7.0 \</span>
+<span class="sd">    --parameter_version 1.0.0 \</span>
+<span class="sd">    --rise_width_ns 2.5 \</span>
+<span class="sd">    --fall_width_ns 5.0 \</span>
+<span class="sd">    --rise_range 0.1 0.9 \</span>
+<span class="sd">    --fall_range 0.9 0.1 \</span>
+<span class="sd">    --dt_ns 0.1 \</span>
+<span class="sd">    --time_margin_ns 10</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.data_model.model_data_writer</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">writer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.application_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_application_label</span><span class="p">,</span> <span class="n">startup_application</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">initialize_simulation_models</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.pulse_shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_sigma_tau_from_rise_fall</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse command line configuration for parameter derivation.&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">get_application_label</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Derive Gaussian sigma and exponential tau from rise/fall width specifications.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--rise_width_ns&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Wdth on the rising edge in ns between rise_range fractions.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--fall_width_ns&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Width on the falling edge in ns between fall_range fractions.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--rise_range&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Fractional amplitudes (low high) for rise width, e.g. 0.1 0.9&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--fall_range&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Fractional amplitudes (high low) for fall width, e.g. 0.9 0.1&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--dt_ns&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Time sampling step in ns used by the solver.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--time_margin_ns&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Margin (ns) added to both ends of the instrument readout window when deriving the &quot;</span>
+            <span class="s2">&quot;internal time window.&quot;</span>
+        <span class="p">),</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
+        <span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">simulation_model</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;telescope&quot;</span><span class="p">,</span> <span class="s2">&quot;model_version&quot;</span><span class="p">,</span> <span class="s2">&quot;parameter_version&quot;</span><span class="p">],</span>
+        <span class="n">output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../user-guide/applications/simtools-derive-pulse-shape-parameters.html#derive_pulse_shape_parameters.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run parameter derivation and write results.&quot;&quot;&quot;</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">)</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="n">rise_width_ns</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;rise_width_ns&quot;</span><span class="p">]</span>
+    <span class="n">fall_width_ns</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;fall_width_ns&quot;</span><span class="p">]</span>
+    <span class="n">rise_range</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;rise_range&quot;</span><span class="p">])</span>
+    <span class="n">fall_range</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;fall_range&quot;</span><span class="p">])</span>
+    <span class="n">dt_ns</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;dt_ns&quot;</span><span class="p">]</span>
+    <span class="n">time_margin_ns</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;time_margin_ns&quot;</span><span class="p">]</span>
+    <span class="n">site</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">get_application_label</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+    <span class="n">telescope_model</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">initialize_simulation_models</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+        <span class="n">db_config</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">db_config</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+        <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span>
+        <span class="n">telescope_name</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">fadc_sum_bins</span> <span class="o">=</span> <span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;fadc_sum_bins&quot;</span><span class="p">)</span>
+
+    <span class="n">window_ns</span> <span class="o">=</span> <span class="n">fadc_sum_bins</span> <span class="o">+</span> <span class="n">time_margin_ns</span>
+    <span class="n">t_start_ns</span> <span class="o">=</span> <span class="o">-</span><span class="n">window_ns</span>
+    <span class="n">t_stop_ns</span> <span class="o">=</span> <span class="n">window_ns</span>
+
+    <span class="n">sigma_ns</span><span class="p">,</span> <span class="n">tau_ns</span> <span class="o">=</span> <span class="n">solve_sigma_tau_from_rise_fall</span><span class="p">(</span>
+        <span class="n">rise_width_ns</span><span class="o">=</span><span class="n">rise_width_ns</span><span class="p">,</span>
+        <span class="n">fall_width_ns</span><span class="o">=</span><span class="n">fall_width_ns</span><span class="p">,</span>
+        <span class="n">dt_ns</span><span class="o">=</span><span class="n">dt_ns</span><span class="p">,</span>
+        <span class="n">rise_range</span><span class="o">=</span><span class="n">rise_range</span><span class="p">,</span>
+        <span class="n">t_start_ns</span><span class="o">=</span><span class="n">t_start_ns</span><span class="p">,</span>
+        <span class="n">t_stop_ns</span><span class="o">=</span><span class="n">t_stop_ns</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># Apply reasonable rounding for output precision.</span>
+    <span class="n">sigma_ns</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">sigma_ns</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="n">tau_ns</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">tau_ns</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Derived pulse parameters: sigma=</span><span class="si">{</span><span class="n">sigma_ns</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2"> ns, tau=</span><span class="si">{</span><span class="n">tau_ns</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2"> ns &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;(rise=</span><span class="si">{</span><span class="n">rise_width_ns</span><span class="si">}</span><span class="s2"> ns @ </span><span class="si">{</span><span class="n">rise_range</span><span class="si">}</span><span class="s2">, fall=</span><span class="si">{</span><span class="n">fall_width_ns</span><span class="si">}</span><span class="s2"> ns @ </span><span class="si">{</span><span class="n">fall_range</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">)</span>
+    <span class="n">instrument</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;telescope&quot;</span><span class="p">)</span>
+    <span class="n">parameter_version</span> <span class="o">=</span> <span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">)</span>
+
+    <span class="n">writer</span><span class="o">.</span><span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump_model_parameter</span><span class="p">(</span>
+        <span class="n">parameter_name</span><span class="o">=</span><span class="s2">&quot;flasher_pulse_width&quot;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">sigma_ns</span><span class="p">,</span>
+        <span class="n">instrument</span><span class="o">=</span><span class="n">instrument</span><span class="p">,</span>
+        <span class="n">parameter_version</span><span class="o">=</span><span class="n">parameter_version</span><span class="p">,</span>
+        <span class="n">output_file</span><span class="o">=</span><span class="s2">&quot;flasher_pulse_width.json&quot;</span><span class="p">,</span>
+        <span class="n">output_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span>
+        <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;ns&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump_model_parameter</span><span class="p">(</span>
+        <span class="n">parameter_name</span><span class="o">=</span><span class="s2">&quot;flasher_pulse_exp_decay&quot;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">tau_ns</span><span class="p">,</span>
+        <span class="n">instrument</span><span class="o">=</span><span class="n">instrument</span><span class="p">,</span>
+        <span class="n">parameter_version</span><span class="o">=</span><span class="n">parameter_version</span><span class="p">,</span>
+        <span class="n">output_file</span><span class="o">=</span><span class="s2">&quot;flasher_pulse_exp_decay.json&quot;</span><span class="p">,</span>
+        <span class="n">output_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span>
+        <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;ns&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Wrote model parameter files flasher_pulse_width.json and &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;flasher_pulse_exp_decay.json (sigma=</span><span class="si">{</span><span class="n">sigma_ns</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2"> ns, tau=</span><span class="si">{</span><span class="n">tau_ns</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2"> ns)&quot;</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

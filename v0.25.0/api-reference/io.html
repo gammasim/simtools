@@ -1,0 +1,1283 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>I/O &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=d8dd0411"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/io';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Job execution and submission" href="job_execution.html" />
+    <link rel="prev" title="Database support" href="db_handler.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.25.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="camera.html">Camera</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Application, dependency and version management.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="db_handler.html">Database support</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array_layout.html">Layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mc_model.html">MC Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="production_configuration.html">Production Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runners.html">Runners for simulation software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">API</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">I/O</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="i-o">
+<span id="io"></span><h1>I/O<a class="headerlink" href="#i-o" title="Link to this heading">#</a></h1>
+<p>This module include I/O related functionality.</p>
+<section id="module-simtools.io.io_handler">
+<span id="io-handler"></span><span id="iomodule"></span><h2>io_handler<a class="headerlink" href="#module-simtools.io.io_handler" title="Link to this heading">#</a></h2>
+<p>Handle input and output directories and file paths.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simtools.io.io_handler.IOHandler">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtools.io.io_handler.</span></span><span class="sig-name descname"><span class="pre">IOHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler" title="Link to this definition">#</a></dt>
+<dd><p>Handle input and output directories and file paths.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simtools.io.io_handler.IOHandler.get_model_configuration_directory">
+<span class="sig-name descname"><span class="pre">get_model_configuration_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.get_model_configuration_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.get_model_configuration_directory" title="Link to this definition">#</a></dt>
+<dd><p>Get path of the simulation model configuration directory.</p>
+<p>This is the directory where the sim_telarray configuration files will be stored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model_version: str</strong></dt><dd><p>Model version.</p>
+</dd>
+<dt><strong>sub_dir: str</strong></dt><dd><p>subdirectory</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtools.io.io_handler.IOHandler.get_output_directory">
+<span class="sig-name descname"><span class="pre">get_output_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.get_output_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.get_output_directory" title="Link to this definition">#</a></dt>
+<dd><p>Create and get path of an output directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sub_dir: str or list of str, optional</strong></dt><dd><p>Name of the subdirectory (ray_tracing, model etc)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>FileNotFoundError</dt><dd><p>if the directory cannot be created</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtools.io.io_handler.IOHandler.get_output_file">
+<span class="sig-name descname"><span class="pre">get_output_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.get_output_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.get_output_file" title="Link to this definition">#</a></dt>
+<dd><p>Get path of an output file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>files_name: str</strong></dt><dd><p>File name.</p>
+</dd>
+<dt><strong>sub_dir: sub_dir: str or list of str, optional</strong></dt><dd><p>Name of the subdirectory (ray_tracing, model etc)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtools.io.io_handler.IOHandler.get_test_data_file">
+<span class="sig-name descname"><span class="pre">get_test_data_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.get_test_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.get_test_data_file" title="Link to this definition">#</a></dt>
+<dd><p>Get path of a data file in the test resources directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>files_name: str</strong></dt><dd><p>File name.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtools.io.io_handler.IOHandler.set_paths">
+<span class="sig-name descname"><span class="pre">set_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandler.set_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandler.set_paths" title="Link to this definition">#</a></dt>
+<dd><p>Set paths for input and output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>output_path: str or Path</strong></dt><dd><p>Path pointing to the output directory.</p>
+</dd>
+<dt><strong>model_path: str or Path</strong></dt><dd><p>Path pointing to the model file directory.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simtools.io.io_handler.IOHandlerSingleton">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtools.io.io_handler.</span></span><span class="sig-name descname"><span class="pre">IOHandlerSingleton</span></span><a class="reference internal" href="../_modules/simtools/io/io_handler.html#IOHandlerSingleton"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.io_handler.IOHandlerSingleton" title="Link to this definition">#</a></dt>
+<dd><p>Singleton base class.</p>
+</dd></dl>
+
+</section>
+<section id="module-simtools.io.ascii_handler">
+<span id="ascii-handler"></span><span id="io-ascii-handler"></span><h2>ascii_handler<a class="headerlink" href="#module-simtools.io.ascii_handler" title="Link to this heading">#</a></h2>
+<p>Helper module for ASCII file operations.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simtools.io.ascii_handler.JsonNumpyEncoder">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtools.io.ascii_handler.</span></span><span class="sig-name descname"><span class="pre">JsonNumpyEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipkeys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensure_ascii</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_circular</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_nan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">separators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/ascii_handler.html#JsonNumpyEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.ascii_handler.JsonNumpyEncoder" title="Link to this definition">#</a></dt>
+<dd><p>Convert numpy to python types as accepted by json.dump.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simtools.io.ascii_handler.JsonNumpyEncoder.default">
+<span class="sig-name descname"><span class="pre">default</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">o</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/ascii_handler.html#JsonNumpyEncoder.default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.ascii_handler.JsonNumpyEncoder.default" title="Link to this definition">#</a></dt>
+<dd><p>Return default encoder.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.ascii_handler.collect_data_from_file">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.ascii_handler.</span></span><span class="sig-name descname"><span class="pre">collect_data_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yaml_document</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/ascii_handler.html#collect_data_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.ascii_handler.collect_data_from_file" title="Link to this definition">#</a></dt>
+<dd><p>Collect data from file based on its extension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str</strong></dt><dd><p>Name of the yaml/json/ascii file.</p>
+</dd>
+<dt><strong>yaml_document: None, int</strong></dt><dd><p>Return list of yaml documents or a single document (for yaml files with several documents).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>data: dict or list</dt><dd><p>Data as dict or list.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.ascii_handler.collect_data_from_http">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.ascii_handler.</span></span><span class="sig-name descname"><span class="pre">collect_data_from_http</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/ascii_handler.html#collect_data_from_http"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.ascii_handler.collect_data_from_http" title="Link to this definition">#</a></dt>
+<dd><p>Download yaml or json file from url and return it contents as dict.</p>
+<p>File is downloaded as a temporary file and deleted afterwards.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>url: str</strong></dt><dd><p>URL of the yaml/json file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary containing the file content.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>TypeError</dt><dd><p>If url is not a valid URL.</p>
+</dd>
+<dt>FileNotFoundError</dt><dd><p>If downloading the yaml file fails.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.ascii_handler.is_utf8_file">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.ascii_handler.</span></span><span class="sig-name descname"><span class="pre">is_utf8_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/ascii_handler.html#is_utf8_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.ascii_handler.is_utf8_file" title="Link to this definition">#</a></dt>
+<dd><p>Check if a file is encoded in UTF-8.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str, Path</strong></dt><dd><p>Name of the file to be checked.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if the file is encoded in UTF-8, False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.ascii_handler.read_file_encoded_in_utf_or_latin">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.ascii_handler.</span></span><span class="sig-name descname"><span class="pre">read_file_encoded_in_utf_or_latin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/ascii_handler.html#read_file_encoded_in_utf_or_latin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.ascii_handler.read_file_encoded_in_utf_or_latin" title="Link to this definition">#</a></dt>
+<dd><p>Read a file encoded in UTF-8 or Latin-1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str</strong></dt><dd><p>Name of the file to be read.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of lines read from the file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>UnicodeDecodeError</dt><dd><p>If the file cannot be decoded using UTF-8 or Latin-1.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.ascii_handler.write_data_to_file">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.ascii_handler.</span></span><span class="sig-name descname"><span class="pre">write_data_to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numpy_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/ascii_handler.html#write_data_to_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.ascii_handler.write_data_to_file" title="Link to this definition">#</a></dt>
+<dd><p>Write structured data to JSON or YAML file.</p>
+<p>The file type is determined by the file extension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data: dict or list</strong></dt><dd><p>Data to be written to the file.</p>
+</dd>
+<dt><strong>output_file: str or Path</strong></dt><dd><p>Name of the file to be written.</p>
+</dd>
+<dt><strong>sort_keys: bool, optional</strong></dt><dd><p>If True, sort the keys.</p>
+</dd>
+<dt><strong>numpy_types: bool, optional</strong></dt><dd><p>If True, convert numpy types to native Python types.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="eventio-handler">
+<span id="id1"></span><h2>eventio_handler<a class="headerlink" href="#eventio-handler" title="Link to this heading">#</a></h2>
+<p id="module-simtools.io.eventio_handler">Read file info and run headers from eventio (CORSIKA IACT, sim_telarray) files.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.eventio_handler.get_combined_corsika_run_header">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.eventio_handler.</span></span><span class="sig-name descname"><span class="pre">get_combined_corsika_run_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_telarray_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/eventio_handler.html#get_combined_corsika_run_header"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.eventio_handler.get_combined_corsika_run_header" title="Link to this definition">#</a></dt>
+<dd><p>Return the CORSIKA run header information from an sim_telarray file.</p>
+<p>Reads both RunHeader and MCRunHeader object from file and returns a merged dictionary.
+Adds primary id from the first event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sim_telarray_file: str</strong></dt><dd><p>Path to the sim_telarray file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict, None</dt><dd><p>CORSIKA run header. Returns None if not found.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.eventio_handler.get_corsika_run_and_event_headers">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.eventio_handler.</span></span><span class="sig-name descname"><span class="pre">get_corsika_run_and_event_headers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_iact_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/eventio_handler.html#get_corsika_run_and_event_headers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.eventio_handler.get_corsika_run_and_event_headers" title="Link to this definition">#</a></dt>
+<dd><p>Return the CORSIKA run and event headers from a CORSIKA IACT eventio file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>corsika_iact_file: str, Path</strong></dt><dd><p>Path to the CORSIKA IACT eventio file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple</dt><dd><p>CORSIKA run header and event header as dictionaries.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.eventio_handler.get_corsika_run_number">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.eventio_handler.</span></span><span class="sig-name descname"><span class="pre">get_corsika_run_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/eventio_handler.html#get_corsika_run_number"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.eventio_handler.get_corsika_run_number" title="Link to this definition">#</a></dt>
+<dd><p>Return the CORSIKA run number from an eventio (CORSIKA IACT or sim_telarray) file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file: str</strong></dt><dd><p>Path to the eventio file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>int, None</dt><dd><p>CORSIKA run number. Returns None if not found.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.eventio_handler.get_simulated_events">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.eventio_handler.</span></span><span class="sig-name descname"><span class="pre">get_simulated_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_io_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/eventio_handler.html#get_simulated_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.eventio_handler.get_simulated_events" title="Link to this definition">#</a></dt>
+<dd><p>Return the number of shower and MC events from a simulation (eventio) file.</p>
+<p>For a sim_telarray file, the number of simulated showers and MC events is
+determined by counting the number of MCShower (type id 2020) and MCEvent
+objects (type id 2021). For a CORSIKA IACT file, the number of simulated
+showers is determined by counting the number of IACTShower (type id 1202).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>event_io_file: str, Path</strong></dt><dd><p>Path to the eventio file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple</dt><dd><p>Number of showers and number of MC events (MC events for sim_telarray files only).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-simtools.io.table_handler">
+<span id="table-handler"></span><span id="io-table-handler"></span><h2>table_handler<a class="headerlink" href="#module-simtools.io.table_handler" title="Link to this heading">#</a></h2>
+<p>IO operations on astropy tables.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.table_handler.copy_metadata_to_hdf5">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.table_handler.</span></span><span class="sig-name descname"><span class="pre">copy_metadata_to_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/table_handler.html#copy_metadata_to_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.table_handler.copy_metadata_to_hdf5" title="Link to this definition">#</a></dt>
+<dd><p>Copy metadata (table column meta) from one HDF5 file to another.</p>
+<p>For merging tables, this function ensures that the metadata is preserved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>src_file</strong><span class="classifier">str or Path</span></dt><dd><p>Path to the source HDF5 file.</p>
+</dd>
+<dt><strong>dst_file</strong><span class="classifier">str or Path</span></dt><dd><p>Path to the destination HDF5 file.</p>
+</dd>
+<dt><strong>table_name</strong><span class="classifier">str</span></dt><dd><p>Name of the table whose metadata is to be copied.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.table_handler.merge_tables">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.table_handler.</span></span><span class="sig-name descname"><span class="pre">merge_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_table_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/table_handler.html#merge_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.table_handler.merge_tables" title="Link to this definition">#</a></dt>
+<dd><p>Merge multiple astropy tables from different files into a single file.</p>
+<p>Handles multiple tables per file and supports both HDF5 and FITS formats.
+Updates ‘file_id’ column if present to maintain file origin tracking.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_files</strong><span class="classifier">list of str</span></dt><dd><p>List of input file paths to be merged.</p>
+</dd>
+<dt><strong>input_table_names</strong><span class="classifier">list of str</span></dt><dd><p>List of table names to be merged from each input file.</p>
+</dd>
+<dt><strong>output_file</strong><span class="classifier">str</span></dt><dd><p>Path to the output file where the merged data will be saved.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.table_handler.read_table_file_type">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.table_handler.</span></span><span class="sig-name descname"><span class="pre">read_table_file_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/table_handler.html#read_table_file_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.table_handler.read_table_file_type" title="Link to this definition">#</a></dt>
+<dd><p>Determine the file type of the input files.</p>
+<p>All input files must be of the same type (either all HDF5 or all FITS).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_files</strong><span class="classifier">list of str</span></dt><dd><p>List of input file paths.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>File type (‘HDF5’ or ‘FITS’).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.table_handler.read_table_from_hdf5">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.table_handler.</span></span><span class="sig-name descname"><span class="pre">read_table_from_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/table_handler.html#read_table_from_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.table_handler.read_table_from_hdf5" title="Link to this definition">#</a></dt>
+<dd><p>Read a single astropy table from an HDF5 file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file</strong><span class="classifier">str or Path</span></dt><dd><p>Path to the input HDF5 file.</p>
+</dd>
+<dt><strong>table_name</strong><span class="classifier">str</span></dt><dd><p>Name of the table to read.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.table.Table</dt><dd><p>The requested astropy table.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.table_handler.read_table_list">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.table_handler.</span></span><span class="sig-name descname"><span class="pre">read_table_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_indexed_tables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/table_handler.html#read_table_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.table_handler.read_table_list" title="Link to this definition">#</a></dt>
+<dd><p>Read available tables found in the input file.</p>
+<p>If table_counter is True, search for tables with the same name
+but with different suffixes (e.g., “_0”, “_1”, etc.).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.table_handler.read_tables">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.table_handler.</span></span><span class="sig-name descname"><span class="pre">read_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/table_handler.html#read_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.table_handler.read_tables" title="Link to this definition">#</a></dt>
+<dd><p>Read tables from a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file</strong><span class="classifier">str</span></dt><dd><p>Path to the input file.</p>
+</dd>
+<dt><strong>table_names</strong><span class="classifier">list of str</span></dt><dd><p>List of table names to read.</p>
+</dd>
+<dt><strong>file_type</strong><span class="classifier">str</span></dt><dd><p>Type of the input file (‘HDF5’ or ‘FITS’).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with table names as keys and astropy tables as values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.table_handler.write_table_in_hdf5">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.table_handler.</span></span><span class="sig-name descname"><span class="pre">write_table_in_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/table_handler.html#write_table_in_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.table_handler.write_table_in_hdf5" title="Link to this definition">#</a></dt>
+<dd><p>Write or append a single astropy table to an HDF5 file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>table</strong><span class="classifier">astropy.table.Table</span></dt><dd><p>The astropy table to write.</p>
+</dd>
+<dt><strong>output_file</strong><span class="classifier">str or Path</span></dt><dd><p>Path to the output HDF5 file.</p>
+</dd>
+<dt><strong>table_name</strong><span class="classifier">str</span></dt><dd><p>Name of the table in the HDF5 file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.table_handler.write_tables">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.table_handler.</span></span><span class="sig-name descname"><span class="pre">write_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/table_handler.html#write_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.table_handler.write_tables" title="Link to this definition">#</a></dt>
+<dd><p>Write tables to file (overwriting if exists).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tables</strong><span class="classifier">list or dict</span></dt><dd><p>List or Dictionary with astropy tables as values.</p>
+</dd>
+<dt><strong>output_file</strong><span class="classifier">str or Path</span></dt><dd><p>Path to the output file.</p>
+</dd>
+<dt><strong>overwrite_existing</strong><span class="classifier">bool</span></dt><dd><p>If True, overwrite the output file if it exists.</p>
+</dd>
+<dt><strong>file_type</strong><span class="classifier">str</span></dt><dd><p>Type of the output file (‘HDF5’ or ‘FITS’).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-simtools.io.hdf5_handler">
+<span id="hdf5-handler"></span><span id="iohdf5"></span><h2>hdf5_handler<a class="headerlink" href="#module-simtools.io.hdf5_handler" title="Link to this heading">#</a></h2>
+<p>Helper module for reading and writing in hd5 format.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.hdf5_handler.fill_hdf5_table">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.hdf5_handler.</span></span><span class="sig-name descname"><span class="pre">fill_hdf5_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_bin_edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_bin_edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/hdf5_handler.html#fill_hdf5_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.hdf5_handler.fill_hdf5_table" title="Link to this definition">#</a></dt>
+<dd><p>Create and fill an hdf5 table with the histogram information.</p>
+<p>It works for both 1D and 2D distributions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>hist: numpy.ndarray</strong></dt><dd><p>The counts of the histograms.</p>
+</dd>
+<dt><strong>x_bin_edges: numpy.array</strong></dt><dd><p>The x bin edges of the histograms.</p>
+</dd>
+<dt><strong>y_bin_edges: numpy.array</strong></dt><dd><p>The y bin edges of the histograms.
+Use None for 1D histograms.</p>
+</dd>
+<dt><strong>x_label: str</strong></dt><dd><p>X bin edges label.</p>
+</dd>
+<dt><strong>y_label: str</strong></dt><dd><p>Y bin edges label.
+Use None for 1D histograms.</p>
+</dd>
+<dt><strong>meta_data: dict</strong></dt><dd><p>Dictionary with the histogram metadata.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.hdf5_handler.read_hdf5">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.hdf5_handler.</span></span><span class="sig-name descname"><span class="pre">read_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hdf5_file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/hdf5_handler.html#read_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.hdf5_handler.read_hdf5" title="Link to this definition">#</a></dt>
+<dd><p>Read a hdf5 output file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>hdf5_file_name: str or Path</strong></dt><dd><p>Name or Path of the hdf5 file to read from.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>The list with the astropy.Table instances for the various 1D and 2D histograms saved
+in the hdf5 file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.hdf5_handler.validate_histogram">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.hdf5_handler.</span></span><span class="sig-name descname"><span class="pre">validate_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_bin_edges</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/hdf5_handler.html#validate_histogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.hdf5_handler.validate_histogram" title="Link to this definition">#</a></dt>
+<dd><p>Validate histogram dimensions and y_bin_edges consistency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>hist (np.ndarray): The histogram array, expected to be 1D or 2D.</strong></dt><dd></dd>
+<dt><strong>y_bin_edges (array-like or None): Bin edges for the second dimension (if applicable).</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError: If histogram dimensions are invalid or inconsistent with y_bin_edges.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-simtools.io.legacy_data_handler">
+<span id="id2"></span><span id="legacy-data-handler"></span><h2>legacy_data_handler<a class="headerlink" href="#module-simtools.io.legacy_data_handler" title="Link to this heading">#</a></h2>
+<p>Reading of legacy data files (expect that this will be obsolete in future).</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.legacy_data_handler.read_legacy_data_as_table">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.legacy_data_handler.</span></span><span class="sig-name descname"><span class="pre">read_legacy_data_as_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/legacy_data_handler.html#read_legacy_data_as_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.legacy_data_handler.read_legacy_data_as_table" title="Link to this definition">#</a></dt>
+<dd><p>Read legacy data file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_path: Path</strong></dt><dd><p>Path to the legacy data file.</p>
+</dd>
+<dt><strong>file_type: str</strong></dt><dd><p>Type of legacy data file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Table</dt><dd><p>Astropy table.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If unsupported legacy data file type.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.io.legacy_data_handler.read_legacy_lst_single_pe">
+<span class="sig-prename descclassname"><span class="pre">simtools.io.legacy_data_handler.</span></span><span class="sig-name descname"><span class="pre">read_legacy_lst_single_pe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/io/legacy_data_handler.html#read_legacy_lst_single_pe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.io.legacy_data_handler.read_legacy_lst_single_pe" title="Link to this definition">#</a></dt>
+<dd><p>Read LST single pe file (in legacy data format).</p>
+<p>File contains two columns: amplitude (in units of single p.e) and response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_path: Path</strong></dt><dd><p>Path to the legacy data file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Table</dt><dd><p>Astropy table.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="db_handler.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Database support</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="job_execution.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Job execution and submission</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simtools.io.io_handler">io_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandler"><code class="docutils literal notranslate"><span class="pre">IOHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandler.get_model_configuration_directory"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_model_configuration_directory()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandler.get_output_directory"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_output_directory()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandler.get_output_file"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_output_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandler.get_test_data_file"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_test_data_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandler.set_paths"><code class="docutils literal notranslate"><span class="pre">IOHandler.set_paths()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.io_handler.IOHandlerSingleton"><code class="docutils literal notranslate"><span class="pre">IOHandlerSingleton</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simtools.io.ascii_handler">ascii_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.ascii_handler.JsonNumpyEncoder"><code class="docutils literal notranslate"><span class="pre">JsonNumpyEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.ascii_handler.JsonNumpyEncoder.default"><code class="docutils literal notranslate"><span class="pre">JsonNumpyEncoder.default()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.ascii_handler.collect_data_from_file"><code class="docutils literal notranslate"><span class="pre">collect_data_from_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.ascii_handler.collect_data_from_http"><code class="docutils literal notranslate"><span class="pre">collect_data_from_http()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.ascii_handler.is_utf8_file"><code class="docutils literal notranslate"><span class="pre">is_utf8_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.ascii_handler.read_file_encoded_in_utf_or_latin"><code class="docutils literal notranslate"><span class="pre">read_file_encoded_in_utf_or_latin()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.ascii_handler.write_data_to_file"><code class="docutils literal notranslate"><span class="pre">write_data_to_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#eventio-handler">eventio_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.eventio_handler.get_combined_corsika_run_header"><code class="docutils literal notranslate"><span class="pre">get_combined_corsika_run_header()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.eventio_handler.get_corsika_run_and_event_headers"><code class="docutils literal notranslate"><span class="pre">get_corsika_run_and_event_headers()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.eventio_handler.get_corsika_run_number"><code class="docutils literal notranslate"><span class="pre">get_corsika_run_number()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.eventio_handler.get_simulated_events"><code class="docutils literal notranslate"><span class="pre">get_simulated_events()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simtools.io.table_handler">table_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.table_handler.copy_metadata_to_hdf5"><code class="docutils literal notranslate"><span class="pre">copy_metadata_to_hdf5()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.table_handler.merge_tables"><code class="docutils literal notranslate"><span class="pre">merge_tables()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.table_handler.read_table_file_type"><code class="docutils literal notranslate"><span class="pre">read_table_file_type()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.table_handler.read_table_from_hdf5"><code class="docutils literal notranslate"><span class="pre">read_table_from_hdf5()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.table_handler.read_table_list"><code class="docutils literal notranslate"><span class="pre">read_table_list()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.table_handler.read_tables"><code class="docutils literal notranslate"><span class="pre">read_tables()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.table_handler.write_table_in_hdf5"><code class="docutils literal notranslate"><span class="pre">write_table_in_hdf5()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.table_handler.write_tables"><code class="docutils literal notranslate"><span class="pre">write_tables()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simtools.io.hdf5_handler">hdf5_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.hdf5_handler.fill_hdf5_table"><code class="docutils literal notranslate"><span class="pre">fill_hdf5_table()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.hdf5_handler.read_hdf5"><code class="docutils literal notranslate"><span class="pre">read_hdf5()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.hdf5_handler.validate_histogram"><code class="docutils literal notranslate"><span class="pre">validate_histogram()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simtools.io.legacy_data_handler">legacy_data_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.legacy_data_handler.read_legacy_data_as_table"><code class="docutils literal notranslate"><span class="pre">read_legacy_data_as_table()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.io.legacy_data_handler.read_legacy_lst_single_pe"><code class="docutils literal notranslate"><span class="pre">read_legacy_lst_single_pe()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api-reference/io.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
