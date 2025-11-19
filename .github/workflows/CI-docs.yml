@@ -4,9 +4,8 @@ name: CI-docs
 
 on:
   workflow_dispatch:
+  push:
   pull_request:
-    branches: [main]
-    types: [opened, ready_for_review]
   release:
     types: [published]
 
@@ -90,8 +89,8 @@ jobs:
           target-folder: ${{ github.ref_name }}  # e.g., v0.7.0
           clean: false
 
-      - name: Deploy dev docs on PR merge to main
-        if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || github.event_name == 'workflow_dispatch'
+      - name: Deploy dev docs on merge to main
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
