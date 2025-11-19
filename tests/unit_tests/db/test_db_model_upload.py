@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
+from packaging.version import InvalidVersion
 
 import simtools.db.db_model_upload as db_model_upload
 
@@ -249,7 +250,10 @@ def test_read_production_tables_with_info_yml(mock_collect_data, tmp_test_direct
     (old_model_path / "LSTN-01.json").touch()
 
     # Mock info.yml content
-    mock_collect_data.return_value = {"model_version_history": ["1.0.0"]}
+    mock_collect_data.return_value = {
+        "model_version_history": ["1.0.0"],
+        "model_update": "patch_update",
+    }
 
     with patch("simtools.db.db_model_upload._read_production_table") as mock_read_table:
         mock_read_table.side_effect = lambda md, file, model: md.update(
@@ -328,9 +332,10 @@ def test_read_production_tables_invalid_version_in_history(mock_collect_data, tm
     (model_path / "info.yml").touch()
 
     # Mock info.yml with invalid version in history
-    mock_collect_data.return_value = {"model_version_history": ["not.a.version"]}
-
-    from packaging.version import InvalidVersion
+    mock_collect_data.return_value = {
+        "model_version_history": ["not.a.version"],
+        "model_update": "patch_update",
+    }
 
     with pytest.raises(InvalidVersion, match=r"Invalid version: 'not.a.version'"):
         db_model_upload._read_production_tables(model_path)
