@@ -69,7 +69,7 @@ def _parse():
         help="Calibration run mode",
         type=str,
         required=True,
-        choices=["pedestals", "dark_pedestals", "nsb_only_pedestals"],
+        choices=["pedestals", "pedestals_dark", "pedestals_nsb_only"],
     )
     config.parser.add_argument(
         "--number_of_events",
