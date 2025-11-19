@@ -10,8 +10,7 @@
 # Shared build arguments
 ARG CORSIKA_VERSION="78010"
 ARG CORSIKA_OPT_PATCH_VERSION="v1.1.0"
-ARG HADRONIC_MODEL="qgs3"
-ARG HADRONIC_MODEL_LE="urqmd"
+ARG CORSIKA_CONFIG_VERSION="78010"
 ARG AVX_FLAG="avx2"
 
 # hadolint global ignore=DL3013,DL3033,DL3041,SC1091
@@ -28,6 +27,7 @@ ARG CORSIKA_REPO="gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.gi
 ARG CORSIKA_OPT_PATCH_VERSION
 ARG CORSIKA_OPT_PATCH_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git"
 ARG CORSIKA_CONFIG_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git"
+ARG CORSIKA_CONFIG_VERSION
 
 RUN microdnf update -y && microdnf install -y git && \
     microdnf clean all
@@ -42,9 +42,9 @@ RUN git config --global advice.detachedHead false && \
 
 # Clone CORSIKA from KIT gitlab (note change in version tag format: e.g., v7.8010)
 RUN --mount=type=secret,id=corsika7_token \
-    CORSIKA_CONFIG_TAG="v${CORSIKA_VERSION:0:1}.${CORSIKA_VERSION:1}" && \
+    CORSIKA7_TAG="v${CORSIKA_VERSION:0:1}.${CORSIKA_VERSION:1}" && \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${CORSIKA_CONFIG_TAG}" "https://oauth2:$(cat /run/secrets/corsika7_token)@${CORSIKA_REPO}"
+    git clone --depth 1 --branch "${CORSIKA7_TAG}" "https://oauth2:$(cat /run/secrets/corsika7_token)@${CORSIKA_REPO}"
 
 # Clone CORSIKA optimization patches from CTAO gitlab
 RUN --mount=type=secret,id=opt_patches_token \
@@ -60,8 +60,6 @@ RUN mv autoconf-2.71 ./autoconf
 # STAGE 2: build_image
 # -----------------------------------------------------------------------------
 FROM almalinux:9.5 AS build_image
-ARG HADRONIC_MODEL
-ARG HADRONIC_MODEL_LE
 ARG AVX_FLAG
 ARG CORSIKA_VERSION
 ARG C_SPECIFIC_FLAGS="-std=c99"
@@ -96,10 +94,12 @@ RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
     fi
 
 # Build non-optimized / optimized CORSIKA
-RUN for variant in curved flat; do \
+RUN for config_file in ../config_*.h; do \
+        # Extract variant name (curved/flat) from config file name
+        variant=$(basename "$config_file" .h | sed 's/.*_\(curved\|flat\)$/\1/'); \
         ./coconut -d && rm -f ./*/*.a lib/*/*.a include/*.h && \
         # CTAO specific CORSIKA configuration
-        cp -v ../config_${HADRONIC_MODEL}_${HADRONIC_MODEL_LE}_${variant}.h include/config.h; \
+        cp -v "$config_file" include/config.h; \
         # compilation flags (with or without optimization)
         AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
         if [ "$AVX_FLAG" = "no_opt" ] || [ "$variant" = "curved" ]; then \
@@ -118,7 +118,8 @@ RUN for variant in curved flat; do \
         rm -f ./run/qgsdat-II-04 && \
         CORSIKA_RUN_DIR="/workdir/corsika-run" && \
         mkdir -p ${CORSIKA_RUN_DIR} && \
-        mv -v -f "./run/corsika${CORSIKA_VERSION}Linux_"* "${CORSIKA_RUN_DIR}/corsika-$variant" && \
+        corsika_name=$(basename "$config_file" .h | sed 's/^config_/corsika_/'); \
+        mv -v -f "./run/corsika${CORSIKA_VERSION}Linux_"* "${CORSIKA_RUN_DIR}/${corsika_name}" && \
         cp -r -v "./run/"* ${CORSIKA_RUN_DIR}/; \
     done
 
@@ -131,7 +132,7 @@ COPY --from=build_image /workdir/corsika-run /workdir/simulation_software/corsik
 
 RUN microdnf update -y && microdnf install -y \
 #    gcc-fortran && \
-    libgfortran libquadmath && \
+    libgfortran && \
     microdnf clean all
 
 WORKDIR /workdir/simulation_software/corsika
