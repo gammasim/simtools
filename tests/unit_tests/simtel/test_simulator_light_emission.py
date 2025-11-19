@@ -246,7 +246,7 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian(
     assert table_path.exists()
     content = table_path.read_text().splitlines()
     assert content[0].startswith("# angle[deg] relative_intensity")
-    # Expect 101 lines: header + 100 samples
+    # Expect 101 lines: header + 100 samples (0..max angle)
     assert len(content) == 101
     # Width mock used with degrees conversion
     width_mock.to.assert_called_once_with(u.deg)

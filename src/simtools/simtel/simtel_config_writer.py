@@ -198,7 +198,7 @@ class SimtelConfigWriter:
         max_angle_deg,
         n_samples=100,
     ):
-        """Write a Lambertian angular distribution table.
+        """Write a Lambertian angular distribution table (I(θ) ~ cos θ).
 
         Parameters
         ----------
@@ -215,8 +215,8 @@ class SimtelConfigWriter:
             Path to created angular distribution table.
         """
         logger.info(
-            f"Generating Lambertian angular distribution table up to {max_angle_deg} deg"
-            f" with {n_samples} samples"
+            f"Generating Lambertian angular distribution table up to {max_angle_deg} deg "
+            f"with {n_samples} samples"
         )
         angles = np.linspace(0.0, float(max_angle_deg), int(n_samples), dtype=float)
         intensities = np.cos(np.deg2rad(angles))
