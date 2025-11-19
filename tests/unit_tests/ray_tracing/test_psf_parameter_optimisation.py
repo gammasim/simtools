@@ -1740,9 +1740,9 @@ def test_run_ray_tracing_simulation_single_mirror_mode(mock_telescope_model, moc
         "random_focal_length_seed": 42,
         "simtel_path": "/path/to/simtel",
         "test": True,
-        "fraction": 0.8,
+        "fraction": 0.95,
     }
-    params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    params = {"mirror_reflection_random_angle": [0.006, 0.14, 0.025]}
 
     with patch("simtools.ray_tracing.psf_parameter_optimisation.RayTracing") as mock_rt:
         mock_rt.return_value = _setup_ray_tracing_mock()
@@ -1766,13 +1766,13 @@ def test_run_ray_tracing_simulation_full_telescope_mode(mock_telescope_model, mo
     """Test _run_ray_tracing_simulation in full telescope mode (single_mirror_mode=False)."""
     args_dict = {
         "single_mirror_mode": False,
-        "zenith": 20.0,
-        "src_distance": 10.0,
+        "zenith": 25.0,
+        "src_distance": 12.0,
         "simtel_path": "/path/to/simtel",
         "test": True,
-        "fraction": 0.8,
+        "fraction": 0.85,
     }
-    params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    params = {"mirror_reflection_random_angle": [0.004, 0.16, 0.035]}
 
     with patch("simtools.ray_tracing.psf_parameter_optimisation.RayTracing") as mock_rt:
         mock_rt.return_value = _setup_ray_tracing_mock()
@@ -1789,8 +1789,8 @@ def test_run_ray_tracing_simulation_full_telescope_mode(mock_telescope_model, mo
         assert "zenith_angle" in call_kwargs
         assert "source_distance" in call_kwargs
         assert "off_axis_angle" in call_kwargs
-        assert call_kwargs["zenith_angle"].value == pytest.approx(20.0)
+        assert call_kwargs["zenith_angle"].value == pytest.approx(25.0)
         assert call_kwargs["zenith_angle"].unit == u.deg
-        assert call_kwargs["source_distance"].value == pytest.approx(10.0)
+        assert call_kwargs["source_distance"].value == pytest.approx(12.0)
         assert call_kwargs["source_distance"].unit == u.km
         assert "single_mirror_mode" not in call_kwargs or not call_kwargs.get("single_mirror_mode")
