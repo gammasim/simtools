@@ -207,24 +207,49 @@ def test__get_angular_distribution_string_for_sim_telarray(simulator_instance):
     simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_once_with(
         "flasher_angular_distribution_width"
     )
-    mock_width.to.assert_called_once_with(u.deg)
 
-    # Reset mocks for second test
-    simulator_instance.calibration_model.reset_mock()
 
-    # Test with width None
-    simulator_instance.calibration_model.get_parameter_value.return_value = "Gauss"
-    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = None
+def test__get_angular_distribution_string_for_sim_telarray_lambertian(
+    simulator_instance, tmp_test_directory
+):
+    """Lambertian distribution should generate a table file and return its path."""
+    from pathlib import Path
+
+    # Prepare mocked IO handler directory
+    base_dir = Path(tmp_test_directory) / "angular_distributions"
+    base_dir.mkdir(parents=True, exist_ok=True)
+    io_mock = Mock()
+    io_mock.get_output_directory.return_value = base_dir
+    simulator_instance.io_handler = io_mock
+
+    # Provide telescope/light_source identifiers for filename construction
+    simulator_instance.light_emission_config = {
+        "telescope": "TEL01",
+        "light_source": "CalibA",
+    }
+
+    # Mock calibration model values
+    simulator_instance.calibration_model.get_parameter_value.side_effect = (
+        lambda name: "Lambertian" if name == "flasher_angular_distribution" else None
+    )
+    width_mock = Mock()
+    width_mock.to.return_value.value = 12.0
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
+        lambda name: width_mock if name == "flasher_angular_distribution_width" else None
+    )
 
     result = simulator_instance._get_angular_distribution_string_for_sim_telarray()
-    assert result == "gauss"
 
-    simulator_instance.calibration_model.get_parameter_value.assert_called_once_with(
-        "flasher_angular_distribution"
-    )
-    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_once_with(
-        "flasher_angular_distribution_width"
-    )
+    # Result should be a path to the generated table
+    assert result.endswith(".dat")
+    table_path = Path(result)
+    assert table_path.exists()
+    content = table_path.read_text().splitlines()
+    assert content[0].startswith("# angle[deg] relative_intensity")
+    # Expect 101 lines: header + 100 samples
+    assert len(content) == 101
+    # Width mock used with degrees conversion
+    width_mock.to.assert_called_once_with(u.deg)
 
 
 def test__get_pulse_shape_string_for_sim_telarray(simulator_instance):

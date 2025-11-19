@@ -194,12 +194,57 @@ class SimtelConfigWriter:
         return SimtelConfigWriter._write_ascii_pulse_table(file_path, t, y)
 
     @staticmethod
+    def write_angular_distribution_table_lambertian(
+        file_path,
+        max_angle_deg,
+        n_samples=100,
+    ):
+        """Write a Lambertian angular distribution table.
+
+        Parameters
+        ----------
+        file_path : str or pathlib.Path
+            Destination path of the ASCII table to write. Parent directory must exist.
+        max_angle_deg : float
+            Maximum angle (deg) for the distribution sampling range [0, max_angle_deg].
+        n_samples : int, optional
+            Number of samples (including end point) from 0 to max_angle_deg. Default 100.
+
+        Returns
+        -------
+        pathlib.Path
+            Path to created angular distribution table.
+        """
+        logger.info(
+            f"Generating Lambertian angular distribution table up to {max_angle_deg} deg"
+            f" with {n_samples} samples"
+        )
+        angles = np.linspace(0.0, float(max_angle_deg), int(n_samples), dtype=float)
+        intensities = np.cos(np.deg2rad(angles))
+        intensities[intensities < 0] = 0.0
+        if intensities.max() > 0:
+            intensities /= intensities.max()
+
+        return SimtelConfigWriter._write_ascii_angle_distribution_table(
+            file_path, angles, intensities
+        )
+
+    @staticmethod
     def _write_ascii_pulse_table(file_path, t, y):
         """Write two-column ASCII pulse table."""
         with open(file_path, "w", encoding="utf-8") as fh:
             fh.write("# time[ns] amplitude\n")
             for ti, yi in zip(t, y):
                 fh.write(f"{ti:.6f} {yi:.8f}\n")
+        return Path(file_path)
+
+    @staticmethod
+    def _write_ascii_angle_distribution_table(file_path, angles, intensities):
+        """Write two-column ASCII angular distribution table."""
+        with open(file_path, "w", encoding="utf-8") as fh:
+            fh.write("# angle[deg] relative_intensity\n")
+            for a, i in zip(angles, intensities):
+                fh.write(f"{a:.6f} {i:.8f}\n")
         return Path(file_path)
 
     def _get_parameters_for_sim_telarray(self, parameters, config_file_path):
