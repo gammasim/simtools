@@ -71,3 +71,10 @@ def test_inspect_ignore_patterns(mock_logger):
     )
     result = inspect(log_text)
     assert result is True
+
+    log_text = (
+        "Hello!"
+        "WARNING::metadata_collector(l273)::_fill_contact_meta::Failed to get user name: 'getpwuid(): uid not found: 1000', setting it to UNKNOWN_USER"
+    )
+    result = inspect(log_text)
+    assert result is True
