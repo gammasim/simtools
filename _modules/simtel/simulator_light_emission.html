@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=8dbc3247"></script>
+    <script src="../../_static/documentation_options.js?v=f1633de4"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gf4a27e94b" />
+  <meta name="docsearch:version" content="0.1.dev1+g315f70fe5" />
   </head>
   
   
@@ -792,16 +792,19 @@
         <span class="n">dist_cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_distance_focal_plane_calibration_device</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
         <span class="n">angular_distribution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_angular_distribution_string_for_sim_telarray</span><span class="p">()</span>
 
-        <span class="c1"># Build pulse table for ff-1m using model width/exp parameters; else use token.</span>
+        <span class="c1"># Build pulse table for ff-1m using unified list parameter [shape, width, exp]</span>
+        <span class="n">pulse_shape_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_shape&quot;</span><span class="p">)</span>
+        <span class="n">shape_name</span> <span class="o">=</span> <span class="n">pulse_shape_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">width_ns</span> <span class="o">=</span> <span class="n">pulse_shape_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">exp_ns</span> <span class="o">=</span> <span class="n">pulse_shape_value</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="n">pulse_arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pulse_shape_string_for_sim_telarray</span><span class="p">()</span>
-        <span class="n">pulse_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_shape&quot;</span><span class="p">)</span>
-        <span class="n">width_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_width&quot;</span><span class="p">)</span>
-        <span class="n">exp_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_exp_decay&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="nb">isinstance</span><span class="p">(</span><span class="n">exp_q</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">width_q</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="n">pulse_shape</span> <span class="o">==</span> <span class="s2">&quot;Gauss-Exponential&quot;</span>
-        <span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">shape_name</span> <span class="o">==</span> <span class="s2">&quot;Gauss-Exponential&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">width_ns</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">exp_ns</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Gauss-Exponential pulse shape requires positive width&quot;</span>
+                    <span class="s2">&quot; and exponential decay values&quot;</span>
+                <span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">base_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="s2">&quot;pulse_shapes&quot;</span><span class="p">)</span>
 
@@ -816,10 +819,10 @@
                 <span class="n">table_path</span> <span class="o">=</span> <span class="n">base_dir</span> <span class="o">/</span> <span class="n">fname</span>
                 <span class="n">fadc_bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;fadc_sum_bins&quot;</span><span class="p">)</span>
 
-                <span class="n">SimtelConfigWriter</span><span class="o">.</span><span class="n">write_lightpulse_table_gauss_expconv</span><span class="p">(</span>
+                <span class="n">SimtelConfigWriter</span><span class="o">.</span><span class="n">write_light_pulse_table_gauss_exp_conv</span><span class="p">(</span>
                     <span class="n">file_path</span><span class="o">=</span><span class="n">table_path</span><span class="p">,</span>
-                    <span class="n">width_ns</span><span class="o">=</span><span class="n">width_q</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">ns</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                    <span class="n">exp_decay_ns</span><span class="o">=</span><span class="n">exp_q</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">ns</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="n">width_ns</span><span class="o">=</span><span class="n">width_ns</span><span class="p">,</span>
+                    <span class="n">exp_decay_ns</span><span class="o">=</span><span class="n">exp_ns</span><span class="p">,</span>
                     <span class="n">fadc_sum_bins</span><span class="o">=</span><span class="n">fadc_bins</span><span class="p">,</span>
                     <span class="n">time_margin_ns</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -975,9 +978,16 @@
 <span class="sd">            The pulse shape string.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">opt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_shape&quot;</span><span class="p">)</span>
-        <span class="n">option_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">opt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-        <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_width&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">option_string</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">width</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">ns</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">width</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">option_string</span></div>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">opt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">opt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">expv</span> <span class="o">=</span> <span class="n">opt</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="s2">&quot;gauss-exponential&quot;</span> <span class="ow">and</span> <span class="n">width</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">expv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">width</span><span class="p">)</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">expv</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;gauss&quot;</span><span class="p">,</span> <span class="s2">&quot;tophat&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">width</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">width</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="s2">&quot;exponential&quot;</span> <span class="ow">and</span> <span class="n">expv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">expv</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">shape</span></div>
 
 </pre></div>
 

@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=8dbc3247"></script>
+    <script src="../_static/documentation_options.js?v=f1633de4"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Layout" href="array_layout.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gf4a27e94b" />
+  <meta name="docsearch:version" content="0.1.dev1+g315f70fe5" />
   </head>
   
   
@@ -1295,9 +1295,64 @@ This feature is intended for developers and lacks validation.</p>
 </dd></dl>
 
 </section>
+<section id="legacy-model-parameter">
+<h2>legacy_model_parameter<a class="headerlink" href="#legacy-model-parameter" title="Link to this heading">#</a></h2>
+<p id="module-model.legacy_model_parameter"><span id="id3"></span>Handling of legacy model parameters for backward compatibility.</p>
+<p>Collects routines to convert legacy model parameters to more recent
+formats. This is a fine-tuned process and requires to hard wire the
+changes. All code related to legacy model parameters should go into
+this module.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="model.legacy_model_parameter.apply_legacy_updates_to_parameters">
+<span class="sig-prename descclassname"><span class="pre">model.legacy_model_parameter.</span></span><span class="sig-name descname"><span class="pre">apply_legacy_updates_to_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legacy_updates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/legacy_model_parameter.html#apply_legacy_updates_to_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.legacy_model_parameter.apply_legacy_updates_to_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Apply legacy updates to model parameters.</p>
+<p>Modifies the parameters dictionary in-place.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>parameters: dict</strong></dt><dd><p>Dictionary of model parameters (all parameters).</p>
+</dd>
+<dt><strong>legacy_updates: dict</strong></dt><dd><p>Dictionary of legacy updates to apply.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model.legacy_model_parameter.register_update">
+<span class="sig-prename descclassname"><span class="pre">model.legacy_model_parameter.</span></span><span class="sig-name descname"><span class="pre">register_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/legacy_model_parameter.html#register_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.legacy_model_parameter.register_update" title="Link to this definition">#</a></dt>
+<dd><p>Register update handler for legacy model parameter.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model.legacy_model_parameter.update_parameter">
+<span class="sig-prename descclassname"><span class="pre">model.legacy_model_parameter.</span></span><span class="sig-name descname"><span class="pre">update_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/legacy_model_parameter.html#update_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.legacy_model_parameter.update_parameter" title="Link to this definition">#</a></dt>
+<dd><p>Update legacy model parameters to recent formats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>par_name: str</strong></dt><dd><p>Model parameter name.</p>
+</dd>
+<dt><strong>parameters: dict</strong></dt><dd><p>Dictionary of model parameters (all parameters).</p>
+</dd>
+<dt><strong>schema_version: str</strong></dt><dd><p>Target schema version.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Updated model parameter.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="model-repository">
 <h2>model_repository<a class="headerlink" href="#model-repository" title="Link to this heading">#</a></h2>
-<p id="module-model.model_repository"><span id="id3"></span>Utilities for managing the simulation models repository.</p>
+<p id="module-model.model_repository"><span id="id4"></span>Utilities for managing the simulation models repository.</p>
 <p>Simulation model parameters and production tables are managed through
 a gitlab repository (‘simulation_models’). This module provides service
 functions to interact with and verify the repository.</p>
@@ -1475,7 +1530,7 @@ present in the simulation models repository.</p>
 </section>
 <section id="site-model">
 <h2>site_model<a class="headerlink" href="#site-model" title="Link to this heading">#</a></h2>
-<p id="module-model.site_model"><span id="id4"></span>Definition of site model.</p>
+<p id="module-model.site_model"><span id="id5"></span>Definition of site model.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="model.site_model.SiteModel">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.site_model.</span></span><span class="sig-name descname"><span class="pre">SiteModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_model_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_software_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel" title="Link to this definition">#</a></dt>
@@ -1632,7 +1687,7 @@ or in CORSIKA-expected coordinates.</p>
 </section>
 <section id="telescope-model">
 <h2>telescope_model<a class="headerlink" href="#telescope-model" title="Link to this heading">#</a></h2>
-<p id="module-model.telescope_model"><span id="id5"></span>MC model of a telescope.</p>
+<p id="module-model.telescope_model"><span id="id6"></span>MC model of a telescope.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="model.telescope_model.TelescopeModel">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.telescope_model.</span></span><span class="sig-name descname"><span class="pre">TelescopeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_model_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_software_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/telescope_model.html#TelescopeModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.telescope_model.TelescopeModel" title="Link to this definition">#</a></dt>
@@ -2013,6 +2068,12 @@ reflectivity, etc.)</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.write_sim_telarray_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.write_sim_telarray_config_file()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#legacy-model-parameter">legacy_model_parameter</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.legacy_model_parameter.apply_legacy_updates_to_parameters"><code class="docutils literal notranslate"><span class="pre">apply_legacy_updates_to_parameters()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.legacy_model_parameter.register_update"><code class="docutils literal notranslate"><span class="pre">register_update()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.legacy_model_parameter.update_parameter"><code class="docutils literal notranslate"><span class="pre">update_parameter()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-repository">model_repository</a><ul class="nav section-nav flex-column">

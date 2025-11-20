@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=8dbc3247"></script>
+    <script src="../_static/documentation_options.js?v=f1633de4"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="Runners for simulation software" href="runners.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gf4a27e94b" />
+  <meta name="docsearch:version" content="0.1.dev1+g315f70fe5" />
   </head>
   
   
@@ -647,31 +647,28 @@ Check for differences in ‘default’ and ‘limits’ entries.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_config_writer.SimtelConfigWriter.write_lightpulse_table_gauss_expconv">
-<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_lightpulse_table_gauss_expconv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_ns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_decay_ns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_ns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rise_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.1,</span> <span class="pre">0.9)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fall_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.9,</span> <span class="pre">0.1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fadc_sum_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_margin_ns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_writer.html#SimtelConfigWriter.write_lightpulse_table_gauss_expconv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_lightpulse_table_gauss_expconv" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="simtel.simtel_config_writer.SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_light_pulse_table_gauss_exp_conv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_ns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_decay_ns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fadc_sum_bins</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_ns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rise_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.1,</span> <span class="pre">0.9)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fall_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.9,</span> <span class="pre">0.1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_margin_ns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_writer.html#SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv" title="Link to this definition">#</a></dt>
 <dd><p>Write a pulse table for a Gaussian convolved with a causal exponential.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>file_path</strong><span class="classifier">str or pathlib.Path</span></dt><dd><p>Destination path of the ASCII pulse table to write. Parent directory must exist.</p>
 </dd>
-<dt><strong>width_ns</strong><span class="classifier">float</span></dt><dd><p>Target rise time in ns between the fractional levels defined by <code class="docutils literal notranslate"><span class="pre">rise_range</span></code>.
-Defaults correspond to 10-90% rise time.</p>
+<dt><strong>width_ns</strong><span class="classifier">float</span></dt><dd><p>Target rise time in ns between the fractional levels defined by <code class="docutils literal notranslate"><span class="pre">rise_range</span></code>.</p>
 </dd>
-<dt><strong>exp_decay_ns</strong><span class="classifier">float</span></dt><dd><p>Target fall time in ns between the fractional levels defined by <code class="docutils literal notranslate"><span class="pre">fall_range</span></code>.
-Defaults correspond to 90-10% fall time.</p>
-</dd>
-<dt><strong>dt_ns</strong><span class="classifier">float, optional</span></dt><dd><p>Time sampling step in ns for the generated pulse table. Default is 0.1.</p>
-</dd>
-<dt><strong>rise_range</strong><span class="classifier">tuple[float, float], optional</span></dt><dd><p>Fractional amplitude bounds (low, high) for rise-time definition. Default (0.1, 0.9).</p>
-</dd>
-<dt><strong>fall_range</strong><span class="classifier">tuple[float, float], optional</span></dt><dd><p>Fractional amplitude bounds (high, low) for fall-time definition. Default (0.9, 0.1).</p>
+<dt><strong>exp_decay_ns</strong><span class="classifier">float</span></dt><dd><p>Target fall time in ns between the fractional levels defined by <code class="docutils literal notranslate"><span class="pre">fall_range</span></code>.</p>
 </dd>
 <dt><strong>fadc_sum_bins</strong><span class="classifier">int</span></dt><dd><p>Length of the FADC integration window (treated as ns here) used to derive
 the internal time sampling window of the solver as [-(margin), bins + margin].</p>
 </dd>
-<dt><strong>time_margin_ns</strong><span class="classifier">float, optional</span></dt><dd><p>Margin in ns to add to both ends of the FADC window when <code class="docutils literal notranslate"><span class="pre">fadc_sum_bins</span></code> is given.
-Default is 5.0 ns.</p>
+<dt><strong>dt_ns</strong><span class="classifier">float, optional</span></dt><dd><p>Time sampling step in ns for the generated pulse table.</p>
+</dd>
+<dt><strong>rise_range</strong><span class="classifier">tuple[float, float], optional</span></dt><dd><p>Fractional amplitude bounds (low, high) for rise-time definition.</p>
+</dd>
+<dt><strong>fall_range</strong><span class="classifier">tuple[float, float], optional</span></dt><dd><p>Fractional amplitude bounds (high, low) for fall-time definition.</p>
+</dd>
+<dt><strong>time_margin_ns</strong><span class="classifier">float, optional</span></dt><dd><p>Margin in ns to add to both ends of the FADC window when <code class="docutils literal notranslate"><span class="pre">fadc_sum_bins</span></code> is given.</p>
 </dd>
 </dl>
 </dd>
@@ -1570,7 +1567,7 @@ fall times measured on monotonic segments relative to the peak.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_writer.SimtelConfigWriter"><code class="docutils literal notranslate"><span class="pre">SimtelConfigWriter</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_array_config_file"><code class="docutils literal notranslate"><span class="pre">SimtelConfigWriter.write_array_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_dummy_telescope_configuration_file"><code class="docutils literal notranslate"><span class="pre">SimtelConfigWriter.write_dummy_telescope_configuration_file()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_lightpulse_table_gauss_expconv"><code class="docutils literal notranslate"><span class="pre">SimtelConfigWriter.write_lightpulse_table_gauss_expconv()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv"><code class="docutils literal notranslate"><span class="pre">SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_single_mirror_list_file"><code class="docutils literal notranslate"><span class="pre">SimtelConfigWriter.write_single_mirror_list_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_telescope_config_file"><code class="docutils literal notranslate"><span class="pre">SimtelConfigWriter.write_telescope_config_file()</span></code></a></li>
 </ul>
