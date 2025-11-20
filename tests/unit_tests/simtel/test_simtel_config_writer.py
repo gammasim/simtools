@@ -568,23 +568,21 @@ def test_write_single_mirror_list_file(simtel_config_writer, tmp_test_directory,
 
 
 @pytest.mark.parametrize(
-    ("shape", "width", "expected_sigtime", "expected_twidth", "expected_exptime"),
+    ("shape", "width", "exp", "expected_sigtime", "expected_twidth", "expected_exptime"),
     [
-        ("gauss", 2.5, 2.5, 0.0, 0.0),
-        ("tophat", 5.0, 0.0, 5.0, 0.0),
-        ("exponential", 3.2, 0.0, 0.0, 3.2),
-        ("gauss-exponential", 3.2, 3.2, 0.0, 3.2),
-        ("GAUSS", 1.5, 1.5, 0.0, 0.0),  # case insensitive
+        ("gauss", 2.5, 0.0, 2.5, 0.0, 0.0),
+        ("tophat", 5.0, 0.0, 0.0, 5.0, 0.0),
+        ("exponential", 0.0, 3.2, 0.0, 0.0, 3.2),
+        ("gauss-exponential", 3.2, 3.2, 3.2, 0.0, 3.2),
+        ("GAUSS", 1.5, 0.0, 1.5, 0.0, 0.0),  # case insensitive
     ],
 )
 def test_get_flasher_parameters_for_sim_telarray_valid_shapes(
-    simtel_config_writer, shape, width, expected_sigtime, expected_twidth, expected_exptime
+    simtel_config_writer, shape, width, exp, expected_sigtime, expected_twidth, expected_exptime
 ):
-    """Test _get_flasher_parameters_for_sim_telarray with valid pulse shapes."""
+    """Test _get_flasher_parameters_for_sim_telarray with valid pulse shapes (unified list)."""
     parameters = {
-        "flasher_pulse_shape": {"value": shape},
-        "flasher_pulse_width": {"value": width},
-        "flasher_pulse_exp_decay": {"value": width},
+        "flasher_pulse_shape": {"value": [shape, width, exp]},
     }
     result = simtel_config_writer._get_flasher_parameters_for_sim_telarray(parameters, {})
 
@@ -599,8 +597,8 @@ def test_get_flasher_parameters_for_sim_telarray_invalid_shapes(
 ):
     """Test _get_flasher_parameters_for_sim_telarray with invalid shapes - covers warning case."""
     parameters = {
-        "flasher_pulse_shape": {"value": shape},
-        "flasher_pulse_width": {"value": 1.0},
+        # Provide unified list but with an invalid shape token
+        "flasher_pulse_shape": {"value": [shape, 0.0, 0.0]},
     }
 
     with caplog.at_level(logging.WARNING):
@@ -622,11 +620,8 @@ def test_get_flasher_parameters_for_sim_telarray_missing_params(simtel_config_wr
     assert result == simtel_par
 
     simtel_par = {"existing_param": "existing_value"}
-
-    parameters = {
-        "flasher_pulse_width": {"value": 0.0},
-        "flasher_pulse_shape": {"value": "bad_shape"},
-    }
+    # Provide unified list with invalid shape token; expect warning and zeroed flasher params
+    parameters = {"flasher_pulse_shape": {"value": ["bad_shape", 0.0, 0.0]}}
 
     with caplog.at_level(logging.WARNING):
         result = simtel_config_writer._get_flasher_parameters_for_sim_telarray(
@@ -640,6 +635,7 @@ def test_get_flasher_parameters_for_sim_telarray_missing_params(simtel_config_wr
         result[key] == pytest.approx(0.0)
         for key in ["laser_pulse_sigtime", "laser_pulse_twidth", "laser_pulse_exptime"]
     )
+    assert result["existing_param"] == "existing_value"
 
 
 def test_write_array_triggers_file_mixed_hardstereo(simtel_config_writer, tmp_test_directory):
@@ -901,10 +897,10 @@ def _read_pulse_table(path: Path):
     return np.array(t_vals), np.array(y_vals)
 
 
-def test_write_lightpulse_table_gauss_expconv_creates_normalized_file(tmp_test_directory):
+def test_write_light_pulse_table_gauss_exp_conv_creates_normalized_file(tmp_test_directory):
     """Writer should create a pulse table with peak amplitude ~1 and expected window."""
     out = Path(tmp_test_directory) / "pulse_shape_test.dat"
-    result = SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+    result = SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
         file_path=out,
         width_ns=2.5,
         exp_decay_ns=5.0,
@@ -931,11 +927,11 @@ def test_write_lightpulse_table_gauss_expconv_creates_normalized_file(tmp_test_d
     assert (t[-1] - t[0]) >= (expected_span - dt)
 
 
-def test_write_lightpulse_table_gauss_expconv_time_spacing(tmp_test_directory):
+def test_write_light_pulse_table_gauss_exp_conv_time_spacing(tmp_test_directory):
     """Time column should be spaced by dt_ns consistently."""
     out = Path(tmp_test_directory) / "pulse_shape_spacing.dat"
     dt = 0.5
-    SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+    SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
         file_path=out,
         width_ns=3.0,
         exp_decay_ns=6.0,
@@ -947,11 +943,11 @@ def test_write_lightpulse_table_gauss_expconv_time_spacing(tmp_test_directory):
     assert np.allclose(np.diff(t), dt, atol=1e-9)
 
 
-def test_write_lightpulse_table_gauss_expconv_missing_params_raises(tmp_test_directory):
+def test_write_light_pulse_table_gauss_exp_conv_missing_params_raises(tmp_test_directory):
     """Missing width/decay should raise ValueError."""
     out = Path(tmp_test_directory) / "pulse_missing_params.dat"
     with pytest.raises(ValueError, match="width_ns"):
-        SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+        SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
             file_path=out,
             width_ns=None,
             exp_decay_ns=5.0,
