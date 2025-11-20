@@ -4,8 +4,8 @@
 # Contains different versions of CORSIKA (possibly optimized; with and without curved atmosphere)
 #
 # Pending tasks:
-# - use almalinux:10 to replace autorecon 2.71 installation
 # - updates to iact code?
+# - release corsika config and replace CORSIKA_CONFIG_VERSION
 
 # Shared build arguments
 ARG CORSIKA_VERSION="78010"
@@ -18,14 +18,13 @@ ARG AVX_FLAG="avx2"
 # - SC1091: ignore warning about not being able to source the bashrc
 
 # -----------------------------------------------------------------------------
-# STAGE 1: source_preparation
-# Centralizes all source code preparation and extraction.
+# STAGE 1: source code preparation
 # -----------------------------------------------------------------------------
-FROM almalinux:9.5-minimal AS source_preparation
-ARG CORSIKA_VERSION
+FROM almalinux:10.0-minimal AS source_preparation
 ARG CORSIKA_REPO="gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git"
-ARG CORSIKA_OPT_PATCH_VERSION
+ARG CORSIKA_VERSION
 ARG CORSIKA_OPT_PATCH_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git"
+ARG CORSIKA_OPT_PATCH_VERSION
 ARG CORSIKA_CONFIG_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git"
 ARG CORSIKA_CONFIG_VERSION
 
@@ -53,20 +52,16 @@ RUN --mount=type=secret,id=opt_patches_token \
     cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/* corsika7/ && \
     rm -rf corsika-opt-patches
 
-ADD autoconf.tar.gz .
-RUN mv autoconf-2.71 ./autoconf
-
 # -----------------------------------------------------------------------------
 # STAGE 2: build_image
 # -----------------------------------------------------------------------------
-FROM almalinux:9.5 AS build_image
+FROM almalinux:10.0 AS build_image
 ARG AVX_FLAG
 ARG CORSIKA_VERSION
 ARG C_SPECIFIC_FLAGS="-std=c99"
 ARG FORTRAN_SPECIFIC_FLAGS="-ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy"
 
 ENV GCC_PATH="/usr/bin/"
-ENV CORSIKA_DIR="corsika7"
 
 RUN yum update -y --setopt=tsflags=nodocs && \
     yum install -y \
@@ -76,13 +71,7 @@ RUN yum update -y --setopt=tsflags=nodocs && \
 WORKDIR /workdir/simulation_software
 COPY --from=source_preparation /src .
 
-# autoconf 2.71 required to re-generate the configure script after applying patches
-WORKDIR /workdir/simulation_software/autoconf
-RUN ./configure --prefix=/usr && \
-    make && make install && \
-    rm -rf /workdir/simulation_software/autoconf
-
-WORKDIR /workdir/simulation_software/${CORSIKA_DIR}
+WORKDIR /workdir/simulation_software/corsika7
 
 # Apply patches for non-optimized / optimized CORSIKA
 RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
@@ -124,15 +113,13 @@ RUN for config_file in ../config_*.h; do \
     done
 
 # -----------------------------------------------------------------------------
-# STAGE 3: Final Image (Runtime)
+# STAGE 3: Runtime Image
 # -----------------------------------------------------------------------------
-FROM almalinux:9.5-minimal
+FROM almalinux:10.0-minimal
 WORKDIR /workdir/simulation_software
 COPY --from=build_image /workdir/corsika-run /workdir/simulation_software/corsika
 
 RUN microdnf update -y && microdnf install -y \
-#    gcc-fortran && \
-    libgfortran && \
-    microdnf clean all
+    libgfortran && microdnf clean all
 
 WORKDIR /workdir/simulation_software/corsika
