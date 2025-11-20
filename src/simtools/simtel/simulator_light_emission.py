@@ -356,7 +356,12 @@ class SimulatorLightEmission(SimtelRunner):
         exp_ns = pulse_shape_value[2]
         pulse_arg = self._get_pulse_shape_string_for_sim_telarray()
 
-        if shape_name == "Gauss-Exponential" and width_ns > 0 and exp_ns > 0:
+        if shape_name == "Gauss-Exponential":
+            if width_ns <= 0 or exp_ns <= 0:
+                raise ValueError(
+                    "Gauss-Exponential pulse shape requires positive width"
+                    " and exponential decay values"
+                )
             try:
                 base_dir = self.io_handler.get_output_directory("pulse_shapes")
 
