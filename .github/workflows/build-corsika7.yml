@@ -1,0 +1,84 @@
+---
+name: build-corsika7
+# Build and push CORSIKA7 images for different CPU architectures.
+# The no_opt (non-optimized) images are built as multi-platform images (x86_64 and arm64).
+#
+# The images are built and pushed when manually triggered (workflow_dispatch).
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - docker/Dockerfile-corsika7
+  schedule:
+    - cron: '0 0 1 * *'  # Every 1st day of the month at 00:00 UTC (build only)
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
+
+jobs:
+  build-corsika7:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        version:
+          - {corsika_version: '78010', avx_instruction: 'no_opt'}
+          - {corsika_version: '78010', avx_instruction: 'avx2'}
+          - {corsika_version: '78010', avx_instruction: 'avx512f'}
+          - {corsika_version: '78010', avx_instruction: 'sse4'}
+
+    env:
+      BASE_LABELS: "corsika7-${{ matrix.version.corsika_version }}-${{ matrix.version.avx_instruction }}"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for CORSIKA7 image (tags, labels)
+        id: meta-base
+        uses: docker/metadata-action@v5
+        with:
+          tags: |
+            type=ref,event=pr
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}
+            type=schedule,pattern={{date 'YYYYMMDD'}}
+            type=raw,value={{date 'YYYYMMDD-HHmmss'}}
+          images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABELS }}
+          flavor: latest=true
+
+      - name: Build and push CORSIKA7 image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          # Build multi-platform only for no_opt (non-optimized) variant, others are x86-specific
+          platforms: ${{ matrix.version.avx_instruction == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
+          build-args: |
+            AVX_FLAG=${{ matrix.version.avx_instruction }}
+            CORSIKA_VERSION=${{ matrix.version.corsika_version }}
+          secrets: |
+            corsika7_token=${{ secrets.CORSIKA7_KIT_GITLAB }}
+          # push: ${{ github.event_name == 'workflow_dispatch' }}
+          push: false
+          file: ./docker/Dockerfile-corsika7
+          tags: ${{ steps.meta-base.outputs.tags }}
+          labels: ${{ steps.meta-base.outputs.labels }}
+
+      - name: Output image information
+        run: |
+          echo "Built base image: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABELS }}:latest"
+          echo "Image tags: ${{ steps.meta-base.outputs.tags }}"
