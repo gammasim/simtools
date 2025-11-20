@@ -349,16 +349,19 @@ class SimulatorLightEmission(SimtelRunner):
         dist_cm = self.calculate_distance_focal_plane_calibration_device().to(u.cm).value
         angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
 
-        # Build pulse table for ff-1m using model width/exp parameters; else use token.
+        # Build pulse table for ff-1m using unified list parameter [shape, width, exp]
+        pulse_shape_value = self.calibration_model.get_parameter_value("flasher_pulse_shape")
+        shape_name = pulse_shape_value[0]
+        width_ns = pulse_shape_value[1]
+        exp_ns = pulse_shape_value[2]
         pulse_arg = self._get_pulse_shape_string_for_sim_telarray()
-        pulse_shape = self.calibration_model.get_parameter_value("flasher_pulse_shape")
-        width_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
-        exp_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_exp_decay")
-        if (
-            isinstance(exp_q, u.Quantity)
-            and isinstance(width_q, u.Quantity)
-            and pulse_shape == "Gauss-Exponential"
-        ):
+
+        if shape_name == "Gauss-Exponential":
+            if width_ns <= 0 or exp_ns <= 0:
+                raise ValueError(
+                    "Gauss-Exponential pulse shape requires positive width"
+                    " and exponential decay values"
+                )
             try:
                 base_dir = self.io_handler.get_output_directory("pulse_shapes")
 
@@ -373,10 +376,10 @@ class SimulatorLightEmission(SimtelRunner):
                 table_path = base_dir / fname
                 fadc_bins = self.telescope_model.get_parameter_value("fadc_sum_bins")
 
-                SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+                SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
                     file_path=table_path,
-                    width_ns=width_q.to(u.ns).value,
-                    exp_decay_ns=exp_q.to(u.ns).value,
+                    width_ns=width_ns,
+                    exp_decay_ns=exp_ns,
                     fadc_sum_bins=fadc_bins,
                     time_margin_ns=5.0,
                 )
@@ -529,6 +532,13 @@ class SimulatorLightEmission(SimtelRunner):
             The pulse shape string.
         """
         opt = self.calibration_model.get_parameter_value("flasher_pulse_shape")
-        option_string = str(opt).lower() if opt is not None else ""
-        width = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
-        return f"{option_string}:{width.to(u.ns).value}" if width is not None else option_string
+        shape = opt[0].lower()
+        width = opt[1]
+        expv = opt[2]
+        if shape == "gauss-exponential" and width is not None and expv is not None:
+            return f"{shape}:{float(width)}:{float(expv)}"
+        if shape in ("gauss", "tophat") and width is not None:
+            return f"{shape}:{float(width)}"
+        if shape == "exponential" and expv is not None:
+            return f"{shape}:{float(expv)}"
+        return shape
