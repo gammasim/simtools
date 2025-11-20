@@ -251,6 +251,23 @@ def test__get_pulse_shape_string_for_sim_telarray(simulator_instance):
         "flasher_pulse_shape"
     )
 
+    # Reset mocks for third test (exponential branch)
+    simulator_instance.calibration_model.reset_mock()
+
+    # Test exponential pulse shape with decay only
+    simulator_instance.calibration_model.get_parameter_value.return_value = [
+        "Exponential",
+        0.0,
+        3.2,
+    ]
+
+    result = simulator_instance._get_pulse_shape_string_for_sim_telarray()
+    assert result == "exponential:3.2"
+
+    simulator_instance.calibration_model.get_parameter_value.assert_called_once_with(
+        "flasher_pulse_shape"
+    )
+
 
 def test__add_illuminator_command_options(simulator_instance):
     """Test _add_illuminator_command_options with different conditions."""
