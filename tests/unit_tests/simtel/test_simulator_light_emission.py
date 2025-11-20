@@ -232,10 +232,9 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian(
     simulator_instance.calibration_model.get_parameter_value.side_effect = (
         lambda name: "Lambertian" if name == "flasher_angular_distribution" else None
     )
-    width_mock = Mock()
-    width_mock.to.return_value.value = 12.0
+    # Width is ignored for Lambertian; no need to mock width conversion.
     simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
-        lambda name: width_mock if name == "flasher_angular_distribution_width" else None
+        lambda name: None
     )
 
     result = simulator_instance._get_angular_distribution_string_for_sim_telarray()
@@ -248,8 +247,8 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian(
     assert content[0].startswith("# angle[deg] relative_intensity")
     # Expect 101 lines: header + 100 samples (0..max angle)
     assert len(content) == 101
-    # Width mock used with degrees conversion
-    width_mock.to.assert_called_once_with(u.deg)
+    # Width parameter should not have been requested for Lambertian
+    assert simulator_instance.calibration_model.get_parameter_value_with_unit.call_count == 0
 
 
 def test__get_pulse_shape_string_for_sim_telarray(simulator_instance):
