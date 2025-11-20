@@ -597,7 +597,7 @@ def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_t
             return_value=90.0,
         ),
         patch(
-            "simtools.simtel.simulator_light_emission.SimtelConfigWriter.write_lightpulse_table_gauss_expconv"
+            "simtools.simtel.simulator_light_emission.SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv"
         ) as mock_writer,
     ):
         mock_distance_value = Mock()
@@ -695,7 +695,7 @@ def test__add_flasher_command_options_writer_fallback(simulator_instance, tmp_te
             return_value="gauss-exponential-token",
         ),
         patch(
-            "simtools.simtel.simulator_light_emission.SimtelConfigWriter.write_lightpulse_table_gauss_expconv",
+            "simtools.simtel.simulator_light_emission.SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv",
             side_effect=OSError("boom"),
         ),
     ):

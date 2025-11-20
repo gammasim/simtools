@@ -125,14 +125,14 @@ class SimtelConfigWriter:
                 file.write(f"{meta}\n")
 
     @staticmethod
-    def write_lightpulse_table_gauss_expconv(
+    def write_light_pulse_table_gauss_exp_conv(
         file_path,
-        width_ns=None,
-        exp_decay_ns=None,
+        width_ns,
+        exp_decay_ns,
+        fadc_sum_bins,
         dt_ns=0.1,
         rise_range=(0.1, 0.9),
         fall_range=(0.9, 0.1),
-        fadc_sum_bins=None,
         time_margin_ns=10.0,
     ):
         """Write a pulse table for a Gaussian convolved with a causal exponential.
@@ -143,22 +143,19 @@ class SimtelConfigWriter:
             Destination path of the ASCII pulse table to write. Parent directory must exist.
         width_ns : float
             Target rise time in ns between the fractional levels defined by ``rise_range``.
-            Defaults correspond to 10-90% rise time.
         exp_decay_ns : float
             Target fall time in ns between the fractional levels defined by ``fall_range``.
-            Defaults correspond to 90-10% fall time.
-        dt_ns : float, optional
-            Time sampling step in ns for the generated pulse table. Default is 0.1.
-        rise_range : tuple[float, float], optional
-            Fractional amplitude bounds (low, high) for rise-time definition. Default (0.1, 0.9).
-        fall_range : tuple[float, float], optional
-            Fractional amplitude bounds (high, low) for fall-time definition. Default (0.9, 0.1).
         fadc_sum_bins : int
             Length of the FADC integration window (treated as ns here) used to derive
             the internal time sampling window of the solver as [-(margin), bins + margin].
+        dt_ns : float, optional
+            Time sampling step in ns for the generated pulse table.
+        rise_range : tuple[float, float], optional
+            Fractional amplitude bounds (low, high) for rise-time definition.
+        fall_range : tuple[float, float], optional
+            Fractional amplitude bounds (high, low) for fall-time definition.
         time_margin_ns : float, optional
             Margin in ns to add to both ends of the FADC window when ``fadc_sum_bins`` is given.
-            Default is 5.0 ns.
 
         Returns
         -------
@@ -174,8 +171,10 @@ class SimtelConfigWriter:
         if width_ns is None or exp_decay_ns is None:
             raise ValueError("width_ns (rise 10-90) and exp_decay_ns (fall 90-10) are required")
         logger.info(
-            f"Generating lightpulse table with rise10-90={width_ns} ns, "
-            f"fall90-10={exp_decay_ns} ns, dt={dt_ns} ns"
+            "Generating pulse-shape table with "
+            f"rise{int(rise_range[0] * 100)}-{int(rise_range[1] * 100)}={width_ns} ns, "
+            f"fall{int(fall_range[0] * 100)}-{int(fall_range[1] * 100)}={exp_decay_ns} ns, "
+            f"dt={dt_ns} ns"
         )
         width = float(fadc_sum_bins)
         t_start_ns = -abs(time_margin_ns + width)
