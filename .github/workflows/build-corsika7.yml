@@ -6,7 +6,6 @@ name: build-corsika7
 # The images are built and pushed when manually triggered (workflow_dispatch).
 
 on:
-  workflow_dispatch:
   pull_request:
     paths:
       - docker/Dockerfile-corsika7
