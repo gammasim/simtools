@@ -95,7 +95,8 @@ jobs:
             CORSIKA_VERSION=${{ matrix.version.corsika_version }}
           secrets: |
             corsika7_token=${{ secrets.CORSIKA7_KIT_GITLAB }}
-          push: ${{ github.event_name == 'workflow_dispatch' }}
+          # push: ${{ github.event_name == 'workflow_dispatch' }}
+          push: true
           file: ./docker/Dockerfile-corsika7
           tags: ${{ steps.meta-base.outputs.tags }}
           labels: ${{ steps.meta-base.outputs.labels }}
