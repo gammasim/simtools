@@ -6,6 +6,7 @@ name: build-corsika7
 # The images are built and pushed when manually triggered (workflow_dispatch).
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - docker/Dockerfile-corsika7
@@ -26,7 +27,7 @@ jobs:
       - name: download-auxiliary-files
         run: |
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_AUTOCONF }}/download -O autoconf.tar.gz
-      - name: Upload autoconf
+      - name: upload-auxiliary-files
         uses: actions/upload-artifact@v5
         with:
           name: upload-auxiliary-files
@@ -94,8 +95,7 @@ jobs:
             CORSIKA_VERSION=${{ matrix.version.corsika_version }}
           secrets: |
             corsika7_token=${{ secrets.CORSIKA7_KIT_GITLAB }}
-          # push: ${{ github.event_name == 'workflow_dispatch' }}
-          push: false
+          push: ${{ github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-corsika7
           tags: ${{ steps.meta-base.outputs.tags }}
           labels: ${{ steps.meta-base.outputs.labels }}
