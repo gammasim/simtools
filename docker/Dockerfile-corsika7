@@ -62,6 +62,8 @@ ADD autoconf.tar.gz .
 FROM almalinux:9.5 AS build_image
 ARG AVX_FLAG
 ARG CORSIKA_VERSION
+ARG CORSIKA_OPT_PATCH_VERSION
+ARG CORSIKA_CONFIG_VERSION
 ARG C_SPECIFIC_FLAGS="-std=c99"
 ARG FORTRAN_SPECIFIC_FLAGS="-ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy"
 
@@ -118,6 +120,26 @@ RUN for config_file in ../config_*.h; do \
         corsika_name=$(basename "$config_file" .h | sed 's/^config_/corsika_/'); \
         mv -v -f "./run/corsika${CORSIKA_VERSION}Linux_"* "${CORSIKA_RUN_DIR}/${corsika_name}" && \
         cp -v -r "./run/"* ${CORSIKA_RUN_DIR}/; \
+    done
+
+# Generate config.yml with build information
+RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
+    echo "CORSIKA_VERSION: \"${CORSIKA_VERSION}\"" > ${CORSIKA_RUN_DIR}/config.yml && \
+    echo "CORSIKA_OPT_PATCH_VERSION: \"${CORSIKA_OPT_PATCH_VERSION}\"" >> ${CORSIKA_RUN_DIR}/config.yml && \
+    echo "CORSIKA_CONFIG_VERSION: \"${CORSIKA_CONFIG_VERSION}\"" >> ${CORSIKA_RUN_DIR}/config.yml && \
+    echo "AVX_FLAG: \"${AVX_FLAG}\"" >> ${CORSIKA_RUN_DIR}/config.yml && \
+    echo "VARIANT:" >> ${CORSIKA_RUN_DIR}/config.yml && \
+    for config_file in ../config_*.h; do \
+        basename_file=$(basename "$config_file" .h); \
+        corsika_name=$(echo "$basename_file" | sed 's/^config_/corsika_/'); \
+        he_model=$(echo "$basename_file" | sed 's/^config_\([^_]*\)_.*/\1/'); \
+        le_model=$(echo "$basename_file" | sed 's/^config_[^_]*_\([^_]*\)_.*/\1/'); \
+        variant=$(echo "$basename_file" | sed 's/.*_\(curved\|flat\)$/\1/'); \
+        echo "  - EXECUTABLE: \"${corsika_name}\"" >> ${CORSIKA_RUN_DIR}/config.yml; \
+        echo "    CONFIG: \"${basename_file}\"" >> ${CORSIKA_RUN_DIR}/config.yml; \
+        echo "    ATMOSPHERE_GEOMETRY: \"${variant}\"" >> ${CORSIKA_RUN_DIR}/config.yml; \
+        echo "    HE_HADRONIC_MODEL: \"${he_model}\"" >> ${CORSIKA_RUN_DIR}/config.yml; \
+        echo "    LE_HADRONIC_MODEL: \"${le_model}\"" >> ${CORSIKA_RUN_DIR}/config.yml; \
     done
 
 # -----------------------------------------------------------------------------
