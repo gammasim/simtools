@@ -99,8 +99,6 @@ jobs:
           file: ./docker/Dockerfile-corsika7
           tags: ${{ steps.meta-base.outputs.tags }}
           labels: ${{ steps.meta-base.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Output image information
         run: |
