@@ -1,0 +1,66 @@
+# syntax=docker/dockerfile:1.4
+# Dockerfile for sim_telarray
+#
+
+# Shared build arguments
+ARG SIMTEL_VERSION="master"
+ARG BUILD_OPT="prod6-baseline"
+ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
+ARG HESSIO_VERSION="master"
+ARG STDTOOLS_VERSION="master"
+
+# hadolint global ignore=DL3013,DL3033,DL3041,SC1091
+# - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)
+# - SC1091: ignore warning about not being able to source the bashrc
+
+# -----------------------------------------------------------------------------
+# STAGE 1: source code preparation
+# -----------------------------------------------------------------------------
+FROM almalinux:9.5-minimal AS source_preparation
+ARG SIMTEL_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray.git"
+ARG SIMTEL_VERSION
+ARG HESSIO_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio.git"
+ARG HESSIO_VERSION
+ARG STDTOOLS_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools.git"
+ARG STDTOOLS_VERSION
+
+RUN microdnf update -y && microdnf install -y git && \
+    microdnf clean all
+
+WORKDIR /src
+
+# Clone sim_telarray from CTAO gitlab
+RUN --mount=type=secret,id=sim_telarray_token \
+    git config --global advice.detachedHead false && \
+    git clone --depth 1 --branch "${SIMTEL_VERSION}" "https://oauth2:$(cat /run/secrets/sim_telarray_token)@${SIMTEL_REPO}"
+
+# Clone hessio from CTAO gitlab
+RUN --mount=type=secret,id=hessio_token \
+    git config --global advice.detachedHead false && \
+    git clone --depth 1 --branch "${HESSIO_VERSION}" "https://oauth2:$(cat /run/secrets/hessio_token)@${HESSIO_REPO}"
+
+# Clone stdtools from CTAO gitlab
+RUN --mount=type=secret,id=stdtools_token \
+    git config --global advice.detachedHead false && \
+    git clone --depth 1 --branch "${STDTOOLS_VERSION}" "https://oauth2:$(cat /run/secrets/stdtools_token)@${STDTOOLS_REPO}"
+
+# -----------------------------------------------------------------------------
+# STAGE 2: build_image
+# -----------------------------------------------------------------------------
+FROM almalinux:9.5 AS build_image
+ARG BUILD_OPT
+ARG EXTRA_DEF
+ARG BERNLOHR_VERSION
+
+ENV GCC_PATH="/usr/bin/"
+
+RUN yum update -y && yum install -y \
+    gcc-fortran gsl-devel libgfortran \
+    automake csh patch perl which bzip2 \
+    wget make tar m4 && \
+    yum clean all
+
+WORKDIR /workdir/simulation_software
+COPY --from=source_preparation /src .
+
+WORKDIR /workdir/simulation_software/sim_telarray
