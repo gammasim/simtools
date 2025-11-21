@@ -101,7 +101,6 @@ RUN ls ../config_*.h && for config_file in ../config_*.h; do \
         AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
         if [ "$AVX_FLAG" = "no_opt" ] || [ "$variant" = "curved" ]; then \
             BASE_FLAGS="-g -O3"; \
-            continue; \
         else \
             BASE_FLAGS="-g -DCERENKOPT -DVLIBM -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
             echo "#define __CERENKOPT__ 1" >> include/config.h; \
