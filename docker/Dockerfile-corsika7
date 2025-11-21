@@ -91,7 +91,7 @@ RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
     fi
 
 # Build non-optimized / optimized CORSIKA
-RUN for config_file in ../config_*.h; do \
+RUN ls ../config_*.h && for config_file in ../config_*.h; do \
         ./coconut -d && rm -f ./*/*.a lib/*/*.a include/*.h && \
         # Extract variant name (curved/flat) from config file name
         variant=$(basename "$config_file" .h | sed 's/.*_\(curved\|flat\)$/\1/'); \
