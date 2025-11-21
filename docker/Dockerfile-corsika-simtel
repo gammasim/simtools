@@ -7,13 +7,13 @@
 # CORSIKA optimized build) to be in the same directory as this Dockerfile.
 
 # Shared build arguments
-ARG CORSIKA_VERSION="78010"
+ARG CORSIKA_VERSION="77550"
 ARG CORSIKA_OPT_PATCH_VERSION="v1.1.0"
-ARG BUILD_OPT="prod6-baseline"
+ARG BUILD_OPT="prod6-sc"
 ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
-ARG HADRONIC_MODEL="qgs3"
+ARG HADRONIC_MODEL="qgs2"
 ARG AVX_FLAG="avx2"
-ARG BERNLOHR_VERSION="1.70"
+ARG BERNLOHR_VERSION="1.68"
 ARG AUTOCONF_VERSION="2.71"
 
 #
@@ -24,16 +24,14 @@ ARG AUTOCONF_VERSION="2.71"
 FROM almalinux:9.5 AS patches_stage
 ARG CORSIKA_VERSION
 ARG CORSIKA_OPT_PATCH_VERSION
-ARG CORSIKA_OPT_PATCH_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git"
 
-RUN yum update -y --setopt=tsflags=nodocs && \
-    yum install -y git && \
+RUN yum update -y && yum install -y git && \
     yum clean all && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
 RUN --mount=type=secret,id=gitlab_token \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${CORSIKA_OPT_PATCH_VERSION}" "https://oauth2:$(cat /run/secrets/gitlab_token)@${CORSIKA_OPT_PATCH_REPO}" && \
+    git clone --depth 1 --branch "${CORSIKA_OPT_PATCH_VERSION}" "https://oauth2:$(cat /run/secrets/gitlab_token)@gitlab.cta-observatory.org/cta-computing/dpps/simpipe/corsika-opt-patches.git" && \
     cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/ ./corsika-patches/ && \
     rm -rf corsika-opt-patches
 
@@ -68,7 +66,6 @@ RUN cd "autoconf-$AUTOCONF_VERSION" && \
 WORKDIR /workdir/sim_telarray
 ADD corsika_simtelarray.tar.gz .
 COPY --from=patches_stage /corsika-patches ./${CORSIKA_DIR}/
-
 
 RUN tar -zxf ${CORSIKA_DIR}.tar.gz && \
     tar -zxf bernlohr-$BERNLOHR_VERSION.tar.gz -C ${CORSIKA_DIR}/bernlohr && \
@@ -123,13 +120,11 @@ RUN for variant in curved ""; do \
         if [ "$variant" = "curved" ]; then \
             mv -v -f "${CORSIKA_DIR}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-run/corsika-$variant" && \
             cp -v -f "${CORSIKA_DIR}/src/corsikacompilefile.f" "corsika-run/corsikacompilefile_$variant.f" && \
-            cp -v -f "${CORSIKA_DIR}/include/corsika_config.h" "corsika-run/corsika_config_$variant.h" && \
             echo "=== After curved variant copy, corsika-run contains: ===" && \
             ls -la corsika-run/; \
         else \
             mv -v -f "${CORSIKA_DIR}/run/corsika${CORSIKA_VERSION}Linux_"* "corsika-run/corsika" && \
             cp -v -f "${CORSIKA_DIR}/src/corsikacompilefile.f" "corsika-run/corsikacompilefile.f" && \
-            cp -v -f "${CORSIKA_DIR}/include/corsika_config.h" "corsika-run/corsika_config_$variant.h" && \
             echo "=== After non-curved variant copy, corsika-run contains: ===" && \
             ls -la corsika-run/; \
         fi && \
