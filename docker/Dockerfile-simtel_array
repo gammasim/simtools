@@ -3,9 +3,8 @@
 #
 
 # Shared build arguments
+ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=99 -DCTA_PROD6"
 ARG SIMTEL_VERSION="master"
-ARG BUILD_OPT="prod6-baseline"
-ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
 ARG HESSIO_VERSION="master"
 ARG STDTOOLS_VERSION="master"
 
@@ -32,27 +31,32 @@ WORKDIR /src
 # Clone sim_telarray from CTAO gitlab
 RUN --mount=type=secret,id=sim_telarray_token \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${SIMTEL_VERSION}" "https://oauth2:$(cat /run/secrets/sim_telarray_token)@${SIMTEL_REPO}"
+    git clone --depth 1 --branch "${SIMTEL_VERSION}" "https://oauth2:$(cat /run/secrets/sim_telarray_token)@${SIMTEL_REPO}" && \
+    cd sim_telarray && rm -rf .git
 
 # Clone hessio from CTAO gitlab
-RUN --mount=type=secret,id=hessio_token \
-    git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${HESSIO_VERSION}" "https://oauth2:$(cat /run/secrets/hessio_token)@${HESSIO_REPO}"
+#RUN --mount=type=secret,id=hessio_token \
+#    git config --global advice.detachedHead false && \
+#    git clone --depth 1 --branch "${HESSIO_VERSION}" "https://oauth2:$(cat /run/secrets/hessio_token)@${HESSIO_REPO}"
+# TODO temporarily uses tar package
+ADD hessioxxx.tar.gz .
 
 # Clone stdtools from CTAO gitlab
 RUN --mount=type=secret,id=stdtools_token \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${STDTOOLS_VERSION}" "https://oauth2:$(cat /run/secrets/stdtools_token)@${STDTOOLS_REPO}"
+    git clone --depth 1 --branch "${STDTOOLS_VERSION}" "https://oauth2:$(cat /run/secrets/stdtools_token)@${STDTOOLS_REPO}" && \
+    cd stdtools && rm -rf .git
 
 # -----------------------------------------------------------------------------
 # STAGE 2: build_image
 # -----------------------------------------------------------------------------
 FROM almalinux:9.5 AS build_image
-ARG BUILD_OPT
 ARG EXTRA_DEF
 ARG BERNLOHR_VERSION
+ARG GSL_COMPILE="-DWITH_GSL -DWITH_GSL_RNG"
 
 ENV GCC_PATH="/usr/bin/"
+ENV CDEBUGFLAGS="DEFINES=${EXTRA_DEF} ${GSL_COMPILE}"
 
 RUN yum update -y && yum install -y \
     gcc-fortran gsl-devel libgfortran \
@@ -63,4 +67,16 @@ RUN yum update -y && yum install -y \
 WORKDIR /workdir/simulation_software
 COPY --from=source_preparation /src .
 
+WORKDIR /workdir/simulation_software/hessioxxx
+RUN make clean && \
+    make WITH_RPATH=1 CDEBUGFLAGS= 'DEFINES=${EXTRA_DEF} ${GSL_COMPILE}' && \
+    rm -rf out doc root
+
+WORKDIR /workdir/simulation_software/stdtools
+RUN make clean && \
+    make WITH_RPATH=1 CDEBUGFLAGS= 'DEFINES=${EXTRA_DEF} ${GSL_COMPILE}'
+
 WORKDIR /workdir/simulation_software/sim_telarray
+ADD version.h .
+RUN make clean && \
+    make WITH_RPATH=1
