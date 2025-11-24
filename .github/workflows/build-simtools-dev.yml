@@ -100,6 +100,6 @@ jobs:
           build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
           push: true
           # ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
-          file: ./docker/Dockerfile-${{ matrix.type }}
+          file: ./docker/Dockerfile-simtools-${{ matrix.type }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}
