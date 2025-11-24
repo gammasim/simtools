@@ -16,10 +16,11 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   TEST_TAG: user/app:test
+  CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
 jobs:
 
-  download-auxiliary-files:
+  download-qgsjet-tables:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,14 +30,14 @@ jobs:
       - name: Upload QGSJet files
         uses: actions/upload-artifact@v5
         with:
-          name: upload-auxiliary-files
+          name: upload-qgsjet-tables
           path: |
             qgsdat-III.bz2
           retention-days: 1
 
   build-simtools-container:
     runs-on: ubuntu-latest
-    needs: [download-auxiliary-files]
+    needs: [download-qgsjet-tables]
     permissions:
       contents: read
       packages: write
