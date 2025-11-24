@@ -94,7 +94,8 @@ jobs:
             sim_telarray_token=${{ secrets.SIMTELARRAY_CTAO_GITLAB}}
             hessio_token=${{ secrets.HESSIO_CTAO_GITLAB}}
             stdtools_token=${{ secrets.STDTOOLS_CTAO_GITLAB}}
-          push: ${{ github.event_name == 'workflow_dispatch' }}
+          # push: ${{ github.event_name == 'workflow_dispatch' }}
+          push: true
           file: ./docker/Dockerfile-simtel_array
           tags: ${{ steps.meta-base.outputs.tags }}
           labels: ${{ steps.meta-base.outputs.labels }}
