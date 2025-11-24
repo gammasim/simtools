@@ -10,7 +10,6 @@
 #
 # hadolint global ignore=DL3013,DL3041
 # - DL3013, DL3041: ignore warnings about using latest
-FROM almalinux:9.5-minimal
 
 ARG CORSIKA_VERSION="78010"
 ARG CORSIKA_IMAGE_VERSION="20251124-081214"
@@ -19,14 +18,20 @@ ARG SIMTEL_BUILD_OPT="prod6-baseline"
 ARG SIMTEL_IMAGE_VERSION="20251124-122142"
 ARG AVX_INSTRUCTION="no_opt"
 ARG PYTHON_VERSION="3.12"
+ARG SIMTOOLS_REQUIREMENT="https://github.com/gammasim/simtools.git"
+
+ARG CORSIKA_VERSION ARG CORSIKA_IMAGE_VERSION ARG AVX_INSTRUCTION
+FROM ghcr.io/gammasim/corsika7-${CORSIKA_VERSION}-${AVX_INSTRUCTION}:${CORSIKA_IMAGE_VERSION} AS corsika_img
+ARG SIMTEL_VERSION ARG SIMTEL_IMAGE_VERSION ARG SIMTEL_BUILD_OPT
+FROM ghcr.io/gammasim/simtel-${SIMTEL_VERSION}-${SIMTEL_BUILD_OPT}:${SIMTEL_IMAGE_VERSION} as simtel_img
+
+FROM almalinux:9.5-minimal
 
 # Copy CORSIKA from corsika image
-COPY --from=ghcr.io/gammasim/corsika7-${CORSIKA_VERSION}-${AVX_INSTRUCTION}:${CORSIKA_IMAGE_VERSION} \
-     /workdir/simulation_software/corsika \
-     /workdir/simulation_software/corsika
+COPY --from=corsika_img /workdir/simulation_software/corsika  /workdir/simulation_software/corsika
 
 # Copy sim_telarray components from simtel image
-COPY --from=ghcr.io/gammasim/simtel-${SIMTEL_VERSION}-${SIMTEL_BUILD_OPT}:${SIMTEL_IMAGE_VERSION} \
+COPY --from=simtel_img \
      /workdir/simulation_software/sim_telarray \
      /workdir/simulation_software/hessioxxx \
      /workdir/simulation_software/stdtools \
@@ -45,17 +50,15 @@ RUN if [ -f qgsdat-III.bz2 ]; then \
         bzip2 -dq qgsdat-III.bz2; \
     fi
 
-WORKDIR /workdir
-RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproject.toml && \
-    python${PYTHON_VERSION} -m venv env && \
-    . env/bin/activate && \
-    pip install --no-cache-dir -U pip && \
-    pip install --no-cache-dir toml-to-requirements && \
-    toml-to-req --toml-file pyproject.toml --optional-lists dev,doc,tests && \
-    pip uninstall -y toml-to-requirements && \
-    pip install --no-cache-dir -r requirements.txt
+RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
+  && git clone -b "$BUILD_BRANCH" "${SIMTOOLS_REQUIREMENT}" --depth 1 \
+  && python${PYTHON_VERSION} -m venv env \
+  && . env/bin/activate \
+  && pip install --no-cache-dir -U pip \
+  && pip install --no-cache-dir "git+${SIMTOOLS_REQUIREMENT}@${BUILD_BRANCH}" \
+  && echo ". /workdir/env/bin/activate" >> ~/.bashrc
+
+ENV PATH="/workdir/env/bin/:$PATH"
 
 ENV SIMTEL_PATH="/workdir/simulation_software/sim_telarray/"
 ENV PATH="/workdir/simtools/env/bin/:$PATH"
-
-WORKDIR /workdir/external
