@@ -123,22 +123,26 @@ RUN ls ../config_*.h && for config_file in ../config_*.h; do \
 
 # Generate config.yml with build information
 RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
-    echo "CORSIKA_VERSION: \"${CORSIKA_VERSION}\"" > ${CORSIKA_RUN_DIR}/config.yml && \
-    echo "CORSIKA_OPT_PATCH_VERSION: \"${CORSIKA_OPT_PATCH_VERSION}\"" >> ${CORSIKA_RUN_DIR}/config.yml && \
-    echo "CORSIKA_CONFIG_VERSION: \"${CORSIKA_CONFIG_VERSION}\"" >> ${CORSIKA_RUN_DIR}/config.yml && \
-    echo "AVX_FLAG: \"${AVX_FLAG}\"" >> ${CORSIKA_RUN_DIR}/config.yml && \
-    echo "VARIANT:" >> ${CORSIKA_RUN_DIR}/config.yml && \
+    { \
+        echo "CORSIKA_VERSION: \"${CORSIKA_VERSION}\""; \
+        echo "CORSIKA_OPT_PATCH_VERSION: \"${CORSIKA_OPT_PATCH_VERSION}\""; \
+        echo "CORSIKA_CONFIG_VERSION: \"${CORSIKA_CONFIG_VERSION}\""; \
+        echo "AVX_FLAG: \"${AVX_FLAG}\""; \
+        echo "VARIANT:"; \
+    } > ${CORSIKA_RUN_DIR}/config.yml && \
     for config_file in ../config_*.h; do \
         basename_file=$(basename "$config_file" .h); \
         corsika_name=$(echo "$basename_file" | sed 's/^config_/corsika_/'); \
         he_model=$(echo "$basename_file" | sed 's/^config_\([^_]*\)_.*/\1/'); \
         le_model=$(echo "$basename_file" | sed 's/^config_[^_]*_\([^_]*\)_.*/\1/'); \
         variant=$(echo "$basename_file" | sed 's/.*_\(curved\|flat\)$/\1/'); \
-        echo "  - EXECUTABLE: \"${corsika_name}\"" >> ${CORSIKA_RUN_DIR}/config.yml; \
-        echo "    CONFIG: \"${basename_file}\"" >> ${CORSIKA_RUN_DIR}/config.yml; \
-        echo "    ATMOSPHERE_GEOMETRY: \"${variant}\"" >> ${CORSIKA_RUN_DIR}/config.yml; \
-        echo "    HE_HADRONIC_MODEL: \"${he_model}\"" >> ${CORSIKA_RUN_DIR}/config.yml; \
-        echo "    LE_HADRONIC_MODEL: \"${le_model}\"" >> ${CORSIKA_RUN_DIR}/config.yml; \
+        { \
+            echo "  - EXECUTABLE: \"${corsika_name}\""; \
+            echo "    CONFIG: \"${basename_file}\""; \
+            echo "    ATMOSPHERE_GEOMETRY: \"${variant}\""; \
+            echo "    HE_HADRONIC_MODEL: \"${he_model}\""; \
+            echo "    LE_HADRONIC_MODEL: \"${le_model}\""; \
+        } >> ${CORSIKA_RUN_DIR}/config.yml; \
     done
 
 # -----------------------------------------------------------------------------

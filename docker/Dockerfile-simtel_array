@@ -8,9 +8,8 @@ ARG SIMTEL_VERSION="master"
 ARG HESSIO_VERSION="master"
 ARG STDTOOLS_VERSION="master"
 
-# hadolint global ignore=DL3013,DL3033,DL3041,SC1091
-# - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)
-# - SC1091: ignore warning about not being able to source the bashrc
+# hadolint global ignore=DL3033,DL3041
+# - DL3033, DL3041: ignore warnings about installing non-specific versions with microdnf or yum)
 
 # -----------------------------------------------------------------------------
 # STAGE 1: source code preparation
