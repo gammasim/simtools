@@ -116,7 +116,7 @@ RUN echo "SIMTEL_VERSION: \"${SIMTEL_VERSION}\"" > config.yml && \
     echo "      - \"sim_telarray\"" >> config.yml && \
     echo "  - NAME: \"sim_telarray_debug_trace\"" >> config.yml && \
     echo "    VERSION: \"${SIMTEL_VERSION}\"" >> config.yml && \
-    echo "    BUILD_FLAGS: \"EXTRA_DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\"" >> config.yml && \
+    echo "    BUILD_FLAGS: \"EXTRA_DEFINES=${EXTRA_DEFINES} -DDEBUG_TRACE_99 ${GSL_COMPILE}\"" >> config.yml && \
     echo "    EXECUTABLES:" >> config.yml && \
     echo "      - \"sim_telarray_debug_trace\"" >> config.yml
 
