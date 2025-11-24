@@ -48,6 +48,7 @@ RUN microdnf update -y && microdnf install -y \
 
 WORKDIR /workdir
 
+SHELL ["/bin/bash", "-c"]
 RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
   && git clone -b "$BUILD_BRANCH" "${SIMTOOLS_REQUIREMENT}" --depth 1 \
   && python${PYTHON_VERSION} -m venv env \
