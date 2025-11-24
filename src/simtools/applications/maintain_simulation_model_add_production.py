@@ -28,8 +28,8 @@ The following example applies a patch update with changes defined in a YAML file
 
 .. code-block:: console
 
-    simtools-maintain-simulation-model-add-new-production \\
-        --model_path ../simulation-models-dev/simulation-models/ \\
+    simtools-maintain-simulation-model-add-production \\
+        --model_path ../simulation-models-dev \\
         --model_version 6.0.2
 
 """
