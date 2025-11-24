@@ -10,7 +10,7 @@ on:
     types: [completed]
   pull_request:
     paths:
-      - docker/Dockerfile-simtools
+      - docker/Dockerfile-simtools-legacy
   release:
     types: [published]
   schedule:
@@ -91,7 +91,7 @@ jobs:
             BASE_IMAGE=${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABELS }}:latest
             BUILD_BRANCH=${{ env.BUILD_BRANCH }}
           push: ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
-          file: ./docker/Dockerfile-simtools
+          file: ./docker/Dockerfile-simtools-legacy
           tags: ${{ steps.meta-simtools.outputs.tags }}
           labels: ${{ steps.meta-simtools.outputs.labels }}-prod
 
