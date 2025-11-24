@@ -1,4 +1,4 @@
-"""Definition of the ArrayModel class."""
+"""Array model represents an observatory consisting of site, telescopes, and further devices."""
 
 import logging
 from pathlib import Path
