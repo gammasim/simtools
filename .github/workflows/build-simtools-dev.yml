@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - './docker/Dockerfile-dev'
+      - './docker/Dockerfile-simtools-dev'
   release:
     types: [published]
   schedule:
@@ -89,7 +89,7 @@ jobs:
           context: .
           build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
           load: true
-          file: ./docker/Dockerfile-${{ matrix.type }}
+          file: ./docker/Dockerfile-simtools-${{ matrix.type }}
           tags: ${{ env.TEST_TAG }}
 
       - name: Build and push image
