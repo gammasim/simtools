@@ -3,7 +3,7 @@ name: build-corsika7
 # Build and push CORSIKA7 images for different CPU architectures.
 # The no_opt (non-optimized) images are built as multi-platform images (x86_64 and arm64).
 #
-# The images are built and pushed when manually triggered (workflow_dispatch).
+# The images are built and pushed when manually triggered (workflow_dispatch). TODO: remove debug push
 
 on:
   workflow_dispatch:
@@ -96,6 +96,7 @@ jobs:
           secrets: |
             corsika7_token=${{ secrets.CORSIKA7_KIT_GITLAB }}
           # push: ${{ github.event_name == 'workflow_dispatch' }}
+          # TODO - for now always push to keep images updated
           push: true
           file: ./docker/Dockerfile-corsika7
           tags: ${{ steps.meta-base.outputs.tags }}
