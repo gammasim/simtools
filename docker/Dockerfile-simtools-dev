@@ -21,7 +21,7 @@ ARG PYTHON_VERSION="3.12"
 ARG SIMTOOLS_REQUIREMENT="https://github.com/gammasim/simtools.git"
 
 FROM ghcr.io/gammasim/corsika7-${CORSIKA_VERSION}-${AVX_INSTRUCTION}:${CORSIKA_IMAGE_VERSION} AS corsika_img
-FROM ghcr.io/gammasim/simtel-${SIMTEL_VERSION}-${SIMTEL_BUILD_OPT}:${SIMTEL_IMAGE_VERSION} as simtel_img
+FROM ghcr.io/gammasim/simtel-${SIMTEL_VERSION}-${SIMTEL_BUILD_OPT}:${SIMTEL_IMAGE_VERSION} AS simtel_img
 
 FROM almalinux:9.5-minimal
 ARG PYTHON_VERSION

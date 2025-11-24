@@ -22,7 +22,6 @@ jobs:
 
   download-qgsjet-tables:
     runs-on: ubuntu-latest
-
     steps:
       - name: Download QGSJet
         run: |
@@ -48,6 +47,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+
+      - name: Download QGSJet tables
+        uses: actions/download-artifact@v6
+        with:
+          name: upload-qgsjet-tables
+          path: .
 
       - name: Set build arguments (correct branch)
         run: |
