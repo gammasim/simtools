@@ -4,7 +4,6 @@ name: build-simtel_array
 #
 # The images are built and pushed when manually triggered (workflow_dispatch).
 #
-# TODO: sort out push; hessioxx
 
 on:
   workflow_dispatch:
