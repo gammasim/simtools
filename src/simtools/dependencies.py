@@ -151,11 +151,14 @@ def get_corsika_version(run_time=None):
     str
         Version of the CORSIKA package.
     """
-    corsika_path = os.getenv("SIMTOOLS_SIMTEL_PATH")
-    if corsika_path is None:
-        _logger.warning("Environment variable SIMTOOLS_SIMTEL_PATH is not set.")
+    corsika_path = os.getenv("SIMTOOLS_CORSIKA_PATH")
+    corsika_exe = os.getenv("SIMTOOLS_CORSIKA_EXECUTABLE")
+    if corsika_path is None or corsika_exe is None:
+        _logger.warning(
+            "Environment variable SIMTOOLS_CORSIKA_PATH or SIMTOOLS_CORSIKA_EXECUTABLE are not set."
+        )
         return None
-    corsika_command = Path(corsika_path) / "corsika-run" / "corsika"
+    corsika_command = Path(corsika_path) / corsika_exe
 
     if run_time is None:
         command = [str(corsika_command)]
@@ -200,6 +203,8 @@ def get_build_options(run_time=None):
     Return CORSIKA / sim_telarray build options.
 
     Expects a build_opts.yml file in the sim_telarray directory.
+
+    TODO - needs adaption
 
     Parameters
     ----------
