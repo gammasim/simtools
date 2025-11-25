@@ -101,6 +101,7 @@ class ModelDataWriter:
         db_config=None,
         unit=None,
         meta_parameter=False,
+        model_parameter_schema_version=None,
     ):
         """
         Generate DB-style model parameter dict and write it to json file.
@@ -125,6 +126,10 @@ class ModelDataWriter:
             Database configuration. If not None, check if parameter with the same version exists.
         unit: str
             Unit of the parameter value (if applicable and value is not of type astropy Quantity).
+        meta_parameter: bool
+            Setting for meta parameter flag.
+        model_parameter_schema_version: str, None
+            Version of the model parameter schema (if None, use schema version from schema dict).
 
         Returns
         -------
@@ -158,6 +163,7 @@ class ModelDataWriter:
             instrument,
             parameter_version,
             unique_id,
+            model_parameter_schema_version=model_parameter_schema_version,
             unit=unit,
             meta_parameter=meta_parameter,
         )
@@ -211,6 +217,7 @@ class ModelDataWriter:
         schema_version=None,
         unit=None,
         meta_parameter=False,
+        model_parameter_schema_version=None,
     ):
         """
         Get validated parameter dictionary.
@@ -233,6 +240,8 @@ class ModelDataWriter:
             Unit of the parameter value (if applicable and value is not an astropy Quantity).
         meta_parameter: bool
             Setting for meta parameter flag.
+        model_parameter_schema_version: str, None
+            Version of the model parameter schema (if None, use schema version from schema dict).
 
         Returns
         -------
@@ -240,7 +249,9 @@ class ModelDataWriter:
             Validated parameter dictionary.
         """
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
-        self.schema_dict, schema_file = self._read_schema_dict(parameter_name, schema_version)
+        self.schema_dict, schema_file = self._read_schema_dict(
+            parameter_name, model_parameter_schema_version
+        )
 
         if unit is None:
             value, unit = value_conversion.split_value_and_unit(value)
@@ -257,7 +268,8 @@ class ModelDataWriter:
             "type": self._get_parameter_type(),
             "file": self._parameter_is_a_file(),
             "meta_parameter": meta_parameter,
-            "model_parameter_schema_version": self.schema_dict.get("schema_version", "0.1.0"),
+            "model_parameter_schema_version": model_parameter_schema_version
+            or self.schema_dict.get("schema_version", "0.1.0"),
         }
         return self.validate_and_transform(
             product_data_dict=data_dict,

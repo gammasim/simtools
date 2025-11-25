@@ -39,10 +39,6 @@ r"""
         It allows the transformation system to keep using sequential run numbers without repetition.
     run (int, required)
         Run number (actual run number will be 'start_run' + 'run').
-    data_directory (str, optional)
-        The location of the output directories corsika-data and simtel-data.
-        the label is added to the data_directory, such that the output
-        will be written to data_directory/label/simtel-data.
     pack_for_grid_register (str, optional)
         Set whether to prepare a tarball for registering the output files on the grid.
         The files are written to the specified directory.
@@ -58,13 +54,6 @@ r"""
         simtools-simulate-prod \\
         --model_version 5.0.0 --site north --primary gamma --azimuth_angle north \\
         --zenith_angle 20 --start_run 0 --run 1
-
-    By default the configuration is saved in simtools-output/test-production
-    together with the actual simulation output in corsika-data and simtel-data within.
-    The location of the latter directories can be set
-    to a different location via the option --data_directory,
-    but the label is always added to the data_directory, such that the output
-    will be written to data_directory/label/simtel-data.
 """
 
 from simtools.application_control import startup_application
@@ -76,15 +65,12 @@ def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(description="Run simulations for productions")
     config.parser.add_argument(
-        "--data_directory",
+        "--corsika_file",
         help=(
-            "The directory where to save the corsika-data and simtel-data output directories."
-            "the label is added to the data_directory, such that the output"
-            "will be written to data_directory/label/simtel-data."
+            "Path to the CORSIKA input file (only relevant for simulation software 'sim_telarray')."
         ),
-        type=str.lower,
+        type=str,
         required=False,
-        default="./simtools-output/",
     )
     config.parser.add_argument(
         "--pack_for_grid_register",
@@ -150,18 +136,17 @@ def main():
     simulator.simulate()
     simulator.validate_metadata()
 
-    app_context.logger.info(
-        f"Production run complete for primary {app_context.args['primary']} showers "
-        f"from {app_context.args['azimuth_angle']} azimuth and "
-        f"{app_context.args['zenith_angle']} zenith "
-        f"at {app_context.args['site']} site, using {app_context.args['model_version']} model."
-    )
     if app_context.args["save_reduced_event_lists"]:
         simulator.save_reduced_event_lists()
+
+    simulator.verify_simulations()
+
     if app_context.args.get("pack_for_grid_register"):
         simulator.pack_for_register(app_context.args["pack_for_grid_register"])
     if app_context.args["save_file_lists"]:
         simulator.save_file_lists()
+
+    simulator.report()
 
 
 if __name__ == "__main__":

@@ -146,11 +146,10 @@ def validate_dict_using_schema(
 
 def _validate_meta_schema_url(data):
     """Validate meta_schema_url if present in data."""
-    if (
-        isinstance(data, dict)
-        and data.get("meta_schema_url")
-        and not gen.url_exists(data["meta_schema_url"])
-    ):
+    if not isinstance(data, dict):
+        return
+
+    if data.get("meta_schema_url") is not None and not gen.url_exists(data["meta_schema_url"]):
         raise FileNotFoundError(f"Meta schema URL does not exist: {data['meta_schema_url']}")
 
 
@@ -355,3 +354,111 @@ def validate_deprecation_and_version(data, software_name=None, ignore_software_v
             _logger.warning(f"{msg}, but version check is ignored.")
         else:
             raise ValueError(msg)
+
+
+def validate_schema_from_files(
+    file_directory, file_name=None, schema_file=None, ignore_software_version=False
+):
+    """
+    Validate a schema file or several files in a directory.
+
+    Files to be validated are taken from file_directory and file_name pattern.
+    The schema is either given as command line argument, read from the meta_schema_url or from
+    the metadata section of the data dictionary.
+
+    Parameters
+    ----------
+    file_directory : str or Path, optional
+        Directory with files to be validated.
+    file_name : str or Path, optional
+        File name pattern to be validated.
+    schema_file : str, optional
+        Schema file name provided directly.
+    ignore_software_version : bool
+        If True, ignore software version check.
+    """
+    if file_directory and file_name:
+        file_list = sorted(Path(file_directory).rglob(file_name))
+    else:
+        file_list = [Path(file_name)] if file_name else []
+
+    for _file_name in file_list:
+        try:
+            data = ascii_handler.collect_data_from_file(file_name=_file_name)
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Error reading schema file from {_file_name}") from exc
+        data = data if isinstance(data, list) else [data]
+        try:
+            for data_dict in data:
+                validate_dict_using_schema(
+                    data_dict,
+                    _get_schema_file_name(schema_file, _file_name, data_dict),
+                    ignore_software_version=ignore_software_version,
+                )
+        except Exception as exc:
+            raise ValueError(f"Validation of file {_file_name} failed") from exc
+        _logger.info(f"Successful validation of file {_file_name}")
+
+
+def _get_schema_file_name(schema_file=None, file_name=None, data_dict=None):
+    """
+    Get schema file name from metadata, data dict, or from file.
+
+    Parameters
+    ----------
+    schema_file : str, optional
+        Schema file name provided directly.
+    file_name : str or Path, optional
+        File name to extract schema information from.
+    data_dict : dict, optional
+        Dictionary with metaschema information.
+
+    Returns
+    -------
+    str or None
+        Schema file name.
+    """
+    if schema_file is not None:
+        return schema_file
+
+    if data_dict and (url := data_dict.get("meta_schema_url")):
+        return url
+
+    if file_name:
+        return _extract_schema_from_file(file_name)
+
+    return None
+
+
+def _extract_schema_url_from_metadata_dict(metadata, observatory="cta"):
+    """Extract schema URL from metadata dictionary."""
+    for key in (observatory, observatory.lower()):
+        url = metadata.get(key, {}).get("product", {}).get("data", {}).get("model", {}).get("url")
+        if url:
+            return url
+    return None
+
+
+def _extract_schema_from_file(file_name, observatory="cta"):
+    """
+    Extract schema file name from a metadata or data file.
+
+    Parameters
+    ----------
+    file_name : str or Path
+        File name to extract schema information from.
+    observatory : str
+        Observatory name (default: "cta").
+
+    Returns
+    -------
+    str or None
+        Schema file name or None if not found.
+
+    """
+    try:
+        metadata = ascii_handler.collect_data_from_file(file_name=file_name, yaml_document=0)
+    except FileNotFoundError:
+        return None
+
+    return _extract_schema_url_from_metadata_dict(metadata, observatory)

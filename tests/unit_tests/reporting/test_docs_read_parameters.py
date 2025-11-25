@@ -1459,3 +1459,90 @@ def test_generate_model_parameter_reports_for_devices(db_config, tmp_path):
             # Check that the last processed device set the correct attributes
             assert read_parameters.array_element == "ILLS-01"
             assert read_parameters.site == "South"
+
+
+def test__generate_plots_with_mirror_parameters(tmp_test_directory, db_config):
+    """Test _generate_plots with mirror-related parameters."""
+    args = {"telescope": "LSTN-design", "site": "North", "model_version": "6.0.0"}
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_test_directory)
+    input_file = Path(tmp_test_directory / "mirror_config.dat")
+    input_file.write_text("dummy mirror content")
+
+    with patch.object(
+        read_parameters, "_plot_mirror_config", return_value=["mirror_plot"]
+    ) as mock_mirror_plot:
+        result = read_parameters._generate_plots(
+            "mirror_list", "1.0.0", input_file, tmp_test_directory
+        )
+        assert result == ["mirror_plot"]
+        mock_mirror_plot.assert_called_once_with(
+            "mirror_list", "1.0.0", input_file, tmp_test_directory
+        )
+
+    with patch.object(
+        read_parameters, "_plot_mirror_config", return_value=["primary_plot"]
+    ) as mock_mirror_plot:
+        result = read_parameters._generate_plots(
+            "primary_mirror_segmentation", "1.0.0", input_file, tmp_test_directory
+        )
+        assert result == ["primary_plot"]
+        mock_mirror_plot.assert_called_once()
+
+    with patch.object(
+        read_parameters, "_plot_mirror_config", return_value=["secondary_plot"]
+    ) as mock_mirror_plot:
+        result = read_parameters._generate_plots(
+            "secondary_mirror_segmentation", "1.0.0", input_file, tmp_test_directory
+        )
+        assert result == ["secondary_plot"]
+        mock_mirror_plot.assert_called_once()
+
+
+def test__plot_mirror_config_no_parameter_version(tmp_test_directory, db_config):
+    """Test _plot_mirror_config when parameter_version is None."""
+    args = {"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"}
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_test_directory)
+    input_file = Path(tmp_test_directory / "mirror_config.dat")
+    input_file.write_text("dummy mirror content")
+
+    result = read_parameters._plot_mirror_config(
+        "mirror_list", None, input_file, tmp_test_directory
+    )
+    assert result == []
+
+
+def test__plot_mirror_config(tmp_test_directory, db_config, mocker):
+    """Test _plot_mirror_config with valid parameter_version."""
+    args = {"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"}
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=tmp_test_directory)
+
+    input_file = Path(tmp_test_directory / "mirror_config.dat")
+    input_file.write_text("dummy mirror content")
+    plot_name = input_file.stem.replace(".", "-")
+    plot_path = Path(tmp_test_directory / f"{plot_name}.png")
+
+    mock_plot = mocker.patch("simtools.visualization.plot_mirrors.plot")
+
+    result = read_parameters._plot_mirror_config(
+        "mirror_list", "1.0.0", input_file, tmp_test_directory
+    )
+    assert result == [plot_name]
+    mock_plot.assert_called_once_with(
+        config={
+            "parameter": "mirror_list",
+            "telescope": args["telescope"],
+            "parameter_version": "1.0.0",
+            "site": args["site"],
+            "model_version": args["model_version"],
+        },
+        output_file=Path(f"{tmp_test_directory}/{plot_name}"),
+        db_config=db_config,
+    )
+
+    plot_path.touch()
+    mock_plot.reset_mock()
+    result = read_parameters._plot_mirror_config(
+        "mirror_list", "1.0.0", input_file, tmp_test_directory
+    )
+    assert result == [plot_name]
+    mock_plot.assert_not_called()

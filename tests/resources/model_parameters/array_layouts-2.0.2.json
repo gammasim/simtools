@@ -1,43 +1,47 @@
 {
-    "schema_version": "0.3.0",
-    "parameter": "array_layouts",
+    "file": false,
     "instrument": "OBS-North",
-    "site": "North",
+    "meta_parameter": false,
+    "model_parameter_schema_version": "0.1.0",
+    "parameter": "array_layouts",
     "parameter_version": "2.0.2",
+    "schema_version": "0.3.0",
+    "site": "North",
+    "type": "dict",
     "unique_id": null,
+    "unit": null,
     "value": [
         {
-            "name": "1lst",
             "elements": [
                 "LSTN-01"
-            ]
+            ],
+            "name": "1lst"
         },
         {
-            "name": "1mst",
             "elements": [
                 "MSTN-15"
-            ]
+            ],
+            "name": "1mst"
         },
         {
-            "name": "4mst",
             "elements": [
                 "MSTN-15",
                 "MSTN-03",
                 "MSTN-04",
                 "MSTN-05"
-            ]
+            ],
+            "name": "4mst"
         },
         {
-            "name": "subsystem_lsts",
             "elements": [
                 "LSTN-01",
                 "LSTN-02",
                 "LSTN-03",
                 "LSTN-04"
-            ]
+            ],
+            "name": "subsystem_lsts"
         },
         {
-            "name": "extension_msts",
             "elements": [
                 "MSTN-01",
                 "MSTN-02",
@@ -53,10 +57,10 @@
                 "MSTN-12",
                 "MSTN-13",
                 "MSTN-14"
-            ]
+            ],
+            "name": "extension_msts"
         },
         {
-            "name": "subsystem_msts",
             "elements": [
                 "MSTN-01",
                 "MSTN-02",
@@ -67,28 +71,10 @@
                 "MSTN-07",
                 "MSTN-10",
                 "MSTN-15"
-            ]
+            ],
+            "name": "subsystem_msts"
         },
         {
-            "name": "alpha",
-            "elements": [
-                "LSTN-01",
-                "LSTN-02",
-                "LSTN-03",
-                "LSTN-04",
-                "MSTN-01",
-                "MSTN-02",
-                "MSTN-03",
-                "MSTN-04",
-                "MSTN-05",
-                "MSTN-06",
-                "MSTN-07",
-                "MSTN-10",
-                "MSTN-15"
-            ]
-        },
-        {
-            "name": "test_layout",
             "elements": [
                 "LSTN-01",
                 "LSTN-02",
@@ -103,12 +89,26 @@
                 "MSTN-07",
                 "MSTN-10",
                 "MSTN-15"
-            ]
+            ],
+            "name": "alpha"
+        },
+        {
+            "elements": [
+                "LSTN-01",
+                "LSTN-02",
+                "LSTN-03",
+                "LSTN-04",
+                "MSTN-01",
+                "MSTN-02",
+                "MSTN-03",
+                "MSTN-04",
+                "MSTN-05",
+                "MSTN-06",
+                "MSTN-07",
+                "MSTN-10",
+                "MSTN-15"
+            ],
+            "name": "test_layout"
         }
-    ],
-    "unit": null,
-    "type": "dict",
-    "file": false,
-    "meta_parameter": false,
-    "model_parameter_schema_version": "0.1.0"
+    ]
 }

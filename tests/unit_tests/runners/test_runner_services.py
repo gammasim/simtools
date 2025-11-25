@@ -118,10 +118,7 @@ def test_load_corsika_data_directories(runner_service_config_only):
         assert isinstance(item, pathlib.Path)
 
 
-def test_has_file(io_handler, runner_service, file_base_name):
-    corsika_file = io_handler.get_test_data_file(
-        file_name="run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst"
-    )
+def test_has_file(io_handler, runner_service, file_base_name, corsika_file_gamma):
     # Copying the corsika file to the expected location and
     # changing its name for the sake of this test.
     # This should not affect the efficiency of this test.
@@ -130,7 +127,7 @@ def test_has_file(io_handler, runner_service, file_base_name):
     )
     output_directory.mkdir(parents=True, exist_ok=True)
     shutil.copy(
-        corsika_file,
+        corsika_file_gamma,
         output_directory.joinpath(f"{file_base_name}.corsika.zst"),
     )
     assert runner_service.has_file(file_type="corsika_output", run_number=1)
@@ -138,17 +135,36 @@ def test_has_file(io_handler, runner_service, file_base_name):
 
 
 def test_get_file_basename(runner_service, file_base_name, model_version):
-    assert runner_service._get_file_basename(1) == file_base_name
+    assert runner_service._get_file_basename(1, calibration_run_mode=None) == file_base_name
     _runner_service_copy = copy.deepcopy(runner_service)
     _runner_service_copy.label = ""
-    assert _runner_service_copy._get_file_basename(1) == (
+    assert _runner_service_copy._get_file_basename(1, calibration_run_mode=None) == (
         f"proton_run000001_za20deg_azm000deg_South_test_layout_{model_version}"
     )
 
     _runner_service_copy.corsika_config.primary_particle = None
-    assert _runner_service_copy._get_file_basename(1) == (
+    assert _runner_service_copy._get_file_basename(1, calibration_run_mode=None) == (
         f"run000001_za20deg_azm000deg_South_test_layout_{model_version}"
     )
+
+
+def test_get_file_basename_calibration_mode(runner_service, model_version):
+    basename_pedestals = runner_service._get_file_basename(1, calibration_run_mode="pedestals")
+    expected_basename = (
+        f"pedestals_run000001_za20deg_azm000deg_South_test_layout_"
+        f"{model_version}_test-corsika-runner"
+    )
+    assert basename_pedestals == expected_basename
+
+    _runner_service_copy = copy.deepcopy(runner_service)
+    _runner_service_copy.label = ""
+    basename_pedestals_no_label = _runner_service_copy._get_file_basename(
+        1, calibration_run_mode="pedestals"
+    )
+    expected_basename_no_label = (
+        f"pedestals_run000001_za20deg_azm000deg_South_test_layout_{model_version}"
+    )
+    assert basename_pedestals_no_label == expected_basename_no_label
 
 
 def test_get_log_file_path(runner_service, corsika_runner_mock_array_model, file_base_name):
@@ -235,6 +251,8 @@ def test_get_resources(runner_service_mock_array_model, caplog):
     assert isinstance(resources, dict)
     assert "runtime" in resources
     assert resources["runtime"] == 500
+    # NSHOW from corsika_config_data fixture
+    assert resources["n_events"] == 100
 
     with open(sub_log_file, "w", encoding="utf-8") as file:
         lines_to_write = ["SOMETHING ELSE 500\n"]

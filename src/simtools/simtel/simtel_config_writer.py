@@ -11,7 +11,10 @@ import numpy as np
 import simtools.utils.general as gen
 import simtools.version
 from simtools.io import ascii_handler
+from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 from simtools.utils import names
+
+logger = logging.getLogger(__name__)
 
 
 def sim_telarray_random_seeds(seed, number):
@@ -121,6 +124,83 @@ class SimtelConfigWriter:
             ):
                 file.write(f"{meta}\n")
 
+    @staticmethod
+    def write_light_pulse_table_gauss_exp_conv(
+        file_path,
+        width_ns,
+        exp_decay_ns,
+        fadc_sum_bins,
+        dt_ns=0.1,
+        rise_range=(0.1, 0.9),
+        fall_range=(0.9, 0.1),
+        time_margin_ns=10.0,
+    ):
+        """Write a pulse table for a Gaussian convolved with a causal exponential.
+
+        Parameters
+        ----------
+        file_path : str or pathlib.Path
+            Destination path of the ASCII pulse table to write. Parent directory must exist.
+        width_ns : float
+            Target rise time in ns between the fractional levels defined by ``rise_range``.
+        exp_decay_ns : float
+            Target fall time in ns between the fractional levels defined by ``fall_range``.
+        fadc_sum_bins : int
+            Length of the FADC integration window (treated as ns here) used to derive
+            the internal time sampling window of the solver as [-(margin), bins + margin].
+        dt_ns : float, optional
+            Time sampling step in ns for the generated pulse table.
+        rise_range : tuple[float, float], optional
+            Fractional amplitude bounds (low, high) for rise-time definition.
+        fall_range : tuple[float, float], optional
+            Fractional amplitude bounds (high, low) for fall-time definition.
+        time_margin_ns : float, optional
+            Margin in ns to add to both ends of the FADC window when ``fadc_sum_bins`` is given.
+
+        Returns
+        -------
+        pathlib.Path
+            The path to the created pulse table file.
+
+        Notes
+        -----
+        The underlying model is a Gaussian convolved with a causal exponential. The model
+        parameters (sigma, tau) are solved such that the normalized pulse matches the requested
+        rise and fall times. The pulse is normalized to a peak amplitude of 1.
+        """
+        if width_ns is None or exp_decay_ns is None:
+            raise ValueError("width_ns (rise 10-90) and exp_decay_ns (fall 90-10) are required")
+        logger.info(
+            "Generating pulse-shape table with "
+            f"rise{int(rise_range[0] * 100)}-{int(rise_range[1] * 100)}={width_ns} ns, "
+            f"fall{int(fall_range[0] * 100)}-{int(fall_range[1] * 100)}={exp_decay_ns} ns, "
+            f"dt={dt_ns} ns"
+        )
+        width = float(fadc_sum_bins)
+        t_start_ns = -abs(time_margin_ns + width)
+        t_stop_ns = +abs(time_margin_ns + width)
+        t, y = generate_pulse_from_rise_fall_times(
+            width_ns,
+            exp_decay_ns,
+            dt_ns=dt_ns,
+            rise_range=rise_range,
+            fall_range=fall_range,
+            t_start_ns=t_start_ns,
+            t_stop_ns=t_stop_ns,
+            center_on_peak=True,
+        )
+
+        return SimtelConfigWriter._write_ascii_pulse_table(file_path, t, y)
+
+    @staticmethod
+    def _write_ascii_pulse_table(file_path, t, y):
+        """Write two-column ASCII pulse table."""
+        with open(file_path, "w", encoding="utf-8") as fh:
+            fh.write("# time[ns] amplitude\n")
+            for ti, yi in zip(t, y):
+                fh.write(f"{ti:.6f} {yi:.8f}\n")
+        return Path(file_path)
+
     def _get_parameters_for_sim_telarray(self, parameters, config_file_path):
         """
         Convert parameter dictionary to sim_telarray configuration file format.
@@ -176,28 +256,24 @@ class SimtelConfigWriter:
             Model parameters in sim_telarray format including flasher parameters.
 
         """
-        if "flasher_pulse_shape" not in parameters and "flasher_pulse_width" not in parameters:
+        if "flasher_pulse_shape" not in parameters:
             return simtel_par
 
         mapping = {
             "gauss": "laser_pulse_sigtime",
             "tophat": "laser_pulse_twidth",
+            "gauss-exponential": "laser_pulse_sigtime",
         }
 
-        shape = parameters.get("flasher_pulse_shape", {}).get("value", "").lower()
-        if "exponential" in shape:
-            simtel_par["laser_pulse_exptime"] = parameters.get("flasher_pulse_exp_decay", {}).get(
-                "value", 0.0
-            )
-        else:
-            simtel_par["laser_pulse_exptime"] = 0.0
+        shape_value = parameters.get("flasher_pulse_shape", {}).get("value")
+        shape = shape_value[0].lower()
+        width = shape_value[1]
+        exp_decay = shape_value[2]
 
-        width = parameters.get("flasher_pulse_width", {}).get("value", 0.0)
+        simtel_par["laser_pulse_exptime"] = exp_decay if ("exponential" in shape) else 0.0
 
         simtel_par.update(dict.fromkeys(mapping.values(), 0.0))
-        if shape == "gauss-exponential":
-            simtel_par["laser_pulse_sigtime"] = width
-        elif shape in mapping:
+        if shape in mapping:
             simtel_par[mapping[shape]] = width
         else:
             self._logger.warning(f"Flasher pulse shape '{shape}' without width definition")
@@ -221,7 +297,7 @@ class SimtelConfigWriter:
         value = "none" if value is None else value  # simtel requires 'none'
         if isinstance(value, bool):
             value = 1 if value else 0
-        elif isinstance(value, (list, np.ndarray)):
+        elif isinstance(value, list | np.ndarray):
             value = gen.convert_list_to_string(value, shorten_list=True)
         return value
 
@@ -592,34 +668,111 @@ class SimtelConfigWriter:
         telescope_model: dict of TelescopeModel
             Telescope models.
         """
-        trigger_per_telescope_type = {}
-        for count, tel_name in enumerate(telescope_model.keys()):
-            telescope_type = names.get_array_element_type_from_name(tel_name)
-            trigger_per_telescope_type.setdefault(telescope_type, []).append(count + 1)
-
-        trigger_lines = {}
-        for tel_type, tel_list in trigger_per_telescope_type.items():
-            trigger_dict = self._get_array_triggers_for_telescope_type(
-                array_triggers, tel_type, len(tel_list)
-            )
-            trigger_lines[tel_type] = f"Trigger {trigger_dict['multiplicity']['value']} of "
-            trigger_lines[tel_type] += ", ".join(map(str, tel_list))
-            width = trigger_dict["width"]["value"] * u.Unit(trigger_dict["width"]["unit"]).to("ns")
-            trigger_lines[tel_type] += f" width {width}"
-            if trigger_dict.get("hard_stereo", {}).get("value"):
-                trigger_lines[tel_type] += " hardstereo"
-            if all(trigger_dict["min_separation"][key] is not None for key in ["value", "unit"]):
-                min_sep = trigger_dict["min_separation"]["value"] * u.Unit(
-                    trigger_dict["min_separation"]["unit"]
-                ).to("m")
-                trigger_lines[tel_type] += f" minsep {min_sep}"
+        trigger_per_telescope_type = self._group_telescopes_by_type(telescope_model)
+        hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity = (
+            self._process_telescope_triggers(array_triggers, trigger_per_telescope_type)
+        )
 
         array_triggers_file = "array_triggers.dat"
         with open(model_path / array_triggers_file, "w", encoding="utf-8") as file:
             file.write("# Array trigger definition\n")
-            file.writelines(f"{line}\n" for line in trigger_lines.values())
+            self._write_trigger_lines(
+                file, hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
+            )
 
         return array_triggers_file
+
+    def _group_telescopes_by_type(self, telescope_model):
+        """Group telescopes by their type."""
+        trigger_per_telescope_type = {}
+        for count, tel_name in enumerate(telescope_model.keys()):
+            telescope_type = names.get_array_element_type_from_name(tel_name)
+            trigger_per_telescope_type.setdefault(telescope_type, []).append(count + 1)
+        return trigger_per_telescope_type
+
+    def _process_telescope_triggers(self, array_triggers, trigger_per_telescope_type):
+        """Process telescope triggers and group them by hardstereo and parameters."""
+        hardstereo_lines = []
+        non_hardstereo_groups = {}
+        all_non_hardstereo_tels = []
+        multiplicity = None
+
+        for tel_type, tel_list in trigger_per_telescope_type.items():
+            trigger_dict = self._get_array_triggers_for_telescope_type(
+                array_triggers, tel_type, len(tel_list)
+            )
+            width, minsep = self._extract_trigger_parameters(trigger_dict)
+            multiplicity = trigger_dict["multiplicity"]["value"]  # Store for later use
+
+            if trigger_dict.get("hard_stereo", {}).get("value"):
+                line = self._build_trigger_line(
+                    trigger_dict, tel_list, width, minsep, hardstereo=True
+                )
+                hardstereo_lines.append(line)
+            else:
+                key = (width, minsep)
+                non_hardstereo_groups.setdefault(key, []).extend(tel_list)
+                all_non_hardstereo_tels.extend(tel_list)
+
+        return hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
+
+    def _extract_trigger_parameters(self, trigger_dict):
+        """Extract width and min_separation parameters from trigger dictionary."""
+        width = trigger_dict["width"]["value"] * u.Unit(trigger_dict["width"]["unit"]).to("ns")
+        minsep = None
+        if all(trigger_dict["min_separation"][key] is not None for key in ["value", "unit"]):
+            minsep = trigger_dict["min_separation"]["value"] * u.Unit(
+                trigger_dict["min_separation"]["unit"]
+            ).to("m")
+        return width, minsep
+
+    def _build_trigger_line(self, trigger_dict, tel_list, width, minsep, hardstereo=False):
+        """Build a trigger line string."""
+        line = f"Trigger {trigger_dict['multiplicity']['value']} of "
+        line += ", ".join(map(str, tel_list))
+        line += f" width {width}"
+        if hardstereo:
+            line += " hardstereo"
+        if minsep is not None:
+            line += f" minsep {minsep}"
+        return line
+
+    def _write_trigger_lines(
+        self, file, hardstereo_lines, non_hardstereo_groups, all_non_hardstereo_tels, multiplicity
+    ):
+        """Write all trigger lines to file."""
+        # Write hardstereo lines first
+        for line in hardstereo_lines:
+            file.write(f"{line}\n")
+
+        # Write individual non-hardstereo groups if they have different parameters
+        if len(non_hardstereo_groups) > 1:
+            for (width, minsep), tel_list in non_hardstereo_groups.items():
+                line = f"Trigger {multiplicity} of "
+                line += ", ".join(map(str, tel_list))
+                line += f" width {width}"
+                if minsep is not None:
+                    line += f" minsep {minsep}"
+                file.write(f"{line}\n")
+
+        # Write combined line with all non-hardstereo telescopes using shortest values
+        if all_non_hardstereo_tels:
+            min_width = min(width for width, minsep in non_hardstereo_groups.keys())
+            min_minsep = self._get_minimum_minsep(non_hardstereo_groups)
+
+            combined_line = f"Trigger {multiplicity} of "
+            combined_line += ", ".join(map(str, sorted(all_non_hardstereo_tels)))
+            combined_line += f" width {min_width}"
+            if min_minsep is not None:
+                combined_line += f" minsep {min_minsep}"
+            file.write(f"{combined_line}\n")
+
+    def _get_minimum_minsep(self, non_hardstereo_groups):
+        """Get minimum min_separation value from groups."""
+        minsep_values = [
+            minsep for width, minsep in non_hardstereo_groups.keys() if minsep is not None
+        ]
+        return min(minsep_values) if minsep_values else None
 
     def _get_array_triggers_for_telescope_type(
         self, array_triggers, telescope_type, num_telescopes_of_type
