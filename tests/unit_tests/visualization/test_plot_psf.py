@@ -286,7 +286,6 @@ def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
     mock_site_model = MagicMock()
     args_dict = {
         "fraction": 0.8,
-        "simtel_path": "/path/to/simtel",
         "zenith": 20,
         "src_distance": 10,
     }

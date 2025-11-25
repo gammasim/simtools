@@ -49,7 +49,7 @@ class _Config:
     @property
     def sim_telarray_exe(self):
         return (
-            Path(self._sim_telarray_path) / self._sim_telarray_exe
+            Path(self._sim_telarray_path) / "bin" / self._sim_telarray_exe
             if self._sim_telarray_path is not None
             else None
         )
@@ -57,7 +57,7 @@ class _Config:
     @property
     def sim_telarray_exe_debug_trace(self):
         return (
-            Path(self._sim_telarray_path) / (self._sim_telarray_exe + "_debug_trace")
+            Path(self._sim_telarray_path) / "bin" / (self._sim_telarray_exe + "_debug_trace")
             if self._sim_telarray_path is not None
             else None
         )
@@ -77,6 +77,19 @@ class _Config:
         return (
             Path(self._corsika_path) / (self._corsika_exe.replace("_flat", "_curved"))
             if self._corsika_path is not None
+            else None
+        )
+
+    @property
+    def corsika_dummy_file(self):
+        """
+        Path to a dummy CORSIKA file required by sim_telarray for ray-tracing simulations.
+
+        This file does not need to exist; sim_telarray only requires a file path.
+        """
+        return (
+            self.sim_telarray_path / "run9991.corsika.gz"
+            if self._sim_telarray_path is not None
             else None
         )
 

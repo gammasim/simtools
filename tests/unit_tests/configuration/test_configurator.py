@@ -10,6 +10,7 @@ import astropy.units as u
 import pytest
 import yaml
 
+from simtools import settings
 from simtools.configuration.configurator import (
     Configurator,
     InvalidConfigurationParameterError,
@@ -20,10 +21,15 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def configurator(tmp_test_directory, _mock_settings_env_vars, simtel_path):
+def configurator(tmp_test_directory, _mock_settings_env_vars):
     config = Configurator()
     config.default_config(
-        ("--output_path", str(tmp_test_directory), "--simtel_path", str(simtel_path))
+        (
+            "--output_path",
+            str(tmp_test_directory),
+            "--simtel_path",
+            str(settings.config.sim_telarray_path),
+        )
     )
     return config
 

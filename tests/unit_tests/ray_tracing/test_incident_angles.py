@@ -52,7 +52,6 @@ def mock_models(monkeypatch):
 @pytest.fixture
 def calculator(mock_models, config_data, tmp_test_directory):
     return IncidentAnglesCalculator(
-        simtel_path=Path("/simtel"),
         db_config={"db": "config"},
         config_data=config_data,
         output_dir=tmp_test_directory,
@@ -61,7 +60,6 @@ def calculator(mock_models, config_data, tmp_test_directory):
 
 
 def test_initialization(calculator, config_data):
-    assert calculator._simtel_path == Path("/simtel")
     assert calculator.config_data == config_data
     assert calculator.output_dir.is_dir()
     assert calculator.results is None

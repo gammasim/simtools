@@ -213,7 +213,6 @@ class IncidentAnglesCalculator:
             Path to the generated shell script.
         """
         script_path = self.scripts_dir / f"run_incident_angles_{self._label_suffix()}.sh"
-        corsika_dummy = settings.config.sim_telarray_path / "run9991.corsika.gz"
 
         theta = self.ZENITH_ANGLE_DEG
         off = float(self.config_data["off_axis_angle"].to_value(u.deg))
@@ -255,7 +254,8 @@ class IncidentAnglesCalculator:
         ]
 
         command = (
-            f"{settings.config.sim_telarray_exe_debug_trace!s} {' '.join(opts)} {corsika_dummy}"
+            f"{settings.config.sim_telarray_exe_debug_trace} {' '.join(opts)} "
+            f"{settings.config.corsika_dummy_file}"
         )
         with script_path.open("w", encoding="utf-8") as sh:
             sh.write("#!/usr/bin/env bash\n\n")

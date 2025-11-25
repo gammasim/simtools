@@ -137,7 +137,7 @@ def test_single_mirror(io_handler, telescope_model_mst, site_model_south):
     plt.close()
 
 
-def test_integral_curve(simtel_path_no_mock, io_handler, telescope_model_lst, site_model_north):
+def test_integral_curve(io_handler, telescope_model_lst, site_model_north):
     ray = RayTracing(
         telescope_model=telescope_model_lst,
         site_model=site_model_north,
