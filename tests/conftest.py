@@ -4,7 +4,6 @@ import os
 import re
 import tarfile
 from contextlib import contextmanager
-from pathlib import Path
 from unittest import mock
 
 import matplotlib.pyplot as plt
@@ -13,6 +12,7 @@ from astropy import units as u
 from dotenv import dotenv_values, load_dotenv
 
 import simtools.io.io_handler
+from simtools import settings
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.configuration.configurator import Configurator
 from simtools.corsika.corsika_config import CorsikaConfig
@@ -23,6 +23,13 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.runners.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _simtools_settings():
+    """Load simtools settings for the test session."""
+    load_dotenv(".env")
+    settings.config.load()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -81,23 +88,7 @@ def _mock_settings_env_vars(tmp_test_directory):
 
 
 @pytest.fixture
-def simtel_path():
-    """Empty string used as placeholder for simtel_path."""
-    return Path()
-
-
-@pytest.fixture
-def simtel_path_no_mock():
-    """Simtel path as set by the .env file."""
-    load_dotenv(".env")
-    simtel_path = Path(os.path.expandvars("$SIMTOOLS_SIMTEL_PATH"))
-    if simtel_path.exists():
-        return simtel_path
-    return ""
-
-
-@pytest.fixture
-def args_dict(tmp_test_directory, simtel_path, data_path):
+def args_dict(tmp_test_directory, data_path):
     """Minimal configuration from command line."""
     return Configurator().default_config(
         (
@@ -106,13 +97,13 @@ def args_dict(tmp_test_directory, simtel_path, data_path):
             "--data_path",
             data_path,
             "--simtel_path",
-            str(simtel_path),
+            str(settings.config.sim_telarray_path),
         ),
     )
 
 
 @pytest.fixture
-def args_dict_site(tmp_test_directory, simtel_path, data_path):
+def args_dict_site(tmp_test_directory, data_path):
     "Configuration include site and telescopes."
     return Configurator().default_config(
         (
@@ -121,7 +112,7 @@ def args_dict_site(tmp_test_directory, simtel_path, data_path):
             "--data_path",
             data_path,
             "--simtel_path",
-            str(simtel_path),
+            str(settings.config.sim_telarray_path),
             "--site",
             "South",
             "--telescope",
@@ -418,20 +409,18 @@ def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data, 
 
 
 @pytest.fixture
-def corsika_runner(corsika_config, io_handler, simtel_path):
+def corsika_runner(corsika_config, io_handler):
     return CorsikaRunner(
         corsika_config=corsika_config,
-        simtel_path=simtel_path,
         label="test-corsika-runner",
         use_multipipe=False,
     )
 
 
 @pytest.fixture
-def corsika_runner_mock_array_model(corsika_config_mock_array_model, io_handler, simtel_path):
+def corsika_runner_mock_array_model(corsika_config_mock_array_model, io_handler):
     return CorsikaRunner(
         corsika_config=corsika_config_mock_array_model,
-        simtel_path=simtel_path,
         label="test-corsika-runner",
         use_multipipe=False,
     )
@@ -477,7 +466,7 @@ def safe_tar_open():
 
 
 @pytest.fixture
-def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
+def camera_efficiency_sst(io_handler, db_config, model_version):
     return CameraEfficiency(
         config_data={
             "telescope": "SSTS-05",
@@ -485,7 +474,6 @@ def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
             "model_version": model_version,
             "zenith_angle": 20 * u.deg,
             "azimuth_angle": 0 * u.deg,
-            "simtel_path": simtel_path,
         },
         db_config=db_config,
         label="validate_camera_efficiency",

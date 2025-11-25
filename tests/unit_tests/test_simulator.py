@@ -23,11 +23,10 @@ INITIALIZE_RUN_LIST_ERROR_MSG = (
 
 
 @pytest.fixture
-def simulations_args_dict(corsika_config_data, model_version, simtel_path):
+def simulations_args_dict(corsika_config_data, model_version):
     """Return a dictionary with the simulation command line arguments."""
     args_dict = copy.deepcopy(corsika_config_data)
     args_dict["simulation_software"] = "sim_telarray"
-    args_dict["simtel_path"] = simtel_path
     args_dict["model_version"] = model_version
     args_dict["label"] = "test-array-simulator"
     args_dict["array_layout_name"] = "test_layout"

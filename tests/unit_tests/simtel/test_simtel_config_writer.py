@@ -524,21 +524,23 @@ def test_write_simtools_parameters(simtel_config_writer, tmp_test_directory, fil
     with open(build_opts_file, "w") as f:
         f.write("build_date: 2023-01-01\nversion: 1.0.0")
 
-    simtel_config_writer._simtel_path = tmp_test_directory
-    with open(test_file, "w") as f:
-        simtel_config_writer._write_simtools_parameters(f)
+    with mock.patch("simtools.simtel.simtel_config_writer.settings") as mock_settings:
+        mock_settings.config.sim_telarray_path = tmp_test_directory
+        with open(test_file, "w") as f:
+            simtel_config_writer._write_simtools_parameters(f)
 
-    # Check build_opts parameters are included
-    assert file_has_text(test_file, "metaparam global set simtools_build_date = 2023-01-01")
-    assert file_has_text(test_file, "metaparam global set simtools_version = 1.0.0")
+        # Check build_opts parameters are included
+        assert file_has_text(test_file, "metaparam global set simtools_build_date = 2023-01-01")
+        assert file_has_text(test_file, "metaparam global set simtools_version = 1.0.0")
 
     # Test with invalid simtel_path
-    simtel_config_writer._simtel_path = tmp_test_directory / "nonexistent"
-    with open(test_file, "w") as f:
-        simtel_config_writer._write_simtools_parameters(f)
-    # Should still write basic parameters without build_opts
-    assert file_has_text(test_file, "% Simtools parameters")
-    assert file_has_text(test_file, "metaparam global set simtools_version")
+    with mock.patch("simtools.simtel.simtel_config_writer.settings") as mock_settings:
+        mock_settings.config.sim_telarray_path = tmp_test_directory / "nonexistent"
+        with open(test_file, "w") as f:
+            simtel_config_writer._write_simtools_parameters(f)
+        # Should still write basic parameters without build_opts
+        assert file_has_text(test_file, "% Simtools parameters")
+        assert file_has_text(test_file, "metaparam global set simtools_version")
 
 
 def test_write_single_mirror_list_file(simtel_config_writer, tmp_test_directory, file_has_text):

@@ -14,14 +14,13 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def config_data_lst(model_version_prod5, simtel_path):
+def config_data_lst(model_version_prod5):
     return {
         "telescope": "LSTN-01",
         "site": "North",
         "model_version": model_version_prod5,
         "zenith_angle": 20 * u.deg,
         "azimuth_angle": 0 * u.deg,
-        "simtel_path": simtel_path,
     }
 
 

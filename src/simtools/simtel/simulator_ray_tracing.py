@@ -81,10 +81,6 @@ class SimulatorRayTracing(SimtelRunner):
         force_simulate: bool
             Remove existing files and force re-running of the ray-tracing simulation.
         """
-        # This file is not actually needed and does not exist in simtools.
-        # It is required as CORSIKA input file to sim_telarray
-        self._corsika_file = settings.config.sim_telarray_path.joinpath("run9991.corsika.gz")
-
         # Loop to define and remove existing files.
         # Files will be named _base_file = self.__dict__['_' + base + 'File']
         for base_name in ["stars", "photons", "log"]:
@@ -195,7 +191,7 @@ class SimulatorRayTracing(SimtelRunner):
             command += super().get_config_option("parabolic_dish", "0")
             command += super().get_config_option("mirror_align_random_distance", "0.")
             command += super().get_config_option("mirror_align_random_vertical", "0.,28.,0.,0.")
-        command += " " + str(self._corsika_file)
+        command += " " + str(settings.config.corsika_dummy_file)
 
         return clear_default_sim_telarray_cfg_directories(command), self._log_file, self._log_file
 

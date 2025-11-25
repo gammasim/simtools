@@ -94,21 +94,23 @@ class PSFImage:
             Name of sim_telarray file with photon list.
         """
         try:
-            rx_output = subprocess.Popen(  # pylint: disable=consider-using-with
+            with subprocess.Popen(
                 shlex.split(
                     f"{settings.config.sim_telarray_path}/bin/rx "
                     f"-f {self._containment_fraction:.2f} -v"
                 ),
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-            )
-            with gzip.open(photon_file, "rb") as _stdin:
-                with rx_output.stdin:
-                    shutil.copyfileobj(_stdin, rx_output.stdin)
-                    try:
-                        rx_output = rx_output.communicate()[0].splitlines()[-1:][0].split()
-                    except IndexError as e:
-                        raise IndexError(f"Unexpected output format from rx: {rx_output}") from e
+            ) as rx_process:
+                with gzip.open(photon_file, "rb") as _stdin:
+                    with rx_process.stdin:
+                        shutil.copyfileobj(_stdin, rx_process.stdin)
+                        try:
+                            rx_output = rx_process.communicate()[0].splitlines()[-1:][0].split()
+                        except IndexError as e:
+                            raise IndexError(
+                                f"Unexpected output format from rx: {rx_process}"
+                            ) from e
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Photon list file not found: {photon_file}") from e
 
