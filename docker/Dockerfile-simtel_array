@@ -72,7 +72,7 @@ RUN sed -i "s|hessioxxx-prepare: build-doc doc/eventio_en.pdf doc/hessio_refman.
     make hessioxxx-prepare && mv hessioxxx /workdir/
 
 WORKDIR /workdir/hessioxxx
-RUN rm -rf /workdir/hessio && make clean && make include/eventio_version.h \
+RUN rm -rf /workdir/hessio && make clean && make include/eventio_version.h && \
     make WITH_RPATH=1 DEFINES="${EXTRA_DEFINES} ${GSL_COMPILE}" && \
     rm -rf ./out ./doc ./root ./hessio_refman.pdf ./.git
 
