@@ -15,6 +15,6 @@ applications:
     site: North
   integration_tests:
   - output_file: sim_telarray/data/run000010/run000010_za20deg_azm000deg_North_1mst_6.0_test-flasher-direct-injection-mst-nectarcam.simtel.zst
-  test_name: direction_injection
+  test_name: direction_injection_msfx_nectarcam
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
