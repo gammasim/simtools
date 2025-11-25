@@ -45,7 +45,8 @@ jobs:
   integration_tests:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/gammasim/simtools-dev:latest
+      # Temporary fix: use fixed image date until PR 1917 is merged
+      image: ghcr.io/gammasim/simtools-dev:20251123-020721
       options: --user 0
 
     services:
