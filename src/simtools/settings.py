@@ -74,11 +74,12 @@ class _Config:
 
     @property
     def corsika_exe_curved(self):
-        return (
-            Path(self._corsika_path) / (self._corsika_exe.replace("_flat", "_curved"))
-            if self._corsika_path is not None
-            else None
+        corsika_curved = (
+            self._corsika_exe.replace("_flat", "_curved")
+            if "_flat" in self._corsika_exe
+            else self._corsika_exe + "-curved"  # legacy naming convention
         )
+        return Path(self._corsika_path) / corsika_curved if self._corsika_path is not None else None
 
     @property
     def corsika_dummy_file(self):
