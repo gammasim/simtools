@@ -60,6 +60,7 @@ RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproj
     pip install --no-cache-dir -r requirements.txt
 
 ENV SIMTEL_PATH="/workdir/simulation_software/sim_telarray"
+ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:/workdir/simulation_software/stdtools/lib"
 ENV PATH="/workdir/env/bin/:$PATH"
 SHELL ["/bin/bash", "-c"]
 
