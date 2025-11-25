@@ -1,13 +1,18 @@
 # syntax=docker/dockerfile:1.4
 # Dockerfile for CORSIKA7
 #
-# Contains different versions of CORSIKA (possibly optimized; with and without curved atmosphere)
+# Image different versions of CORSIKA:
+# - flat and curved atmosphere
+# - high- / and low-energy hadronic interaction models
+#
+# The variants are build depending on the configuration files provided by CTAO.
+#
+# CORSIKA can be build with or without optimization flags (AVX2/AVX512).
 #
 # Pending tasks:
 # - updates to iact code?
 # - release corsika config and replace CORSIKA_CONFIG_VERSION
 
-# Shared build arguments
 ARG CORSIKA_VERSION="78010"
 ARG CORSIKA_OPT_PATCH_VERSION="v1.1.0"
 ARG CORSIKA_CONFIG_VERSION="78010"
@@ -68,13 +73,13 @@ ARG C_SPECIFIC_FLAGS="-std=c99"
 ARG FORTRAN_SPECIFIC_FLAGS="-ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy"
 
 RUN yum update -y --setopt=tsflags=nodocs && \
-    yum install -y \
-    automake diffutils csh gcc gcc-c++ gcc-fortran libtool m4 patch && \
+    yum install -y automake diffutils csh gcc gcc-c++ gcc-fortran libtool m4 patch && \
     yum clean all
 
 WORKDIR /workdir/simulation_software
 COPY --from=source_preparation /src .
 
+# Install autoconf 2.71 - needed to apply CORSIKA patches
 WORKDIR /workdir/simulation_software/autoconf-2.71
 RUN ./configure --prefix=/usr && \
     make && make install
@@ -90,7 +95,7 @@ RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
         autoreconf; \
     fi
 
-# Build non-optimized / optimized CORSIKA
+# Build all CORSIKA versions (each config*.h file results in one build)
 RUN ls ../config_*.h && for config_file in ../config_*.h; do \
         ./coconut -d && rm -f ./*/*.a lib/*/*.a include/*.h && \
         # Extract variant name (curved/flat) from config file name
@@ -101,6 +106,7 @@ RUN ls ../config_*.h && for config_file in ../config_*.h; do \
         AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
         if [ "$AVX_FLAG" = "no_opt" ] || [ "$variant" = "curved" ]; then \
             BASE_FLAGS="-g -O3"; \
+        # Optimization config options
         else \
             BASE_FLAGS="-g -DCERENKOPT -DVLIBM -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
             echo "#define __CERENKOPT__ 1" >> include/config.h; \
@@ -121,15 +127,15 @@ RUN ls ../config_*.h && for config_file in ../config_*.h; do \
         cp -v -r "./run/"* ${CORSIKA_RUN_DIR}/; \
     done
 
-# Generate config.yml with build information
+# Generate build_opts.yml with build information
 RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
     { \
-        echo "CORSIKA_VERSION: \"${CORSIKA_VERSION}\""; \
-        echo "CORSIKA_OPT_PATCH_VERSION: \"${CORSIKA_OPT_PATCH_VERSION}\""; \
-        echo "CORSIKA_CONFIG_VERSION: \"${CORSIKA_CONFIG_VERSION}\""; \
-        echo "AVX_FLAG: \"${AVX_FLAG}\""; \
-        echo "VARIANT:"; \
-    } > ${CORSIKA_RUN_DIR}/config.yml && \
+        echo "corsika_version: \"${CORSIKA_VERSION}\""; \
+        echo "corsika_opt_patch_version: \"${CORSIKA_OPT_PATCH_VERSION}\""; \
+        echo "corsika_config_version: \"${CORSIKA_CONFIG_VERSION}\""; \
+        echo "avx_flag: \"${AVX_FLAG}\""; \
+        echo "variant:"; \
+    } > ${CORSIKA_RUN_DIR}/build_opts.yml && \
     for config_file in ../config_*.h; do \
         basename_file=$(basename "$config_file" .h); \
         corsika_name=$(echo "$basename_file" | sed 's/^config_/corsika_/'); \
@@ -137,16 +143,16 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
         le_model=$(echo "$basename_file" | sed 's/^config_[^_]*_\([^_]*\)_.*/\1/'); \
         variant=$(echo "$basename_file" | sed 's/.*_\(curved\|flat\)$/\1/'); \
         { \
-            echo "  - EXECUTABLE: \"${corsika_name}\""; \
-            echo "    CONFIG: \"${basename_file}\""; \
-            echo "    ATMOSPHERE_GEOMETRY: \"${variant}\""; \
-            echo "    HE_HADRONIC_MODEL: \"${he_model}\""; \
-            echo "    LE_HADRONIC_MODEL: \"${le_model}\""; \
-        } >> ${CORSIKA_RUN_DIR}/config.yml; \
+            echo "  - executable: \"${corsika_name}\""; \
+            echo "    config: \"${basename_file}\""; \
+            echo "    atmosphere_geometry: \"${variant}\""; \
+            echo "    he_hadronic_model: \"${he_model}\""; \
+            echo "    le_hadronic_model: \"${le_model}\""; \
+        } >> ${CORSIKA_RUN_DIR}/build_opts.yml; \
     done
 
 # -----------------------------------------------------------------------------
-# STAGE 3: Runtime Image
+# STAGE 3: Runtime
 # -----------------------------------------------------------------------------
 FROM almalinux:9.5-minimal
 WORKDIR /workdir/simulation_software
