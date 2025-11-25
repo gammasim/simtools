@@ -72,16 +72,7 @@ RUN sed -i "s|hessioxxx-prepare: build-doc doc/eventio_en.pdf doc/hessio_refman.
     make hessioxxx-prepare && mv hessioxxx /workdir/
 
 WORKDIR /workdir/hessioxxx
-# Create eventio_version.h file
-# TODO replace
-RUN echo '#define EVENTIO_VERSION "2025-06-02 18:04:56 CEST (konrad@wizard4)"' > include/eventio_version.h && \
-    echo '#define EVENTIO_RELEASE "2025-06-26"' >> include/eventio_version.h && \
-    echo '#ifdef EVENTIO_BASE_RELEASE' >> include/eventio_version.h && \
-    echo '# undef EVENTIO_BASE_RELEASE' >> include/eventio_version.h && \
-    echo '#endif' >> include/eventio_version.h && \
-    echo '#define EVENTIO_BASE_RELEASE "2025-06-26"' >> include/eventio_version.h
-
-RUN rm -rf /workdir/hessio && make clean && \
+RUN rm -rf /workdir/hessio && make clean && make include/eventio_version.h \
     make WITH_RPATH=1 DEFINES="${EXTRA_DEFINES} ${GSL_COMPILE}" && \
     rm -rf ./out ./doc ./root ./hessio_refman.pdf ./.git
 
