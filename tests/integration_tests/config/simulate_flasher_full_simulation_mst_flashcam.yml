@@ -4,16 +4,17 @@ applications:
   configuration:
     run_mode: full_simulation
     light_source: MSFx-FlashCam
-    model_version: 6.0.2
+    model_version: 7.0.0
     output_path: simtools-output
     site: South
     telescope: MSTS-04
+    run_number: 10
     test: true
     log_level: DEBUG
   integration_tests:
   - output_file: logfile.log
   - output_file: ff-1m.simtel.zst
   model_version_use_current: true
-  test_name: full-simulation-msfx-flashcam
+  test_name: full-simulation_msfx_flashcam
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
