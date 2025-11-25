@@ -213,15 +213,17 @@ def get_build_options(run_time=None):
     """
     build_opts = {}
     for package in ["corsika", "sim_telarray"]:
-        path_attr = f"{package}_path"
+        path = getattr(config, f"{package}_path")
         try:
-            build_opts.update(
-                _get_build_options_from_file(
-                    getattr(config, path_attr) / "build_opts.yml", run_time
-                )
-            )
+            build_opts.update(_get_build_options_from_file(path / "build_opts.yml", run_time))
         except (FileNotFoundError, TypeError, ValueError):
-            pass
+            # legacy fallback only for sim_telarray
+            if package == "sim_telarray":
+                try:
+                    legacy_path = path.parent / "build_opts.yml"
+                    build_opts.update(_get_build_options_from_file(legacy_path, run_time))
+                except (FileNotFoundError, TypeError, ValueError):
+                    pass
     if not build_opts:
         raise FileNotFoundError("No build option file found.")
 
