@@ -2,8 +2,8 @@
 
 import logging
 import stat
-from pathlib import Path
 
+from simtools import settings
 from simtools.io import io_handler
 from simtools.runners.runner_services import RunnerServices
 
@@ -26,8 +26,6 @@ class CorsikaRunner:
     ----------
     corsika_config_data: CorsikaConfig
         CORSIKA configuration.
-    simtel_path: str or Path
-        Location of source of the sim_telarray/CORSIKA package.
     label: str
         Instance label.
     keep_seeds: bool
@@ -41,7 +39,6 @@ class CorsikaRunner:
     def __init__(
         self,
         corsika_config,
-        simtel_path,
         label=None,
         keep_seeds=False,
         use_multipipe=False,
@@ -57,7 +54,6 @@ class CorsikaRunner:
         self._use_multipipe = use_multipipe
         self.curved_atmosphere_min_zenith_angle = curved_atmosphere_min_zenith_angle
 
-        self._simtel_path = Path(simtel_path)
         self.io_handler = io_handler.IOHandler()
 
         self.runner_service = RunnerServices(corsika_config, label)
@@ -178,7 +174,7 @@ class CorsikaRunner:
         str
             pfp command.
         """
-        cmd = self._simtel_path.joinpath("sim_telarray/bin/pfp")
+        cmd = settings.config.sim_telarray_path / "bin/pfp"
         cmd = str(cmd) + f" -V -DWITHOUT_MULTIPIPE - < {corsika_input_file}"
         cmd += f" > {input_tmp_file} || exit\n"
         return cmd
@@ -203,17 +199,17 @@ class CorsikaRunner:
             autoinputs command.
         """
         if self.corsika_config.use_curved_atmosphere:
-            corsika_bin_path = self._simtel_path.joinpath("corsika-run/corsika-curved")
+            corsika_bin_path = settings.config.corsika_exe_curved
             self._logger.debug("Using curved-atmosphere CORSIKA binary.")
         else:
-            corsika_bin_path = self._simtel_path.joinpath("corsika-run/corsika")
+            corsika_bin_path = settings.config.corsika_exe
             self._logger.debug("Using flat-atmosphere CORSIKA binary.")
 
         log_file = self.get_file_name(file_type="log", run_number=run_number)
         if self._use_multipipe:
             log_file = log_file.with_name(f"multipipe_{log_file.name}")
 
-        cmd = self._simtel_path.joinpath("sim_telarray/bin/corsika_autoinputs")
+        cmd = settings.config.sim_telarray_path.joinpath("bin/corsika_autoinputs")
         cmd = str(cmd) + f" --run {corsika_bin_path}"
         cmd += f" -R {run_number}"
         cmd += ' -p "$CORSIKA_DATA"'

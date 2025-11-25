@@ -110,18 +110,10 @@ def get_sim_telarray_version(run_time=None):
     str
         Version of the sim_telarray package.
     """
-    try:
-        sim_telarray = config.sim_telarray_path / "bin" / config.sim_telarray_exe
-    except TypeError:
-        _logger.warning(
-            "SIMTOOLS_SIMTEL_PATH or SIMTOOLS_SIMTEL_EXE environment variables are not set."
-        )
-        return None
-
     if run_time is None:
-        command = [str(sim_telarray), "--version"]
+        command = [str(config.sim_telarray_exe), "--version"]
     else:
-        command = [*run_time, str(sim_telarray), "--version"]
+        command = [*run_time, str(config.sim_telarray_exe), "--version"]
 
     _logger.debug(f"Running command: {command}")
     result = subprocess.run(command, capture_output=True, text=True, check=False)

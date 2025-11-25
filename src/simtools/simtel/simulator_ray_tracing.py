@@ -5,6 +5,7 @@ from collections import namedtuple
 
 import astropy.units as u
 
+from simtools import settings
 from simtools.io import io_handler
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils import names
@@ -27,8 +28,6 @@ class SimulatorRayTracing(SimtelRunner):
         site model
     label: str
         label used for output file naming.
-    simtel_path: str or Path
-        Location of sim_telarray installation.
     config_data: namedtuple
         namedtuple containing the configurable parameters as values (expected units in
         brackets): zenith_angle (deg), off_axis_angle (deg), source_distance (km),
@@ -43,7 +42,6 @@ class SimulatorRayTracing(SimtelRunner):
         telescope_model,
         site_model,
         label=None,
-        simtel_path=None,
         config_data=None,
         force_simulate=False,
         test=False,
@@ -52,7 +50,7 @@ class SimulatorRayTracing(SimtelRunner):
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimulatorRayTracing")
 
-        super().__init__(label=label, simtel_path=simtel_path)
+        super().__init__(label=label)
 
         self.telescope_model = telescope_model
         self.site_model = site_model
@@ -85,7 +83,7 @@ class SimulatorRayTracing(SimtelRunner):
         """
         # This file is not actually needed and does not exist in simtools.
         # It is required as CORSIKA input file to sim_telarray
-        self._corsika_file = self._simtel_path.joinpath("run9991.corsika.gz")
+        self._corsika_file = settings.config.sim_telarray_path.joinpath("run9991.corsika.gz")
 
         # Loop to define and remove existing files.
         # Files will be named _base_file = self.__dict__['_' + base + 'File']
@@ -153,7 +151,7 @@ class SimulatorRayTracing(SimtelRunner):
             )
 
         # RayTracing
-        command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
+        command = str(settings.config.sim_telarray_exe)
         command += f" -c {self.telescope_model.config_file_path}"
         command += f" -I{self.telescope_model.config_file_directory}"
         command += super().get_config_option("random_state", "none")

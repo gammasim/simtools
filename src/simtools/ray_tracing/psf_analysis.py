@@ -17,6 +17,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 
+from simtools import settings
 from simtools.utils.general import collect_kwargs, set_default_kwargs
 
 
@@ -36,8 +37,6 @@ class PSFImage:
         Scatter area of all photons in cm^2. If not given, effective area cannot be computed.
     containment_fraction: float
         Containment fraction for PSF calculation.
-    simtel_path: str
-        Path to sim_telarray installation.
     """
 
     __PSF_RADIUS = "Radius [cm]"
@@ -48,11 +47,9 @@ class PSFImage:
         focal_length=None,
         total_scattered_area=None,
         containment_fraction=None,
-        simtel_path=None,
     ):
         """Initialize PSFImage class."""
         self._logger = logging.getLogger(__name__)
-        self.simtel_path = simtel_path
 
         self._total_photons = None
         self._number_of_detected_photons = None
@@ -99,7 +96,8 @@ class PSFImage:
         try:
             rx_output = subprocess.Popen(  # pylint: disable=consider-using-with
                 shlex.split(
-                    f"{self.simtel_path}/sim_telarray/bin/rx -f {self._containment_fraction:.2f} -v"
+                    f"{settings.config.sim_telarray_path}/bin/rx "
+                    f"-f {self._containment_fraction:.2f} -v"
                 ),
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,

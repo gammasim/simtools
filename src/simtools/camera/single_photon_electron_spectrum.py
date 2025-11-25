@@ -12,6 +12,7 @@ from astropy.table import Table
 from scipy.optimize import curve_fit
 
 import simtools.data_model.model_data_writer as writer
+from simtools import settings
 from simtools.constants import MODEL_PARAMETER_SCHEMA_URL, SCHEMA_PATH
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
@@ -140,7 +141,7 @@ class SinglePhotonElectronSpectrum:
         )
 
         command = [
-            f"{self.args_dict['simtel_path']}/sim_telarray/bin/norm_spe",
+            f"{settings.config.sim_telarray_path}/bin/norm_spe",
             "-r",
             f"{self.args_dict['step_size']},{self.args_dict['max_amplitude']}",
         ]

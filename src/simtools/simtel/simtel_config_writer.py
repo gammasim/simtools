@@ -10,6 +10,7 @@ import numpy as np
 
 import simtools.utils.general as gen
 import simtools.version
+from simtools import settings
 from simtools.io import ascii_handler
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 from simtools.utils import names
@@ -56,8 +57,6 @@ class SimtelConfigWriter:
         Layout name.
     label: str
         Instance label. Important for output file naming.
-    simtel_path: str or Path
-        Path to the sim_telarray installation directory.
     """
 
     TAB = " " * 3
@@ -70,7 +69,6 @@ class SimtelConfigWriter:
         telescope_model_name=None,
         telescope_design_model=None,
         label=None,
-        simtel_path=None,
     ):
         """Initialize SimtelConfigWriter."""
         self._logger = logging.getLogger(__name__)
@@ -82,7 +80,6 @@ class SimtelConfigWriter:
         self._layout_name = layout_name
         self._telescope_model_name = telescope_model_name
         self._telescope_design_model = telescope_design_model
-        self._simtel_path = simtel_path
 
     def write_telescope_config_file(
         self, config_file_path, parameters, telescope_name=None, telescope_design_model=None
@@ -572,7 +569,7 @@ class SimtelConfigWriter:
         }
         try:
             build_opts = ascii_handler.collect_data_from_file(
-                Path(self._simtel_path) / "build_opts.yml"
+                Path(settings.config.sim_telarray_path) / "build_opts.yml"
             )
             for key, value in build_opts.items():
                 meta_items[f"simtools_{key}"] = value
