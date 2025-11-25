@@ -7,12 +7,9 @@ import numpy as np
 from astropy import units as u
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.io import io_handler
+from simtools.io import eventio_handler, io_handler
 from simtools.model.model_parameter import ModelParameter
-
-
-class InvalidCorsikaInputError(Exception):
-    """Exception for invalid corsika input."""
+from simtools.utils import general as gen
 
 
 class CorsikaConfig:
@@ -45,25 +42,20 @@ class CorsikaConfig:
         self._logger.debug("Init CorsikaConfig")
 
         self.label = label
-        self.zenith_angle = None
-        self.azimuth_angle = None
+        self.shower_events = self.mc_events = None
+        self.zenith_angle = self.azimuth_angle = None
+        self.curved_atmosphere_min_zenith_angle = None
         self._run_number = None
         self.config_file_path = None
         self.primary_particle = args_dict  # see setter for primary_particle
+        self.use_curved_atmosphere = args_dict  # see setter for use_curved_atmosphere
         self.dummy_simulations = dummy_simulations
 
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
-        self.config = self.fill_corsika_configuration(args_dict, db_config)
+        self.config = self._fill_corsika_configuration(args_dict, db_config)
+        self._initialize_from_config(args_dict)
         self.is_file_updated = False
-
-    def __repr__(self):
-        """CorsikaConfig class representation."""
-        return (
-            f"<class {self.__class__.__name__}> "
-            f"(site={self.array_model.site}, "
-            f"layout={self.array_model.layout_name}, label={self.label})"
-        )
 
     @property
     def primary_particle(self):
@@ -71,27 +63,59 @@ class CorsikaConfig:
         return self._primary_particle
 
     @primary_particle.setter
-    def primary_particle(self, args_dict):
+    def primary_particle(self, args):
         """
-        Set primary particle from input dictionary.
+        Set primary particle from input dictionary or CORSIKA 7 particle ID.
 
         This is to make sure that when setting the primary particle,
         we get the full PrimaryParticle object expected.
 
         Parameters
         ----------
-        args_dict: dict
+        args: dict, corsika particle ID, or None
             Configuration dictionary
         """
-        self._primary_particle = self._set_primary_particle(args_dict)
+        if (
+            isinstance(args, dict)
+            and args.get("primary_id_type") is not None
+            and args.get("primary") is not None
+        ):
+            self._primary_particle = PrimaryParticle(
+                particle_id_type=args.get("primary_id_type"), particle_id=args.get("primary")
+            )
+        elif isinstance(args, int):
+            self._primary_particle = PrimaryParticle(
+                particle_id_type="corsika7_id", particle_id=args
+            )
+        else:
+            self._primary_particle = PrimaryParticle()
 
-    def fill_corsika_configuration(self, args_dict, db_config=None):
+    @property
+    def use_curved_atmosphere(self):
+        """Check if zenith angle condition for curved atmosphere usage for CORSIKA is met."""
+        return self._use_curved_atmosphere
+
+    @use_curved_atmosphere.setter
+    def use_curved_atmosphere(self, args):
+        """Check if zenith angle condition for curved atmosphere usage for CORSIKA is met."""
+        self._use_curved_atmosphere = False
+        if isinstance(args, bool):
+            self._use_curved_atmosphere = args
+        elif isinstance(args, dict):
+            try:
+                self._use_curved_atmosphere = (
+                    args.get("zenith_angle", 0.0 * u.deg).to("deg").value
+                    > args["curved_atmosphere_min_zenith_angle"].to("deg").value
+                )
+            except KeyError:
+                self._use_curved_atmosphere = False
+
+    def _fill_corsika_configuration(self, args_dict, db_config=None):
         """
         Fill CORSIKA configuration.
 
-        Dictionary keys are CORSIKA parameter names.
-        Values are converted to CORSIKA-consistent units.
-
+        Dictionary keys are CORSIKA parameter names. Values are converted to
+        CORSIKA-consistent units.
 
         Parameters
         ----------
@@ -108,31 +132,34 @@ class CorsikaConfig:
         if args_dict is None:
             return {}
 
-        self.is_file_updated = False
-        self.azimuth_angle = int(args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value)
-        self.zenith_angle = int(args_dict.get("zenith_angle", 0.0 * u.deg).to("deg").value)
-
-        self._logger.debug(
-            f"Setting CORSIKA parameters from database ({args_dict['model_version']})"
-        )
-
         config = {}
         if self.dummy_simulations:
-            config["USER_INPUT"] = self._corsika_configuration_for_dummy_simulations()
+            config["USER_INPUT"] = self._corsika_configuration_for_dummy_simulations(args_dict)
+        elif args_dict.get("corsika_file", None) is not None:
+            config["USER_INPUT"] = self._corsika_configuration_from_corsika_file(
+                args_dict["corsika_file"]
+            )
         else:
             config["USER_INPUT"] = self._corsika_configuration_from_user_input(args_dict)
 
+        config.update(
+            self._fill_corsika_configuration_from_db(
+                gen.ensure_iterable(args_dict.get("model_version")), db_config
+            )
+        )
+        return config
+
+    def _fill_corsika_configuration_from_db(self, model_versions, db_config):
+        """Fill CORSIKA configuration from database."""
+        config = {}
         if db_config is None:  # all following parameter require DB
             return config
 
-        # If the user provided multiple model versions, we take the first one
-        # because for CORSIKA config we need only one and it doesn't matter which
-        model_versions = args_dict.get("model_version", None)
-        if not isinstance(model_versions, list):
-            model_versions = [model_versions]
+        # For multiple model versions, check that CORSIKA parameters are identical
         self.assert_corsika_configurations_match(model_versions, db_config=db_config)
         model_version = model_versions[0]
-        self._logger.debug(f"Using model version {model_version} for CORSIKA parameters")
+
+        self._logger.debug(f"Using model version {model_version} for CORSIKA parameters from DB")
         db_model_parameters = ModelParameter(db_config=db_config, model_version=model_version)
         parameters_from_db = db_model_parameters.get_simulation_software_parameters("corsika")
 
@@ -144,8 +171,40 @@ class CorsikaConfig:
         )
         config["DEBUGGING_OUTPUT_PARAMETERS"] = self._corsika_configuration_debugging_parameters()
         config["IACT_PARAMETERS"] = self._corsika_configuration_iact_parameters(parameters_from_db)
-
         return config
+
+    def _initialize_from_config(self, args_dict):
+        """
+        Initialize additional parameters either from command line args or from derived config.
+
+        Takes into account that in the case of a given CORSIKA input file, some parameters are read
+        from the file instead of the command line args.
+
+        """
+        self.primary_particle = int(self.config.get("USER_INPUT", {}).get("PRMPAR", [1])[0])
+        self.shower_events = int(self.config.get("USER_INPUT", {}).get("NSHOW", [0])[0])
+        self.mc_events = int(
+            self.shower_events * self.config.get("USER_INPUT", {}).get("CSCAT", [1])[0]
+        )
+
+        if args_dict.get("corsika_file", None) is not None:
+            azimuth = self._rotate_azimuth_by_180deg(
+                0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1]),
+                invert_operation=True,
+            )
+            zenith = 0.5 * (
+                self.config["USER_INPUT"]["THETAP"][0] + self.config["USER_INPUT"]["THETAP"][1]
+            )
+        else:
+            azimuth = args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value
+            zenith = args_dict.get("zenith_angle", 20.0 * u.deg).to("deg").value
+
+        self.azimuth_angle = round(azimuth)
+        self.zenith_angle = round(zenith)
+
+        self.curved_atmosphere_min_zenith_angle = (
+            args_dict.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
+        )
 
     def assert_corsika_configurations_match(self, model_versions, db_config=None):
         """
@@ -193,13 +252,13 @@ class CorsikaConfig:
                         f"  {model_versions[i]}: {current_value}\n"
                         f"  {model_versions[i + 1]}: {next_value}"
                     )
-                    raise InvalidCorsikaInputError(
+                    raise ValueError(
                         f"CORSIKA parameter '{key}' differs between model versions "
                         f"{model_versions[i]} and {model_versions[i + 1]}. "
                         f"Values are {current_value} and {next_value} respectively."
                     )
 
-    def _corsika_configuration_for_dummy_simulations(self):
+    def _corsika_configuration_for_dummy_simulations(self, args_dict):
         """
         Return CORSIKA configuration for dummy simulations.
 
@@ -211,16 +270,73 @@ class CorsikaConfig:
         dict
             Dictionary with CORSIKA parameters for dummy simulations.
         """
+        theta, phi = self._get_corsika_theta_phi(args_dict)
         return {
             "EVTNR": [1],
             "NSHOW": [1],
             "PRMPAR": [1],  # CORSIKA ID 1 for primary gamma
             "ESLOPE": [-2.0],
             "ERANGE": [0.1, 0.1],
-            "THETAP": [20.0, 20.0],
-            "PHIP": [0.0, 0.0],
+            "THETAP": [theta, theta],
+            "PHIP": [phi, phi],
             "VIEWCONE": [0.0, 0.0],
             "CSCAT": [1, 0.0, 10.0],
+        }
+
+    def _corsika_configuration_from_corsika_file(self, corsika_input_file):
+        """
+        Get CORSIKA configuration run header of provided input files.
+
+        Reads configuration from the run and event headers from the CORSIKA input file
+        (unfortunately quite fine tuned to the pycorsikaio run and event
+        header implementation).
+
+        Parameters
+        ----------
+        corsika_input_file : str, path
+            Path to the CORSIKA input file.
+
+        Returns
+        -------
+        dict
+            Dictionary with CORSIKA parameters from input file.
+        """
+        run_header, event_header = eventio_handler.get_corsika_run_and_event_headers(
+            corsika_input_file
+        )
+        self._logger.debug(f"CORSIKA run header from {corsika_input_file}")
+
+        def to_float32(value):
+            """Convert value to numpy float32."""
+            return np.float32(value) if value is not None else 0.0
+
+        def to_int32(value):
+            """Convert value to numpy int32."""
+            return np.int32(value) if value is not None else 0
+
+        if run_header["n_observation_levels"] > 0:
+            self._check_altitude_and_site(run_header["observation_height"][0])
+
+        return {
+            "EVTNR": [to_int32(event_header["event_number"])],
+            "NSHOW": [to_int32(run_header["n_showers"])],
+            "PRMPAR": [to_int32(event_header["particle_id"])],
+            "ESLOPE": [to_float32(run_header["energy_spectrum_slope"])],
+            "ERANGE": [to_float32(run_header["energy_min"]), to_float32(run_header["energy_max"])],
+            "THETAP": [
+                to_float32(event_header["theta_min"]),
+                to_float32(event_header["theta_max"]),
+            ],
+            "PHIP": [to_float32(event_header["phi_min"]), to_float32(event_header["phi_max"])],
+            "VIEWCONE": [
+                to_float32(event_header["viewcone_inner_angle"]),
+                to_float32(event_header["viewcone_outer_angle"]),
+            ],
+            "CSCAT": [
+                to_int32(event_header["n_reuse"]),
+                to_float32(event_header["reuse_x"]),
+                to_float32(event_header["reuse_y"]),
+            ],
         }
 
     def _corsika_configuration_from_user_input(self, args_dict):
@@ -237,6 +353,7 @@ class CorsikaConfig:
         dict
             Dictionary with CORSIKA parameters.
         """
+        theta, phi = self._get_corsika_theta_phi(args_dict)
         return {
             "EVTNR": [args_dict["event_number_first_shower"]],
             "NSHOW": [args_dict["nshow"]],
@@ -246,24 +363,8 @@ class CorsikaConfig:
                 args_dict["energy_range"][0].to("GeV").value,
                 args_dict["energy_range"][1].to("GeV").value,
             ],
-            "THETAP": [
-                float(args_dict["zenith_angle"].to("deg").value),
-                float(args_dict["zenith_angle"].to("deg").value),
-            ],
-            "PHIP": [
-                self._rotate_azimuth_by_180deg(
-                    args_dict["azimuth_angle"].to("deg").value,
-                    correct_for_geomagnetic_field_alignment=args_dict[
-                        "correct_for_b_field_alignment"
-                    ],
-                ),
-                self._rotate_azimuth_by_180deg(
-                    args_dict["azimuth_angle"].to("deg").value,
-                    correct_for_geomagnetic_field_alignment=args_dict[
-                        "correct_for_b_field_alignment"
-                    ],
-                ),
-            ],
+            "THETAP": [theta, theta],
+            "PHIP": [phi, phi],
             "VIEWCONE": [
                 args_dict["view_cone"][0].to("deg").value,
                 args_dict["view_cone"][1].to("deg").value,
@@ -274,6 +375,26 @@ class CorsikaConfig:
                 0.0,
             ],
         }
+
+    def _check_altitude_and_site(self, observation_height):
+        """Check that observation height from CORSIKA file matches site model."""
+        site_altitude = self.array_model.site_model.get_parameter_value("corsika_observation_level")
+        if not np.isclose(observation_height / 1.0e2, site_altitude, atol=1.0):
+            raise ValueError(
+                "Observatory altitude does not match CORSIKA file observation height: "
+                f"{site_altitude} m (site model) != {observation_height / 1.0e2} m (CORSIKA file)"
+            )
+
+    def _get_corsika_theta_phi(self, args_dict):
+        """Get CORSIKA theta and phi angles from args_dict."""
+        theta = args_dict.get("zenith_angle", 20.0 * u.deg).to("deg").value
+        phi = self._rotate_azimuth_by_180deg(
+            args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value,
+            correct_for_geomagnetic_field_alignment=args_dict.get(
+                "correct_for_b_field_alignment", True
+            ),
+        )
+        return theta, phi
 
     def _corsika_configuration_interaction_flags(self, parameters_from_db):
         """
@@ -298,7 +419,8 @@ class CorsikaConfig:
                 parameters_from_db["corsika_starting_grammage"]
             )
         ]
-        parameters["TSTART"] = ["T"]
+        if not self.use_curved_atmosphere:
+            parameters["TSTART"] = ["T"]
         parameters["ECUTS"] = self._input_config_corsika_particle_kinetic_energy_cutoff(
             parameters_from_db["corsika_particle_kinetic_energy_cutoff"]
         )
@@ -444,9 +566,14 @@ class CorsikaConfig:
             return f"{int(value)}MB"
         return f"{int(entry['value'] * u.Unit(entry['unit']).to('byte'))}"
 
-    def _rotate_azimuth_by_180deg(self, az, correct_for_geomagnetic_field_alignment=True):
+    def _rotate_azimuth_by_180deg(
+        self, az, correct_for_geomagnetic_field_alignment=True, invert_operation=False
+    ):
         """
         Convert azimuth angle to the CORSIKA coordinate system.
+
+        Corresponds to a rotation by 180 degrees, and optionally a correction for the
+        for the differences between the geographic and geomagnetic north pole.
 
         Parameters
         ----------
@@ -454,6 +581,8 @@ class CorsikaConfig:
             Azimuth angle in degrees.
         correct_for_geomagnetic_field_alignment: bool
             Whether to correct for the geomagnetic field alignment.
+        invert_operation: bool
+            Whether to invert the operation (i.e., convert from CORSIKA to geographic system).
 
         Returns
         -------
@@ -463,33 +592,14 @@ class CorsikaConfig:
         b_field_declination = 0
         if correct_for_geomagnetic_field_alignment:
             b_field_declination = self.array_model.site_model.get_parameter_value("geomag_rotation")
+        if invert_operation:
+            return (az - 180 - b_field_declination) % 360
         return (az + 180 + b_field_declination) % 360
 
     @property
     def primary(self):
         """Primary particle name."""
         return self.primary_particle.name
-
-    def _set_primary_particle(self, args_dict):
-        """
-        Set primary particle from input dictionary.
-
-        Parameters
-        ----------
-        args_dict: dict
-            Input dictionary.
-
-        Returns
-        -------
-        PrimaryParticle
-            Primary particle.
-
-        """
-        if not args_dict or args_dict.get("primary_id_type") is None:
-            return PrimaryParticle()
-        return PrimaryParticle(
-            particle_id_type=args_dict.get("primary_id_type"), particle_id=args_dict.get("primary")
-        )
 
     def get_config_parameter(self, par_name):
         """
@@ -674,7 +784,7 @@ class CorsikaConfig:
 
         base_name = (
             f"{self.primary_particle.name}_{run_number_in_file_name}"
-            f"za{int(self.get_config_parameter('THETAP')[0]):03}deg_"
+            f"za{int(self.get_config_parameter('THETAP')[0]):02}deg_"
             f"azm{self.azimuth_angle:03}deg{view_cone}_"
             f"{self.array_model.site}_{self.array_model.layout_name}_"
             f"{self.array_model.model_version}{file_label}"
@@ -685,7 +795,7 @@ class CorsikaConfig:
         if file_type == "config":
             return f"corsika_config_{base_name}.input"
         if file_type == "output_generic":
-            return f"{base_name}.zst"
+            return f"{base_name}.corsika.zst"
         if file_type == "multipipe":
             return f"multi_cta-{self.array_model.site}-{self.array_model.layout_name}.cfg"
 

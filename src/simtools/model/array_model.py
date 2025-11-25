@@ -1,4 +1,4 @@
-"""Definition of the ArrayModel class."""
+"""Array model represents an observatory consisting of site, telescopes, and further devices."""
 
 import logging
 from pathlib import Path
@@ -36,8 +36,6 @@ class ArrayModel:
         the array element positions).
     calibration_device_types: List[str], optional
         List of calibration device types (e.g., 'flat_fielding') attached to each telescope.
-    sim_telarray_seeds : dict, optional
-        Dictionary with configuration for sim_telarray random instrument setup.
     simtel_path: str, Path, optional
         Path to the sim_telarray installation directory.
     overwrite_model_parameters: str, optional
@@ -53,7 +51,6 @@ class ArrayModel:
         layout_name=None,
         array_elements=None,
         calibration_device_types=None,
-        sim_telarray_seeds=None,
         simtel_path=None,
         overwrite_model_parameters=None,
     ):
@@ -80,7 +77,7 @@ class ArrayModel:
 
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
-        self.sim_telarray_seeds = sim_telarray_seeds
+        self._sim_telarray_seeds = None
         self.simtel_path = simtel_path
 
     def _initialize(self, site, array_elements_config, calibration_device_types):
@@ -140,6 +137,41 @@ class ArrayModel:
         return array_elements, site_model, telescope_models, calibration_models
 
     @property
+    def sim_telarray_seeds(self):
+        """
+        Return sim_telarray seeds.
+
+        Returns
+        -------
+        dict
+            Dictionary with sim_telarray seeds.
+        """
+        return self._sim_telarray_seeds
+
+    @sim_telarray_seeds.setter
+    def sim_telarray_seeds(self, value):
+        """
+        Set sim_telarray seeds.
+
+        Parameters
+        ----------
+        value: dict
+            Dictionary with sim_telarray seeds.
+        """
+        if isinstance(value, dict):
+            required_keys = {
+                "seed",
+                "random_instrument_instances",
+                "seed_file_name",
+            }
+            if not required_keys.issubset(value):
+                raise ValueError(
+                    "sim_telarray_seeds dictionary must contain the following keys: "
+                    f"{required_keys}"
+                )
+        self._sim_telarray_seeds = value
+
+    @property
     def config_file_path(self):
         """
         Return the path of the array config file for sim_telarray.
@@ -153,7 +185,6 @@ class ArrayModel:
             config_file_name = names.simtel_config_file_name(
                 array_name=self.layout_name,
                 site=self.site_model.site,
-                model_version=self.model_version,
                 label=self.label,
             )
             self._config_file_path = self.get_config_directory().joinpath(config_file_name)

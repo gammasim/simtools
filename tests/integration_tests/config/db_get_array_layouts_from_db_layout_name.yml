@@ -3,7 +3,7 @@ applications:
 - application: simtools-db-get-array-layouts-from-db
   configuration:
     array_layout_name: test_layout
-    model_version: 6.0
+    model_version: 6.0.2
     site: North
   test_name: layout_name
 schema_name: application_workflow.metaschema

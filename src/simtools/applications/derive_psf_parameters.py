@@ -187,6 +187,11 @@ def _parse():
         type=float,
         default=0.8,
     )
+    config.parser.add_argument(
+        "--cleanup",
+        help="Remove intermediate *.log and *.lis* files after optimization.",
+        action="store_true",
+    )
     return config.initialize(
         db_config=True,
         simulation_model=["telescope", "model_version", "parameter_version"],

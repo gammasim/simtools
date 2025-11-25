@@ -361,7 +361,7 @@ def _get_changes_to_production(
         _version_changes, base_model_version = _get_changes_to_production(
             _changes_dict, simulation_models_path, update_type="full_update"
         )
-        changes = _update_two_levels_in_changes_dict(changes, _version_changes)
+        changes = _update_two_levels_in_changes_dict(_version_changes, changes)
         # stop iterative loop after reaching first full version of production tables
         if _changes_dict.get("model_update", "full_update") == "full_update":
             break
@@ -461,7 +461,7 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
 
     param_dir = telescope_dir / param
     try:
-        latest_file = _get_latest_model_parameter_file(param_dir, param)
+        latest_file = _get_latest_model_parameter_file(param_dir, param, param_data["version"])
     except FileNotFoundError:
         latest_file = None
 
@@ -484,10 +484,11 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
         output_path=param_dir,
         unit=param_data.get("unit"),
         meta_parameter=param_data.get("meta_parameter", False),
+        model_parameter_schema_version=param_data.get("model_parameter_schema_version", None),
     )
 
 
-def _get_latest_model_parameter_file(directory, parameter):
+def _get_latest_model_parameter_file(directory, parameter, max_version):
     """
     Get the latest model parameter JSON file for a parameter in the given directory.
 
@@ -499,11 +500,14 @@ def _get_latest_model_parameter_file(directory, parameter):
         Path to the directory containing parameter JSON files.
     parameter: str
         Name of the parameter to find.
+    max_version: str
+        Maximum version to consider (inclusive). Files with versions greater than
+        this will be excluded.
 
     Returns
     -------
     str
-        Path to the latest JSON file for the parameter.
+        Path to the latest JSON file for the parameter with version <= max_version.
 
     Raises
     ------
@@ -521,7 +525,16 @@ def _get_latest_model_parameter_file(directory, parameter):
         # version is part after first '-'
         return parse_version(path.stem.split("-", 1)[1])
 
-    latest_file = max(files, key=extract_version)
+    max_ver = parse_version(max_version)
+    filtered_files = [f for f in files if extract_version(f) <= max_ver]
+
+    if not filtered_files:
+        raise FileNotFoundError(
+            f"No JSON files found for parameter '{parameter}' with version <= {max_version} "
+            f"in directory '{directory}'."
+        )
+
+    latest_file = max(filtered_files, key=extract_version)
     return str(latest_file)
 
 

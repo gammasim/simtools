@@ -2,6 +2,8 @@ import logging
 import mmap
 import os
 import re
+import tarfile
+from contextlib import contextmanager
 from pathlib import Path
 from unittest import mock
 
@@ -128,6 +130,14 @@ def args_dict_site(tmp_test_directory, simtel_path, data_path):
             "integration_test",
         )
     )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def mongo_db_logger_settings():
+    """Suppress MongoDB 'IdleConnectionMonitor' DEBUG logs during tests."""
+    monitor_logger = logging.getLogger("IdleConnectionMonitor")
+    monitor_logger.setLevel(logging.INFO)
+    logger.info("[TEST SETUP] Suppressing MongoDB 'IdleConnectionMonitor' DEBUG logs.")
 
 
 @pytest.fixture
@@ -327,7 +337,6 @@ def corsika_config_data(model_version):
         "nshow": 100,
         "run_number_offset": 0,
         "run_number": 1,
-        "number_of_runs": 10,
         "event_number_first_shower": 1,
         "zenith_angle": 20 * u.deg,
         "azimuth_angle": 0.0 * u.deg,
@@ -338,7 +347,6 @@ def corsika_config_data(model_version):
         "primary": "proton",
         "primary_id_type": "common_name",
         "correct_for_b_field_alignment": True,
-        "data_directory": "simtools-output",
         "model_version": model_version,
     }
 
@@ -363,7 +371,10 @@ def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data, 
     array_model.layout_name = "test_layout"
     array_model.corsika_config.primary = "proton"
     array_model.site_model = mock.MagicMock()
-    array_model.site_model._parameters = {"geomag_rotation": -4.533}
+    array_model.site_model._parameters = {
+        "geomag_rotation": -4.533,
+        "corsika_observation_level": 2200.0,
+    }
     array_model.model_version = model_version
 
     # Define get_parameter_value() to behave as expected
@@ -451,6 +462,21 @@ def file_has_text():
 
 
 @pytest.fixture
+def safe_tar_open():
+    """Fixture returning a context manager to open tar files safely in tests.
+
+    Archives are created/read from controlled test inputs; no extraction to filesystem occurs.
+    """
+
+    @contextmanager
+    def _open(path, mode):
+        with tarfile.open(path, mode) as tar:  # NOSONAR
+            yield tar
+
+    return _open
+
+
+@pytest.fixture
 def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
     return CameraEfficiency(
         config_data={
@@ -463,6 +489,15 @@ def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
         },
         db_config=db_config,
         label="validate_camera_efficiency",
+    )
+
+
+@pytest.fixture
+def corsika_file_gamma():
+    """Gamma corsika file for testing."""
+    return (
+        "tests/resources/"
+        "gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst"
     )
 
 

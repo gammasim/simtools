@@ -377,12 +377,6 @@ class CommandLineParser(argparse.ArgumentParser):
                 "required": True,
                 "default": 1,
             },
-            "number_of_runs": {
-                "help": "Number of runs to be simulated.",
-                "type": int,
-                "required": True,
-                "default": 1,
-            },
             "event_number_first_shower": {
                 "help": "Event number of first shower",
                 "type": int,
@@ -394,6 +388,14 @@ class CommandLineParser(argparse.ArgumentParser):
                 "action": "store_true",
                 "required": False,
                 "default": True,
+            },
+            "curved_atmosphere_min_zenith_angle": {
+                "help": (
+                    "Minimum zenith angle (deg) for using curved-atmosphere CORSIKA binaries. "
+                ),
+                "type": CommandLineParser.zenith_angle,
+                "required": False,
+                "default": 65 * u.deg,
             },
         }
 

@@ -1,6 +1,7 @@
 """Simulation runner for array simulations."""
 
 import logging
+import stat
 
 from simtools.io import io_handler
 from simtools.runners.simtel_runner import InvalidOutputFileError, SimtelRunner
@@ -42,6 +43,7 @@ class SimulatorArray(SimtelRunner):
             simtel_path=simtel_path,
             corsika_config=corsika_config,
             use_multipipe=use_multipipe,
+            calibration_run_mode=calibration_config.get("run_mode") if calibration_config else None,
         )
 
         self.sim_telarray_seeds = sim_telarray_seeds
@@ -49,6 +51,52 @@ class SimulatorArray(SimtelRunner):
         self.calibration_config = calibration_config
         self.io_handler = io_handler.IOHandler()
         self._log_file = None
+
+    def prepare_run_script(self, test=False, input_file=None, run_number=None, extra_commands=None):
+        """
+        Build and return the full path of the bash run script containing the sim_telarray command.
+
+        Parameters
+        ----------
+        test: bool
+            Test flag for faster execution.
+        input_file: str or Path
+            Full path of the input CORSIKA file.
+        run_number: int
+            Run number.
+        extra_commands: list[str]
+            Additional commands for running simulations given in config.yml.
+
+        Returns
+        -------
+        Path
+            Full path of the run script.
+        """
+        script_file_path = self.get_file_name(file_type="sub_script", run_number=run_number)
+        self._logger.debug(f"Run bash script - {script_file_path}")
+        self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
+
+        command = self.make_run_command(run_number=run_number, input_file=input_file)
+        with script_file_path.open("w", encoding="utf-8") as file:
+            file.write("#!/usr/bin/env bash\n\n")
+            file.write("set -e\n")
+            file.write("set -o pipefail\n")
+            file.write("\nSECONDS=0\n")
+
+            if extra_commands:
+                file.write("# Writing extras\n")
+                for line in extra_commands:
+                    file.write(f"{line}\n")
+                file.write("# End of extras\n\n")
+
+            n = 1 if test else self.runs_per_set
+            for _ in range(n):
+                file.write(f"{command}\n\n")
+
+            file.write('\necho "RUNTIME: $SECONDS"\n')
+
+        script_file_path.chmod(script_file_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
+        return script_file_path
 
     def make_run_command(self, run_number=None, input_file=None, weak_pointing=None):
         """
@@ -111,12 +159,12 @@ class SimulatorArray(SimtelRunner):
                 command += super().get_config_option(key, cfg[key])
 
         run_mode = cfg.get("run_mode")
-        if run_mode in ("pedestals", "nsb_only_pedestals"):
+        if run_mode in ("pedestals", "pedestals_nsb_only"):
             n_events = cfg.get("number_of_pedestal_events", cfg["number_of_events"])
             command += super().get_config_option("pedestal_events", n_events)
-        if run_mode == "nsb_only_pedestals":
-            command += self._nsb_only_pedestals_command()
-        if run_mode == "dark_pedestals":
+        if run_mode == "pedestals_nsb_only":
+            command += self._pedestals_nsb_only_command()
+        if run_mode == "pedestals_dark":
             n_events = cfg.get("number_of_dark_events", cfg["number_of_events"])
             command += super().get_config_option("dark_events", n_events)
         if run_mode == "direct_injection":
@@ -155,7 +203,7 @@ class SimulatorArray(SimtelRunner):
 
         return command
 
-    def _nsb_only_pedestals_command(self):
+    def _pedestals_nsb_only_command(self):
         """
         Generate the command to run sim_telarray for nsb-only pedestal simulations.
 
@@ -193,7 +241,7 @@ class SimulatorArray(SimtelRunner):
 
     def _check_run_result(self, run_number=None):
         """
-        Check if simtel output file exists.
+        Check if sim_telarray output file exists.
 
         Parameters
         ----------
@@ -203,18 +251,16 @@ class SimulatorArray(SimtelRunner):
         Returns
         -------
         bool
-            True if simtel output file exists.
+            True if sim_telarray output file exists.
 
         Raises
         ------
         InvalidOutputFileError
-            If simtel output file does not exist.
+            If sim_telarray output file does not exist.
         """
         output_file = self.get_file_name(file_type="simtel_output", run_number=run_number)
         if not output_file.exists():
-            msg = f"sim_telarray output file {output_file} does not exist."
-            self._logger.error(msg)
-            raise InvalidOutputFileError(msg)
+            raise InvalidOutputFileError(f"sim_telarray output file {output_file} does not exist.")
         self._logger.debug(f"sim_telarray output file {output_file} exists.")
         return True
 
@@ -223,7 +269,7 @@ class SimulatorArray(SimtelRunner):
         """
         Get the power law index for sim_telarray.
 
-        Events will be histogrammed in sim_telarray with a weight according to
+        Events will be filled in histograms in sim_telarray with a weight according to
         the difference between this exponent and the one used for the shower simulations.
 
         Parameters

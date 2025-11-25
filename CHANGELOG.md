@@ -7,6 +7,72 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.25.0](https://github.com/gammasim/simtools/releases/tag/v0.25.0) - 2025-11-19
+
+### Bugfixes
+
+- Bugfix in comparison of sim-telarray configuration files: ignore system dependent metadata values. ([#1873](https://github.com/gammasim/simtools/pull/1873))
+- Fix thread-safe singleton check in `mongo_db`. Add `{"maxIdleTimeMS": 10000}` to close idle connections after 10s. Add debugging tool for connections. ([#1899](https://github.com/gammasim/simtools/pull/1899))
+- Fix simulation model production table upload: full updates tables need not to search through the model history. This led to the addition of deprecated parameters back into the production. ([#1913](https://github.com/gammasim/simtools/pull/1913))
+
+### New Features
+
+- Add pulse shape table writer for light emission flasher simulations. ([#1851](https://github.com/gammasim/simtools/pull/1851))
+- Add CORSIKA executable compiled with CURVED option to docker images (`corsika-curved`). ([#1859](https://github.com/gammasim/simtools/pull/1859))
+- Improve array plotting with more custom configuration options. ([#1860](https://github.com/gammasim/simtools/pull/1860), [#1862](https://github.com/gammasim/simtools/pull/1862))
+- Add tests for certain strings in the CORSIKA and sim_telarray log files. ([#1882](https://github.com/gammasim/simtools/pull/1882))
+- Verify that the request and actually simulated number of events is identical for CORSIKA and sim_telarray simulations. ([#1883](https://github.com/gammasim/simtools/pull/1883))
+- Add tests that certain strings do not appear in the CORSIKA and sim_telarray log file (see also PR #1882) ([#1885](https://github.com/gammasim/simtools/pull/1885))
+- Added functionality to plot mirrors and implemented auto plotting of mirrors for the reports. ([#1886](https://github.com/gammasim/simtools/pull/1886))
+- Add test to verify that number of CORSIKA events is consistent with requested number of events. ([#1890](https://github.com/gammasim/simtools/pull/1890))
+- Add application for pulse shape parameter derivation and move existing functionality there. ([#1894](https://github.com/gammasim/simtools/pull/1894))
+- Add possibility to run sim_telarray only using an existing CORSIKA file with `simtools-simulate-prod`. ([#1896](https://github.com/gammasim/simtools/pull/1896))
+
+### Maintenance
+
+- Refactor `simtools-validate-file-using-schema` and improve unit testing of code. ([#1857](https://github.com/gammasim/simtools/pull/1857))
+- Introducing a new psf optimizer class and improving exception handling. ([#1864](https://github.com/gammasim/simtools/pull/1864))
+- Update model version to ensure reproducibility if given as MAJOR.MINOR. Revert testing to exact semver version. ([#1870](https://github.com/gammasim/simtools/pull/1870))
+- Improve description of `submit_array_layouts`. Fix model parameter writing of instrument for site parameters. ([#1872](https://github.com/gammasim/simtools/pull/1872))
+- Introducing a data class and capping maximum learning rate in PSF optimization modules. ([#1875](https://github.com/gammasim/simtools/pull/1875))
+- Remove unused command line parameter `data_directory` from simtools-simulate-prod. ([#1891](https://github.com/gammasim/simtools/pull/1891))
+- Remove unused command line parameter `number_of_runs` from simtools-simulate-prod. Simulate always a single run number. ([#1893](https://github.com/gammasim/simtools/pull/1893))
+- Introduce consistent naming for pedestal runs and output files: always start with `pedestal...` (e.g., `pedestals_dark`). ([#1904](https://github.com/gammasim/simtools/pull/1904))
+- Suppress mongoDB connection close debug message in unit test. ([#1906](https://github.com/gammasim/simtools/pull/1906))
+- Documentation is now generated for each push. Deployment changed to either the release of a version, merge to main, or manual trigger. ([#1907](https://github.com/gammasim/simtools/pull/1907))
+- Update ignore pattern for log file inspector to ignore warnings on `getpwuid` obtained in AIV environment. ([#1912](https://github.com/gammasim/simtools/pull/1912))
+
+### Simulation model
+
+- Merge all flasher pulse shape parameters (shape, width, exp decay) into a single parameter `flasher_pulse_shape`. ([#1895](https://github.com/gammasim/simtools/pull/1895))
+
+
+## [v0.24.0](https://github.com/gammasim/simtools/releases/tag/v0.24.0) - 2025-10-28
+
+### Bugfixes
+
+- Bugfix in validation of generated sim_telarray configuration: missing assert on the outcome of the tests (tests always passed, even with differences). ([#1856](https://github.com/gammasim/simtools/pull/1856))
+- Fixed array trigger file generation to properly combine non-hardstereo telescopes. Previously, each telescope type generated separate trigger lines, preventing software stereo triggers between different telescope types (e.g., SST+MST). Now hardstereo lines remain separate while non-hardstereo telescopes are combined into a single line, enabling cross-telescope-type triggering. ([#1863](https://github.com/gammasim/simtools/pull/1863))
+
+### New Features
+
+- Add new simulation model parameter `transit_time_random`. ([#1808](https://github.com/gammasim/simtools/pull/1808))
+- Implement version check for model parameters for any software type. ([#1842](https://github.com/gammasim/simtools/pull/1842))
+- Add possibility to define new base models taking into account the correct history of models for `simtools-maintain-simulation-model-add-production`. ([#1844](https://github.com/gammasim/simtools/pull/1844))
+- Add possibility to change model parameters from command line using the `--overwrite_model_parameters` command line parameter. ([#1850](https://github.com/gammasim/simtools/pull/1850))
+
+### Maintenance
+
+- Change source of simulation model database in CI to 'main' branch of simulation model repository.
+  Tests against the latest release versions for simtools release candidates (`1.2.3-rc`).
+  Allow to configure simulation model repository branches for manually triggered workflows. ([#1846](https://github.com/gammasim/simtools/pull/1846))
+- Review and update all XPASS unit tests. ([#1855](https://github.com/gammasim/simtools/pull/1855))
+
+### Simulation model
+
+- Change default simulation models database version to 0.11.0. ([#1852](https://github.com/gammasim/simtools/pull/1852))
+
+
 ## [v0.23.0](https://github.com/gammasim/simtools/releases/tag/v0.23.0) - 2025-10-13
 
 ### Bugfixes

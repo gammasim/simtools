@@ -5,6 +5,7 @@ import pathlib
 import re
 
 import pytest
+from astropy import units as u
 
 logger = logging.getLogger()
 
@@ -107,6 +108,7 @@ def test_get_autoinputs_command(corsika_runner_mock_array_model, caplog):
     assert "corsika_autoinputs" in autoinputs_command
     assert "-R 3" in autoinputs_command
     assert "--keep-seeds" not in autoinputs_command
+
     corsika_runner_mock_array_model._keep_seeds = True
     with caplog.at_level("WARNING"):
         autoinputs_command_with_seeds = corsika_runner_mock_array_model._get_autoinputs_command(
@@ -117,6 +119,40 @@ def test_get_autoinputs_command(corsika_runner_mock_array_model, caplog):
             for message in caplog.messages
         )
     assert "--keep-seeds" in autoinputs_command_with_seeds
+
+
+def test_get_autoinputs_command_flat_atmosphere(corsika_runner_mock_array_model, caplog):
+    with caplog.at_level("DEBUG"):
+        autoinputs_command = corsika_runner_mock_array_model._get_autoinputs_command(
+            run_number=3, input_tmp_file="tmp_file"
+        )
+    assert "corsika-run/corsika" in autoinputs_command
+    assert any("Using flat-atmosphere CORSIKA binary" in message for message in caplog.messages)
+
+
+def test_get_autoinputs_command_curved_atmosphere(corsika_runner_mock_array_model, caplog):
+    corsika_runner_mock_array_model.corsika_config.zenith_angle = 70
+    corsika_runner_mock_array_model.corsika_config.curved_atmosphere_min_zenith_angle = 65
+    # Trigger a re-evaluation of use_curved_atmosphere
+    corsika_runner_mock_array_model.corsika_config.use_curved_atmosphere = {
+        "zenith_angle": 70 * u.deg,
+        "curved_atmosphere_min_zenith_angle": 65 * u.deg,
+    }
+    with caplog.at_level("DEBUG"):
+        autoinputs_command = corsika_runner_mock_array_model._get_autoinputs_command(
+            run_number=3, input_tmp_file="tmp_file"
+        )
+    assert "corsika-run/corsika-curved" in autoinputs_command
+    assert any("Using curved-atmosphere CORSIKA binary" in message for message in caplog.messages)
+
+
+def test_get_autoinputs_command_with_multipipe(corsika_runner_mock_array_model):
+    corsika_runner_mock_array_model._use_multipipe = True
+    autoinputs_command = corsika_runner_mock_array_model._get_autoinputs_command(
+        run_number=3, input_tmp_file="tmp_file"
+    )
+    assert "corsika_autoinputs" in autoinputs_command
+    assert "multipipe_" in autoinputs_command
 
 
 def test_get_resources(corsika_runner_mock_array_model):

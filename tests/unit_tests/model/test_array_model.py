@@ -73,9 +73,9 @@ def test_exporting_config_files(db_config, model_version):
     test_cfg = "_test.cfg"
     list_of_export_files = [
         "CTA-LST_lightguide_eff_2020-04-12_average.dat",
-        "CTA-North-LSTN-01-" + model_version + test_cfg,
-        "CTA-North-MSTN-01-" + model_version + test_cfg,
-        "CTA-test_layout-North-" + model_version + test_cfg,
+        "CTA-North-LSTN-01" + test_cfg,
+        "CTA-North-MSTN-01" + test_cfg,
+        "CTA-test_layout-North" + test_cfg,
         "NectarCAM_lightguide_efficiency_POP_131019.dat",
         "Pulse_template_nectarCam_17042020-noshift.dat",
         "array_triggers.dat",
@@ -126,11 +126,9 @@ def test_get_telescope_position_parameter(array_model_north):
     }
 
 
-def test_get_config_file(model_version, array_model_north):
+def test_get_config_file(array_model_north):
     am = array_model_north
-    assert (
-        am.config_file_path.name == "CTA-test_layout-North-" + model_version + "_test-lst-array.cfg"
-    )
+    assert am.config_file_path.name == "CTA-test_layout-North_test-lst-array.cfg"
 
 
 def test_get_config_directory(array_model_north):
@@ -199,7 +197,7 @@ def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version
     mock_get_output_directory = MagicMock(return_value=mock_output_dir)
 
     with (
-        patch("tarfile.open", mock_tarfile_open),
+        patch("tarfile.open", mock_tarfile_open),  # NOSONAR
         patch("pathlib.Path.rglob", mock_rglob),
         patch.object(io_handler, "get_output_directory", mock_get_output_directory),
         patch("pathlib.Path.is_file", return_value=True),
@@ -211,7 +209,7 @@ def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version
 
     mock_rglob = MagicMock(return_value=[])
     with (
-        patch("tarfile.open", mock_tarfile_open),
+        patch("tarfile.open", mock_tarfile_open),  # NOSONAR
         patch("pathlib.Path.rglob", mock_rglob),
         patch.object(io_handler, "get_output_directory", mock_get_output_directory),
     ):
@@ -220,13 +218,17 @@ def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version
 
 def test_get_additional_simtel_metadata(array_model_north, mocker):
     array_model_north_cp = copy.deepcopy(array_model_north)
-    array_model_north_cp.sim_telarray_seeds = {"seeds": 1234}
+    array_model_north_cp.sim_telarray_seeds = {
+        "seed": 1234,
+        "random_instrument_instances": 512,
+        "seed_file_name": None,
+    }
     mocker.patch.object(
         array_model_north_cp.site_model, "get_nsb_integrated_flux", return_value=42.0
     )
 
     assert "nsb_integrated_flux" in array_model_north_cp._get_additional_simtel_metadata()
-    assert "seeds" in array_model_north_cp._get_additional_simtel_metadata()
+    assert "seed" in array_model_north_cp._get_additional_simtel_metadata()
 
 
 def test_build_calibration_models():
@@ -340,3 +342,27 @@ def test_build_telescope_models():
         assert "LSTN-01" in telescope_models
         assert "non_telescope" not in telescope_models
         mock_tel_model.assert_called_once()
+
+
+def test_sim_telarray_seeds_property(array_model_north):
+    assert array_model_north.sim_telarray_seeds is None
+
+
+def test_sim_telarray_seeds_setter_valid(array_model_north):
+    seeds = {
+        "seed": 12345,
+        "random_instrument_instances": 100,
+        "seed_file_name": "test_seed.txt",
+    }
+    array_model_north.sim_telarray_seeds = seeds
+    assert array_model_north.sim_telarray_seeds == seeds
+
+
+def test_sim_telarray_seeds_setter_invalid(array_model_north):
+    with pytest.raises(ValueError, match=r"sim_telarray_seeds dictionary must contain"):
+        array_model_north.sim_telarray_seeds = {"seed": 12345}
+
+
+def test_sim_telarray_seeds_setter_none(array_model_north):
+    array_model_north.sim_telarray_seeds = None
+    assert array_model_north.sim_telarray_seeds is None

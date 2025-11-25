@@ -829,7 +829,7 @@ def test_ensure_iterable():
     assert gen.ensure_iterable((1, 2, 3)) == (1, 2, 3)
 
 
-@patch("tarfile.open")
+@patch("tarfile.open")  # NOSONAR
 def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
     tar_file_name = tmp_test_directory / "test_archive.tar.gz"
     # Do not actually create directories or files; mock filesystem interactions
