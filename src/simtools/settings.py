@@ -14,24 +14,24 @@ class _Config:
         self._corsika_path = None
         self._corsika_exe = None
 
-    def load(self, args, db_config=None):
-        self._args = MappingProxyType(args)  # immutable view
+    def load(self, args=None, db_config=None):
+        self._args = MappingProxyType(args) if args is not None else {}
         self._db_config = MappingProxyType(db_config) if db_config is not None else {}
         self._sim_telarray_path = os.getenv(
             "SIMTOOLS_SIMTEL_PATH",
-            args.get("simtel_path", None),
+            args.get("simtel_path", None) if args is not None else None,
         )
         self._sim_telarray_exe = os.getenv(
             "SIMTOOLS_SIMTEL_EXECUTABLE",
-            args.get("simtel_executable", "sim_telarray"),
+            args.get("simtel_executable", "sim_telarray") if args is not None else "sim_telarray",
         )
         self._corsika_path = os.getenv(
             "SIMTOOLS_CORSIKA_PATH",
-            args.get("corsika_path", None),
+            args.get("corsika_path", None) if args is not None else None,
         )
         self._corsika_exe = os.getenv(
             "SIMTOOLS_CORSIKA_EXECUTABLE",
-            args.get("corsika_executable", "corsika"),
+            args.get("corsika_executable", "corsika") if args is not None else "corsika",
         )
 
     @property
@@ -48,7 +48,19 @@ class _Config:
 
     @property
     def sim_telarray_exe(self):
-        return self._sim_telarray_exe
+        return (
+            Path(self._sim_telarray_path) / self._sim_telarray_exe
+            if self._sim_telarray_path is not None
+            else None
+        )
+
+    @property
+    def sim_telarray_exe_debug_trace(self):
+        return (
+            Path(self._sim_telarray_path) / (self._sim_telarray_exe + "_debug_trace")
+            if self._sim_telarray_path is not None
+            else None
+        )
 
     @property
     def corsika_path(self):
@@ -56,7 +68,17 @@ class _Config:
 
     @property
     def corsika_exe(self):
-        return self._corsika_exe
+        return (
+            Path(self._corsika_path) / self._corsika_exe if self._corsika_path is not None else None
+        )
+
+    @property
+    def corsika_exe_curved(self):
+        return (
+            Path(self._corsika_path) / (self._corsika_exe.replace("_flat", "_curved"))
+            if self._corsika_path is not None
+            else None
+        )
 
 
 config = _Config()
