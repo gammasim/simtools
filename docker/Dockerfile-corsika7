@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.4
 # Dockerfile for CORSIKA7
 #
-# Image different versions of CORSIKA:
+# Image with different config variants of CORSIKA:
 # - flat and curved atmosphere
 # - high- / and low-energy hadronic interaction models
 #
