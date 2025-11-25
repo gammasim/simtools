@@ -140,4 +140,6 @@ RUN microdnf update -y && microdnf install -y \
     bc findutils gsl procps zstd && \
     microdnf clean all
 
+ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:/workdir/simulation_software/stdtools/lib"
+
 WORKDIR /workdir/simulation_software/sim_telarray
