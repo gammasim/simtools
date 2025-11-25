@@ -1,8 +1,9 @@
 # syntax=docker/dockerfile:1.4
 # Dockerfile for sim_telarray
 #
+# Image with sim_telarray and tools.
+#
 
-# Shared build arguments
 ARG EXTRA_DEFINES="-DMAXIMUM_TELESCOPES=99 -DCTA_PROD6"
 ARG SIMTEL_VERSION="master"
 ARG HESSIO_VERSION="master"
@@ -33,11 +34,9 @@ RUN --mount=type=secret,id=sim_telarray_token \
     git clone --depth 1 --branch "${SIMTEL_VERSION}" "https://oauth2:$(cat /run/secrets/sim_telarray_token)@${SIMTEL_REPO}"
 
 # Clone hessio from CTAO gitlab
-#RUN --mount=type=secret,id=hessio_token \
-#    git config --global advice.detachedHead false && \
-#    git clone --depth 1 --branch "${HESSIO_VERSION}" "https://oauth2:$(cat /run/secrets/hessio_token)@${HESSIO_REPO}"
-# TODO temporarily uses tar package
-ADD hessioxxx.tar.gz .
+RUN --mount=type=secret,id=hessio_token \
+    git config --global advice.detachedHead false && \
+    git clone --depth 1 --branch "${HESSIO_VERSION}" "https://oauth2:$(cat /run/secrets/hessio_token)@${HESSIO_REPO}"
 
 # Clone stdtools from CTAO gitlab
 RUN --mount=type=secret,id=stdtools_token \
@@ -58,15 +57,31 @@ ENV GCC_PATH="/usr/bin/"
 
 RUN yum update -y && yum install -y \
     gcc gcc-c++ gsl-devel \
-    automake csh patch perl which bzip2 \
-    wget make tar m4 && \
+    automake csh patch perl \
+    make m4 which && \
     yum clean all
 
 WORKDIR /workdir
 COPY --from=source_preparation /src .
 
+WORKDIR /workdir/hessio
+# Prepare hessioxxx from hessio (fudge to avoid installing dependencies like doxygen)
+RUN sed -i "s|hessioxxx-prepare: build-doc doc/eventio_en.pdf doc/hessio_refman.pdf|hessioxxx-prepare:|" Makefile && \
+    touch Makefile.LaTeX && touch Makefile.Common && touch ChangeLog && \
+    mkdir -p doc && touch doc/eventio_en.pdf && touch doc/hessio_refman.pdf && \
+    make hessioxxx-prepare && mv hessioxxx /workdir/
+
 WORKDIR /workdir/hessioxxx
-RUN make clean && \
+# Create eventio_version.h file
+# TODO replace
+RUN echo '#define EVENTIO_VERSION "2025-06-02 18:04:56 CEST (konrad@wizard4)"' > include/eventio_version.h && \
+    echo '#define EVENTIO_RELEASE "2025-06-26"' >> include/eventio_version.h && \
+    echo '#ifdef EVENTIO_BASE_RELEASE' >> include/eventio_version.h && \
+    echo '# undef EVENTIO_BASE_RELEASE' >> include/eventio_version.h && \
+    echo '#endif' >> include/eventio_version.h && \
+    echo '#define EVENTIO_BASE_RELEASE "2025-06-26"' >> include/eventio_version.h
+
+RUN rm -rf /workdir/hessio && make clean && \
     make WITH_RPATH=1 DEFINES="${EXTRA_DEFINES} ${GSL_COMPILE}" && \
     rm -rf ./out ./doc ./root ./hessio_refman.pdf ./.git
 
@@ -95,29 +110,31 @@ RUN make clean && \
     rm -vf LightEmission/LightSourcesPresentation.pdf && \
     find . -name "*.o" -exec rm -f {} \;
 
-# Generate config.yml with build information
-RUN echo "SIMTEL_VERSION: \"${SIMTEL_VERSION}\"" > config.yml && \
-    echo "HESSIO_VERSION: \"${HESSIO_VERSION}\"" >> config.yml && \
-    echo "STDTOOLS_VERSION: \"${STDTOOLS_VERSION}\"" >> config.yml && \
-    echo "EXTRA_DEFINES: \"${EXTRA_DEFINES}\"" >> config.yml && \
-    echo "BUILD_DATE: \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"" >> config.yml && \
-    echo "COMPONENTS:" >> config.yml && \
-    echo "  - NAME: \"hessioxxx\"" >> config.yml && \
-    echo "    VERSION: \"${HESSIO_VERSION}\"" >> config.yml && \
-    echo "    BUILD_FLAGS: \"DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\"" >> config.yml && \
-    echo "  - NAME: \"stdtools\"" >> config.yml && \
-    echo "    VERSION: \"${STDTOOLS_VERSION}\"" >> config.yml && \
-    echo "    BUILD_FLAGS: \"EXTRA_DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\"" >> config.yml && \
-    echo "  - NAME: \"sim_telarray\"" >> config.yml && \
-    echo "    VERSION: \"${SIMTEL_VERSION}\"" >> config.yml && \
-    echo "    BUILD_FLAGS: \"EXTRA_DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\"" >> config.yml && \
-    echo "    EXECUTABLES:" >> config.yml && \
-    echo "      - \"sim_telarray\"" >> config.yml && \
-    echo "  - NAME: \"sim_telarray_debug_trace\"" >> config.yml && \
-    echo "    VERSION: \"${SIMTEL_VERSION}\"" >> config.yml && \
-    echo "    BUILD_FLAGS: \"EXTRA_DEFINES=${EXTRA_DEFINES} -DDEBUG_TRACE_99 ${GSL_COMPILE}\"" >> config.yml && \
-    echo "    EXECUTABLES:" >> config.yml && \
-    echo "      - \"sim_telarray_debug_trace\"" >> config.yml
+# Generate build_opts.yml with build information
+RUN { \
+    echo "simtel_version: \"${SIMTEL_VERSION}\""; \
+    echo "hessio_version: \"${HESSIO_VERSION}\""; \
+    echo "stdtools_version: \"${STDTOOLS_VERSION}\""; \
+    echo "extra_defines: \"${EXTRA_DEFINES}\""; \
+    echo "build_date: \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\""; \
+    echo "components:"; \
+    echo "  - name: \"hessioxxx\""; \
+    echo "    version: \"${HESSIO_VERSION}\""; \
+    echo "    build_flags: \"DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\""; \
+    echo "  - name: \"stdtools\""; \
+    echo "    version: \"${STDTOOLS_VERSION}\""; \
+    echo "    build_flags: \"EXTRA_DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\""; \
+    echo "  - name: \"sim_telarray\""; \
+    echo "    version: \"${SIMTEL_VERSION}\""; \
+    echo "    build_flags: \"EXTRA_DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\""; \
+    echo "    executables:"; \
+    echo "      - \"sim_telarray\""; \
+    echo "  - name: \"sim_telarray_debug_trace\""; \
+    echo "    version: \"${SIMTEL_VERSION}\""; \
+    echo "    build_flags: \"EXTRA_DEFINES=${EXTRA_DEFINES} -DDEBUG_TRACE_99 ${GSL_COMPILE}\""; \
+    echo "    executables:"; \
+    echo "      - \"sim_telarray_debug_trace\""; \
+    } > build_opts.yml
 
 # -----------------------------------------------------------------------------
 # STAGE 3: Runtime Image
