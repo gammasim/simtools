@@ -54,6 +54,8 @@ ARG STDTOOLS_VERSION="master"
 ARG GSL_COMPILE="-DWITH_GSL -DWITH_GSL_RNG"
 
 ENV GCC_PATH="/usr/bin/"
+ENV HSEVENTIO="/workdir/simulation_software/hessioxxx/"
+ENV STDTOOLS_PATH="/workdir/simulation_software/stdtools/"
 
 RUN yum update -y && yum install -y \
     gcc gcc-c++ gsl-devel \
@@ -61,26 +63,26 @@ RUN yum update -y && yum install -y \
     make m4 which && \
     yum clean all
 
-WORKDIR /workdir
+WORKDIR /workdir/simulation_software
 COPY --from=source_preparation /src .
 
-WORKDIR /workdir/hessio
+WORKDIR /workdir/simulation_software/hessio
 # Prepare hessioxxx from hessio (fudge to avoid installing dependencies like doxygen)
 RUN sed -i "s|hessioxxx-prepare: build-doc doc/eventio_en.pdf doc/hessio_refman.pdf|hessioxxx-prepare:|" Makefile && \
     touch Makefile.LaTeX && touch Makefile.Common && touch ChangeLog && \
     mkdir -p doc && touch doc/eventio_en.pdf && touch doc/hessio_refman.pdf && \
-    make hessioxxx-prepare && mv hessioxxx /workdir/
+    make hessioxxx-prepare && mv hessioxxx /workdir/simulation_software/
 
-WORKDIR /workdir/hessioxxx
-RUN rm -rf /workdir/hessio && make clean && make include/eventio_version.h && \
+WORKDIR /workdir/simulation_software/hessioxxx
+RUN rm -rf /workdir/simulation_software/hessio && make clean && make include/eventio_version.h && \
     make WITH_RPATH=1 DEFINES="${EXTRA_DEFINES} ${GSL_COMPILE}" && \
     rm -rf ./out ./doc ./root ./hessio_refman.pdf ./.git
 
-WORKDIR /workdir/stdtools
+WORKDIR /workdir/simulation_software/stdtools
 RUN make WITH_RPATH=1 EXTRA_DEFINES="${EXTRA_DEFINES} ${GSL_COMPILE}" && \
     mv -v -f out/libstdtools.so ./lib && rm -rf out ./.git
 
-WORKDIR /workdir/sim_telarray
+WORKDIR /workdir/simulation_software/sim_telarray
 # Create version.h file
 RUN echo "#define VERSION \"$(date -u '+%Y.%j %H:%M:%S') UTC ($(whoami)@$(hostname))\"" > version.h && \
     echo '#define RELEASE "2025.246.0 from 2025-09-03"' >> version.h && \
@@ -97,7 +99,7 @@ RUN make WITH_RPATH=1 EXTRA_DEFINES="${EXTRA_DEFINES} -DDEBUG_TRACE_99 ${GSL_COM
 RUN make clean && \
     make WITH_RPATH=1 EXTRA_DEFINES="${EXTRA_DEFINES} ${GSL_COMPILE}" install && \
     mv ./sim_telarray_debug_trace ./bin/sim_telarray_debug_trace && \
-    rm -fr ./cfg/* ./corsika ./hegra ./hess ./doc_src ./doc ./LightEmission/out ./.git && \
+    rm -fr ./cfg/* ./hegra ./hess ./doc_src ./doc ./LightEmission/out ./.git && \
     rm -vf LightEmission/LightSourcesPresentation.pdf && \
     find . -name "*.o" -exec rm -f {} \;
 
@@ -132,16 +134,12 @@ RUN { \
 # -----------------------------------------------------------------------------
 FROM almalinux:9.5-minimal
 WORKDIR /workdir/simulation_software
-COPY --from=build_image /workdir/hessioxxx /workdir/simulation_software/hessioxxx
-COPY --from=build_image /workdir/stdtools /workdir/simulation_software/stdtools
-COPY --from=build_image /workdir/sim_telarray /workdir/simulation_software/sim_telarray
+COPY --from=build_image /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
+COPY --from=build_image /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
+COPY --from=build_image /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
 
 RUN microdnf update -y && microdnf install -y \
     bc findutils gsl procps zstd && \
     microdnf clean all
-
-ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:\
-/workdir/simulation_software/stdtools/lib:\
-/workdir/simulation_software/sim_telarray/LightEmission/lib"
 
 WORKDIR /workdir/simulation_software/sim_telarray
