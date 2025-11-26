@@ -363,3 +363,48 @@ def test_create_optimization_plots(tmp_path, sample_psf_data, sample_parameters)
         args_dict_no_plots, gd_results, mock_telescope_model, data_to_plot, tmp_path
     )
     assert result is None
+
+
+def test_create_final_psf_comparison_plot(tmp_path, sample_psf_data, sample_parameters):
+    """Test final PSF comparison plot creation."""
+    mock_telescope_model = MagicMock()
+    mock_telescope_model.name = "LSTN-01"
+    data_to_plot = {"measured": sample_psf_data}
+    final_rmsd = 0.023
+
+    with (
+        patch("simtools.visualization.plot_psf._create_base_plot_figure") as mock_base,
+        patch("matplotlib.pyplot.close") as mock_close,
+    ):
+        mock_fig = MagicMock()
+        mock_ax = MagicMock()
+        mock_base.return_value = (mock_fig, mock_ax)
+
+        # Test with all parameters present
+        output_file = plot_psf.create_final_psf_comparison_plot(
+            mock_telescope_model,
+            sample_parameters,
+            data_to_plot,
+            tmp_path,
+            final_rmsd,
+            sample_psf_data,
+        )
+
+        assert output_file is not None
+        mock_base.assert_called_once()
+        mock_ax.set_title.assert_called_once()
+        mock_ax.text.assert_called_once()
+        mock_fig.savefig.assert_called_once()
+        mock_close.assert_called_once()
+
+        # Verify title contains parameter information
+        title_call = mock_ax.set_title.call_args[0][0]
+        assert "Final Optimized Parameters" in title_call
+        assert "mirror_reflection_random_angle" in title_call
+        assert "mirror_align_random_vertical" in title_call
+        assert "mirror_align_random_horizontal" in title_call
+
+        # Verify RMSD text
+        text_call = mock_ax.text.call_args[0][2]
+        assert "RMSD" in text_call
+        assert "0.0230" in text_call
