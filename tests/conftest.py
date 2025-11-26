@@ -25,10 +25,15 @@ from simtools.runners.corsika_runner import CorsikaRunner
 logger = logging.getLogger()
 
 
-@pytest.fixture(scope="session", autouse=True)
-def _simtools_settings():
+@pytest.fixture(autouse=True)
+def simtools_settings():
     """Load simtools settings for the test session."""
     load_dotenv(".env")
+    # Set defaults only if not already set (e.g. CI environment)
+    os.environ.setdefault("SIMTOOLS_SIMTEL_PATH", "/tmp/sim_telarray")
+    os.environ.setdefault("SIMTOOLS_SIMTEL_EXECUTABLE", "sim_telarray")
+    os.environ.setdefault("SIMTOOLS_CORSIKA_PATH", "/tmp/corsika")
+    os.environ.setdefault("SIMTOOLS_CORSIKA_EXECUTABLE", "corsika_flat")
     settings.config.load()
 
 
@@ -74,7 +79,7 @@ def _mock_settings_env_vars(tmp_test_directory):
     with mock.patch.dict(
         os.environ,
         {
-            "SIMTOOLS_SIMTEL_PATH": str(tmp_test_directory) + "/simtel",
+            "SIMTOOLS_SIMTEL_PATH": "/tmp/sim_telarray",
             "SIMTOOLS_DB_API_USER": "db_user",
             "SIMTOOLS_DB_API_PW": "12345",
             "SIMTOOLS_DB_API_PORT": "42",
@@ -96,8 +101,6 @@ def args_dict(tmp_test_directory, data_path):
             str(tmp_test_directory),
             "--data_path",
             data_path,
-            "--simtel_path",
-            str(settings.config.sim_telarray_path),
         ),
     )
 
@@ -111,8 +114,6 @@ def args_dict_site(tmp_test_directory, data_path):
             str(tmp_test_directory),
             "--data_path",
             data_path,
-            "--simtel_path",
-            str(settings.config.sim_telarray_path),
             "--site",
             "South",
             "--telescope",
