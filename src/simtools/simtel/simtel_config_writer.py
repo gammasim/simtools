@@ -10,8 +10,7 @@ import numpy as np
 
 import simtools.utils.general as gen
 import simtools.version
-from simtools import settings
-from simtools.io import ascii_handler
+from simtools import dependencies, settings
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 from simtools.utils import names
 
@@ -568,17 +567,19 @@ class SimtelConfigWriter:
             "simtools_model_production_version": self._model_version,
         }
         try:
-            build_opts = ascii_handler.collect_data_from_file(
-                Path(settings.config.sim_telarray_path) / "build_opts.yml"
-            )
+            build_opts = dependencies.get_build_options()
             for key, value in build_opts.items():
                 meta_items[f"simtools_{key}"] = value
         except (FileNotFoundError, TypeError):
             pass  # don't expect build_opts.yml to be present on all systems
 
+        # CORSIKA executable without _flat/_curved suffix (do not know here if curved or flat)
+        meta_items["simtools_corsika_exec"] = settings.config.corsika_exe.name.removesuffix("_flat")
+
         file.write(f"{self.TAB}% Simtools parameters\n")
         for key, value in meta_items.items():
-            file.write(f"{self.TAB}metaparam global set {key} = {value}\n")
+            if not isinstance(value, list):
+                file.write(f"{self.TAB}metaparam global set {key} = {value}\n")
 
     def _write_site_parameters(
         self, file, site_parameters, model_path, telescope_model, additional_metadata=None
