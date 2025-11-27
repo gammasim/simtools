@@ -1,4 +1,5 @@
 import logging
+import subprocess
 
 import pytest
 import yaml
@@ -270,3 +271,43 @@ def test_get_build_options_debug_logging_on_exception(mocker, caplog):
     with pytest.raises(FileNotFoundError):
         get_build_options()
     assert any("No build options found for sim_telarray." in m for m in caplog.text.splitlines())
+
+
+def test_get_sim_telarray_version_with_run_time(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+    mock_config.sim_telarray_exe = "sim_telarray"
+    mock_run = mocker.patch("simtools.dependencies.subprocess.run")
+    mock_run.return_value.stdout = "Release: 2024.271.0 from 2024-09-27\n"
+    mock_run.return_value.stderr = ""
+    run_time = ["docker"]
+    version = get_sim_telarray_version(run_time=run_time)
+    assert version == "2024.271.0"
+    mock_run.assert_called_once_with(
+        ["docker", "sim_telarray", "--version"], capture_output=True, text=True, check=False
+    )
+
+
+def test_get_corsika_version_with_run_time(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+
+    class PathMock:
+        def __truediv__(self, other):
+            return f"/mocked/path/{other}"
+
+    mock_config.corsika_path = PathMock()
+    mock_config.corsika_exe = "corsika"
+    mock_popen = mocker.patch("simtools.dependencies.subprocess.Popen")
+    process_mock = mocker.Mock()
+    process_mock.stdout = ["NUMBER OF VERSION :  7.7550\n"]
+    process_mock.terminate = mocker.Mock()
+    mock_popen.return_value = process_mock
+    run_time = ["docker"]
+    version = get_corsika_version(run_time=run_time)
+    assert version == "7.7550"
+    mock_popen.assert_called_once_with(
+        ["docker", "/mocked/path/corsika"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        text=True,
+    )
