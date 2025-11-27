@@ -175,7 +175,6 @@ def test_get_sim_telarray_version_empty_output(mocker):
 
 def test_get_corsika_version_typeerror(mocker):
     mock_config = mocker.patch("simtools.dependencies.config")
-    mock_config.corsika_path = None
     mock_config.corsika_exe = None
     version = get_corsika_version()
     assert version is None
@@ -294,8 +293,7 @@ def test_get_corsika_version_with_run_time(mocker):
         def __truediv__(self, other):
             return f"/mocked/path/{other}"
 
-    mock_config.corsika_path = PathMock()
-    mock_config.corsika_exe = "corsika"
+    mock_config.corsika_exe = PathMock() / "corsika"
     mock_popen = mocker.patch("simtools.dependencies.subprocess.Popen")
     process_mock = mocker.Mock()
     process_mock.stdout = ["NUMBER OF VERSION :  7.7550\n"]

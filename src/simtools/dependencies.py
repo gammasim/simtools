@@ -144,9 +144,7 @@ def get_corsika_version(run_time=None):
     str
         Version of the CORSIKA package.
     """
-    try:
-        corsika = config.corsika_path / config.corsika_exe
-    except TypeError:
+    if config.corsika_exe is None:
         _logger.warning(
             "SIMTOOLS_CORSIKA_PATH or SIMTOOLS_CORSIKA_EXECUTABLE environment "
             "variables are not set."
@@ -154,12 +152,10 @@ def get_corsika_version(run_time=None):
         return None
 
     if run_time is None:
-        command = [str(corsika)]
+        command = [str(config.corsika_exe)]
     else:
-        command = [*run_time, str(corsika)]
+        command = [*run_time, str(config.corsika_exe)]
 
-    # Below I do not use the standard context manager because
-    # it makes mocking in the tests significantly more difficult
     process = subprocess.Popen(  # pylint: disable=consider-using-with
         command,
         stdout=subprocess.PIPE,
