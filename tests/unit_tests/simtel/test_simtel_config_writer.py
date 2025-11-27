@@ -1127,3 +1127,16 @@ def test_write_trigger_lines_no_hardstereo_no_minsep(simtel_config_writer):
     assert TRIGGER_1_2_WIDTH_300_LINE in lines
     assert TRIGGER_3_4_WIDTH_400_LINE in lines
     assert TRIGGER_1234_WIDTH_300_LINE in lines  # Min width, no minsep
+
+
+def test_write_simtools_parameters_attribute_error(simtel_config_writer, tmp_test_directory):
+    # Create a mock file to write to
+    test_file = tmp_test_directory / "test_simtools_params.txt"
+    # Patch settings.config.corsika_exe to None to trigger AttributeError
+    with mock.patch("simtools.simtel.simtel_config_writer.settings") as mock_settings:
+        mock_settings.config.corsika_exe = None
+        with pytest.raises(
+            AttributeError, match=r"CORSIKA executable path is not set in settings."
+        ):
+            with open(test_file, "w") as f:
+                simtel_config_writer._write_simtools_parameters(f)

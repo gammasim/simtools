@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 import yaml
 
@@ -253,3 +255,18 @@ def test__get_build_options_from_file_subprocess_error(mocker):
     mock_run.return_value.stderr = "file not found"
     with pytest.raises(FileNotFoundError, match="No build option file found in container"):
         _get_build_options_from_file("/mocked/path/build_opts.yml", run_time=["docker"])
+
+
+def test_get_build_options_debug_logging_on_exception(mocker, caplog):
+    mock_config = mocker.patch("simtools.dependencies.config")
+    mock_path = mocker.Mock()
+    mock_path.parent = mocker.Mock()
+    mock_config.corsika_path = mock_path
+    mock_config.sim_telarray_path = mock_path
+    mock_ascii_handler = mocker.patch("simtools.dependencies.ascii_handler.collect_data_from_file")
+    # First call raises FileNotFoundError, legacy fallback also raises
+    mock_ascii_handler.side_effect = [FileNotFoundError, FileNotFoundError]
+    caplog.set_level(logging.DEBUG)
+    with pytest.raises(FileNotFoundError):
+        get_build_options()
+    assert any("No build options found for sim_telarray." in m for m in caplog.text.splitlines())

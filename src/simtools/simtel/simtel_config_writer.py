@@ -574,7 +574,12 @@ class SimtelConfigWriter:
             pass  # don't expect build_opts.yml to be present on all systems
 
         # CORSIKA executable without _flat/_curved suffix (do not know here if curved or flat)
-        meta_items["simtools_corsika_exec"] = settings.config.corsika_exe.name.removesuffix("_flat")
+        try:
+            meta_items["simtools_corsika_exec"] = settings.config.corsika_exe.name.removesuffix(
+                "_flat"
+            )
+        except AttributeError as exc:
+            raise AttributeError("CORSIKA executable path is not set in settings.") from exc
 
         file.write(f"{self.TAB}% Simtools parameters\n")
         for key, value in meta_items.items():

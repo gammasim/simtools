@@ -98,6 +98,8 @@ class _Config:
     @property
     def corsika_exe_curved(self):
         """Path to the curved version of the CORSIKA executable."""
+        if self._corsika_exe is None:
+            return None
         corsika_curved = (
             self._corsika_exe.replace("_flat", "_curved")
             if "_flat" in self._corsika_exe

@@ -6,15 +6,12 @@ from copy import copy
 import astropy.units as u
 import matplotlib.pyplot as plt
 import pytest
-from dotenv import load_dotenv
 
 from simtools import settings
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing.ray_tracing import RayTracing
 
 logger = logging.getLogger()
-load_dotenv(".env")
-settings.config.load()
 
 
 @pytest.mark.parametrize("telescope_model_name", ["SSTS-design"])
@@ -122,7 +119,6 @@ def test_single_mirror(io_handler, telescope_model_mst, site_model_south):
         mirror_numbers=list(range(1, 5)),
         single_mirror_mode=True,
     )
-    print(settings.config.sim_telarray_path)
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
 
