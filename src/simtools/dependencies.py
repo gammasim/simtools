@@ -148,7 +148,8 @@ def get_corsika_version(run_time=None):
         corsika = config.corsika_path / config.corsika_exe
     except TypeError:
         _logger.warning(
-            "SIMTOOLS_CORSIKA_PATH or SIMTOOLS_CORSIKA_EXE environment variables are not set."
+            "SIMTOOLS_CORSIKA_PATH or SIMTOOLS_CORSIKA_EXECUTABLE environment "
+            "variables are not set."
         )
         return None
 
@@ -223,7 +224,7 @@ def get_build_options(run_time=None):
                     legacy_path = path.parent / "build_opts.yml"
                     build_opts.update(_get_build_options_from_file(legacy_path, run_time))
                 except (FileNotFoundError, TypeError, ValueError):
-                    pass
+                    _logger.debug(f"No build options found for {package}.")
     if not build_opts:
         raise FileNotFoundError("No build option file found.")
 

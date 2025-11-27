@@ -115,3 +115,24 @@ def test_corsika_exe_curved_property(config_instance):
 def test_corsika_dummy_file_property(config_instance):
     config_instance.load(args={"simtel_path": "/path/to/simtel"})
     assert config_instance.corsika_dummy_file == Path("/path/to/simtel/run9991.corsika.gz")
+
+
+@patch.dict(os.environ, {}, clear=True)
+def test_corsika_exe_curved_none(config_instance):
+    config_instance._corsika_exe = None
+    config_instance._corsika_path = "/path/to/corsika"
+    assert config_instance.corsika_exe_curved is None
+
+
+@patch.dict(os.environ, {}, clear=True)
+def test_corsika_exe_curved_flat(config_instance):
+    config_instance.load(
+        args={"corsika_path": "/path/to/corsika", "corsika_executable": "corsika_flat"}
+    )
+    assert config_instance.corsika_exe_curved == Path("/path/to/corsika/corsika_curved")
+
+
+@patch.dict(os.environ, {}, clear=True)
+def test_corsika_exe_curved_legacy(config_instance):
+    config_instance.load(args={"corsika_path": "/path/to/corsika", "corsika_executable": "corsika"})
+    assert config_instance.corsika_exe_curved == Path("/path/to/corsika/corsika-curved")
