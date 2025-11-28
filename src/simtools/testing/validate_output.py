@@ -13,6 +13,26 @@ from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
 
+
+def _versions_match(from_command_line, from_config_file):
+    """Return True if validations should run for the given versions.
+
+    Behavior:
+    - If no version is provided from the command line, run validations.
+    - If a filter is provided from the command line, run only when it matches
+        the version(s) from the config file.
+    """
+    if from_command_line is None:
+        return True
+
+    # Normalize to collections for comparison
+    cmd_versions = from_command_line if isinstance(from_command_line, list) else [from_command_line]
+    cfg_versions = from_config_file if isinstance(from_config_file, list) else [from_config_file]
+
+    # Consider a match if any overlap exists
+    return any(cv in cmd_versions for cv in cfg_versions)
+
+
 # Keys to ignore when comparing sim_telarray configuration files
 # (e.g., version numbers, system dependent parameters, CORSIKA options)
 cfg_ignore_keys = [
@@ -60,7 +80,7 @@ def validate_application_output(
             f"from config file: {from_config_file}"
         )
 
-        if from_command_line == from_config_file:
+        if _versions_match(from_command_line, from_config_file):
             _validate_output_files(config, integration_test, db_config)
 
             if "file_type" in integration_test:
@@ -141,6 +161,8 @@ def _validate_output_path_and_file(config, integration_file_tests):
             assert assertions.check_output_from_sim_telarray(output_file_path, file_test)
         elif output_file_path.name.endswith(".log_hist.tar.gz"):
             assert assertions.check_simulation_logs(output_file_path, file_test)
+        elif output_file_path.suffix == ".log":
+            assert assertions.check_plain_log(output_file_path, file_test)
 
 
 def _validate_model_parameter_json_file(config, model_parameter_validation, db_config):
