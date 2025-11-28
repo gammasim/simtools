@@ -31,10 +31,7 @@ ARG PYTHON_VERSION
 ARG BUILD_BRANCH
 ARG SIMTOOLS_REQUIREMENT
 
-# Copy CORSIKA from corsika image
-COPY --from=corsika_img /workdir/simulation_software/corsika  /workdir/simulation_software/corsika
-
-# Copy sim_telarray components from simtel image
+COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulation_software/corsika7
 COPY --from=simtel_img /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
 COPY --from=simtel_img /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
 COPY --from=simtel_img /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
