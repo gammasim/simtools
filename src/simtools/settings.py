@@ -33,18 +33,24 @@ class _Config:
         """
         self._args = MappingProxyType(args) if args is not None else {}
         self._db_config = MappingProxyType(db_config) if db_config is not None else {}
-        self._sim_telarray_path = os.getenv(
-            "SIMTOOLS_SIMTEL_PATH",
-            args.get("simtel_path", None) if args is not None else None,
+        self._sim_telarray_path = (
+            args.get("simtel_path")
+            if args is not None and "simtel_path" in args
+            else os.getenv("SIMTOOLS_SIMTEL_PATH")
         )
-        self._sim_telarray_exe = os.getenv(
-            "SIMTOOLS_SIMTEL_EXECUTABLE",
-            args.get("simtel_executable", "sim_telarray") if args is not None else "sim_telarray",
+
+        self._sim_telarray_exe = (
+            args.get("simtel_executable")
+            if args is not None and "simtel_executable" in args
+            else os.getenv("SIMTOOLS_SIMTEL_EXECUTABLE", "sim_telarray")
         )
-        self._corsika_path = os.getenv(
-            "SIMTOOLS_CORSIKA_PATH",
-            args.get("corsika_path", None) if args is not None else None,
+
+        self._corsika_path = (
+            args.get("corsika_path")
+            if args is not None and "corsika_path" in args
+            else os.getenv("SIMTOOLS_CORSIKA_PATH")
         )
+
         self._corsika_exe = self._get_corsika_exec() if self._corsika_path is not None else None
 
     def _get_corsika_exec(self):
@@ -54,13 +60,16 @@ class _Config:
         Build the executable name based on configured interaction models. Fall back to
         legacy naming (simply "corsika") if models are not specified.
         """
-        he_model = os.getenv(
-            "SIMTOOLS_CORSIKA_HE_INTERACTION",
-            self._args.get("corsika_he_interaction", None) if self._args is not None else None,
+        he_model = (
+            self._args.get("corsika_he_interaction")
+            if self._args is not None and "corsika_he_interaction" in self._args
+            else os.getenv("SIMTOOLS_CORSIKA_HE_INTERACTION")
         )
-        le_model = os.getenv(
-            "SIMTOOLS_CORSIKA_LE_INTERACTION",
-            self._args.get("corsika_le_interaction", None) if self._args is not None else None,
+
+        le_model = (
+            self._args.get("corsika_le_interaction")
+            if self._args is not None and "corsika_le_interaction" in self._args
+            else os.getenv("SIMTOOLS_CORSIKA_LE_INTERACTION")
         )
 
         if he_model and le_model:
