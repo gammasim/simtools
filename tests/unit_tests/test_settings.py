@@ -99,16 +99,24 @@ def test_corsika_path_property(config_instance):
 
 @patch.dict(os.environ, {}, clear=True)
 def test_corsika_exe_property(config_instance):
-    config_instance.load(args={"corsika_path": "/path/to/corsika"})
-    assert config_instance.corsika_exe == Path("/path/to/corsika/corsika")
+    with patch.object(Path, "exists", return_value=True):
+        config_instance.load(args={"corsika_path": "/path/to/corsika"})
+        assert config_instance.corsika_exe == Path("/path/to/corsika/corsika")
 
 
 @patch.dict(os.environ, {}, clear=True)
 def test_corsika_exe_curved_property(config_instance):
-    config_instance.load(
-        args={"corsika_path": "/path/to/corsika", "corsika_executable": "corsika_flat"}
-    )
-    assert config_instance.corsika_exe_curved == Path("/path/to/corsika/corsika_curved")
+    with patch.object(Path, "exists", return_value=True):
+        config_instance.load(
+            args={
+                "corsika_path": "/path/to/corsika",
+                "corsika_he_interaction": "qgs3",
+                "corsika_le_interaction": "urqmd",
+            }
+        )
+        assert config_instance.corsika_exe_curved == Path(
+            "/path/to/corsika/corsika_qgs3_urqmd_curved"
+        )
 
 
 @patch.dict(os.environ, {}, clear=True)
@@ -126,13 +134,27 @@ def test_corsika_exe_curved_none(config_instance):
 
 @patch.dict(os.environ, {}, clear=True)
 def test_corsika_exe_curved_flat(config_instance):
-    config_instance.load(
-        args={"corsika_path": "/path/to/corsika", "corsika_executable": "corsika_flat"}
-    )
-    assert config_instance.corsika_exe_curved == Path("/path/to/corsika/corsika_curved")
+    with patch.object(Path, "exists", return_value=True):
+        config_instance.load(
+            args={
+                "corsika_path": "/path/to/corsika",
+                "corsika_he_interaction": "qgs3",
+                "corsika_le_interaction": "urqmd",
+            }
+        )
+        assert config_instance.corsika_exe_curved == Path(
+            "/path/to/corsika/corsika_qgs3_urqmd_curved"
+        )
 
 
 @patch.dict(os.environ, {}, clear=True)
 def test_corsika_exe_curved_legacy(config_instance):
-    config_instance.load(args={"corsika_path": "/path/to/corsika", "corsika_executable": "corsika"})
-    assert config_instance.corsika_exe_curved == Path("/path/to/corsika/corsika-curved")
+    with patch.object(Path, "exists", return_value=True):
+        config_instance.load(
+            args={
+                "corsika_path": "/path/to/corsika",
+                "corsika_he_interaction": None,
+                "corsika_le_interaction": None,
+            }
+        )
+        assert config_instance.corsika_exe_curved == Path("/path/to/corsika/corsika-curved")

@@ -145,10 +145,7 @@ def get_corsika_version(run_time=None):
         Version of the CORSIKA package.
     """
     if config.corsika_exe is None:
-        _logger.warning(
-            "SIMTOOLS_CORSIKA_PATH or SIMTOOLS_CORSIKA_EXECUTABLE environment "
-            "variables are not set."
-        )
+        _logger.warning("CORSIKA environment not configured.")
         return None
 
     if run_time is None:
