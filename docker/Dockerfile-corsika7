@@ -124,7 +124,7 @@ RUN ls ../config_*.h && for config_file in ../config_*.h; do \
         mkdir -p ${CORSIKA_RUN_DIR} && \
         corsika_name=$(basename "$config_file" .h | sed 's/^config_/corsika_/'); \
         mv -v -f "./run/corsika${CORSIKA_VERSION}Linux_"* "${CORSIKA_RUN_DIR}/${corsika_name}" && \
-        cp -v -r "./run/"* ${CORSIKA_RUN_DIR}/; \
+        cp -v -r "./run/"* ${CORSIKA_RUN_DIR}/ && cp -v -r ./epos ${CORSIKA_RUN_DIR}/; \
     done
 
 # Generate build_opts.yml with build information
@@ -156,9 +156,9 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
 # -----------------------------------------------------------------------------
 FROM almalinux:9.5-minimal
 WORKDIR /workdir/simulation_software
-COPY --from=build_image /workdir/corsika-run /workdir/simulation_software/corsika
+COPY --from=build_image /workdir/corsika-run /workdir/simulation_software/corsika7
 
 RUN microdnf update -y && microdnf install -y \
     libgfortran && microdnf clean all
 
-WORKDIR /workdir/simulation_software/corsika
+WORKDIR /workdir/simulation_software/corsika7
