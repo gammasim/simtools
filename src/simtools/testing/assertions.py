@@ -253,9 +253,13 @@ def check_simulation_logs(tar_file, file_test):
 
 def check_plain_log(log_file, file_test):
     """Check a plain .log file for expected and forbidden patterns."""
-    expected_log = file_test.get("expected_log_output", {})
-    wanted = expected_log.get("pattern", [])
-    forbidden = expected_log.get("forbidden_pattern", [])
+    expected_log = file_test.get("expected_log_output")
+    if isinstance(expected_log, dict):
+        wanted = expected_log.get("pattern", [])
+        forbidden = expected_log.get("forbidden_pattern", [])
+    else:
+        wanted = file_test.get("pattern", [])
+        forbidden = file_test.get("forbidden_pattern", [])
 
     if not (wanted or forbidden):
         _logger.debug(f"No expected log output provided, skipping checks {file_test}")
