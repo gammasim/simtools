@@ -37,13 +37,6 @@ def test_new_testeff_version_false(builtins_open):
             assert helpers._new_testeff_version() is False
 
 
-def test_new_testeff_version_no_env_var():
-    if "SIMTOOLS_SIMTEL_PATH" in os.environ:
-        del os.environ["SIMTOOLS_SIMTEL_PATH"]
-    with pytest.raises(TypeError):
-        helpers._new_testeff_version()
-
-
 def test_skip_camera_efficiency_old_testeff(new_testeff_version):
     config = {"application": "camera-efficiency", "test_name": "some_test"}
     with mock.patch(new_testeff_version, return_value=False):

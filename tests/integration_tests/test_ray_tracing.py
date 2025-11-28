@@ -7,6 +7,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import pytest
 
+from simtools import settings
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing.ray_tracing import RayTracing
 
@@ -17,7 +18,6 @@ logger = logging.getLogger()
 def test_ssts(
     telescope_model_name,
     db_config,
-    simtel_path_no_mock,
     io_handler,
     model_version,
     site_model_south,
@@ -34,7 +34,6 @@ def test_ssts(
     ray = RayTracing(
         telescope_model=tel,
         site_model=site_model_south,
-        simtel_path=simtel_path_no_mock,
         zenith_angle=20.0 * u.deg,
         source_distance=10.0 * u.km,
         off_axis_angle=[0, 1.0, 2.0, 3.0, 4.0] * u.deg,
@@ -43,11 +42,10 @@ def test_ssts(
     ray.analyze(force=True)
 
 
-def test_rx(simtel_path_no_mock, io_handler, telescope_model_lst, site_model_north):
+def test_rx(io_handler, telescope_model_lst, site_model_north):
     ray = RayTracing(
         telescope_model=telescope_model_lst,
         site_model=site_model_north,
-        simtel_path=simtel_path_no_mock,
         zenith_angle=20 * u.deg,
         source_distance=10 * u.km,
         off_axis_angle=[0, 2.5, 5.0] * u.deg,
@@ -86,11 +84,10 @@ def test_rx(simtel_path_no_mock, io_handler, telescope_model_lst, site_model_nor
     plt.close()
 
 
-def test_plot_image(simtel_path_no_mock, io_handler, telescope_model_sst, site_model_south):
+def test_plot_image(io_handler, telescope_model_sst, site_model_south):
     ray = RayTracing(
         telescope_model=telescope_model_sst,
         site_model=site_model_south,
-        simtel_path=simtel_path_no_mock,
         zenith_angle=20 * u.deg,
         source_distance=10 * u.km,
         off_axis_angle=[0, 2.5, 5.0] * u.deg,
@@ -113,14 +110,12 @@ def test_plot_image(simtel_path_no_mock, io_handler, telescope_model_sst, site_m
         plt.close()
 
 
-def test_single_mirror(simtel_path_no_mock, io_handler, telescope_model_mst, site_model_south):
+def test_single_mirror(io_handler, telescope_model_mst, site_model_south):
     """Test MST, single mirror PSF simulation"""
-
     telescope_model_mst.write_sim_telarray_config_file(site_model_south)
     ray = RayTracing(
         telescope_model=telescope_model_mst,
         site_model=site_model_south,
-        simtel_path=simtel_path_no_mock,
         mirror_numbers=list(range(1, 5)),
         single_mirror_mode=True,
     )
@@ -138,16 +133,15 @@ def test_single_mirror(simtel_path_no_mock, io_handler, telescope_model_mst, sit
     plt.close()
 
 
-def test_integral_curve(simtel_path_no_mock, io_handler, telescope_model_lst, site_model_north):
+def test_integral_curve(io_handler, telescope_model_lst, site_model_north):
     ray = RayTracing(
         telescope_model=telescope_model_lst,
         site_model=site_model_north,
-        simtel_path=simtel_path_no_mock,
         zenith_angle=20 * u.deg,
         source_distance=10 * u.km,
         off_axis_angle=[0] * u.deg,
     )
-
+    settings.config.load()
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
 

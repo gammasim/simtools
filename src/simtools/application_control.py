@@ -8,6 +8,7 @@ import simtools.utils.general as gen
 from simtools import version
 from simtools.db import db_handler
 from simtools.io import io_handler
+from simtools.settings import config
 
 
 @dataclass
@@ -76,6 +77,7 @@ def startup_application(parse_function, setup_io_handler=True, logger_name=None)
             # ... rest of application logic
     """
     args_dict, db_config = parse_function()
+    config.load(args_dict, db_config)
 
     if logger_name:
         logger = logging.getLogger(logger_name)

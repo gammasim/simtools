@@ -10,6 +10,7 @@ import astropy.units as u
 import pytest
 import yaml
 
+from simtools import settings
 from simtools.configuration.configurator import (
     Configurator,
     InvalidConfigurationParameterError,
@@ -20,10 +21,13 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def configurator(tmp_test_directory, _mock_settings_env_vars, simtel_path):
+def configurator(tmp_test_directory, _mock_settings_env_vars):
     config = Configurator()
     config.default_config(
-        ("--output_path", str(tmp_test_directory), "--simtel_path", str(simtel_path))
+        (
+            "--output_path",
+            str(tmp_test_directory),
+        )
     )
     return config
 
@@ -220,6 +224,8 @@ def test_get_db_parameters_from_env(configurator, args_dict):
     expected_config = {k: v for k, v in args_dict.items() if not k.startswith("user_")}
     actual_config = {k: v for k, v in configurator.config.items() if not k.startswith("user_")}
     actual_config.pop("db_api_authentication_database")  # depends on user setup; ignore here
+
+    expected_config["simtel_path"] = settings.config.sim_telarray_path
 
     assert expected_config == actual_config
 

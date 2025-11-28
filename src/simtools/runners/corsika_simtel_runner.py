@@ -5,6 +5,7 @@ import stat
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools import settings
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.simtel.simulator_array import SimulatorArray
 
@@ -21,8 +22,6 @@ class CorsikaSimtelRunner:
     corsika_config : CorsikaConfig or list of CorsikaConfig
         A list of "CorsikaConfig" instances which
         contain the CORSIKA configuration parameters.
-    simtel_path : str or Path
-        Location of the sim_telarray package.
     label : str
         Label.
     keep_seeds : bool
@@ -38,7 +37,6 @@ class CorsikaSimtelRunner:
     def __init__(
         self,
         corsika_config,
-        simtel_path,
         label=None,
         keep_seeds=False,
         use_multipipe=False,
@@ -52,7 +50,6 @@ class CorsikaSimtelRunner:
         # the base corsika config is the one used to define the CORSIKA specific parameters.
         # The others are used for the array configurations.
         self.base_corsika_config = self.corsika_config[0]
-        self._simtel_path = simtel_path
         self.sim_telarray_seeds = sim_telarray_seeds
         self.label = label
         self.sequential = "--sequential" if sequential else ""
@@ -60,7 +57,6 @@ class CorsikaSimtelRunner:
         self.base_corsika_config.set_output_file_and_directory(use_multipipe)
         self.corsika_runner = CorsikaRunner(
             corsika_config=self.base_corsika_config,
-            simtel_path=simtel_path,
             label=label,
             keep_seeds=keep_seeds,
             use_multipipe=use_multipipe,
@@ -73,7 +69,6 @@ class CorsikaSimtelRunner:
             self.simulator_array.append(
                 SimulatorArray(
                     corsika_config=_corsika_config,
-                    simtel_path=simtel_path,
                     label=label,
                     use_multipipe=use_multipipe,
                     sim_telarray_seeds=sim_telarray_seeds,
@@ -171,8 +166,8 @@ class CorsikaSimtelRunner:
             "run_cta_multipipe"
         )
         with open(multipipe_script, "w", encoding="utf-8") as file:
-            multipipe_command = Path(self._simtel_path).joinpath(
-                f"sim_telarray/bin/multipipe_corsika -c {multipipe_file} {self.sequential} "
+            multipipe_command = settings.config.sim_telarray_path.joinpath(
+                f"bin/multipipe_corsika -c {multipipe_file} {self.sequential} "
                 "|| echo 'Fan-out failed'"
             )
             file.write(f"{multipipe_command}")

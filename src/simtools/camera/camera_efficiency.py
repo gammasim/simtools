@@ -34,7 +34,6 @@ class CameraEfficiency:
         """Initialize the CameraEfficiency class."""
         self._logger = logging.getLogger(__name__)
 
-        self._simtel_path = config_data.get("simtel_path")
         self.label = label
 
         self.io_handler = io_handler.IOHandler()
@@ -109,7 +108,6 @@ class CameraEfficiency:
         self.export_model_files()
 
         simtel = SimulatorCameraEfficiency(
-            simtel_path=self._simtel_path,
             telescope_model=self.telescope_model,
             site_model=self.site_model,
             zenith_angle=self.config["zenith_angle"],

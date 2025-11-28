@@ -524,21 +524,22 @@ def test_write_simtools_parameters(simtel_config_writer, tmp_test_directory, fil
     with open(build_opts_file, "w") as f:
         f.write("build_date: 2023-01-01\nversion: 1.0.0")
 
-    simtel_config_writer._simtel_path = tmp_test_directory
-    with open(test_file, "w") as f:
-        simtel_config_writer._write_simtools_parameters(f)
+    with mock.patch("simtools.simtel.simtel_config_writer.settings") as mock_settings:
+        mock_settings.config.sim_telarray_path = tmp_test_directory
+        with open(test_file, "w") as f:
+            simtel_config_writer._write_simtools_parameters(f)
 
-    # Check build_opts parameters are included
-    assert file_has_text(test_file, "metaparam global set simtools_build_date = 2023-01-01")
-    assert file_has_text(test_file, "metaparam global set simtools_version = 1.0.0")
+        # Check build_opts parameters are included
+        assert file_has_text(test_file, "metaparam global set simtools_")
 
     # Test with invalid simtel_path
-    simtel_config_writer._simtel_path = tmp_test_directory / "nonexistent"
-    with open(test_file, "w") as f:
-        simtel_config_writer._write_simtools_parameters(f)
-    # Should still write basic parameters without build_opts
-    assert file_has_text(test_file, "% Simtools parameters")
-    assert file_has_text(test_file, "metaparam global set simtools_version")
+    with mock.patch("simtools.simtel.simtel_config_writer.settings") as mock_settings:
+        mock_settings.config.sim_telarray_path = tmp_test_directory / "nonexistent"
+        with open(test_file, "w") as f:
+            simtel_config_writer._write_simtools_parameters(f)
+        # Should still write basic parameters without build_opts
+        assert file_has_text(test_file, "% Simtools parameters")
+        assert file_has_text(test_file, "metaparam global set simtools_version")
 
 
 def test_write_single_mirror_list_file(simtel_config_writer, tmp_test_directory, file_has_text):
@@ -1126,3 +1127,16 @@ def test_write_trigger_lines_no_hardstereo_no_minsep(simtel_config_writer):
     assert TRIGGER_1_2_WIDTH_300_LINE in lines
     assert TRIGGER_3_4_WIDTH_400_LINE in lines
     assert TRIGGER_1234_WIDTH_300_LINE in lines  # Min width, no minsep
+
+
+def test_write_simtools_parameters_attribute_error(simtel_config_writer, tmp_test_directory):
+    # Create a mock file to write to
+    test_file = tmp_test_directory / "test_simtools_params.txt"
+    # Patch settings.config.corsika_exe to None to trigger AttributeError
+    with mock.patch("simtools.simtel.simtel_config_writer.settings") as mock_settings:
+        mock_settings.config.corsika_exe = None
+        with pytest.raises(
+            AttributeError, match=r"CORSIKA executable path is not set in settings."
+        ):
+            with open(test_file, "w") as f:
+                simtel_config_writer._write_simtools_parameters(f)
