@@ -12,10 +12,10 @@
 # - DL3013, DL3041: ignore warnings about using latest
 
 ARG CORSIKA_VERSION="78010"
-ARG CORSIKA_IMAGE_VERSION="20251124-081214"
+ARG CORSIKA_IMAGE_VERSION="latest"
 ARG SIMTEL_VERSION="251124"
 ARG SIMTEL_BUILD_OPT="prod6-baseline"
-ARG SIMTEL_IMAGE_VERSION="20251124-122142"
+ARG SIMTEL_IMAGE_VERSION="latest"
 ARG AVX_INSTRUCTION="no_opt"
 ARG PYTHON_VERSION="3.12"
 ARG BUILD_BRANCH=main
@@ -31,7 +31,7 @@ ARG PYTHON_VERSION
 ARG BUILD_BRANCH
 ARG SIMTOOLS_REQUIREMENT
 
-COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulation_software/corsika7
+COPY --from=corsika_img /workdir/simulation_software/corsika  /workdir/simulation_software/corsika7
 COPY --from=simtel_img /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
 COPY --from=simtel_img /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
 COPY --from=simtel_img /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
@@ -52,7 +52,9 @@ RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
   && . env/bin/activate \
   && pip install --no-cache-dir -U pip \
   && pip install --no-cache-dir "git+${SIMTOOLS_REQUIREMENT}@${BUILD_BRANCH}" \
+  && pip cache purge && rm -rf /root/.cache \
   && echo ". /workdir/env/bin/activate" >> ~/.bashrc
 
 ENV SIMTEL_PATH="/workdir/simulation_software/sim_telarray/"
+ENV CORSIKA_PATH="/workdir/simulation_software/corsika/"
 ENV PATH="/workdir/env/bin/:$PATH"
