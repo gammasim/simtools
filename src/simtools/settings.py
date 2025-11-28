@@ -45,10 +45,39 @@ class _Config:
             "SIMTOOLS_CORSIKA_PATH",
             args.get("corsika_path", None) if args is not None else None,
         )
-        self._corsika_exe = os.getenv(
-            "SIMTOOLS_CORSIKA_EXECUTABLE",
-            args.get("corsika_executable", "corsika") if args is not None else "corsika",
+        self._corsika_exe = self._get_corsika_exec() if self._corsika_path is not None else None
+
+    def _get_corsika_exec(self):
+        """
+        Get the CORSIKA executable from environment variable or command line argument.
+
+        Build the executable name based on configured interaction models. Fall back to
+        legacy naming (simply "corsika") if models are not specified.
+        """
+        he_model = os.getenv(
+            "SIMTOOLS_CORSIKA_HE_INTERACTION",
+            self._args.get("corsika_he_interaction", None) if self._args is not None else None,
         )
+        le_model = os.getenv(
+            "SIMTOOLS_CORSIKA_LE_INTERACTION",
+            self._args.get("corsika_le_interaction", None) if self._args is not None else None,
+        )
+
+        if he_model and le_model:
+            corsika_exe = (
+                self.corsika_path / f"corsika_{he_model}_{le_model}_flat"
+                if he_model and le_model
+                else None
+            )
+            if corsika_exe and corsika_exe.exists():
+                return corsika_exe
+
+        # legacy naming
+        corsika_exe = self.corsika_path / "corsika"
+        if corsika_exe and corsika_exe.exists():
+            return corsika_exe
+
+        return None
 
     @property
     def args(self):
@@ -101,9 +130,9 @@ class _Config:
         if self._corsika_exe is None:
             return None
         corsika_curved = (
-            self._corsika_exe.replace("_flat", "_curved")
-            if "_flat" in self._corsika_exe
-            else self._corsika_exe + "-curved"  # legacy naming convention
+            self._corsika_exe.name.replace("_flat", "_curved")
+            if "_flat" in self._corsika_exe.name
+            else self._corsika_exe.name + "-curved"  # legacy naming convention
         )
         return Path(self._corsika_path) / corsika_curved if self._corsika_path is not None else None
 
