@@ -13,10 +13,9 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def simulator_camera_efficiency(camera_efficiency_sst, site_model_south, simtel_path):
+def simulator_camera_efficiency(camera_efficiency_sst, site_model_south):
     camera_efficiency_sst.export_model_files()
     return SimulatorCameraEfficiency(
-        simtel_path=simtel_path,
         telescope_model=camera_efficiency_sst.telescope_model,
         site_model=site_model_south,
         file_simtel=camera_efficiency_sst._file["sim_telarray"],
@@ -96,7 +95,7 @@ def test_check_run_result(simulator_camera_efficiency):
         simulator_camera_efficiency._check_run_result()
 
 
-def test_get_one_dim_distribution(db_config, simtel_path, model_version_prod5, site_model_south):
+def test_get_one_dim_distribution(db_config, model_version_prod5, site_model_south):
     logger.warning(
         "Running test_get_one_dim_distribution using prod5 model "
         " (prod6 model with 1D transmission function)"
@@ -108,7 +107,6 @@ def test_get_one_dim_distribution(db_config, simtel_path, model_version_prod5, s
             "model_version": model_version_prod5,
             "zenith_angle": 20 * u.deg,
             "azimuth_angle": 0 * u.deg,
-            "simtel_path": simtel_path,
         },
         db_config=db_config,
         label="validate_camera_efficiency",
@@ -121,7 +119,6 @@ def test_get_one_dim_distribution(db_config, simtel_path, model_version_prod5, s
         site_model=site_model_south,
         file_simtel=camera_efficiency_sst_prod5._file["sim_telarray"],
         label="test-simtel-runner-camera-efficiency",
-        simtel_path=simtel_path,
     )
     camera_filter_file = simulator_camera_efficiency_prod5._get_one_dim_distribution(
         "camera_filter", "camera_filter_incidence_angle"
