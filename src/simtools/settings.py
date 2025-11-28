@@ -1,4 +1,4 @@
-"""Centralized (immutable) settings object with command line and environment variables."""
+"""Centralized settings object with command line and environment variables."""
 
 import os
 from pathlib import Path
@@ -6,7 +6,7 @@ from types import MappingProxyType
 
 
 class _Config:
-    """Centralized (immutable) settings object with command line and environment variables."""
+    """Centralized settings object with command line and environment variables."""
 
     def __init__(self):
         """Initialize empty config."""
