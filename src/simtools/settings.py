@@ -64,12 +64,8 @@ class _Config:
         )
 
         if he_model and le_model:
-            corsika_exe = (
-                self.corsika_path / f"corsika_{he_model}_{le_model}_flat"
-                if he_model and le_model
-                else None
-            )
-            if corsika_exe and corsika_exe.exists():
+            corsika_exe = self.corsika_path / f"corsika_{he_model}_{le_model}_flat"
+            if corsika_exe.exists():
                 return corsika_exe
 
         # legacy naming
