@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 
+from simtools import settings
 from simtools.io import ascii_handler
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils import general
@@ -20,8 +21,6 @@ class SimulatorCameraEfficiency(SimtelRunner):
         Instance of SiteModel class.
     label: str
         Instance label. Important for output file naming.
-    simtel_path: str or Path
-        Location of sim_telarray installation.
     file_simtel: str or Path
         Location of the sim_telarray testeff tool output file.
     zenith_angle: float
@@ -37,7 +36,6 @@ class SimulatorCameraEfficiency(SimtelRunner):
         telescope_model,
         site_model,
         label=None,
-        simtel_path=None,
         file_simtel=None,
         file_log=None,
         zenith_angle=None,
@@ -48,7 +46,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimulatorCameraEfficiency")
 
-        super().__init__(label=label, simtel_path=simtel_path)
+        super().__init__(label=label)
 
         self._telescope_model = telescope_model
         self._site_model = site_model
@@ -109,7 +107,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
                 "mirror_reflectivity", "secondary_mirror_incidence_angle"
             )
 
-        command = str(self._simtel_path.joinpath("sim_telarray/testeff"))
+        command = str(settings.config.sim_telarray_path / "bin/testeff")
         if self.skip_correction_to_nsb_spectrum:
             command += " -nc"  # Do not apply correction to original altitude where B&E was derived
         command += " -I"  # Clear the fall-back configuration directories
@@ -150,7 +148,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command = general.clear_default_sim_telarray_cfg_directories(command)
 
         return (
-            f"cd {self._simtel_path.joinpath('sim_telarray')} && {command}",
+            f"cd {settings.config.sim_telarray_path} && {command}",
             self._file_simtel,
             self._file_log,
         )

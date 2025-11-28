@@ -45,7 +45,8 @@ jobs:
   integration_tests:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/gammasim/simtools-dev:latest
+      # Temporary fix: use fixed image date until PR 1917 is merged
+      image: ghcr.io/gammasim/simtools-dev:20251123-020721
       options: --user 0
 
     services:
@@ -87,7 +88,9 @@ jobs:
             echo "SIMTOOLS_DB_API_USER=${{ secrets.DB_API_USER }}"
             echo "SIMTOOLS_DB_API_PW=${{ secrets.DB_API_PW }}"
             echo "SIMTOOLS_DB_API_PORT=${{ secrets.DB_API_PORT }}"
-            echo "SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray/"
+            echo "SIMTOOLS_SIMTEL_PATH=$(grep '^SIMTOOLS_SIMTEL_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
+            echo "SIMTOOLS_CORSIKA_EXECUTABLE=$(grep '^SIMTOOLS_CORSIKA_EXECUTABLE=' .env_template | cut -d '=' -f2- | tr -d '"')"
+            echo "SIMTOOLS_CORSIKA_PATH=$(grep '^SIMTOOLS_CORSIKA_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
           } > .env
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
@@ -109,7 +112,9 @@ jobs:
             echo "SIMTOOLS_DB_API_PORT=27017"
             echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}"
             echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}"
-            echo "SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray/"
+            echo "SIMTOOLS_SIMTEL_PATH=$(grep '^SIMTOOLS_SIMTEL_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
+            echo "SIMTOOLS_CORSIKA_EXECUTABLE=$(grep '^SIMTOOLS_CORSIKA_EXECUTABLE=' .env_template | cut -d '=' -f2- | tr -d '"')"
+            echo "SIMTOOLS_CORSIKA_PATH=$(grep '^SIMTOOLS_CORSIKA_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
           } > .env
 
       - name: Determine simulation model branch

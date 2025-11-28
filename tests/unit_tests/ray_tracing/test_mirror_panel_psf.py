@@ -25,7 +25,6 @@ def mock_args_dict(tmp_test_directory):
         "no_tuning": False,
         "rnda": 0,
         "rtol_psf_containment": 0.1,
-        "simtel_path": "path/to/simtel",
         "number_of_mirrors_to_test": 2,
         "use_random_focal_length": False,
         "containment_fraction": 0.8,
