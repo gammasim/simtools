@@ -249,3 +249,34 @@ def check_simulation_logs(tar_file, file_test):
 
     _logger.debug(f"All expected patterns found: {wanted}")
     return True
+
+
+def check_plain_log(log_file, file_test):
+    """Check a plain .log file for expected and forbidden patterns."""
+    expected_log = file_test.get("expected_log_output", {})
+    wanted = expected_log.get("pattern", [])
+    forbidden = expected_log.get("forbidden_pattern", [])
+
+    if not (wanted or forbidden):
+        _logger.debug(f"No expected log output provided, skipping checks {file_test}")
+        return True
+
+    try:
+        text = Path(log_file).read_text(encoding="utf-8", errors="ignore")
+    except FileNotFoundError:
+        _logger.error(f"Log file {log_file} not found")
+        return False
+
+    found = _find_patterns(text, wanted)
+    bad = _find_patterns(text, forbidden)
+
+    if bad:
+        _logger.error(f"Forbidden patterns found: {list(bad)}")
+        return False
+    missing = [p for p in wanted if p not in found]
+    if missing:
+        _logger.error(f"Missing expected patterns: {missing}")
+        return False
+
+    _logger.debug(f"All expected patterns found: {wanted}")
+    return True
