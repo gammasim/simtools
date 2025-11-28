@@ -73,11 +73,7 @@ class _Config:
                 return corsika_exe
 
         # legacy naming
-        corsika_exe = self.corsika_path / "corsika"
-        if corsika_exe and corsika_exe.exists():
-            return corsika_exe
-
-        return None
+        return self.corsika_path / "corsika"
 
     @property
     def args(self):
