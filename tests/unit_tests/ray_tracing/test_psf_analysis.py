@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 
+from simtools import settings
 from simtools.ray_tracing.psf_analysis import PSFImage
 
 
@@ -254,6 +255,8 @@ def test_process_simtel_file_using_rx_success(
 
     mock_popen = mocker.patch("subprocess.Popen")
     mock_process = mock_popen.return_value
+    mock_process.__enter__ = mocker.Mock(return_value=mock_process)
+    mock_process.__exit__ = mocker.Mock(return_value=None)
     mock_process.communicate.return_value = (mock_rx_output,)
 
     mock_gzip_open = mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=b"dummy data"))
@@ -263,7 +266,7 @@ def test_process_simtel_file_using_rx_success(
 
     mock_popen.assert_called_once_with(
         shlex.split(
-            f"{image.simtel_path}/sim_telarray/bin/rx -f {image._containment_fraction:.2f} -v"
+            f"{settings.config.sim_telarray_path}/bin/rx -f {image._containment_fraction:.2f} -v"
         ),
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
@@ -295,6 +298,8 @@ def test_process_simtel_file_using_rx_unexpected_output_format(
 
     mock_popen = mocker.patch("subprocess.Popen")
     mock_process = mock_popen.return_value
+    mock_process.__enter__ = mocker.Mock(return_value=mock_process)
+    mock_process.__exit__ = mocker.Mock(return_value=None)
     mock_process.communicate.return_value = (mock_rx_output,)
 
     dummy_data = b"dummy data"

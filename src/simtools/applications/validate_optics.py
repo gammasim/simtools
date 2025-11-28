@@ -146,7 +146,6 @@ def main():
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
-        simtel_path=app_context.args["simtel_path"],
         zenith_angle=app_context.args["zenith"] * u.deg,
         source_distance=app_context.args["src_distance"] * u.km,
         off_axis_angle=np.linspace(

@@ -9,6 +9,7 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
+from simtools import settings
 from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.runners.simtel_runner import SimtelRunner
@@ -36,9 +37,7 @@ class SimulatorLightEmission(SimtelRunner):
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
 
-        super().__init__(
-            simtel_path=light_emission_config.get("simtel_path"), label=label, corsika_config=None
-        )
+        super().__init__(label=label, corsika_config=None)
 
         self.output_directory = self.io_handler.get_output_directory()
 
@@ -292,7 +291,7 @@ class SimulatorLightEmission(SimtelRunner):
             "corsika_observation_level"
         )
 
-        parts = [str(self._simtel_path / "sim_telarray/LightEmission") + f"/{app_name}"]
+        parts = [str(settings.config.sim_telarray_path / "LightEmission") + f"/{app_name}"]
         parts.extend(self._get_site_command(app_name, config_directory, corsika_observation_level))
         parts.extend(self._get_light_source_command())
         if self.light_emission_config["light_source_type"] == "illuminator":
@@ -312,7 +311,7 @@ class SimulatorLightEmission(SimtelRunner):
             atmo_id = self._prepare_flasher_atmosphere_files(config_directory)
             return [
                 "-I.",
-                f"-I{self._simtel_path / 'sim_telarray/cfg'}",
+                f"-I{settings.config.sim_telarray_path / 'cfg'}",
                 f"-I{config_directory}",
                 f"--altitude {corsika_observation_level.to(u.m).value}",
                 f"--atmosphere {atmo_id}",
@@ -438,7 +437,7 @@ class SimulatorLightEmission(SimtelRunner):
         """
         theta, phi = self._get_telescope_pointing()
 
-        simtel_bin = self._simtel_path.joinpath("sim_telarray/bin/sim_telarray/")
+        simtel_bin = str(settings.config.sim_telarray_exe)
 
         parts = [
             f"{simtel_bin}",

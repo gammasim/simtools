@@ -20,7 +20,6 @@ def simulator_instance():
     inst.site_model = Mock()
     inst.light_emission_config = {}
     inst.output_directory = "/test/output"
-    inst._simtel_path = Mock()
     inst._logger = Mock()
     return inst
 
@@ -38,7 +37,6 @@ def test__make_simtel_script(
     mock_prefix, mock_app_name, mock_pointing, mock_clear_cfg, simulator_instance
 ):
     """Test _make_simtel_script method with different conditions."""
-    simulator_instance._simtel_path = Path("/mock/simtel")
     simulator_instance.telescope_model.config_file_directory = "/mock/config"
     simulator_instance.telescope_model.config_file_path = "/mock/config/telescope.cfg"
 
@@ -103,7 +101,6 @@ def test__make_simtel_script(
 def test__make_simtel_script_bypass_optics_condition(simulator_instance):
     """Test that flat_fielding adds Bypass_Optics option."""
     # Setup minimal mocks
-    simulator_instance._simtel_path = Path("/mock/simtel")
     simulator_instance.telescope_model.config_file_directory = "/mock/config"
     simulator_instance.telescope_model.config_file_path = "/mock/config/telescope.cfg"
 
@@ -773,16 +770,19 @@ def test__get_light_source_command(simulator_instance):
 
 def test__get_site_command(simulator_instance, tmp_test_directory):
     """Test _get_site_command method."""
-    simulator_instance._simtel_path = Path("/mock/simtel")
 
     # Mock altitude value
     mock_altitude = Mock()
     mock_altitude.to.return_value.value = 2200
 
     # Test ff-1m app (flasher path)
-    with patch.object(
-        simulator_instance, "_prepare_flasher_atmosphere_files", return_value="atm_id_123"
-    ) as mock_atmo:
+    with (
+        patch.object(
+            simulator_instance, "_prepare_flasher_atmosphere_files", return_value="atm_id_123"
+        ) as mock_atmo,
+        patch("simtools.simtel.simulator_light_emission.settings") as mock_settings,
+    ):
+        mock_settings.config.sim_telarray_path = Path("/mock/simtel/sim_telarray")
         result = simulator_instance._get_site_command("ff-1m", "/config/dir", mock_altitude)
 
         expected = [
@@ -813,7 +813,6 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
 
 def test__make_light_emission_script(simulator_instance):
     """Test _make_light_emission_script method."""
-    simulator_instance._simtel_path = Path("/mock/simtel")
     simulator_instance.output_directory = "/output"
     simulator_instance.label = "test_label"
 
@@ -839,9 +838,11 @@ def test__make_light_emission_script(simulator_instance):
         patch.object(
             simulator_instance, "_get_light_source_command", return_value=["--photons 1000000"]
         ) as mock_light_source,
+        patch("simtools.simtel.simulator_light_emission.settings") as mock_settings,
     ):
         # Test flat_fielding (no atmospheric profile)
         simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
+        mock_settings.config.sim_telarray_path = Path("/mock/simtel/sim_telarray")
 
         result = simulator_instance._make_light_emission_script()
 
@@ -869,8 +870,10 @@ def test__make_light_emission_script(simulator_instance):
         patch.object(
             simulator_instance, "_get_light_source_command", return_value=["-x 100", "-y 200"]
         ),
+        patch("simtools.simtel.simulator_light_emission.settings") as mock_settings,
     ):
         simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
+        mock_settings.config.sim_telarray_path = Path("/mock/simtel/sim_telarray")
 
         result = simulator_instance._make_light_emission_script()
 
@@ -1238,7 +1241,6 @@ def test___init__(tmp_test_directory):
 
         # Test configuration
         config = {
-            "simtel_path": "/test/simtel",
             "site": "North",
             "telescope": "LSTN-01",
             "light_source": "calibration_device",
