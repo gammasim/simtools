@@ -2,16 +2,13 @@
 # Dockerfile for CORSIKA7
 #
 # Image with different config variants of CORSIKA:
+#
 # - flat and curved atmosphere
 # - high- / and low-energy hadronic interaction models
 #
 # The variants are build depending on the configuration files provided by CTAO.
 #
 # CORSIKA can be build with or without optimization flags (AVX2/AVX512).
-#
-# Pending tasks:
-# - updates to iact code?
-# - release corsika config and replace CORSIKA_CONFIG_VERSION
 
 ARG CORSIKA_VERSION="78010"
 ARG CORSIKA_OPT_PATCH_VERSION="v1.1.0"
