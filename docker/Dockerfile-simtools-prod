@@ -31,7 +31,7 @@ ARG PYTHON_VERSION
 ARG BUILD_BRANCH
 ARG SIMTOOLS_REQUIREMENT
 
-COPY --from=corsika_img /workdir/simulation_software/corsika  /workdir/simulation_software/corsika7
+COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulation_software/corsika7
 COPY --from=simtel_img /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
 COPY --from=simtel_img /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
 COPY --from=simtel_img /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
@@ -45,7 +45,6 @@ RUN microdnf update -y && microdnf install -y \
 
 WORKDIR /workdir
 
-SHELL ["/bin/bash", "-c"]
 RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
   && git clone -b "$BUILD_BRANCH" "${SIMTOOLS_REQUIREMENT}" --depth 1 \
   && python${PYTHON_VERSION} -m venv env \
