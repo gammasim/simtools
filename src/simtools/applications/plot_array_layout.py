@@ -278,7 +278,7 @@ def _parse():
     )
 
 
-def read_layouts(args_dict, db_config, logger):
+def read_layouts(args_dict, logger):
     """
     Read array layouts from the database or parameter file.
 
@@ -286,8 +286,6 @@ def read_layouts(args_dict, db_config, logger):
     ----------
     args_dict : dict
         Dictionary with command line arguments.
-    db_config : dict
-        Database configuration.
     logger : logging.app_context.logger
         app_context.logger instance.
 
@@ -302,7 +300,6 @@ def read_layouts(args_dict, db_config, logger):
             args_dict["array_layout_name"],
             args_dict["site"],
             args_dict["model_version"],
-            db_config,
             args_dict["coordinate_system"],
         )
         if isinstance(layouts, list):
@@ -314,7 +311,6 @@ def read_layouts(args_dict, db_config, logger):
         return layout_utils.get_array_layouts_from_parameter_file(
             args_dict["array_layout_parameter_file"],
             args_dict["model_version"],
-            db_config,
             args_dict["coordinate_system"],
         )
 
@@ -328,7 +324,6 @@ def read_layouts(args_dict, db_config, logger):
             [args_dict["array_element_list"]],
             args_dict["site"],
             args_dict["model_version"],
-            db_config,
             args_dict["coordinate_system"],
         )
 
@@ -339,14 +334,13 @@ def main():
     """Plot array layout application."""
     app_context = startup_application(_parse)
 
-    layouts = read_layouts(app_context.args, app_context.db_config, app_context.logger)
+    layouts = read_layouts(app_context.args, app_context.logger)
 
     if app_context.args.get("array_layout_name_background"):
         background_layout = layout_utils.get_array_layouts_from_db(
             app_context.args["array_layout_name_background"],
             app_context.args["site"],
             app_context.args["model_version"],
-            app_context.db_config,
             app_context.args["coordinate_system"],
         )["array_elements"]
     else:

@@ -127,11 +127,7 @@ def main():
     """Run simulations for productions."""
     app_context = startup_application(_parse, setup_io_handler=False)
 
-    simulator = Simulator(
-        label=app_context.args.get("label"),
-        args_dict=app_context.args,
-        db_config=app_context.db_config,
-    )
+    simulator = Simulator(label=app_context.args.get("label"), args_dict=app_context.args)
 
     simulator.simulate()
     simulator.validate_metadata()

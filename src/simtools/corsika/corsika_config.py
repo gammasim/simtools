@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 from astropy import units as u
 
+from simtools import settings
 from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.io import eventio_handler, io_handler
 from simtools.model.model_parameter import ModelParameter
@@ -27,8 +28,6 @@ class CorsikaConfig:
         Array model.
     args_dict : dict
         Configuration dictionary.
-    db_config : dict
-        MongoDB configuration.
     label : str
         Instance label.
     dummy_simulations : bool
@@ -36,7 +35,7 @@ class CorsikaConfig:
         (e.g., sim_telarray requires for some run modes a valid CORSIKA input file).
     """
 
-    def __init__(self, array_model, args_dict, db_config=None, label=None, dummy_simulations=False):
+    def __init__(self, array_model, args_dict, label=None, dummy_simulations=False):
         """Initialize CorsikaConfig."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaConfig")
@@ -53,7 +52,7 @@ class CorsikaConfig:
 
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
-        self.config = self._fill_corsika_configuration(args_dict, db_config)
+        self.config = self._fill_corsika_configuration(args_dict)
         self._initialize_from_config(args_dict)
         self.is_file_updated = False
 
@@ -110,7 +109,7 @@ class CorsikaConfig:
             except KeyError:
                 self._use_curved_atmosphere = False
 
-    def _fill_corsika_configuration(self, args_dict, db_config=None):
+    def _fill_corsika_configuration(self, args_dict):
         """
         Fill CORSIKA configuration.
 
@@ -121,8 +120,6 @@ class CorsikaConfig:
         ----------
         args_dict : dict
             Configuration dictionary.
-        db_config: dict
-            Database configuration.
 
         Returns
         -------
@@ -144,23 +141,24 @@ class CorsikaConfig:
 
         config.update(
             self._fill_corsika_configuration_from_db(
-                gen.ensure_iterable(args_dict.get("model_version")), db_config
+                gen.ensure_iterable(args_dict.get("model_version"))
             )
         )
         return config
 
-    def _fill_corsika_configuration_from_db(self, model_versions, db_config):
+    def _fill_corsika_configuration_from_db(self, model_versions):
         """Fill CORSIKA configuration from database."""
         config = {}
-        if db_config is None:  # all following parameter require DB
+        # all following parameters require DB
+        if settings.config.db_config is None or not model_versions:
             return config
 
         # For multiple model versions, check that CORSIKA parameters are identical
-        self.assert_corsika_configurations_match(model_versions, db_config=db_config)
+        self.assert_corsika_configurations_match(model_versions)
         model_version = model_versions[0]
 
         self._logger.debug(f"Using model version {model_version} for CORSIKA parameters from DB")
-        db_model_parameters = ModelParameter(db_config=db_config, model_version=model_version)
+        db_model_parameters = ModelParameter(model_version=model_version)
         parameters_from_db = db_model_parameters.get_simulation_software_parameters("corsika")
 
         config["INTERACTION_FLAGS"] = self._corsika_configuration_interaction_flags(
@@ -206,7 +204,7 @@ class CorsikaConfig:
             args_dict.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
         )
 
-    def assert_corsika_configurations_match(self, model_versions, db_config=None):
+    def assert_corsika_configurations_match(self, model_versions):
         """
         Assert that CORSIKA configurations match across all model versions.
 
@@ -214,8 +212,6 @@ class CorsikaConfig:
         ----------
         model_versions : list
             List of model versions to check.
-        db_config : dict, optional
-            Database configuration.
 
         Raises
         ------
@@ -229,7 +225,7 @@ class CorsikaConfig:
 
         # Get parameters for all model versions
         for model_version in model_versions:
-            db_model_parameters = ModelParameter(db_config=db_config, model_version=model_version)
+            db_model_parameters = ModelParameter(model_version=model_version)
             parameters_from_db_list.append(
                 db_model_parameters.get_simulation_software_parameters("corsika")
             )

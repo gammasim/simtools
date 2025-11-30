@@ -87,7 +87,7 @@ def startup_application(parse_function, setup_io_handler=True, logger_name=None)
 
     io_handler_instance = io_handler.IOHandler() if setup_io_handler else None
 
-    _resolve_model_version_to_latest_patch(args_dict, db_config, logger)
+    _resolve_model_version_to_latest_patch(args_dict, logger)
 
     return ApplicationContext(
         args=args_dict,
@@ -124,7 +124,7 @@ def get_application_label(file_path):
     return Path(file_path).stem
 
 
-def _resolve_model_version_to_latest_patch(args_dict, db_config, logger):
+def _resolve_model_version_to_latest_patch(args_dict, logger):
     """
     Update model_version in args_dict to latest patch version if needed.
 
@@ -134,13 +134,11 @@ def _resolve_model_version_to_latest_patch(args_dict, db_config, logger):
     ----------
     args_dict : dict
         Parsed command line arguments and configuration.
-    db_config : dict
-        Database configuration dictionary.
     logger : logging.Logger
         Logger instance for logging information.
     """
     mv = args_dict.get("model_version")
-    if not mv or not db_config:
+    if not mv:
         return
 
     versions = mv if isinstance(mv, list) else [mv]
@@ -149,7 +147,7 @@ def _resolve_model_version_to_latest_patch(args_dict, db_config, logger):
         return
 
     try:
-        db = db_handler.DatabaseHandler(db_config)
+        db = db_handler.DatabaseHandler()
         model_versions = db.get_model_versions()
     except (ValueError, KeyError, OSError) as exc:
         logger.warning(f"Could not connect to database, using version(s) as-is. Error: {exc}")

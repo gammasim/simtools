@@ -108,7 +108,7 @@ def main():
     """Get a parameter entry from DB for a specific telescope or a site."""
     app_context = startup_application(_parse)
 
-    db = db_handler.DatabaseHandler(db_config=app_context.db_config)
+    db = db_handler.DatabaseHandler()
 
     pars = db.get_model_parameter(
         parameter=app_context.args["parameter"],

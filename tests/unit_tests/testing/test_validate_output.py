@@ -631,11 +631,9 @@ def test_validate_model_parameter_json_file(mocker, output_path):
         "tolerance": 1.0e-5,
     }
 
-    validate_output._validate_model_parameter_json_file(
-        config, model_parameter_validation, db_config=None
-    )
+    validate_output._validate_model_parameter_json_file(config, model_parameter_validation)
 
-    mock_db_handler.assert_called_once_with(db_config=None)
+    mock_db_handler.assert_called_once_with()
     mock_db_instance.get_model_parameter.assert_called_once_with(
         parameter="reference_param",
         site="test_site",
@@ -676,11 +674,9 @@ def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
     }
 
     with pytest.raises(AssertionError):
-        validate_output._validate_model_parameter_json_file(
-            config, model_parameter_validation, db_config=None
-        )
+        validate_output._validate_model_parameter_json_file(config, model_parameter_validation)
 
-    mock_db_handler.assert_called_once_with(db_config=None)
+    mock_db_handler.assert_called_once_with()
     mock_db_instance.get_model_parameter.assert_called_once_with(
         parameter="reference_param",
         site="test_site",

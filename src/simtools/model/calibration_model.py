@@ -17,8 +17,6 @@ class CalibrationModel(ModelParameter):
         Site name (e.g., South or North).
     calibration_device_model_name: str
         Calibration device model name (ex. ILLS-01, ILLN-01, ...).
-    db_config: dict
-        Database configuration.
     model_version: str
         Model version.
     label: str, optional
@@ -31,7 +29,6 @@ class CalibrationModel(ModelParameter):
         self,
         site,
         calibration_device_model_name,
-        db_config,
         model_version,
         label=None,
         overwrite_model_parameters=None,
@@ -41,7 +38,6 @@ class CalibrationModel(ModelParameter):
             site=site,
             array_element_name=calibration_device_model_name,
             collection="calibration_devices",
-            db_config=db_config,
             model_version=model_version,
             label=label,
             overwrite_model_parameters=overwrite_model_parameters,
