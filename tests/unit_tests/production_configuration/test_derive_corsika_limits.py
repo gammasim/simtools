@@ -206,7 +206,7 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
     generate_corsika_limits_grid(args)
 
     mock_read_layouts.assert_called_once_with(
-        args["array_layout_name"], args["site"], args["model_version"], None
+        args["array_layout_name"], args["site"], args["model_version"]
     )
     assert mock_process.call_count == 2  # 2 layouts
     assert mock_write.call_count == 1

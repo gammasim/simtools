@@ -10,10 +10,9 @@ from simtools.model.site_model import SiteModel
 logger = logging.getLogger()
 
 
-def test_site_model(db_config, model_version):
+def test_site_model(model_version):
     _south = SiteModel(
         site="South",
-        db_config=db_config,
         label="testing-sitemodel",
         model_version=model_version,
     )
@@ -26,10 +25,9 @@ def test_site_model(db_config, model_version):
     assert isinstance(_south.parameters["reference_point_altitude"]["value"], float)
 
 
-def test_get_corsika_site_parameters(db_config, model_version):
+def test_get_corsika_site_parameters(model_version):
     _north = SiteModel(
         site="North",
-        db_config=db_config,
         label="testing-sitemodel",
         model_version=model_version,
     )
@@ -48,10 +46,9 @@ def test_get_corsika_site_parameters_with_model_directory(array_model_north):
     assert "model/" in str(corsika_site_parameters["IACT ATMOFILE"][0])
 
 
-def test_get_array_elements_for_layout(db_config, model_version):
+def test_get_array_elements_for_layout(model_version):
     _north = SiteModel(
         site="North",
-        db_config=db_config,
         label="testing-sitemodel",
         model_version=model_version,
     )
@@ -66,10 +63,9 @@ def test_get_array_elements_for_layout(db_config, model_version):
         _north.get_array_elements_for_layout("not_a_layout")
 
 
-def test_get_list_of_array_layouts(db_config, model_version):
+def test_get_list_of_array_layouts(model_version):
     _north = SiteModel(
         site="North",
-        db_config=db_config,
         label="testing-sitemodel",
         model_version=model_version,
     )
@@ -78,10 +74,9 @@ def test_get_list_of_array_layouts(db_config, model_version):
     assert "test_layout" in _north.get_list_of_array_layouts()
 
 
-def test_export_atmospheric_transmission_file(db_config, model_version, tmp_path, mocker):
+def test_export_atmospheric_transmission_file(model_version, tmp_path, mocker):
     _south = SiteModel(
         site="South",
-        db_config=db_config,
         label="testing-sitemodel",
         model_version=model_version,
     )
@@ -105,10 +100,9 @@ def test_export_atmospheric_transmission_file(db_config, model_version, tmp_path
     )
 
 
-def test_get_nsb_integrated_flux(db_config, model_version, mocker):
+def test_get_nsb_integrated_flux(model_version, mocker):
     _south = SiteModel(
         site="South",
-        db_config=db_config,
         label="testing-sitemodel",
         model_version=model_version,
     )

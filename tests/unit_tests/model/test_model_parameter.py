@@ -227,13 +227,12 @@ def test_flen_type(telescope_model_lst):
     assert isinstance(flen_info["value"], float)
 
 
-def test_updating_export_model_files(db_config, model_version):
+def test_updating_export_model_files(model_version):
     tel = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
         model_version=model_version,
         label="test-telescope-model-2",
-        db_config=db_config,
     )
 
     logger.debug(
@@ -559,9 +558,7 @@ def test_overwrite_parameters_from_file_with_changes(telescope_model_lst, tmp_pa
     assert tel_model.parameters["num_gains"]["value"] == 999
 
 
-def test_check_model_parameter_with_overwrite_file(
-    db_config, io_handler, model_version, tmp_path, mocker
-):
+def test_check_model_parameter_with_overwrite_file(io_handler, model_version, tmp_path, mocker):
     """Test _check_model_parameter_versions with overwrite_model_parameters."""
 
     # Create a temporary overwrite file
@@ -588,7 +585,6 @@ def test_check_model_parameter_with_overwrite_file(
         site="North",
         telescope_name="LSTN-01",
         model_version=model_version,
-        db_config=db_config,
         label="test-telescope-model",
         overwrite_model_parameters=str(overwrite_file),
     )

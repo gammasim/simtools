@@ -42,8 +42,6 @@ class Simulator:
         Instance label.
     extra_commands: str or list of str
         Extra commands to be added to the run script before the run command.
-    db_config: dict
-        Database configuration.
     """
 
     def __init__(
@@ -51,14 +49,12 @@ class Simulator:
         args_dict,
         label=None,
         extra_commands=None,
-        db_config=None,
     ):
         """Initialize Simulator class."""
         self.logger = logging.getLogger(__name__)
         self.label = label
 
         self.args_dict = args_dict
-        self.db_config = db_config
         self.site = self.args_dict.get("site", None)
         self.model_version = self.args_dict.get("model_version", None)
 
@@ -140,7 +136,6 @@ class Simulator:
                     label=self.label,
                     site=self.site,
                     layout_name=self.args_dict.get("array_layout_name"),
-                    db_config=self.db_config,
                     model_version=version,
                     calibration_device_types=self._get_calibration_device_types(self.run_mode),
                     overwrite_model_parameters=self.args_dict.get("overwrite_model_parameters"),
@@ -151,7 +146,6 @@ class Simulator:
                     array_model=array_model[-1],
                     label=self.label,
                     args_dict=self.args_dict,
-                    db_config=self.db_config,
                     dummy_simulations=self._is_calibration_run(self.run_mode),
                 )
             )

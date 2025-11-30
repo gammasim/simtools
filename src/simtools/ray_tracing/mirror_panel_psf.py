@@ -28,17 +28,15 @@ class MirrorPanelPSF:
         Application label.
     args_dict: dict
         Dictionary with input arguments.
-    db_config:
-        Dictionary with database configuration.
     """
 
-    def __init__(self, label, args_dict, db_config):
+    def __init__(self, label, args_dict):
         """Initialize the MirrorPanelPSF class."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initializing MirrorPanelPSF")
 
         self.args_dict = args_dict
-        self.telescope_model, self.site_model = self._define_telescope_model(label, db_config)
+        self.telescope_model, self.site_model = self._define_telescope_model(label)
 
         if self.args_dict["test"]:
             self.args_dict["number_of_mirrors_to_test"] = 2
@@ -56,7 +54,7 @@ class MirrorPanelPSF:
         self.results_mean = []
         self.results_sig = []
 
-    def _define_telescope_model(self, label, db_config):
+    def _define_telescope_model(self, label):
         """
         Define telescope model.
 
@@ -72,7 +70,6 @@ class MirrorPanelPSF:
         """
         tel_model, site_model, _ = initialize_simulation_models(
             label=label,
-            db_config=db_config,
             site=self.args_dict["site"],
             telescope_name=self.args_dict["telescope"],
             model_version=self.args_dict["model_version"],

@@ -16,7 +16,7 @@ from simtools.visualization import plot_simtel_event_histograms
 _logger = logging.getLogger(__name__)
 
 
-def generate_corsika_limits_grid(args_dict, db_config=None):
+def generate_corsika_limits_grid(args_dict):
     """
     Generate CORSIKA limits.
 
@@ -24,15 +24,12 @@ def generate_corsika_limits_grid(args_dict, db_config=None):
     ----------
     args_dict : dict
         Dictionary containing command line arguments.
-    db_config : dict, optional
-        Database configuration dictionary.
     """
     if args_dict.get("array_layout_name"):
         telescope_configs = get_array_elements_from_db_for_layouts(
             args_dict["array_layout_name"],
             args_dict.get("site"),
             args_dict.get("model_version"),
-            db_config,
         )
     else:
         telescope_configs = ascii_handler.collect_data_from_file(args_dict["telescope_ids"])[

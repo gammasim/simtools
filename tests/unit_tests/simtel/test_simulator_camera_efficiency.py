@@ -95,7 +95,7 @@ def test_check_run_result(simulator_camera_efficiency):
         simulator_camera_efficiency._check_run_result()
 
 
-def test_get_one_dim_distribution(db_config, model_version_prod5, site_model_south):
+def test_get_one_dim_distribution(model_version_prod5, site_model_south):
     logger.warning(
         "Running test_get_one_dim_distribution using prod5 model "
         " (prod6 model with 1D transmission function)"
@@ -108,7 +108,6 @@ def test_get_one_dim_distribution(db_config, model_version_prod5, site_model_sou
             "zenith_angle": 20 * u.deg,
             "azimuth_angle": 0 * u.deg,
         },
-        db_config=db_config,
         label="validate_camera_efficiency",
     )
 
