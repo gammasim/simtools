@@ -14,11 +14,10 @@ LABEL = "test_simulator_ray_tracing"
 
 
 @pytest.fixture
-def ray_tracing_sst(telescope_model_sst, site_model_south, simtel_path):
+def ray_tracing_sst(telescope_model_sst, site_model_south):
     return RayTracing(
         telescope_model=telescope_model_sst,
         site_model=site_model_south,
-        simtel_path=simtel_path,
         label=LABEL,
         source_distance=10 * u.km,
         zenith_angle=20 * u.deg,
@@ -28,11 +27,10 @@ def ray_tracing_sst(telescope_model_sst, site_model_south, simtel_path):
 
 
 @pytest.fixture
-def ray_tracing_mst(telescope_model_mst, site_model_south, simtel_path):
+def ray_tracing_mst(telescope_model_mst, site_model_south):
     return RayTracing(
         telescope_model=telescope_model_mst,
         site_model=site_model_south,
-        simtel_path=simtel_path,
         label=LABEL,
         source_distance=10 * u.km,
         zenith_angle=20 * u.deg,
@@ -42,9 +40,8 @@ def ray_tracing_mst(telescope_model_mst, site_model_south, simtel_path):
 
 
 @pytest.fixture
-def simulator_ray_tracing_sst(ray_tracing_sst, telescope_model_sst, site_model_south, simtel_path):
+def simulator_ray_tracing_sst(ray_tracing_sst, telescope_model_sst, site_model_south):
     return SimulatorRayTracing(
-        simtel_path=simtel_path,
         telescope_model=telescope_model_sst,
         site_model=site_model_south,
         config_data={
@@ -60,11 +57,8 @@ def simulator_ray_tracing_sst(ray_tracing_sst, telescope_model_sst, site_model_s
 
 
 @pytest.fixture
-def simulator_ray_tracing_single_mirror(
-    ray_tracing_mst, telescope_model_mst, site_model_south, simtel_path
-):
+def simulator_ray_tracing_single_mirror(ray_tracing_mst, telescope_model_mst, site_model_south):
     return SimulatorRayTracing(
-        simtel_path=simtel_path,
         telescope_model=telescope_model_mst,
         site_model=site_model_south,
         config_data={
@@ -103,10 +97,6 @@ def funnel_perfect_file_content():
 def test_load_required_files(simulator_ray_tracing_sst):
     simulator_ray_tracing_sst._load_required_files(force_simulate=False)
 
-    # This file is not actually needed and does not exist in simtools.
-    # However, its name is needed too provide the name of a CORSIKA input file to sim_telarray
-    # so here we check the it does not actually exist.
-    assert not simulator_ray_tracing_sst._corsika_file.exists()
     assert simulator_ray_tracing_sst._photons_file.exists()
     assert simulator_ray_tracing_sst._stars_file.exists()
     assert not simulator_ray_tracing_sst.telescope_model.config_file_directory.joinpath(
@@ -146,10 +136,6 @@ def test_load_required_files_single_mirror(
 ):
     simulator_ray_tracing_single_mirror._load_required_files(force_simulate=False)
 
-    # This file is not actually needed and does not exist in simtools.
-    # However, its name is needed too provide the name of a CORSIKA input file to sim_telarray
-    # so here we check the it does not actually exist.
-    assert not simulator_ray_tracing_single_mirror._corsika_file.exists()
     assert simulator_ray_tracing_single_mirror._photons_file.exists()
     assert simulator_ray_tracing_single_mirror._stars_file.exists()
 

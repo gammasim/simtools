@@ -1,356 +1,311 @@
-#!/usr/bin/python3
-
 import logging
-from unittest import mock
+import subprocess
 
 import pytest
-
-from simtools import dependencies
-
-
-@pytest.fixture
-def db_config():
-    return {
-        "db_simulation_model": "sim_model_db",
-        "db_simulation_model_version": "v1.0.0",
-        "host": "localhost",
-        "port": 27017,
-    }
-
-
-@pytest.fixture
-def fake_path():
-    return "/fake/path"
-
-
-@pytest.fixture
-def corsika_version_string():
-    return "NUMBER OF VERSION :  7.7550\n"
-
-
-@pytest.fixture
-def corsika_request_for_input():
-    return "DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n"
-
-
-@pytest.fixture
-def subprocess_run():
-    return "subprocess.run"
-
-
-@pytest.fixture
-def subprocess_popen():
-    return "subprocess.Popen"
-
-
-@pytest.fixture
-def env_not_set_error():
-    return "Environment variable SIMTOOLS_SIMTEL_PATH is not set."
-
-
-@pytest.fixture
-def get_build_options_literal():
-    return "simtools.dependencies.get_build_options"
-
-
-def test_get_version_string_success(
-    monkeypatch,
-    db_config,
-    fake_path,
-    corsika_version_string,
-    corsika_request_for_input,
-    subprocess_run,
-    subprocess_popen,
-    get_build_options_literal,
-):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    monkeypatch.setenv("SIMTOOLS_CORSIKA_PATH", fake_path)
-
-    mock_sim_telarray_result = mock.Mock()
-    mock_sim_telarray_result.stdout = "Release: 2024.271.0 from 2024-09-27"
-    mock_sim_telarray_result.stderr = ""
-
-    mock_corsika_process = mock.Mock()
-    # Iterable stdout as expected by get_corsika_version
-    mock_corsika_process.stdout = [
-        corsika_version_string,
-        corsika_request_for_input,
-        "",
-    ]
-
-    with mock.patch(subprocess_run, return_value=mock_sim_telarray_result):
-        with mock.patch(subprocess_popen, return_value=mock_corsika_process):
-            with mock.patch(get_build_options_literal, return_value={"corsika_version": "7.7"}):
-                expected_output = (
-                    "Database name: sim_model_db\n"
-                    "Database version: v1.0.0\n"
-                    "sim_telarray version: 2024.271.0\n"
-                    "CORSIKA version: 7.7550\n"
-                    "Build options: {'corsika_version': '7.7'}\n"
-                    "Runtime environment: None\n"
-                )
-                assert dependencies.get_version_string(db_config) == expected_output
-
-
-def test_get_version_string_no_env_var(
-    monkeypatch,
-    db_config,
-    env_not_set_error,
-    caplog,
-    get_build_options_literal,
-):
-    with caplog.at_level(logging.WARNING):
-        with mock.patch(get_build_options_literal, return_value=None):
-            expected_output = (
-                "Database name: sim_model_db\n"
-                "Database version: v1.0.0\n"
-                "sim_telarray version: None\n"
-                "CORSIKA version: None\n"
-                "Build options: None\n"
-                "Runtime environment: None\n"
-            )
-            assert dependencies.get_version_string(db_config) == expected_output
-
-    assert env_not_set_error in caplog.text
-
-
-def test_get_database_version_or_name_success(db_config):
-    assert dependencies.get_database_version_or_name(db_config) == "v1.0.0"
-    assert dependencies.get_database_version_or_name(None) is None
-
-
-def test_get_database_version_or_name_no_version(db_config):
-    db_config_no_version = {
-        "db_simulation_model": "sim_model_db",
-        "host": "localhost",
-        "port": 27017,
-    }
-    assert dependencies.get_database_version_or_name(db_config_no_version) is None
-
-
-def test_get_sim_telarray_version_success(monkeypatch, fake_path, subprocess_run):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    expected_version = "2024.271.0"
-    mock_result = mock.Mock()
-    mock_result.stdout = "Release: 2024.271.0 from 2024-09-27"
-    mock_result.stderr = ""
-
-    with mock.patch(subprocess_run, return_value=mock_result):
-        assert dependencies.get_sim_telarray_version(None) == expected_version
-
-    with mock.patch(subprocess_run, return_value=mock_result):
-        assert dependencies.get_sim_telarray_version("podman run") == expected_version
-
-
-def test_get_sim_telarray_version_no_env_var(caplog, monkeypatch, env_not_set_error):
-    monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
-
-    with caplog.at_level(logging.WARNING):
-        assert dependencies.get_sim_telarray_version(None) is None
-
-    assert env_not_set_error in caplog.text
-
-
-def test_get_sim_telarray_version_no_release(monkeypatch, subprocess_run):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path_simtel")
-    mock_result = mock.Mock()
-    mock_result.stdout = "Some other output"
-    mock_result.stderr = ""
-
-    with mock.patch(subprocess_run, return_value=mock_result):
-        with pytest.raises(ValueError, match="sim_telarray release not found in Some other output"):
-            dependencies.get_sim_telarray_version(None)
-
-
-def test_build_options(monkeypatch, fake_path):
-    # no SIMTEL_PATH defined
-    monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
-    with pytest.raises(ValueError, match="SIMTOOLS_SIMTEL_PATH not defined"):
-        dependencies.get_build_options()
-    # SIMTEL_PATH defined, but no build_opts.yml file
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    with pytest.raises(FileNotFoundError, match=r"No build_opts.yml file found."):
-        dependencies.get_build_options()
-
-    # mock ascii_handler.collect_data_from_file to return a dict
-    with mock.patch(
-        "simtools.dependencies.ascii_handler.collect_data_from_file",
-        return_value={"corsika_version": "7.7"},
-    ):
-        build_opts = dependencies.get_build_options()
-        assert build_opts == {"corsika_version": "7.7"}
-
-
-def test_get_corsika_version_success(
-    monkeypatch, fake_path, corsika_version_string, corsika_request_for_input, subprocess_popen
-):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    mock_process = mock.Mock()
-    # Iterable stdout for version then steering prompt
-    mock_process.stdout = [
-        corsika_version_string,
-        corsika_request_for_input,
-        "",
-    ]
-
-    with mock.patch(subprocess_popen, return_value=mock_process):
-        assert dependencies.get_corsika_version() == "7.7550"
-
-
-def test_get_corsika_version_no_env_var(caplog, monkeypatch, env_not_set_error):
-    monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
-
-    with caplog.at_level(logging.WARNING):
-        assert dependencies.get_corsika_version() is None
-
-    assert env_not_set_error in caplog.text
-
-
-def test_get_corsika_version_no_version(
-    monkeypatch,
-    fake_path,
-    corsika_request_for_input,
-    subprocess_popen,
-    get_build_options_literal,
-    caplog,
-):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    mock_process = mock.Mock()
-    mock_process.stdout = [
-        "Some other output\n",
-        corsika_request_for_input,
-        "",
-    ]
-
-    with mock.patch(subprocess_popen, return_value=mock_process):
-        with mock.patch(get_build_options_literal, return_value={"corsika_version": "7.7"}):
-            with caplog.at_level(logging.DEBUG):
-                assert dependencies.get_corsika_version() == "7.7"
-
-            assert "Getting the CORSIKA version from the build options." in caplog.text
-
-            assert dependencies.get_corsika_version(["podman", "run"]) == "7.7"
-
-
-def test_get_corsika_version_no_build_opts(
-    monkeypatch,
-    fake_path,
-    corsika_request_for_input,
-    subprocess_popen,
-    get_build_options_literal,
-    caplog,
-):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    mock_process = mock.Mock()
-    mock_process.stdout = [
-        "Some other output\n",
-        corsika_request_for_input,
-        "",
-    ]
-
-    with mock.patch(subprocess_popen, return_value=mock_process):
-        with mock.patch(get_build_options_literal, side_effect=FileNotFoundError):
-            with caplog.at_level(logging.WARNING):
-                assert dependencies.get_corsika_version() is None
-
-            assert "Could not get CORSIKA version." in caplog.text
-
-
-def test_get_corsika_version_empty_line(
-    monkeypatch, fake_path, corsika_version_string, subprocess_popen, get_build_options_literal
-):
-    # The empty line causes the function to break before reaching the version
-    # When actually running CORSIKA, we won't get an empty line in the stdout
-    # but rather "\n" at the end of the line. An empty line is a sign that the
-    # process has finished.
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    mock_process = mock.Mock()
-    # Simulate process finishing immediately with no useful output
-    mock_process.stdout = [
-        "",  # Empty line first (signals no version)
-    ]
-
-    with mock.patch(subprocess_popen, return_value=mock_process):
-        with mock.patch(get_build_options_literal, return_value={"corsika_version": "7.7"}):
-            assert dependencies.get_corsika_version() == "7.7"
-
-
-def test_get_build_options_no_env_var(monkeypatch):
-    monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
-    with pytest.raises(ValueError, match=r"SIMTOOLS_SIMTEL_PATH not defined."):
-        dependencies.get_build_options()
-
-
-def test_get_build_options_file_not_found(monkeypatch, fake_path):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    with pytest.raises(FileNotFoundError, match=r"No build_opts.yml file found."):
-        dependencies.get_build_options()
-
-
-def test_get_build_options_success(monkeypatch, fake_path):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    mock_build_opts = {"corsika_version": "7.7"}
-    with mock.patch(
-        "simtools.dependencies.ascii_handler.collect_data_from_file", return_value=mock_build_opts
-    ):
-        assert dependencies.get_build_options() == mock_build_opts
-
-
-def test_get_build_options_container_file_not_found(monkeypatch, fake_path, subprocess_run):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    mock_result = mock.Mock()
-    mock_result.returncode = 1
-    mock_result.stderr = "File not found in container."
-    with mock.patch(subprocess_run, return_value=mock_result):
-        with pytest.raises(
-            FileNotFoundError,
-            match=r"No build_opts.yml file found in container: File not found in container.",
-        ):
-            dependencies.get_build_options(run_time=["docker", "exec", "container"])
-
-
-def test_get_build_options_container_success(monkeypatch, fake_path, subprocess_run):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    mock_result = mock.Mock()
-    mock_result.returncode = 0
-    mock_result.stdout = "corsika_version: '7.7'"
-    with mock.patch(subprocess_run, return_value=mock_result):
-        assert dependencies.get_build_options(run_time=["docker", "exec", "container"]) == {
-            "corsika_version": "7.7"
-        }
-
-
-def test_get_build_options_container_yaml_error(monkeypatch, fake_path, subprocess_run):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    mock_result = mock.Mock()
-    mock_result.returncode = 0
-    mock_result.stdout = "invalid_yaml: ["
-    with mock.patch(subprocess_run, return_value=mock_result):
-        with pytest.raises(ValueError, match=r"Error parsing build_opts.yml from container:"):
-            dependencies.get_build_options(run_time=["docker", "exec", "container"])
+import yaml
+
+from simtools.dependencies import (
+    _get_build_options_from_file,
+    get_build_options,
+    get_corsika_version,
+    get_database_version_or_name,
+    get_sim_telarray_version,
+    get_software_version,
+    get_version_string,
+)
+
+
+def test_get_version_string(mocker):
+    db_config = {"db_simulation_model": "test_db", "db_simulation_model_version": "1.2.3"}
+    mocker.patch("simtools.dependencies.get_sim_telarray_version", return_value="2024.271.0")
+    mocker.patch("simtools.dependencies.get_corsika_version", return_value="7.7550")
+    mocker.patch(
+        "simtools.dependencies.get_build_options",
+        return_value={"simtel_version": "master", "corsika_version": "78010"},
+    )
+    result = get_version_string(db_config=db_config, run_time=["docker"])
+    assert "Database name: test_db" in result
+    assert "Database version: 1.2.3" in result
+    assert "sim_telarray version: 2024.271.0" in result
+    assert "CORSIKA version: 7.7550" in result
+    assert "Build options: {'simtel_version': 'master', 'corsika_version': '78010'}" in result
+    assert "Runtime environment: ['docker']" in result
 
 
 def test_get_software_version_simtools():
-    assert dependencies.get_software_version("simtools") == dependencies.__version__
-    assert dependencies.get_software_version("SIMTOOLS") == dependencies.__version__
+    from simtools.version import __version__
 
-
-def test_get_software_version_corsika(get_build_options_literal):
-    with mock.patch(get_build_options_literal, return_value={"corsika_version": "7.7"}):
-        with mock.patch("simtools.dependencies.get_corsika_version", return_value="7.7550"):
-            assert dependencies.get_software_version("corsika") == "7.7550"
-
-
-def test_get_software_version_sim_telarray(subprocess_run, fake_path, monkeypatch):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
-    mock_result = mock.Mock()
-    mock_result.stdout = "Release: 2024.271.0 from 2024-09-27"
-    mock_result.stderr = ""
-
-    with mock.patch(subprocess_run, return_value=mock_result):
-        assert dependencies.get_software_version("sim_telarray") == "2024.271.0"
+    assert get_software_version("simtools") == __version__
 
 
 def test_get_software_version_unknown():
-    with pytest.raises(ValueError, match="Unknown software: unknown_software"):
-        dependencies.get_software_version("unknown_software")
+    with pytest.raises(ValueError, match="Unknown software: unknown_package"):
+        get_software_version("unknown_package")
+
+
+def test_get_database_version_or_name_version_true():
+    db_config = {"db_simulation_model": "test_db", "db_simulation_model_version": "1.2.3"}
+    result = get_database_version_or_name(db_config, version=True)
+    assert result == "1.2.3"
+
+
+def test_get_database_version_or_name_version_false():
+    db_config = {"db_simulation_model": "test_db", "db_simulation_model_version": "1.2.3"}
+    result = get_database_version_or_name(db_config, version=False)
+    assert result == "test_db"
+
+
+def test_get_database_version_or_name_none_config():
+    result = get_database_version_or_name(None, version=True)
+    assert result is None
+
+
+def test_get_database_version_or_name_missing_keys():
+    db_config = {}
+    result_version = get_database_version_or_name(db_config, version=True)
+    result_name = get_database_version_or_name(db_config, version=False)
+    assert result_version == {}
+    assert result_name == {}
+
+
+def test_get_sim_telarray_version_simple(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+    mock_config.sim_telarray_exe = "sim_telarray"
+    mock_run = mocker.patch("simtools.dependencies.subprocess.run")
+    mock_run.return_value.stdout = "Release: 2024.271.0 from 2024-09-27\n"
+    version = get_sim_telarray_version()
+    assert version == "2024.271.0"
+
+
+def test_get_corsika_version_simple(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+
+    class PathMock:
+        def __truediv__(self, other):
+            return f"/mocked/path/{other}"
+
+    mock_config.corsika_path = PathMock()
+    mock_config.corsika_exe = "corsika"
+    mock_popen = mocker.patch("simtools.dependencies.subprocess.Popen")
+    process_mock = mocker.Mock()
+    process_mock.stdout = ["NUMBER OF VERSION :  7.7550\n"]
+    mock_popen.return_value = process_mock
+    process_mock.terminate = mocker.Mock()
+    version = get_corsika_version()
+    assert version == "7.7550"
+
+
+def test_get_build_options_corsika_and_simtelarray(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+
+    class PathMock:
+        def __truediv__(self, other):
+            return f"/mocked/path/{other}"
+
+        @property
+        def parent(self):
+            return self
+
+    mock_config.corsika_path = PathMock()
+    mock_config.sim_telarray_path = PathMock()
+    mock_ascii_handler = mocker.patch("simtools.dependencies.ascii_handler.collect_data_from_file")
+    # Simulate CORSIKA build_opts.yml
+    corsika_opts = {
+        "corsika_version": "78010",
+        "corsika_opt_patch_version": "v1.1.0",
+        "variant": [
+            {"executable": "corsika_epos_urqmd_curved", "config": "config_epos_urqmd_curved"},
+            {"executable": "corsika_epos_urqmd_flat", "config": "config_epos_urqmd_flat"},
+        ],
+    }
+    # Simulate sim_telarray build_opts.yml
+    simtel_opts = {
+        "simtel_version": "master",
+        "components": [
+            {"name": "sim_telarray", "version": "master", "executables": ["sim_telarray"]}
+        ],
+    }
+    mock_ascii_handler.side_effect = [corsika_opts, simtel_opts]
+    opts = get_build_options()
+    assert opts["corsika_version"] == "78010"
+    assert opts["simtel_version"] == "master"
+    assert "variant" in opts
+    assert "components" in opts
+
+
+def test_get_build_options_legacy(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+    mock_config.sim_telarray_path = mocker.Mock()
+    mock_ascii_handler = mocker.patch("simtools.dependencies.ascii_handler.collect_data_from_file")
+    legacy_opts = {
+        "build_opt": "prod6-baseline",
+        "corsika_version": "78010",
+        "bernlohr_version": "1.70",
+    }
+    mock_ascii_handler.side_effect = [legacy_opts]
+    opts = get_build_options()
+    assert opts["build_opt"] == "prod6-baseline"
+    assert opts["corsika_version"] == "78010"
+    assert opts["bernlohr_version"] == "1.70"
+
+
+def test_get_software_version_keyerror():
+    # Should raise ValueError for unknown software
+    with pytest.raises(ValueError, match="Unknown software: not_a_real_package"):
+        get_software_version("not_a_real_package")
+
+
+def test_get_sim_telarray_version_no_release(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+    mock_config.sim_telarray_exe = "sim_telarray"
+    mock_run = mocker.patch("simtools.dependencies.subprocess.run")
+    mock_run.return_value.stdout = "No version info here"
+    with pytest.raises(ValueError, match="sim_telarray release not found"):
+        get_sim_telarray_version()
+
+
+def test_get_sim_telarray_version_empty_output(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+    mock_config.sim_telarray_exe = "sim_telarray"
+    mock_run = mocker.patch("simtools.dependencies.subprocess.run")
+    mock_run.return_value.stdout = ""
+    with pytest.raises(ValueError, match="sim_telarray release not found"):
+        get_sim_telarray_version()
+
+
+def test_get_corsika_version_typeerror(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+    mock_config.corsika_exe = None
+    version = get_corsika_version()
+    assert version is None
+
+
+def test_get_corsika_version_no_version_but_build_opts(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+
+    class PathMock:
+        def __truediv__(self, other):
+            return f"/mocked/path/{other}"
+
+    mock_config.corsika_path = PathMock()
+    mock_config.corsika_exe = "corsika"
+    mock_popen = mocker.patch("simtools.dependencies.subprocess.Popen")
+    process_mock = mocker.Mock()
+    process_mock.stdout = ["DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n"]
+    mock_popen.return_value = process_mock
+    process_mock.terminate = mocker.Mock()
+    mocker.patch(
+        "simtools.dependencies.get_build_options", return_value={"corsika_version": "99999"}
+    )
+    version = get_corsika_version()
+    assert version == "99999"
+
+
+def test_get_corsika_version_no_build_opts(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+
+    class PathMock:
+        def __truediv__(self, other):
+            return f"/mocked/path/{other}"
+
+    mock_config.corsika_path = PathMock()
+    mock_config.corsika_exe = "corsika"
+    mock_popen = mocker.patch("simtools.dependencies.subprocess.Popen")
+    process_mock = mocker.Mock()
+    process_mock.stdout = ["DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n"]
+    mock_popen.return_value = process_mock
+    process_mock.terminate = mocker.Mock()
+    mocker.patch("simtools.dependencies.get_build_options", side_effect=FileNotFoundError)
+    version = get_corsika_version()
+    assert version is None
+
+
+def test_get_build_options_file_not_found(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+
+    class PathMock:
+        def __truediv__(self, other):
+            return f"/mocked/path/{other}"
+
+        @property
+        def parent(self):
+            return self
+
+    mock_config.corsika_path = PathMock()
+    mock_config.sim_telarray_path = PathMock()
+    mocker.patch(
+        "simtools.dependencies.ascii_handler.collect_data_from_file", side_effect=FileNotFoundError
+    )
+    with pytest.raises(FileNotFoundError, match="No build option file found"):
+        get_build_options()
+
+
+def test__get_build_options_from_file_yaml_error(mocker):
+    mocker.patch("simtools.dependencies.yaml.safe_load", side_effect=yaml.YAMLError("bad yaml"))
+    mock_run = mocker.patch("simtools.dependencies.subprocess.run")
+    mock_run.return_value.returncode = 0
+    mock_run.return_value.stdout = "bad: yaml"
+    with pytest.raises(ValueError, match=r"Error parsing build_opts.yml from container"):
+        _get_build_options_from_file("/mocked/path/build_opts.yml", run_time=["docker"])
+
+
+def test__get_build_options_from_file_subprocess_error(mocker):
+    mock_run = mocker.patch("simtools.dependencies.subprocess.run")
+    mock_run.return_value.returncode = 1
+    mock_run.return_value.stderr = "file not found"
+    with pytest.raises(FileNotFoundError, match="No build option file found in container"):
+        _get_build_options_from_file("/mocked/path/build_opts.yml", run_time=["docker"])
+
+
+def test_get_build_options_debug_logging_on_exception(mocker, caplog):
+    mock_config = mocker.patch("simtools.dependencies.config")
+    mock_path = mocker.Mock()
+    mock_path.parent = mocker.Mock()
+    mock_config.corsika_path = mock_path
+    mock_config.sim_telarray_path = mock_path
+    mock_ascii_handler = mocker.patch("simtools.dependencies.ascii_handler.collect_data_from_file")
+    # First call raises FileNotFoundError, legacy fallback also raises
+    mock_ascii_handler.side_effect = [FileNotFoundError, FileNotFoundError]
+    caplog.set_level(logging.DEBUG)
+    with pytest.raises(FileNotFoundError):
+        get_build_options()
+    assert any("No build options found for sim_telarray." in m for m in caplog.text.splitlines())
+
+
+def test_get_sim_telarray_version_with_run_time(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+    mock_config.sim_telarray_exe = "sim_telarray"
+    mock_run = mocker.patch("simtools.dependencies.subprocess.run")
+    mock_run.return_value.stdout = "Release: 2024.271.0 from 2024-09-27\n"
+    mock_run.return_value.stderr = ""
+    run_time = ["docker"]
+    version = get_sim_telarray_version(run_time=run_time)
+    assert version == "2024.271.0"
+    mock_run.assert_called_once_with(
+        ["docker", "sim_telarray", "--version"], capture_output=True, text=True, check=False
+    )
+
+
+def test_get_corsika_version_with_run_time(mocker):
+    mock_config = mocker.patch("simtools.dependencies.config")
+
+    class PathMock:
+        def __truediv__(self, other):
+            return f"/mocked/path/{other}"
+
+    mock_config.corsika_exe = PathMock() / "corsika"
+    mock_popen = mocker.patch("simtools.dependencies.subprocess.Popen")
+    process_mock = mocker.Mock()
+    process_mock.stdout = ["NUMBER OF VERSION :  7.7550\n"]
+    process_mock.terminate = mocker.Mock()
+    mock_popen.return_value = process_mock
+    run_time = ["docker"]
+    version = get_corsika_version(run_time=run_time)
+    assert version == "7.7550"
+    mock_popen.assert_called_once_with(
+        ["docker", "/mocked/path/corsika"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        text=True,
+    )

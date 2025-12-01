@@ -1,4 +1,4 @@
-"""Definition of the ArrayModel class."""
+"""Array model represents an observatory consisting of site, telescopes, and further devices."""
 
 import logging
 from pathlib import Path
@@ -36,8 +36,6 @@ class ArrayModel:
         the array element positions).
     calibration_device_types: List[str], optional
         List of calibration device types (e.g., 'flat_fielding') attached to each telescope.
-    simtel_path: str, Path, optional
-        Path to the sim_telarray installation directory.
     overwrite_model_parameters: str, optional
         File name to overwrite model parameters from DB with provided values.
     """
@@ -51,7 +49,6 @@ class ArrayModel:
         layout_name=None,
         array_elements=None,
         calibration_device_types=None,
-        simtel_path=None,
         overwrite_model_parameters=None,
     ):
         """Initialize ArrayModel."""
@@ -78,7 +75,6 @@ class ArrayModel:
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
         self._sim_telarray_seeds = None
-        self.simtel_path = simtel_path
 
     def _initialize(self, site, array_elements_config, calibration_device_types):
         """
@@ -322,7 +318,6 @@ class ArrayModel:
             layout_name=self.layout_name,
             model_version=self.model_version,
             label=self.label,
-            simtel_path=self.simtel_path,
         )
         simtel_writer.write_array_config_file(
             config_file_path=self.config_file_path,
