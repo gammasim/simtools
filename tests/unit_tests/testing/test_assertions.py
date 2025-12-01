@@ -508,3 +508,27 @@ def test_check_plain_log_top_level_keys_fallback(tmp_path: Path):
     file_test = {"expected_log_output": None, "pattern": ["finished"], "forbidden_pattern": []}
 
     assert check_plain_log(log_file, file_test) is True
+
+
+def test_check_plain_log_no_patterns_returns_true(tmp_path: Path, caplog):
+    # expected_log_output has no patterns; function should return True and log debug
+    log_file = tmp_path / "run.log"
+    log_file.write_text("some content\n", encoding="utf-8")
+
+    file_test = {"expected_log_output": {}}
+
+    with caplog.at_level(logging.DEBUG):
+        assert check_plain_log(log_file, file_test) is True
+        assert "No expected log output provided" in caplog.text
+
+
+def test_check_plain_log_missing_expected_patterns(tmp_path: Path, caplog):
+    # wanted pattern not present in log should log error and return False
+    log_file = tmp_path / "run.log"
+    log_file.write_text("only info lines here\n", encoding="utf-8")
+
+    file_test = {"expected_log_output": {"pattern": ["NEEDED"], "forbidden_pattern": []}}
+
+    with caplog.at_level(logging.ERROR):
+        assert check_plain_log(log_file, file_test) is False
+        assert "Missing expected patterns" in caplog.text
