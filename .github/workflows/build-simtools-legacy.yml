@@ -180,4 +180,5 @@ jobs:
         run: |
           source /workdir/env/bin/activate
           pip install --no-cache-dir pytest pytest-cov pytest-requirements pytest-xdist
+          simtools-print-version
           pytest --model_version=${{ matrix.model_version }} --no-cov --color=yes -n auto tests/integration_tests/test_applications_from_config.py
