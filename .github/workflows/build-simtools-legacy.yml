@@ -112,7 +112,7 @@ jobs:
           # - {build_opt: 'prod6-sc', extra_def: ''} # currently not used
           - {build_opt: 'prod6-baseline', extra_def: ''}
         model_version:
-          - "6.0"
+          - "6.0.2"
     container:
       image: ghcr.io/gammasim/simtools-sim-telarray-${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.version.hadronic_model }}-${{ matrix.version.avx_instruction }}
       options: --user 0
