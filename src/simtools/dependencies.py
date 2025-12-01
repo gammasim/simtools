@@ -42,7 +42,9 @@ def get_version_string(db_config=None, run_time=None):
         f"Database name: {get_database_version_or_name(db_config, version=False)}\n"
         f"Database version: {get_database_version_or_name(db_config, version=True)}\n"
         f"sim_telarray version: {get_sim_telarray_version(run_time)}\n"
+        f"sim_telarray exe: {config.sim_telarray_exe if config.sim_telarray_exe else 'None'}\n"
         f"CORSIKA version: {get_corsika_version(run_time)}\n"
+        f"CORSIKA exe: {config.corsika_exe if config.corsika_exe else 'None'}\n"
         f"Build options: {get_build_options(run_time)}\n"
         f"Runtime environment: {run_time if run_time else 'None'}\n"
     )
