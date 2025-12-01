@@ -28,7 +28,7 @@ ARG PYTHON_VERSION
 ARG SIMTOOLS_REQUIREMENT
 
 # Copy CORSIKA from corsika image
-COPY --from=corsika_img /workdir/simulation_software/corsika  /workdir/simulation_software/corsika
+COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulation_software/corsika7
 
 # Copy sim_telarray components from simtel image
 COPY --from=simtel_img /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
@@ -42,7 +42,7 @@ RUN microdnf update -y && microdnf install -y \
     ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
 
 # Add QGSJet tables downloaded externally (large files!)
-WORKDIR /workdir/simulation_software/corsika
+WORKDIR /workdir/simulation_software/corsika7
 COPY qgsdat-III.bz2 .
 RUN if [ -f qgsdat-III.bz2 ]; then \
         bzip2 -dq qgsdat-III.bz2; \
