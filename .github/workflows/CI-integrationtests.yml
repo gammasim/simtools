@@ -163,6 +163,9 @@ jobs:
             --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }} \
             --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH"
 
+      - name: Print versions
+        run: simtools-print-versions
+
       - name: Integration tests
         shell: bash -l {0}
         env:
