@@ -167,7 +167,7 @@ jobs:
         run: |
           source /workdir/env/bin/activate
           pip install --no-cache-dir -e .
-          simtools-print-versions
+          simtools-print-version
 
       - name: Integration tests
         shell: bash -l {0}
