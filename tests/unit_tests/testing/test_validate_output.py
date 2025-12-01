@@ -697,7 +697,7 @@ def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
 
 
 def test_versions_match_semantics():
-    # No CLI filter → always validate
+    # No CLI filter, always validate
     assert _versions_match(None, "6.0.0") is True
 
     # Exact match
@@ -762,7 +762,7 @@ def test_validate_application_output_gating_calls(tmp_path: Path):
         patch("simtools.testing.validate_output._validate_output_files") as m_validate,
         patch("simtools.testing.validate_output._test_simtel_cfg_files"),
     ):
-        # No CLI filter → should call validation
+        # No CLI filter, should call validation
         validate_application_output(cfg, from_command_line=None, from_config_file="6.0.0")
         assert m_validate.called
 
@@ -770,6 +770,6 @@ def test_validate_application_output_gating_calls(tmp_path: Path):
         patch("simtools.testing.validate_output._validate_output_files") as m_validate,
         patch("simtools.testing.validate_output._test_simtel_cfg_files"),
     ):
-        # CLI filter not matching → should skip validations
+        # CLI filter not matching, should skip validations
         validate_application_output(cfg, from_command_line="7.0.0", from_config_file="6.0.0")
         m_validate.assert_not_called()
