@@ -634,17 +634,6 @@ def test_event_first_interaction_heights(corsika_histograms_instance_set_histogr
     assert corsika_histograms_instance_set_histograms.event_first_interaction_heights.unit == u.km
 
 
-def test_magnetic_field(corsika_histograms_instance_set_histograms):
-    for i_event in range(corsika_histograms_instance_set_histograms.num_events):
-        assert corsika_histograms_instance_set_histograms.magnetic_field[0].value[
-            i_event
-        ] == pytest.approx(20.5, abs=1e-1)
-        assert corsika_histograms_instance_set_histograms.magnetic_field[1].value[
-            i_event
-        ] == pytest.approx(-9.4, abs=1e-1)
-    assert corsika_histograms_instance_set_histograms.magnetic_field[0].unit == u.uT
-
-
 def test_get_event_parameter_info(corsika_histograms_instance_set_histograms, caplog):
     for parameter in corsika_histograms_instance_set_histograms.all_event_keys[1:]:
         assert isinstance(

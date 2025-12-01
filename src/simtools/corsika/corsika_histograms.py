@@ -40,11 +40,11 @@ class CorsikaHistograms:
     Parameters
     ----------
     input_file: str or Path
-        CORSIKA IACT file provided by the CORSIKA simulation.
+        CORSIKA IACT file.
     label: str
         Instance label.
     output_path: str
-        Path where to save the output of the class methods.
+        Output file path.
     hdf5_file_name: str
         HDF5 file name for histogram storage.
 
@@ -62,22 +62,15 @@ class CorsikaHistograms:
 
         self.input_file = Path(self.input_file)
         if not self.input_file.exists():
-            msg = f"file {self.input_file} does not exist."
-            self._logger.error(msg)
-            raise FileNotFoundError
+            raise FileNotFoundError(f"file {self.input_file} does not exist.")
 
         self.io_handler = io_handler.IOHandler()
-        _default_output_path = self.io_handler.get_output_directory("corsika")
-
-        if output_path is None:
-            self.output_path = _default_output_path
-        else:
-            self.output_path = Path(output_path)
-
-        if hdf5_file_name is None:
-            self.hdf5_file_name = re.split(r"\.", self.input_file.name)[0] + ".hdf5"
-        else:
-            self.hdf5_file_name = hdf5_file_name
+        self.output_path = (
+            Path(output_path) if output_path else self.io_handler.get_output_directory("corsika")
+        )
+        self.hdf5_file_name = (
+            hdf5_file_name if hdf5_file_name else re.split(r"\.", self.input_file.name)[0] + ".hdf5"
+        )
 
         self._telescope_indices = None
         self._telescope_positions = None
@@ -94,8 +87,6 @@ class CorsikaHistograms:
         self._event_zenith_angles = None
         self._hist_config = None
         self._total_num_photons = None
-        self._magnetic_field_x = None
-        self._magnetic_field_z = None
         self._event_total_energies = None
         self._event_first_interaction_heights = None
         self._corsika_version = None
@@ -276,7 +267,7 @@ class CorsikaHistograms:
 
     def read_event_information(self):
         """
-        Read the information about the events from their headers and save as a class instance.
+        Read event information from run headers.
 
         The main information can also be fetched individually through the functions below.
         For the remaining information (such as px, py, pz), use this function.
@@ -1701,26 +1692,6 @@ class CorsikaHistograms:
             )
         return self._event_first_interaction_heights
 
-    @property
-    def magnetic_field(self):
-        """
-        Get the Earth magnetic field from the events header in astropy units of microT.
-
-        A tuple with Earth's magnetic field in the x and z directions are returned.
-
-        Returns
-        -------
-        astropy.Quantity
-            The Earth magnetic field in the x direction used for each event.
-        astropy.Quantity
-            The Earth magnetic field in the z direction used for each event.
-        """
-        if self._magnetic_field_x is None:
-            self._magnetic_field_x = (self.event_information["earth_magnetic_field_x"]).to(u.uT)
-        if self._magnetic_field_z is None:
-            self._magnetic_field_z = (self.event_information["earth_magnetic_field_z"]).to(u.uT)
-        return self._magnetic_field_x, self._magnetic_field_z
-
     def get_event_parameter_info(self, parameter):
         """
         Get specific information (i.e. any parameter) of the events.
@@ -1772,11 +1743,10 @@ class CorsikaHistograms:
         KeyError:
             If parameter is not valid.
         """
-        if parameter not in self.all_run_keys:
-            msg = f"key is not valid. Valid entries are {self.all_run_keys}"
-            self._logger.error(msg)
-            raise KeyError
-        return self.header[parameter]
+        try:
+            return self.header[parameter]
+        except KeyError as exc:
+            raise KeyError(f"key is not valid. Valid entries are {self.all_run_keys}") from exc
 
     def event_1d_histogram(self, key, bins=50, hist_range=None):
         """
@@ -1808,9 +1778,7 @@ class CorsikaHistograms:
             If key is not valid.
         """
         if key not in self.all_event_keys:
-            msg = f"key is not valid. Valid entries are {self.all_event_keys}"
-            self._logger.error(msg)
-            raise KeyError
+            raise KeyError(f"key is not valid. Valid entries are {self.all_event_keys}")
         hist, bin_edges = np.histogram(
             self.event_information[key].value,
             bins=bins,
@@ -1858,8 +1826,7 @@ class CorsikaHistograms:
                     f"At least one of the keys given is not valid. Valid entries are "
                     f"{self.all_event_keys}"
                 )
-                self._logger.error(msg)
-                raise KeyError
+                raise KeyError(msg)
         hist, x_bin_edges, y_bin_edges = np.histogram2d(
             self.event_information[key_1].value,
             self.event_information[key_2].value,
