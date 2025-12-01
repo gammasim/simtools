@@ -110,6 +110,9 @@ def get_sim_telarray_version(run_time=None):
     str
         Version of the sim_telarray package.
     """
+    if config.sim_telarray_exe is None:
+        _logger.warning("sim_telarray environment not configured.")
+        return None
     if run_time is None:
         command = [str(config.sim_telarray_exe), "--version"]
     else:

@@ -37,7 +37,7 @@ COPY --from=simtel_img /workdir/simulation_software/hessioxxx /workdir/simulatio
 COPY --from=simtel_img /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
 
 RUN microdnf update -y && microdnf install -y \
-    bc findutils git libgfortran procps zstd \
+    bc findutils git gsl-devel libgfortran procps zstd \
     python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
     microdnf clean all && \
     rm -rf /var/cache/dnf/* /tmp/* /var/tmp/* && \
@@ -45,6 +45,7 @@ RUN microdnf update -y && microdnf install -y \
 
 WORKDIR /workdir
 
+# hadolint ignore=DL4006
 RUN BUILD_BRANCH="$(printf '%s' "$BUILD_BRANCH" | sed 's#refs/tags/##')" \
   && git clone -b "$BUILD_BRANCH" "${SIMTOOLS_REQUIREMENT}" --depth 1 \
   && python${PYTHON_VERSION} -m venv env \
@@ -54,8 +55,8 @@ RUN BUILD_BRANCH="$(printf '%s' "$BUILD_BRANCH" | sed 's#refs/tags/##')" \
   && pip cache purge && rm -rf /root/.cache \
   && echo ". /workdir/env/bin/activate" >> ~/.bashrc
 
-ENV SIMTEL_PATH="/workdir/simulation_software/sim_telarray"
-ENV CORSIKA_PATH="/workdir/simulation_software/corsika"
-ENV CORSIKA_HE_INTERACTION="qgs3"
-ENV CORSIKA_LE_INTERACTION="urqmd"
+ENV SIMTOOLS_SIMTEL_PATH="/workdir/simulation_software/sim_telarray"
+ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
+ENV SIMTOOLS_CORSIKA_HE_INTERACTION="qgs3"
+ENV SIMTOOLS_CORSIKA_LE_INTERACTION="urqmd"
 ENV PATH="/workdir/env/bin/:$PATH"
