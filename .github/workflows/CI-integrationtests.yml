@@ -164,7 +164,7 @@ jobs:
             --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH"
 
       - name: Print versions
-        run: simtools-print-versions
+        run: simtools-print-version
 
       - name: Integration tests
         shell: bash -l {0}
