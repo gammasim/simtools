@@ -164,7 +164,10 @@ jobs:
             --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH"
 
       - name: Print versions
-        run: simtools-print-version
+        run: |
+          source /workdir/env/bin/activate
+          pip install --no-cache-dir -e .
+          simtools-print-versions
 
       - name: Integration tests
         shell: bash -l {0}
