@@ -6,11 +6,11 @@ applications:
     azimuth_angle: South
     core_scatter: 1 840 m
     corsika_test_seeds: true
-    energy_range: 10 GeV 11 GeV
+    energy_range: 10 GeV 1 TeV
     label: test
     log_level: DEBUG
     model_version: 6.0.2
-    nshow: 10
+    nshow: 50
     output_path: simtools-output
     primary: gamma
     run_number: 7
