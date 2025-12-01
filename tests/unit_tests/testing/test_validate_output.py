@@ -440,12 +440,18 @@ def test_validate_application_output_with_assertion_error(output_path):
         "configuration": {"output_path": output_path},
         "test_output_files": [{"path_descriptor": "output_path", "file": test_path}],
     }
-    with pytest.raises(
-        AssertionError, match=r"Output file /path/to/output/not_there does not exist."
+    dummy_dir_content = [Path("dummy_file")]
+    with (
+        patch("pathlib.Path.exists", return_value=False),
+        patch("pathlib.Path.iterdir", return_value=dummy_dir_content),
     ):
-        validate_output._validate_output_path_and_file(
-            config, [{"path_descriptor": "output_path", "file": test_path}]
-        )
+        with pytest.raises(
+            AssertionError,
+            match=r"Output file /path/to/output/not_there does not exist. Directory contents: \[PosixPath\('dummy_file'\)\]",
+        ):
+            validate_output._validate_output_path_and_file(
+                config, [{"path_descriptor": "output_path", "file": test_path}]
+            )
 
 
 def test_validate_application_output_with_file_type(

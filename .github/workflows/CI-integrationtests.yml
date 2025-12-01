@@ -88,8 +88,9 @@ jobs:
             echo "SIMTOOLS_DB_API_PW=${{ secrets.DB_API_PW }}"
             echo "SIMTOOLS_DB_API_PORT=${{ secrets.DB_API_PORT }}"
             echo "SIMTOOLS_SIMTEL_PATH=$(grep '^SIMTOOLS_SIMTEL_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
-            echo "SIMTOOLS_CORSIKA_EXECUTABLE=$(grep '^SIMTOOLS_CORSIKA_EXECUTABLE=' .env_template | cut -d '=' -f2- | tr -d '"')"
             echo "SIMTOOLS_CORSIKA_PATH=$(grep '^SIMTOOLS_CORSIKA_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
+            echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_HE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
+            echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_LE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
           } > .env
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
@@ -112,8 +113,9 @@ jobs:
             echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}"
             echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}"
             echo "SIMTOOLS_SIMTEL_PATH=$(grep '^SIMTOOLS_SIMTEL_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
-            echo "SIMTOOLS_CORSIKA_EXECUTABLE=$(grep '^SIMTOOLS_CORSIKA_EXECUTABLE=' .env_template | cut -d '=' -f2- | tr -d '"')"
             echo "SIMTOOLS_CORSIKA_PATH=$(grep '^SIMTOOLS_CORSIKA_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
+            echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_HE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
+            echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_LE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
           } > .env
 
       - name: Determine simulation model branch
@@ -160,6 +162,13 @@ jobs:
             --db_simulation_model ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} \
             --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }} \
             --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH"
+
+      - name: Print versions
+        run: |
+          source /workdir/env/bin/activate
+          pip install --no-cache-dir -e .
+          cat .env
+          simtools-print-version
 
       - name: Integration tests
         shell: bash -l {0}

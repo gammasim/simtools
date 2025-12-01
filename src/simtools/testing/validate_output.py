@@ -127,7 +127,10 @@ def _validate_output_path_and_file(config, integration_file_tests):
         try:
             assert output_file_path.exists()
         except AssertionError as exc:
-            raise AssertionError(f"Output file {output_file_path} does not exist. ") from exc
+            raise AssertionError(
+                f"Output file {output_file_path} does not exist. "
+                f"Directory contents: {list(output_file_path.parent.iterdir())}"
+            ) from exc
 
         if output_file_path.name.endswith(".simtel.zst"):
             assert assertions.check_output_from_sim_telarray(output_file_path, file_test)
