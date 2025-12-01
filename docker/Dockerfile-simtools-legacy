@@ -38,4 +38,6 @@ RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
   && pip install --no-cache-dir "git+${SIMTOOLS_REQUIREMENT}@${BUILD_BRANCH}" \
   && echo ". /workdir/env/bin/activate" >> ~/.bashrc
 
+ENV SIMTOOLS_SIMTEL_PATH="/workdir/sim_telarray/sim_telarray"
+ENV SIMTOOLS_CORSIKA_PATH="/workdir/sim_telarray/corsika-run"
 ENV PATH="/workdir/env/bin/:$PATH"
