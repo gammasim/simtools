@@ -775,7 +775,7 @@ def test__add_flasher_command_options_invalid_gauss_exponential_width(simulator_
     # Minimal calibration mocks
     def mock_get_param_with_unit(name):
         if name == "flasher_position":
-            return [0.0 * u.cm, 0.0 * u.cm]
+            return [0.0 * u.cm, 0.0 * u.cm, 0.0 * u.cm]
         if name == "flasher_wavelength":
             return 400.0 * u.nm
         if name == "flasher_pulse_shape":
@@ -799,11 +799,23 @@ def test__add_flasher_command_options_invalid_gauss_exponential_width(simulator_
 
     simulator_instance.light_emission_config = {"number_of_events": 1, "flasher_photons": 100}
 
-    with pytest.raises(
-        ValueError,
-        match="Gauss-Exponential pulse shape requires positive width and exponential decay values",
+    # Bypass geometry shape validation to exercise Gauss-Exponential parameter check
+    with (
+        patch(
+            "simtools.simtel.simulator_light_emission.fiducial_radius_from_shape",
+            return_value=75.0,
+        ),
+        patch.object(
+            simulator_instance,
+            "calculate_distance_focal_plane_calibration_device",
+            return_value=Mock(**{"to.return_value.value": 900.0}),
+        ),
     ):
-        simulator_instance._add_flasher_command_options()
+        with pytest.raises(
+            ValueError,
+            match="Gauss-Exponential pulse shape requires positive width and exponential decay values",
+        ):
+            simulator_instance._add_flasher_command_options()
 
 
 def test__add_flasher_command_options_invalid_gauss_exponential_decay(simulator_instance):
@@ -812,7 +824,7 @@ def test__add_flasher_command_options_invalid_gauss_exponential_decay(simulator_
     # Minimal calibration mocks
     def mock_get_param_with_unit(name):
         if name == "flasher_position":
-            return [0.0 * u.cm, 0.0 * u.cm]
+            return [0.0 * u.cm, 0.0 * u.cm, 0.0 * u.cm]
         if name == "flasher_wavelength":
             return 420.0 * u.nm
         if name == "flasher_pulse_shape":
@@ -836,11 +848,23 @@ def test__add_flasher_command_options_invalid_gauss_exponential_decay(simulator_
 
     simulator_instance.light_emission_config = {"number_of_events": 1, "flasher_photons": 100}
 
-    with pytest.raises(
-        ValueError,
-        match="Gauss-Exponential pulse shape requires positive width and exponential decay values",
+    # Bypass geometry shape validation to exercise Gauss-Exponential parameter check
+    with (
+        patch(
+            "simtools.simtel.simulator_light_emission.fiducial_radius_from_shape",
+            return_value=75.0,
+        ),
+        patch.object(
+            simulator_instance,
+            "calculate_distance_focal_plane_calibration_device",
+            return_value=Mock(**{"to.return_value.value": 900.0}),
+        ),
     ):
-        simulator_instance._add_flasher_command_options()
+        with pytest.raises(
+            ValueError,
+            match="Gauss-Exponential pulse shape requires positive width and exponential decay values",
+        ):
+            simulator_instance._add_flasher_command_options()
 
 
 def test__get_light_source_command(simulator_instance):
