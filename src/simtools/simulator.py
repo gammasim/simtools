@@ -144,7 +144,6 @@ class Simulator:
                     model_version=version,
                     calibration_device_types=self._get_calibration_device_types(self.run_mode),
                     overwrite_model_parameters=self.args_dict.get("overwrite_model_parameters"),
-                    simtel_path=self.args_dict.get("simtel_path"),
                 )
             )
             corsika_configurations.append(
@@ -232,7 +231,6 @@ class Simulator:
         runner_args = {
             "label": self.label,
             "corsika_config": self.corsika_configurations,
-            "simtel_path": self.args_dict.get("simtel_path"),
             "use_multipipe": runner_class is CorsikaSimtelRunner,
         }
 

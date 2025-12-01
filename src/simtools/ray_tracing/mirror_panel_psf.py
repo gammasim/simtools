@@ -225,7 +225,6 @@ class MirrorPanelPSF:
         ray = RayTracing(
             telescope_model=self.telescope_model,
             site_model=self.site_model,
-            simtel_path=self.args_dict.get("simtel_path", None),
             single_mirror_mode=True,
             mirror_numbers=(
                 list(range(1, self.args_dict["number_of_mirrors_to_test"] + 1))

@@ -1,7 +1,6 @@
 """Helper functions for integration testing."""
 
-import os
-from pathlib import Path
+from simtools import settings
 
 
 def skip_camera_efficiency(config):
@@ -21,7 +20,7 @@ def _new_testeff_version():
 
     This test checks if the new version is used.
     """
-    testeff_path = Path(os.getenv("SIMTOOLS_SIMTEL_PATH")) / "sim_telarray/testeff.c"
+    testeff_path = settings.config.sim_telarray_path / "testeff.c"
     try:
         with open(testeff_path, encoding="utf-8") as file:
             file_content = file.read()

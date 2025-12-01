@@ -2,7 +2,6 @@
 
 import logging
 import subprocess
-from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.runners.runner_services import RunnerServices
@@ -25,8 +24,6 @@ class SimtelRunner:
 
     Parameters
     ----------
-    simtel_path: str or Path
-        Location of sim_telarray installation.
     label: str
         Instance label. Important for output file naming.
     corsika_config: CorsikaConfig
@@ -39,7 +36,6 @@ class SimtelRunner:
 
     def __init__(
         self,
-        simtel_path,
         label=None,
         corsika_config=None,
         use_multipipe=False,
@@ -48,7 +44,6 @@ class SimtelRunner:
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
-        self._simtel_path = Path(simtel_path)
         self.label = label
         self._base_directory = None
         self.calibration_run_mode = calibration_run_mode

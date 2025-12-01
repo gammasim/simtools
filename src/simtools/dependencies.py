@@ -9,14 +9,13 @@ This modules provides two main functionalities:
 """
 
 import logging
-import os
 import re
 import subprocess
-from pathlib import Path
 
 import yaml
 
 from simtools.io import ascii_handler
+from simtools.settings import config
 from simtools.version import __version__
 
 _logger = logging.getLogger(__name__)
@@ -111,16 +110,10 @@ def get_sim_telarray_version(run_time=None):
     str
         Version of the sim_telarray package.
     """
-    sim_telarray_path = os.getenv("SIMTOOLS_SIMTEL_PATH")
-    if sim_telarray_path is None:
-        _logger.warning("Environment variable SIMTOOLS_SIMTEL_PATH is not set.")
-        return None
-    sim_telarray_path = Path(sim_telarray_path) / "sim_telarray" / "bin" / "sim_telarray"
-
     if run_time is None:
-        command = [str(sim_telarray_path), "--version"]
+        command = [str(config.sim_telarray_exe), "--version"]
     else:
-        command = [*run_time, str(sim_telarray_path), "--version"]
+        command = [*run_time, str(config.sim_telarray_exe), "--version"]
 
     _logger.debug(f"Running command: {command}")
     result = subprocess.run(command, capture_output=True, text=True, check=False)
@@ -151,19 +144,18 @@ def get_corsika_version(run_time=None):
     str
         Version of the CORSIKA package.
     """
-    corsika_path = os.getenv("SIMTOOLS_SIMTEL_PATH")
-    if corsika_path is None:
-        _logger.warning("Environment variable SIMTOOLS_SIMTEL_PATH is not set.")
+    if config.corsika_exe is None:
+        _logger.warning(
+            "SIMTOOLS_CORSIKA_PATH or SIMTOOLS_CORSIKA_EXECUTABLE environment "
+            "variables are not set."
+        )
         return None
-    corsika_command = Path(corsika_path) / "corsika-run" / "corsika"
 
     if run_time is None:
-        command = [str(corsika_command)]
+        command = [str(config.corsika_exe)]
     else:
-        command = [*run_time, str(corsika_command)]
+        command = [*run_time, str(config.corsika_exe)]
 
-    # Below I do not use the standard context manager because
-    # it makes mocking in the tests significantly more difficult
     process = subprocess.Popen(  # pylint: disable=consider-using-with
         command,
         stdout=subprocess.PIPE,
@@ -197,9 +189,14 @@ def get_corsika_version(run_time=None):
 
 def get_build_options(run_time=None):
     """
-    Return CORSIKA / sim_telarray build options.
+    Return CORSIKA / sim_telarray config and build options.
 
-    Expects a build_opts.yml file in the sim_telarray directory.
+    For CORSIKA / sim_telarray build simtools version >0.25.0:
+    expect build_opts.yml  file in each CORSIKA and sim_telarray
+    directories.
+
+    For CORSIKA / sim_telarray build simtools version <=0.25.0:
+    expects a build_opts.yml file in the sim_telarray directory.
 
     Parameters
     ----------
@@ -209,26 +206,41 @@ def get_build_options(run_time=None):
     Returns
     -------
     dict
-        Build options from build_opts.yml file.
+        CORSIKA / sim_telarray build options.
     """
-    sim_telarray_path = os.getenv("SIMTOOLS_SIMTEL_PATH")
-    if sim_telarray_path is None:
-        raise ValueError("SIMTOOLS_SIMTEL_PATH not defined.")
+    build_opts = {}
+    for package in ["corsika", "sim_telarray"]:
+        path = getattr(config, f"{package}_path")
+        try:
+            build_opts.update(_get_build_options_from_file(path / "build_opts.yml", run_time))
+        except (FileNotFoundError, TypeError, ValueError):
+            # legacy fallback only for sim_telarray
+            if package == "sim_telarray":
+                try:
+                    legacy_path = path.parent / "build_opts.yml"
+                    build_opts.update(_get_build_options_from_file(legacy_path, run_time))
+                except (FileNotFoundError, TypeError, ValueError):
+                    _logger.debug(f"No build options found for {package}.")
+    if not build_opts:
+        raise FileNotFoundError("No build option file found.")
 
-    build_opts_path = Path(sim_telarray_path) / "build_opts.yml"
+    return build_opts
 
+
+def _get_build_options_from_file(build_opts_path, run_time=None):
+    """Read build options from file."""
     if run_time is None:
         try:
             return ascii_handler.collect_data_from_file(build_opts_path)
         except FileNotFoundError as exc:
-            raise FileNotFoundError("No build_opts.yml file found.") from exc
+            raise FileNotFoundError("No build option file found.") from exc
 
     command = [*run_time, "cat", str(build_opts_path)]
-    _logger.debug(f"Reading build_opts.yml with command: {command}")
+    _logger.debug(f"Reading build option with command: {command}")
 
     result = subprocess.run(command, capture_output=True, text=True, check=False)
     if result.returncode:
-        raise FileNotFoundError(f"No build_opts.yml file found in container: {result.stderr}")
+        raise FileNotFoundError(f"No build option file found in container: {result.stderr}")
 
     try:
         return yaml.safe_load(result.stdout)

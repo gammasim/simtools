@@ -10,7 +10,7 @@ import numpy as np
 
 import simtools.utils.general as gen
 import simtools.version
-from simtools.io import ascii_handler
+from simtools import dependencies, settings
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 from simtools.utils import names
 
@@ -56,8 +56,6 @@ class SimtelConfigWriter:
         Layout name.
     label: str
         Instance label. Important for output file naming.
-    simtel_path: str or Path
-        Path to the sim_telarray installation directory.
     """
 
     TAB = " " * 3
@@ -70,7 +68,6 @@ class SimtelConfigWriter:
         telescope_model_name=None,
         telescope_design_model=None,
         label=None,
-        simtel_path=None,
     ):
         """Initialize SimtelConfigWriter."""
         self._logger = logging.getLogger(__name__)
@@ -82,7 +79,6 @@ class SimtelConfigWriter:
         self._layout_name = layout_name
         self._telescope_model_name = telescope_model_name
         self._telescope_design_model = telescope_design_model
-        self._simtel_path = simtel_path
 
     def write_telescope_config_file(
         self, config_file_path, parameters, telescope_name=None, telescope_design_model=None
@@ -616,17 +612,24 @@ class SimtelConfigWriter:
             "simtools_model_production_version": self._model_version,
         }
         try:
-            build_opts = ascii_handler.collect_data_from_file(
-                Path(self._simtel_path) / "build_opts.yml"
-            )
+            build_opts = dependencies.get_build_options()
             for key, value in build_opts.items():
                 meta_items[f"simtools_{key}"] = value
         except (FileNotFoundError, TypeError):
             pass  # don't expect build_opts.yml to be present on all systems
 
+        # CORSIKA executable without _flat/_curved suffix (do not know here if curved or flat)
+        try:
+            meta_items["simtools_corsika_exec"] = settings.config.corsika_exe.name.removesuffix(
+                "_flat"
+            )
+        except AttributeError as exc:
+            raise AttributeError("CORSIKA executable path is not set in settings.") from exc
+
         file.write(f"{self.TAB}% Simtools parameters\n")
         for key, value in meta_items.items():
-            file.write(f"{self.TAB}metaparam global set {key} = {value}\n")
+            if not isinstance(value, list):
+                file.write(f"{self.TAB}metaparam global set {key} = {value}\n")
 
     def _write_site_parameters(
         self, file, site_parameters, model_path, telescope_model, additional_metadata=None

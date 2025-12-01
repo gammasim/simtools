@@ -15,6 +15,7 @@ from pathlib import Path
 import astropy.units as u
 from astropy.table import QTable
 
+from simtools import settings
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.model.model_utils import initialize_simulation_models
 
@@ -24,8 +25,6 @@ class IncidentAnglesCalculator:
 
     Parameters
     ----------
-    simtel_path : str or pathlib.Path
-        Path to the sim_telarray installation directory (containing ``sim_telarray/bin``).
     db_config : dict
         Database configuration passed to ``initialize_simulation_models``.
     config_data : dict
@@ -48,7 +47,6 @@ class IncidentAnglesCalculator:
 
     def __init__(
         self,
-        simtel_path,
         db_config,
         config_data,
         output_dir,
@@ -56,7 +54,6 @@ class IncidentAnglesCalculator:
     ):
         self.logger = logging.getLogger(__name__)
 
-        self._simtel_path = Path(simtel_path)
         self.config_data = config_data
         self.output_dir = Path(output_dir)
         self.label = label or f"incident_angles_{config_data['telescope']}"
@@ -216,8 +213,6 @@ class IncidentAnglesCalculator:
             Path to the generated shell script.
         """
         script_path = self.scripts_dir / f"run_incident_angles_{self._label_suffix()}.sh"
-        simtel_bin = self._simtel_path / "sim_telarray/bin/sim_telarray_debug_trace"
-        corsika_dummy = self._simtel_path / "sim_telarray/run9991.corsika.gz"
 
         theta = self.ZENITH_ANGLE_DEG
         off = float(self.config_data["off_axis_angle"].to_value(u.deg))
@@ -258,7 +253,10 @@ class IncidentAnglesCalculator:
             cfg("camera_filter", "none"),
         ]
 
-        command = f"{simtel_bin} {' '.join(opts)} {corsika_dummy}"
+        command = (
+            f"{settings.config.sim_telarray_exe_debug_trace} {' '.join(opts)} "
+            f"{settings.config.corsika_dummy_file}"
+        )
         with script_path.open("w", encoding="utf-8") as sh:
             sh.write("#!/usr/bin/env bash\n\n")
             sh.write("set -e\nset -o pipefail\n\n")
