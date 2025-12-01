@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import gzip
 import logging
 from pathlib import Path
@@ -10,6 +8,7 @@ import pytest
 
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.testing import assertions
+from simtools.testing.assertions import check_plain_log
 
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -474,3 +473,38 @@ def test_check_simulation_logs_forbidden_only_empty_list(tmp_test_directory, saf
     file_test = {"expected_log_output": {"forbidden_pattern": []}}
     result = assertions.check_simulation_logs(tar_path, file_test)
     assert result
+
+
+def test_check_plain_log_patterns_found(tmp_path: Path):
+    log_file = tmp_path / "run.log"
+    log_file.write_text("start\nAll good\nOK done\n", encoding="utf-8")
+
+    file_test = {"expected_log_output": {"pattern": ["OK"], "forbidden_pattern": []}}
+
+    assert check_plain_log(log_file, file_test) is True
+
+
+def test_check_plain_log_forbidden_pattern(tmp_path: Path):
+    log_file = tmp_path / "run.log"
+    log_file.write_text("ERROR: failure happened\n", encoding="utf-8")
+
+    file_test = {"expected_log_output": {"pattern": [], "forbidden_pattern": ["ERROR"]}}
+
+    assert check_plain_log(log_file, file_test) is False
+
+
+def test_check_plain_log_missing_file_returns_false(tmp_path: Path):
+    log_file = tmp_path / "missing.log"
+    file_test = {"expected_log_output": {"pattern": ["hello"], "forbidden_pattern": []}}
+
+    assert check_plain_log(log_file, file_test) is False
+
+
+def test_check_plain_log_top_level_keys_fallback(tmp_path: Path):
+    # When expected_log_output is not a dict, fallback to top-level keys
+    log_file = tmp_path / "run.log"
+    log_file.write_text("pipeline finished successfully\n", encoding="utf-8")
+
+    file_test = {"expected_log_output": None, "pattern": ["finished"], "forbidden_pattern": []}
+
+    assert check_plain_log(log_file, file_test) is True
