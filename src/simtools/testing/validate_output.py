@@ -38,15 +38,7 @@ def _versions_match(from_command_line, from_config_file):
 cfg_ignore_keys = [
     "config_release",
     "Label",
-    "simtools_version",
-    "simtools_model_production_version",
-    "simtools_build_opt",
-    "simtools_extra_def",
-    "simtools_hadronic_model",
-    "simtools_avx_flag",
-    "simtools_corsika_version",
-    "simtools_corsika_opt_patch_version",
-    "simtools_bernlohr_version",
+    "simtools_",  # ignore all simtools_ keys - version/build info dependence
 ]
 
 

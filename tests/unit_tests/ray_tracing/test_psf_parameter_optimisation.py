@@ -47,7 +47,6 @@ def mock_args_dict():
         "src_distance": 10.0,
         "monte_carlo_analysis": False,
         "rmsd_threshold": 0.01,
-        "simtel_path": "/path/to/simtel",
         "fraction": 0.8,
     }
 
@@ -238,7 +237,6 @@ def test__run_ray_tracing_simulation(
 ):
     """Test ray tracing simulation execution with normal parameters and error cases."""
     if should_raise_error:
-        mock_args_dict["simtel_path"] = "/path/to/simtel"
         with pytest.raises(ValueError, match="No best parameters found"):
             psf_opt._run_ray_tracing_simulation(
                 mock_telescope_model, mock_site_model, mock_args_dict, pars

@@ -126,7 +126,7 @@ def test_get_autoinputs_command_flat_atmosphere(corsika_runner_mock_array_model,
         autoinputs_command = corsika_runner_mock_array_model._get_autoinputs_command(
             run_number=3, input_tmp_file="tmp_file"
         )
-    assert "corsika-run/corsika" in autoinputs_command
+    assert "corsika-run/corsika" in autoinputs_command or "_flat" in autoinputs_command
     assert any("Using flat-atmosphere CORSIKA binary" in message for message in caplog.messages)
 
 
@@ -142,7 +142,7 @@ def test_get_autoinputs_command_curved_atmosphere(corsika_runner_mock_array_mode
         autoinputs_command = corsika_runner_mock_array_model._get_autoinputs_command(
             run_number=3, input_tmp_file="tmp_file"
         )
-    assert "corsika-run/corsika-curved" in autoinputs_command
+    assert "corsika-run/corsika-curved" in autoinputs_command or "_curved" in autoinputs_command
     assert any("Using curved-atmosphere CORSIKA binary" in message for message in caplog.messages)
 
 

@@ -7,12 +7,10 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from dotenv import load_dotenv
 
 from simtools.testing import configuration, helpers, log_inspector, validate_output
 
 logger = logging.getLogger()
-load_dotenv(".env")
 
 config_files = sorted(Path(__file__).parent.glob("config/*.yml"))
 test_configs, test_ids = configuration.get_list_of_test_configurations(config_files)

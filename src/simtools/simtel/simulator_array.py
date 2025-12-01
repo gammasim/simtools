@@ -3,6 +3,7 @@
 import logging
 import stat
 
+from simtools import settings
 from simtools.io import io_handler
 from simtools.runners.simtel_runner import InvalidOutputFileError, SimtelRunner
 from simtools.utils.general import clear_default_sim_telarray_cfg_directories
@@ -16,8 +17,6 @@ class SimulatorArray(SimtelRunner):
     ----------
     corsika_config_data: CorsikaConfig
         CORSIKA configuration.
-    simtel_path: str or Path
-        Location of source of the sim_telarray/CORSIKA package.
     label: str
         Instance label.
     use_multipipe: bool
@@ -29,7 +28,6 @@ class SimulatorArray(SimtelRunner):
     def __init__(
         self,
         corsika_config,
-        simtel_path,
         label=None,
         use_multipipe=False,
         sim_telarray_seeds=None,
@@ -40,7 +38,6 @@ class SimulatorArray(SimtelRunner):
         self._logger.debug("Init SimulatorArray")
         super().__init__(
             label=label,
-            simtel_path=simtel_path,
             corsika_config=corsika_config,
             use_multipipe=use_multipipe,
             calibration_run_mode=calibration_config.get("run_mode") if calibration_config else None,
@@ -181,7 +178,7 @@ class SimulatorArray(SimtelRunner):
         output_file = self.get_file_name(file_type="simtel_output", run_number=run_number)
         self.corsika_config.array_model.export_all_simtel_config_files()
 
-        command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
+        command = str(settings.config.sim_telarray_exe)
         command += f" -c {self.corsika_config.array_model.config_file_path}"
         command += f" -I{config_dir}"
         command += super().get_config_option(
