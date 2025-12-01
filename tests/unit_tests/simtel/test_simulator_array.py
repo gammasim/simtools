@@ -13,10 +13,9 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def simtel_runner(corsika_config_mock_array_model, simtel_path):
+def simtel_runner(corsika_config_mock_array_model):
     return SimulatorArray(
         corsika_config=corsika_config_mock_array_model,
-        simtel_path=simtel_path,
         label="test-simtel-runner",
         use_multipipe=False,
     )

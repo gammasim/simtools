@@ -5,7 +5,6 @@ import logging
 import shutil
 from copy import copy
 from math import pi, tan
-from pathlib import Path
 
 import astropy.io.ascii
 import astropy.units as u
@@ -33,8 +32,6 @@ class RayTracing:
         telescope model
     site_model: SiteModel
         site model
-    simtel_path: str (or Path)
-        Location of sim_telarray installation.
     label: str
         label used for output file naming.
     zenith_angle: astropy.units.Quantity
@@ -64,7 +61,6 @@ class RayTracing:
         self,
         telescope_model,
         site_model,
-        simtel_path,
         label=None,
         zenith_angle=20.0 * u.deg,
         off_axis_angle=[0.0] * u.deg,
@@ -78,7 +74,6 @@ class RayTracing:
         self._logger = logging.getLogger(__name__)
         self._logger.debug(f"Initializing RayTracing class {single_mirror_mode}")
 
-        self.simtel_path = Path(simtel_path)
         self._io_handler = io_handler.IOHandler()
 
         self.telescope_model, self.site_model = telescope_model, site_model
@@ -212,7 +207,6 @@ class RayTracing:
                     f"Simulating RayTracing for off_axis={this_off_axis}, mirror={mirror_number}"
                 )
                 simtel = SimulatorRayTracing(
-                    simtel_path=self.simtel_path,
                     telescope_model=self.telescope_model,
                     site_model=self.site_model,
                     test=test,
@@ -408,11 +402,7 @@ class RayTracing:
         PSFImage
             PSF image object.
         """
-        image = PSFImage(
-            focal_length=focal_length,
-            containment_fraction=containment_fraction,
-            simtel_path=self.simtel_path,
-        )
+        image = PSFImage(focal_length=focal_length, containment_fraction=containment_fraction)
         image.process_photon_list(photons_file, use_rx)
         self._psf_images[this_off_axis] = copy(image)
         return image
