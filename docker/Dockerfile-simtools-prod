@@ -45,7 +45,7 @@ RUN microdnf update -y && microdnf install -y \
 
 WORKDIR /workdir
 
-RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
+RUN BUILD_BRANCH="$(printf '%s' "$BUILD_BRANCH" | sed 's#refs/tags/##')" \
   && git clone -b "$BUILD_BRANCH" "${SIMTOOLS_REQUIREMENT}" --depth 1 \
   && python${PYTHON_VERSION} -m venv env \
   && . env/bin/activate \
@@ -54,6 +54,8 @@ RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
   && pip cache purge && rm -rf /root/.cache \
   && echo ". /workdir/env/bin/activate" >> ~/.bashrc
 
-ENV SIMTEL_PATH="/workdir/simulation_software/sim_telarray/"
-ENV CORSIKA_PATH="/workdir/simulation_software/corsika/"
+ENV SIMTEL_PATH="/workdir/simulation_software/sim_telarray"
+ENV CORSIKA_PATH="/workdir/simulation_software/corsika"
+ENV CORSIKA_HE_INTERACTION="qgs3"
+ENV CORSIKA_LE_INTERACTION="urqmd"
 ENV PATH="/workdir/env/bin/:$PATH"
