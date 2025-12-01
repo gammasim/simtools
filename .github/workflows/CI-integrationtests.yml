@@ -89,8 +89,8 @@ jobs:
             echo "SIMTOOLS_DB_API_PORT=${{ secrets.DB_API_PORT }}"
             echo "SIMTOOLS_SIMTEL_PATH=$(grep '^SIMTOOLS_SIMTEL_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
             echo "SIMTOOLS_CORSIKA_PATH=$(grep '^SIMTOOLS_CORSIKA_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
-            echo "SIMTOOLS_CORSIKA_HE_INTERACTIONS=$(grep '^SIMTOOLS_CORSIKA_HE_INTERACTIONS=' .env_template | cut -d '=' -f2- | tr -d '"')"
-            echo "SIMTOOLS_CORSIKA_LE_INTERACTIONS=$(grep '^SIMTOOLS_CORSIKA_LE_INTERACTIONS=' .env_template | cut -d '=' -f2- | tr -d '"')"
+            echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_HE_INTERACTIONS=' .env_template | cut -d '=' -f2- | tr -d '"')"
+            echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_LE_INTERACTIONS=' .env_template | cut -d '=' -f2- | tr -d '"')"
           } > .env
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
@@ -167,6 +167,7 @@ jobs:
         run: |
           source /workdir/env/bin/activate
           pip install --no-cache-dir -e .
+          cat .env
           simtools-print-version
 
       - name: Integration tests
