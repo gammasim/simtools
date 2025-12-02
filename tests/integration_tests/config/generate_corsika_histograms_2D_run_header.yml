@@ -7,9 +7,7 @@ applications:
     - azimuth
     hdf5: true
     hdf5_file_name: test_file_2D_run_header.hdf5
-    iact_file: './tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio
-
-      '
+    iact_file: './tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio'
     output_path: simtools-output
     pdf: true
     test: true
