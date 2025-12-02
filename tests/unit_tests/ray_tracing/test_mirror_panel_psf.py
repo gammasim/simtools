@@ -64,9 +64,8 @@ def mock_mirror_panel_psf(
 ):
     with patch(mock_telescope_model_string) as mock_init_models, patch(mock_find_file_string):
         mock_init_models.return_value = (dummy_tel, "dummy_site", None)
-        db_config = {"db": "config"}
         label = "test_label"
-        mirror_panel_psf = MirrorPanelPSF(label, mock_args_dict, db_config)
+        mirror_panel_psf = MirrorPanelPSF(label, mock_args_dict)
         yield mirror_panel_psf
 
 
@@ -83,15 +82,13 @@ def test_define_telescope_model(
 
         args_dict["mirror_list"] = None
         args_dict["random_focal_length"] = None
-        db_config = {"db": "config"}
         label = "test_label"
 
-        mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
+        mirror_panel_psf = MirrorPanelPSF(label, args_dict)
         tel = mirror_panel_psf.telescope_model
 
         mock_init_models.assert_called_once_with(
             label=label,
-            db_config=db_config,
             site=args_dict["site"],
             telescope_name=args_dict["telescope"],
             model_version=args_dict["model_version"],
@@ -110,15 +107,13 @@ def test_define_telescope_model(
         args_dict["mirror_list"] = "mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv"
         args_dict["model_path"] = "tests/resources"
         args_dict["random_focal_length"] = 0.1
-        db_config = {"db": "config"}
         label = "test_label"
 
-        mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
+        mirror_panel_psf = MirrorPanelPSF(label, args_dict)
         tel = mirror_panel_psf.telescope_model
 
         mock_init_models.assert_called_once_with(
             label=label,
-            db_config=db_config,
             site=args_dict["site"],
             telescope_name=args_dict["telescope"],
             model_version=args_dict["model_version"],
@@ -138,7 +133,6 @@ def test_define_telescope_model_test_errors(
         patch(mock_find_file_string),
     ):
         mock_init_models.return_value = (dummy_tel, "dummy_site", None)
-        db_config = {"db": "config"}
         label = "test_label"
 
         args_dict["mirror_list"] = "mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv"
@@ -146,14 +140,14 @@ def test_define_telescope_model_test_errors(
         args_dict["random_focal_length"] = 0.1
         args_dict["test"] = True
 
-        mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
+        mirror_panel_psf = MirrorPanelPSF(label, args_dict)
 
         assert mirror_panel_psf.args_dict["number_of_mirrors_to_test"] == 2
 
         args_dict["psf_measurement"] = None
         args_dict["psf_measurement_containment_mean"] = None
         with pytest.raises(ValueError, match=r"Missing PSF measurement"):
-            MirrorPanelPSF(label, args_dict, db_config)
+            MirrorPanelPSF(label, args_dict)
 
 
 def test_write_optimization_data(mock_mirror_panel_psf):
@@ -203,9 +197,8 @@ def test_run_simulations_and_analysis(
         patch("simtools.ray_tracing.mirror_panel_psf.RayTracing") as mock_ray_tracing,
     ):
         mock_init_models.return_value = (dummy_tel, "dummy_site", None)
-        db_config = {"db": "config"}
         label = "test_label"
-        mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
+        mirror_panel_psf = MirrorPanelPSF(label, args_dict)
 
         mock_ray_instance = mock_ray_tracing.return_value
         mock_ray_instance.get_mean.return_value = 0.5 * u.cm

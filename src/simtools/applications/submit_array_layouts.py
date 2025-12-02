@@ -75,7 +75,7 @@ def main():
     """Submit and validate array layouts."""
     app_context = startup_application(_parse)
 
-    db = db_handler.DatabaseHandler(db_config=app_context.db_config)
+    db = db_handler.DatabaseHandler()
 
     array_layouts = validate_array_layouts_with_db(
         production_table=db.read_production_table_from_db(
@@ -84,9 +84,7 @@ def main():
         array_layouts=ascii_handler.collect_data_from_file(app_context.args["array_layouts"]),
     )
 
-    write_array_layouts(
-        array_layouts=array_layouts, args_dict=app_context.args, db_config=app_context.db_config
-    )
+    write_array_layouts(array_layouts=array_layouts, args_dict=app_context.args)
 
 
 if __name__ == "__main__":

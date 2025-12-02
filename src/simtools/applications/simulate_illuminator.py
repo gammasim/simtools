@@ -120,7 +120,6 @@ def main():
 
     light_source = SimulatorLightEmission(
         light_emission_config=app_context.args,
-        db_config=app_context.db_config,
         label=app_context.args.get("label"),
     )
     light_source.simulate()

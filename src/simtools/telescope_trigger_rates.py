@@ -14,7 +14,7 @@ from simtools.visualization import plot_simtel_event_histograms
 _logger = logging.getLogger(__name__)
 
 
-def telescope_trigger_rates(args_dict, db_config):
+def telescope_trigger_rates(args_dict):
     """
     Calculate trigger rates for single telescopes or arrays of telescopes.
 
@@ -27,7 +27,6 @@ def telescope_trigger_rates(args_dict, db_config):
             args_dict["array_layout_name"],
             args_dict.get("site"),
             args_dict.get("model_version"),
-            db_config,
         )
     else:
         telescope_configs = ascii_handler.collect_data_from_file(args_dict["telescope_ids"])[

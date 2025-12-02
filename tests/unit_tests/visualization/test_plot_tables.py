@@ -32,7 +32,7 @@ def test_plot(mock_read_table_data, mock_visualize):
 
     plot_tables.plot(config, output_file)
 
-    mock_read_table_data.assert_called_once_with(config, None, None)
+    mock_read_table_data.assert_called_once_with(config, None)
     mock_visualize.plot_1d.assert_called_once_with(mock_data, **config)
     mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file)
 
@@ -112,16 +112,15 @@ def test_read_table_data_from_model_database(
             }
         ]
     }
-    db_config = None
     mock_db_handler = mock_db_handler_class.return_value
     mock_table = mock.MagicMock()
     mock_db_handler.export_model_file.return_value = mock_table
     mock_structure_array = mock.MagicMock()
     mock_get_structure_array_from_table.return_value = mock_structure_array
 
-    result = plot_tables.read_table_data(config, db_config)
+    result = plot_tables.read_table_data(config)
 
-    mock_db_handler_class.assert_called_once_with(db_config=db_config)
+    mock_db_handler_class.assert_called_once_with()
     mock_db_handler.export_model_file.assert_called_once_with(
         parameter="test_parameter",
         site="test_site",
@@ -136,10 +135,9 @@ def test_read_table_data_from_model_database(
 
 def test_read_table_data_no_table_data_defined():
     config = {"tables": [{"label": "test_table", "column_x": "x", "column_y": "y"}]}
-    db_config = None
 
     with pytest.raises(ValueError, match=r"No table data defined in configuration."):
-        plot_tables.read_table_data(config, db_config)
+        plot_tables.read_table_data(config)
 
 
 @mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
@@ -150,7 +148,6 @@ def test_export_model_file(mock_db_handler_class):
         "model_version": "test_version",
         "parameter": "test_parameter",
     }
-    db_config = None
     mock_db_handler = mock_db_handler_class.return_value
     mock_table = mock.MagicMock()
     mock_db_handler.export_model_file.return_value = mock_table
@@ -160,9 +157,9 @@ def test_export_model_file(mock_db_handler_class):
     table_config["column_x"] = "x"
     table_config["column_y"] = "y"
 
-    plot_tables.read_table_data(config, db_config)
+    plot_tables.read_table_data(config)
 
-    mock_db_handler_class.assert_called_once_with(db_config=db_config)
+    mock_db_handler_class.assert_called_once_with()
     mock_db_handler.export_model_file.assert_called_once_with(
         parameter="test_parameter",
         site="test_site",
@@ -180,7 +177,6 @@ def test_export_model_file_site_only(mock_db_handler_class):
         "model_version": "test_version",
         "parameter": "test_parameter",
     }
-    db_config = None
     mock_db_handler = mock_db_handler_class.return_value
     mock_table = mock.MagicMock()
     mock_db_handler.export_model_file.return_value = mock_table
@@ -190,9 +186,9 @@ def test_export_model_file_site_only(mock_db_handler_class):
     table_config["column_x"] = "x"
     table_config["column_y"] = "y"
 
-    plot_tables.read_table_data(config, db_config)
+    plot_tables.read_table_data(config)
 
-    mock_db_handler_class.assert_called_once_with(db_config=db_config)
+    mock_db_handler_class.assert_called_once_with()
     mock_db_handler.export_model_file.assert_called_once_with(
         parameter="test_parameter",
         site="test_site",
@@ -334,9 +330,7 @@ def test_generate_output_file_name(
 
 @mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
 @mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
-def test_generate_plot_configurations(
-    mock_collect_data, mock_read_table, tmp_test_directory, db_config
-):
+def test_generate_plot_configurations(mock_collect_data, mock_read_table, tmp_test_directory):
     # Mock the table data
     mock_table = Table()
     mock_table["time"] = [1.0, 2.0, 3.0]
@@ -353,7 +347,6 @@ def test_generate_plot_configurations(
             telescope="SSTS-design",
             output_path=tmp_test_directory,
             plot_type="all",
-            db_config=db_config,
         )
         is None
     )
@@ -373,7 +366,6 @@ def test_generate_plot_configurations(
         telescope=None,
         output_path=tmp_test_directory,
         plot_type="all",
-        db_config=db_config,
     )
     assert len(configs) > 0
     for _file in output_files:
@@ -394,7 +386,6 @@ def test_generate_plot_configurations(
         telescope="SSTS-design",
         output_path=tmp_test_directory,
         plot_type="fadc_pulse_shape",
-        db_config=db_config,
     )
     assert len(configs) == 1
     assert "tables" in configs[0]
@@ -408,7 +399,6 @@ def test_generate_plot_configurations(
         telescope="SSTS-design",
         output_path=tmp_test_directory,
         plot_type="non_existent_type",
-        db_config=db_config,
     )
     assert result is None
 
@@ -448,7 +438,7 @@ def test_get_plotting_label_multiple_duplicates():
 @mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
 @mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
 def test_generate_plot_configurations_with_nan_and_missing_columns(
-    mock_read_table, mock_collect_data, tmp_test_directory, db_config
+    mock_read_table, mock_collect_data, tmp_test_directory
 ):
     """Test handling of NaN values and missing columns in generate_plot_configurations."""
     # Create mock table with valid and NaN columns
@@ -489,7 +479,6 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
         telescope="LSTS-01",
         output_path=tmp_test_directory,
         plot_type="all",
-        db_config=db_config,
     )
 
     # Should only have the valid configuration
@@ -505,7 +494,6 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
         telescope="LSTS-01",
         output_path=tmp_test_directory,
         plot_type="valid_plot",
-        db_config=db_config,
     )
 
     assert len(configs) == 1
@@ -520,7 +508,6 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
         telescope="LSTS-01",
         output_path=tmp_test_directory,
         plot_type="invalid_plot_all_nan",
-        db_config=db_config,
     )
 
     # Should return None since no valid configs were found for this plot type
