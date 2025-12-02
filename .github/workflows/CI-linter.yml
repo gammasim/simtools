@@ -63,12 +63,6 @@ jobs:
         with:
           args: "--validate"
 
-      - name: Install mamba dependencies
-        uses: mamba-org/setup-micromamba@v2
-        with:
-          environment-file: environment.yml
-          init-shell: bash
-
       - name: Python dependencies
         run: |
           pip install -e '.[tests,dev,doc]'
