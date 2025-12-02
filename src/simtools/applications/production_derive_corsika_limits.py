@@ -134,7 +134,7 @@ def main():
     """Derive limits for energy, radial distance, and viewcone."""
     app_context = startup_application(_parse)
 
-    generate_corsika_limits_grid(app_context.args, app_context.db_config)
+    generate_corsika_limits_grid(app_context.args)
 
 
 if __name__ == "__main__":

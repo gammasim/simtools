@@ -4,6 +4,7 @@ import logging
 from collections import defaultdict
 from pathlib import Path
 
+from simtools import settings
 from simtools.data_model import validate_data
 from simtools.db.mongo_db import MongoDBHandler
 from simtools.io import io_handler
@@ -20,11 +21,6 @@ class DatabaseHandler:
 
     - db_simulation_model_version (from db_config): version of the simulation model database
     - model_version (from production_tables): version of the model contained in the database
-
-    Parameters
-    ----------
-    db_config: dict
-        Dictionary with the DB configuration.
     """
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
@@ -33,13 +29,17 @@ class DatabaseHandler:
     model_parameters_cached = {}
     model_versions_cached = {}
 
-    def __init__(self, db_config=None):
+    def __init__(self):
         """Initialize the DatabaseHandler class."""
         self._logger = logging.getLogger(__name__)
 
-        self.db_config = MongoDBHandler.validate_db_config(db_config)
+        self.db_config = (
+            MongoDBHandler.validate_db_config(dict(settings.config.db_config))
+            if settings.config.db_config
+            else None
+        )
         self.io_handler = io_handler.IOHandler()
-        self.mongo_db_handler = MongoDBHandler(db_config) if self.db_config else None
+        self.mongo_db_handler = MongoDBHandler(self.db_config) if self.db_config else None
 
         self.db_name = (
             MongoDBHandler.get_db_name(
@@ -49,6 +49,17 @@ class DatabaseHandler:
             if self.db_config
             else None
         )
+
+    def is_configured(self):
+        """
+        Check if the DatabaseHandler is configured.
+
+        Returns
+        -------
+        bool
+            True if the DatabaseHandler is configured, False otherwise.
+        """
+        return self.mongo_db_handler is not None
 
     def get_db_name(self, db_name=None, db_simulation_model_version=None, model_name=None):
         """Build DB name from configuration."""

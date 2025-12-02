@@ -219,7 +219,6 @@ def test_run_application_failure(monkeypatch, mock_logger):
 def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     # Prepare mocks
     mock_logger = mock.Mock()
-    mock_db_config = {"db": "config"}
     mock_args_dict = {
         "configuration_file": "dummy_config.yml",
         "steps": None,
@@ -252,7 +251,7 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
 
     monkeypatch.setattr("simtools.runners.simtools_runner.run_application", mock_run_application)
 
-    simtools_runner.run_applications(mock_args_dict, mock_db_config, mock_logger)
+    simtools_runner.run_applications(mock_args_dict, mock_logger)
 
     # Check log file contents
     with log_file_path.open("r", encoding="utf-8") as f:
@@ -275,7 +274,6 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
 
 def test_run_applications_handles_run_application_exception(monkeypatch, tmp_test_directory):
     mock_logger = mock.Mock()
-    mock_db_config = {"db": "config"}
     mock_args_dict = {
         "configuration_file": "dummy_config.yml",
         "steps": None,
@@ -302,7 +300,7 @@ def test_run_applications_handles_run_application_exception(monkeypatch, tmp_tes
     monkeypatch.setattr("simtools.runners.simtools_runner.run_application", mock_run_application)
 
     with pytest.raises(subprocess.CalledProcessError):
-        simtools_runner.run_applications(mock_args_dict, mock_db_config, mock_logger)
+        simtools_runner.run_applications(mock_args_dict, mock_logger)
 
 
 def test_convert_dict_to_args_with_boolean():

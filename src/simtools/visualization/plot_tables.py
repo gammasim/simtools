@@ -16,7 +16,7 @@ from simtools.visualization import visualize
 _logger = logging.getLogger(__name__)
 
 
-def plot(config, output_file, db_config=None, data_path=None):
+def plot(config, output_file, data_path=None):
     """
     Plot tabular data from data or from model parameter files.
 
@@ -26,12 +26,10 @@ def plot(config, output_file, db_config=None, data_path=None):
         Configuration dictionary for plotting.
     output_file: str
         Output file.
-    db_config: dict, optional
-        Database configuration dictionary for accessing the model parameter database.
     data_path: Path or str, optional
         Path to the data files (optional). Expect all files to be in the same directory.
     """
-    data = read_table_data(config, db_config, data_path)
+    data = read_table_data(config, data_path)
 
     fig = visualize.plot_1d(
         data,
@@ -42,7 +40,7 @@ def plot(config, output_file, db_config=None, data_path=None):
     return output_file
 
 
-def read_table_data(config, db_config, data_path=None):
+def read_table_data(config, data_path=None):
     """
     Read table data from file or parameter database.
 
@@ -50,8 +48,6 @@ def read_table_data(config, db_config, data_path=None):
     ----------
     config: dict
         Configuration dictionary for plotting.
-    db_config: dict
-        Database configuration dictionary for accessing the model parameter database.
     data_path: Path or str, optional
         Path to the data files (optional). Expect all files to be in the same directory.
 
@@ -64,7 +60,7 @@ def read_table_data(config, db_config, data_path=None):
 
     for _config in config["tables"]:
         if "parameter" in _config:
-            table = _read_table_from_model_database(_config, db_config)
+            table = _read_table_from_model_database(_config)
         elif "file_name" in _config:
             file_name = (
                 _config["file_name"]
@@ -117,7 +113,7 @@ def _process_table_data(table, _config):
     )
 
 
-def _read_table_from_model_database(table_config, db_config):
+def _read_table_from_model_database(table_config):
     """
     Read table data from model parameter database.
 
@@ -131,7 +127,7 @@ def _read_table_from_model_database(table_config, db_config):
     Table
         Astropy table
     """
-    db = db_handler.DatabaseHandler(db_config=db_config)
+    db = db_handler.DatabaseHandler()
     return db.export_model_file(
         parameter=table_config["parameter"],
         site=table_config["site"],
@@ -178,7 +174,7 @@ def _get_valid_columns(table):
 
 
 def generate_plot_configurations(
-    parameter, parameter_version, site, telescope, output_path, plot_type, db_config
+    parameter, parameter_version, site, telescope, output_path, plot_type
 ):
     """
     Generate plot configurations for a model parameter from schema files.
@@ -197,8 +193,6 @@ def generate_plot_configurations(
         Output path for the plots.
     plot_type: str
         Plot type or "all" for all plots.
-    db_config: dict
-        Database configuration.
 
     Returns
     -------
@@ -226,7 +220,6 @@ def generate_plot_configurations(
             "telescope": telescope,
             "parameter_version": parameter_version,
         },
-        db_config=db_config,
     )
     valid_columns = _get_valid_columns(table)
 
