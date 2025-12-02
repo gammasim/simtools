@@ -17,7 +17,6 @@ logger = logging.getLogger()
 @pytest.mark.parametrize("telescope_model_name", ["SSTS-design"])
 def test_ssts(
     telescope_model_name,
-    db_config,
     io_handler,
     model_version,
     site_model_south,
@@ -28,7 +27,6 @@ def test_ssts(
         telescope_name=telescope_model_name,
         model_version=model_version,
         label="test-sst",
-        db_config=db_config,
     )
 
     ray = RayTracing(

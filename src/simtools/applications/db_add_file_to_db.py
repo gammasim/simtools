@@ -166,7 +166,7 @@ def main():
     """Add files to the database."""
     app_context = startup_application(_parse, setup_io_handler=False)
 
-    db = db_handler.DatabaseHandler(db_config=app_context.db_config)
+    db = db_handler.DatabaseHandler()
 
     files_to_insert = collect_files_to_insert(app_context.args, app_context.logger, db)
     confirm_and_insert_files(files_to_insert, app_context.args, db, app_context.logger)

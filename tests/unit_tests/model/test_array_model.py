@@ -16,35 +16,28 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def array_model_north_from_list(db_config, model_version):
+def array_model_north_from_list(model_version):
     return ArrayModel(
         label="test",
         site="North",
-        db_config=db_config,
         model_version=model_version,
         array_elements=["LSTN-01", "MSTN-01"],
     )
 
 
-def test_array_model_north_from_file(db_config, model_version, telescope_north_test_file):
+def test_array_model_north_from_file(model_version, telescope_north_test_file):
     am = ArrayModel(
         label="test",
         site="North",
-        db_config=db_config,
         model_version=model_version,
         array_elements=telescope_north_test_file,
     )
     assert am.number_of_telescopes == 13
 
 
-def test_array_model_north_init_without_layout_or_telescope_list(db_config, model_version):
+def test_array_model_north_init_without_layout_or_telescope_list(model_version):
     with pytest.raises(ValueError, match=r"No array elements found."):
-        ArrayModel(
-            label="test",
-            site="North",
-            db_config=db_config,
-            model_version=model_version,
-        )
+        ArrayModel(label="test", site="North", model_version=model_version)
 
 
 def test_input_validation(array_model_north):
@@ -58,12 +51,11 @@ def test_site(array_model_north):
     assert am.site == "North"
 
 
-def test_exporting_config_files(db_config, model_version):
+def test_exporting_config_files(model_version):
     am = ArrayModel(
         label="test",
         site="North",
         layout_name="test_layout",
-        db_config=db_config,
         model_version=model_version,
     )
 
@@ -278,7 +270,6 @@ def test_build_calibration_models():
         mock_calibration_model.return_value = mock_calibration_instance
 
         # Set up array model attributes for CalibrationModel initialization
-        array_model_north.db_config = {"test": "config"}
         array_model_north.model_version = "6.0.0"
         array_model_north.label = "test_label"
         array_model_north.overwrite_model_parameters = None
@@ -319,7 +310,6 @@ def test_build_telescope_models():
 
     array_model_north = Mock()
     array_model_north.model_version = "6.0.0"
-    array_model_north.db_config = {"test": "config"}
     array_model_north.label = "test"
 
     site_model = Mock()

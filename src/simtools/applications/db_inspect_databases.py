@@ -32,7 +32,7 @@ def main():
     """Inspect databases."""
     app_context = startup_application(_parse, setup_io_handler=False)
 
-    db = db_handler.DatabaseHandler(db_config=app_context.db_config)
+    db = db_handler.DatabaseHandler()
     # databases without internal databases we don't have rights to modify
     databases = [
         d

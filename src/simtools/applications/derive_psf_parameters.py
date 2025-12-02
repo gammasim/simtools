@@ -204,7 +204,6 @@ def main():
 
     tel_model, site_model, _ = initialize_simulation_models(
         label=app_context.args.get("label"),
-        db_config=app_context.db_config,
         site=app_context.args["site"],
         telescope_name=app_context.args["telescope"],
         model_version=app_context.args["model_version"],

@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 
 import logging
-from unittest.mock import call
+from unittest.mock import call, patch
 
 import pytest
 from bson.objectid import ObjectId
 
 from simtools.db import db_handler
+from simtools.db.mongo_db import MongoDBHandler
 from simtools.utils import names
 
 # Suppress warnings of type
@@ -19,17 +20,9 @@ logger = logging.getLogger()
 @pytest.fixture(autouse=True)
 def reset_db_client():
     """Reset db_client before each test."""
-    from simtools.db.mongo_db import MongoDBHandler
-
     MongoDBHandler.db_client = None
     yield
     MongoDBHandler.db_client = None
-
-
-@pytest.fixture
-def db_no_config_file():
-    """Database object (without configuration)."""
-    return db_handler.DatabaseHandler(db_config=None)
 
 
 @pytest.fixture
@@ -112,7 +105,6 @@ def mock_collection_setup(mocker, db):
 @pytest.fixture
 def mock_db_client(mocker, db, test_db):
     """Common fixture for mocking db_client."""
-    from simtools.db.mongo_db import MongoDBHandler
 
     mock_client = {test_db: mocker.Mock()}
     return mocker.patch.object(MongoDBHandler, "db_client", mock_client)
@@ -191,16 +183,14 @@ def assert_model_parameter_calls(
 
 def test_set_up_connection_no_config():
     """Test connection setup with no configuration."""
-    from simtools.db.mongo_db import MongoDBHandler
-
-    _ = db_handler.DatabaseHandler(db_config=None)
-    assert MongoDBHandler.db_client is None
+    with patch("simtools.db.db_handler.settings") as mock_settings:
+        mock_settings.db_config = None
+        _ = db_handler.DatabaseHandler()
+        assert MongoDBHandler.db_client is None
 
 
 def test_set_up_connection_with_config(db):
     """Test connection setup with valid configuration."""
-    from simtools.db.mongo_db import MongoDBHandler
-
     assert MongoDBHandler.db_client is not None
 
 
@@ -604,7 +594,7 @@ def test_get_query_from_parameter_version_table(db):
         assert result == expected
 
 
-def test_read_db(db, mocker, test_db):
+def test_read_db(db, mocker):
     """Test read_mongo_db method."""
     doc1_id = ObjectId()
     doc2_id = ObjectId()
@@ -1237,8 +1227,6 @@ def test_get_db_name(db):
 
 def test_print_connection_info_with_handler(db, mocker, caplog):
     """Test print_connection_info when mongo_db_handler exists."""
-    import logging
-
     mock_print = mocker.patch.object(db.mongo_db_handler, "print_connection_info")
     with caplog.at_level(logging.INFO):
         db.print_connection_info()
@@ -1372,10 +1360,12 @@ def test_print_connection_info_with_mongo_handler(db, mocker):
     mock_print_connection_info.assert_called_once_with(db.db_name)
 
 
-def test_print_connection_info_without_mongo_handler(db_no_config_file, mocker):
+def test_print_connection_info_without_mongo_handler(mocker):
     """Test print_connection_info without mongo_db_handler."""
-    mock_logger = mocker.patch.object(db_no_config_file._logger, "info")
 
-    db_no_config_file.print_connection_info()
-
-    mock_logger.assert_called_once_with("No database defined.")
+    with patch("simtools.db.db_handler.settings") as mock_settings:
+        mock_settings.config.db_config = None
+        db_no_config = db_handler.DatabaseHandler()
+        mock_logger = mocker.patch.object(db_no_config._logger, "info")
+        db_no_config.print_connection_info()
+        mock_logger.assert_called_once_with("No database defined.")
