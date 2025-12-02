@@ -106,9 +106,7 @@ def main():
         ),
         output_path=output_path,
         metadata_input_dict=app_context.args,
-        db_config=app_context.db_config
-        if app_context.args.get("check_parameter_version")
-        else None,
+        check_db_for_existing_parameter=app_context.args.get("check_parameter_version", False),
     )
 
 

@@ -109,7 +109,7 @@ def write_utm_array_elements_to_repository(args_dict, logger):
         )
 
 
-def write_ground_array_elements_to_repository(args_dict, db_config, logger):
+def write_ground_array_elements_to_repository(args_dict, logger):
     """
     Write ground position of array elements to model repository.
 
@@ -117,14 +117,11 @@ def write_ground_array_elements_to_repository(args_dict, db_config, logger):
     ----------
     args_dict : dict
         Command line arguments.
-    db_config : dict
-        Database configuration.
     logger : logger
         logger object.
 
     """
     array_model = ArrayModel(
-        db_config=db_config,
         model_version=None,
         site=args_dict["site"],
         array_elements=args_dict["input"],
@@ -148,9 +145,7 @@ def main():
     if app_context.args["coordinate_system"] == "utm":
         write_utm_array_elements_to_repository(app_context.args, app_context.logger)
     elif app_context.args["coordinate_system"] == "ground":
-        write_ground_array_elements_to_repository(
-            app_context.args, app_context.db_config, app_context.logger
-        )
+        write_ground_array_elements_to_repository(app_context.args, app_context.logger)
     else:
         app_context.logger.error("Invalid coordinate system. Allowed are 'utm' and 'ground'.")
         raise ValueError

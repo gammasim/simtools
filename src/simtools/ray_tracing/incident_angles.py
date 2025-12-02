@@ -25,8 +25,6 @@ class IncidentAnglesCalculator:
 
     Parameters
     ----------
-    db_config : dict
-        Database configuration passed to ``initialize_simulation_models``.
     config_data : dict
         Simulation configuration (e.g. ``site``, ``telescope``, ``model_version``,
         ``off_axis_angle``, ``source_distance``, ``number_of_photons``).
@@ -47,7 +45,6 @@ class IncidentAnglesCalculator:
 
     def __init__(
         self,
-        db_config,
         config_data,
         output_dir,
         label=None,
@@ -79,7 +76,6 @@ class IncidentAnglesCalculator:
         )
         self.telescope_model, self.site_model, _ = initialize_simulation_models(
             label=self.label,
-            db_config=db_config,
             site=config_data["site"],
             telescope_name=config_data["telescope"],
             model_version=config_data["model_version"],

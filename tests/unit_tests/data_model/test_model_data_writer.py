@@ -166,7 +166,7 @@ def test_astropy_data_format():
     assert writer.ModelDataWriter._astropy_data_format(ascii_format) == ascii_format
 
 
-def test_dump_model_parameter(tmp_test_directory, db_config):
+def test_dump_model_parameter(tmp_test_directory):
     parameter_version = "1.1.0"
     instrument = "LSTN-01"
     num_gains_name = "num_gains"
@@ -224,11 +224,8 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
             parameter_version=parameter_version,
             output_file=num_gains_name + ".json",
             output_path=tmp_test_directory,
-            db_config=db_config,
         )
-        mock_db_check.assert_called_once_with(
-            num_gains_name, instrument, parameter_version, db_config
-        )
+        mock_db_check.assert_called_once_with(num_gains_name, instrument, parameter_version)
 
 
 def test_get_validated_parameter_dict():
@@ -349,7 +346,6 @@ def test_parameter_is_a_file(num_gains_schema):
 
 
 def test_check_db_for_existing_parameter():
-    db_config = {"host": "localhost", "port": 27017}
     parameter_name = "test_parameter"
     instrument = "LSTN-01"
     parameter_version = "1.0.0"
@@ -361,7 +357,7 @@ def test_check_db_for_existing_parameter():
         mock_db_instance.get_model_parameter.side_effect = ValueError("Parameter not found")
 
         # Test case where parameter does not exist
-        w1.check_db_for_existing_parameter(parameter_name, instrument, parameter_version, db_config)
+        w1.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
         mock_db_instance.get_model_parameter.assert_called_once_with(
             parameter=parameter_name,
             parameter_version=parameter_version,
@@ -378,9 +374,7 @@ def test_check_db_for_existing_parameter():
             ValueError,
             match=f"Parameter {parameter_name} with version {parameter_version} already exists.",
         ):
-            w1.check_db_for_existing_parameter(
-                parameter_name, instrument, parameter_version, db_config
-            )
+            w1.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
         mock_db_instance.get_model_parameter.assert_called_once_with(
             parameter=parameter_name,
             parameter_version=parameter_version,

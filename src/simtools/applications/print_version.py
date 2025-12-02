@@ -26,7 +26,7 @@ def main():
     """Print the versions of the simtools software."""
     app_context = startup_application(_parse)
 
-    version_string = dependencies.get_version_string(app_context.db_config)
+    version_string = dependencies.get_version_string()
     version_dict = {"simtools version": version.__version__}
 
     print()
