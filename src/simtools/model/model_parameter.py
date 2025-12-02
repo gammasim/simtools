@@ -29,8 +29,6 @@ class ModelParameter:
 
     Parameters
     ----------
-    db_config:
-        Database configuration dictionary.
     model_version: str
         Version of the model (ex. 5.0.0).
     site: str
@@ -52,7 +50,6 @@ class ModelParameter:
 
     def __init__(
         self,
-        db_config,
         model_version,
         site=None,
         array_element_name=None,
@@ -63,7 +60,9 @@ class ModelParameter:
     ):
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
-        self.db = db_handler.DatabaseHandler(db_config=db_config)
+        self.db = db_handler.DatabaseHandler()
+        if not self.db.is_configured():
+            raise RuntimeError("Database is not configured.")
 
         self.parameters = {}
         self._simulation_config_parameters = {sw: {} for sw in names.simulation_software()}

@@ -37,7 +37,7 @@ def main():
     """Generate compound indexes for the specified database."""
     app_context = startup_application(_parse, setup_io_handler=False)
 
-    db = db_handler.DatabaseHandler(db_config=app_context.db_config)
+    db = db_handler.DatabaseHandler()
 
     db.generate_compound_indexes_for_databases(
         db_name=app_context.args["db_name"],

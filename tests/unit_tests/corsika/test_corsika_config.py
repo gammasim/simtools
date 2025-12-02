@@ -50,7 +50,7 @@ def get_standard_corsika_parameters():
 
 
 @pytest.fixture
-def corsika_config_no_array_model(corsika_config_data, mocker):
+def corsika_config_no_array_model(mocker):
     """Fixture for corsika config with no array model."""
     mock_array_model = create_mock_array_model(mocker)
 
@@ -71,7 +71,6 @@ def corsika_config_no_array_model(corsika_config_data, mocker):
         array_model=mock_array_model,
         label="test-corsika-config",
         args_dict=modified_data,
-        db_config=None,
     )
 
 
@@ -149,7 +148,6 @@ def test_fill_corsika_configuration(corsika_config_mock_array_model, mocker):
         array_model=mock_array_model,
         label="test-corsika-config",
         args_dict=args_dict,
-        db_config=None,
     )
     assert isinstance(config_none_args.config, dict)
     assert "USER_INPUT" in config_none_args.config
@@ -161,7 +159,6 @@ def test_fill_corsika_configuration(corsika_config_mock_array_model, mocker):
     assert corsika_config_mock_array_model.get_config_parameter("PHIP") == [175.467, 175.467]
     assert corsika_config_mock_array_model.get_config_parameter("CSCAT") == [10, 140000.0, 0]
 
-    # db_config is not None
     assert corsika_config_mock_array_model.get_config_parameter("CERSIZ") == pytest.approx(5.0)
     assert corsika_config_mock_array_model.get_config_parameter("MAX_BUNCHES") == 1000000
     assert corsika_config_mock_array_model.get_config_parameter("ECUTS") == "0.3 0.1 0.02 0.02"
@@ -200,12 +197,10 @@ def test_fill_corsika_configuration_model_version(
             "core_scatter": [10, 140000 * u.cm],
             "correct_for_b_field_alignment": True,
         }
-        config = corsika_config_mock_array_model._fill_corsika_configuration(
-            args_dict, db_config={}
-        )
+        config = corsika_config_mock_array_model._fill_corsika_configuration(args_dict)
 
         # Verify ModelParameter was instantiated with the correct model (the first one)
-        mock_model_parameter.assert_called_with(db_config={}, model_version="5.0.0")
+        mock_model_parameter.assert_called_with(model_version="5.0.0")
         mock_params.get_simulation_software_parameters.assert_called_with("corsika")
 
         assert isinstance(config, dict)
@@ -627,11 +622,11 @@ def test_assert_corsika_configurations_match_success(corsika_config_mock_array_m
         mock_model_parameter.return_value = mock_params
 
         corsika_config_mock_array_model.assert_corsika_configurations_match(
-            model_versions=["5.0.0", "6.0.0"], db_config={}
+            model_versions=["5.0.0", "6.0.0"]
         )
 
-        mock_model_parameter.assert_any_call(db_config={}, model_version="5.0.0")
-        mock_model_parameter.assert_any_call(db_config={}, model_version="6.0.0")
+        mock_model_parameter.assert_any_call(model_version="5.0.0")
+        mock_model_parameter.assert_any_call(model_version="6.0.0")
         assert mock_model_parameter.call_count == 2
 
 
@@ -653,7 +648,7 @@ def test_assert_corsika_configurations_match_failure(corsika_config_mock_array_m
 
         with pytest.raises(ValueError, match="CORSIKA parameter 'param2' differs"):
             corsika_config_mock_array_model.assert_corsika_configurations_match(
-                model_versions=["5.0.0", "6.0.0"], db_config={}
+                model_versions=["5.0.0", "6.0.0"]
             )
 
 
@@ -673,11 +668,11 @@ def test_assert_corsika_configurations_match_skip_parameters(corsika_config_mock
         mock_model_parameter.side_effect = [mock_params_1, mock_params_2]
 
         corsika_config_mock_array_model.assert_corsika_configurations_match(
-            model_versions=["5.0.0", "6.0.0"], db_config={}
+            model_versions=["5.0.0", "6.0.0"]
         )
 
-        mock_model_parameter.assert_any_call(db_config={}, model_version="5.0.0")
-        mock_model_parameter.assert_any_call(db_config={}, model_version="6.0.0")
+        mock_model_parameter.assert_any_call(model_version="5.0.0")
+        mock_model_parameter.assert_any_call(model_version="6.0.0")
         assert mock_model_parameter.call_count == 2
 
 
@@ -694,7 +689,7 @@ def test_assert_corsika_configurations_match_single_version(corsika_config_mock_
 
         # Should return early without any database calls
         corsika_config_mock_array_model.assert_corsika_configurations_match(
-            model_versions=["5.0.0"], db_config={}
+            model_versions=["5.0.0"]
         )
 
         # Verify ModelParameter was never called
@@ -901,10 +896,6 @@ def test_fill_corsika_configuration_variations(
     assert config["USER_INPUT"]["NSHOW"] == [1]
     assert config["USER_INPUT"]["PRMPAR"] == [1]
 
-    # Test empty DB config
-    result = corsika_config_no_array_model._fill_corsika_configuration_from_db(["5.0.0"], None)
-    assert result == {}
-
     # Test DB config with parameters
     with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
         mock_params = Mock()
@@ -912,9 +903,7 @@ def test_fill_corsika_configuration_variations(
             get_standard_corsika_parameters
         )
         mock_model_parameter.return_value = mock_params
-        result = corsika_config_mock_array_model._fill_corsika_configuration_from_db(
-            ["5.0.0"], db_config={}
-        )
+        result = corsika_config_mock_array_model._fill_corsika_configuration_from_db(["5.0.0"])
         assert all(
             key in result
             for key in [
@@ -974,7 +963,7 @@ def test_corsika_file_initialization(mocker, tmp_path):
             mock_headers.return_value = (run_header_dict, event_header_dict)
 
             config = CorsikaConfig(
-                array_model=mock_array_model, label="test", args_dict=case["args"], db_config=None
+                array_model=mock_array_model, label="test", args_dict=case["args"]
             )
 
             assert config.zenith_angle == case["expected"]["zenith"]
@@ -1027,9 +1016,7 @@ def test_initialize_from_config_values(mocker):
     ]
 
     for case in cases:
-        config = CorsikaConfig(
-            array_model=mock_array_model, label="test", args_dict=case["args"], db_config=None
-        )
+        config = CorsikaConfig(array_model=mock_array_model, label="test", args_dict=case["args"])
         assert config.azimuth_angle == case["expected"]["azimuth"]
         assert config.zenith_angle == case["expected"]["zenith"]
         expected_curved_atm = case["expected"]["curved_atm"]
