@@ -8,10 +8,10 @@ from simtools.reporting.docs_auto_report_generator import ReportGenerator
 GET_SITE_FROM_NAME_PATH = "simtools.utils.names.get_site_from_array_element_name"
 
 
-def test__add_design_models_to_telescopes(io_handler, db_config):
+def test__add_design_models_to_telescopes(io_handler):
     args = {"site": "North", "telescope": "LSTN-01"}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     telescopes = ["LSTN-01", "LSTN-02"]
     model_version = "6.0.0"
@@ -28,10 +28,10 @@ def test__add_design_models_to_telescopes(io_handler, db_config):
     assert "LSTN-02" in result
 
 
-def test__filter_telescopes_by_site(io_handler, db_config):
+def test__filter_telescopes_by_site(io_handler):
     args = {"site": "North", "telescope": "LSTN-01"}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     telescopes = ["LSTN-01", "LSTN-02", "MSTS-01", "MSTN-01"]
     selected_sites = {"North"}
@@ -106,11 +106,9 @@ def test__filter_telescopes_by_site(io_handler, db_config):
         },
     ],
 )
-def test__generate_array_element_report_combinations(io_handler, db_config, test_case):
+def test__generate_array_element_report_combinations(io_handler, test_case):
     """Test array element report combinations generation with different flag combinations."""
-    report_generator = ReportGenerator(
-        db_config, test_case["args"], io_handler.get_output_directory()
-    )
+    report_generator = ReportGenerator(test_case["args"], io_handler.get_output_directory())
 
     with (
         patch.multiple(
@@ -141,7 +139,7 @@ def test__generate_array_element_report_combinations(io_handler, db_config, test
             assert all(combo[2] == test_case["args"]["site"] for combo in result)
 
 
-def test__get_telescopes_from_layout(io_handler, db_config):
+def test__get_telescopes_from_layout(io_handler):
     """Test getting telescopes from layout for both all_telescopes=True and False cases."""
     test_cases = [
         # Test case 1: all_telescopes=True
@@ -171,7 +169,7 @@ def test__get_telescopes_from_layout(io_handler, db_config):
 
     for case in test_cases:
         output_path = io_handler.get_output_directory()
-        report_generator = ReportGenerator(db_config, case["args"], output_path)
+        report_generator = ReportGenerator(case["args"], output_path)
 
         with patch.multiple(
             report_generator.db,
@@ -196,7 +194,7 @@ def test__get_telescopes_from_layout(io_handler, db_config):
                 assert result == {case["args"]["telescope"]}
 
 
-def test__generate_parameter_report_combinations(io_handler, db_config):
+def test__generate_parameter_report_combinations(io_handler):
     """Test parameter report combinations generation for both specific and all telescopes."""
 
     test_cases = [
@@ -223,7 +221,7 @@ def test__generate_parameter_report_combinations(io_handler, db_config):
 
     for case in test_cases:
         output_path = io_handler.get_output_directory()
-        report_generator = ReportGenerator(db_config, case["args"], output_path)
+        report_generator = ReportGenerator(case["args"], output_path)
 
         with (
             patch(
@@ -255,12 +253,12 @@ def test__generate_parameter_report_combinations(io_handler, db_config):
                 assert all(combo[0] == case["args"]["telescope"] for combo in result)
 
 
-def test_auto_generate_array_element_reports(io_handler, db_config):
+def test_auto_generate_array_element_reports(io_handler):
     """Test array element report generation with all observatory options enabled."""
     # Test observatory path with all options enabled
     args = {"observatory": True, "all_sites": True, "all_model_versions": True}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     # Mock the observatory reports method
     with patch.object(
@@ -278,7 +276,7 @@ def test_auto_generate_array_element_reports(io_handler, db_config):
 
     # Test regular array element report generation
     args = {"all_telescopes": True, "all_sites": True, "all_model_versions": True}
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     # Mock parameters that would be returned for different sites and telescopes
     mock_params = [
@@ -308,11 +306,11 @@ def test_auto_generate_array_element_reports(io_handler, db_config):
         )
 
 
-def test_auto_generate_parameter_reports(io_handler, db_config):
+def test_auto_generate_parameter_reports(io_handler):
     """Test parameter report generation for multiple telescopes and sites."""
     args = {"all_telescopes": True, "all_sites": True}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     # Mock telescope-site combinations that would be returned
     mock_combinations = [
@@ -351,11 +349,11 @@ def test_auto_generate_parameter_reports(io_handler, db_config):
         mock_calibration_reports.assert_called_once()
 
 
-def test_auto_generate_parameter_reports_no_all_telescopes(io_handler, db_config):
+def test_auto_generate_parameter_reports_no_all_telescopes(io_handler):
     """Test parameter report generation when all_telescopes is False."""
     args = {"all_telescopes": False, "telescope": "LSTN-01", "site": "North"}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     # Mock telescope-site combinations that would be returned
     mock_combinations = [("LSTN-01", "North")]
@@ -385,12 +383,12 @@ def test_auto_generate_parameter_reports_no_all_telescopes(io_handler, db_config
         mock_calibration_reports.assert_not_called()
 
 
-def test__generate_single_array_element_report(io_handler, db_config):
+def test__generate_single_array_element_report(io_handler):
     """Test generation of a single array element report."""
     # Initialize ReportGenerator with basic args
     args = {"all_telescopes": True, "all_sites": True}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     # Test parameters
     model_version = "6.0.0"
@@ -417,19 +415,17 @@ def test__generate_single_array_element_report(io_handler, db_config):
         }
         expected_output_path = Path(output_path) / str(model_version)
 
-        mock_read_params_class.assert_called_once_with(
-            db_config, expected_args, expected_output_path
-        )
+        mock_read_params_class.assert_called_once_with(expected_args, expected_output_path)
 
         # Verify produce_array_element_report was called
         mock_read_params.produce_array_element_report.assert_called_once()
 
 
-def test__get_valid_sites_for_telescope(io_handler, db_config):
+def test__get_valid_sites_for_telescope(io_handler):
     """Test getting valid sites for different telescope types."""
     args = {"all_telescopes": True, "all_sites": True}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     test_cases = [
         # Test single site telescope (LST North)
@@ -461,7 +457,7 @@ def test__get_valid_sites_for_telescope(io_handler, db_config):
             assert isinstance(result, list)
 
 
-def test__generate_observatory_report_combinations(io_handler, db_config):
+def test__generate_observatory_report_combinations(io_handler):
     """Test generation of observatory report combinations."""
     test_cases = [
         # Case 1: All sites and all model versions
@@ -490,9 +486,7 @@ def test__generate_observatory_report_combinations(io_handler, db_config):
     ]
 
     for case in test_cases:
-        report_generator = ReportGenerator(
-            db_config, case["args"], io_handler.get_output_directory()
-        )
+        report_generator = ReportGenerator(case["args"], io_handler.get_output_directory())
 
         with patch.object(
             report_generator.db,
@@ -503,11 +497,11 @@ def test__generate_observatory_report_combinations(io_handler, db_config):
             assert set(result) == set(case["expected_combinations"])
 
 
-def test__generate_single_observatory_report(io_handler, db_config):
+def test__generate_single_observatory_report(io_handler):
     """Test generation of a single observatory report."""
     args = {"site": "North", "model_version": "6.0.0"}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     mock_read_params = MagicMock()
 
@@ -525,19 +519,17 @@ def test__generate_single_observatory_report(io_handler, db_config):
         }
         expected_output_path = Path(output_path) / str(args["model_version"])
 
-        mock_read_params_class.assert_called_once_with(
-            db_config, expected_args, expected_output_path
-        )
+        mock_read_params_class.assert_called_once_with(expected_args, expected_output_path)
 
         # Verify produce_observatory_report was called
         mock_read_params.produce_observatory_report.assert_called_once()
 
 
-def test_auto_generate_observatory_reports(io_handler, db_config):
+def test_auto_generate_observatory_reports(io_handler):
     """Test generation of all observatory reports."""
     args = {"all_sites": True, "all_model_versions": True}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     # Mock combinations that would be returned
     mock_combinations = [
@@ -570,11 +562,11 @@ def test_auto_generate_observatory_reports(io_handler, db_config):
         )
 
 
-def test__generate_calibration_device_parameter_reports(io_handler, db_config):
+def test__generate_calibration_device_parameter_reports(io_handler):
     """Test generation of calibration device parameter reports across all model versions."""
     args = {"all_telescopes": True, "all_sites": True}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     mock_model_versions = ["5.0.0", "6.0.0", "6.1.0"]
 
@@ -591,11 +583,11 @@ def test__generate_calibration_device_parameter_reports(io_handler, db_config):
         mock_process_version.assert_has_calls([call(version) for version in mock_model_versions])
 
 
-def test__process_calibration_devices_for_version_with_devices(io_handler, db_config):
+def test__process_calibration_devices_for_version_with_devices(io_handler):
     """Test processing calibration devices for a specific model version when devices exist."""
     args = {"all_telescopes": True, "all_sites": True, "model_version": "6.0.0"}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     mock_calibration_elements = ["ILLN-01", "ILLS-01"]
     mock_design_model = "ILLN-design"
@@ -626,7 +618,7 @@ def test__process_calibration_devices_for_version_with_devices(io_handler, db_co
 
         # Verify that ReadParameters was instantiated with a version-specific args copy
         mock_read_params_class.assert_called_once()
-        called_args = mock_read_params_class.call_args[0][1]  # second argument (args)
+        called_args = mock_read_params_class.call_args[0][0]  # first argument (args dict)
         assert called_args["model_version"] == "6.0.0"
 
         # Verify that generate_model_parameter_reports_for_devices was called
@@ -636,11 +628,11 @@ def test__process_calibration_devices_for_version_with_devices(io_handler, db_co
         assert report_generator.args == original_args
 
 
-def test__process_calibration_devices_for_version_no_devices(io_handler, db_config):
+def test__process_calibration_devices_for_version_no_devices(io_handler):
     """Test processing calibration devices when no devices exist for the model version."""
     args = {"all_telescopes": True, "all_sites": True}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     # Test case 1: Empty calibration elements list
     with patch.object(
@@ -668,11 +660,11 @@ def test__process_calibration_devices_for_version_no_devices(io_handler, db_conf
         report_generator._process_calibration_devices_for_version("5.0.0")
 
 
-def test__process_calibration_devices_for_version_unexpected_error(io_handler, db_config):
+def test__process_calibration_devices_for_version_unexpected_error(io_handler):
     """Test handling of unexpected ValueError."""
     args = {"all_telescopes": True, "all_sites": True}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     # Mock unexpected ValueError
     mock_error = ValueError("Some unexpected error")
@@ -683,11 +675,11 @@ def test__process_calibration_devices_for_version_unexpected_error(io_handler, d
             report_generator._process_calibration_devices_for_version("5.0.0")
 
 
-def test_auto_generate_simulation_configuration_reports(io_handler, db_config):
+def test_auto_generate_simulation_configuration_reports(io_handler):
     """Test generation of simulation configuration reports."""
     args = {"all_model_versions": True}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     mock_model_versions = ["5.0.0", "6.0.0"]
 
@@ -715,11 +707,11 @@ def test_auto_generate_simulation_configuration_reports(io_handler, db_config):
             assert report_generator.args["model_version"] in mock_model_versions
 
 
-def test_auto_generate_simulation_configuration_reports_single_version(io_handler, db_config):
+def test_auto_generate_simulation_configuration_reports_single_version(io_handler):
     """Test generation of simulation configuration reports for single version."""
     args = {"all_model_versions": False, "model_version": "6.0.0"}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     with patch(
         "simtools.reporting.docs_auto_report_generator.ReadParameters"
@@ -739,11 +731,11 @@ def test_auto_generate_simulation_configuration_reports_single_version(io_handle
         assert report_generator.args["model_version"] == "6.0.0"
 
 
-def test_auto_generate_calibration_reports(io_handler, db_config):
+def test_auto_generate_calibration_reports(io_handler):
     """Test generation of calibration reports."""
     args = {"all_model_versions": True}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     mock_model_versions = ["5.0.0", "6.0.0"]
 
@@ -765,11 +757,11 @@ def test_auto_generate_calibration_reports(io_handler, db_config):
         assert mock_read_params.produce_calibration_reports.call_count == len(mock_model_versions)
 
 
-def test_auto_generate_calibration_reports_with_valueerror(io_handler, db_config):
+def test_auto_generate_calibration_reports_with_valueerror(io_handler):
     """Test generation of calibration reports with ValueError handling."""
     args = {"all_model_versions": True}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     mock_model_versions = ["5.0.0", "6.0.0"]
 
@@ -800,11 +792,11 @@ def test_auto_generate_calibration_reports_with_valueerror(io_handler, db_config
         assert mock_read_params.produce_calibration_reports.call_count == len(mock_model_versions)
 
 
-def test_auto_generate_calibration_reports_unexpected_valueerror(io_handler, db_config):
+def test_auto_generate_calibration_reports_unexpected_valueerror(io_handler):
     """Test generation of calibration reports with unexpected ValueError."""
     args = {"all_model_versions": True}
     output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+    report_generator = ReportGenerator(args, output_path)
 
     mock_model_versions = ["6.0.0"]
 

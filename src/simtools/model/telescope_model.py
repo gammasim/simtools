@@ -26,8 +26,6 @@ class TelescopeModel(ModelParameter):
         Site name (e.g., South or North).
     telescope_name: str
         Telescope name (ex. LSTN-01, LSTN-design, ...).
-    db_config: dict
-        Database configuration.
     model_version: str
         Model version.
     label: str, optional
@@ -42,7 +40,6 @@ class TelescopeModel(ModelParameter):
         self,
         site,
         telescope_name,
-        db_config,
         model_version,
         label=None,
         overwrite_model_parameters=None,
@@ -52,7 +49,6 @@ class TelescopeModel(ModelParameter):
         super().__init__(
             site=site,
             array_element_name=telescope_name,
-            db_config=db_config,
             model_version=model_version,
             label=label,
             overwrite_model_parameters=overwrite_model_parameters,

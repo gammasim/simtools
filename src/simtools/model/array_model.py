@@ -21,8 +21,6 @@ class ArrayModel:
 
     Parameters
     ----------
-    db_config: dict
-        Database configuration.
     model_version: str
         Model version.
     label: str, optional
@@ -42,7 +40,6 @@ class ArrayModel:
 
     def __init__(
         self,
-        db_config,
         model_version,
         label=None,
         site=None,
@@ -54,7 +51,6 @@ class ArrayModel:
         """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init ArrayModel")
-        self.db_config = db_config
         self.model_version = model_version
         self.label = label
         self.layout_name = (
@@ -101,7 +97,6 @@ class ArrayModel:
         self._logger.debug(f"Getting site parameters from DB ({site})")
         site_model = SiteModel(
             site=names.validate_site_name(site),
-            db_config=self.db_config,
             model_version=self.model_version,
             label=self.label,
             overwrite_model_parameters=self.overwrite_model_parameters,
@@ -246,7 +241,6 @@ class ArrayModel:
                 site=site_model.site,
                 telescope_name=element_name,
                 model_version=self.model_version,
-                db_config=self.db_config,
                 label=self.label,
                 overwrite_model_parameters=self.overwrite_model_parameters,
             )
@@ -278,7 +272,6 @@ class ArrayModel:
             calibration_models[device_name] = CalibrationModel(
                 site=site_model.site,
                 calibration_device_model_name=device_name,
-                db_config=self.db_config,
                 model_version=self.model_version,
                 label=self.label,
                 overwrite_model_parameters=self.overwrite_model_parameters,

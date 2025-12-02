@@ -19,7 +19,6 @@ def test_calibration_model_init(mock_db_handler, caplog):
         model = CalibrationModel(
             site="North",
             calibration_device_model_name="ILLN-01",
-            db_config={},
             model_version="1.0.0",
         )
 
@@ -40,7 +39,6 @@ def test_calibration_model_init_with_label(mock_db_handler):
     model = CalibrationModel(
         site="South",
         calibration_device_model_name="ILLS-01",
-        db_config={},
         model_version="1.0.0",
         label="test_label",
     )

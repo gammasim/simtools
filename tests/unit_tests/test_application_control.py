@@ -95,31 +95,17 @@ def test_resolve_model_version_to_latest_patch_no_model_version():
     """Test _resolve_model_version_to_latest_patch when model_version is not in args."""
 
     args_dict = {"log_level": "info"}
-    db_config = {"host": "localhost"}
     logger = logging.getLogger("test")
 
-    _resolve_model_version_to_latest_patch(args_dict, db_config, logger)
+    _resolve_model_version_to_latest_patch(args_dict, logger)
 
     assert "model_version" not in args_dict
-
-
-def test_resolve_model_version_to_latest_patch_no_db_config():
-    """Test _resolve_model_version_to_latest_patch when db_config is None."""
-
-    args_dict = {"model_version": "6.0"}
-    db_config = None
-    logger = logging.getLogger("test")
-
-    _resolve_model_version_to_latest_patch(args_dict, db_config, logger)
-
-    assert args_dict["model_version"] == "6.0"
 
 
 def test_resolve_model_version_to_latest_patch_full_version():
     """Test _resolve_model_version_to_latest_patch when model_version is already full."""
 
     args_dict = {"model_version": "6.0.1"}
-    db_config = {"host": "localhost"}
     logger = logging.getLogger("test")
 
     with patch("simtools.application_control.db_handler.DatabaseHandler") as mock_db_class:
@@ -128,7 +114,7 @@ def test_resolve_model_version_to_latest_patch_full_version():
                 "simtools.application_control.version.MAJOR_MINOR_PATCH", "major.minor.patch"
             ):
                 mock_version_kind.return_value = "major.minor.patch"
-                _resolve_model_version_to_latest_patch(args_dict, db_config, logger)
+                _resolve_model_version_to_latest_patch(args_dict, logger)
 
     assert args_dict["model_version"] == "6.0.1"
     mock_db_class.assert_not_called()
@@ -138,7 +124,6 @@ def test_resolve_model_version_to_latest_patch_resolves_to_latest():
     """Test _resolve_model_version_to_latest_patch resolves to latest patch version."""
 
     args_dict = {"model_version": "6.0"}
-    db_config = {"host": "localhost"}
     logger = logging.getLogger("test")
 
     mock_db = MagicMock()
@@ -150,7 +135,7 @@ def test_resolve_model_version_to_latest_patch_resolves_to_latest():
                 "simtools.application_control.version.resolve_version_to_latest_patch",
                 return_value="6.0.2",
             ) as mock_resolve:
-                _resolve_model_version_to_latest_patch(args_dict, db_config, logger)
+                _resolve_model_version_to_latest_patch(args_dict, logger)
 
                 mock_resolve.assert_called_once_with("6.0", ["6.0.0", "6.0.1", "6.0.2"])
                 assert args_dict["model_version"] == "6.0.2"
@@ -160,7 +145,6 @@ def test_resolve_model_version_to_latest_patch_list_of_versions():
     """Test _resolve_model_version_to_latest_patch with list of versions."""
 
     args_dict = {"model_version": ["6.0", "6.1"]}
-    db_config = {"host": "localhost"}
     logger = logging.getLogger("test")
 
     mock_db = MagicMock()
@@ -172,7 +156,7 @@ def test_resolve_model_version_to_latest_patch_list_of_versions():
                 "simtools.application_control.version.resolve_version_to_latest_patch",
                 side_effect=["6.0.2", "6.1.1"],
             ) as mock_resolve:
-                _resolve_model_version_to_latest_patch(args_dict, db_config, logger)
+                _resolve_model_version_to_latest_patch(args_dict, logger)
 
                 assert mock_resolve.call_count == 2
                 assert args_dict["model_version"] == ["6.0.2", "6.1.1"]
@@ -182,7 +166,6 @@ def test_resolve_model_version_to_latest_patch_list_with_full_versions():
     """Test _resolve_model_version_to_latest_patch with list containing full versions."""
 
     args_dict = {"model_version": ["6.0.2", "6.1"]}
-    db_config = {"host": "localhost"}
     logger = logging.getLogger("test")
 
     mock_db = MagicMock()
@@ -200,7 +183,7 @@ def test_resolve_model_version_to_latest_patch_list_with_full_versions():
                     "simtools.application_control.version.resolve_version_to_latest_patch",
                     return_value="6.1.1",
                 ) as mock_resolve:
-                    _resolve_model_version_to_latest_patch(args_dict, db_config, logger)
+                    _resolve_model_version_to_latest_patch(args_dict, logger)
 
                     mock_resolve.assert_called_once_with("6.1", ["6.0.2", "6.1.0", "6.1.1"])
                     assert args_dict["model_version"] == ["6.0.2", "6.1.1"]
@@ -210,10 +193,9 @@ def test_resolve_model_version_to_latest_patch_empty_list():
     """Test _resolve_model_version_to_latest_patch with empty list."""
 
     args_dict = {"model_version": []}
-    db_config = {"host": "localhost"}
     logger = logging.getLogger("test")
 
-    _resolve_model_version_to_latest_patch(args_dict, db_config, logger)
+    _resolve_model_version_to_latest_patch(args_dict, logger)
 
     assert args_dict["model_version"] == []
 
@@ -222,7 +204,6 @@ def test_resolve_model_version_to_latest_patch_db_exception():
     """Test _resolve_model_version_to_latest_patch when database raises exception."""
 
     args_dict = {"model_version": "6.0"}
-    db_config = {"host": "localhost"}
     logger = logging.getLogger("test")
 
     with patch(
@@ -230,7 +211,7 @@ def test_resolve_model_version_to_latest_patch_db_exception():
         side_effect=OSError("Database connection failed"),
     ):
         with patch("simtools.application_control.version.version_kind", return_value="MAJOR_MINOR"):
-            _resolve_model_version_to_latest_patch(args_dict, db_config, logger)
+            _resolve_model_version_to_latest_patch(args_dict, logger)
 
             assert args_dict["model_version"] == "6.0"
 
@@ -239,7 +220,6 @@ def test_resolve_model_version_to_latest_patch_list_with_db_exception():
     """Test _resolve_model_version_to_latest_patch with list when database raises exception."""
 
     args_dict = {"model_version": ["6.0", "6.1"]}
-    db_config = {"host": "localhost"}
     logger = logging.getLogger("test")
 
     with patch(
@@ -247,7 +227,7 @@ def test_resolve_model_version_to_latest_patch_list_with_db_exception():
         side_effect=OSError("Database connection failed"),
     ):
         with patch("simtools.application_control.version.version_kind", return_value="MAJOR_MINOR"):
-            _resolve_model_version_to_latest_patch(args_dict, db_config, logger)
+            _resolve_model_version_to_latest_patch(args_dict, logger)
 
             assert args_dict["model_version"] == ["6.0", "6.1"]
 
@@ -256,7 +236,6 @@ def test_resolve_model_version_to_latest_patch_list_mixed_with_exception():
     """Test _resolve_model_version_to_latest_patch with list where one version fails."""
 
     args_dict = {"model_version": ["6.0", "6.1"]}
-    db_config = {"host": "localhost"}
     logger = logging.getLogger("test")
 
     mock_db = MagicMock()
@@ -268,6 +247,6 @@ def test_resolve_model_version_to_latest_patch_list_mixed_with_exception():
                 "simtools.application_control.version.resolve_version_to_latest_patch",
                 side_effect=["6.0.1", ValueError("Version not found")],
             ):
-                _resolve_model_version_to_latest_patch(args_dict, db_config, logger)
+                _resolve_model_version_to_latest_patch(args_dict, logger)
 
                 assert args_dict["model_version"] == ["6.0.1", "6.1"]

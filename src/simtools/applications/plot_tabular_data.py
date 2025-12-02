@@ -78,7 +78,6 @@ def main():
     plot_tables.plot(
         config=plot_config["plot"],
         output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),
-        db_config=app_context.db_config,
         data_path=app_context.args.get("table_data_path"),
     )
 

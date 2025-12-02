@@ -96,7 +96,6 @@ def configure_runner_mock(io_handler):
 @pytest.fixture
 def array_simulator(
     io_handler,
-    db_config,
     simulations_args_dict,
     patch_simulator_core,
     configure_runner_mock,
@@ -112,14 +111,12 @@ def array_simulator(
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
-        db_config=db_config,
     )
 
 
 @pytest.fixture
 def shower_simulator(
     io_handler,
-    db_config,
     simulations_args_dict,
     patch_simulator_core,
     configure_runner_mock,
@@ -136,14 +133,12 @@ def shower_simulator(
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
-        db_config=db_config,
     )
 
 
 @pytest.fixture
 def shower_array_simulator(
     io_handler,
-    db_config,
     simulations_args_dict,
     patch_simulator_core,
     configure_runner_mock,
@@ -161,14 +156,12 @@ def shower_array_simulator(
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
-        db_config=db_config,
     )
 
 
 @pytest.fixture
 def calibration_simulator(
     io_handler,
-    db_config,
     simulations_args_dict,
     patch_simulator_core,
     configure_runner_mock,
@@ -187,7 +180,6 @@ def calibration_simulator(
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
-        db_config=db_config,
     )
 
 
@@ -412,7 +404,7 @@ def test_validate_metadata(array_simulator, mocker, caplog, model_version):
 
 
 def test_pack_for_register_with_multiple_versions(
-    io_handler, simulations_args_dict, db_config, mocker, caplog, tmp_test_directory, model_version
+    io_handler, simulations_args_dict, mocker, caplog, tmp_test_directory, model_version
 ):
     args_dict = copy.deepcopy(simulations_args_dict)
     args_dict["simulation_software"] = "corsika_sim_telarray"
@@ -432,11 +424,7 @@ def test_pack_for_register_with_multiple_versions(
     mocker.patch("simtools.simulator.CorsikaConfig")
     mocker.patch("simtools.simulator.CorsikaSimtelRunner")
 
-    local_shower_array_simulator = Simulator(
-        label=args_dict["label"],
-        args_dict=args_dict,
-        db_config=db_config,
-    )
+    local_shower_array_simulator = Simulator(label=args_dict["label"], args_dict=args_dict)
 
     # Define file patterns
     file_patterns = {
