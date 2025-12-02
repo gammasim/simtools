@@ -42,9 +42,7 @@ cfg_ignore_keys = [
 ]
 
 
-def validate_application_output(
-    config, from_command_line=None, from_config_file=None, db_config=None
-):
+def validate_application_output(config, from_command_line=None, from_config_file=None):
     """
     Validate application output against expected output.
 
@@ -73,7 +71,7 @@ def validate_application_output(
         )
 
         if _versions_match(from_command_line, from_config_file):
-            _validate_output_files(config, integration_test, db_config)
+            _validate_output_files(config, integration_test)
 
             if "file_type" in integration_test:
                 assert assertions.assert_file_type(
@@ -85,7 +83,7 @@ def validate_application_output(
         _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file)
 
 
-def _validate_output_files(config, integration_test, db_config):
+def _validate_output_files(config, integration_test):
     """Validate output files."""
     if "reference_output_file" in integration_test:
         _validate_reference_output_file(config, integration_test)
@@ -97,11 +95,7 @@ def _validate_output_files(config, integration_test, db_config):
             [{"path_descriptor": "output_path", "file": integration_test["output_file"]}],
         )
     if "model_parameter_validation" in integration_test:
-        _validate_model_parameter_json_file(
-            config,
-            integration_test["model_parameter_validation"],
-            db_config,
-        )
+        _validate_model_parameter_json_file(config, integration_test["model_parameter_validation"])
 
 
 def _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file):
@@ -157,7 +151,7 @@ def _validate_output_path_and_file(config, integration_file_tests):
             assert assertions.check_plain_log(output_file_path, file_test)
 
 
-def _validate_model_parameter_json_file(config, model_parameter_validation, db_config):
+def _validate_model_parameter_json_file(config, model_parameter_validation):
     """
     Validate model parameter json file and compare it with a reference parameter from the database.
 
@@ -172,7 +166,7 @@ def _validate_model_parameter_json_file(config, model_parameter_validation, db_c
 
     """
     _logger.info(f"Checking model parameter json file: {model_parameter_validation}")
-    db = db_handler.DatabaseHandler(db_config=db_config)
+    db = db_handler.DatabaseHandler()
 
     reference_parameter_name = model_parameter_validation.get("reference_parameter_name")
 

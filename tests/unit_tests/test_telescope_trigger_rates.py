@@ -14,7 +14,6 @@ def test_telescope_trigger_rates_with_array_layout_name():
         "event_data_file": FILE_SIMTEL,
         "plot_histograms": False,
     }
-    db_config = {"db_key": "db_value"}
 
     with (
         patch(
@@ -26,11 +25,9 @@ def test_telescope_trigger_rates_with_array_layout_name():
         mock_histograms_instance = MagicMock()
         mock_histograms.return_value = mock_histograms_instance
 
-        telescope_trigger_rates(args_dict, db_config)
+        telescope_trigger_rates(args_dict)
 
-        mock_get_array_elements.assert_called_once_with(
-            "test_layout", "test_site", "1.0.0", db_config
-        )
+        mock_get_array_elements.assert_called_once_with("test_layout", "test_site", "1.0.0")
         mock_histograms.assert_called_once_with(
             FILE_SIMTEL, array_name="array1", telescope_list=[1, 2, 3]
         )
@@ -44,7 +41,6 @@ def test_telescope_trigger_rates_without_array_layout_name():
         "event_data_file": FILE_SIMTEL,
         "plot_histograms": True,
     }
-    db_config = {"db_key": "db_value"}
 
     with (
         patch(
@@ -61,7 +57,7 @@ def test_telescope_trigger_rates_without_array_layout_name():
         mock_io_handler.return_value = mock_io_handler_instance
         mock_io_handler_instance.get_output_directory.return_value = Path("output_dir")
 
-        telescope_trigger_rates(args_dict, db_config)
+        telescope_trigger_rates(args_dict)
 
         mock_collect_data.assert_called_once_with(Path("test_telescope_ids.txt"))
         mock_histograms.assert_called_once_with(

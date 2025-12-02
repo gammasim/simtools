@@ -1376,7 +1376,7 @@ def test___init__(tmp_test_directory):
         }
 
         # Create instance
-        instance = SimulatorLightEmission(config, db_config={}, label="test_label")
+        instance = SimulatorLightEmission(config, label="test_label")
 
         # Verify initialization
         assert hasattr(instance, "_logger")
@@ -1389,7 +1389,6 @@ def test___init__(tmp_test_directory):
         # Verify models were initialized correctly
         mock_init_models.assert_called_once_with(
             label="test_label",
-            db_config={},
             site="North",
             telescope_name="LSTN-01",
             calibration_device_name="calibration_device",
