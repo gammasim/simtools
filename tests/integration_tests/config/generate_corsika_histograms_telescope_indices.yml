@@ -4,9 +4,7 @@ applications:
   configuration:
     hdf5: true
     hdf5_file_name: test_file_telescope_indices.hdf5
-    iact_file: './tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio
-
-      '
+    iact_file: './tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio'
     output_path: simtools-output
     pdf: true
     telescope_indices:
