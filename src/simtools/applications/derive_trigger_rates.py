@@ -81,7 +81,7 @@ def main():
     """Derive trigger rates for a single telescope or an array of telescopes."""
     app_context = startup_application(_parse)
 
-    telescope_trigger_rates(app_context.args, app_context.db_config)
+    telescope_trigger_rates(app_context.args)
 
 
 if __name__ == "__main__":

@@ -92,7 +92,6 @@ def main():
     tel_model = TelescopeModel(
         site=app_context.args["site"],
         telescope_name=app_context.args["telescope"],
-        db_config=app_context.db_config,
         model_version=app_context.args["model_version"],
         label=label,
     )
