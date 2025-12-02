@@ -40,9 +40,10 @@ def get_version_string(run_time=None):
         f"Database name: {get_database_version_or_name(version=False)}\n"
         f"Database version: {get_database_version_or_name(version=True)}\n"
         f"sim_telarray version: {get_sim_telarray_version(run_time)}\n"
-        f"sim_telarray exe: {config.sim_telarray_exe if config.sim_telarray_exe else 'None'}\n"
+        "sim_telarray exe: "
+        f"{settings.config.sim_telarray_exe if settings.config.sim_telarray_exe else 'None'}\n"
         f"CORSIKA version: {get_corsika_version(run_time)}\n"
-        f"CORSIKA exe: {config.corsika_exe if config.corsika_exe else 'None'}\n"
+        f"CORSIKA exe: {settings.config.corsika_exe if settings.config.corsika_exe else 'None'}\n"
         f"Build options: {get_build_options(run_time)}\n"
         f"Runtime environment: {run_time if run_time else 'None'}\n"
     )
@@ -110,7 +111,7 @@ def get_sim_telarray_version(run_time=None):
     str
         Version of the sim_telarray package.
     """
-    if config.sim_telarray_exe is None:
+    if settings.config.sim_telarray_exe is None:
         _logger.warning("sim_telarray environment not configured.")
         return None
     if run_time is None:
