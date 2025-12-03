@@ -248,6 +248,30 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian(
     assert simulator_instance.calibration_model.get_parameter_value_with_unit.call_count == 0
 
 
+def test__get_angular_distribution_string_for_sim_telarray_lambertian_failure(
+    simulator_instance,
+):
+    """Test Lambertian distribution failure handling."""
+    # Mock calibration model values
+    simulator_instance.calibration_model.get_parameter_value.side_effect = (
+        lambda name: "Lambertian" if name == "flasher_angular_distribution" else None
+    )
+
+    # Mock _generate_lambertian_angular_distribution_table to raise OSError
+    with patch.object(
+        simulator_instance,
+        "_generate_lambertian_angular_distribution_table",
+        side_effect=OSError("Write failed"),
+    ):
+        result = simulator_instance._get_angular_distribution_string_for_sim_telarray()
+
+    # Should return the token string "lambertian" and log a warning
+    assert result == "lambertian"
+    simulator_instance._logger.warning.assert_called_with(
+        "Failed to write Lambertian angular distribution table: Write failed; using token instead."
+    )
+
+
 def test__get_pulse_shape_string_for_sim_telarray(simulator_instance):
     # Test with unified 3-element list [shape, width_ns, exp_ns]
     simulator_instance.calibration_model.get_parameter_value.return_value = ["Gauss", 5.0, 0.0]
