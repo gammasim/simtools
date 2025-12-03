@@ -360,6 +360,9 @@ class MetadataCollector:
                     "Metadata extraction from sim_telarray files is not supported yet."
                 )
                 continue
+            elif Path(metadata_file).name.endswith((".corsika.zst", ".corsika")):
+                self._logger.warning("Metadata extraction from CORSIKA files is not supported yet.")
+                continue
             else:
                 raise ValueError(f"Unknown metadata file format: {metadata_file}")
 
