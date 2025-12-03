@@ -201,7 +201,6 @@ class SimtelIOEventHistograms:
         """
         if data["1d"]:
             if data["event_data"] is None:
-                self._logger.debug(f"DEBUG: event_data is None for {data.get('event_data_column')}")
                 return
             hist, _ = np.histogram(
                 getattr(data["event_data"], data["event_data_column"]), bins=data["bin_edges"]

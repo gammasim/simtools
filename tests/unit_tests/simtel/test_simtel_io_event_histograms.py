@@ -608,3 +608,41 @@ def test_print_summary(mock_histograms, mocker, caplog):
     # Verify log messages
     assert "Total simulated events: 60" in caplog.text
     assert "Total triggered events: 45" in caplog.text
+
+
+def test_fill_histogram_and_bin_edges_event_data_none(mock_reader, hdf5_file_name):
+    """Test _fill_histogram_and_bin_edges returns early if event_data is None."""
+    histograms = SimtelIOEventHistograms(hdf5_file_name)
+    data = {
+        "1d": True,
+        "event_data": None,
+        "event_data_column": "simulated_energy",
+        "bin_edges": np.array([0, 1, 2]),
+        "histogram": None,
+    }
+    histograms._fill_histogram_and_bin_edges(data)
+    assert data["histogram"] is None
+
+    data = {
+        "1d": False,
+        "event_data": [None, None],
+        "event_data_column": "simulated_energy",
+        "bin_edges": np.array([0, 1, 2]),
+        "histogram": None,
+    }
+    histograms._fill_histogram_and_bin_edges(data)
+    assert data["histogram"] is None
+
+
+def test_view_cone_bins_min_equals_max(mock_reader, hdf5_file_name):
+    """Test view_cone_bins when viewcone_min equals viewcone_max."""
+    histograms = SimtelIOEventHistograms(hdf5_file_name)
+    histograms.file_info = {
+        "viewcone_min": 5.0 * u.deg,
+        "viewcone_max": 5.0 * u.deg,
+    }
+    bins = histograms.view_cone_bins
+    assert isinstance(bins, np.ndarray)
+    assert len(bins) == 100
+    assert bins[0] == pytest.approx(5.0)
+    assert bins[-1] == pytest.approx(0.5)
