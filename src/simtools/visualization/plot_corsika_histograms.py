@@ -1,7 +1,6 @@
 """Visualize Cherenkov photon distributions from CORSIKA."""
 
 import logging
-import re
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -460,6 +459,8 @@ def plot_1d_event_header_distribution(
     hist_values, bin_edges = histograms_instance.event_1d_histogram(
         event_header_element, bins=bins, hist_range=hist_range
     )
+    if hist_values is None or bin_edges is None:
+        return None
     fig, ax = plt.subplots()
     ax.bar(
         bin_edges[:-1],
@@ -572,11 +573,8 @@ def save_figs_to_pdf(figs, pdf_file_name):
     pdf_pages.close()
 
 
-def build_all_photon_figures(histograms_instance, test: bool = False):
-    """Return list of all photon histogram figures for the given instance.
-
-    When test is True, only generate the first two figure groups to reduce runtime.
-    """
+def build_all_photon_figures(histograms_instance):
+    """Return list of all photon histogram figures for the given instance."""
     plot_function_names = sorted(
         [
             name
@@ -586,8 +584,6 @@ def build_all_photon_figures(histograms_instance, test: bool = False):
             and callable(obj)
         ]
     )
-    if test:
-        plot_function_names = plot_function_names[:2]
 
     figure_list = []
     module_obj = globals()
@@ -599,82 +595,25 @@ def build_all_photon_figures(histograms_instance, test: bool = False):
     return np.array(figure_list).flatten()
 
 
-def export_all_photon_figures_pdf(histograms_instance, test: bool = False):
-    """Build and save all photon histogram figures into a single PDF.
-
-    The PDF name is derived from the HDF5 file name core and written under output_path.
-    """
-    figs = build_all_photon_figures(histograms_instance, test=test)
-    core_name = re.sub(r"\.hdf5$", "", Path(histograms_instance.hdf5_file_name).name)
-    output_file_name = Path(histograms_instance.output_path).joinpath(f"{core_name}.pdf")
-    save_figs_to_pdf(figs, output_file_name)
-    return output_file_name
+def export_all_photon_figures_pdf(histograms_instance, pdf_file_name):
+    """Build and save all photon histogram figures into a single PDF."""
+    figs = build_all_photon_figures(histograms_instance)
+    save_figs_to_pdf(figs, Path(pdf_file_name))
 
 
 def derive_event_1d_histograms(
     histograms_instance,
     event_1d_header_keys,
-    pdf: bool,
-    hdf5: bool,
-    overwrite: bool = False,
+    pdf_file_name,
 ):
     """Create 1D event header histograms; optionally save to PDF and/or HDF5."""
     figure_list = []
     for key in event_1d_header_keys:
-        if pdf:
-            fig = plot_1d_event_header_distribution(histograms_instance, key)
+        fig = plot_1d_event_header_distribution(histograms_instance, key)
+        if fig is not None:
             figure_list.append(fig)
-        if hdf5:
-            histograms_instance.export_event_header_1d_histogram(
-                key, bins=50, hist_range=None, overwrite=overwrite
-            )
-    if pdf:
-        figs_array = np.array(figure_list).flatten()
-        pdf_name = Path(histograms_instance.output_path).joinpath(
-            f"{Path(histograms_instance.hdf5_file_name).name}_event_1d_histograms.pdf"
-        )
-        save_figs_to_pdf(figs_array, pdf_name)
-        return pdf_name
-    return None
 
-
-def derive_event_2d_histograms(
-    histograms_instance,
-    event_2d_header_keys,
-    pdf: bool,
-    hdf5: bool,
-    overwrite: bool = False,
-):
-    """Create 2D event header histograms in pairs; optionally save PDF and/or HDF5.
-
-    If an odd number of keys is provided, the last one is ignored (with a warning).
-    """
-    if len(event_2d_header_keys) % 2 == 1:
-        _logger.warning(
-            "An odd number of keys was passed to generate 2D histograms.\n"
-            "The last key is being ignored."
-        )
-
-    figure_list = []
-    for i, _ in enumerate(event_2d_header_keys[::2]):
-        if pdf:
-            fig = plot_2d_event_header_distribution(
-                histograms_instance, event_2d_header_keys[i], event_2d_header_keys[i + 1]
-            )
-            figure_list.append(fig)
-        if hdf5:
-            histograms_instance.export_event_header_2d_histogram(
-                event_2d_header_keys[i],
-                event_2d_header_keys[i + 1],
-                bins=50,
-                hist_range=None,
-                overwrite=overwrite,
-            )
-    if pdf:
-        figs_array = np.array(figure_list).flatten()
-        pdf_name = Path(histograms_instance.output_path).joinpath(
-            f"{Path(histograms_instance.hdf5_file_name).name}_event_2d_histograms.pdf"
-        )
-        save_figs_to_pdf(figs_array, pdf_name)
-        return pdf_name
-    return None
+    save_figs_to_pdf(
+        np.array(figure_list).flatten(),
+        pdf_file_name.with_name(pdf_file_name.stem + "_1D" + pdf_file_name.suffix),
+    )

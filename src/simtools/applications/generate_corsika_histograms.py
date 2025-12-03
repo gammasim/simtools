@@ -188,102 +188,21 @@ def _parse():
     )
 
     config.parser.add_argument(
-        "--telescope_indices",
-        help="List of telescope indices to be considered in the generation of the histograms",
+        "--pdf_file_name",
+        help="Save histograms into a pdf file.",
         type=str,
-        required=False,
-        nargs="+",
-        default=None,
+        required=None,
     )
 
-    config.parser.add_argument(
-        "--individual_telescopes",
-        help="if False, the histograms are filled for all given telescopes together, otherwise"
-        "one histogram is set for each telescope separately.",
-        action="store_true",
-        required=False,
-        default=False,
-    )
-
-    config.parser.add_argument(
-        "--hist_config",
-        help="hdf5 file with the configuration parameters to create the histograms.",
-        type=str,
-        required=False,
-        default=None,
-    )
-
-    config.parser.add_argument(
-        "--pdf", help="Save histograms into a pdf file.", action="store_true", required=False
-    )
-
-    config.parser.add_argument(
-        "--hdf5", help="Save histograms into hdf5 files.", action="store_true", required=False
-    )
-
-    config.parser.add_argument(
-        "--hdf5_file_name",
-        help="Name of the hdf5 file where to save the histograms.",
-        type=str,
-        required=False,
-        default=None,
-    )
-
-    config.parser.add_argument(
-        "--event_1d_histograms",
-        help="The keys from the CORSIKA event header to be used for the generation of 1D "
-        "histograms. The available choices can been found in the all_event_keys attribute of"
-        "the CorsikaHistograms.",
-        required=False,
-        default=None,
-        nargs="*",
-    )
-
-    config.parser.add_argument(
-        "--event_2d_histograms",
-        help="The keys from the CORSIKA event header to be used for the generation of 2D "
-        "histograms. The available choices can been found in the all_event_keys attribute of"
-        "the CorsikaHistograms.",
-        required=False,
-        default=None,
-        nargs="*",
-    )
-
-    config_parser, _ = config.initialize(db_config=False, paths=True)
-
-    if (
-        not config_parser["pdf"]
-        and not config_parser["hdf5"]
-        and not config_parser["event_1d_histograms"]
-        and not config_parser["event_2d_histograms"]
-    ):
-        config.parser.error(
-            "At least one argument is required: --pdf, --hdf5, --event_1d_histograms, or "
-            "--event_2d_histograms."
-        )
-
-    return config_parser, _
+    return config.initialize(db_config=False, paths=True)
 
 
 def main():
     """Generate a set of histograms for the Cherenkov photons saved in the CORSIKA IACT file."""
     app_context = startup_application(_parse)
 
-    corsika_histograms_instance = CorsikaHistograms(
-        app_context.args["iact_file"],
-        output_path=app_context.io_handler.get_output_directory(),
-        hdf5_file_name=app_context.args["hdf5_file_name"],
-    )
-    corsika_histograms_instance.run_export_pipeline(
-        individual_telescopes=app_context.args["individual_telescopes"],
-        hist_config=app_context.args["hist_config"],
-        indices_arg=app_context.args["telescope_indices"],
-        write_pdf=app_context.args["pdf"],
-        write_hdf5=app_context.args["hdf5"],
-        event1d=app_context.args["event_1d_histograms"],
-        event2d=app_context.args["event_2d_histograms"],
-        test=app_context.args["test"],
-    )
+    corsika_histograms = CorsikaHistograms(app_context.args["iact_file"])
+    corsika_histograms.run_export_pipeline(pdf_file=app_context.args.get("pdf_file_name"))
 
 
 if __name__ == "__main__":
