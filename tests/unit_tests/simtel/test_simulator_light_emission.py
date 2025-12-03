@@ -248,6 +248,36 @@ def test__get_pulse_shape_string_for_sim_telarray(simulator_instance):
         "flasher_pulse_shape"
     )
 
+
+def test__get_pulse_shape_string_for_sim_telarray_tophat_maps_to_simple(simulator_instance):
+    # Tophat should map to simple:<width>
+    simulator_instance.calibration_model.get_parameter_value.return_value = [
+        "Tophat",
+        7.5,
+        0.0,
+    ]
+
+    result = simulator_instance._get_pulse_shape_string_for_sim_telarray()
+    assert result == "simple:7.5"
+    simulator_instance.calibration_model.get_parameter_value.assert_called_once_with(
+        "flasher_pulse_shape"
+    )
+
+
+def test__get_pulse_shape_string_for_sim_telarray_gauss_exponential_token(simulator_instance):
+    # Gauss-Exponential should format as gauss-exponential:<width>,<decay>
+    simulator_instance.calibration_model.get_parameter_value.return_value = [
+        "Gauss-Exponential",
+        2.0,
+        6.0,
+    ]
+
+    result = simulator_instance._get_pulse_shape_string_for_sim_telarray()
+    assert result == "gauss-exponential:2.0:6.0"
+    simulator_instance.calibration_model.get_parameter_value.assert_called_once_with(
+        "flasher_pulse_shape"
+    )
+
     # Reset mocks for third test (exponential branch)
     simulator_instance.calibration_model.reset_mock()
 
@@ -737,6 +767,104 @@ def test__add_flasher_command_options_writer_fallback(simulator_instance, tmp_te
         lightpulse_args = [arg for arg in result if str(arg).startswith("--lightpulse ")]
         assert len(lightpulse_args) == 1
         assert lightpulse_args[0] == "--lightpulse gauss-exponential-token"
+
+
+def test__add_flasher_command_options_invalid_gauss_exponential_width(simulator_instance):
+    """Gauss-Exponential with non-positive width must raise ValueError."""
+
+    # Minimal calibration mocks
+    def mock_get_param_with_unit(name):
+        if name == "flasher_position":
+            return [0.0 * u.cm, 0.0 * u.cm, 0.0 * u.cm]
+        if name == "flasher_wavelength":
+            return 400.0 * u.nm
+        if name == "flasher_pulse_shape":
+            return ["Gauss-Exponential", 0.0, 5.0]  # invalid width
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_param_with_unit
+    )
+    simulator_instance.calibration_model.get_parameter_value.side_effect = (
+        lambda k: 8000 if k == "flasher_bunch_size" else ["Gauss-Exponential", 0.0, 5.0]
+    )
+
+    # Telescope minimal mocks
+    mock_diameter = Mock()
+    mock_diameter.to.return_value.value = 200.0
+    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
+    simulator_instance.telescope_model.get_parameter_value.side_effect = (
+        lambda k: 40 if k == "fadc_sum_bins" else "hexagonal"
+    )
+
+    simulator_instance.light_emission_config = {"number_of_events": 1, "flasher_photons": 100}
+
+    # Bypass geometry shape validation to exercise Gauss-Exponential parameter check
+    with (
+        patch(
+            "simtools.simtel.simulator_light_emission.fiducial_radius_from_shape",
+            return_value=75.0,
+        ),
+        patch.object(
+            simulator_instance,
+            "calculate_distance_focal_plane_calibration_device",
+            return_value=Mock(**{"to.return_value.value": 900.0}),
+        ),
+    ):
+        with pytest.raises(
+            ValueError,
+            match="Gauss-Exponential pulse shape requires positive width and exponential decay values",
+        ):
+            simulator_instance._add_flasher_command_options()
+
+
+def test__add_flasher_command_options_invalid_gauss_exponential_decay(simulator_instance):
+    """Gauss-Exponential with non-positive decay must raise ValueError."""
+
+    # Minimal calibration mocks
+    def mock_get_param_with_unit(name):
+        if name == "flasher_position":
+            return [0.0 * u.cm, 0.0 * u.cm, 0.0 * u.cm]
+        if name == "flasher_wavelength":
+            return 420.0 * u.nm
+        if name == "flasher_pulse_shape":
+            return ["Gauss-Exponential", 2.0, 0.0]  # invalid decay
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_param_with_unit
+    )
+    simulator_instance.calibration_model.get_parameter_value.side_effect = (
+        lambda k: 4000 if k == "flasher_bunch_size" else ["Gauss-Exponential", 2.0, 0.0]
+    )
+
+    # Telescope minimal mocks
+    mock_diameter = Mock()
+    mock_diameter.to.return_value.value = 160.0
+    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
+    simulator_instance.telescope_model.get_parameter_value.side_effect = (
+        lambda k: 40 if k == "fadc_sum_bins" else "hexagonal"
+    )
+
+    simulator_instance.light_emission_config = {"number_of_events": 1, "flasher_photons": 100}
+
+    # Bypass geometry shape validation to exercise Gauss-Exponential parameter check
+    with (
+        patch(
+            "simtools.simtel.simulator_light_emission.fiducial_radius_from_shape",
+            return_value=75.0,
+        ),
+        patch.object(
+            simulator_instance,
+            "calculate_distance_focal_plane_calibration_device",
+            return_value=Mock(**{"to.return_value.value": 900.0}),
+        ),
+    ):
+        with pytest.raises(
+            ValueError,
+            match="Gauss-Exponential pulse shape requires positive width and exponential decay values",
+        ):
+            simulator_instance._add_flasher_command_options()
 
 
 def test__get_light_source_command(simulator_instance):
