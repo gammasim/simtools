@@ -531,12 +531,18 @@ class SimulatorLightEmission(SimtelRunner):
         """
         opt = self.calibration_model.get_parameter_value("flasher_pulse_shape")
         shape = opt[0].lower()
+        # Map internal shapes to sim_telarray expected tokens
+        # 'tophat' corresponds to a simple (flat) pulse in sim_telarray.
+        shape_token_map = {
+            "tophat": "simple",
+        }
+        shape_out = shape_token_map.get(shape, shape)
         width = opt[1]
         expv = opt[2]
-        if shape == "gauss-exponential" and width is not None and expv is not None:
-            return f"{shape}:{float(width)}:{float(expv)}"
-        if shape in ("gauss", "tophat") and width is not None:
-            return f"{shape}:{float(width)}"
-        if shape == "exponential" and expv is not None:
-            return f"{shape}:{float(expv)}"
-        return shape
+        if shape_out == "gauss-exponential" and width is not None and expv is not None:
+            return f"{shape_out}:{float(width)}:{float(expv)}"
+        if shape_out in ("gauss", "simple") and width is not None:
+            return f"{shape_out}:{float(width)}"
+        if shape_out == "exponential" and expv is not None:
+            return f"{shape_out}:{float(expv)}"
+        return shape_out
