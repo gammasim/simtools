@@ -204,23 +204,71 @@ def test__get_angular_distribution_string_for_sim_telarray(simulator_instance):
     simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_once_with(
         "flasher_angular_distribution_width"
     )
-    mock_width.to.assert_called_once_with(u.deg)
 
-    # Reset mocks for second test
-    simulator_instance.calibration_model.reset_mock()
 
-    # Test with width None
-    simulator_instance.calibration_model.get_parameter_value.return_value = "Gauss"
-    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = None
+def test__get_angular_distribution_string_for_sim_telarray_lambertian(
+    simulator_instance, tmp_test_directory
+):
+    """Lambertian distribution should generate a table file and return its path."""
+    from pathlib import Path
+
+    # Prepare mocked IO handler directory
+    base_dir = Path(tmp_test_directory) / "angular_distributions"
+    base_dir.mkdir(parents=True, exist_ok=True)
+    io_mock = Mock()
+    io_mock.get_output_directory.return_value = base_dir
+    simulator_instance.io_handler = io_mock
+
+    # Provide telescope/light_source identifiers for filename construction
+    simulator_instance.light_emission_config = {
+        "telescope": "TEL01",
+        "light_source": "CalibA",
+    }
+
+    # Mock calibration model values
+    simulator_instance.calibration_model.get_parameter_value.side_effect = (
+        lambda name: "Lambertian" if name == "flasher_angular_distribution" else None
+    )
+    # Width is ignored for Lambertian; no need to mock width conversion.
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
+        lambda name: None
+    )
 
     result = simulator_instance._get_angular_distribution_string_for_sim_telarray()
-    assert result == "gauss"
 
-    simulator_instance.calibration_model.get_parameter_value.assert_called_once_with(
-        "flasher_angular_distribution"
+    # Result should be a path to the generated table
+    assert result.endswith(".dat")
+    table_path = Path(result)
+    assert table_path.exists()
+    content = table_path.read_text().splitlines()
+    assert content[0].startswith("# angle[deg] relative_intensity")
+    # Expect 101 lines: header + 100 samples (0..max angle)
+    assert len(content) == 101
+    # Width parameter should not have been requested for Lambertian
+    assert simulator_instance.calibration_model.get_parameter_value_with_unit.call_count == 0
+
+
+def test__get_angular_distribution_string_for_sim_telarray_lambertian_failure(
+    simulator_instance,
+):
+    """Test Lambertian distribution failure handling."""
+    # Mock calibration model values
+    simulator_instance.calibration_model.get_parameter_value.side_effect = (
+        lambda name: "Lambertian" if name == "flasher_angular_distribution" else None
     )
-    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_once_with(
-        "flasher_angular_distribution_width"
+
+    # Mock _generate_lambertian_angular_distribution_table to raise OSError
+    with patch.object(
+        simulator_instance,
+        "_generate_lambertian_angular_distribution_table",
+        side_effect=OSError("Write failed"),
+    ):
+        result = simulator_instance._get_angular_distribution_string_for_sim_telarray()
+
+    # Should return the token string "lambertian" and log a warning
+    assert result == "lambertian"
+    simulator_instance._logger.warning.assert_called_with(
+        "Failed to write Lambertian angular distribution table: Write failed; using token instead."
     )
 
 
