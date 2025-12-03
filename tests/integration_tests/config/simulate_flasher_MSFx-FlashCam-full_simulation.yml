@@ -23,7 +23,6 @@ applications:
       - "Finished."
       forbidden_pattern:
       - "Error"
-      - "ERROR"
       - "had less photons than required and were skipped"
       file: logfile.log
       path_descriptor: output_path
