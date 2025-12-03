@@ -232,9 +232,7 @@ def test_read_event_data_with_missing_triggers(tmp_test_directory, mock_tables):
 
             tables = {}
             for name in table_names:
-                if name == "SHOWERS":
-                    tables[name] = Table.read(file, hdu=name)
-                elif name == "FILE_INFO":
+                if name in ("SHOWERS", "FILE_INFO"):
                     tables[name] = Table.read(file, hdu=name)
             return tables
 
