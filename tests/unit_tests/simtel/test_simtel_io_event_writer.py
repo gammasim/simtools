@@ -393,3 +393,77 @@ def test_map_telescope_names(lookup_table_generator):
     telescope_ids = [98, 99]
     expected = ["Unknown_98", "Unknown_99"]
     assert lookup_table_generator._map_telescope_names(telescope_ids) == expected
+
+
+def test_process_mc_shower_from_iact_simple(lookup_table_generator):
+    """Very simple test for _process_mc_shower_from_iact."""
+    mock_eventio_object = MagicMock()
+    mock_eventio_object.parse.return_value = {
+        "n_reuse": 2,
+        "event_number": 7,
+        "total_energy": 42.0,
+        "reuse_x": [100.0, 200.0],
+        "reuse_y": [300.0, 400.0],
+        "azimuth": 0.1,
+        "zenith": 0.2,
+    }
+
+    lookup_table_generator._process_mc_shower_from_iact(mock_eventio_object, 1)
+
+    assert len(lookup_table_generator.shower_data) == 2
+    assert lookup_table_generator.shower_data[0]["shower_id"] == 7
+    assert lookup_table_generator.shower_data[0]["event_id"] == 700
+    assert lookup_table_generator.shower_data[1]["event_id"] == 701
+    assert lookup_table_generator.shower_data[0]["simulated_energy"] == 42.0
+    assert lookup_table_generator.shower_data[0]["x_core"] == 1.0
+    assert lookup_table_generator.shower_data[1]["x_core"] == 2.0
+    assert lookup_table_generator.shower_data[0]["y_core"] == 3.0
+    assert lookup_table_generator.shower_data[1]["y_core"] == 4.0
+    assert lookup_table_generator.shower_data[0]["file_id"] == 1
+    assert lookup_table_generator.shower_data[1]["file_id"] == 1
+    assert lookup_table_generator.shower_data[0]["area_weight"] == 1.0
+    assert lookup_table_generator.shower_data[1]["area_weight"] == 1.0
+
+
+def test_process_file_info_else(monkeypatch, tmp_path):
+    """Test _process_file_info for CORSIKA IACT file (run_info is None)."""
+    file_path = tmp_path / "test.iact"
+    file_path.touch()
+
+    fake_run_header = {"x_scatter": 10000.0}
+    fake_event_header = {
+        "particle_id": 3,
+        "energy_min": 0.5,
+        "energy_max": 5.0,
+        "zenith": 0.5,
+        "azimuth": 1.0,
+        "viewcone_inner_angle": 0.1,
+        "viewcone_outer_angle": 0.2,
+    }
+
+    monkeypatch.setattr(
+        "simtools.simtel.simtel_io_event_writer.get_combined_eventio_run_header",
+        lambda f: None,
+    )
+    monkeypatch.setattr(
+        "simtools.simtel.simtel_io_event_writer.get_corsika_run_and_event_headers",
+        lambda f: (fake_run_header, fake_event_header),
+    )
+
+    writer = SimtelIOEventDataWriter([str(file_path)])
+    writer._process_file_info(1, str(file_path))
+
+    assert len(writer.file_info) == 1
+    info = writer.file_info[0]
+    assert info["file_name"] == str(file_path)
+    assert info["file_id"] == 1
+    assert info["particle_id"] == 3
+    assert info["energy_min"] == 0.5
+    assert info["energy_max"] == 5.0
+    assert info["viewcone_min"] == 0.1
+    assert info["viewcone_max"] == 0.2
+    assert info["core_scatter_min"] == 0.0
+    assert info["core_scatter_max"] == 100.0
+    assert info["zenith"] == pytest.approx(28.64788975654116)
+    assert info["azimuth"] == pytest.approx(57.29577951308232)
+    assert info["nsb_level"] == 0.0

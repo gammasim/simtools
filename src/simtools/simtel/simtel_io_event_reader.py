@@ -88,22 +88,13 @@ class SimtelIOEventDataReader:
         except (ValueError, AttributeError):
             sorted_indices = [0]  # Handle the case where the key is only "SHOWERS"
         for i in sorted_indices:
-            triggers = dataset_dict["TRIGGERS"][i] if len(dataset_dict["TRIGGERS"]) > i else None
-            if triggers:
-                data_sets.append(
-                    {
-                        "SHOWERS": dataset_dict["SHOWERS"][i],
-                        "TRIGGERS": triggers,
-                        "FILE_INFO": dataset_dict["FILE_INFO"][i],
-                    }
-                )
-            else:
-                data_sets.append(
-                    {
-                        "SHOWERS": dataset_dict["SHOWERS"][i],
-                        "FILE_INFO": dataset_dict["FILE_INFO"][i],
-                    }
-                )
+            entry = {
+                "SHOWERS": dataset_dict["SHOWERS"][i],
+                "FILE_INFO": dataset_dict["FILE_INFO"][i],
+            }
+            if i < len(dataset_dict["TRIGGERS"]) and dataset_dict["TRIGGERS"][i]:
+                entry["TRIGGERS"] = dataset_dict["TRIGGERS"][i]
+            data_sets.append(entry)
 
         return data_sets
 
@@ -258,19 +249,11 @@ class SimtelIOEventDataReader:
             A tuple with file info table, shower, triggered shower, and triggered event data.
         """
 
-        def get_name(key):
-            if table_name_map is None:
-                return key
-            return table_name_map.get(key)
+        def get_name(k):
+            return k if table_name_map is None else table_name_map.get(k)
 
-        tables = table_handler.read_tables(
-            event_data_file,
-            table_names=[
-                name
-                for k in ("SHOWERS", "TRIGGERS", "FILE_INFO")
-                if (name := get_name(k)) is not None
-            ],
-        )
+        table_names = [name for k in ("SHOWERS", "TRIGGERS", "FILE_INFO") if (name := get_name(k))]
+        tables = table_handler.read_tables(event_data_file, table_names=table_names)
         self.reduced_file_info = self.get_reduced_simulation_file_info(
             tables[get_name("FILE_INFO")]
         )
