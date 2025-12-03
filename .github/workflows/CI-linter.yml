@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -62,12 +62,6 @@ jobs:
         uses: citation-file-format/cffconvert-github-action@2.0.0
         with:
           args: "--validate"
-
-      - name: Install mamba dependencies
-        uses: mamba-org/setup-micromamba@v2
-        with:
-          environment-file: environment.yml
-          init-shell: bash
 
       - name: Python dependencies
         run: |

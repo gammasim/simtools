@@ -52,7 +52,6 @@ def mock_models(monkeypatch):
 @pytest.fixture
 def calculator(mock_models, config_data, tmp_test_directory):
     return IncidentAnglesCalculator(
-        db_config={"db": "config"},
         config_data=config_data,
         output_dir=tmp_test_directory,
         label="test-label",

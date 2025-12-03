@@ -60,7 +60,7 @@ def main():
     """Get file from database."""
     app_context = startup_application(_parse)
 
-    db = db_handler.DatabaseHandler(db_config=app_context.db_config)
+    db = db_handler.DatabaseHandler()
     file_id = db.export_model_files(
         dest=app_context.io_handler.get_output_directory(),
         file_names=app_context.args["file_name"],

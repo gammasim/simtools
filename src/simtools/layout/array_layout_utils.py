@@ -137,7 +137,7 @@ def merge_array_layouts(layouts_1, layouts_2):
     return merged_layout
 
 
-def write_array_layouts(array_layouts, args_dict, db_config):
+def write_array_layouts(array_layouts, args_dict):
     """
     Write array layouts as model parameter.
 
@@ -147,8 +147,6 @@ def write_array_layouts(array_layouts, args_dict, db_config):
         Command line arguments.
     array_layouts : dict
         Array layouts to be written.
-    db_config : dict
-        Database configuration.
     """
     site = args_dict.get("site") or array_layouts.get("site")
     _logger.info(f"Writing updated array layouts to the database for site {site}.")
@@ -165,7 +163,6 @@ def write_array_layouts(array_layouts, args_dict, db_config):
         instrument=f"OBS-{site}",
         parameter_version=args_dict.get("updated_parameter_version"),
         output_file=output_file,
-        db_config=db_config,
     )
     MetadataCollector.dump(
         args_dict,
@@ -208,9 +205,7 @@ def validate_array_layouts_with_db(production_table, array_layouts):
     return array_layouts
 
 
-def get_array_layouts_from_parameter_file(
-    file_path, model_version, db_config, coordinate_system="ground"
-):
+def get_array_layouts_from_parameter_file(file_path, model_version, coordinate_system="ground"):
     """
     Retrieve array layouts from parameter file.
 
@@ -220,8 +215,6 @@ def get_array_layouts_from_parameter_file(
         Path to the array layout parameter file.
     model_version : str
         Model version to retrieve.
-    db_config : dict
-        Database configuration.
     coordinate_system : str
         Coordinate system to use for the array elements (default is "ground").
 
@@ -241,7 +234,6 @@ def get_array_layouts_from_parameter_file(
     for layout in value:
         layouts.append(
             _get_array_layout_dict(
-                db_config,
                 model_version,
                 site,
                 layout.get("elements"),
@@ -252,9 +244,7 @@ def get_array_layouts_from_parameter_file(
     return layouts
 
 
-def get_array_layouts_from_db(
-    layout_name, site, model_version, db_config, coordinate_system="ground"
-):
+def get_array_layouts_from_db(layout_name, site, model_version, coordinate_system="ground"):
     """
     Retrieve all array layouts from the database and return as list of astropy tables.
 
@@ -266,8 +256,6 @@ def get_array_layouts_from_db(
         Site identifier.
     model_version : str
         Model version to retrieve.
-    db_config : dict
-        Database configuration.
     coordinate_system : str
         Coordinate system to use for the array elements (default is "ground").
 
@@ -280,15 +268,13 @@ def get_array_layouts_from_db(
     if layout_name:
         layout_names = gen.ensure_iterable(layout_name)
     else:
-        site_model = SiteModel(site=site, model_version=model_version, db_config=db_config)
+        site_model = SiteModel(site=site, model_version=model_version)
         layout_names = site_model.get_list_of_array_layouts()
 
     layouts = []
     for _layout_name in layout_names:
         layouts.append(
-            _get_array_layout_dict(
-                db_config, model_version, site, None, _layout_name, coordinate_system
-            )
+            _get_array_layout_dict(model_version, site, None, _layout_name, coordinate_system)
         )
     if len(layouts) == 1:
         return layouts[0]
@@ -296,7 +282,7 @@ def get_array_layouts_from_db(
 
 
 def get_array_layouts_using_telescope_lists_from_db(
-    telescope_lists, site, model_version, db_config, coordinate_system="ground"
+    telescope_lists, site, model_version, coordinate_system="ground"
 ):
     """
     Retrieve array layouts from the database using telescope lists.
@@ -309,8 +295,6 @@ def get_array_layouts_using_telescope_lists_from_db(
         Site identifier.
     model_version : str
         Model version to retrieve.
-    db_config : dict
-        Database configuration.
     coordinate_system : str
         Coordinate system to use for the array elements (default is "ground").
 
@@ -333,9 +317,7 @@ def get_array_layouts_using_telescope_lists_from_db(
             _site = sites.pop()
 
         layouts.append(
-            _get_array_layout_dict(
-                db_config, model_version, _site, telescope_list, None, coordinate_system
-            )
+            _get_array_layout_dict(model_version, _site, telescope_list, None, coordinate_system)
         )
     return layouts
 
@@ -368,12 +350,9 @@ def get_array_layouts_from_file(file_path):
     return layouts
 
 
-def _get_array_layout_dict(
-    db_config, model_version, site, telescope_list, layout_name, coordinate_system
-):
+def _get_array_layout_dict(model_version, site, telescope_list, layout_name, coordinate_system):
     """Return array layout dictionary for a given telescope list."""
     array_model = ArrayModel(
-        db_config=db_config,
         model_version=model_version,
         site=site,
         array_elements=telescope_list,
@@ -388,7 +367,7 @@ def _get_array_layout_dict(
     }
 
 
-def get_array_elements_from_db_for_layouts(layouts, site, model_version, db_config):
+def get_array_elements_from_db_for_layouts(layouts, site, model_version):
     """
     Get list of array elements from the database for given list of layout names.
 
@@ -408,15 +387,13 @@ def get_array_elements_from_db_for_layouts(layouts, site, model_version, db_conf
         Site name for the array layouts.
     model_version : str
         Model version for the array layouts.
-    db_config : dict
-        Database configuration dictionary.
 
     Returns
     -------
     dict
         Dictionary mapping layout names to telescope IDs.
     """
-    site_model = SiteModel(site=site, model_version=model_version, db_config=db_config)
+    site_model = SiteModel(site=site, model_version=model_version)
     layout_names = site_model.get_list_of_array_layouts() if layouts == ["all"] else layouts
     layout_dict = {}
     for layout_name in layout_names:

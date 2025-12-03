@@ -32,9 +32,7 @@ def main():
 
     output_path = app_context.io_handler.get_output_directory()
 
-    generator = ReportGenerator(
-        db_config=app_context.db_config, args=app_context.args, output_path=output_path
-    )
+    generator = ReportGenerator(args=app_context.args, output_path=output_path)
     generator.auto_generate_calibration_reports()
 
     if app_context.args.get("all_model_versions"):
