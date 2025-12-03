@@ -252,7 +252,9 @@ class SimtelIOEventDataReader:
         def get_name(k):
             return k if table_name_map is None else table_name_map.get(k)
 
-        table_names = [name for k in ("SHOWERS", "TRIGGERS", "FILE_INFO") if (name := get_name(k))]
+        table_names = [
+            name for k in ("SHOWERS", "TRIGGERS", "FILE_INFO") if (name := get_name(k)) is not None
+        ]
         tables = table_handler.read_tables(event_data_file, table_names=table_names)
         self.reduced_file_info = self.get_reduced_simulation_file_info(
             tables[get_name("FILE_INFO")]

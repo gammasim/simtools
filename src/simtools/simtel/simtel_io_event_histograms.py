@@ -304,7 +304,7 @@ class SimtelIOEventHistograms:
 
         # avoid zero-width bins
         if viewcone_min == viewcone_max:
-            viewcone_max = 0.5
+            viewcone_max = viewcone_min + 0.5
 
         return np.linspace(viewcone_min, viewcone_max, 100)
 
