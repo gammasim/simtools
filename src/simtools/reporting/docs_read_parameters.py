@@ -26,11 +26,10 @@ MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 class ReadParameters:
     """Read and manage model parameter data for report generation."""
 
-    def __init__(self, db_config, args, output_path):
+    def __init__(self, args, output_path):
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
-        self.db = db_handler.DatabaseHandler(db_config=db_config)
-        self.db_config = db_config
+        self.db = db_handler.DatabaseHandler()
         self.array_element = args.get("telescope", None)
         self.site = args.get("site", None)
         self.model_version = args.get("model_version", None)
@@ -109,7 +108,6 @@ class ReadParameters:
             plot_pixels.plot(
                 config=plot_config,
                 output_file=Path(f"{outpath}/{plot_name}"),
-                db_config=self.db_config,
             )
             plot_names.append(plot_name)
         else:
@@ -142,7 +140,6 @@ class ReadParameters:
             plot_mirrors.plot(
                 config=plot_config,
                 output_file=Path(f"{outpath}/{plot_name}"),
-                db_config=self.db_config,
             )
             plot_names.append(plot_name)
         else:
@@ -165,7 +162,6 @@ class ReadParameters:
             telescope=tel,
             output_path=outpath,
             plot_type="all",
-            db_config=self.db_config,
         )
 
         if not config_data:
@@ -180,7 +176,6 @@ class ReadParameters:
                 plot_tables.plot(
                     config=plot_config,
                     output_file=image_output_file,
-                    db_config=self.db_config,
                 )
                 plt.close("all")
 
@@ -582,7 +577,6 @@ class ReadParameters:
             telescope_name=self.array_element,
             model_version=self.model_version,
             label="reports",
-            db_config=self.db_config,
             ignore_software_version=True,
         )
 

@@ -107,7 +107,6 @@ def main():
     app_context = startup_application(_parse)
 
     ce = CameraEfficiency(
-        db_config=app_context.db_config,
         label=app_context.args.get("label"),
         config_data=app_context.args,
     )

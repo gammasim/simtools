@@ -63,7 +63,7 @@ def _detect_segmentation_type(data_file_path):
     return "standard"
 
 
-def plot(config, output_file, db_config=None):
+def plot(config, output_file):
     """
     Plot mirror panel layout based on configuration.
 
@@ -79,8 +79,6 @@ def plot(config, output_file, db_config=None):
         - title: str, optional, plot title
     output_file : str or Path
         Path where to save the plot (without extension)
-    db_config : dict, optional
-        Database configuration dictionary
 
     Returns
     -------
@@ -91,7 +89,6 @@ def plot(config, output_file, db_config=None):
         site=config["site"],
         telescope_name=config["telescope"],
         model_version=config.get("model_version"),
-        db_config=db_config,
         ignore_software_version=True,
     )
 

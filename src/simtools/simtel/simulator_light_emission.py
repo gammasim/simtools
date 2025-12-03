@@ -32,7 +32,7 @@ class SimulatorLightEmission(SimtelRunner):
         Label for the simulation
     """
 
-    def __init__(self, light_emission_config, db_config=None, label=None):
+    def __init__(self, light_emission_config, label=None):
         """Initialize SimulatorLightEmission."""
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
@@ -44,7 +44,6 @@ class SimulatorLightEmission(SimtelRunner):
         self.telescope_model, self.site_model, self.calibration_model = (
             initialize_simulation_models(
                 label=label,
-                db_config=db_config,
                 site=light_emission_config.get("site"),
                 telescope_name=light_emission_config.get("telescope"),
                 calibration_device_name=light_emission_config.get("light_source"),

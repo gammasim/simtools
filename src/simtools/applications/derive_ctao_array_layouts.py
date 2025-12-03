@@ -92,7 +92,7 @@ def main():
         branch_name=app_context.args["repository_branch"],
     )
 
-    db = db_handler.DatabaseHandler(db_config=app_context.db_config)
+    db = db_handler.DatabaseHandler()
     db_array_layouts = db.get_model_parameter(
         parameter="array_layouts",
         site=app_context.args["site"],
@@ -107,7 +107,6 @@ def main():
     write_array_layouts(
         array_layouts=merge_array_layouts(db_array_layouts["array_layouts"], ctao_array_layouts),
         args_dict=app_context.args,
-        db_config=app_context.db_config,
     )
 
 

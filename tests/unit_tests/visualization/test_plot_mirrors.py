@@ -44,7 +44,6 @@ def test_plot(mock_telescope_model, mock_mirrors, mock_save, mock_plot_layout, t
             site="North",
             telescope_name="LSTN-01",
             model_version="6.0.0",
-            db_config=None,
             ignore_software_version=True,
         )
         mock_tel_instance.get_parameter_value.assert_called_once_with("mirror_list")

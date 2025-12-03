@@ -16,11 +16,10 @@ logger = logging.getLogger()
 class ReportGenerator:
     """Automate report generation."""
 
-    def __init__(self, db_config, args, output_path):
+    def __init__(self, args, output_path):
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
-        self.db = db_handler.DatabaseHandler(db_config=db_config)
-        self.db_config = db_config
+        self.db = db_handler.DatabaseHandler()
         self.args = args
         self.output_path = output_path
 
@@ -99,7 +98,7 @@ class ReportGenerator:
         )
 
         output_path = Path(self.output_path) / str(model_version)
-        ReadParameters(self.db_config, self.args, output_path).produce_array_element_report()
+        ReadParameters(self.args, output_path).produce_array_element_report()
 
         logger.info(
             f"Markdown report generated for {site} "
@@ -167,9 +166,7 @@ class ReportGenerator:
                 }
             )
 
-            ReadParameters(
-                self.db_config, self.args, self.output_path
-            ).produce_model_parameter_reports()
+            ReadParameters(self.args, self.output_path).produce_model_parameter_reports()
 
             logger.info(
                 f"Markdown report generated for {site} Telescope {telescope}: {self.output_path}"
@@ -211,7 +208,7 @@ class ReportGenerator:
         )
 
         output_path = Path(self.output_path) / str(model_version)
-        ReadParameters(self.db_config, self.args, output_path).produce_observatory_report()
+        ReadParameters(self.args, output_path).produce_observatory_report()
 
         logger.info(f"Observatory report generated for {site} (v{model_version}): {output_path}")
 
@@ -237,9 +234,7 @@ class ReportGenerator:
             self.args.update({"model_version": version})
             output_path = Path(self.output_path) / str(version)
 
-            ReadParameters(
-                self.db_config, self.args, output_path
-            ).produce_simulation_configuration_report()
+            ReadParameters(self.args, output_path).produce_simulation_configuration_report()
 
             logger.info(f"Configuration reports for (v{version}) produced: {output_path}")
 
@@ -262,7 +257,7 @@ class ReportGenerator:
             output_path = Path(self.output_path) / str(version)
 
             try:
-                ReadParameters(self.db_config, self.args, output_path).produce_calibration_reports()
+                ReadParameters(self.args, output_path).produce_calibration_reports()
                 logger.info(f"Calibration reports for (v{version}) produced: {output_path}")
             except ValueError as err:
                 # Some model versions do not have calibration_devices in the DB;
@@ -305,7 +300,7 @@ class ReportGenerator:
 
                 # Generate parameter comparison reports for calibration devices
                 ReadParameters(
-                    self.db_config, version_args, self.output_path
+                    version_args, self.output_path
                 ).generate_model_parameter_reports_for_devices(array_elements)
 
                 logger.info(
