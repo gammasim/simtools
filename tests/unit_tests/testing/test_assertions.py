@@ -532,3 +532,17 @@ def test_check_plain_log_missing_expected_patterns(tmp_path: Path, caplog):
     with caplog.at_level(logging.ERROR):
         assert check_plain_log(log_file, file_test) is False
         assert "Missing expected patterns" in caplog.text
+
+
+def test_check_plain_log_case_insensitive(tmp_path: Path):
+    log_file = tmp_path / "run.log"
+    log_file.write_text("Error: something went wrong\n", encoding="utf-8")
+
+    # "error" (lowercase) should match "Error" (mixed case)
+    file_test = {"expected_log_output": {"forbidden_pattern": ["error"]}}
+    assert check_plain_log(log_file, file_test) is False
+
+    log_file.write_text("Success: all good\n", encoding="utf-8")
+    # "success" (lowercase) should match "Success" (mixed case)
+    file_test = {"expected_log_output": {"pattern": ["success"]}}
+    assert check_plain_log(log_file, file_test) is True
