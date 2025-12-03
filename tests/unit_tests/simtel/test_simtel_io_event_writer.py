@@ -414,15 +414,15 @@ def test_process_mc_shower_from_iact_simple(lookup_table_generator):
     assert lookup_table_generator.shower_data[0]["shower_id"] == 7
     assert lookup_table_generator.shower_data[0]["event_id"] == 700
     assert lookup_table_generator.shower_data[1]["event_id"] == 701
-    assert lookup_table_generator.shower_data[0]["simulated_energy"] == 42.0
-    assert lookup_table_generator.shower_data[0]["x_core"] == 1.0
-    assert lookup_table_generator.shower_data[1]["x_core"] == 2.0
-    assert lookup_table_generator.shower_data[0]["y_core"] == 3.0
-    assert lookup_table_generator.shower_data[1]["y_core"] == 4.0
+    assert lookup_table_generator.shower_data[0]["simulated_energy"] == pytest.approx(42.0)
+    assert lookup_table_generator.shower_data[0]["x_core"] == pytest.approx(1.0)
+    assert lookup_table_generator.shower_data[1]["x_core"] == pytest.approx(2.0)
+    assert lookup_table_generator.shower_data[0]["y_core"] == pytest.approx(3.0)
+    assert lookup_table_generator.shower_data[1]["y_core"] == pytest.approx(4.0)
     assert lookup_table_generator.shower_data[0]["file_id"] == 1
     assert lookup_table_generator.shower_data[1]["file_id"] == 1
-    assert lookup_table_generator.shower_data[0]["area_weight"] == 1.0
-    assert lookup_table_generator.shower_data[1]["area_weight"] == 1.0
+    assert lookup_table_generator.shower_data[0]["area_weight"] == pytest.approx(1.0)
+    assert lookup_table_generator.shower_data[1]["area_weight"] == pytest.approx(1.0)
 
 
 def test_process_file_info_else(monkeypatch, tmp_path):
@@ -458,12 +458,12 @@ def test_process_file_info_else(monkeypatch, tmp_path):
     assert info["file_name"] == str(file_path)
     assert info["file_id"] == 1
     assert info["particle_id"] == 3
-    assert info["energy_min"] == 0.5
-    assert info["energy_max"] == 5.0
-    assert info["viewcone_min"] == 0.1
-    assert info["viewcone_max"] == 0.2
-    assert info["core_scatter_min"] == 0.0
-    assert info["core_scatter_max"] == 100.0
+    assert info["energy_min"] == pytest.approx(0.5)
+    assert info["energy_max"] == pytest.approx(5.0)
+    assert info["viewcone_min"] == pytest.approx(0.1)
+    assert info["viewcone_max"] == pytest.approx(0.2)
+    assert info["core_scatter_min"] == pytest.approx(0.0)
+    assert info["core_scatter_max"] == pytest.approx(100.0)
     assert info["zenith"] == pytest.approx(28.64788975654116)
     assert info["azimuth"] == pytest.approx(57.29577951308232)
-    assert info["nsb_level"] == 0.0
+    assert info["nsb_level"] == pytest.approx(0.0)
