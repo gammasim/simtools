@@ -645,4 +645,4 @@ def test_view_cone_bins_min_equals_max(mock_reader, hdf5_file_name):
     assert isinstance(bins, np.ndarray)
     assert len(bins) == 100
     assert bins[0] == pytest.approx(5.0)
-    assert bins[-1] == pytest.approx(0.5)
+    assert bins[-1] == pytest.approx(5.5)
