@@ -3,34 +3,34 @@
 import functools
 import logging
 import operator
-import re
 import time
 from pathlib import Path
 
 import boost_histogram as bh
 import numpy as np
 from astropy import units as u
-from astropy.io.misc import yaml
 from astropy.units import cds
 from corsikaio.subblocks import event_header, get_units_from_fields, run_header
-from ctapipe.io import write_table
 from eventio import IACTFile
 
-from simtools import version
 from simtools.io import io_handler
-from simtools.io.ascii_handler import collect_data_from_file
-from simtools.io.hdf5_handler import fill_hdf5_table
 from simtools.utils.geometry import convert_2d_to_radial_distr, rotate
-from simtools.utils.names import sanitize_name
 from simtools.visualization import plot_corsika_histograms as visualize
 
 X_AXIS_STRING = "x axis"
 Y_AXIS_STRING = "y axis"
 Z_AXIS_STRING = "z axis"
 
-
-class HistogramNotCreatedError(Exception):
-    """Exception for histogram not created."""
+event_headers_1D = [
+    "total_energy",
+    "starting_altitude",
+    "first_interaction_height",
+    "momentum_x",
+    "momentum_y",
+    "momentum_minus_z",
+    "zenith",
+    "azimuth",
+]
 
 
 class CorsikaHistograms:
@@ -43,10 +43,6 @@ class CorsikaHistograms:
         CORSIKA IACT file.
     label: str
         Instance label.
-    output_path: str
-        Output file path.
-    hdf5_file_name: str
-        HDF5 file name for histogram storage.
 
     Raises
     ------
@@ -54,7 +50,7 @@ class CorsikaHistograms:
         if the input file given does not exist.
     """
 
-    def __init__(self, input_file, label=None, output_path=None, hdf5_file_name=None):
+    def __init__(self, input_file, label=None):
         self.label = label
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaHistograms")
@@ -65,12 +61,9 @@ class CorsikaHistograms:
             raise FileNotFoundError(f"file {self.input_file} does not exist.")
 
         self.io_handler = io_handler.IOHandler()
-        self.output_path = (
-            Path(output_path) if output_path else self.io_handler.get_output_directory("corsika")
-        )
-        self.hdf5_file_name = (
-            hdf5_file_name if hdf5_file_name else re.split(r"\.", self.input_file.name)[0] + ".hdf5"
-        )
+        self.output_path = self.io_handler.get_output_directory("corsika")
+
+        self._corsika_version = None
 
         self._telescope_indices = None
         self._telescope_positions = None
@@ -80,18 +73,17 @@ class CorsikaHistograms:
         self._num_photons_per_event_per_telescope = None
         self._num_photons_per_event = None
         self._num_photons_per_telescope = None
-        self.__meta_dict = None
         self._dict_2d_distributions = None
         self._dict_1d_distributions = None
         self._event_azimuth_angles = None
         self._event_zenith_angles = None
-        self._hist_config = None
+        # Initialize individual telescopes before using it in default config
+        self._individual_telescopes = False
+        self.hist_config = self._create_histogram_default_config()
         self._total_num_photons = None
         self._event_total_energies = None
         self._event_first_interaction_heights = None
-        self._corsika_version = None
         self.event_information = None
-        self._individual_telescopes = None
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
         self._allowed_1d_labels = {"wavelength", "time", "altitude"}
         self._allowed_2d_labels = {"counts", "density", "direction", "time_altitude"}
@@ -119,120 +111,34 @@ class CorsikaHistograms:
             self._logger.error(msg)
             raise ValueError(msg) from exc
 
-    def should_overwrite(
-        self, write_hdf5: bool, event1d: list | None, event2d: list | None
-    ) -> bool:
-        """Return True if output HDF5 exists and any writing flag is requested."""
-        exists = Path(self.hdf5_file_name).exists()
-        if exists and (write_hdf5 or bool(event1d) or bool(event2d)):
-            self._logger.warning(
-                f"Output hdf5 file {self.hdf5_file_name} already exists. Overwriting it."
-            )
-            return True
-        return False
-
-    def run_export_pipeline(
-        self,
-        *,
-        individual_telescopes: bool,
-        hist_config,
-        indices_arg,
-        write_pdf: bool,
-        write_hdf5: bool,
-        event1d: list | None,
-        event2d: list | None,
-        test: bool = False,
-    ) -> dict:
-        """Run the full histogram export pipeline and return output artifact paths.
-
-        Returns a dict with optional keys: pdf_photons, pdf_event1d, pdf_event2d.
-        """
-        outputs: dict[str, Path | None] = {
-            "pdf_photons": None,
-            "pdf_event_1d": None,
-            "pdf_event_2d": None,
-        }
-
-        indices = self.parse_telescope_indices(indices_arg)
-        overwrite = self.should_overwrite(write_hdf5, event1d, event2d)
-
+    def run_export_pipeline(self, pdf_file):
+        """Run the full histogram export pipeline and return output artifact paths."""
         self.set_histograms(
-            telescope_indices=indices,
-            individual_telescopes=individual_telescopes,
-            hist_config=hist_config,
+            telescope_indices=self.parse_telescope_indices(None), individual_telescopes=None
         )
 
-        if write_pdf:
-            pdf_path = visualize.export_all_photon_figures_pdf(self, test=test)
-            outputs["pdf_photons"] = pdf_path
-        if write_hdf5:
-            self.export_histograms(overwrite=overwrite)
+        if pdf_file is None:
+            pdf_file = Path(self.input_file.name).stem + ".pdf"
 
-        if event1d is not None:
-            outputs["pdf_event_1d"] = visualize.derive_event_1d_histograms(
-                self, event1d, pdf=write_pdf, hdf5=write_hdf5, overwrite=not write_hdf5
-            )
-        if event2d is not None:
-            outputs["pdf_event_2d"] = visualize.derive_event_2d_histograms(
-                self,
-                event2d,
-                pdf=write_pdf,
-                hdf5=write_hdf5,
-                overwrite=not (write_hdf5 or bool(event1d)),
-            )
+        pdf_file = Path(self.output_path).joinpath(pdf_file)
+        self._logger.info(f"Saving histograms to {pdf_file}")
 
-        return outputs
-
-    @property
-    def hdf5_file_name(self):
-        """
-        Property for the hdf5 file name.
-
-        The idea of this property is to allow setting (or changing) the name of the hdf5 file
-        even after creating the class instance.
-        """
-        return self._hdf5_file_name
-
-    @hdf5_file_name.setter
-    def hdf5_file_name(self, hdf5_file_name):
-        """
-        Set the hdf5_file_name to the argument passed.
-
-        Parameters
-        ----------
-        hdf5_file_name: str
-            The name of hdf5 file to be set.
-        """
-        self._hdf5_file_name = Path(self.output_path).joinpath(hdf5_file_name).absolute().as_posix()
+        visualize.export_all_photon_figures_pdf(self, pdf_file)
+        visualize.derive_event_1d_histograms(self, event_headers_1D, pdf_file)
 
     @property
     def corsika_version(self):
         """
-        Get the version of the CORSIKA IACT file.
+        CORSIKA version used to generate the IACT file.
 
         Returns
         -------
         float:
-            The version of CORSIKA used to produce the CORSIKA IACT file given by self.input_file.
+            CORSIKA version.
         """
         if self._corsika_version is None:
-            all_corsika_versions = list(run_header.run_header_types.keys())
             header = list(self.iact_file.header)
-
-            for i_version in reversed(all_corsika_versions):
-                # Get the event header for this software version being tested.
-                single_run_header = run_header.run_header_types[i_version]
-                # Get the position in the dictionary, where the version is.
-                version_index_position = np.argwhere(
-                    np.array(list(single_run_header.names)) == "version"
-                )[0]
-
-                # Check if version tested is the same as the version written in the file header.
-                if i_version == np.trunc(float(header[version_index_position[0]]) * 10) / 10:
-                    # If the version found is the same as the initial guess, leave the loop,
-                    # otherwise, iterate until we find the correct version.
-                    self._corsika_version = np.around(float(header[version_index_position[0]]), 3)
-                    break
+            self._corsika_version = float(header[3])
         return self._corsika_version
 
     def _initialize_header(self):
@@ -380,71 +286,14 @@ class CorsikaHistograms:
                     raise TypeError
             self._telescope_indices = np.sort(telescope_new_indices)
 
-    @property
-    def hist_config(self):
-        """
-        The configuration of the histograms.
-
-        Returns
-        -------
-        dict:
-            the dictionary with the histogram configuration.
-        """
-        if self._hist_config is None:
-            msg = (
-                "No histogram configuration was defined before. The default config is being "
-                "created now."
-            )
-            self._logger.warning(msg)
-            self._hist_config = self._create_histogram_default_config()
-        return self._hist_config
-
-    @hist_config.setter
-    def hist_config(self, input_config):
-        """
-        Set the configuration for the histograms (e.g., bin size, min and max values, etc).
-
-        The input is allowed either through a yaml file or a dictionary. If nothing is given,
-        the dictionary is created with default values.
-
-        Parameters
-        ----------
-        input_config: str, Path, dict or NoneType
-            yaml file with the configuration parameters to create the histograms. For the correct
-            format, please look at the docstring at _create_histogram_default_config.
-            Alternatively, it can be a dictionary with the configuration parameters to create
-            the histograms.
-        """
-        if isinstance(input_config, dict):
-            self._hist_config = input_config
-        else:
-            self._hist_config = collect_data_from_file(input_config) if input_config else None
-
-    def hist_config_to_yaml(self, file_name=None):
-        """
-        Save the histogram configuration dictionary to a yaml file.
-
-        Parameters
-        ----------
-        file_name: str
-            Name of the output file, in which to save the histogram configuration.
-
-        """
-        if file_name is None:
-            file_name = "hist_config"
-        file_name = Path(file_name).with_suffix(".yml")
-        output_config_file_name = Path(self.output_path).joinpath(file_name)
-        with open(output_config_file_name, "w", encoding="utf-8") as file:
-            yaml.dump(self.hist_config, file)
-
     def _create_histogram_default_config(self):
         """
         Create a dictionary with the configuration necessary to create the histograms.
 
         It is used only in case the configuration is not provided in a yaml file or dict.
 
-        Three histograms are created: hist_position with 3 dimensions (x, y positions and the
-        wavelength), hist_direction with 2 dimensions (direction cosines in x and y directions),
+        Three histograms are created: hist_position with 3 dimensions (x, y positions),
+        hist_direction with 2 dimensions (direction cosines in x and y directions),
         hist_time_altitude with 2 dimensions (time and altitude of emission).
 
         Four arguments are passed to each dimension in the dictionary:
@@ -626,7 +475,6 @@ class CorsikaHistograms:
              is positive or at first interaction if otherwise.
              zem: altitude where the photon was generated in cm,
              photons: number of photons associated to this bunch,
-             wavelength: the wavelength of the photons in nm.
         rotation_around_z_axis: astropy.Quantity
             Angle to rotate the observational plane around the Z axis.
             It can be passed in radians or degrees.
@@ -677,7 +525,7 @@ class CorsikaHistograms:
             if self.individual_telescopes is True:
                 hist_num += 1
 
-    def set_histograms(self, telescope_indices=None, individual_telescopes=None, hist_config=None):
+    def set_histograms(self, telescope_indices=None, individual_telescopes=None):
         """
         Create and fill Cherenkov photons histograms using information from the CORSIKA IACT file.
 
@@ -688,11 +536,6 @@ class CorsikaHistograms:
         individual_telescopes: bool
             if False, the histograms are supposed to be filled for all telescopes. Default is False.
             if True, one histogram is set for each telescope separately.
-        hist_config:
-            yaml file with the configuration parameters to create the histograms. For the correct
-            format, please look at the docstring of _create_histogram_default_config.
-            Alternatively, it can be a dictionary with the configuration parameters to create
-            the histograms.
 
         Returns
         -------
@@ -705,7 +548,6 @@ class CorsikaHistograms:
         """
         self.telescope_indices = telescope_indices
         self.individual_telescopes = individual_telescopes
-        self.hist_config = hist_config
         self._create_histograms(individual_telescopes=self.individual_telescopes)
 
         num_photons_per_event_per_telescope_to_set = []
@@ -757,24 +599,6 @@ class CorsikaHistograms:
         else:
             self._individual_telescopes = new_individual_telescopes
 
-    def _raise_if_no_histogram(self):
-        """
-        Raise an error if the histograms were not created.
-
-        Raises
-        ------
-        HistogramNotCreatedError:
-            if the histogram was not previously created.
-        """
-        for histogram in self._allowed_histograms:
-            if not hasattr(self, histogram) or getattr(self, histogram) is None:
-                msg = (
-                    "The histograms were not created. Please, use create_histograms to create "
-                    "histograms from the CORSIKA output file."
-                )
-                self._logger.error(msg)
-                raise HistogramNotCreatedError
-
     def _get_hist_2d_projection(self, label):
         """
         Get 2D distributions.
@@ -802,7 +626,6 @@ class CorsikaHistograms:
             msg = f"label is not valid. Valid entries are {self._allowed_2d_labels}"
             self._logger.error(msg)
             raise ValueError(msg)
-        self._raise_if_no_histogram()
 
         num_telescopes_to_fill = (
             len(self.telescope_indices) if self.individual_telescopes is True else 1
@@ -943,7 +766,6 @@ class CorsikaHistograms:
             msg = f"{label} is not valid. Valid entries are {self._allowed_1d_labels}"
             self._logger.error(msg)
             raise ValueError(msg)
-        self._raise_if_no_histogram()
 
         x_bin_edges_list, hist_1d_list = [], []
         for i_hist, _ in enumerate(self.hist_position):
@@ -1182,39 +1004,6 @@ class CorsikaHistograms:
         hist, bin_edges = np.histogram(self.num_photons_per_telescope, bins=bins, range=hist_range)
         return hist.reshape(1, bins), bin_edges.reshape(1, bins + 1)
 
-    def export_histograms(self, overwrite=False):
-        """
-        Export the histograms to hdf5 files.
-
-        Parameters
-        ----------
-        overwrite: bool
-            If True overwrites the histograms already saved in the hdf5 file.
-        """
-        self._export_1d_histograms(overwrite=overwrite)
-        self._export_2d_histograms(overwrite=False)
-
-    @property
-    def _meta_dict(self):
-        """
-        Define the meta dictionary for exporting the histograms.
-
-        Returns
-        -------
-        dict
-            Meta dictionary for the hdf5 files with the histograms.
-        """
-        if self.__meta_dict is None:
-            self.__meta_dict = {
-                "corsika_version": self.corsika_version,
-                "simtools_version": version.__version__,
-                "iact_file": self.input_file.name,
-                "telescope_indices": list(self.telescope_indices),
-                "individual_telescopes": self.individual_telescopes,
-                "note": "Only lower bin edges are given.",
-            }
-        return self.__meta_dict
-
     @property
     def dict_1d_distributions(self):
         """
@@ -1282,55 +1071,6 @@ class CorsikaHistograms:
             },
         }
         return self._dict_1d_distributions
-
-    def _export_1d_histograms(self, overwrite=False):
-        """
-        Auxiliary function to export only the 1D histograms.
-
-        Parameters
-        ----------
-        overwrite: bool
-            If True overwrites the histograms already saved in the hdf5 file.
-        """
-        axis_unit = "axis unit"
-        for _, function_dict in self.dict_1d_distributions.items():
-            self._meta_dict["Title"] = sanitize_name(function_dict["title"])
-            histogram_function = getattr(self, function_dict["function"])
-            hist_1d_list, x_bin_edges_list = histogram_function()
-            x_bin_edges_list = x_bin_edges_list * function_dict[axis_unit]
-            if function_dict["function"] == "get_photon_density_distr":
-                histogram_value_unit = 1 / (function_dict[axis_unit] ** 2)
-            else:
-                histogram_value_unit = u.dimensionless_unscaled
-            hist_1d_list = hist_1d_list * histogram_value_unit
-            for i_histogram, _ in enumerate(x_bin_edges_list):
-                if self.individual_telescopes:
-                    hdf5_table_name = (
-                        f"/{function_dict['file name']}_"
-                        f"tel_index_{self.telescope_indices[i_histogram]}"
-                    )
-                else:
-                    hdf5_table_name = f"/{function_dict['file name']}_all_tels"
-
-                table = fill_hdf5_table(
-                    hist=hist_1d_list[i_histogram],
-                    x_bin_edges=x_bin_edges_list[i_histogram],
-                    y_bin_edges=None,
-                    x_label=function_dict["bin edges"],
-                    y_label=None,
-                    meta_data=self._meta_dict,
-                )
-                self._logger.info(
-                    f"Writing 1D histogram with name {hdf5_table_name} to {self.hdf5_file_name}."
-                )
-                # overwrite takes precedence over append
-                if overwrite is True:
-                    append = False
-                else:
-                    append = True
-                write_table(
-                    table, self.hdf5_file_name, hdf5_table_name, append=append, overwrite=overwrite
-                )
 
     @property
     def dict_2d_distributions(self):
@@ -1402,164 +1142,6 @@ class CorsikaHistograms:
                 },
             }
         return self._dict_2d_distributions
-
-    def _export_2d_histograms(self, overwrite):
-        """
-        Auxiliary function to export only the 2D histograms.
-
-        Parameters
-        ----------
-        overwrite: bool
-            If True overwrites the histograms already saved in the hdf5 file.
-        """
-        x_axis_unit = "x axis unit"
-        y_axis_unit = "y axis unit"
-
-        for property_name, function_dict in self.dict_2d_distributions.items():
-            self._meta_dict["Title"] = sanitize_name(function_dict["title"])
-            histogram_function = getattr(self, function_dict["function"])
-
-            hist_2d_list, x_bin_edges_list, y_bin_edges_list = histogram_function()
-            if function_dict["function"] == "get_2d_photon_density_distr":
-                histogram_value_unit = 1 / (
-                    self.dict_2d_distributions[property_name][x_axis_unit]
-                    * self.dict_2d_distributions[property_name][y_axis_unit]
-                )
-            else:
-                histogram_value_unit = u.dimensionless_unscaled
-
-            hist_2d_list, x_bin_edges_list, y_bin_edges_list = (
-                hist_2d_list * histogram_value_unit,
-                x_bin_edges_list * self.dict_2d_distributions[property_name][x_axis_unit],
-                y_bin_edges_list * self.dict_2d_distributions[property_name][y_axis_unit],
-            )
-
-            for i_histogram, _ in enumerate(x_bin_edges_list):
-                if self.individual_telescopes:
-                    hdf5_table_name = (
-                        f"/{self.dict_2d_distributions[property_name]['file name']}"
-                        f"_tel_index_{self.telescope_indices[i_histogram]}"
-                    )
-                else:
-                    hdf5_table_name = (
-                        f"/{self.dict_2d_distributions[property_name]['file name']}_all_tels"
-                    )
-                table = fill_hdf5_table(
-                    hist=hist_2d_list[i_histogram],
-                    x_bin_edges=x_bin_edges_list[i_histogram],
-                    y_bin_edges=y_bin_edges_list[i_histogram],
-                    x_label=function_dict["x bin edges"],
-                    y_label=function_dict["y bin edges"],
-                    meta_data=self._meta_dict,
-                )
-
-                self._logger.info(
-                    f"Writing 2D histogram with name {hdf5_table_name} to {self.hdf5_file_name}."
-                )
-                # Always appending to table due to the file previously created
-                # by self._export_1d_histograms.
-                write_table(
-                    table, self.hdf5_file_name, hdf5_table_name, append=True, overwrite=overwrite
-                )
-
-    def export_event_header_1d_histogram(
-        self, event_header_element, bins=50, hist_range=None, overwrite=False
-    ):
-        """
-        Export 'event_header_element' from CORSIKA to hd5 for a 1D histogram.
-
-        Parameters
-        ----------
-        event_header_element: str
-            The key to the CORSIKA event header element.
-            Possible choices are stored in 'self.all_event_keys'.
-        bins: float
-            Number of bins for the histogram.
-        hist_range: 2-tuple
-            Tuple to define the range of the histogram.
-        overwrite: bool
-            If True overwrites the histograms already saved in the hdf5 file.
-        """
-        hist, bin_edges = self.event_1d_histogram(
-            event_header_element, bins=bins, hist_range=hist_range
-        )
-        bin_edges *= self.event_information[event_header_element].unit
-        table = fill_hdf5_table(
-            hist=hist,
-            x_bin_edges=bin_edges,
-            y_bin_edges=None,
-            x_label=event_header_element,
-            y_label=None,
-            meta_data=self._meta_dict,
-        )
-        hdf5_table_name = f"/event_2d_histograms_{event_header_element}"
-
-        self._logger.info(
-            f"Exporting histogram with name {hdf5_table_name} to {self.hdf5_file_name}."
-        )
-        # overwrite takes precedence over append
-        if overwrite is True:
-            append = False
-        else:
-            append = True
-        write_table(table, self.hdf5_file_name, hdf5_table_name, append=append, overwrite=overwrite)
-
-    def export_event_header_2d_histogram(
-        self,
-        event_header_element_1,
-        event_header_element_2,
-        bins=50,
-        hist_range=None,
-        overwrite=False,
-    ):
-        """
-        Export event_header of a 2D histogram to a hdf5 file.
-
-        Searches the 2D histogram for the key 'event_header_element_1' and
-        'event_header_element_2'from the CORSIKA event header.
-
-        Parameters
-        ----------
-        event_header_element_1: str
-            The key to the CORSIKA event header element.
-        event_header_element_2: str
-            The key to the CORSIKA event header element.
-            Possible choices for 'event_header_element_1' and 'event_header_element_2' are stored
-            in 'self.all_event_keys'.
-        bins: float
-            Number of bins for the histogram.
-        hist_range: 2-tuple
-            Tuple to define the range of the histogram.
-        overwrite: bool
-            If True overwrites the histograms already saved in the hdf5 file.
-
-        """
-        hist, x_bin_edges, y_bin_edges = self.event_2d_histogram(
-            event_header_element_1, event_header_element_2, bins=bins, hist_range=hist_range
-        )
-        x_bin_edges *= self.event_information[event_header_element_1].unit
-        y_bin_edges *= self.event_information[event_header_element_2].unit
-
-        table = fill_hdf5_table(
-            hist=hist,
-            x_bin_edges=x_bin_edges,
-            y_bin_edges=y_bin_edges,
-            x_label=event_header_element_1,
-            y_label=event_header_element_2,
-            meta_data=self._meta_dict,
-        )
-
-        hdf5_table_name = f"/event_2d_histograms_{event_header_element_1}_{event_header_element_2}"
-
-        self._logger.info(
-            f"Exporting histogram with name {hdf5_table_name} to {self.hdf5_file_name}."
-        )
-        # overwrite takes precedence over append
-        if overwrite is True:
-            append = False
-        else:
-            append = True
-        write_table(table, self.hdf5_file_name, hdf5_table_name, append=append, overwrite=overwrite)
 
     @property
     def num_photons_per_telescope(self):
@@ -1779,11 +1361,27 @@ class CorsikaHistograms:
         """
         if key not in self.all_event_keys:
             raise KeyError(f"key is not valid. Valid entries are {self.all_event_keys}")
-        hist, bin_edges = np.histogram(
-            self.event_information[key].value,
-            bins=bins,
-            range=hist_range,
-        )
+
+        if isinstance(self.event_information[key], u.Quantity):
+            data = self.event_information[key].value
+        else:
+            return None, None
+
+        if len(data) == 0:
+            self._logger.warning(f"No data available for '{key}'. Returning empty histogram.")
+            return np.array([]), np.array([])
+
+        data_range = np.ptp(data)
+        if data_range == 0:
+            self._logger.warning(
+                f"All values for '{key}' are identical ({data[0]}). Creating single-bin histogram."
+            )
+            bins = 1
+            if hist_range is None:
+                epsilon = 0.5 if data[0] == 0 else abs(data[0]) * 0.01
+                hist_range = (data[0] - epsilon, data[0] + epsilon)
+
+        hist, bin_edges = np.histogram(data, bins=bins, range=hist_range)
         return hist, bin_edges
 
     def event_2d_histogram(self, key_1, key_2, bins=50, hist_range=None):

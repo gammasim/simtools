@@ -1,12 +1,9 @@
 """Helper module for reading and writing in hd5 format."""
 
 import logging
-from pathlib import PosixPath
 
 import astropy.units as u
-import tables
 from astropy.table import Table
-from ctapipe.io import read_table
 
 from simtools.utils.names import sanitize_name
 
@@ -109,31 +106,3 @@ def validate_histogram(hist, y_bin_edges):
 
     if hist.ndim == 2 and y_bin_edges is None:
         raise ValueError("y_bin_edges should not be None for 2D histograms.")
-
-
-def read_hdf5(hdf5_file_name):
-    """
-    Read a hdf5 output file.
-
-    Parameters
-    ----------
-    hdf5_file_name: str or Path
-        Name or Path of the hdf5 file to read from.
-
-    Returns
-    -------
-    list
-        The list with the astropy.Table instances for the various 1D and 2D histograms saved
-        in the hdf5 file.
-    """
-    if isinstance(hdf5_file_name, PosixPath):
-        hdf5_file_name = hdf5_file_name.absolute().as_posix()
-
-    tables_list = []
-
-    with tables.open_file(hdf5_file_name, mode="r") as file:
-        for node in file.walk_nodes("/", "Table"):
-            table_path = node._v_pathname  # pylint: disable=protected-access
-            table = read_table(hdf5_file_name, table_path)
-            tables_list.append(table)
-    return tables_list

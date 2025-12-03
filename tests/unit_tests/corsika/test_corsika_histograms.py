@@ -11,14 +11,9 @@ import numpy as np
 import pytest
 import tables
 from astropy import units as u
-from astropy.table import Table
 
 from simtools import version
-from simtools.corsika.corsika_histograms import (
-    CorsikaHistograms,
-    HistogramNotCreatedError,
-)
-from simtools.io.hdf5_handler import read_hdf5
+from simtools.corsika.corsika_histograms import CorsikaHistograms
 
 x_axis_string = "x axis"
 y_axis_string = "y axis"
@@ -289,13 +284,6 @@ def test_set_histograms_passing_config(corsika_histograms_instance):
     assert corsika_histograms_instance.hist_position[0][:, :, sum].shape == (100, 100)
     assert corsika_histograms_instance.hist_position[0][:, :, sum].axes[0].edges[0] == -500
     assert corsika_histograms_instance.hist_position[0][:, :, sum].axes[0].edges[-1] == 500
-
-
-def test_raise_if_no_histogram(corsika_output_file_name, caplog):
-    corsika_histograms_instance_not_hist = CorsikaHistograms(corsika_output_file_name)
-    with pytest.raises(HistogramNotCreatedError):
-        corsika_histograms_instance_not_hist._raise_if_no_histogram()
-    assert "The histograms were not created." in caplog.text
 
 
 def test_get_hist_2d_projection(corsika_histograms_instance, caplog):
@@ -736,33 +724,6 @@ def test_dict_1d_distributions(corsika_histograms_instance_set_histograms):
     )
 
 
-def test_export_and_read_histograms(corsika_histograms_instance_set_histograms, io_handler):
-    # Default values
-    corsika_histograms_instance_set_histograms.export_histograms()
-
-    file_name = Path(corsika_histograms_instance_set_histograms.output_path).joinpath(
-        "tel_output_10GeV-2-gamma-20deg-CTAO-South.hdf5"
-    )
-    assert io_handler.get_output_directory().joinpath(file_name).exists()
-
-    # Change hdf5 file name
-    corsika_histograms_instance_set_histograms.hdf5_file_name = "test.hdf5"
-    corsika_histograms_instance_set_histograms.export_histograms()
-    output_file = io_handler.get_output_directory().joinpath("test.hdf5")
-    assert output_file.exists()
-
-    # Read hdf5 file
-    list_of_tables = read_hdf5(output_file)
-    assert len(list_of_tables) == 12
-    for table in list_of_tables:
-        assert isinstance(table, Table)
-    # Check piece of metadata
-    assert (
-        list_of_tables[-1].meta["corsika_version"]
-        == corsika_histograms_instance_set_histograms.corsika_version
-    )
-
-
 def test_dict_2d_distributions(corsika_histograms_instance_set_histograms):
     expected_dict_2d_distributions = {
         "counts": {
@@ -783,41 +744,6 @@ def test_dict_2d_distributions(corsika_histograms_instance_set_histograms):
         corsika_histograms_instance_set_histograms.dict_2d_distributions["counts"]
         == expected_dict_2d_distributions["counts"]
     )
-
-
-def test_export_event_header_1d_histogram(corsika_histograms_instance_set_histograms):
-    corsika_event_header_example = {
-        "total_energy": "event_1d_histograms_total_energy",
-        "azimuth": "event_1d_histograms_azimuth",
-        "zenith": "event_1d_histograms_zenith",
-        "first_interaction_height": "event_1d_histograms_first_interaction_height",
-    }
-    for event_header_element in corsika_event_header_example:
-        corsika_histograms_instance_set_histograms.export_event_header_1d_histogram(
-            event_header_element, bins=50, hist_range=None
-        )
-
-    tables = read_hdf5(corsika_histograms_instance_set_histograms.hdf5_file_name)
-    assert len(tables) == 4
-
-
-def test_export_event_header_2d_histogram(corsika_histograms_instance_set_histograms):
-    # Test writing the default photon histograms as well
-    corsika_histograms_instance_set_histograms.export_histograms()
-    tables = read_hdf5(corsika_histograms_instance_set_histograms.hdf5_file_name)
-    assert len(tables) == 12
-
-    corsika_event_header_example = {
-        ("azimuth", "zenith"): "event_2d_histograms_azimuth_zenith",
-    }
-
-    # Test writing (appending) event header histograms
-    for event_header_element, file_name in corsika_event_header_example.items():
-        corsika_histograms_instance_set_histograms.export_event_header_2d_histogram(
-            event_header_element[0], event_header_element[1], bins=50, hist_range=None
-        )
-    tables = read_hdf5(corsika_histograms_instance_set_histograms.hdf5_file_name)
-    assert len(tables) == 13
 
 
 def test_export_histograms_individual_telescopes_naming(corsika_histograms_instance, io_handler):
