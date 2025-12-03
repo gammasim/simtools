@@ -471,6 +471,7 @@ def test_view_cone_bins_no_file_info(mock_reader, hdf5_file_name):
 def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
     """Test calculate_cumulative_data end-to-end without patching internals."""
     histograms = SimtelIOEventHistograms(hdf5_file_name)
+    histograms.reader.data_sets = [{"TRIGGERS": "TRIGGERS"}]
 
     # Seed histogram dictionary with minimal required histograms (as dicts)
     histograms.histograms = {
@@ -520,6 +521,7 @@ def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
 def test_calculate_efficiency_data(mock_reader, hdf5_file_name):
     """Test calculate_efficiency_data method."""
     histograms = SimtelIOEventHistograms(hdf5_file_name)
+    histograms.reader.data_sets = [{"TRIGGERS": "TRIGGERS"}]
 
     # Mock histograms for triggered and simulated events (as dicts)
     histograms.histograms = {
@@ -550,8 +552,7 @@ def test_calculate_efficiency_data(mock_reader, hdf5_file_name):
 def test_calculate_efficiency_data_shape_mismatch(mock_reader, hdf5_file_name, caplog):
     """Test calculate_efficiency_data with shape mismatch."""
     histograms = SimtelIOEventHistograms(hdf5_file_name)
-
-    # Mock histograms with mismatched shapes (as dicts)
+    histograms.reader.data_sets = [{"TRIGGERS": "TRIGGERS"}]
     histograms.histograms = {
         "energy": {"histogram": np.array([10, 20]), "axis_titles": ["E", ""]},
         "energy_mc": {"histogram": np.array([20, 40, 60]), "axis_titles": ["E", ""]},
@@ -571,6 +572,7 @@ def test_calculate_efficiency_data_shape_mismatch(mock_reader, hdf5_file_name, c
 def test_calculate_efficiency_data_missing_histograms(mock_reader, hdf5_file_name):
     """Test calculate_efficiency_data with missing histograms."""
     histograms = SimtelIOEventHistograms(hdf5_file_name)
+    histograms.reader.data_sets = [{"TRIGGERS": "TRIGGERS"}]
 
     # Mock histograms with missing triggered histogram (as dict)
     histograms.histograms = {

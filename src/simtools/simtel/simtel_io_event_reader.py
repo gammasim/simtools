@@ -257,9 +257,10 @@ class SimtelIOEventDataReader:
         tuple
             A tuple with file info table, shower, triggered shower, and triggered event data.
         """
-        table_name_map = table_name_map or {}
 
         def get_name(key):
+            if table_name_map is None:
+                return key
             return table_name_map.get(key)
 
         tables = table_handler.read_tables(

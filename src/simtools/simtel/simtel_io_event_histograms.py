@@ -229,7 +229,7 @@ class SimtelIOEventHistograms:
         dict
             Dictionary containing the efficiency histograms.
         """
-        if "TRIGGERS" not in self.reader.data_sets:
+        if not any(isinstance(ds, dict) and "TRIGGERS" in ds for ds in self.reader.data_sets):
             return None
 
         def calculate_efficiency(trig_hist, mc_hist):
@@ -318,8 +318,9 @@ class SimtelIOEventHistograms:
         dict
             Dictionary containing the cumulative histograms.
         """
-        if "TRIGGERS" not in self.reader.data_sets:
+        if not any(isinstance(ds, dict) and "TRIGGERS" in ds for ds in self.reader.data_sets):
             return None
+
         cumulative_data = {}
         suffix = "_cumulative"
 
