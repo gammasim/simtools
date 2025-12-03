@@ -244,14 +244,15 @@ class SimtelIOEventDataWriter:
         """
         shower_header = eventio_object.parse()
         self.n_use = int(shower_header["n_reuse"])
+
         self.shower_data.extend(
             {
                 "shower_id": shower_header["event_number"],
                 "event_id": shower_header["event_number"] * 100 + i,
                 "file_id": file_id,
                 "simulated_energy": shower_header["total_energy"],
-                "x_core": shower_header["reuse_x"][i],
-                "y_core": shower_header["reuse_y"][i],
+                "x_core": shower_header["reuse_x"][i] / 1.0e2,
+                "y_core": shower_header["reuse_y"][i] / 1.0e2,
                 "shower_azimuth": np.degrees(shower_header["azimuth"]),
                 "shower_altitude": 90.0 - np.degrees(shower_header["zenith"]),
                 "area_weight": 1.0,

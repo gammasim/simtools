@@ -61,7 +61,7 @@ class SimtelIOEventDataReader:
 
         Rearrange dictionary with tables names into a list of dictionaries
         under the assumption that the file contains the tables "SHOWERS",
-        "TRIGGERS", and "FILE_INFO".
+        "TRIGGERS", and "FILE_INFO". Note that not all tables need to be present.
 
         Parameters
         ----------
@@ -88,13 +88,22 @@ class SimtelIOEventDataReader:
         except (ValueError, AttributeError):
             sorted_indices = [0]  # Handle the case where the key is only "SHOWERS"
         for i in sorted_indices:
-            data_sets.append(
-                {
-                    "SHOWERS": dataset_dict["SHOWERS"][i],
-                    "TRIGGERS": dataset_dict["TRIGGERS"][i],
-                    "FILE_INFO": dataset_dict["FILE_INFO"][i],
-                }
-            )
+            triggers = dataset_dict["TRIGGERS"][i] if len(dataset_dict["TRIGGERS"]) > i else None
+            if triggers:
+                data_sets.append(
+                    {
+                        "SHOWERS": dataset_dict["SHOWERS"][i],
+                        "TRIGGERS": triggers,
+                        "FILE_INFO": dataset_dict["FILE_INFO"][i],
+                    }
+                )
+            else:
+                data_sets.append(
+                    {
+                        "SHOWERS": dataset_dict["SHOWERS"][i],
+                        "FILE_INFO": dataset_dict["FILE_INFO"][i],
+                    }
+                )
 
         return data_sets
 
@@ -251,17 +260,25 @@ class SimtelIOEventDataReader:
         table_name_map = table_name_map or {}
 
         def get_name(key):
-            return table_name_map.get(key, key)
+            return table_name_map.get(key)
 
         tables = table_handler.read_tables(
             event_data_file,
-            table_names=[get_name(k) for k in ("SHOWERS", "TRIGGERS", "FILE_INFO")],
+            table_names=[
+                name
+                for k in ("SHOWERS", "TRIGGERS", "FILE_INFO")
+                if (name := get_name(k)) is not None
+            ],
         )
         self.reduced_file_info = self.get_reduced_simulation_file_info(
             tables[get_name("FILE_INFO")]
         )
 
         shower_data = self._table_to_shower_data(tables[get_name("SHOWERS")])
+        if tables.get(get_name("TRIGGERS")) is None:
+            self._logger.info("No triggered event data found in the file.")
+            return tables[get_name("FILE_INFO")], shower_data, None, None
+
         triggered_data = self._table_to_triggered_data(tables[get_name("TRIGGERS")])
         triggered_shower = self._get_triggered_shower_data(
             shower_data,
