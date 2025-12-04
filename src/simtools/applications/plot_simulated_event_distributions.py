@@ -6,6 +6,13 @@ Plot simulated event distributions for shower and/or triggered event data.
 Reads reduced event data files and generate histogram plots e.g. for energy or
 core distance distributions.
 
+Command line arguments
+----------------------
+input_file (str, required)
+    Input file path.
+output_path (str, required)
+    Output directory for the generated plots.
+
 Examples
 --------
 Generate plots from a given input file:
