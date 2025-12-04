@@ -19,7 +19,7 @@ def test_telescope_trigger_rates_with_array_layout_name():
         patch(
             "simtools.telescope_trigger_rates.get_array_elements_from_db_for_layouts"
         ) as mock_get_array_elements,
-        patch("simtools.telescope_trigger_rates.SimtelIOEventHistograms") as mock_histograms,
+        patch("simtools.telescope_trigger_rates.EventDataHistograms") as mock_histograms,
     ):
         mock_get_array_elements.return_value = {"array1": [1, 2, 3]}
         mock_histograms_instance = MagicMock()
@@ -46,7 +46,7 @@ def test_telescope_trigger_rates_without_array_layout_name():
         patch(
             "simtools.telescope_trigger_rates.ascii_handler.collect_data_from_file"
         ) as mock_collect_data,
-        patch("simtools.telescope_trigger_rates.SimtelIOEventHistograms") as mock_histograms,
+        patch("simtools.telescope_trigger_rates.EventDataHistograms") as mock_histograms,
         patch("simtools.telescope_trigger_rates.plot_simtel_event_histograms.plot") as mock_plot,
         patch("simtools.telescope_trigger_rates.io_handler.IOHandler") as mock_io_handler,
     ):

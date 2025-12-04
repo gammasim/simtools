@@ -1475,7 +1475,7 @@ class CorsikaHistograms:
         self, event_header_element, bins=50, hist_range=None, overwrite=False
     ):
         """
-        Export 'event_header_element' from CORSIKA to hd5 for a 1D histogram.
+        Export 'event_header_element' from CORSIKA to hdf5 for a 1D histogram.
 
         Parameters
         ----------
