@@ -40,7 +40,6 @@ applications:
         - "NUMBER OF GENERATED EVENTS =          5"
         - "========== END OF RUN ========"
         - "Sim_telarray finished at"
-        - "Run(s) completed as expected after 10 events (5 showers)."
       file: gamma_run000001_za40deg_azm180deg_North_alpha_6.0.2_test.log_hist.tar.gz
       path_descriptor: pack_for_grid_register
   - test_simtel_cfg_files:

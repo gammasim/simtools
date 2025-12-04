@@ -25,10 +25,8 @@ RUN microdnf update -y && microdnf install -y \
     git gcc gcc-c++ \
     python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
     microdnf clean all && \
-    rm -rf /var/cache/dnf/* /tmp/* /var/tmp/*
-
-# Create python symlink pointing to the specified Python version
-RUN ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
+    rm -rf /var/cache/dnf/* /tmp/* /var/tmp/* && \
+    ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
 
 RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
   && git clone -b "$BUILD_BRANCH" "${SIMTOOLS_REQUIREMENT}" --depth 1 \
@@ -36,6 +34,9 @@ RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
   && . env/bin/activate \
   && pip install --no-cache-dir -U pip \
   && pip install --no-cache-dir "git+${SIMTOOLS_REQUIREMENT}@${BUILD_BRANCH}" \
+  && pip cache purge && rm -rf /root/.cache \
   && echo ". /workdir/env/bin/activate" >> ~/.bashrc
 
+ENV SIMTOOLS_SIMTEL_PATH="/workdir/sim_telarray/sim_telarray"
+ENV SIMTOOLS_CORSIKA_PATH="/workdir/sim_telarray/corsika-run"
 ENV PATH="/workdir/env/bin/:$PATH"
