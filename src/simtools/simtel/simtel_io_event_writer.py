@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import astropy.units as u
 import numpy as np
 from astropy.table import Table
-from eventio import EventIOFile
+from eventio import EventIOFile, iact
 from eventio.simtel import (
     ArrayEvent,
     MCEvent,
@@ -17,7 +17,10 @@ from eventio.simtel import (
 )
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.io.eventio_handler import get_combined_corsika_run_header
+from simtools.io.eventio_handler import (
+    get_combined_eventio_run_header,
+    get_corsika_run_and_event_headers,
+)
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
     read_sim_telarray_metadata,
@@ -108,7 +111,7 @@ class SimtelIOEventDataWriter:
         Returns
         -------
         list
-            List of astropy tables containing processed data.
+            List of tables containing processed data.
         """
         for i, file in enumerate(self.input_files[: self.max_files]):
             self._logger.info(f"Processing file {i + 1}/{self.max_files}: {file}")
@@ -117,13 +120,15 @@ class SimtelIOEventDataWriter:
         return self.create_tables()
 
     def create_tables(self):
-        """Create astropy tables from collected data."""
+        """Create tables from collected data."""
         tables = []
         for data, schema, name in [
             (self.shower_data, TableSchemas.shower_schema, "SHOWERS"),
             (self.trigger_data, TableSchemas.trigger_schema, "TRIGGERS"),
             (self.file_info, TableSchemas.file_info_schema, "FILE_INFO"),
         ]:
+            if len(data) == 0:
+                continue
             table = Table(rows=data, names=schema.keys())
             table.meta["EXTNAME"] = name
             self._add_units_to_table(table, schema)
@@ -149,40 +154,68 @@ class SimtelIOEventDataWriter:
                     self._process_mc_event(eventio_object)
                 elif isinstance(eventio_object, ArrayEvent):
                     self._process_array_event(eventio_object, file_id)
+                elif isinstance(eventio_object, iact.EventHeader):
+                    self._process_mc_shower_from_iact(eventio_object, file_id)
 
     def _process_mc_run_header(self, eventio_object):
-        """Process MC run header and update data lists."""
+        """Process MC run header (sim_telarray file)."""
         mc_head = eventio_object.parse()
         self.n_use = mc_head["n_use"]  # reuse factor n_use needed to extend the values below
         self._logger.info(f"Shower reuse factor: {self.n_use} (viewcone: {mc_head['viewcone']})")
 
     def _process_file_info(self, file_id, file):
         """Process file information and append to file info list."""
-        run_info = get_combined_corsika_run_header(file)
-        self.telescope_id_to_name = get_sim_telarray_telescope_id_to_telescope_name_mapping(file)
-        particle = PrimaryParticle(
-            particle_id_type="eventio_id", particle_id=run_info.get("primary_id", 1)
-        )
+        run_info = get_combined_eventio_run_header(file)
+        if run_info:  # sim_telarray file
+            self.telescope_id_to_name = get_sim_telarray_telescope_id_to_telescope_name_mapping(
+                file
+            )
+            corsika7_id = PrimaryParticle(
+                particle_id_type="eventio_id",
+                particle_id=run_info.get("primary_id", 1),
+            ).corsika7_id
+            nsb = self.get_nsb_level_from_sim_telarray_metadata(file)
+
+            e_min, e_max = run_info["E_range"]
+            view_cone_min, view_cone_max = run_info["viewcone"]
+            core_min, core_max = run_info["core_range"]
+            azimuth, el = np.degrees(run_info["direction"])
+            zenith = 90.0 - el
+        else:  # CORSIKA IACT file
+            run_header, event_header = get_corsika_run_and_event_headers(file)
+            corsika7_id = int(event_header["particle_id"])
+            e_min = event_header["energy_min"]
+            e_max = event_header["energy_max"]
+            zenith = np.degrees(event_header["zenith"])
+            # relative to geomagnetic north - requires update in pycorsikaio to
+            # read rotation angle
+            azimuth = np.degrees(event_header["azimuth"])
+            view_cone_min = event_header["viewcone_inner_angle"]
+            view_cone_max = event_header["viewcone_outer_angle"]
+            core_min = 0.0
+            core_max = run_header["x_scatter"] / 1.0e2  # cm to m
+            nsb = 0.0
+
         self.file_info.append(
             {
                 "file_name": str(file),
                 "file_id": file_id,
-                "particle_id": particle.corsika7_id,
-                "energy_min": run_info["E_range"][0],
-                "energy_max": run_info["E_range"][1],
-                "viewcone_min": run_info["viewcone"][0],
-                "viewcone_max": run_info["viewcone"][1],
-                "core_scatter_min": run_info["core_range"][0],
-                "core_scatter_max": run_info["core_range"][1],
-                "zenith": 90.0 - np.degrees(run_info["direction"][1]),
-                "azimuth": np.degrees(run_info["direction"][0]),
-                "nsb_level": self.get_nsb_level_from_sim_telarray_metadata(file),
+                "particle_id": corsika7_id,
+                "energy_min": e_min,
+                "energy_max": e_max,
+                "viewcone_min": view_cone_min,
+                "viewcone_max": view_cone_max,
+                "core_scatter_min": core_min,
+                "core_scatter_max": core_max,
+                "zenith": zenith,
+                "azimuth": azimuth,
+                "nsb_level": nsb,
             }
         )
 
     def _process_mc_shower(self, eventio_object, file_id):
         """
-        Process MC shower and update shower event list.
+        Process MC shower from sim_telarray file and update shower event list.
 
         Duplicated entries 'self.n_use' times to match the number simulated events with
         different core positions.
@@ -202,6 +235,31 @@ class SimtelIOEventDataWriter:
                 "area_weight": None,  # filled in _process_mc_event
             }
             for _ in range(self.n_use)
+        )
+
+    def _process_mc_shower_from_iact(self, eventio_object, file_id):
+        """
+        Process MC shower from IACT file and update shower event list.
+
+        Duplicated entries 'self.n_use' times to match the number simulated events with
+        different core positions.
+        """
+        shower_header = eventio_object.parse()
+        self.n_use = int(shower_header["n_reuse"])
+
+        self.shower_data.extend(
+            {
+                "shower_id": shower_header["event_number"],
+                "event_id": shower_header["event_number"] * 100 + i,
+                "file_id": file_id,
+                "simulated_energy": shower_header["total_energy"],
+                "x_core": shower_header["reuse_x"][i] / 1.0e2,
+                "y_core": shower_header["reuse_y"][i] / 1.0e2,
+                "shower_azimuth": np.degrees(shower_header["azimuth"]),
+                "shower_altitude": 90.0 - np.degrees(shower_header["zenith"]),
+                "area_weight": 1.0,
+            }
+            for i in range(self.n_use)
         )
 
     def _process_mc_event(self, eventio_object):
