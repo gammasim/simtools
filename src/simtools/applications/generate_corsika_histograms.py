@@ -202,7 +202,8 @@ def main():
     app_context = startup_application(_parse)
 
     corsika_histograms = CorsikaHistograms(app_context.args["iact_file"])
-    corsika_histograms.run_export_pipeline(pdf_file=app_context.args.get("pdf_file_name"))
+    corsika_histograms.fill()
+    corsika_histograms.plot(pdf_file=app_context.args.get("pdf_file_name"))
 
 
 if __name__ == "__main__":

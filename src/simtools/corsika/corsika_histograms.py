@@ -3,7 +3,6 @@
 import functools
 import logging
 import operator
-import time
 from pathlib import Path
 
 import boost_histogram as bh
@@ -20,17 +19,6 @@ from simtools.visualization import plot_corsika_histograms as visualize
 X_AXIS_STRING = "x axis"
 Y_AXIS_STRING = "y axis"
 Z_AXIS_STRING = "z axis"
-
-event_headers_1D = [
-    "total_energy",
-    "starting_altitude",
-    "first_interaction_height",
-    "momentum_x",
-    "momentum_y",
-    "momentum_minus_z",
-    "zenith",
-    "azimuth",
-]
 
 
 class CorsikaHistograms:
@@ -54,9 +42,7 @@ class CorsikaHistograms:
         self.label = label
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaHistograms")
-        self.input_file = input_file
-
-        self.input_file = Path(self.input_file)
+        self.input_file = Path(input_file)
         if not self.input_file.exists():
             raise FileNotFoundError(f"file {self.input_file} does not exist.")
 
@@ -82,7 +68,6 @@ class CorsikaHistograms:
         self.hist_config = self._create_histogram_default_config()
         self._total_num_photons = None
         self._event_total_energies = None
-        self._event_first_interaction_heights = None
         self.event_information = None
         self._allowed_histograms = {"hist_position", "hist_direction", "hist_time_altitude"}
         self._allowed_1d_labels = {"wavelength", "time", "altitude"}
@@ -111,12 +96,8 @@ class CorsikaHistograms:
             self._logger.error(msg)
             raise ValueError(msg) from exc
 
-    def run_export_pipeline(self, pdf_file):
-        """Run the full histogram export pipeline and return output artifact paths."""
-        self.set_histograms(
-            telescope_indices=self.parse_telescope_indices(None), individual_telescopes=None
-        )
-
+    def plot(self, pdf_file=None):
+        """Generate plots."""
         if pdf_file is None:
             pdf_file = Path(self.input_file.name).stem + ".pdf"
 
@@ -124,7 +105,6 @@ class CorsikaHistograms:
         self._logger.info(f"Saving histograms to {pdf_file}")
 
         visualize.export_all_photon_figures_pdf(self, pdf_file)
-        visualize.derive_event_1d_histograms(self, event_headers_1D, pdf_file)
 
     @property
     def corsika_version(self):
@@ -212,6 +192,8 @@ class CorsikaHistograms:
                         np.array(self.event_information[key]) * all_event_astropy_units[key]
                     )
 
+        print("AAA", self.event_information)
+
     def _get_header_astropy_units(self, parameters, non_astropy_units):
         """
         Return the dictionary with astropy units from the given list of parameters.
@@ -289,8 +271,6 @@ class CorsikaHistograms:
     def _create_histogram_default_config(self):
         """
         Create a dictionary with the configuration necessary to create the histograms.
-
-        It is used only in case the configuration is not provided in a yaml file or dict.
 
         Three histograms are created: hist_position with 3 dimensions (x, y positions),
         hist_direction with 2 dimensions (direction cosines in x and y directions),
@@ -451,9 +431,10 @@ class CorsikaHistograms:
                 )
             )
 
+    # TMP GOOD - to be updated for new histogram definition
     def _fill_histograms(self, photons, rotation_around_z_axis=None, rotation_around_y_axis=None):
         """
-        Fill histograms with the information of the photons on the ground.
+        Fill Cherenkov photon histograms.
 
         if the azimuth and zenith angles are provided, the Cherenkov photon's coordinates are
         filled in the plane perpendicular to the incoming direction of the particle.
@@ -470,9 +451,7 @@ class CorsikaHistograms:
              incoming direction and the x axis,
              cy: direction cosine in the y direction, i.e., the cosine of the angle between the
              incoming direction and the y axis,
-             time: time of arrival of the photon in ns. The clock starts when the particle crosses
-             the top of the atmosphere (CORSIKA-defined) if self.event_first_interaction_heights
-             is positive or at first interaction if otherwise.
+             time: time of arrival of the photon in ns.
              zem: altitude where the photon was generated in cm,
              photons: number of photons associated to this bunch,
         rotation_around_z_axis: astropy.Quantity
@@ -525,9 +504,10 @@ class CorsikaHistograms:
             if self.individual_telescopes is True:
                 hist_num += 1
 
-    def set_histograms(self, telescope_indices=None, individual_telescopes=None):
+    # Good - to be simplified for histograms per telescope type and per telescope
+    def fill(self, telescope_indices=None, individual_telescopes=None):
         """
-        Create and fill Cherenkov photons histograms using information from the CORSIKA IACT file.
+        Create and fill Cherenkov photons histograms.
 
         Parameters
         ----------
@@ -551,8 +531,6 @@ class CorsikaHistograms:
         self._create_histograms(individual_telescopes=self.individual_telescopes)
 
         num_photons_per_event_per_telescope_to_set = []
-        start_time = time.time()
-        self._logger.debug(f"Starting reading the file at {start_time}.")
         with IACTFile(self.input_file) as f:
             event_counter = 0
             for event in f:
@@ -573,10 +551,6 @@ class CorsikaHistograms:
                 )
                 event_counter += 1
         self.num_photons_per_event_per_telescope = num_photons_per_event_per_telescope_to_set
-        self._logger.debug(
-            f"Finished reading the file and creating the histograms in {time.time() - start_time} "
-            f"seconds"
-        )
 
     @property
     def individual_telescopes(self):
@@ -907,7 +881,7 @@ class CorsikaHistograms:
         Get the distribution of the emitted time of the Cherenkov photons.
 
         The clock starts when the particle crosses the top of the atmosphere (CORSIKA-defined) if
-        self.event_first_interaction_heights is positive or at first interaction if otherwise.
+        first interaction heights is positive or at first interaction if otherwise.
 
         Returns
         -------
@@ -1201,7 +1175,7 @@ class CorsikaHistograms:
 
     # In the next five functions, we provide dedicated functions to retrieve specific information
     # about the runs, i.e. zenith, azimuth, total energy, interaction height and Earth magnetic
-    # field defined for the run. For other information, please use the get_event_parameter_info
+    # field defined for the run.
     # function.
     @property
     def event_zenith_angles(self):
@@ -1254,57 +1228,6 @@ class CorsikaHistograms:
             )
         return self._event_total_energies
 
-    @property
-    def event_first_interaction_heights(self):
-        """
-        Get the height of the first interaction in astropy units of km.
-
-        If negative, tracking starts at margin of atmosphere,
-        see TSTART in the CORSIKA 7 user guide.
-
-        Returns
-        -------
-        astropy.Quantity
-            The first interaction height for each event, usually in km.
-        """
-        if self._event_first_interaction_heights is None:
-            self._event_first_interaction_heights = np.around(
-                (self.event_information["first_interaction_height"]).to(u.km),
-                4,
-            )
-        return self._event_first_interaction_heights
-
-    def get_event_parameter_info(self, parameter):
-        """
-        Get specific information (i.e. any parameter) of the events.
-
-        The parameter is passed through the key word parameter.
-        Available options are to be found under self.all_event_keys.
-        The unit of the parameter, if any, is given according to the CORSIKA version
-        (please see user guide in this case).
-
-        Parameters
-        ----------
-        parameter: str
-            The parameter of interest. Available options are to be found under
-            self.all_event_keys.
-
-        Returns
-        -------
-        astropy.Quantity
-            The array with the event information as required by the parameter.
-
-        Raises
-        ------
-        KeyError:
-            If parameter is not valid.
-        """
-        if parameter not in self.all_event_keys:
-            msg = f"key is not valid. Valid entries are {self.all_event_keys}"
-            self._logger.error(msg)
-            raise KeyError
-        return self.event_information[parameter]
-
     def get_run_info(self, parameter):
         """
         Get specific information (i.e. any parameter) of the run.
@@ -1329,106 +1252,3 @@ class CorsikaHistograms:
             return self.header[parameter]
         except KeyError as exc:
             raise KeyError(f"key is not valid. Valid entries are {self.all_run_keys}") from exc
-
-    def event_1d_histogram(self, key, bins=50, hist_range=None):
-        """
-        Create a histogram for the all events using key as parameter.
-
-        Valid keys are stored in self.all_event_keys (CORSIKA defined).
-
-        Parameters
-        ----------
-        key: str
-            The information from which to build the histogram, e.g. total_energy, zenith or
-            first_interaction_height.
-        bins: float
-            Number of bins for the histogram.
-        hist_range: 2-tuple
-            Tuple to define the range of the histogram.
-
-        Returns
-        -------
-        numpy.ndarray
-            The counts of the histogram.
-        numpy.array
-            Edges of the histogram.
-
-
-        Raises
-        ------
-        KeyError:
-            If key is not valid.
-        """
-        if key not in self.all_event_keys:
-            raise KeyError(f"key is not valid. Valid entries are {self.all_event_keys}")
-
-        if isinstance(self.event_information[key], u.Quantity):
-            data = self.event_information[key].value
-        else:
-            return None, None
-
-        if len(data) == 0:
-            self._logger.warning(f"No data available for '{key}'. Returning empty histogram.")
-            return np.array([]), np.array([])
-
-        data_range = np.ptp(data)
-        if data_range == 0:
-            self._logger.warning(
-                f"All values for '{key}' are identical ({data[0]}). Creating single-bin histogram."
-            )
-            bins = 1
-            if hist_range is None:
-                epsilon = 0.5 if data[0] == 0 else abs(data[0]) * 0.01
-                hist_range = (data[0] - epsilon, data[0] + epsilon)
-
-        hist, bin_edges = np.histogram(data, bins=bins, range=hist_range)
-        return hist, bin_edges
-
-    def event_2d_histogram(self, key_1, key_2, bins=50, hist_range=None):
-        """
-        Create a 2D histogram for the all events using key_1 and key_2 as parameters.
-
-        Valid keys are stored in self.all_event_keys (CORSIKA defined).
-
-        Parameters
-        ----------
-        key_1: str
-            The information from which to build the histogram, e.g. total_energy, zenith or
-            first_interaction_height.
-        key_2: str
-            The information from which to build the histogram, e.g. total_energy, zenith or
-            first_interaction_height.
-        bins: float
-            Number of bins for the histogram.
-        hist_range: 2-tuple
-            Tuple to define the range of the histogram.
-
-        Returns
-        -------
-        numpy.ndarray
-            The counts of the histogram.
-        numpy.array
-            x Edges of the histogram.
-        numpy.array
-            y Edges of the histogram.
-
-
-        Raises
-        ------
-        KeyError:
-            If at least one of the keys is not valid.
-        """
-        for key in [key_1, key_2]:
-            if key not in self.all_event_keys:
-                msg = (
-                    f"At least one of the keys given is not valid. Valid entries are "
-                    f"{self.all_event_keys}"
-                )
-                raise KeyError(msg)
-        hist, x_bin_edges, y_bin_edges = np.histogram2d(
-            self.event_information[key_1].value,
-            self.event_information[key_2].value,
-            bins=bins,
-            range=hist_range,
-        )
-        return hist, x_bin_edges, y_bin_edges

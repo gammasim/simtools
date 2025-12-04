@@ -230,34 +230,6 @@ def test_derive_event_histograms_pdf_and_hdf5(
     assert pdf_2d.exists()
 
 
-def test_derive_event_2d_histograms_odd_keys_warning(
-    corsika_histograms_instance_set_histograms, caplog
-):
-    with caplog.at_level(logging.WARNING):
-        # Use odd number of keys and disable outputs to only exercise the warning path
-        result = plot_corsika_histograms.derive_event_2d_histograms(
-            corsika_histograms_instance_set_histograms,
-            event_2d_header_keys=["zenith", "azimuth", "total_energy"],
-            pdf=False,
-            hdf5=False,
-            overwrite=False,
-        )
-    assert result is None
-    assert "An odd number of keys was passed" in caplog.text
-
-
-def test_derive_event_1d_histograms_no_pdf_returns_none(corsika_histograms_instance_set_histograms):
-    # pdf disabled -> function should return None regardless of hdf5 export
-    result = plot_corsika_histograms.derive_event_1d_histograms(
-        corsika_histograms_instance_set_histograms,
-        event_1d_header_keys=["total_energy"],
-        pdf=False,
-        hdf5=True,
-        overwrite=False,
-    )
-    assert result is None
-
-
 def test_plot_2d_time_altitude_returns_figs(corsika_histograms_instance_set_histograms):
     figs = plot_corsika_histograms.plot_2d_time_altitude(
         corsika_histograms_instance_set_histograms, log_z=True
