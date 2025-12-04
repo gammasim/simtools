@@ -22,6 +22,7 @@ production_configuration
 ray_tracing
 reporting
 runners
+sim_events
 sim_telarray
 simulators
 testing
