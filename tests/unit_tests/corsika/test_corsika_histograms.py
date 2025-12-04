@@ -613,32 +613,6 @@ def test_event_energies(corsika_histograms_instance_set_histograms):
     assert corsika_histograms_instance_set_histograms.event_energies.unit == u.TeV
 
 
-def test_event_first_interaction_heights(corsika_histograms_instance_set_histograms):
-    first_height = [-10.3, -39.7]
-    for i_event in range(corsika_histograms_instance_set_histograms.num_events):
-        assert corsika_histograms_instance_set_histograms.event_first_interaction_heights.value[
-            i_event
-        ] == pytest.approx(first_height[i_event], abs=1e-1)
-    assert corsika_histograms_instance_set_histograms.event_first_interaction_heights.unit == u.km
-
-
-def test_get_event_parameter_info(corsika_histograms_instance_set_histograms, caplog):
-    for parameter in corsika_histograms_instance_set_histograms.all_event_keys[1:]:
-        assert isinstance(
-            corsika_histograms_instance_set_histograms.get_event_parameter_info(parameter),
-            u.quantity.Quantity,
-        )
-    with caplog.at_level("ERROR"):
-        with pytest.raises(KeyError):
-            corsika_histograms_instance_set_histograms.get_event_parameter_info(
-                "non_existent_parameter"
-            )
-    assert (
-        f"key is not valid. Valid entries are "
-        f"{corsika_histograms_instance_set_histograms.all_event_keys}" in caplog.text
-    )
-
-
 def test_get_run_info(corsika_histograms_instance_set_histograms, caplog):
     for parameter in corsika_histograms_instance_set_histograms.all_run_keys[1:]:
         assert isinstance(
@@ -652,24 +626,6 @@ def test_get_run_info(corsika_histograms_instance_set_histograms, caplog):
         f"key is not valid. Valid entries are "
         f"{corsika_histograms_instance_set_histograms.all_run_keys}" in caplog.text
     )
-
-
-def test_event_1d_histogram(corsika_histograms_instance_set_histograms):
-    hist, bin_edges = corsika_histograms_instance_set_histograms.event_1d_histogram(
-        "total_energy", bins=5, hist_range=(5, 15)
-    )
-    assert np.size(bin_edges) == 6
-    assert np.sum(hist) == 2
-    assert hist[2] == 2
-
-
-def test_event_2d_histogram(corsika_histograms_instance_set_histograms):
-    hist, x_bin_edges, _ = corsika_histograms_instance_set_histograms.event_2d_histogram(
-        "total_energy", "first_interaction_height", bins=(5, 5), hist_range=[[5, 15], [-60e5, -5e5]]
-    )
-    assert np.size(x_bin_edges) == 6
-    assert np.sum(hist) == 2
-    assert np.shape(hist) == (5, 5)
 
 
 def test_get_bins_max_dist(corsika_histograms_instance):
@@ -831,14 +787,6 @@ def test_run_export_pipeline_minimal(corsika_dummy_input, tmp_path):
                 "simtools.visualization.plot_corsika_histograms.export_all_photon_figures_pdf",
                 return_value=tmp_path / "photons.pdf",
             ) as m_pdf,
-            mock.patch(
-                "simtools.visualization.plot_corsika_histograms.derive_event_1d_histograms",
-                return_value=None,
-            ),
-            mock.patch(
-                "simtools.visualization.plot_corsika_histograms.derive_event_2d_histograms",
-                return_value=None,
-            ),
         ):
             out = ch.run_export_pipeline(
                 individual_telescopes=False,
