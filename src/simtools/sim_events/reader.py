@@ -44,11 +44,11 @@ class TriggeredEventData:
     angular_distance: list[float] = field(default_factory=list)
 
 
-class IOEventDataReader:
+class EventDataReader:
     """Read reduced MC data set stored in astropy tables."""
 
     def __init__(self, event_data_file, telescope_list=None):
-        """Initialize IOEventDataReader."""
+        """Initialize EventDataReader."""
         self._logger = logging.getLogger(__name__)
         self.telescope_list = telescope_list
 

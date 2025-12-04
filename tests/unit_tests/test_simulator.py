@@ -641,7 +641,7 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
 
     mock_generator = mocker.MagicMock()
     mock_simtel_io_writer = mocker.patch(
-        "simtools.simulator.IOEventDataWriter", return_value=mock_generator
+        "simtools.simulator.EventDataWriter", return_value=mock_generator
     )
     mock_table_handler = mocker.patch("simtools.simulator.table_handler")
 
@@ -666,7 +666,7 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
 
 def test_save_reduced_event_lists_no_output_files(array_simulator, mocker):
     mocker.patch.object(array_simulator, "get_file_list", return_value=[])
-    mock_simtel_io_writer = mocker.patch("simtools.simulator.IOEventDataWriter")
+    mock_simtel_io_writer = mocker.patch("simtools.simulator.EventDataWriter")
     mock_io_table_handler = mocker.patch("simtools.simulator.table_handler")
 
     array_simulator.save_reduced_event_lists()

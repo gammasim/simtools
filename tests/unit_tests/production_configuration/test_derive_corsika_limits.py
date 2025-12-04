@@ -13,7 +13,7 @@ from simtools.production_configuration.derive_corsika_limits import (
 
 # Constants
 SIM_EVENTS_HISTOGRAMS_PATH = (
-    "simtools.production_configuration.derive_corsika_limits.IOEventDataHistograms"
+    "simtools.production_configuration.derive_corsika_limits.EventDataHistograms"
 )
 COMPUTE_LOWER_ENERGY_LIMIT_PATH = (
     "simtools.production_configuration.derive_corsika_limits.compute_lower_energy_limit"
@@ -88,7 +88,7 @@ def test_generate_corsika_limits_grid(mocker, mock_args_dict):
 
 def test_process_file(mocker):
     """Test _process_file function."""
-    # Mock the IOEventDataHistograms class
+    # Mock the EventDataHistograms class
     mock_histograms = mocker.MagicMock()
     mock_histogram_class = mocker.patch(SIM_EVENTS_HISTOGRAMS_PATH)
     mock_histogram_class.return_value = mock_histograms
@@ -331,7 +331,7 @@ def test_is_close(caplog):
 
 
 def test_process_file_with_mocked_histograms(mocker):
-    """Test _process_file with mocked IOEventDataHistograms."""
+    """Test _process_file with mocked EventDataHistograms."""
     mock_histograms = mocker.MagicMock()
     mock_histograms.fill.return_value = None
 

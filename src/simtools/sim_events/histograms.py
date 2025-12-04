@@ -6,10 +6,10 @@ import logging
 import astropy.units as u
 import numpy as np
 
-from simtools.sim_events.reader import IOEventDataReader
+from simtools.sim_events.reader import EventDataReader
 
 
-class IOEventDataHistograms:
+class EventDataHistograms:
     """
     Generate and fill histograms for shower and (if available) triggered events.
 
@@ -35,7 +35,7 @@ class IOEventDataHistograms:
         self.histograms = {}
         self.file_info = {}
 
-        self.reader = IOEventDataReader(event_data_file, telescope_list=telescope_list)
+        self.reader = EventDataReader(event_data_file, telescope_list=telescope_list)
 
     def fill(self):
         """

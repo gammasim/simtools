@@ -71,7 +71,7 @@ class TableSchemas:
     }
 
 
-class IOEventDataWriter:
+class EventDataWriter:
     """
     Process simulation events (CORSIKA/sim_telarray) and write tables to file.
 
