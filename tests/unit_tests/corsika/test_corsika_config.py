@@ -808,7 +808,7 @@ def test_corsika_configuration_from_corsika_file(corsika_config_mock_array_model
     }
 
     mock_get_headers = mocker.patch(
-        "simtools.io.eventio_handler.get_corsika_run_and_event_headers",
+        "simtools.sim_events.file_info.get_corsika_run_and_event_headers",
         return_value=(run_header_dict, event_header_dict),
     )
 
@@ -938,7 +938,9 @@ def test_corsika_file_initialization(mocker, tmp_path):
     ]
 
     for case in test_cases:
-        with patch("simtools.io.eventio_handler.get_corsika_run_and_event_headers") as mock_headers:
+        with patch(
+            "simtools.sim_events.file_info.get_corsika_run_and_event_headers"
+        ) as mock_headers:
             run_header_dict = {
                 "n_showers": 100,
                 "energy_spectrum_slope": None,
