@@ -8,8 +8,9 @@ from astropy import units as u
 
 from simtools import settings
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.io import eventio_handler, io_handler
+from simtools.io import io_handler
 from simtools.model.model_parameter import ModelParameter
+from simtools.sim_events import file_info
 from simtools.utils import general as gen
 
 
@@ -297,9 +298,7 @@ class CorsikaConfig:
         dict
             Dictionary with CORSIKA parameters from input file.
         """
-        run_header, event_header = eventio_handler.get_corsika_run_and_event_headers(
-            corsika_input_file
-        )
+        run_header, event_header = file_info.get_corsika_run_and_event_headers(corsika_input_file)
         self._logger.debug(f"CORSIKA run header from {corsika_input_file}")
 
         def to_float32(value):

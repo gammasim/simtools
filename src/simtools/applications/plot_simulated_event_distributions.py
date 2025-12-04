@@ -27,7 +27,7 @@ Generate plots from a given input file:
 
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.simtel.simtel_io_event_histograms import SimtelIOEventHistograms
+from simtools.sim_events.histograms import EventDataHistograms
 from simtools.visualization import plot_simtel_event_histograms
 
 
@@ -46,7 +46,7 @@ def main():
     app_context = startup_application(_parse)
     app_context.logger.info(f"Loading input file from: {app_context.args['input_file']}")
 
-    histograms = SimtelIOEventHistograms(app_context.args["input_file"])
+    histograms = EventDataHistograms(app_context.args["input_file"])
     histograms.fill()
     plot_simtel_event_histograms.plot(
         histograms.histograms, output_path=app_context.io_handler.get_output_directory()
