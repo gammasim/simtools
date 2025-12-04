@@ -106,6 +106,7 @@ scripts.simtools-maintain-simulation-model-verify-production-tables = "simtools.
 scripts.simtools-merge-tables = "simtools.applications.merge_tables:main"
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
 scripts.simtools-plot-simtel-events = "simtools.applications.plot_simtel_events:main"
+scripts.simtools-plot-simulated-event-distributions = "simtools.applications.plot_simulated_event_distributions:main"
 scripts.simtools-plot-tabular-data = "simtools.applications.plot_tabular_data:main"
 scripts.simtools-plot-tabular-data-for-model-parameter = "simtools.applications.plot_tabular_data_for_model_parameter:main"
 scripts.simtools-print-version = "simtools.applications.print_version:main"
