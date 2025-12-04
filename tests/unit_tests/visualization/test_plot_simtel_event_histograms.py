@@ -30,7 +30,7 @@ PATCH_CONTOUR = f"{MOD}.plt.contour"
 PATCH_COLORBAR = f"{MOD}.plt.colorbar"
 PATCH_CREATE_PLOT = f"{MOD}._create_plot"
 PATCH_CREATE_REBINNED = f"{MOD}._create_rebinned_plot"
-PATCH_REBIN = f"{MOD}.SimtelIOEventHistograms.rebin_2d_histogram"
+PATCH_REBIN = f"{MOD}.IOEventDataHistograms.rebin_2d_histogram"
 PATCH_HAS_DATA = f"{MOD}._has_data"
 PATCH_BUILD_FILENAME = f"{MOD}._build_plot_filename"
 

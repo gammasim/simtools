@@ -8,7 +8,7 @@ from ctao_cr_spectra.definitions import IRFDOC_PROTON_SPECTRUM
 
 from simtools.io import ascii_handler, io_handler
 from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
-from simtools.simtel.simtel_io_event_histograms import SimtelIOEventHistograms
+from simtools.sim_events.histograms import IOEventDataHistograms
 from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def telescope_trigger_rates(args_dict):
         _logger.info(
             f"Processing file: {args_dict['event_data_file']} with telescope config: {array_name}"
         )
-        histograms = SimtelIOEventHistograms(
+        histograms = IOEventDataHistograms(
             args_dict["event_data_file"], array_name=array_name, telescope_list=telescope_ids
         )
         histograms.fill()

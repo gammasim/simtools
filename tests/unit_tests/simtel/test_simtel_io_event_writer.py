@@ -11,7 +11,7 @@ from eventio.simtel import (
     TriggerInformation,
 )
 
-from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
+from simtools.sim_events.writer import IOEventDataWriter
 
 OUTPUT_FILE_NAME = "output.fits"
 one_two_three = "LSTN-01,LSTN-02,MSTN-01"
@@ -27,8 +27,8 @@ def mock_eventio_file(tmp_path):
 
 @pytest.fixture
 def lookup_table_generator(mock_eventio_file):
-    """Create SimtelIOEventDataWriter instance."""
-    return SimtelIOEventDataWriter(input_files=[mock_eventio_file], max_files=1)
+    """Create IOEventDataWriter instance."""
+    return IOEventDataWriter(input_files=[mock_eventio_file], max_files=1)
 
 
 @pytest.fixture
@@ -145,7 +145,7 @@ def test_process_files(
     mock_read_sim_telarray_metadata,
 ):
     """Test processing of files and creation of tables."""
-    # Create sequence that matches SimtelIOEventDataWriter expectations
+    # Create sequence that matches IOEventDataWriter expectations
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = [
         create_mc_run_header(),
         create_mc_shower(shower_id=1),  # First shower
@@ -177,7 +177,7 @@ def test_process_files(
 
 def test_no_input_files():
     with pytest.raises(TypeError, match=r"No input files provided."):
-        SimtelIOEventDataWriter(None, None)
+        IOEventDataWriter(None, None)
 
 
 @patch("simtools.simtel.simtel_io_event_writer.EventIOFile", autospec=True)
@@ -202,7 +202,7 @@ def test_multiple_files(
     for file in input_files:
         Path(file).touch()
 
-    writer = SimtelIOEventDataWriter(input_files=input_files, max_files=3)
+    writer = IOEventDataWriter(input_files=input_files, max_files=3)
     tables = writer.process_files()
 
     assert len(tables) == 3
@@ -450,7 +450,7 @@ def test_process_file_info_else(monkeypatch, tmp_path):
         lambda f: (fake_run_header, fake_event_header),
     )
 
-    writer = SimtelIOEventDataWriter([str(file_path)])
+    writer = IOEventDataWriter([str(file_path)])
     writer._process_file_info(1, str(file_path))
 
     assert len(writer.file_info) == 1

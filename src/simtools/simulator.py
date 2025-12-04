@@ -16,7 +16,7 @@ from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
-from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
+from simtools.sim_events.writer import IOEventDataWriter
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
 from simtools.utils import general, names
@@ -437,7 +437,7 @@ class Simulator:
         input_files = self.get_file_list(file_type="simtel_output")
         output_files = self.get_file_list(file_type="event_data")
         for input_file, output_file in zip(input_files, output_files):
-            generator = SimtelIOEventDataWriter([input_file])
+            generator = IOEventDataWriter([input_file])
             table_handler.write_tables(
                 tables=generator.process_files(),
                 output_file=Path(output_file),
