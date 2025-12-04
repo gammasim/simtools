@@ -130,7 +130,7 @@ from simtools.application_control import get_application_label, startup_applicat
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import io_handler, table_handler
-from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
+from simtools.sim_events.writer import IOEventDataWriter
 
 
 def _parse():
@@ -173,7 +173,7 @@ def main():
         return
 
     output_filepath = io_handler.IOHandler().get_output_file(app_context.args["output_file"])
-    generator = SimtelIOEventDataWriter(files, app_context.args["max_files"])
+    generator = IOEventDataWriter(files, app_context.args["max_files"])
     tables = generator.process_files()
     table_handler.write_tables(tables, output_filepath, overwrite_existing=True)
     MetadataCollector.dump(

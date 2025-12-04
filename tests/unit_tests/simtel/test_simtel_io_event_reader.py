@@ -6,8 +6,8 @@ import pytest
 from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 
-from simtools.simtel.simtel_io_event_reader import (
-    SimtelIOEventDataReader,
+from simtools.sim_events.reader import (
+    IOEventDataReader,
 )
 
 
@@ -71,7 +71,7 @@ def mock_fits_file(mock_tables, tmp_test_directory):
 
 def test_reader_initialization(mock_fits_file):
     """Test basic reader initialization."""
-    reader = SimtelIOEventDataReader(mock_fits_file)
+    reader = IOEventDataReader(mock_fits_file)
     data_sets = reader.data_sets
 
     assert len(data_sets) > 0
@@ -81,14 +81,14 @@ def test_reader_initialization(mock_fits_file):
 def test_telescope_filtering(mock_fits_file):
     """Test filtering by telescope list."""
     # Should only keep events with telescope 1
-    reader = SimtelIOEventDataReader(mock_fits_file, telescope_list=["LSTN-01"])
+    reader = IOEventDataReader(mock_fits_file, telescope_list=["LSTN-01"])
     _, _, _, triggered_data = reader.read_event_data(mock_fits_file)
 
     assert len(triggered_data.telescope_list) == 1
     assert "LSTN-01" in triggered_data.telescope_list[0]
 
     # Should keep both events (all have telescope "LSTN-03")
-    reader = SimtelIOEventDataReader(mock_fits_file, telescope_list=["LSTN-03"])
+    reader = IOEventDataReader(mock_fits_file, telescope_list=["LSTN-03"])
     _, _, _, triggered_data = reader.read_event_data(mock_fits_file)
 
     assert len(triggered_data.telescope_list) == 2
@@ -98,7 +98,7 @@ def test_telescope_filtering(mock_fits_file):
 
 def test_shower_coordinate_transformation(mock_fits_file):
     """Test transformation of core positions to shower coordinates."""
-    reader = SimtelIOEventDataReader(mock_fits_file)
+    reader = IOEventDataReader(mock_fits_file)
     _, _, triggered_shower, _ = reader.read_event_data(mock_fits_file)
 
     assert hasattr(triggered_shower, "x_core_shower")
@@ -108,7 +108,7 @@ def test_shower_coordinate_transformation(mock_fits_file):
 
 def test_angular_separation_calculation(mock_fits_file):
     """Test calculation of angular separation."""
-    reader = SimtelIOEventDataReader(mock_fits_file)
+    reader = IOEventDataReader(mock_fits_file)
     _, _, _, triggered_data = reader.read_event_data(mock_fits_file)
 
     assert hasattr(triggered_data, "angular_distance")
@@ -117,7 +117,7 @@ def test_angular_separation_calculation(mock_fits_file):
 
 def test_get_reduced_simulation_info(mock_fits_file):
     """Test getting reduced simulation information."""
-    reader = SimtelIOEventDataReader(mock_fits_file)
+    reader = IOEventDataReader(mock_fits_file)
     file_info, _, _, _ = reader.read_event_data(mock_fits_file)
     info = reader.get_reduced_simulation_file_info(file_info)
 
@@ -127,11 +127,11 @@ def test_get_reduced_simulation_info(mock_fits_file):
     assert info["nsb_level"] == pytest.approx(1.0)
 
 
-@patch("simtools.simtel.simtel_io_event_reader.PrimaryParticle")
+@patch("simtools.sim_events.reader.PrimaryParticle")
 def test_get_reduced_simulation_info_with_warning(mock_primary_particle, mock_fits_file, caplog):
     """Test get_reduced_simulation_info with multiple values that trigger warning."""
 
-    reader = SimtelIOEventDataReader(mock_fits_file)
+    reader = IOEventDataReader(mock_fits_file)
 
     new_file_info = Table()
     new_file_info.meta["EXTNAME"] = "FILE_INFO"
@@ -162,7 +162,7 @@ def test_get_reduced_simulation_info_with_warning(mock_primary_particle, mock_fi
 
 def test_get_triggered_shower_data_single_match(mock_fits_file):
     """Test _get_triggered_shower_data with single matches."""
-    reader = SimtelIOEventDataReader(mock_fits_file)
+    reader = IOEventDataReader(mock_fits_file)
     _, shower_data, triggered_shower, _ = reader.read_event_data(mock_fits_file)
 
     # Get triggered shower data
@@ -180,7 +180,7 @@ def test_get_triggered_shower_data_single_match(mock_fits_file):
 
 def test_get_triggered_shower_data_no_matches(mock_fits_file, caplog):
     """Test _get_triggered_shower_data when no matches are found."""
-    reader = SimtelIOEventDataReader(mock_fits_file)
+    reader = IOEventDataReader(mock_fits_file)
     _, shower_data, triggered_shower, _ = reader.read_event_data(mock_fits_file)
 
     with caplog.at_level(logging.WARNING):
@@ -198,7 +198,7 @@ def test_get_triggered_shower_data_no_matches(mock_fits_file, caplog):
 
 def test_read_event_data_returns_expected_types_and_values(mock_fits_file):
     """Test that read_event_data returns expected types and values."""
-    reader = SimtelIOEventDataReader(mock_fits_file)
+    reader = IOEventDataReader(mock_fits_file)
     file_info, shower_data, triggered_shower, triggered_data = reader.read_event_data(
         mock_fits_file
     )
@@ -238,7 +238,7 @@ def test_read_event_data_with_missing_triggers(tmp_test_directory, mock_tables):
 
         mock_read_tables.side_effect = fake_read_tables
 
-        reader = SimtelIOEventDataReader(str(test_file))
+        reader = IOEventDataReader(str(test_file))
         file_info, shower_data, triggered_shower, triggered_data = reader.read_event_data(
             str(test_file)
         )

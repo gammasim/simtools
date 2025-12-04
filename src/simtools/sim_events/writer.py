@@ -1,4 +1,4 @@
-"""Generate a reduced dataset from sim_telarray output files using astropy tables."""
+"""Generate a reduced dataset from simulation files (CORSIKA/sim_telarray) using astropy tables."""
 
 import logging
 from dataclasses import dataclass
@@ -71,11 +71,11 @@ class TableSchemas:
     }
 
 
-class SimtelIOEventDataWriter:
+class IOEventDataWriter:
     """
-    Process sim_telarray events and write tables to file.
+    Process simulation events (CORSIKA/sim_telarray) and write tables to file.
 
-    Extracts essential information from sim_telarray output files:
+    Extracts essential information from simulation files, including:
 
     - Shower parameters (energy, core location, direction)
     - Trigger patterns

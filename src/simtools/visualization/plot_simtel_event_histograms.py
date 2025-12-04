@@ -1,4 +1,4 @@
-"""Plot simtel event histograms filled with SimtelIOEventHistograms."""
+"""Plot simtel event histograms filled with IOEventDataHistograms."""
 
 import logging
 
@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LogNorm
 
-from simtools.simtel.simtel_io_event_histograms import SimtelIOEventHistograms
+from simtools.sim_events.histograms import IOEventDataHistograms
 
 _logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ def plot(histograms, output_path=None, limits=None, rebin_factor=2, array_name=N
 
     Parameters
     ----------
-    histograms: SimtelIOEventHistograms
+    histograms: IOEventDataHistograms
         Instance containing the histograms to plot.
     output_path: Path or str, optional
         Directory to save plots. If None, plots will be displayed.
@@ -230,7 +230,7 @@ def _create_rebinned_plot(plot_args, filename, output_path, rebin_factor):
     data = plot_args["data"]
     bins = plot_args["bins"]
 
-    rebinned_data, rebinned_x_bins, rebinned_y_bins = SimtelIOEventHistograms.rebin_2d_histogram(
+    rebinned_data, rebinned_x_bins, rebinned_y_bins = IOEventDataHistograms.rebin_2d_histogram(
         data, bins[0], bins[1], rebin_factor
     )
 
