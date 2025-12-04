@@ -194,3 +194,56 @@ def test_get_triggered_shower_data_no_matches(mock_fits_file, caplog):
         assert len(triggered_shower.shower_id) == 0
         assert len(triggered_shower.simulated_energy) == 0
         assert "Found 0 matches" in caplog.text
+
+
+def test_read_event_data_returns_expected_types_and_values(mock_fits_file):
+    """Test that read_event_data returns expected types and values."""
+    reader = SimtelIOEventDataReader(mock_fits_file)
+    file_info, shower_data, triggered_shower, triggered_data = reader.read_event_data(
+        mock_fits_file
+    )
+
+    assert hasattr(file_info, "colnames")
+    assert hasattr(shower_data, "shower_id")
+    assert hasattr(triggered_shower, "shower_id")
+    assert hasattr(triggered_data, "shower_id")
+    assert len(shower_data.shower_id) > 0
+    assert len(triggered_shower.shower_id) > 0
+    assert len(triggered_data.shower_id) > 0
+
+
+def test_read_event_data_with_missing_triggers(tmp_test_directory, mock_tables):
+    """Test read_event_data when TRIGGERS table is missing."""
+
+    test_file = tmp_test_directory / "test_no_triggers.fits"
+    shower_table, _, file_info_table = mock_tables
+
+    shower_table.write(test_file, format="fits", overwrite=True)
+    file_info_table.write(test_file, format="fits", append=True)
+
+    # Patch table_handler.read_tables to simulate missing 'TRIGGERS' extension
+    import simtools.io.table_handler as table_handler_mod
+
+    with patch.object(table_handler_mod, "read_tables") as mock_read_tables:
+
+        def fake_read_tables(file, table_names=None, **kwargs):
+            # Only return SHOWERS and FILE_INFO, omit TRIGGERS
+            from astropy.table import Table
+
+            tables = {}
+            for name in table_names:
+                if name in ("SHOWERS", "FILE_INFO"):
+                    tables[name] = Table.read(file, hdu=name)
+            return tables
+
+        mock_read_tables.side_effect = fake_read_tables
+
+        reader = SimtelIOEventDataReader(str(test_file))
+        file_info, shower_data, triggered_shower, triggered_data = reader.read_event_data(
+            str(test_file)
+        )
+
+    assert triggered_shower is None
+    assert triggered_data is None
+    assert hasattr(file_info, "colnames")
+    assert hasattr(shower_data, "shower_id")
