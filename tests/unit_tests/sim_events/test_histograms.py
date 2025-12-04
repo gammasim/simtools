@@ -9,7 +9,7 @@ from simtools.sim_events.histograms import IOEventDataHistograms
 
 @pytest.fixture
 def mock_reader(mocker):
-    mock = mocker.patch("simtools.simtel.sim_events.histograms.IOEventDataReader")
+    mock = mocker.patch("simtools.sim_events.histograms.IOEventDataReader")
     mock.return_value.triggered_shower_data.simulated_energy = np.array([1, 10, 100])
     mock.return_value.shower_data.simulated_energy = np.array([1, 10, 100])
     mock.return_value.triggered_data = mocker.Mock()
@@ -346,7 +346,7 @@ def test_normalized_cumulative_histogram(mock_reader, hdf5_file_name):
 @pytest.fixture
 def mock_histograms(mocker):
     """Create a mocked IOEventDataHistograms that doesn't require a file."""
-    mocker.patch("simtools.simtel.sim_events.histograms.IOEventDataReader")
+    mocker.patch("simtools.sim_events.histograms.IOEventDataReader")
     return IOEventDataHistograms("dummy_file.h5", "test_array")
 
 

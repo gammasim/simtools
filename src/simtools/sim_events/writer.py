@@ -17,7 +17,7 @@ from eventio.simtel import (
 )
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.io.eventio_handler import (
+from simtools.sim_events.file_info import (
     get_combined_eventio_run_header,
     get_corsika_run_and_event_headers,
 )
