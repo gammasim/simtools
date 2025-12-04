@@ -2,7 +2,7 @@
 
 import warnings
 
-from simtools.io.eventio_handler import (
+from simtools.sim_events.file_info import (
     get_combined_eventio_run_header,
     get_corsika_run_and_event_headers,
     get_corsika_run_number,

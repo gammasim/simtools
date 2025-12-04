@@ -34,9 +34,7 @@ def lookup_table_generator(mock_eventio_file):
 @pytest.fixture
 def mock_corsika_run_header(mocker):
     """Mock the get_combined_eventio_run_header."""
-    mock_get_header = mocker.patch(
-        "simtools.simtel.simtel_io_event_writer.get_combined_eventio_run_header"
-    )
+    mock_get_header = mocker.patch("simtools.sim_events.writer.get_combined_eventio_run_header")
     mock_get_header.return_value = {
         "direction": [0.0, 70.0 / 57.3],
         "particle_id": 1,
@@ -51,8 +49,7 @@ def mock_corsika_run_header(mocker):
 def mock_get_sim_telarray_telescope_id_to_telescope_name_mapping(mocker):
     """Mock the get_sim_telarray_telescope_id_to_telescope_name_mapping."""
     mock_get_mapping = mocker.patch(
-        "simtools.simtel.simtel_io_event_writer."
-        "get_sim_telarray_telescope_id_to_telescope_name_mapping"
+        "simtools.sim_events.writer.get_sim_telarray_telescope_id_to_telescope_name_mapping"
     )
     mock_get_mapping.return_value = {
         1: "LSTN-01",
@@ -66,9 +63,7 @@ def mock_get_sim_telarray_telescope_id_to_telescope_name_mapping(mocker):
 @pytest.fixture
 def mock_read_sim_telarray_metadata(mocker):
     """Mock the read_sim_telarray_metadata function."""
-    mock_metadata = mocker.patch(
-        "simtools.simtel.simtel_io_event_writer.read_sim_telarray_metadata"
-    )
+    mock_metadata = mocker.patch("simtools.sim_events.writer.read_sim_telarray_metadata")
     mock_metadata.return_value = {"nsb_integrated_flux": 22.24}, {}
     return mock_metadata
 
@@ -136,7 +131,7 @@ def validate_datasets(reduced_data, triggered_data, file_info, trigger_telescope
     assert len(reduced_data.col("shower_altitude")) > 0
 
 
-@patch("simtools.simtel.simtel_io_event_writer.EventIOFile", autospec=True)
+@patch("simtools.sim_events.writer.EventIOFile", autospec=True)
 def test_process_files(
     mock_eventio_class,
     lookup_table_generator,
@@ -180,7 +175,7 @@ def test_no_input_files():
         IOEventDataWriter(None, None)
 
 
-@patch("simtools.simtel.simtel_io_event_writer.EventIOFile", autospec=True)
+@patch("simtools.sim_events.writer.EventIOFile", autospec=True)
 def test_multiple_files(
     mock_eventio_class,
     tmp_path,
@@ -442,11 +437,11 @@ def test_process_file_info_else(monkeypatch, tmp_path):
     }
 
     monkeypatch.setattr(
-        "simtools.simtel.simtel_io_event_writer.get_combined_eventio_run_header",
+        "simtools.sim_events.writer.get_combined_eventio_run_header",
         lambda f: None,
     )
     monkeypatch.setattr(
-        "simtools.simtel.simtel_io_event_writer.get_corsika_run_and_event_headers",
+        "simtools.sim_events.writer.get_corsika_run_and_event_headers",
         lambda f: (fake_run_header, fake_event_header),
     )
 

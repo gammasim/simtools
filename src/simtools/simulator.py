@@ -11,11 +11,12 @@ import numpy as np
 from astropy import units as u
 
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.io import eventio_handler, io_handler, table_handler
+from simtools.io import io_handler, table_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
+from simtools.sim_events import file_info
 from simtools.sim_events.writer import IOEventDataWriter
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
@@ -110,7 +111,7 @@ class Simulator:
         }
 
         if self.args_dict.get("corsika_file"):
-            self.run_number = eventio_handler.get_corsika_run_number(self.args_dict["corsika_file"])
+            self.run_number = file_info.get_corsika_run_number(self.args_dict["corsika_file"])
         else:
             self.run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
                 "run_number", 1
@@ -683,7 +684,7 @@ class Simulator:
 
         event_errors = []
         for file in self.get_file_list(file_type="corsika_output"):
-            shower_events, _ = eventio_handler.get_simulated_events(file)
+            shower_events, _ = file_info.get_simulated_events(file)
 
             if shower_events != expected_mc_events:
                 if consistent(shower_events, expected_mc_events, tol=tolerance):
@@ -728,7 +729,7 @@ class Simulator:
         """
         event_errors = []
         for file in self.get_file_list(file_type="simtel_output"):
-            shower_events, mc_events = eventio_handler.get_simulated_events(file)
+            shower_events, mc_events = file_info.get_simulated_events(file)
 
             if (shower_events, mc_events) != (expected_shower_events, expected_mc_events):
                 event_errors.append(
