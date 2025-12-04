@@ -11,7 +11,7 @@ from eventio.simtel import (
     TriggerInformation,
 )
 
-from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
+from simtools.sim_events.writer import EventDataWriter
 
 OUTPUT_FILE_NAME = "output.fits"
 one_two_three = "LSTN-01,LSTN-02,MSTN-01"
@@ -27,16 +27,14 @@ def mock_eventio_file(tmp_path):
 
 @pytest.fixture
 def lookup_table_generator(mock_eventio_file):
-    """Create SimtelIOEventDataWriter instance."""
-    return SimtelIOEventDataWriter(input_files=[mock_eventio_file], max_files=1)
+    """Create EventDataWriter instance."""
+    return EventDataWriter(input_files=[mock_eventio_file], max_files=1)
 
 
 @pytest.fixture
 def mock_corsika_run_header(mocker):
     """Mock the get_combined_eventio_run_header."""
-    mock_get_header = mocker.patch(
-        "simtools.simtel.simtel_io_event_writer.get_combined_eventio_run_header"
-    )
+    mock_get_header = mocker.patch("simtools.sim_events.writer.get_combined_eventio_run_header")
     mock_get_header.return_value = {
         "direction": [0.0, 70.0 / 57.3],
         "particle_id": 1,
@@ -51,8 +49,7 @@ def mock_corsika_run_header(mocker):
 def mock_get_sim_telarray_telescope_id_to_telescope_name_mapping(mocker):
     """Mock the get_sim_telarray_telescope_id_to_telescope_name_mapping."""
     mock_get_mapping = mocker.patch(
-        "simtools.simtel.simtel_io_event_writer."
-        "get_sim_telarray_telescope_id_to_telescope_name_mapping"
+        "simtools.sim_events.writer.get_sim_telarray_telescope_id_to_telescope_name_mapping"
     )
     mock_get_mapping.return_value = {
         1: "LSTN-01",
@@ -66,9 +63,7 @@ def mock_get_sim_telarray_telescope_id_to_telescope_name_mapping(mocker):
 @pytest.fixture
 def mock_read_sim_telarray_metadata(mocker):
     """Mock the read_sim_telarray_metadata function."""
-    mock_metadata = mocker.patch(
-        "simtools.simtel.simtel_io_event_writer.read_sim_telarray_metadata"
-    )
+    mock_metadata = mocker.patch("simtools.sim_events.writer.read_sim_telarray_metadata")
     mock_metadata.return_value = {"nsb_integrated_flux": 22.24}, {}
     return mock_metadata
 
@@ -136,7 +131,7 @@ def validate_datasets(reduced_data, triggered_data, file_info, trigger_telescope
     assert len(reduced_data.col("shower_altitude")) > 0
 
 
-@patch("simtools.simtel.simtel_io_event_writer.EventIOFile", autospec=True)
+@patch("simtools.sim_events.writer.EventIOFile", autospec=True)
 def test_process_files(
     mock_eventio_class,
     lookup_table_generator,
@@ -145,7 +140,7 @@ def test_process_files(
     mock_read_sim_telarray_metadata,
 ):
     """Test processing of files and creation of tables."""
-    # Create sequence that matches SimtelIOEventDataWriter expectations
+    # Create sequence that matches EventDataWriter expectations
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = [
         create_mc_run_header(),
         create_mc_shower(shower_id=1),  # First shower
@@ -177,10 +172,10 @@ def test_process_files(
 
 def test_no_input_files():
     with pytest.raises(TypeError, match=r"No input files provided."):
-        SimtelIOEventDataWriter(None, None)
+        EventDataWriter(None, None)
 
 
-@patch("simtools.simtel.simtel_io_event_writer.EventIOFile", autospec=True)
+@patch("simtools.sim_events.writer.EventIOFile", autospec=True)
 def test_multiple_files(
     mock_eventio_class,
     tmp_path,
@@ -202,7 +197,7 @@ def test_multiple_files(
     for file in input_files:
         Path(file).touch()
 
-    writer = SimtelIOEventDataWriter(input_files=input_files, max_files=3)
+    writer = EventDataWriter(input_files=input_files, max_files=3)
     tables = writer.process_files()
 
     assert len(tables) == 3
@@ -442,15 +437,15 @@ def test_process_file_info_else(monkeypatch, tmp_path):
     }
 
     monkeypatch.setattr(
-        "simtools.simtel.simtel_io_event_writer.get_combined_eventio_run_header",
+        "simtools.sim_events.writer.get_combined_eventio_run_header",
         lambda f: None,
     )
     monkeypatch.setattr(
-        "simtools.simtel.simtel_io_event_writer.get_corsika_run_and_event_headers",
+        "simtools.sim_events.writer.get_corsika_run_and_event_headers",
         lambda f: (fake_run_header, fake_event_header),
     )
 
-    writer = SimtelIOEventDataWriter([str(file_path)])
+    writer = EventDataWriter([str(file_path)])
     writer._process_file_info(1, str(file_path))
 
     assert len(writer.file_info) == 1

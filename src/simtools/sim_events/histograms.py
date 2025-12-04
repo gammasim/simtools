@@ -1,4 +1,4 @@
-"""Histograms for shower and triggered events."""
+"""Histograms for shower and (if available) triggered events."""
 
 import copy
 import logging
@@ -6,12 +6,12 @@ import logging
 import astropy.units as u
 import numpy as np
 
-from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader
+from simtools.sim_events.reader import EventDataReader
 
 
-class SimtelIOEventHistograms:
+class EventDataHistograms:
     """
-    Generate and fill histograms for shower and triggered events.
+    Generate and fill histograms for shower and (if available) triggered events.
 
     Event data is read from the reduced MC event data file.
     Calculate cumulative and relative (efficiency) distributions.
@@ -35,7 +35,7 @@ class SimtelIOEventHistograms:
         self.histograms = {}
         self.file_info = {}
 
-        self.reader = SimtelIOEventDataReader(event_data_file, telescope_list=telescope_list)
+        self.reader = EventDataReader(event_data_file, telescope_list=telescope_list)
 
     def fill(self):
         """
@@ -63,12 +63,10 @@ class SimtelIOEventHistograms:
 
             self.histograms = self._define_histograms(event_data, triggered_data, shower_data)
 
-            for name, data in self.histograms.items():
-                self._logger.debug(f"Filling histogram {name}")
+            for data in self.histograms.values():
                 self._fill_histogram_and_bin_edges(data)
 
         self.print_summary()
-
         self.calculate_efficiency_data()
         self.calculate_cumulative_data()
 
@@ -202,11 +200,14 @@ class SimtelIOEventHistograms:
         Adds to existing histogram if present, otherwise initializes it.
         """
         if data["1d"]:
+            if data["event_data"] is None:
+                return
             hist, _ = np.histogram(
-                getattr(data["event_data"], data["event_data_column"]),
-                bins=data["bin_edges"],
+                getattr(data["event_data"], data["event_data_column"]), bins=data["bin_edges"]
             )
         else:
+            if data["event_data"][0] is None or data["event_data"][1] is None:
+                return
             hist, _, _ = np.histogram2d(
                 getattr(data["event_data"][0], data["event_data_column"][0]),
                 getattr(data["event_data"][1], data["event_data_column"][1]),
@@ -227,6 +228,8 @@ class SimtelIOEventHistograms:
         dict
             Dictionary containing the efficiency histograms.
         """
+        if not any(isinstance(ds, dict) and "TRIGGERS" in ds for ds in self.reader.data_sets):
+            return None
 
         def calculate_efficiency(trig_hist, mc_hist):
             with np.errstate(divide="ignore", invalid="ignore"):
@@ -295,11 +298,15 @@ class SimtelIOEventHistograms:
         """Return bins for the viewcone histogram."""
         if "viewcone_bin_edges" in self.histograms:
             return self.histograms["viewcone_bin_edges"]
-        return np.linspace(
-            self.file_info.get("viewcone_min", 0.0 * u.deg).to("deg").value,
-            self.file_info.get("viewcone_max", 20.0 * u.deg).to("deg").value,
-            100,
-        )
+
+        viewcone_min = self.file_info.get("viewcone_min", 0.0 * u.deg).to("deg").value
+        viewcone_max = self.file_info.get("viewcone_max", 20.0 * u.deg).to("deg").value
+
+        # avoid zero-width bins
+        if viewcone_min == viewcone_max:
+            viewcone_max = viewcone_min + 0.5
+
+        return np.linspace(viewcone_min, viewcone_max, 100)
 
     def calculate_cumulative_data(self):
         """
@@ -310,6 +317,9 @@ class SimtelIOEventHistograms:
         dict
             Dictionary containing the cumulative histograms.
         """
+        if not any(isinstance(ds, dict) and "TRIGGERS" in ds for ds in self.reader.data_sets):
+            return None
+
         cumulative_data = {}
         suffix = "_cumulative"
 
