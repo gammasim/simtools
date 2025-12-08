@@ -36,6 +36,7 @@ r"""
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.corsika.corsika_histograms import CorsikaHistograms
+from simtools.visualization import plot_corsika_histograms
 
 
 def _parse():
@@ -65,7 +66,10 @@ def main():
 
     corsika_histograms = CorsikaHistograms(app_context.args["input_file"])
     corsika_histograms.fill()
-    corsika_histograms.plot(pdf_file=app_context.args.get("pdf_file_name"))
+    plot_corsika_histograms.export_all_photon_figures_pdf(
+        corsika_histograms,
+        app_context.io_handler.get_output_file(app_context.args.get("pdf_file_name")),
+    )
 
 
 if __name__ == "__main__":
