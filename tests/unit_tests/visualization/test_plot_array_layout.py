@@ -817,3 +817,31 @@ def test_plot_array_layout_filter_removes_all_telescopes():
 
     assert isinstance(fig, mpl_fig.Figure)
     plt.close(fig)
+
+
+def test_get_patches_empty_with_axes_range():
+    """Test get_patches when no telescopes remain but axes_range is provided."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01"],
+            "position_x": [100] * u.m,
+            "position_y": [100] * u.m,
+            "sphere_radius": [12] * u.m,
+        }
+    )
+
+    # Filter that excludes the telescope
+    # And provide axes_range
+    _, ax = plt.subplots()
+    patches, axes_range, _, _, _ = get_patches(
+        ax,
+        telescopes,
+        show_tel_label=False,
+        axes_range=1000.0,
+        marker_scaling=1.0,
+        filter_x_lim=(500, 600),  # This will filter out the telescope at 100
+        filter_y_lim=(500, 600),
+    )
+
+    assert len(patches) == 0
+    assert axes_range == 1000.0
