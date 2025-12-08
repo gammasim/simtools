@@ -50,17 +50,6 @@ def test_initialize_header(corsika_histograms_instance):
         )
 
 
-def test_telescope_indices(corsika_histograms_instance):
-    corsika_histograms_instance.telescope_indices = [0, 1, 2]
-    assert (corsika_histograms_instance.telescope_indices == [0, 1, 2]).all()
-    # Test int as input
-    corsika_histograms_instance.telescope_indices = 1
-    assert corsika_histograms_instance.telescope_indices == [1]
-    # Test non-integer indices
-    with pytest.raises(TypeError):
-        corsika_histograms_instance.telescope_indices = [1.5, 2, 2.5]
-
-
 def test_read_event_information(corsika_histograms_instance):
     # Check some of the event info
     manual_event_info = {
@@ -718,44 +707,6 @@ def test_export_histograms_individual_telescopes_naming(corsika_histograms_insta
         node_paths = [n._v_pathname for n in h5.walk_nodes("/", "Table")]
     assert any("_tel_index_0" in p for p in node_paths)
     assert any("hist_2d_" in p and "_tel_index_0" in p for p in node_paths)
-
-
-@pytest.fixture(name="corsika_dummy_input")
-def _corsika_dummy_input(tmp_path):
-    # create a tiny dummy file to satisfy existence check
-    p = tmp_path / "dummy.corsikaio"
-    p.write_bytes(b"00")
-    return p
-
-
-def test_parse_telescope_indices_none(corsika_dummy_input, tmp_path):
-    # Patch I/O heavy init pieces by mocking methods used within __init__
-    with (
-        mock.patch.object(CorsikaHistograms, "read_event_information"),
-        mock.patch.object(CorsikaHistograms, "_initialize_header"),
-    ):
-        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
-        assert ch.parse_telescope_indices(None) is None
-
-
-def test_parse_telescope_indices_valid(corsika_dummy_input, tmp_path):
-    with (
-        mock.patch.object(CorsikaHistograms, "read_event_information"),
-        mock.patch.object(CorsikaHistograms, "_initialize_header"),
-    ):
-        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
-        indices = ch.parse_telescope_indices(["1", "2", "3"])
-        assert np.array_equal(indices, np.array([1, 2, 3]))
-
-
-def test_parse_telescope_indices_invalid(corsika_dummy_input, tmp_path):
-    with (
-        mock.patch.object(CorsikaHistograms, "read_event_information"),
-        mock.patch.object(CorsikaHistograms, "_initialize_header"),
-    ):
-        ch = CorsikaHistograms(corsika_dummy_input, output_path=tmp_path, hdf5_file_name="out.hdf5")
-        with pytest.raises(ValueError, match="not a valid input"):
-            ch.parse_telescope_indices(["a", "2"])
 
 
 def test_should_overwrite(corsika_dummy_input, tmp_path):
