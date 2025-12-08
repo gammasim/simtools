@@ -736,13 +736,11 @@ class IncidentAnglesCalculator:
 
             data = combined_table[col_name].to(u.deg).value
             # Create histogram
-            hist, bin_edges = np.histogram(data, bins=100, weights=np.ones_like(data) / len(data))
-
-            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+            bin_centers, hist = self._calculate_histogram(data, bins=100)
 
             table = QTable()
             table["Incidence angle"] = bin_centers * u.deg
-            table["Fraction"] = hist
+            table["Density"] = hist
 
             writer = ModelDataWriter(
                 product_data_file=self.output_dir / f"{param_name}.ecsv",
@@ -759,6 +757,27 @@ class IncidentAnglesCalculator:
                 value=f"{param_name}.ecsv",
                 instrument=self.config_data["telescope"],
                 parameter_version=self.config_data["model_version"],
-                output_file=self.output_dir / f"{param_name}.json",
+                output_file=f"{param_name}.json",
+                output_path=self.output_dir,
                 metadata_input_dict=self.config_data,
             )
+
+    def _calculate_histogram(self, data, bins=100):
+        """
+        Calculate normalized histogram (density).
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Data to calculate histogram for.
+        bins : int
+            Number of bins.
+
+        Returns
+        -------
+        tuple
+            Bin centers and histogram values (density).
+        """
+        hist, bin_edges = np.histogram(data, bins=bins, density=True)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+        return bin_centers, hist
