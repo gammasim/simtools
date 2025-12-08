@@ -740,7 +740,7 @@ class IncidentAnglesCalculator:
 
             table = QTable()
             table["Incidence angle"] = bin_centers * u.deg
-            table["Density"] = hist
+            table["Fraction"] = hist
 
             writer = ModelDataWriter(
                 product_data_file=self.output_dir / f"{param_name}.ecsv",
