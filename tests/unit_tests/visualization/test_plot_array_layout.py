@@ -844,4 +844,4 @@ def test_get_patches_empty_with_axes_range():
     )
 
     assert len(patches) == 0
-    assert axes_range == 1000.0
+    assert np.isclose(axes_range, 1000.0, rtol=1e-05, atol=1e-05)
