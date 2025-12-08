@@ -14,6 +14,8 @@ def convert_2d_to_radial_distr(hist_2d, xaxis, yaxis, bins=50, max_dist=1000):
     """
     Convert a 2d histogram of positions, e.g. photon positions on the ground, to a 1D distribution.
 
+    TODO possible wrong
+
     Parameters
     ----------
     hist_2d: numpy.ndarray
@@ -60,9 +62,7 @@ def convert_2d_to_radial_distr(hist_2d, xaxis, yaxis, bins=50, max_dist=1000):
 
     # We construct a 1D array with the histogram counts sorted according to the distance to the
     # center.
-    hist_sorted = np.array(
-        [hist_2d[i_x, i_y] for i_x, i_y in zip(x_indices_sorted, y_indices_sorted)]
-    )
+    hist_sorted = hist_2d[x_indices_sorted, y_indices_sorted]
     distance_sorted = np.sort(radial_distance_map, axis=None)
 
     # For larger distances, we have more elements in a slice 'dr' in radius, hence, we need to
