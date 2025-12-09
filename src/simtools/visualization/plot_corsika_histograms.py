@@ -6,7 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
-from matplotlib import colors
+from matplotlib import colormaps, colors
 
 from simtools.visualization.visualize import save_figures_to_single_document
 
@@ -90,7 +90,7 @@ def _plot_1d(hist_list, labels=None):
     hist = hist_list[0]
     all_figs = []
 
-    plot_colors = plt.cm.get_cmap("tab10")(np.linspace(0, 1, len(hist_list)))
+    plot_colors = colormaps["tab10"](np.linspace(0, 1, len(hist_list)))
 
     fig, ax = plt.subplots()
     for i_file, (hist_dict, color) in enumerate(zip(hist_list, plot_colors)):
