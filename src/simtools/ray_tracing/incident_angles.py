@@ -695,12 +695,15 @@ class IncidentAnglesCalculator:
             return
         output_file = self.results_dir / f"incident_angles_{self._label_suffix()}.ecsv"
 
-        # Write the table to ECSV
-        self.results.write(output_file, format="ascii.ecsv", overwrite=True)
+        data = self.results["angle_incidence_focal"].to(u.deg).value
+        bin_centers, hist = self._calculate_histogram(data, bins=1000)
 
-        # Write the metadata to a YAML file
-        # This uses the MetadataCollector to ensure the format is correct
-        # and includes all necessary information
+        output_table = QTable()
+        output_table["Incidence angle"] = bin_centers * u.deg
+        output_table["Fraction"] = hist
+
+        output_table.write(output_file, format="ascii.ecsv", overwrite=True)
+
         MetadataCollector.dump(
             args_dict=self.config_data,
             output_file=output_file.with_suffix(".yml"),
