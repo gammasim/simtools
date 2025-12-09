@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
 from matplotlib import colors
-from matplotlib.backends.backend_pdf import PdfPages
+
+from simtools.visualization.visualize import save_figures_to_single_document
 
 _logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ def _plot_2d(hist):
     Returns
     -------
     list
-        List of figures for the given telescopes.
+        List of figures.
     """
     hist_values = hist["hist_values"]
     x_bin_edges = hist["x_bin_edges"]
@@ -45,9 +46,10 @@ def _plot_2d(hist):
         ax.set_xlim(np.amin(x_bin_edges[i_hist]), np.amax(x_bin_edges[i_hist]))
         ax.set_ylim(np.amin(y_bin_edges[i_hist]), np.amax(y_bin_edges[i_hist]))
         ax.set_facecolor("black")
-        fig.colorbar(mesh)
+        cbar = fig.colorbar(mesh)
+        cbar.set_label(_get_axis_label(hist["z_axis_title"], hist["z_axis_unit"]))
         all_figs.append(fig)
-        ax.set_title(f"{hist['file name']}")
+        ax.set_title(f"{hist['file_name']}")
         plt.close()
 
     return all_figs
@@ -65,7 +67,7 @@ def _plot_1d(hist):
     Returns
     -------
     list
-        List of figures for the given telescopes.
+        List of figures.
     """
     hist_values = hist["hist_values"]
     x_bin_edges = hist["x_bin_edges"]
@@ -80,9 +82,10 @@ def _plot_1d(hist):
             width=np.abs(np.diff(x_bin_edges[i_hist])),
         )
         ax.set_xlabel(_get_axis_label(hist["x_axis_title"], hist["x_axis_unit"]))
+        ax.set_ylabel(_get_axis_label(hist["y_axis_title"], hist["y_axis_unit"]))
         if hist["log_y"] is True:
             ax.set_yscale("log")
-        ax.set_title(f"{hist['file name']}")
+        ax.set_title(f"{hist['file_name']}")
         all_figs.append(fig)
         plt.close(fig)
     return all_figs
@@ -95,29 +98,8 @@ def _get_axis_label(title, unit):
     return f"{title}"
 
 
-def save_figs_to_pdf(figs, pdf_file_name):
-    """
-    Save figures from corsika histograms to an output pdf file.
-
-    TODO - to be generalized?
-
-    Parameters
-    ----------
-    figs: list
-        List of figures.
-    pdf_file_name: str or Path
-        PDF file name.
-    """
-    _logger.info(f"Saving {len(figs)} figures to {pdf_file_name}")
-    pdf_pages = PdfPages(Path(pdf_file_name).absolute().as_posix())
-    for fig in figs:
-        plt.tight_layout()
-        pdf_pages.savefig(fig)
-    pdf_pages.close()
-
-
 def _build_all_photon_figures(histograms):
-    """BUild list of all photon histogram figures."""
+    """Build list of all photon histogram figures."""
     all_figs = []
     for hist in histograms.hist.values():
         if hist["is_1d"]:
@@ -139,6 +121,6 @@ def export_all_photon_figures_pdf(histograms_instance, pdf_file_name):
     pdf_file_name: str or Path
         Name of the output pdf file to save the histograms.
     """
-    figs = _build_all_photon_figures(histograms_instance)
-    _logger.debug(f"Exporting {len(figs)} photon figures to {pdf_file_name}")
-    save_figs_to_pdf(figs, Path(pdf_file_name))
+    save_figures_to_single_document(
+        _build_all_photon_figures(histograms_instance), Path(pdf_file_name)
+    )

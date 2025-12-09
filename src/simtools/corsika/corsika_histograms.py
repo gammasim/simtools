@@ -10,11 +10,7 @@ import numpy as np
 from astropy import units as u
 from eventio import IACTFile
 
-from simtools.io import io_handler
 from simtools.utils.geometry import rotate
-
-X_AXIS_STRING = "x axis"
-Y_AXIS_STRING = "y axis"
 
 
 class CorsikaHistograms:
@@ -25,8 +21,6 @@ class CorsikaHistograms:
     ----------
     input_file: str or Path
         CORSIKA IACT file.
-    label: str
-        Instance label.
 
     Raises
     ------
@@ -34,16 +28,12 @@ class CorsikaHistograms:
         if the input file given does not exist.
     """
 
-    def __init__(self, input_file, label=None):
-        self.label = label
+    def __init__(self, input_file):
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaHistograms")
         self.input_file = Path(input_file)
         if not self.input_file.exists():
             raise FileNotFoundError(f"File {self.input_file} does not exist.")
-
-        self.io_handler = io_handler.IOHandler()
-        self.output_path = self.io_handler.get_output_directory("corsika")
 
         self.events = None
         self.hist = self._set_2d_distributions()
@@ -103,7 +93,21 @@ class CorsikaHistograms:
         self.events = np.array(records, dtype=event_dtype)
 
     def _create_regular_axes(self, hist, axes):
-        """Create regular axis for a single histogram."""
+        """
+        Create regular axis for a single histogram.
+
+        Parameters
+        ----------
+        hist: dict
+            Histogram dictionary.
+        axes: list
+            List of axis names (e.g. ["x_bins", "y_bins"]).
+
+        Returns
+        -------
+        list:
+            List of boost_histogram axis instances.
+        """
         transform = {"log": bh.axis.transform.log, "linear": None}
 
         boost_axes = []
@@ -151,81 +155,68 @@ class CorsikaHistograms:
         rotate_photons: bool
             If True, the photon's coordinates are rotated to the plane perpendicular to the
             incoming direction of the primary particle.
-
-        Raises
-        ------
-        IndexError:
-            If the index or indices passed though telescope_index are out of range.
         """
         hist_str = "histogram"
         for photon, telescope in zip(photons, telescope_positions):
-            if not rotate_photons:
-                photon_x, photon_y = photon["x"], photon["y"]
-            else:
-                photon_x, photon_y = rotate(
+            if rotate_photons:
+                px, py = rotate(
                     photon["x"],
                     photon["y"],
                     self.events["azimuth_deg"][event_counter],
                     self.events["zenith_deg"][event_counter],
                 )
+            else:
+                px, py = photon["x"], photon["y"]
 
-            photon_x -= -telescope["x"]
-            photon_y -= -telescope["y"]
+            px -= -telescope["x"]
+            px -= -telescope["y"]
+            w = photon["photons"]
 
-            self.hist["counts_xy"][hist_str].fill(
-                (photon_x * u.cm).to(u.m), (photon_y * u.cm).to(u.m)
-            )
-            self.hist["density_xy"][hist_str].fill(
-                (photon_x * u.cm).to(u.m), (photon_y * u.cm).to(u.m)
-            )
-            self.hist["direction_xy"][hist_str].fill(photon["cx"], photon["cy"])
-            self.hist["time_altitude"][hist_str].fill(
-                photon["time"] * u.ns, (photon["zem"] * u.cm).to(u.km)
-            )
+            pxm = px * u.cm.to(u.m)
+            pym = py * u.cm.to(u.m)
+            zem = (photon["zem"] * u.cm).to(u.km)
+
+            self.hist["counts_xy"][hist_str].fill(pxm, pym, weight=w)
+            self.hist["density_xy"][hist_str].fill(pxm, pym, weight=w)
+            self.hist["direction_xy"][hist_str].fill(photon["cx"], photon["cy"], weight=w)
+            self.hist["time_altitude"][hist_str].fill(photon["time"] * u.ns, zem, weight=w)
             self.hist["wavelength_altitude"][hist_str].fill(
-                np.abs(photon["wavelength"]) * u.nm, (photon["zem"] * u.cm).to(u.km)
+                np.abs(photon["wavelength"]) * u.nm, zem, weight=w
             )
 
-            photon_r = np.sqrt(photon_x**2 + photon_y**2)
-            self.hist["counts_r"][hist_str].fill(photon_r * u.cm.to(u.m))
-            self.hist["density_r"][hist_str].fill(photon_r * u.cm.to(u.m))
+            r = np.hypot(px, py) * u.cm.to(u.m)
+            self.hist["counts_r"][hist_str].fill(r, weight=w)
+            self.hist["density_r"][hist_str].fill(r, weight=w)
 
-            self.events["num_photons"][event_counter] += np.sum(photon["photons"])
+            self.events["num_photons"][event_counter] += np.sum(photon["photons"] * w)
 
-    def get_hist_2d_projection(self, label, hist):
+    def get_hist_2d_projection(self, hist):
         """
         Get 2D distributions.
 
         Parameters
         ----------
-        label: str
-            Histogram label.
-        hist: dict
-            Histogram dictionary.
+        hist: boost_histogram.Histogram
+            Histogram.
 
         Returns
         -------
         numpy.ndarray
-            The counts of the histogram.
+            Histogram counts.
         numpy.array
-            The x bin edges of the histograms.
+            Histogram x bin edges.
         numpy.array
-            The y bin edges of the histograms.
+            Histogram y bin edges
         """
-        h = hist["histogram"]
+        return (
+            np.asarray([hist.view().T]),
+            np.asarray([hist.axes.edges[0].flatten()]),
+            np.asarray([hist.axes.edges[1].flatten()]),
+        )
 
-        v = h.view().T
-        if label == "density_xy":  # TODO density
-            v = v / functools.reduce(operator.mul, h.axes.widths)
-
-        xb = h.axes.edges[0].flatten()
-        yb = h.axes.edges[1].flatten()
-
-        return np.asarray([v]), np.asarray([xb]), np.asarray([yb])
-
-    def get_hist_1d_projection(self, label, hist, bins=50, hist_range=None):
+    def get_hist_1d_projection(self, label, hist):
         """
-        Get 1D distributions.
+        Get 1D distributions from numpy or boost histograms (1D and 2D).
 
         Parameters
         ----------
@@ -243,7 +234,10 @@ class CorsikaHistograms:
         """
         # plain numpy histogram
         if hist.get("projection") is None and label in self.events.dtype.names:
-            histo_1d, bin_edges = np.histogram(self.events[label], bins=bins, range=hist_range)
+            bins = hist["x_bins"][0]
+            histo_1d, bin_edges = np.histogram(
+                self.events[label], bins=bins, range=hist["x_bins"][2]
+            )
             return histo_1d.reshape(1, bins), bin_edges.reshape(1, bins + 1)
 
         # boost 1D histogram
@@ -261,7 +255,7 @@ class CorsikaHistograms:
         edges = h.axes.edges.T.flatten()[0]
         return np.asarray([h.view().T]), np.asarray([edges])
 
-    def _set_1d_distributions(self, r_max=1000 * u.m, bins=100):
+    def _set_1d_distributions(self, r_max=2000 * u.m, bins=100):
         """
         Define 1D histograms.
 
@@ -270,13 +264,15 @@ class CorsikaHistograms:
         dict:
             Dictionary with 1D histogram information.
         """
-        file_name = "file name"
+        file_name = "file_name"
         title = "title"
         projection = "projection"
         x_bins = "x_bins"
         scale = "scale"
         x_axis_unit = "x_axis_unit"
         x_axis_title = "x_axis_title"
+        y_axis_unit = "y_axis_unit"
+        y_axis_title = "y_axis_title"
         hist_1d = {
             "wavelength": {
                 file_name: "hist_1d_photon_wavelength_distr",
@@ -298,6 +294,8 @@ class CorsikaHistograms:
                 scale: "linear",
                 x_axis_title: "Distance to center",
                 x_axis_unit: u.m,
+                y_axis_title: "Photon density",
+                y_axis_unit: u.m**-2,
             },
             "time": {
                 file_name: "hist_1d_photon_time_distr",
@@ -312,6 +310,8 @@ class CorsikaHistograms:
             "num_photons": {
                 file_name: "hist_1d_photon_per_event_distr",
                 title: "Photons per event distribution",
+                "event_type": True,
+                x_bins: [100, 0, None],
                 x_axis_title: "Event counter",
                 x_axis_unit: u.dimensionless_unscaled,
             },
@@ -320,6 +320,12 @@ class CorsikaHistograms:
         for value in hist_1d.values():
             value["is_1d"] = True
             value["log_y"] = True
+            value[y_axis_title] = (
+                "Counts" if value.get(y_axis_title) is None else value[y_axis_title]
+            )
+            value[y_axis_unit] = (
+                u.dimensionless_unscaled if value.get(y_axis_unit) is None else value[y_axis_unit]
+            )
             if value.get("projection") is not None:
                 hist_2d_name = value["projection"][0]
                 if value["projection"][1] == "x":
@@ -330,7 +336,7 @@ class CorsikaHistograms:
                     value[x_bins] = self.hist[hist_2d_name]["y_bins"]
                     value[x_axis_title] = self.hist[hist_2d_name]["y_axis_title"]
                     value[x_axis_unit] = self.hist[hist_2d_name]["y_axis_unit"]
-            elif value.get(x_bins) is not None:
+            elif value.get("event_type", False) is False:
                 boost_axes = self._create_regular_axes(value, ["x_bins"])
                 value["histogram"] = bh.Histogram(boost_axes[0])
         return hist_1d
@@ -344,14 +350,13 @@ class CorsikaHistograms:
         dict:
             Dictionary with 2D histogram information.
         """
-        file_name = "file name"
+        file_name = "file_name"
         title = "title"
         x_bins, y_bins = "x_bins", "y_bins"
         scale = "scale"
-        x_axis_title = "x_axis_title"
-        x_axis_unit = "x_axis_unit"
-        y_axis_title = "y_axis_title"
-        y_axis_unit = "y_axis_unit"
+        x_axis_title, x_axis_unit = "x_axis_title", "x_axis_unit"
+        y_axis_title, y_axis_unit = "y_axis_title", "y_axis_unit"
+        z_axis_title, z_axis_unit = "z_axis_title", "z_axis_unit"
 
         hist_2d = {
             "counts_xy": {
@@ -375,6 +380,8 @@ class CorsikaHistograms:
                 x_axis_unit: xy_maximum.unit,
                 y_axis_title: "y position on the ground",
                 y_axis_unit: xy_maximum.unit,
+                z_axis_title: "Photon density",
+                z_axis_unit: u.m**-2,
             },
             "direction_xy": {
                 file_name: "hist_2d_photon_direction_distr",
@@ -414,6 +421,12 @@ class CorsikaHistograms:
         for value in hist_2d.values():
             value["is_1d"] = False
             value["log_z"] = True
+            value[z_axis_title] = (
+                "Counts" if value.get(z_axis_title) is None else value[z_axis_title]
+            )
+            value[z_axis_unit] = (
+                u.dimensionless_unscaled if value.get(z_axis_unit) is None else value[z_axis_unit]
+            )
             boost_axes = self._create_regular_axes(value, ["x_bins", "y_bins"])
             value["histogram"] = bh.Histogram(boost_axes[0], boost_axes[1])
 
@@ -421,10 +434,25 @@ class CorsikaHistograms:
 
     def _update_distributions(self):
         """Update the distributions dictionary with the histogram values and bin edges."""
+        self._normalize_density_histograms()
+
         for key, value in self.hist.items():
             if value["is_1d"]:
                 value["hist_values"], value["x_bin_edges"] = self.get_hist_1d_projection(key, value)
             else:
                 value["hist_values"], value["x_bin_edges"], value["y_bin_edges"] = (
-                    self.get_hist_2d_projection(key, value)
+                    self.get_hist_2d_projection(value["histogram"])
                 )
+
+    def _normalize_density_histograms(self):
+        """Normalize the density histograms by the area of each bin."""
+        for key in ["density_xy", "density_r"]:
+            hist = self.hist[key]["histogram"]
+            if key == "density_xy":
+                bin_areas = functools.reduce(operator.mul, hist.axes.widths)
+                hist /= bin_areas
+            elif key == "density_r":
+                bin_edges = hist.axes.edges[0]
+                bin_areas = np.pi * (bin_edges[1:] ** 2 - bin_edges[:-1] ** 2)
+                for i, area in enumerate(bin_areas):
+                    hist.view()[i] /= area
