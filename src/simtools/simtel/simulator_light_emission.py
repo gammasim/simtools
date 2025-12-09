@@ -546,6 +546,9 @@ class SimulatorLightEmission(SimtelRunner):
                 )
                 return option_string
 
+        if option_string == "isotropic":
+            return option_string
+
         width = self.calibration_model.get_parameter_value_with_unit(
             "flasher_angular_distribution_width"
         )
