@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from astropy.table import QTable
 from cycler import cycler
 from matplotlib import gridspec
+from matplotlib.backends.backend_pdf import PdfPages
 
 COLORS = {}
 COLORS["classic"] = [
@@ -615,7 +616,7 @@ def plot_hist_2d(data, **kwargs):
     return fig
 
 
-def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"):
+def save_figure(fig, output_file, figure_format=("pdf", "png"), log_title="", dpi="figure"):
     """
     Save figure to output file(s).
 
@@ -630,10 +631,29 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
     title: str
         Title of the figure to be added to the log message.
     """
-    figure_format = figure_format or ["pdf", "png"]
     for fmt in figure_format:
         _file = Path(output_file).with_suffix(f".{fmt}")
         fig.savefig(_file, format=fmt, bbox_inches="tight", dpi=dpi)
         logging.info(f"Saved plot {log_title} to {_file}")
 
     fig.clf()
+
+
+def save_figures_to_single_document(figs, output_file_name):
+    """
+    Save multiple figures to a single PDF document.
+
+    Parameters
+    ----------
+    figs: list
+        List of plt.figure instances to save.
+    output_file_name: Path, str
+        PDF file name
+    """
+    _logger.info(f"Saving {len(figs)} figures to {output_file_name}")
+    pdf_pages = PdfPages(Path(output_file_name).absolute().as_posix())
+    for fig in figs:
+        plt.tight_layout()
+        pdf_pages.savefig(fig)
+
+    pdf_pages.close()
