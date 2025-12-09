@@ -103,6 +103,7 @@ def _plot_1d(hist_list, labels=None):
                 label = labels[i_file]
             else:
                 label = Path(hist_dict.get("input_file_name", f"File {i_file}")).name
+
             ax.plot(
                 bin_centers,
                 hist_values[i_hist],
@@ -111,7 +112,7 @@ def _plot_1d(hist_list, labels=None):
                 marker="o",
                 markersize=3,
                 linestyle="-",
-                linewidth=1.5,
+                linewidth=0.5,
             )
 
     ax.set_xlabel(_get_axis_label(hist["x_axis_title"], hist["x_axis_unit"]))
