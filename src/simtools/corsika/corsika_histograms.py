@@ -113,6 +113,7 @@ class CorsikaHistograms:
         boost_axes = []
         for axis in axes:
             bins, start, stop = hist[axis][:3]
+            scale = hist[axis][3] if len(hist[axis]) > 3 else "linear"
             if isinstance(start, u.quantity.Quantity):
                 start, stop = start.value, stop.value
             boost_axes.append(
@@ -120,7 +121,7 @@ class CorsikaHistograms:
                     bins=bins,
                     start=start,
                     stop=stop,
-                    transform=transform[hist["scale"]],
+                    transform=transform[scale],
                 )
             )
         return boost_axes
@@ -169,7 +170,7 @@ class CorsikaHistograms:
                 px, py = photon["x"], photon["y"]
 
             px -= -telescope["x"]
-            px -= -telescope["y"]
+            py -= -telescope["y"]
             w = photon["photons"]
 
             pxm = px * u.cm.to(u.m)
@@ -214,6 +215,19 @@ class CorsikaHistograms:
             np.asarray([hist.axes.edges[1].flatten()]),
         )
 
+    def _get_hist_1d_from_numpy(self, label, hist):
+        """Get 1D histogram from numpy histogram."""
+        bins = hist["x_bins"][0]
+        start = hist["x_bins"][1] if hist["x_bins"][1] else np.min(self.events[label])
+        stop = hist["x_bins"][2] if hist["x_bins"][2] is not None else np.max(self.events[label])
+        scale = hist["x_bins"][3] if len(hist["x_bins"]) > 3 else "linear"
+        if scale == "log":
+            bin_edges = np.logspace(np.log10(start), np.log10(stop), bins + 1)
+        else:
+            bin_edges = np.linspace(start, stop, bins + 1)
+        histo_1d, _ = np.histogram(self.events[label], bins=bin_edges)
+        return histo_1d.reshape(1, bins), bin_edges.reshape(1, bins + 1)
+
     def get_hist_1d_projection(self, label, hist):
         """
         Get 1D distributions from numpy or boost histograms (1D and 2D).
@@ -234,18 +248,12 @@ class CorsikaHistograms:
         """
         # plain numpy histogram
         if hist.get("projection") is None and label in self.events.dtype.names:
-            bins = hist["x_bins"][0]
-            histo_1d, bin_edges = np.histogram(
-                self.events[label], bins=bins, range=hist["x_bins"][2]
-            )
-            return histo_1d.reshape(1, bins), bin_edges.reshape(1, bins + 1)
-
+            return self._get_hist_1d_from_numpy(label, hist)
         # boost 1D histogram
         if hist.get("projection") is None:
             histo_1d = self.hist[label]["histogram"]
             edges = histo_1d.axes.edges.T.flatten()[0]
             return np.asarray([histo_1d.view().T]), np.asarray([edges])
-
         # boost 2D histogram projection
         histo_2d = self.hist[hist["projection"][0]]["histogram"]
         if hist["projection"][1] == "x":
@@ -268,7 +276,6 @@ class CorsikaHistograms:
         title = "title"
         projection = "projection"
         x_bins = "x_bins"
-        scale = "scale"
         x_axis_unit = "x_axis_unit"
         x_axis_title = "x_axis_title"
         y_axis_unit = "y_axis_unit"
@@ -281,17 +288,15 @@ class CorsikaHistograms:
             },
             "counts_r": {
                 file_name: "hist_1d_photon_radial_distr",
-                title: "Radial photon distribution on the ground",
-                x_bins: [bins, 0 * u.m, r_max],
-                scale: "linear",
+                title: "Photon lateral distribution (ground level)",
+                x_bins: [bins, 0 * u.m, r_max, "linear"],
                 x_axis_title: "Distance to center",
                 x_axis_unit: u.m,
             },
             "density_r": {
                 file_name: "hist_1d_photon_density_distr",
-                title: "Photon density distribution on the ground",
-                x_bins: [bins, 0 * u.m, r_max],
-                scale: "linear",
+                title: "Photon lateral density distribution (ground level)",
+                x_bins: [bins, 0 * u.m, r_max, "linear"],
                 x_axis_title: "Distance to center",
                 x_axis_unit: u.m,
                 y_axis_title: "Photon density",
@@ -299,20 +304,20 @@ class CorsikaHistograms:
             },
             "time": {
                 file_name: "hist_1d_photon_time_distr",
-                title: "Photon time of arrival distribution",
+                title: "Photon arrival time distribution",
                 projection: ["time_altitude", "x"],
             },
             "altitude": {
                 file_name: "hist_1d_photon_altitude_distr",
-                title: "Photon altitude of emission distribution",
+                title: "Photon emission altitude distribution",
                 projection: ["time_altitude", "y"],
             },
             "num_photons": {
                 file_name: "hist_1d_photon_per_event_distr",
                 title: "Photons per event distribution",
                 "event_type": True,
-                x_bins: [100, 0, None],
-                x_axis_title: "Event counter",
+                x_bins: [100, 0, None, "log"],
+                x_axis_title: "Cherenkov photons per event",
                 x_axis_unit: u.dimensionless_unscaled,
             },
         }
@@ -353,7 +358,6 @@ class CorsikaHistograms:
         file_name = "file_name"
         title = "title"
         x_bins, y_bins = "x_bins", "y_bins"
-        scale = "scale"
         x_axis_title, x_axis_unit = "x_axis_title", "x_axis_unit"
         y_axis_title, y_axis_unit = "y_axis_title", "y_axis_unit"
         z_axis_title, z_axis_unit = "z_axis_title", "z_axis_unit"
@@ -361,10 +365,9 @@ class CorsikaHistograms:
         hist_2d = {
             "counts_xy": {
                 file_name: "hist_2d_photon_count_distr",
-                title: "Photon count distribution on the ground",
-                x_bins: [xy_bin, -xy_maximum, xy_maximum],
+                title: "Photon count distribution (ground level)",
+                x_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
                 y_bins: [xy_bin, -xy_maximum, xy_maximum],
-                scale: "linear",
                 x_axis_title: "x position on the ground",
                 x_axis_unit: xy_maximum.unit,
                 y_axis_title: "y position on the ground",
@@ -372,10 +375,9 @@ class CorsikaHistograms:
             },
             "density_xy": {
                 file_name: "hist_2d_photon_density_distr",
-                title: "Photon density distribution on the ground",
-                x_bins: [xy_bin, -xy_maximum, xy_maximum],
-                y_bins: [xy_bin, -xy_maximum, xy_maximum],
-                scale: "linear",
+                title: "Photon lateral density distribution (ground level)",
+                x_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
+                y_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
                 x_axis_title: "x position on the ground",
                 x_axis_unit: xy_maximum.unit,
                 y_axis_title: "y position on the ground",
@@ -386,9 +388,8 @@ class CorsikaHistograms:
             "direction_xy": {
                 file_name: "hist_2d_photon_direction_distr",
                 title: "Photon arrival direction",
-                x_bins: [100, -1, 1],
-                y_bins: [100, -1, 1],
-                scale: "linear",
+                x_bins: [100, -1, 1, "linear"],
+                y_bins: [100, -1, 1, "linear"],
                 x_axis_title: "x direction cosine",
                 x_axis_unit: u.dimensionless_unscaled,
                 y_axis_title: "y direction cosine",
@@ -396,24 +397,22 @@ class CorsikaHistograms:
             },
             "time_altitude": {
                 file_name: "hist_2d_photon_time_altitude_distr",
-                title: "Time of arrival vs altitude of emission",
-                x_bins: [100, -2000 * u.ns, 2000 * u.ns],
-                y_bins: [100, 120 * u.km, 0 * u.km],
-                scale: "linear",
-                x_axis_title: "Time of arrival",
+                title: "Arrival time vs emission altitude",
+                x_bins: [100, -2000 * u.ns, 2000 * u.ns, "linear"],
+                y_bins: [100, 120 * u.km, 0 * u.km, "linear"],
+                x_axis_title: "Arrival time",
                 x_axis_unit: u.ns,
-                y_axis_title: "Altitude of emission",
+                y_axis_title: "Emission altitude",
                 y_axis_unit: u.km,
             },
             "wavelength_altitude": {
                 file_name: "hist_2d_photon_wavelength_altitude_distr",
-                title: "Wavelength vs altitude of emission",
-                x_bins: [100, -2000 * u.ns, 2000 * u.ns],
-                y_bins: [100, 120 * u.km, 0 * u.km],
-                scale: "linear",
+                title: "Wavelength vs emission altitude ",
+                x_bins: [100, -2000 * u.ns, 2000 * u.ns, "linear"],
+                y_bins: [100, 120 * u.km, 0 * u.km, "linear"],
                 x_axis_title: "Wavelength",
                 x_axis_unit: u.nm,
-                y_axis_title: "Altitude of emission",
+                y_axis_title: "Emission altitude",
                 y_axis_unit: u.km,
             },
         }
@@ -437,6 +436,7 @@ class CorsikaHistograms:
         self._normalize_density_histograms()
 
         for key, value in self.hist.items():
+            value["input_file_name"] = str(self.input_file)
             if value["is_1d"]:
                 value["hist_values"], value["x_bin_edges"] = self.get_hist_1d_projection(key, value)
             else:

@@ -4,7 +4,7 @@ r"""
     Generates a set of histograms with Cherenkov photon distributions from CORSIKA output.
 
     The Cherenkov photons (from observation level) are read from a CORSIKA IACT
-    output file provided as input.
+    output file(s) provided as input.
 
     The following 2D histograms are generated:
 
@@ -14,8 +14,8 @@ r"""
 
     Command line arguments
     ----------------------
-    input_file (str, required)
-        The name of the CORSIKA IACT file resulted from the CORSIKA simulation.
+    input_files (str, required)
+        The name(s) of the CORSIKA IACT file(s) resulted from the CORSIKA simulation.
 
     pdf_file_name (str, optional)
         The name of the output pdf file to save the histograms. If not provided,
@@ -27,7 +27,7 @@ r"""
 
      .. code-block:: console
 
-        simtools-generate-corsika-histograms --input_file /workdir/external/simtools/\\
+        simtools-generate-corsika-histograms --input_files /workdir/external/simtools/\\
         tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio \\
             --pdf_file_name test.pdf
 
@@ -46,10 +46,18 @@ def _parse():
         description="Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file.",
     )
     config.parser.add_argument(
-        "--input_file",
-        help="Name of the CORSIKA IACT file from which to generate the histograms.",
+        "--input_files",
+        help="Name(s) of the CORSIKA IACT file(s) to process",
         type=str,
+        nargs="+",
         required=True,
+    )
+    config.parser.add_argument(
+        "--file_labels",
+        help="Labels for the input files (in the same order as input_files)",
+        type=str,
+        nargs="+",
+        required=None,
     )
     config.parser.add_argument(
         "--pdf_file_name",
@@ -61,14 +69,19 @@ def _parse():
 
 
 def main():
-    """Generate a set of histograms for the Cherenkov photons saved in the CORSIKA IACT file."""
+    """Generate a set of histograms for the Cherenkov photons from CORSIKA IACT file(s)."""
     app_context = startup_application(_parse)
 
-    corsika_histograms = CorsikaHistograms(app_context.args["input_file"])
-    corsika_histograms.fill()
+    all_histograms = []
+    for input_file in app_context.args["input_files"]:
+        corsika_histograms = CorsikaHistograms(input_file)
+        corsika_histograms.fill()
+        all_histograms.append(corsika_histograms)
+
     plot_corsika_histograms.export_all_photon_figures_pdf(
-        corsika_histograms,
+        all_histograms,
         app_context.io_handler.get_output_file(app_context.args.get("pdf_file_name")),
+        app_context.args.get("file_labels"),
     )
 
 
