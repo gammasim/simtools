@@ -789,3 +789,24 @@ def test_update_indices_reflection_positive():
     desc = "X reflection point on primary mirror [cm]".lower()
     calc._update_indices_from_header_desc(desc, 15, indices)
     assert indices["prim_x"] == 14
+
+
+def test_save_model_parameters(calculator, tmp_test_directory, monkeypatch):
+    # Mock ModelDataWriter and MetadataCollector
+    mock_writer = MagicMock()
+    monkeypatch.setattr(ia, "ModelDataWriter", mock_writer)
+    monkeypatch.setattr(ia, "MetadataCollector", MagicMock())
+
+    # Create dummy results
+    t1 = QTable()
+    t1["angle_incidence_focal"] = [1.0, 2.0] * u.deg
+    t1["angle_incidence_primary"] = [10.0, 20.0] * u.deg
+
+    results_by_offset = {0.0: t1}
+
+    calculator.save_model_parameters(results_by_offset)
+
+    # Check if ModelDataWriter was called
+    assert mock_writer.call_count > 0
+    # Check if dump_model_parameter was called
+    assert mock_writer.dump_model_parameter.call_count > 0
