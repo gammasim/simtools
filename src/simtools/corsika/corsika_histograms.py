@@ -302,6 +302,16 @@ class CorsikaHistograms:
                 y_axis_title: "Photon density",
                 y_axis_unit: u.m**-2,
             },
+            "density_x": {
+                file_name: "hist_1d_photon_density_x_distr",
+                title: "Photon lateral density x distribution (ground level)",
+                projection: ["density_xy", "x"],
+            },
+            "density_y": {
+                file_name: "hist_1d_photon_density_y_distr",
+                title: "Photon lateral density y distribution (ground level)",
+                projection: ["density_xy", "y"],
+            },
             "time": {
                 file_name: "hist_1d_photon_time_distr",
                 title: "Photon arrival time distribution",
@@ -311,6 +321,16 @@ class CorsikaHistograms:
                 file_name: "hist_1d_photon_altitude_distr",
                 title: "Photon emission altitude distribution",
                 projection: ["time_altitude", "y"],
+            },
+            "direction_cosine_x": {
+                file_name: "hist_1d_photon_direction_cosine_x_distr",
+                title: "Photon direction cosine x distribution",
+                projection: ["direction_xy", "x"],
+            },
+            "direction_cosine_y": {
+                file_name: "hist_1d_photon_direction_cosine_y_distr",
+                title: "Photon direction cosine y distribution",
+                projection: ["direction_xy", "y"],
             },
             "num_photons": {
                 file_name: "hist_1d_photon_per_event_distr",
@@ -408,7 +428,7 @@ class CorsikaHistograms:
             "wavelength_altitude": {
                 file_name: "hist_2d_photon_wavelength_altitude_distr",
                 title: "Wavelength vs emission altitude ",
-                x_bins: [100, -2000 * u.ns, 2000 * u.ns, "linear"],
+                x_bins: [100, 100 * u.nm, 1000 * u.nm, "linear"],
                 y_bins: [100, 120 * u.km, 0 * u.km, "linear"],
                 x_axis_title: "Wavelength",
                 x_axis_unit: u.nm,
