@@ -4,6 +4,7 @@ from pathlib import Path
 
 import boost_histogram as bh
 import numpy as np
+import pytest
 from astropy import units as u
 
 from simtools.corsika.corsika_histograms import CorsikaHistograms
@@ -400,3 +401,47 @@ def test_fill_runs_and_updates_hist(monkeypatch, tmp_path):
         == ch.hist["counts_r"]["histogram"].view().T.shape
     )
     assert counts_r_match
+
+
+def test_corsika_histograms_init_file_exists(tmp_path):
+    dummy_file = tmp_path / "dummy.iact"
+    dummy_file.write_text("test")
+    ch = CorsikaHistograms(dummy_file)
+    assert ch.input_file == dummy_file
+    assert ch.events is None
+    assert isinstance(ch.hist, dict)
+    assert "counts_xy" in ch.hist
+    assert "density_r" in ch.hist
+
+
+def test_corsika_histograms_init_file_not_exists(tmp_path):
+    non_existing_file = tmp_path / "notfound.iact"
+    with pytest.raises(FileNotFoundError):
+        CorsikaHistograms(non_existing_file)
+
+
+def test__fill_histograms_no_rotation(monkeypatch):
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+    dtype = [("azimuth_deg", "f8"), ("zenith_deg", "f8"), ("num_photons", "f8")]
+    ch.events = np.zeros(1, dtype=dtype)
+    ch.events["azimuth_deg"][0] = 0.0
+    ch.events["zenith_deg"][0] = 0.0
+    ch.hist = ch._set_2d_distributions(xy_maximum=1 * u.m, xy_bin=2)
+    ch.hist.update(ch._set_1d_distributions(r_max=2 * u.m, bins=2))
+
+    photon_dtype = [
+        ("x", "f8"),
+        ("y", "f8"),
+        ("cx", "f8"),
+        ("cy", "f8"),
+        ("time", "f8"),
+        ("zem", "f8"),
+        ("photons", "f8"),
+        ("wavelength", "f8"),
+    ]
+    photons = [np.array([(10.0, 20.0, 0.1, 0.2, 5.0, 100.0, 1.0, 400.0)], dtype=photon_dtype)]
+    telescope_positions = np.array([(0.0, 0.0)], dtype=[("x", "f8"), ("y", "f8")])
+
+    ch._fill_histograms(photons, 0, telescope_positions, rotate_photons=False)
+
+    assert np.any(ch.hist["counts_xy"]["histogram"].view() > 0)
