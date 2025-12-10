@@ -75,6 +75,7 @@ def create_dummy_iact_file(events, telescope_positions_data=None):
             return self
 
         def __exit__(self, exc_type, exc_val, exc_tb):
+            # Dummy context manager does not require cleanup,
             pass
 
         def __iter__(self):
@@ -372,7 +373,7 @@ def test_read_event_headers_creates_events(monkeypatch, tmp_path):
     assert ch.events["particle_id"][1] == 2
     assert np.isclose(ch.events["azimuth_deg"][0], 30)
     assert np.isclose(ch.events["zenith_deg"][1], 80)
-    assert ch.events["num_photons"][0] == 0.0
+    assert np.isclose(ch.events["num_photons"][0], 0.0)
 
 
 def test_fill_runs_and_updates_hist(monkeypatch, tmp_path, photon_dtype):
