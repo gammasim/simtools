@@ -8,6 +8,6 @@ applications:
     file_labels: 'CORSIKA IO output'
   integration_tests:
   - output_file: tel_output_10GeV-2-gamma-20deg-CTAO-South.pdf
-  test_name: plot corsika histograms
+  test_name: plot
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
