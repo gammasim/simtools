@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import pytest
+
 from simtools.visualization import legend_handlers as leg_h
 
 
@@ -170,3 +172,23 @@ def test_mean_radius_outer_edge_handler():
     assert patch.get_edgecolor() == (*leg_h.mcolors.to_rgb("darkorange"), 1)
     assert patch.get_radius() == handlebox.height
     assert handlebox.artist == patch
+
+
+def test_base_legend_handler_raises_on_unknown_shape():
+    class DummyHandleBox:
+        xdescent = 0
+        ydescent = 0
+        width = 10
+        height = 10
+
+        def get_transform(self):
+            return None
+
+        def add_artist(self, artist):
+            self.artist = artist
+
+    handler = leg_h.BaseLegendHandler("LST")
+    handler.config["shape"] = "unknown_shape"
+    handlebox = DummyHandleBox()
+    with pytest.raises(ValueError, match="Unknown shape: unknown_shape"):
+        handler.legend_artist(None, None, None, handlebox)

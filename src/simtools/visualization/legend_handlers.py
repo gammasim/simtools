@@ -1,14 +1,13 @@
 """Helper functions for legend handlers used for plotting."""
 
+# pylint: disable=too-few-public-methods
+
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import numpy as np
 
-"""
-Define properties of different telescope types for visualization purposes.
-
-Radii are relative to a reference radius (REFERENCE_RADIUS).
-"""
+# Define properties of different telescope types for visualization purposes.
+# Radii are relative to a reference radius (REFERENCE_RADIUS).
 TELESCOPE_CONFIG = {
     "LST": {"color": "darkorange", "radius": 12.5, "shape": "circle", "filled": False},
     "MST": {"color": "dodgerblue", "radius": 9.15, "shape": "circle", "filled": False},
@@ -272,6 +271,8 @@ class BaseLegendHandler:
             x0, y0 = calculate_center(handlebox)
             radius = handlebox.height
             patch = self._create_hexagon(handlebox, x0, y0, radius)
+        else:
+            raise ValueError(f"Unknown shape: {shape}")
 
         handlebox.add_artist(patch)
         return patch
