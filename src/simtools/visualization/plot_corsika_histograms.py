@@ -125,6 +125,11 @@ def _plot_1d(hist_list, labels=None):
                 linewidth=0.5,
             )
 
+    def get_uncertainty(uncertainties, i_hist):
+        if uncertainties is not None and uncertainties[i_hist] is not None:
+            return uncertainties[i_hist]
+        return None
+
     for i_file, (hist_dict, color) in enumerate(zip(hist_list, plot_colors)):
         hist_values = hist_dict["hist_values"]
         x_bin_edges = hist_dict["x_bin_edges"]
@@ -133,11 +138,7 @@ def _plot_1d(hist_list, labels=None):
 
         for i_hist, x_edges in enumerate(x_bin_edges):
             bin_centers = (x_edges[:-1] + x_edges[1:]) / 2
-            unc = (
-                uncertainties[i_hist]
-                if uncertainties is not None and uncertainties[i_hist] is not None
-                else None
-            )
+            unc = get_uncertainty(uncertainties, i_hist)
             plot_hist_curve(bin_centers, hist_values[i_hist], unc, color, label)
 
     ax.set_xlabel(_get_axis_label(hist["x_axis_title"], hist["x_axis_unit"]))
