@@ -69,6 +69,52 @@ def _plot_2d(hist_list, labels=None):
     return all_figs
 
 
+def _get_histogram_label(hist_dict, i_file, labels):
+    """Get label for histogram curve."""
+    if labels is not None and i_file < len(labels):
+        return labels[i_file]
+    return Path(hist_dict.get("input_file_name", f"File {i_file}")).name
+
+
+def _extract_uncertainty(uncertainties, i_hist):
+    """Extract uncertainty values if available."""
+    if uncertainties is not None and uncertainties[i_hist] is not None:
+        return uncertainties[i_hist]
+    return None
+
+
+def _plot_histogram_curve(ax, bin_centers, hist_values, uncertainties, color, label):
+    """Plot a single histogram curve with or without error bars."""
+    common_params = {
+        "color": color,
+        "label": label,
+        "marker": "o",
+        "markersize": 3,
+        "linestyle": "-",
+        "linewidth": 0.5,
+    }
+
+    if uncertainties is not None:
+        ax.errorbar(
+            bin_centers,
+            hist_values,
+            yerr=uncertainties,
+            capsize=2,
+            capthick=0.5,
+            **common_params,
+        )
+    else:
+        ax.plot(bin_centers, hist_values, **common_params)
+
+
+def _configure_plot_scales(ax, hist):
+    """Configure x and y axis scales."""
+    if len(hist["x_bins"]) > 3 and hist["x_bins"][3] == "log":
+        ax.set_xscale("log")
+    if hist["log_y"] is True:
+        ax.set_yscale("log")
+
+
 def _plot_1d(hist_list, labels=None):
     """
     Plot 1D Cherenkov photon distributions.
@@ -89,71 +135,29 @@ def _plot_1d(hist_list, labels=None):
         return []
 
     hist = hist_list[0]
-    all_figs = []
     plot_colors = colormaps["tab10"](np.linspace(0, 1, len(hist_list)))
     fig, ax = plt.subplots()
-
-    def get_label(hist_dict, i_file):
-        if labels is not None and i_file < len(labels):
-            return labels[i_file]
-        return Path(hist_dict.get("input_file_name", f"File {i_file}")).name
-
-    def plot_hist_curve(bin_centers, hist_values, uncertainties, color, label):
-        if uncertainties is not None:
-            ax.errorbar(
-                bin_centers,
-                hist_values,
-                yerr=uncertainties,
-                color=color,
-                label=label,
-                marker="o",
-                markersize=3,
-                linestyle="-",
-                linewidth=0.5,
-                capsize=2,
-                capthick=0.5,
-            )
-        else:
-            ax.plot(
-                bin_centers,
-                hist_values,
-                color=color,
-                label=label,
-                marker="o",
-                markersize=3,
-                linestyle="-",
-                linewidth=0.5,
-            )
-
-    def get_uncertainty(uncertainties, i_hist):
-        if uncertainties is not None and uncertainties[i_hist] is not None:
-            return uncertainties[i_hist]
-        return None
 
     for i_file, (hist_dict, color) in enumerate(zip(hist_list, plot_colors)):
         hist_values = hist_dict["hist_values"]
         x_bin_edges = hist_dict["x_bin_edges"]
         uncertainties = hist_dict.get("uncertainties")
-        label = get_label(hist_dict, i_file)
+        label = _get_histogram_label(hist_dict, i_file, labels)
 
         for i_hist, x_edges in enumerate(x_bin_edges):
             bin_centers = (x_edges[:-1] + x_edges[1:]) / 2
-            unc = get_uncertainty(uncertainties, i_hist)
-            plot_hist_curve(bin_centers, hist_values[i_hist], unc, color, label)
+            unc = _extract_uncertainty(uncertainties, i_hist)
+            _plot_histogram_curve(ax, bin_centers, hist_values[i_hist], unc, color, label)
 
     ax.set_xlabel(_get_axis_label(hist["x_axis_title"], hist["x_axis_unit"]))
     ax.set_ylabel(_get_axis_label(hist["y_axis_title"], hist["y_axis_unit"]))
-    if len(hist["x_bins"]) > 3 and hist["x_bins"][3] == "log":
-        ax.set_xscale("log")
-    if hist["log_y"] is True:
-        ax.set_yscale("log")
+    _configure_plot_scales(ax, hist)
     ax.set_title(f"{hist['title']}")
     ax.legend()
     ax.grid(True, alpha=0.3)
-    all_figs.append(fig)
-    plt.close(fig)
 
-    return all_figs
+    plt.close(fig)
+    return [fig]
 
 
 def _get_axis_label(title, unit):
