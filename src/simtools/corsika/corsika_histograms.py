@@ -514,23 +514,31 @@ class CorsikaHistograms:
 
     def _normalize_density_histograms(self):
         """Normalize the density histograms by the area of each bin."""
-        for key in ["density_xy", "density_r"]:
-            hist = self.hist[key]["histogram"]
+
+        def normalize_histogram(hist, bin_areas):
             view = hist.view()
-            if key == "density_xy":
-                bin_areas = functools.reduce(operator.mul, hist.axes.widths)
-                if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
-                    view["value"] /= bin_areas
-                    view["variance"] /= bin_areas**2
-                else:
-                    hist /= bin_areas
-            elif key == "density_r":
-                bin_edges = hist.axes.edges[0]
-                bin_areas = np.pi * (bin_edges[1:] ** 2 - bin_edges[:-1] ** 2)
-                if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
-                    for i, area in enumerate(bin_areas):
-                        view["value"][i] /= area
-                        view["variance"][i] /= area**2
-                else:
-                    for i, area in enumerate(bin_areas):
-                        view[i] /= area
+            if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
+                view["value"] /= bin_areas
+                view["variance"] /= bin_areas**2
+            else:
+                hist /= bin_areas
+
+        def normalize_histogram_1d(hist, bin_areas):
+            view = hist.view()
+            if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
+                for i, area in enumerate(bin_areas):
+                    view["value"][i] /= area
+                    view["variance"][i] /= area**2
+            else:
+                for i, area in enumerate(bin_areas):
+                    view[i] /= area
+
+        density_xy_hist = self.hist["density_xy"]["histogram"]
+        density_r_hist = self.hist["density_r"]["histogram"]
+
+        bin_areas_xy = functools.reduce(operator.mul, density_xy_hist.axes.widths)
+        normalize_histogram(density_xy_hist, bin_areas_xy)
+
+        bin_edges_r = density_r_hist.axes.edges[0]
+        bin_areas_r = np.pi * (bin_edges_r[1:] ** 2 - bin_edges_r[:-1] ** 2)
+        normalize_histogram_1d(density_r_hist, bin_areas_r)

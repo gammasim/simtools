@@ -230,35 +230,22 @@ def test__fill_histograms(monkeypatch, photon_dtype, rotate):
 
     ch._fill_histograms(photons, 0, telescope_positions, rotate_photons=rotate)
 
-    # Verify histograms are filled
-    view = ch.hist["counts_xy"]["histogram"].view()
-    values = view["value"] if hasattr(view, "dtype") and view.dtype.names else view
-    assert np.any(values > 0)
+    def assert_hist_filled(hist_key):
+        view = ch.hist[hist_key]["histogram"].view()
+        values = view["value"] if hasattr(view, "dtype") and view.dtype.names else view
+        assert np.any(values > 0)
 
-    view = ch.hist["density_xy"]["histogram"].view()
-    values = view["value"] if hasattr(view, "dtype") and view.dtype.names else view
-    assert np.any(values > 0)
-
-    view = ch.hist["counts_r"]["histogram"].view()
-    values = view["value"] if hasattr(view, "dtype") and view.dtype.names else view
-    assert np.any(values > 0)
+    for key in ["counts_xy", "density_xy", "counts_r"]:
+        assert_hist_filled(key)
 
     if rotate:
-        view = ch.hist["direction_xy"]["histogram"].view()
-        values = view["value"] if hasattr(view, "dtype") and view.dtype.names else view
-        assert np.any(values > 0)
-
-        view = ch.hist["time_altitude"]["histogram"].view()
-        values = view["value"] if hasattr(view, "dtype") and view.dtype.names else view
-        assert np.any(values > 0)
-
-        view = ch.hist["wavelength_altitude"]["histogram"].view()
-        values = view["value"] if hasattr(view, "dtype") and view.dtype.names else view
-        assert np.any(values > 0)
-
-        view = ch.hist["density_r"]["histogram"].view()
-        values = view["value"] if hasattr(view, "dtype") and view.dtype.names else view
-        assert np.any(values > 0)
+        for key in [
+            "direction_xy",
+            "time_altitude",
+            "wavelength_altitude",
+            "density_r",
+        ]:
+            assert_hist_filled(key)
 
     assert ch.events["num_photons"][0] > 0
 

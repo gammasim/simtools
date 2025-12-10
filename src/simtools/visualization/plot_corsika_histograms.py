@@ -90,47 +90,55 @@ def _plot_1d(hist_list, labels=None):
 
     hist = hist_list[0]
     all_figs = []
-
     plot_colors = colormaps["tab10"](np.linspace(0, 1, len(hist_list)))
-
     fig, ax = plt.subplots()
+
+    def get_label(hist_dict, i_file):
+        if labels is not None and i_file < len(labels):
+            return labels[i_file]
+        return Path(hist_dict.get("input_file_name", f"File {i_file}")).name
+
+    def plot_hist_curve(bin_centers, hist_values, uncertainties, color, label):
+        if uncertainties is not None:
+            ax.errorbar(
+                bin_centers,
+                hist_values,
+                yerr=uncertainties,
+                color=color,
+                label=label,
+                marker="o",
+                markersize=3,
+                linestyle="-",
+                linewidth=0.5,
+                capsize=2,
+                capthick=0.5,
+            )
+        else:
+            ax.plot(
+                bin_centers,
+                hist_values,
+                color=color,
+                label=label,
+                marker="o",
+                markersize=3,
+                linestyle="-",
+                linewidth=0.5,
+            )
+
     for i_file, (hist_dict, color) in enumerate(zip(hist_list, plot_colors)):
         hist_values = hist_dict["hist_values"]
         x_bin_edges = hist_dict["x_bin_edges"]
         uncertainties = hist_dict.get("uncertainties")
+        label = get_label(hist_dict, i_file)
 
-        for i_hist, _ in enumerate(x_bin_edges):
-            bin_centers = (x_bin_edges[i_hist][:-1] + x_bin_edges[i_hist][1:]) / 2
-            if labels is not None and i_file < len(labels):
-                label = labels[i_file]
-            else:
-                label = Path(hist_dict.get("input_file_name", f"File {i_file}")).name
-
-            if uncertainties is not None and uncertainties[i_hist] is not None:
-                ax.errorbar(
-                    bin_centers,
-                    hist_values[i_hist],
-                    yerr=uncertainties[i_hist],
-                    color=color,
-                    label=label,
-                    marker="o",
-                    markersize=3,
-                    linestyle="-",
-                    linewidth=0.5,
-                    capsize=2,
-                    capthick=0.5,
-                )
-            else:
-                ax.plot(
-                    bin_centers,
-                    hist_values[i_hist],
-                    color=color,
-                    label=label,
-                    marker="o",
-                    markersize=3,
-                    linestyle="-",
-                    linewidth=0.5,
-                )
+        for i_hist, x_edges in enumerate(x_bin_edges):
+            bin_centers = (x_edges[:-1] + x_edges[1:]) / 2
+            unc = (
+                uncertainties[i_hist]
+                if uncertainties is not None and uncertainties[i_hist] is not None
+                else None
+            )
+            plot_hist_curve(bin_centers, hist_values[i_hist], unc, color, label)
 
     ax.set_xlabel(_get_axis_label(hist["x_axis_title"], hist["x_axis_unit"]))
     ax.set_ylabel(_get_axis_label(hist["y_axis_title"], hist["y_axis_unit"]))
