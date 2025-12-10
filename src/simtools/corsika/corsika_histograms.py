@@ -207,13 +207,22 @@ class CorsikaHistograms:
         numpy.array
             Histogram x bin edges.
         numpy.array
-            Histogram y bin edges
+            Histogram y bin edges.
+        numpy.ndarray or None
+            Histogram uncertainties (sqrt of variance) if available.
         """
-        return (
-            np.asarray([hist.view().T]),
-            np.asarray([hist.axes.edges[0].flatten()]),
-            np.asarray([hist.axes.edges[1].flatten()]),
-        )
+        view = hist.view()
+        if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
+            counts = np.asarray([view["value"].T])
+            uncertainties = np.asarray([np.sqrt(view["variance"].T)])
+        else:
+            counts = np.asarray([view.T])
+            uncertainties = None
+
+        x_edges = np.asarray([hist.axes.edges[0].flatten()])
+        y_edges = np.asarray([hist.axes.edges[1].flatten()])
+
+        return counts, x_edges, y_edges, uncertainties
 
     def _get_hist_1d_from_numpy(self, label, hist):
         """Get 1D histogram from numpy histogram."""
@@ -226,7 +235,12 @@ class CorsikaHistograms:
         else:
             bin_edges = np.linspace(start, stop, bins + 1)
         histo_1d, _ = np.histogram(self.events[label], bins=bin_edges)
-        return histo_1d.reshape(1, bins), bin_edges.reshape(1, bins + 1)
+        uncertainties = np.sqrt(histo_1d)
+        return (
+            histo_1d.reshape(1, bins),
+            bin_edges.reshape(1, bins + 1),
+            uncertainties.reshape(1, bins),
+        )
 
     def get_hist_1d_projection(self, label, hist):
         """
@@ -242,18 +256,37 @@ class CorsikaHistograms:
         Returns
         -------
         numpy.ndarray
-            The counts of the histogram.
+            Histogram counts.
         numpy.array
-            The bin edges of the histogram.
+            Histogram x bin edges.
+        numpy.ndarray or None
+            Histogram uncertainties (if available).
         """
         # plain numpy histogram
-        if hist.get("projection") is None and label in self.events.dtype.names:
+        if (
+            hist.get("projection") is None
+            and hasattr(self, "events")
+            and label in self.events.dtype.names
+        ):
             return self._get_hist_1d_from_numpy(label, hist)
+
         # boost 1D histogram
         if hist.get("projection") is None:
-            histo_1d = self.hist[label]["histogram"]
+            # Use histogram from hist dict if available, otherwise from self.hist
+            if "histogram" in hist:
+                histo_1d = hist["histogram"]
+            else:
+                histo_1d = self.hist[label]["histogram"]
             edges = histo_1d.axes.edges.T.flatten()[0]
-            return np.asarray([histo_1d.view().T]), np.asarray([edges])
+            view = histo_1d.view()
+            if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
+                counts = np.asarray([view["value"].T])
+                uncertainties = np.asarray([np.sqrt(view["variance"].T)])
+            else:
+                counts = np.asarray([view.T])
+                uncertainties = None
+            return counts, np.asarray([edges]), uncertainties
+
         # boost 2D histogram projection
         histo_2d = self.hist[hist["projection"][0]]["histogram"]
         if hist["projection"][1] == "x":
@@ -261,7 +294,14 @@ class CorsikaHistograms:
         else:
             h = histo_2d[sum, :]
         edges = h.axes.edges.T.flatten()[0]
-        return np.asarray([h.view().T]), np.asarray([edges])
+        view = h.view()
+        if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
+            counts = np.asarray([view["value"].T])
+            uncertainties = np.asarray([np.sqrt(view["variance"].T)])
+        else:
+            counts = np.asarray([view.T])
+            uncertainties = None
+        return counts, np.asarray([edges]), uncertainties
 
     def _set_1d_distributions(self, r_max=2000 * u.m, bins=100):
         """
@@ -363,7 +403,7 @@ class CorsikaHistograms:
                     value[x_axis_unit] = self.hist[hist_2d_name]["y_axis_unit"]
             elif value.get("event_type", False) is False:
                 boost_axes = self._create_regular_axes(value, ["x_bins"])
-                value["histogram"] = bh.Histogram(boost_axes[0])
+                value["histogram"] = bh.Histogram(boost_axes[0], storage=bh.storage.Weight())
         return hist_1d
 
     def _set_2d_distributions(self, xy_maximum=1000 * u.m, xy_bin=100):
@@ -447,7 +487,9 @@ class CorsikaHistograms:
                 u.dimensionless_unscaled if value.get(z_axis_unit) is None else value[z_axis_unit]
             )
             boost_axes = self._create_regular_axes(value, ["x_bins", "y_bins"])
-            value["histogram"] = bh.Histogram(boost_axes[0], boost_axes[1])
+            value["histogram"] = bh.Histogram(
+                boost_axes[0], boost_axes[1], storage=bh.storage.Weight()
+            )
 
         return hist_2d
 
@@ -458,21 +500,36 @@ class CorsikaHistograms:
         for key, value in self.hist.items():
             value["input_file_name"] = str(self.input_file)
             if value["is_1d"]:
-                value["hist_values"], value["x_bin_edges"] = self.get_hist_1d_projection(key, value)
-            else:
-                value["hist_values"], value["x_bin_edges"], value["y_bin_edges"] = (
-                    self.get_hist_2d_projection(value["histogram"])
+                value["hist_values"], value["x_bin_edges"], value["uncertainties"] = (
+                    self.get_hist_1d_projection(key, value)
                 )
+            else:
+                (
+                    value["hist_values"],
+                    value["x_bin_edges"],
+                    value["y_bin_edges"],
+                    value["uncertainties"],
+                ) = self.get_hist_2d_projection(value["histogram"])
 
     def _normalize_density_histograms(self):
         """Normalize the density histograms by the area of each bin."""
         for key in ["density_xy", "density_r"]:
             hist = self.hist[key]["histogram"]
+            view = hist.view()
             if key == "density_xy":
                 bin_areas = functools.reduce(operator.mul, hist.axes.widths)
-                hist /= bin_areas
+                if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
+                    view["value"] /= bin_areas
+                    view["variance"] /= bin_areas**2
+                else:
+                    hist /= bin_areas
             elif key == "density_r":
                 bin_edges = hist.axes.edges[0]
                 bin_areas = np.pi * (bin_edges[1:] ** 2 - bin_edges[:-1] ** 2)
-                for i, area in enumerate(bin_areas):
-                    hist.view()[i] /= area
+                if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
+                    for i, area in enumerate(bin_areas):
+                        view["value"][i] /= area
+                        view["variance"][i] /= area**2
+                else:
+                    for i, area in enumerate(bin_areas):
+                        view[i] /= area

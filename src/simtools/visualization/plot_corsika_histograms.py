@@ -42,7 +42,8 @@ def _plot_2d(hist_list, labels=None):
         for i_hist, _ in enumerate(x_bin_edges):
             fig, ax = plt.subplots()
             if hist_dict.get("log_z", False):
-                norm = colors.LogNorm(vmin=1, vmax=np.amax([np.amax(hist_values[i_hist]), 2]))
+                max_val = np.amax(hist_values[i_hist])
+                norm = colors.LogNorm(vmin=1, vmax=np.amax([max_val, 2]))
             else:
                 norm = None
             mesh = ax.pcolormesh(
@@ -96,6 +97,7 @@ def _plot_1d(hist_list, labels=None):
     for i_file, (hist_dict, color) in enumerate(zip(hist_list, plot_colors)):
         hist_values = hist_dict["hist_values"]
         x_bin_edges = hist_dict["x_bin_edges"]
+        uncertainties = hist_dict.get("uncertainties")
 
         for i_hist, _ in enumerate(x_bin_edges):
             bin_centers = (x_bin_edges[i_hist][:-1] + x_bin_edges[i_hist][1:]) / 2
@@ -104,16 +106,31 @@ def _plot_1d(hist_list, labels=None):
             else:
                 label = Path(hist_dict.get("input_file_name", f"File {i_file}")).name
 
-            ax.plot(
-                bin_centers,
-                hist_values[i_hist],
-                color=color,
-                label=label,
-                marker="o",
-                markersize=3,
-                linestyle="-",
-                linewidth=0.5,
-            )
+            if uncertainties is not None and uncertainties[i_hist] is not None:
+                ax.errorbar(
+                    bin_centers,
+                    hist_values[i_hist],
+                    yerr=uncertainties[i_hist],
+                    color=color,
+                    label=label,
+                    marker="o",
+                    markersize=3,
+                    linestyle="-",
+                    linewidth=0.5,
+                    capsize=2,
+                    capthick=0.5,
+                )
+            else:
+                ax.plot(
+                    bin_centers,
+                    hist_values[i_hist],
+                    color=color,
+                    label=label,
+                    marker="o",
+                    markersize=3,
+                    linestyle="-",
+                    linewidth=0.5,
+                )
 
     ax.set_xlabel(_get_axis_label(hist["x_axis_title"], hist["x_axis_unit"]))
     ax.set_ylabel(_get_axis_label(hist["y_axis_title"], hist["y_axis_unit"]))
