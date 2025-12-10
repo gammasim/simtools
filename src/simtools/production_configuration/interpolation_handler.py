@@ -278,15 +278,13 @@ class InterpolationHandler:
         reduced_production_grid_points = self._prepare_production_grid_points()
         energy_grid = self.energy_grids[0] if self.energy_grids else []
 
-        energy_query_grid = []
-        energy_query_grid.extend(
+        energy_query_grid = [
             [
                 np.hstack([energy.to(u.TeV).value, grid_point])
                 for energy in energy_grid
                 for grid_point in reduced_production_grid_points
             ]
-        )
-
+        ]
         energy_query_grid = np.array(energy_query_grid)
 
         self._logger.debug(f"Grid points with energy shape: {grid_points_energy.shape}")
