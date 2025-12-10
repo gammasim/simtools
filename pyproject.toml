@@ -264,19 +264,19 @@ max-line-length = 100
 # Maximum number of lines in a module. (default 1000)
 max-module-lines = 1500
 # Maximum number of branch for function / method body. (default=12)
-max-branches = 25
+max-branches = 15
 # Maximum number of arguments for function / method (default=5).
 max-args = 15
 # Maximum number of locals for function / method body (default=15).
-max-locals = 50
+max-locals = 30
 # Maximum number of attributes for a class (see R0902). (default=7)
-max-attributes = 50
+max-attributes = 20
 # Maximum number of positional arguments for function / method (default=5.)
 max-positional-arguments = 15
 # Maximum number of statements in function / method body. (default=50)
 max-statements = 80
 # Maximum number of public methods for a class (see R0904). (default=20)
-max-public-methods = 50
+max-public-methods = 30
 
 [tool.codespell]
 ignore-words-list = "chec,arrang,livetime"
