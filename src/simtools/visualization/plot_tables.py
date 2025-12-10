@@ -166,11 +166,7 @@ def _validate_config_columns(config, valid_columns, logger):
 
 def _get_valid_columns(table):
     """Return columns that exist and have valid data (not all NaN)."""
-    valid_columns = []
-    for col in table.colnames:
-        if not all(np.isnan(table[col])):
-            valid_columns.append(col)
-    return valid_columns
+    return [col for col in table.colnames if not all(np.isnan(table[col]))]
 
 
 def generate_plot_configurations(

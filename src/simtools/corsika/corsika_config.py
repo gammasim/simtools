@@ -616,7 +616,7 @@ class CorsikaConfig:
             Value(s) of the parameter.
         """
         par_value = []
-        for _, values in self.config.items():
+        for values in self.config.values():
             if par_name in values:
                 par_value = values[par_name]
         if len(par_value) == 0:

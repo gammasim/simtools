@@ -369,8 +369,10 @@ class ModelDataWriter:
         """
         try:
             unit_list = []
-            for data in self.schema_dict["data"]:
-                unit_list.append(data["unit"] if data["unit"] != "dimensionless" else None)
+            unit_list = [
+                data["unit"] if data["unit"] != "dimensionless" else None
+                for data in self.schema_dict["data"]
+            ]
             return unit_list if len(unit_list) > 1 else unit_list[0]
         except (KeyError, IndexError):
             pass
