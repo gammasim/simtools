@@ -23,12 +23,20 @@ r"""
 
     Example
     -------
-    Generate the histograms for a test IACT file:
+    Plot histograms for a test IACT file:
 
      .. code-block:: console
 
         simtools-generate-corsika-histograms --input_files /workdir/external/simtools/\\
         tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio \\
+            --pdf_file_name test.pdf
+
+    Plot histograms for several files:
+
+     .. code-block:: console
+
+        simtools-generate-corsika-histograms --input_files file1 file 2 \\
+            --file_lablels label1 label2 \\
             --pdf_file_name test.pdf
 
 """
