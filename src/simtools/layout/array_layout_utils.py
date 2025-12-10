@@ -230,18 +230,16 @@ def get_array_layouts_from_parameter_file(file_path, model_version, coordinate_s
         raise ValueError("Missing 'value' key in layout file.") from exc
     site = array_layouts.get("site")
 
-    layouts = []
-    for layout in value:
-        layouts.append(
-            _get_array_layout_dict(
-                model_version,
-                site,
-                layout.get("elements"),
-                layout["name"],
-                coordinate_system,
-            )
+    return [
+        _get_array_layout_dict(
+            model_version,
+            site,
+            layout.get("elements"),
+            layout["name"],
+            coordinate_system,
         )
-    return layouts
+        for layout in value
+    ]
 
 
 def get_array_layouts_from_db(layout_name, site, model_version, coordinate_system="ground"):
@@ -271,11 +269,10 @@ def get_array_layouts_from_db(layout_name, site, model_version, coordinate_syste
         site_model = SiteModel(site=site, model_version=model_version)
         layout_names = site_model.get_list_of_array_layouts()
 
-    layouts = []
-    for _layout_name in layout_names:
-        layouts.append(
-            _get_array_layout_dict(model_version, site, None, _layout_name, coordinate_system)
-        )
+    layouts = [
+        _get_array_layout_dict(model_version, site, None, _layout_name, coordinate_system)
+        for _layout_name in layout_names
+    ]
     if len(layouts) == 1:
         return layouts[0]
     return layouts
@@ -339,15 +336,13 @@ def get_array_layouts_from_file(file_path):
     if isinstance(file_path, str | Path):
         file_path = [file_path]
 
-    layouts = []
-    for _file in file_path:
-        layouts.append(
-            {
-                "name": (Path(_file).name).split(".")[0],
-                "array_elements": data_reader.read_table_from_file(file_name=_file),
-            }
-        )
-    return layouts
+    return [
+        {
+            "name": Path(_file).stem,
+            "array_elements": data_reader.read_table_from_file(file_name=_file),
+        }
+        for _file in file_path
+    ]
 
 
 def _get_array_layout_dict(model_version, site, telescope_list, layout_name, coordinate_system):
