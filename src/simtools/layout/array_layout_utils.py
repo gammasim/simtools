@@ -399,3 +399,61 @@ def get_array_elements_from_db_for_layouts(layouts, site, model_version):
     for layout_name in layout_names:
         layout_dict[layout_name] = site_model.get_array_elements_for_layout(layout_name)
     return layout_dict
+
+
+def read_layouts(args_dict):
+    """
+    Read array layouts from the database or parameter file.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary with command line arguments.
+
+    Returns
+    -------
+    list, list
+        List of array layouts and background layout (or None).
+    """
+    background_layout = None
+    if args_dict.get("array_layout_name_background"):
+        background_layout = get_array_layouts_from_db(
+            args_dict["array_layout_name_background"],
+            args_dict["site"],
+            args_dict["model_version"],
+            args_dict["coordinate_system"],
+        )["array_elements"]
+
+    if args_dict["array_layout_name"] is not None or args_dict["plot_all_layouts"]:
+        _logger.info("Plotting array from DB using layout array name(s).")
+        layouts = get_array_layouts_from_db(
+            args_dict["array_layout_name"],
+            args_dict["site"],
+            args_dict["model_version"],
+            args_dict["coordinate_system"],
+        )
+        if isinstance(layouts, list):
+            return layouts, background_layout
+        return [layouts], background_layout
+
+    if args_dict["array_layout_parameter_file"] is not None:
+        _logger.info("Plotting array from parameter file(s).")
+        return get_array_layouts_from_parameter_file(
+            args_dict["array_layout_parameter_file"],
+            args_dict["model_version"],
+            args_dict["coordinate_system"],
+        ), background_layout
+
+    if args_dict["array_layout_file"] is not None:
+        _logger.info("Plotting array from telescope table file(s).")
+        return get_array_layouts_from_file(args_dict["array_layout_file"]), background_layout
+    if args_dict["array_element_list"] is not None:
+        _logger.info("Plotting array from list of array elements.")
+        return get_array_layouts_using_telescope_lists_from_db(
+            [args_dict["array_element_list"]],
+            args_dict["site"],
+            args_dict["model_version"],
+            args_dict["coordinate_system"],
+        ), background_layout
+
+    return [], background_layout

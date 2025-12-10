@@ -702,3 +702,87 @@ def test_read_array_layouts_from_db_all_layouts(mocker):
     assert instance.get_array_elements_for_layout.call_count == 2
     instance.get_array_elements_for_layout.assert_any_call("LST")
     instance.get_array_elements_for_layout.assert_any_call("MST")
+
+
+@pytest.fixture
+def minimal_args_dict():
+    return {
+        "array_layout_name_background": None,
+        "array_layout_name": None,
+        "plot_all_layouts": False,
+        "array_layout_parameter_file": None,
+        "array_layout_file": None,
+        "array_element_list": None,
+        "site": "North",
+        "model_version": "1.0.0",
+        "coordinate_system": "ground",
+    }
+
+
+def test_read_layouts_returns_empty_lists_when_no_inputs(minimal_args_dict):
+    layouts, background = cta_array_layouts.read_layouts(minimal_args_dict)
+    assert layouts == []
+    assert background is None
+
+
+def test_read_layouts_with_array_layout_name_background(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["array_layout_name_background"] = "bg_layout"
+    args["array_layout_name"] = "main_layout"
+    with patch("simtools.layout.array_layout_utils.get_array_layouts_from_db") as mock_get:
+        mock_get.side_effect = [
+            {"array_elements": ["tel1", "tel2"]},
+            {"name": "main_layout", "site": "North", "array_elements": ["tel3", "tel4"]},
+        ]
+        layouts, background = cta_array_layouts.read_layouts(args)
+        assert background == ["tel1", "tel2"]
+        assert isinstance(layouts, list)
+        assert layouts[0]["name"] == "main_layout"
+
+
+def test_read_layouts_with_plot_all_layouts(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["plot_all_layouts"] = True
+    with patch("simtools.layout.array_layout_utils.get_array_layouts_from_db") as mock_get:
+        mock_get.return_value = [{"name": "layout1", "array_elements": ["tel1"]}]
+        layouts, background = cta_array_layouts.read_layouts(args)
+        assert isinstance(layouts, list)
+        assert layouts[0]["name"] == "layout1"
+        assert background is None
+
+
+def test_read_layouts_with_array_layout_parameter_file(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["array_layout_parameter_file"] = "param_file.json"
+    with patch(
+        "simtools.layout.array_layout_utils.get_array_layouts_from_parameter_file"
+    ) as mock_get:
+        mock_get.return_value = [{"name": "layout_param", "array_elements": ["telA"]}]
+        layouts, background = cta_array_layouts.read_layouts(args)
+        assert isinstance(layouts, list)
+        assert layouts[0]["name"] == "layout_param"
+        assert background is None
+
+
+def test_read_layouts_with_array_layout_file(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["array_layout_file"] = "layout_file.txt"
+    with patch("simtools.layout.array_layout_utils.get_array_layouts_from_file") as mock_get:
+        mock_get.return_value = [{"name": "layout_file", "array_elements": ["telB"]}]
+        layouts, background = cta_array_layouts.read_layouts(args)
+        assert isinstance(layouts, list)
+        assert layouts[0]["name"] == "layout_file"
+        assert background is None
+
+
+def test_read_layouts_with_array_element_list(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["array_element_list"] = ["telC", "telD"]
+    with patch(
+        "simtools.layout.array_layout_utils.get_array_layouts_using_telescope_lists_from_db"
+    ) as mock_get:
+        mock_get.return_value = [{"name": "list", "array_elements": ["telC", "telD"]}]
+        layouts, background = cta_array_layouts.read_layouts(args)
+        assert isinstance(layouts, list)
+        assert layouts[0]["name"] == "list"
+        assert background is None
