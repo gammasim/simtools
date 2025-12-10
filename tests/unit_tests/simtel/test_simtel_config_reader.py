@@ -185,14 +185,10 @@ def test_resolve_all_in_column(config_reader_num_gains):
     assert _config._resolve_all_in_column([]) == ([], {})
     # no all
     assert _config._resolve_all_in_column(["1", "2", "3"]) == (["1", "2", "3"], {})
-    # "all:"
     assert _config._resolve_all_in_column(["all:", "2"]) == (["2"], {})
-    # "all:1"
     assert _config._resolve_all_in_column(["all:1"]) == (["1"], {})
-    # "all: 1"
     assert _config._resolve_all_in_column(["all: 1"]) == (["1"], {})
-
-    # "all: 0, 3:500"
+    # all: 0, 3:500
     assert _config._resolve_all_in_column(["all:1", "3:5"]) == (["1"], {"3": "5"})
 
 

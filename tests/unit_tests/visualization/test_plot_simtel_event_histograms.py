@@ -540,7 +540,6 @@ def test_execute_plotting_loop_rebin_and_failed_plot():
         # Rebinned plot should be created exactly once for plotA_cumulative
         mock_create_rebinned_plot.assert_called_once()
         args, _ = mock_create_rebinned_plot.call_args
-        # args: (plot_args_dict, filename, output_path, rebin_factor)
         assert args[1] == "plotA_cumulative.png"
         assert args[2] is output_path
         assert args[3] == rebin_factor

@@ -10,8 +10,7 @@ from simtools.db import db_handler
 from simtools.db.mongo_db import MongoDBHandler
 from simtools.utils import names
 
-# Suppress warnings of type
-# 'pytest.PytestUnraisableExceptionWarning: Exception ignored in: <function MongoClient'
+# Suppress warnings
 pytestmark = pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 
 logger = logging.getLogger()
@@ -579,7 +578,7 @@ def test_get_query_from_parameter_version_table(db):
     }
 
     test_cases = [
-        # (array_element_name, site, expected_result)
+        # array_element_name, site, expected_result
         ("LSTN-01", "North", {"$or": or_list, "instrument": "LSTN-01", "site": "North"}),
         ("LSTN-01", None, {"$or": or_list, "instrument": "LSTN-01"}),
         (None, "North", {"$or": or_list, "site": "North"}),
