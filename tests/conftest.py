@@ -287,29 +287,6 @@ def telescope_south_test_file():
 
 
 @pytest.fixture
-def corsika_output_file_name():
-    """CORSIKA output file name for testing."""
-    return "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio"
-
-
-@pytest.fixture
-def corsika_histograms_instance(io_handler, corsika_output_file_name):
-    """Corsika histogram instance."""
-    from simtools.corsika.corsika_histograms import CorsikaHistograms
-
-    return CorsikaHistograms(
-        corsika_output_file_name, output_path=io_handler.get_output_directory()
-    )
-
-
-@pytest.fixture
-def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histograms_instance):
-    """Corsika histogram instance (fully configured)."""
-    corsika_histograms_instance.set_histograms()
-    return corsika_histograms_instance
-
-
-@pytest.fixture
 def corsika_config_data(model_version):
     """Corsika configuration data (as given by CorsikaConfig)."""
     return {
