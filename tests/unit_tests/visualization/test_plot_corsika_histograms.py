@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from astropy import units as u
@@ -144,22 +145,6 @@ def test_plot_1d_empty_list():
     assert figs == []
 
 
-def test_plot_1d_with_none_uncertainties(hist_1d_factory):
-    """Test plot_1d when uncertainties array contains None values."""
-    hist_dict = hist_1d_factory(uncertainties=[None])
-    figs = plot_corsika_histograms._plot_1d([hist_dict])
-    assert len(figs) == 1
-    assert hasattr(figs[0], "savefig")
-
-
-def test_plot_1d_with_uncertainties(hist_1d_factory):
-    """Test plot_1d with valid uncertainties (error bars)."""
-    hist_dict = hist_1d_factory(uncertainties=[np.array([0.1, 0.2, 0.3])])
-    figs = plot_corsika_histograms._plot_1d([hist_dict])
-    assert len(figs) == 1
-    assert hasattr(figs[0], "savefig")
-
-
 def test_plot_2d_single_histogram(mocker, hist_2d_factory):
     hist_dict = hist_2d_factory()
     figs = plot_corsika_histograms._plot_2d([hist_dict])
@@ -202,3 +187,50 @@ def test_plot_2d_log_scale(mocker, hist_2d_factory):
 def test_plot_2d_empty_list():
     figs = plot_corsika_histograms._plot_2d([])
     assert figs == []
+
+
+def test_extract_uncertainty_with_value():
+    uncertainties = [[1, 2, 3], [4, 5, 6]]
+    result = plot_corsika_histograms._extract_uncertainty(uncertainties, 1)
+    assert result == [4, 5, 6]
+
+
+def test_extract_uncertainty_with_none():
+    uncertainties = [None, [4, 5, 6]]
+    result = plot_corsika_histograms._extract_uncertainty(uncertainties, 0)
+    assert result is None
+
+
+def test_extract_uncertainty_uncertainties_none():
+    result = plot_corsika_histograms._extract_uncertainty(None, 0)
+    assert result is None
+
+
+def test_plot_histogram_curve_with_uncertainties(mocker):
+    fig, ax = plt.subplots()
+    bin_centers = np.array([1, 2, 3])
+    hist_values = np.array([10, 20, 30])
+    uncertainties = np.array([1, 2, 3])
+    color = "blue"
+    label = "Test"
+    errorbar_mock = mocker.patch.object(ax, "errorbar")
+    plot_corsika_histograms._plot_histogram_curve(
+        ax, bin_centers, hist_values, uncertainties, color, label
+    )
+    errorbar_mock.assert_called_once()
+    plt.close(fig)
+
+
+def test_plot_histogram_curve_without_uncertainties(mocker):
+    fig, ax = plt.subplots()
+    bin_centers = np.array([1, 2, 3])
+    hist_values = np.array([10, 20, 30])
+    uncertainties = None
+    color = "red"
+    label = "NoErr"
+    plot_mock = mocker.patch.object(ax, "plot")
+    plot_corsika_histograms._plot_histogram_curve(
+        ax, bin_centers, hist_values, uncertainties, color, label
+    )
+    plot_mock.assert_called_once()
+    plt.close(fig)
