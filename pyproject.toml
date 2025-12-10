@@ -28,6 +28,7 @@ dynamic = [
   "version",
 ]
 dependencies = [
+  "adjusttext",
   "astropy",
   "boost-histogram",
   "ctao-dpps-cosmic-ray-spectra",

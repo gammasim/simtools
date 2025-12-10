@@ -78,3 +78,7 @@ def test_inspect_ignore_patterns(mock_logger):
     )
     result = inspect(log_text)
     assert result is True
+
+    log_text = "DEBUG::__init__(l748)::adjust_text::Error: 52.640601388888854"
+    result = inspect(log_text)
+    assert result is True
