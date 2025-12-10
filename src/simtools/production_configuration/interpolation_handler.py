@@ -214,17 +214,15 @@ class InterpolationHandler:
         np.ndarray
             Reduced production grid points.
         """
-        production_grid_points = []
-
-        for point in self.grid_points_production:
-            production_grid_points.append(
-                [
-                    point["azimuth"]["value"],
-                    point["zenith_angle"]["value"],
-                    point["nsb"]["value"],
-                    point["offset"]["value"],
-                ]
-            )
+        production_grid_points = [
+            [
+                point["azimuth"]["value"],
+                point["zenith_angle"]["value"],
+                point["nsb"]["value"],
+                point["offset"]["value"],
+            ]
+            for point in self.grid_points_production
+        ]
 
         production_grid_points = np.array(production_grid_points)
 
@@ -281,9 +279,13 @@ class InterpolationHandler:
         energy_grid = self.energy_grids[0] if self.energy_grids else []
 
         energy_query_grid = []
-        for energy in energy_grid:
-            for grid_point in reduced_production_grid_points:
-                energy_query_grid.append(np.hstack([energy.to(u.TeV).value, grid_point]))
+        energy_query_grid.extend(
+            [
+                np.hstack([energy.to(u.TeV).value, grid_point])
+                for energy in energy_grid
+                for grid_point in reduced_production_grid_points
+            ]
+        )
 
         energy_query_grid = np.array(energy_query_grid)
 
