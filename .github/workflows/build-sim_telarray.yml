@@ -64,7 +64,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          # Build multi-platform only for no_opt (non-optimized) variant, others are x86-specific
           platforms: 'linux/amd64,linux/arm64/v8'
           build-args: |
             EXTRA_DEF=${{ matrix.production.extra_def }}
