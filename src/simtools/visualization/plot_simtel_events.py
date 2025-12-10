@@ -13,8 +13,7 @@ from ctapipe.visualization import CameraDisplay
 from scipy import signal as _signal
 
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.visualization.plot_corsika_histograms import save_figs_to_pdf
-from simtools.visualization.visualize import save_figure
+from simtools.visualization.visualize import save_figure, save_figures_to_single_document
 
 _logger = logging.getLogger(__name__)
 
@@ -991,7 +990,7 @@ def generate_and_save_plots(
             continue
 
         try:
-            save_figs_to_pdf(figures, pdf_path)
+            save_figures_to_single_document(figures, pdf_path)
             _logger.info("Saved PDF: %s", pdf_path)
         except Exception as ex:  # pylint:disable=broad-except
             _logger.error("Failed to save PDF %s: %s", pdf_path, ex)
