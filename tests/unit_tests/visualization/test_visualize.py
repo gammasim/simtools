@@ -266,3 +266,15 @@ def test_plot_ratio_difference():
     yticks = len(ratio_ax.get_yticks())
     assert yticks <= 7
     plt.close(fig4)
+
+
+def test_save_figures_to_single_document(tmp_path):
+    fig1, ax1 = plt.subplots()
+    ax1.plot([0, 1], [0, 1])
+    fig2, ax2 = plt.subplots()
+    ax2.plot([1, 0], [0, 1])
+    output_pdf = tmp_path / "test_multi_fig.pdf"
+    visualize.save_figures_to_single_document([fig1, fig2], output_pdf)
+    assert output_pdf.exists()
+    plt.close(fig1)
+    plt.close(fig2)

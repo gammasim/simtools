@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import functools
+import operator
 from pathlib import Path
 
 import boost_histogram as bh
@@ -82,18 +84,6 @@ def create_dummy_iact_file(events, telescope_positions_data=None):
             return iter(events)
 
     return DummyIACTFile
-
-
-def test_normalize_density_histograms():
-    ch = CorsikaHistograms.__new__(CorsikaHistograms)
-    ch.input_file = Path("dummy")
-    ch.hist = ch._set_2d_distributions()
-    ch.hist["density_r"] = {
-        "histogram": ch.hist["counts_xy"]["histogram"].project(0),
-        "is_1d": True,
-    }
-
-    ch._normalize_density_histograms()
 
 
 def test_update_distributions_runs(monkeypatch):
@@ -365,3 +355,126 @@ def test_corsika_histograms_init_file_not_exists(tmp_path):
     non_existing_file = tmp_path / "notfound.iact"
     with pytest.raises(FileNotFoundError):
         CorsikaHistograms(non_existing_file)
+
+
+def test_get_hist_1d_projection_numpy_hist(monkeypatch):
+    """Test get_hist_1d_projection returns correct shape for numpy histogram."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+    ch.events = np.array([(1,), (2,), (3,), (4,), (5,)], dtype=[("dummy", "f8")])
+    hist = {"x_bins": [5, 1, 5, "linear"]}
+    result = ch.get_hist_1d_projection("dummy", hist)
+    counts, edges, uncertainties = result
+    assert counts.shape == (1, 5)
+    assert edges.shape == (1, 6)
+    assert uncertainties.shape == (1, 5)
+    assert np.sum(counts) == 5
+
+
+def test_get_hist_1d_projection_boost_hist():
+    """Test get_hist_1d_projection returns correct shape for boost 1D histogram."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+    hist = {
+        "x_bins": [5, 0, 5, "linear"],
+        "histogram": bh.Histogram(bh.axis.Regular(5, 0, 5)),
+    }
+    # Fill histogram with values
+    hist["histogram"].fill([0, 1, 2, 3, 4])
+    result = ch.get_hist_1d_projection("dummy", hist)
+    counts, edges, uncertainties = result
+    assert counts.shape == (1, 5)
+    assert edges.shape == (1, 6)
+    assert uncertainties is None
+    assert np.sum(counts) == 5
+
+
+def test_get_hist_1d_projection_boost_2d_projection():
+    """Test get_hist_1d_projection returns correct shape for boost 2D histogram projection."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+    hist_2d = bh.Histogram(bh.axis.Regular(3, 0, 3), bh.axis.Regular(2, 0, 2))
+    hist_2d.fill(0, 0)
+    hist_2d.fill(1, 1)
+    ch.hist = {"test_2d": {"histogram": hist_2d}}
+    hist = {"projection": ["test_2d", "x"]}
+    result = ch.get_hist_1d_projection("dummy", hist)
+    counts, edges, uncertainties = result
+    assert counts.shape[1] == 3
+    assert edges.shape[1] == 4
+    assert uncertainties is None
+    assert np.sum(counts) == 2
+
+
+def test_get_hist_1d_projection_projection_none_no_events(monkeypatch):
+    """Test get_hist_1d_projection when projection is None and events are missing."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+    if hasattr(ch, "events"):
+        delattr(ch, "events")
+    hist = {"projection": None}
+    # Should not raise, just skip the numpy histogram branch
+    result = ch.get_hist_1d_projection("dummy", hist)
+    assert isinstance(result, tuple)
+    assert len(result) == 3
+
+
+def test_normalize_density_histograms_simple(monkeypatch):
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+    # Create dummy histograms with simple values
+    ch.hist = ch._set_2d_distributions(xy_maximum=2 * u.m, xy_bin=2)
+    ch.hist.update(ch._set_1d_distributions(r_max=2 * u.m, bins=2))
+
+    # Fill density_xy and density_r with ones (using Weight storage format)
+    view_xy = ch.hist["density_xy"]["histogram"].view()
+    view_xy["value"][...] = 1
+    view_xy["variance"][...] = 0
+
+    view_r = ch.hist["density_r"]["histogram"].view()
+    view_r["value"][...] = 1
+    view_r["variance"][...] = 0
+
+    ch._normalize_density_histograms()
+
+    # Check normalization for density_xy
+    density_xy_view = ch.hist["density_xy"]["histogram"].view()
+    bin_areas_xy = functools.reduce(operator.mul, ch.hist["density_xy"]["histogram"].axes.widths)
+    assert np.allclose(density_xy_view["value"], 1 / bin_areas_xy)
+
+    # Check normalization for density_r
+    density_r_view = ch.hist["density_r"]["histogram"].view()
+    bin_edges_r = ch.hist["density_r"]["histogram"].axes.edges[0]
+    bin_areas_r = np.pi * (bin_edges_r[1:] ** 2 - bin_edges_r[:-1] ** 2)
+    assert np.allclose(density_r_view["value"], 1 / bin_areas_r)
+
+
+def test_normalize_density_histograms_without_weight_storage(monkeypatch):
+    """Test normalization with non-Weight storage histograms (legacy path)."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+
+    # Create histograms without Weight storage
+    ch.hist = {
+        "density_xy": {
+            "histogram": bh.Histogram(
+                bh.axis.Regular(2, -2, 2),
+                bh.axis.Regular(2, -2, 2),
+                storage=bh.storage.Double(),
+            )
+        },
+        "density_r": {
+            "histogram": bh.Histogram(bh.axis.Regular(2, 0, 2), storage=bh.storage.Double())
+        },
+    }
+
+    # Fill with ones
+    ch.hist["density_xy"]["histogram"].view()[...] = 1
+    ch.hist["density_r"]["histogram"].view()[...] = 1
+
+    ch._normalize_density_histograms()
+
+    # Check normalization for density_xy
+    density_xy_view = ch.hist["density_xy"]["histogram"].view()
+    bin_areas_xy = functools.reduce(operator.mul, ch.hist["density_xy"]["histogram"].axes.widths)
+    assert np.allclose(density_xy_view, 1 / bin_areas_xy)
+
+    # Check normalization for density_r
+    density_r_view = ch.hist["density_r"]["histogram"].view()
+    bin_edges_r = ch.hist["density_r"]["histogram"].axes.edges[0]
+    bin_areas_r = np.pi * (bin_edges_r[1:] ** 2 - bin_edges_r[:-1] ** 2)
+    assert np.allclose(density_r_view, 1 / bin_areas_r)

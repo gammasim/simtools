@@ -276,7 +276,8 @@ class CorsikaHistograms:
             if "histogram" in hist:
                 histo_1d = hist["histogram"]
             else:
-                histo_1d = self.hist[label]["histogram"]
+                # No histogram available, return None values
+                return None, None, None
             edges = histo_1d.axes.edges.T.flatten()[0]
             view = histo_1d.view()
             if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):

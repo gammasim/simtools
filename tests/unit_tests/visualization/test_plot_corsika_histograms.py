@@ -144,6 +144,22 @@ def test_plot_1d_empty_list():
     assert figs == []
 
 
+def test_plot_1d_with_none_uncertainties(hist_1d_factory):
+    """Test plot_1d when uncertainties array contains None values."""
+    hist_dict = hist_1d_factory(uncertainties=[None])
+    figs = plot_corsika_histograms._plot_1d([hist_dict])
+    assert len(figs) == 1
+    assert hasattr(figs[0], "savefig")
+
+
+def test_plot_1d_with_uncertainties(hist_1d_factory):
+    """Test plot_1d with valid uncertainties (error bars)."""
+    hist_dict = hist_1d_factory(uncertainties=[np.array([0.1, 0.2, 0.3])])
+    figs = plot_corsika_histograms._plot_1d([hist_dict])
+    assert len(figs) == 1
+    assert hasattr(figs[0], "savefig")
+
+
 def test_plot_2d_single_histogram(mocker, hist_2d_factory):
     hist_dict = hist_2d_factory()
     figs = plot_corsika_histograms._plot_2d([hist_dict])
