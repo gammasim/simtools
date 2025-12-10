@@ -3,6 +3,7 @@
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
+import astropy.units as u
 import pytest
 
 import simtools.layout.array_layout_utils as cta_array_layouts
@@ -702,3 +703,35 @@ def test_read_array_layouts_from_db_all_layouts(mocker):
     assert instance.get_array_elements_for_layout.call_count == 2
     instance.get_array_elements_for_layout.assert_any_call("LST")
     instance.get_array_elements_for_layout.assert_any_call("MST")
+
+
+def test_create_regular_array_simple():
+    telescope_distance = {"MST": 100 * u.m}
+    table = cta_array_layouts.create_regular_array("1MST", "North", telescope_distance)
+    assert len(table) == 1
+    assert table.meta["array_name"] == "1MST"
+    assert table.meta["site"] == "North"
+    assert table["position_x"][0].value == 0
+    assert table["position_y"][0].value == 0
+    assert table["position_z"][0].value == 0
+
+
+def test_create_regular_array_four_telescopes(mocker):
+    telescope_distance = {"MST": 120 * u.m}
+    # Patch names.generate_array_element_name_from_type_site_id to return predictable names
+    mocker.patch(
+        "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
+        side_effect=lambda tel_type, site, idx: f"{tel_type}_{site}_{idx}",
+    )
+    table = cta_array_layouts.create_regular_array("4MST", "South", telescope_distance)
+    assert len(table) == 4
+    assert table.meta["array_name"] == "4MST"
+    assert table.meta["site"] == "South"
+    # Check all telescope names
+    expected_names = {f"MST_South_0{i}" for i in range(1, 5)}
+    assert set(table["telescope_name"]) == expected_names
+    # Check all positions are multiples of the distance and z is zero
+    for x, y, z in zip(table["position_x"], table["position_y"], table["position_z"]):
+        assert abs(abs(x.value) - 120) < 1e-6 or abs(x.value) < 1e-6
+        assert abs(abs(y.value) - 120) < 1e-6 or abs(y.value) < 1e-6
+        assert z.value == 0
