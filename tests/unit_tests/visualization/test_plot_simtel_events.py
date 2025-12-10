@@ -4,14 +4,16 @@
 
 import importlib
 import logging
+import sys
 from pathlib import Path
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
 
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
+from simtools.io.io_handler import IOHandler
 from simtools.visualization import plot_simtel_events as sep
 
 logger = logging.getLogger(__name__)
@@ -68,9 +70,6 @@ def _fake_source_with_event(ev, tel_id):
 
 
 def _install_fake_ctapipe(monkeypatch, source_obj):
-    import sys
-    from types import ModuleType
-
     ctapipe_mod = ModuleType("ctapipe")
     io_mod = ModuleType("io")
     calib_mod = ModuleType("calib")
@@ -304,9 +303,6 @@ def test__draw_peak_hist_basic():
 
 
 def test_plot_simtel_peak_timing_returns_stats(monkeypatch):
-    import sys
-    from types import ModuleType
-
     scipy_mod = ModuleType("scipy")
     signal_mod = ModuleType("signal")
 
@@ -601,8 +597,6 @@ def test__histogram_edges_zero_bins():
 
 
 def test__make_output_paths(tmp_path):
-    from simtools.io.io_handler import IOHandler
-
     ioh = IOHandler()
     ioh.set_paths(output_path=tmp_path)
 
@@ -670,9 +664,6 @@ def test__collect_figures_for_file_smoke(tmp_path, monkeypatch):
 
 
 def test_generate_and_save_plots_smoke(tmp_path, monkeypatch):
-    # Arrange IO and inputs
-    from simtools.io.io_handler import IOHandler
-
     ioh = IOHandler()
     ioh.set_paths(output_path=tmp_path)
     simtel_files = [tmp_path / "input.simtel.zst"]
@@ -694,7 +685,7 @@ def test_generate_and_save_plots_smoke(tmp_path, monkeypatch):
         assert Path(pdf_path).suffix == ".pdf"
 
     monkeypatch.setattr(sep, "_collect_figures_for_file", _collector)
-    monkeypatch.setattr(sep, "save_figs_to_pdf", _save)
+    monkeypatch.setattr(sep, "save_figures_to_single_document", _save)
     monkeypatch.setattr(sep.MetadataCollector, "dump", staticmethod(_dump))
 
     sep.generate_and_save_plots(
@@ -748,8 +739,6 @@ def test__format_integrated_title_variants():
 
 
 def test__make_output_paths_base_none_and_pdf_suffix(tmp_path, monkeypatch):
-    from simtools.io.io_handler import IOHandler
-
     ioh = IOHandler()
     ioh.set_paths(output_path=tmp_path)
 
@@ -803,8 +792,6 @@ def test__collect_figures_for_file_unknown_and_all(tmp_path, monkeypatch, caplog
 
 
 def test_generate_and_save_plots_empty_and_error_paths(tmp_path, monkeypatch, caplog):
-    from simtools.io.io_handler import IOHandler
-
     ioh = IOHandler()
     ioh.set_paths(output_path=tmp_path)
     simtel_files = [tmp_path / "input.simtel.zst"]
@@ -820,7 +807,7 @@ def test_generate_and_save_plots_empty_and_error_paths(tmp_path, monkeypatch, ca
     def _dump(_args, _pdf_path, add_activity_name=True):  # pylint:disable=unused-argument
         called["dump"] += 1
 
-    monkeypatch.setattr(sep, "save_figs_to_pdf", _save)
+    monkeypatch.setattr(sep, "save_figures_to_single_document", _save)
     monkeypatch.setattr(sep.MetadataCollector, "dump", staticmethod(_dump))
 
     caplog.clear()
@@ -843,7 +830,7 @@ def test_generate_and_save_plots_empty_and_error_paths(tmp_path, monkeypatch, ca
         raise RuntimeError("dump failed")
 
     monkeypatch.setattr(sep, "_collect_figures_for_file", _collector)
-    monkeypatch.setattr(sep, "save_figs_to_pdf", _save_err)
+    monkeypatch.setattr(sep, "save_figures_to_single_document", _save_err)
     monkeypatch.setattr(sep.MetadataCollector, "dump", staticmethod(_dump_err))
 
     caplog.clear()
