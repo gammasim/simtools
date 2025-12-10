@@ -27,9 +27,9 @@ jobs:
     strategy:
       matrix:
         version:
-          - simtel_version: '251124'
+          - {simtel_version: 'master', hessio_version: 'master', stdtools_version: 'master'}
         production:
-          - {build_opt: 'prod6-baseline', extra_def: '-DMAXIMUM_TELESCOPES=99 -DCTA_PROD6'}
+          - {build_opt: 'prod6-baseline', extra_def: '-DMAXIMUM_TELESCOPES=99'}
 
     env:
       BASE_LABELS: "simtel-${{ matrix.version.simtel_version }}-${{ matrix.production.build_opt }}"
@@ -66,6 +66,9 @@ jobs:
           context: .
           platforms: 'linux/amd64,linux/arm64/v8'
           build-args: |
+            SIMTEL_VERSION=${{ matrix.version.simtel_version }}
+            HESSIO_VERSION=${{ matrix.version.hessio_version }}
+            STDTOOLS_VERSION=${{ matrix.version.stdtools_version }}
             EXTRA_DEF=${{ matrix.production.extra_def }}
           secrets: |
             sim_telarray_token=${{ secrets.SIMTELARRAY_CTAO_GITLAB}}
