@@ -1,270 +1,236 @@
-import logging
+#!/usr/bin/python3
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from astropy import units as u
 
 from simtools.visualization import plot_corsika_histograms
-
-# Ignore UserWarning (e.g., SciPy NumPy-version warning) at module level so pytest
-# does not treat it as an error during collection.
-pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
-
-# Prevent RuntimeWarning from matplotlib about too many open figures during tests
-mpl.rcParams["figure.max_open_warning"] = 0
+from simtools.visualization.plot_corsika_histograms import (
+    _build_all_photon_figures,
+    export_all_photon_figures_pdf,
+)
 
 
-def test_kernel_plot_2d_photons(corsika_histograms_instance_set_histograms, caplog):
-    corsika_histograms_instance_set_histograms.set_histograms(
-        individual_telescopes=False, telescope_indices=[0, 1, 2]
-    )
-    for property_name in [
-        "counts",
-        "density",
-        "direction",
-        "time_altitude",
-        "num_photons_per_telescope",
-    ]:
-        all_figs = plot_corsika_histograms._kernel_plot_2d_photons(
-            corsika_histograms_instance_set_histograms, property_name
+@pytest.fixture
+def hist_1d_factory():
+    def factory(**overrides):
+        base = {
+            "is_1d": True,
+            "hist_values": [np.array([1, 2, 3])],
+            "x_bin_edges": [np.array([0, 1, 2, 3])],
+            "x_axis_title": "X",
+            "x_axis_unit": u.m,
+            "y_axis_title": "Y",
+            "y_axis_unit": u.dimensionless_unscaled,
+            "x_bins": ["", "", "", ""],
+            "log_y": False,
+            "title": "1D Histogram",
+            "input_file_name": "file1",
+        }
+        base.update(overrides)
+        return base
+
+    return factory
+
+
+@pytest.fixture
+def hist_2d_factory():
+    def factory(**overrides):
+        base = {
+            "is_1d": False,
+            "hist_values": [np.array([[1, 2], [3, 4]])],
+            "x_bin_edges": [np.array([0, 1, 2])],
+            "y_bin_edges": [np.array([0, 1, 2])],
+            "x_axis_title": "X",
+            "x_axis_unit": u.m,
+            "y_axis_title": "Y",
+            "y_axis_unit": u.m,
+            "z_axis_title": "Z",
+            "z_axis_unit": u.dimensionless_unscaled,
+            "log_z": False,
+            "title": "2D Histogram",
+            "input_file_name": "file1",
+        }
+        base.update(overrides)
+        return base
+
+    return factory
+
+
+def test_export_all_photon_figures_pdf(tmp_path, mocker, hist_1d_factory):
+    mock_hist = mocker.Mock()
+    mock_hist.hist = {
+        "test_hist": hist_1d_factory(
+            title="Test Histogram",
+            input_file_name="test_file",
         )
-        assert np.size(all_figs) == 1
-        assert isinstance(all_figs[0], plt.Figure)
+    }
 
-    corsika_histograms_instance_set_histograms.set_histograms(
-        individual_telescopes=True, telescope_indices=[0, 1, 2]
+    # Patch save_figures_to_single_document to avoid actual file creation
+    save_fig_patch = mocker.patch(
+        "simtools.visualization.plot_corsika_histograms.save_figures_to_single_document"
     )
-    for property_name in [
-        "counts",
-        "density",
-        "direction",
-        "time_altitude",
-        "num_photons_per_telescope",
-    ]:
-        all_figs = plot_corsika_histograms._kernel_plot_2d_photons(
-            corsika_histograms_instance_set_histograms, property_name
-        )
-        for _, _ in enumerate(corsika_histograms_instance_set_histograms.telescope_indices):
-            assert isinstance(all_figs[0], plt.Figure)
 
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError, match=r"This property does not exist. The valid entries"):
-            plot_corsika_histograms._kernel_plot_2d_photons(
-                corsika_histograms_instance_set_histograms, "this_property_does_not_exist"
-            )
-    assert "This property does not exist. " in caplog.text
+    pdf_path = tmp_path / "output.pdf"
+    export_all_photon_figures_pdf(mock_hist, pdf_path)
+
+    save_fig_patch.assert_called_once()
+    args, _ = save_fig_patch.call_args
+    assert args[1] == pdf_path
 
 
-def test_plot_2ds(corsika_histograms_instance_set_histograms):
-    for function_label in [
-        "plot_2d_counts",
-        "plot_2d_density",
-        "plot_2d_direction",
-        "plot_2d_num_photons_per_telescope",
-    ]:
-        _function = getattr(plot_corsika_histograms, function_label)
-        figs = _function(corsika_histograms_instance_set_histograms)
-        assert isinstance(figs, list)
-        assert all(isinstance(fig, plt.Figure) for fig in figs)
+def test_build_all_photon_figures_1d_and_2d(mocker, hist_1d_factory, hist_2d_factory):
+    mock_hist_1d = mocker.Mock()
+    mock_hist_1d.hist = {"hist_1d": hist_1d_factory(title="1D Histogram")}
+    mock_hist_2d = mocker.Mock()
+    mock_hist_2d.hist = {"hist_2d": hist_2d_factory(title="2D Histogram", input_file_name="file2")}
+
+    figs_1d = _build_all_photon_figures([mock_hist_1d])
+    figs_2d = _build_all_photon_figures([mock_hist_2d])
+
+    assert len(figs_1d) == 1
+    assert hasattr(figs_1d[0], "savefig")
+    assert len(figs_2d) == 1
+    assert hasattr(figs_2d[0], "savefig")
 
 
-def test_kernel_plot_1d_photons(corsika_histograms_instance_set_histograms, caplog):
-    corsika_histograms_instance_set_histograms.set_histograms(
-        individual_telescopes=False, telescope_indices=[0, 1, 2]
+def test_get_axis_label():
+    label_with_unit = plot_corsika_histograms._get_axis_label("Energy", u.GeV)
+    label_without_unit = plot_corsika_histograms._get_axis_label("Count", u.dimensionless_unscaled)
+
+    assert label_with_unit == "Energy (GeV)"
+    assert label_without_unit == "Count"
+
+
+def test_plot_1d_single_histogram(mocker, hist_1d_factory):
+    hist_dict = hist_1d_factory(title="Test 1D")
+    figs = plot_corsika_histograms._plot_1d([hist_dict])
+    assert len(figs) == 1
+    assert hasattr(figs[0], "savefig")
+
+
+def test_plot_1d_multiple_histograms(mocker, hist_1d_factory):
+    hist_dict1 = hist_1d_factory(title="Test 1D", input_file_name="file1")
+    hist_dict2 = hist_1d_factory(hist_values=[np.array([2, 3, 4])], input_file_name="file2")
+    figs = plot_corsika_histograms._plot_1d([hist_dict1, hist_dict2])
+    assert len(figs) == 1
+    assert hasattr(figs[0], "savefig")
+
+
+def test_plot_1d_with_labels(mocker, hist_1d_factory):
+    hist_dict1 = hist_1d_factory(title="Test 1D", input_file_name="file1")
+    hist_dict2 = hist_1d_factory(hist_values=[np.array([2, 3, 4])], input_file_name="file2")
+    labels = ["First", "Second"]
+    figs = plot_corsika_histograms._plot_1d([hist_dict1, hist_dict2], labels=labels)
+    assert len(figs) == 1
+    assert hasattr(figs[0], "savefig")
+
+
+def test_plot_1d_log_scale(hist_1d_factory):
+    hist_dict = hist_1d_factory(
+        hist_values=[np.array([1, 10, 100])],
+        x_bin_edges=[np.array([1, 10, 100, 1000])],
+        x_bins=["", "", "", "log"],
+        log_y=True,
+        title="Log 1D",
     )
-    labels = [
-        "wavelength",
-        "counts",
-        "density",
-        "time",
-        "altitude",
-        "num_photons_per_event",
-        "num_photons_per_telescope",
-    ]
+    figs = plot_corsika_histograms._plot_1d([hist_dict])
+    assert len(figs) == 1
+    assert hasattr(figs[0], "savefig")
 
-    for property_name in labels:
-        all_figs = plot_corsika_histograms._kernel_plot_1d_photons(
-            corsika_histograms_instance_set_histograms, property_name
-        )
-        assert np.size(all_figs) == 1
-        assert isinstance(all_figs[0], type(plt.figure()))
 
-    corsika_histograms_instance_set_histograms.set_histograms(
-        individual_telescopes=True, telescope_indices=[0, 1, 2]
+def test_plot_1d_empty_list():
+    figs = plot_corsika_histograms._plot_1d([])
+    assert figs == []
+
+
+def test_plot_2d_single_histogram(mocker, hist_2d_factory):
+    hist_dict = hist_2d_factory()
+    figs = plot_corsika_histograms._plot_2d([hist_dict])
+    assert len(figs) == 1
+    assert hasattr(figs[0], "savefig")
+
+
+def test_plot_2d_multiple_histograms(mocker, hist_2d_factory):
+    hist_dict1 = hist_2d_factory(input_file_name="file1")
+    hist_dict2 = hist_2d_factory(hist_values=[np.array([[2, 3], [4, 5]])], input_file_name="file2")
+    figs = plot_corsika_histograms._plot_2d([hist_dict1, hist_dict2])
+    assert len(figs) == 2
+    for fig in figs:
+        assert hasattr(fig, "savefig")
+
+
+def test_plot_2d_with_labels(mocker, hist_2d_factory):
+    hist_dict1 = hist_2d_factory(input_file_name="file1")
+    hist_dict2 = hist_2d_factory(hist_values=[np.array([[2, 3], [4, 5]])], input_file_name="file2")
+    labels = ["First", "Second"]
+    figs = plot_corsika_histograms._plot_2d([hist_dict1, hist_dict2], labels=labels)
+    assert len(figs) == 2
+    for fig in figs:
+        assert hasattr(fig, "savefig")
+
+
+def test_plot_2d_log_scale(mocker, hist_2d_factory):
+    hist_dict = hist_2d_factory(
+        hist_values=[np.array([[1, 10], [100, 1000]])],
+        x_bin_edges=[np.array([1, 10, 100])],
+        y_bin_edges=[np.array([1, 10, 100])],
+        log_z=True,
+        title="Log 2D",
     )
-    for property_name in labels:
-        all_figs = plot_corsika_histograms._kernel_plot_1d_photons(
-            corsika_histograms_instance_set_histograms, property_name
-        )
-        for i_hist, _ in enumerate(corsika_histograms_instance_set_histograms.telescope_indices):
-            if property_name in ["num_photons_per_event", "num_photons_per_telescope"]:
-                assert isinstance(all_figs[0], plt.Figure)
-            else:
-                assert isinstance(all_figs[i_hist], plt.Figure)
-    with caplog.at_level("ERROR"):
-        with pytest.raises(ValueError, match=r"This property does not"):
-            plot_corsika_histograms._kernel_plot_1d_photons(
-                corsika_histograms_instance_set_histograms, "this_property_does_not_exist"
-            )
-    assert "This property does not exist. " in caplog.text
+    figs = plot_corsika_histograms._plot_2d([hist_dict])
+    assert len(figs) == 1
+    assert hasattr(figs[0], "savefig")
 
 
-def test_plot_1ds(corsika_histograms_instance_set_histograms):
-    for function_label in [
-        "plot_wavelength_distr",
-        "plot_counts_distr",
-        "plot_density_distr",
-        "plot_time_distr",
-        "plot_altitude_distr",
-        "plot_photon_per_event_distr",
-        "plot_photon_per_telescope_distr",
-    ]:
-        _function = getattr(plot_corsika_histograms, function_label)
-        figs = _function(corsika_histograms_instance_set_histograms)
-        assert isinstance(figs, list)
-        assert all(isinstance(fig, plt.Figure) for fig in figs)
+def test_plot_2d_empty_list():
+    figs = plot_corsika_histograms._plot_2d([])
+    assert figs == []
 
 
-def test_plot_event_headers(corsika_histograms_instance_set_histograms):
-    fig = plot_corsika_histograms.plot_1d_event_header_distribution(
-        corsika_histograms_instance_set_histograms, "total_energy"
-    )
-    assert isinstance(fig, plt.Figure)
-
-    fig = plot_corsika_histograms.plot_2d_event_header_distribution(
-        corsika_histograms_instance_set_histograms, "zenith", "azimuth"
-    )
-    assert isinstance(fig, plt.Figure)
+def test_extract_uncertainty_with_value():
+    uncertainties = [[1, 2, 3], [4, 5, 6]]
+    result = plot_corsika_histograms._extract_uncertainty(uncertainties, 1)
+    assert result == [4, 5, 6]
 
 
-def test_save_figs_to_pdf(corsika_histograms_instance_set_histograms, io_handler):
-    output_file = io_handler.get_output_directory().joinpath("test.pdf")
-    figs_list = []
-    for function_label in [
-        "plot_photon_per_event_distr",
-        "plot_photon_per_telescope_distr",
-    ]:
-        _function = getattr(plot_corsika_histograms, function_label)
-        figs = _function(corsika_histograms_instance_set_histograms)
-        figs_list.append(figs)
-    figs_list = np.array(figs_list).flatten()
-    plot_corsika_histograms.save_figs_to_pdf(figs_list, output_file)
-    assert output_file.exists()
-
-
-def test_event_header_1d_dimensionless_and_log_toggle(corsika_histograms_instance_set_histograms):
-    # Force dimensionless unit to exercise the else-branch for xlabel and log_y=False path
-    key = "total_energy"
-    corsika_histograms_instance_set_histograms.event_information[key] = (
-        corsika_histograms_instance_set_histograms.event_information[key].value
-        * u.dimensionless_unscaled
-    )
-    fig = plot_corsika_histograms.plot_1d_event_header_distribution(
-        corsika_histograms_instance_set_histograms, key, log_y=False
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_event_header_2d_logz_false_and_dimensionless_labels(
-    corsika_histograms_instance_set_histograms,
-):
-    # Force both units to be dimensionless to cover xlabel/ylabel else-branches and log_z=False
-    key_x = "zenith"
-    key_y = "azimuth"
-    corsika_histograms_instance_set_histograms.event_information[key_x] = (
-        corsika_histograms_instance_set_histograms.event_information[key_x].value
-        * u.dimensionless_unscaled
-    )
-    corsika_histograms_instance_set_histograms.event_information[key_y] = (
-        corsika_histograms_instance_set_histograms.event_information[key_y].value
-        * u.dimensionless_unscaled
-    )
-    fig = plot_corsika_histograms.plot_2d_event_header_distribution(
-        corsika_histograms_instance_set_histograms, key_x, key_y, log_z=False
-    )
-    assert isinstance(fig, plt.Figure)
-
-
-def test_build_and_export_all_photon_figures(
-    corsika_histograms_instance_set_histograms, io_handler
-):
-    # Build a reduced set for speed
-    figs = plot_corsika_histograms.build_all_photon_figures(
-        corsika_histograms_instance_set_histograms, test=True
-    )
-    assert isinstance(figs, np.ndarray)
-    assert figs.size > 0
-
-    # Export reduced set to a single PDF
-    pdf_path = plot_corsika_histograms.export_all_photon_figures_pdf(
-        corsika_histograms_instance_set_histograms, test=True
-    )
-    assert pdf_path.exists()
-
-
-def test_derive_event_histograms_pdf_and_hdf5(
-    corsika_histograms_instance_set_histograms, io_handler
-):
-    # 1D event histograms: create PDF and HDF5 outputs
-    pdf_1d = plot_corsika_histograms.derive_event_1d_histograms(
-        corsika_histograms_instance_set_histograms,
-        event_1d_header_keys=["total_energy", "zenith"],
-        pdf=True,
-        hdf5=True,
-        overwrite=True,
-    )
-    assert pdf_1d is not None
-    assert pdf_1d.exists()
-
-    # 2D event histograms: create PDF and HDF5 outputs
-    pdf_2d = plot_corsika_histograms.derive_event_2d_histograms(
-        corsika_histograms_instance_set_histograms,
-        event_2d_header_keys=["zenith", "azimuth"],
-        pdf=True,
-        hdf5=True,
-        overwrite=True,
-    )
-    assert pdf_2d is not None
-    assert pdf_2d.exists()
-
-
-def test_derive_event_2d_histograms_odd_keys_warning(
-    corsika_histograms_instance_set_histograms, caplog
-):
-    with caplog.at_level(logging.WARNING):
-        # Use odd number of keys and disable outputs to only exercise the warning path
-        result = plot_corsika_histograms.derive_event_2d_histograms(
-            corsika_histograms_instance_set_histograms,
-            event_2d_header_keys=["zenith", "azimuth", "total_energy"],
-            pdf=False,
-            hdf5=False,
-            overwrite=False,
-        )
-    assert result is None
-    assert "An odd number of keys was passed" in caplog.text
-
-
-def test_derive_event_1d_histograms_no_pdf_returns_none(corsika_histograms_instance_set_histograms):
-    # pdf disabled -> function should return None regardless of hdf5 export
-    result = plot_corsika_histograms.derive_event_1d_histograms(
-        corsika_histograms_instance_set_histograms,
-        event_1d_header_keys=["total_energy"],
-        pdf=False,
-        hdf5=True,
-        overwrite=False,
-    )
+def test_extract_uncertainty_with_none():
+    uncertainties = [None, [4, 5, 6]]
+    result = plot_corsika_histograms._extract_uncertainty(uncertainties, 0)
     assert result is None
 
 
-def test_plot_2d_time_altitude_returns_figs(corsika_histograms_instance_set_histograms):
-    figs = plot_corsika_histograms.plot_2d_time_altitude(
-        corsika_histograms_instance_set_histograms, log_z=True
+def test_extract_uncertainty_uncertainties_none():
+    result = plot_corsika_histograms._extract_uncertainty(None, 0)
+    assert result is None
+
+
+def test_plot_histogram_curve_with_uncertainties(mocker):
+    fig, ax = plt.subplots()
+    bin_centers = np.array([1, 2, 3])
+    hist_values = np.array([10, 20, 30])
+    uncertainties = np.array([1, 2, 3])
+    color = "blue"
+    label = "Test"
+    errorbar_mock = mocker.patch.object(ax, "errorbar")
+    plot_corsika_histograms._plot_histogram_curve(
+        ax, bin_centers, hist_values, uncertainties, color, label
     )
-    assert isinstance(figs, list)
-    assert len(figs) > 0
-    for f in figs:
-        # matplotlib Figure has savefig attribute
-        assert hasattr(f, "savefig")
-        f.clf()
+    errorbar_mock.assert_called_once()
+    plt.close(fig)
+
+
+def test_plot_histogram_curve_without_uncertainties(mocker):
+    fig, ax = plt.subplots()
+    bin_centers = np.array([1, 2, 3])
+    hist_values = np.array([10, 20, 30])
+    uncertainties = None
+    color = "red"
+    label = "NoErr"
+    plot_mock = mocker.patch.object(ax, "plot")
+    plot_corsika_histograms._plot_histogram_curve(
+        ax, bin_centers, hist_values, uncertainties, color, label
+    )
+    plot_mock.assert_called_once()
+    plt.close(fig)
