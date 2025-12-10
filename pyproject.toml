@@ -235,7 +235,6 @@ ignore = [
   "__init__.py",
   "scm_version.py",
   "_version.py",
-  "legend_handlers.py",
 ]
 
 # See discussion in issue 521
@@ -263,7 +262,7 @@ ignored-classes = [
 # Maximum number of characters on a single line.
 max-line-length = 100
 # Maximum number of lines in a module. (default 1000)
-max-module-lines = 2000
+max-module-lines = 1500
 # Maximum number of branch for function / method body. (default=12)
 max-branches = 25
 # Maximum number of arguments for function / method (default=5).
