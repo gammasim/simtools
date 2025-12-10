@@ -1,4 +1,5 @@
 import builtins
+from unittest.mock import Mock
 
 import astropy.units as u
 import matplotlib.figure as mpl_fig
@@ -294,11 +295,12 @@ def test_get_patches_simplest(monkeypatch):
     dummy_patches = ["dummy_patch1", "dummy_patch2"]  # Two patches
     dummy_radii = [2, 3] * u.m  # Two radii
     dummy_highlighted_patches = []
+    dummy_text_objects = []
 
     def dummy_create_patches(
         telescopes, scale, show_label, ax, grayed_out_elements=None, highlighted_elements=None
     ):
-        return dummy_patches, dummy_radii, dummy_highlighted_patches
+        return dummy_patches, dummy_radii, dummy_highlighted_patches, dummy_text_objects
 
     monkeypatch.setattr(
         "simtools.visualization.plot_array_layout.get_positions",
@@ -311,7 +313,7 @@ def test_get_patches_simplest(monkeypatch):
     _, ax = plt.subplots()
 
     provided_range = 50
-    patches, returned_range, highlighted_patches, _ = get_patches(
+    patches, returned_range, highlighted_patches, _, _ = get_patches(
         ax, telescopes, False, provided_range, 1.0
     )
 
@@ -324,7 +326,9 @@ def test_get_patches_simplest(monkeypatch):
     assert "pos_x_rotated" in telescopes.colnames
     assert "pos_y_rotated" in telescopes.colnames
 
-    patches, returned_range, highlighted_patches, _ = get_patches(ax, telescopes, False, None, 1.0)
+    patches, returned_range, highlighted_patches, _, _ = get_patches(
+        ax, telescopes, False, None, 1.0
+    )
     assert returned_range == pytest.approx(7.7)
 
 
@@ -335,7 +339,7 @@ def test_get_patches_with_highlighted_elements(telescopes):
     highlighted_elements = ["LSTN-01", "MSTN-01"]
     grayed_out_elements = ["LSTN-02"]
 
-    patches, returned_range, highlighted_patches, _ = get_patches(
+    patches, returned_range, highlighted_patches, _, _ = get_patches(
         ax,
         telescopes,
         False,
@@ -415,11 +419,24 @@ def test_plot_array_layout_calls_helpers(monkeypatch):
         dummy_bg_patch = mpatches.Circle((0, 0), 1)  # Another circle patch
         dummy_highlighted_patches = []
         dummy_bounds = PlotBounds(x_lim=(0.0, 100.0), y_lim=(0.0, 100.0))
+        dummy_text_objects = []
         # For first call (primary telescopes)
         if calls["get_patches_count"] == 1:
-            return ([dummy_patch], 50, dummy_highlighted_patches, dummy_bounds)
+            return (
+                [dummy_patch],
+                50,
+                dummy_highlighted_patches,
+                dummy_bounds,
+                dummy_text_objects,
+            )
         # For second call (background telescopes)
-        return ([dummy_bg_patch], 60, dummy_highlighted_patches, dummy_bounds)
+        return (
+            [dummy_bg_patch],
+            60,
+            dummy_highlighted_patches,
+            dummy_bounds,
+            dummy_text_objects,
+        )
 
     def dummy_update_legend(ax, telescopes, grayed_out_elements=None, legend_location="best"):
         calls["update_legend_called"] = True
@@ -473,6 +490,24 @@ def test_plot_array_layout_calls_helpers(monkeypatch):
     assert call_count["count"] > 0
 
 
+def test_plot_array_layout_calls_adjust_text(monkeypatch, telescopes):
+    """Test that adjust_text is called if available."""
+    _, _ = plt.subplots()
+
+    # Mock adjust_text
+    adjust_text_mock = Mock()
+    monkeypatch.setattr("simtools.visualization.plot_array_layout.adjust_text", adjust_text_mock)
+
+    plot_array_layout(telescopes, show_tel_label=True)
+
+    assert adjust_text_mock.called
+    # Check that it was called with a list of texts and ax
+    args, kwargs = adjust_text_mock.call_args
+    assert isinstance(args[0], list)
+    assert len(args[0]) == len(telescopes)
+    assert kwargs["ax"] is not None
+
+
 def test_plot_array_layout_with_highlighted_elements():
     """Test plot_array_layout with highlighted elements."""
     telescopes = QTable(
@@ -508,11 +543,12 @@ def test_plot_array_layout_with_highlighted_elements():
 
 def test_create_patches(telescopes):
     _, ax = plt.subplots()
-    patches, radii, highlighted_patches = create_patches(telescopes, 1.0, True, ax)
+    patches, radii, highlighted_patches, text_objects = create_patches(telescopes, 1.0, True, ax)
 
     assert len(patches)
     assert len(radii)
     assert isinstance(highlighted_patches, list)
+    assert isinstance(text_objects, list)
 
 
 def test_create_patches_with_highlighted_elements(telescopes):
@@ -521,7 +557,7 @@ def test_create_patches_with_highlighted_elements(telescopes):
 
     # Test with highlighted elements
     highlighted_elements = ["LSTN-01", "MSTN-01"]
-    patches, radii, highlighted_patches = create_patches(
+    patches, radii, highlighted_patches, _ = create_patches(
         telescopes, 1.0, False, ax, highlighted_elements=highlighted_elements
     )
 
@@ -546,7 +582,7 @@ def test_create_patches_with_grayed_out_elements(telescopes):
 
     # Test with grayed out elements
     grayed_out_elements = ["LSTN-02"]
-    patches, radii, highlighted_patches = create_patches(
+    patches, radii, highlighted_patches, _ = create_patches(
         telescopes, 1.0, False, ax, grayed_out_elements=grayed_out_elements
     )
 
@@ -788,3 +824,31 @@ def test_plot_array_layout_filter_removes_all_telescopes():
 
     assert isinstance(fig, mpl_fig.Figure)
     plt.close(fig)
+
+
+def test_get_patches_empty_with_axes_range():
+    """Test get_patches when no telescopes remain but axes_range is provided."""
+    telescopes = QTable(
+        {
+            "telescope_name": ["LSTN-01"],
+            "position_x": [100] * u.m,
+            "position_y": [100] * u.m,
+            "sphere_radius": [12] * u.m,
+        }
+    )
+
+    # Filter that excludes the telescope
+    # And provide axes_range
+    _, ax = plt.subplots()
+    patches, axes_range, _, _, _ = get_patches(
+        ax,
+        telescopes,
+        show_tel_label=False,
+        axes_range=1000.0,
+        marker_scaling=1.0,
+        filter_x_lim=(500, 600),  # This will filter out the telescope at 100
+        filter_y_lim=(500, 600),
+    )
+
+    assert len(patches) == 0
+    assert np.isclose(axes_range, 1000.0, rtol=1e-05, atol=1e-05)
