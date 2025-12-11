@@ -735,3 +735,21 @@ def test_create_regular_array_four_telescopes(mocker):
         assert abs(abs(x.value) - 120) < 1e-6 or abs(x.value) < 1e-6
         assert abs(abs(y.value) - 120) < 1e-6 or abs(y.value) < 1e-6
         assert z.value == 0
+
+    with pytest.raises(ValueError, match="Unsupported number of telescopes: 5"):
+        cta_array_layouts.create_regular_array("5MST", "South", telescope_distance)
+
+
+def test_get_array_name_valid():
+    assert cta_array_layouts._get_array_name("4MST") == ("MST", 4)
+    assert cta_array_layouts._get_array_name("1LST") == ("LST", 1)
+    assert cta_array_layouts._get_array_name("2SST") == ("SST", 2)
+
+
+def test_get_array_name_invalid():
+    with pytest.raises(ValueError, match="Invalid array_name: 'MST'"):
+        cta_array_layouts._get_array_name("MST")
+    with pytest.raises(ValueError, match="Invalid array_name: 'A4MST'"):
+        cta_array_layouts._get_array_name("A4MST")
+    with pytest.raises(ValueError, match="Invalid array_name: ''"):
+        cta_array_layouts._get_array_name("")
