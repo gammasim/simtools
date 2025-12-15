@@ -20,7 +20,7 @@ def _plot_2d(hist_list, labels=None):
     Parameters
     ----------
     hist_list: list
-        List of histogram dictionaries from different files.
+        List of histogram dictionaries.
     labels: list or None
         Optional list of labels for the input files. If None, uses file names.
 
