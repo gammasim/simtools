@@ -155,22 +155,23 @@ format.line-ending = "auto"
 # no documentation linting for test files
 format.skip-magic-trailing-comma = false
 lint.extend-select = [
-  "A",   # built-in shadowing
-  "C4",  # comprehension
-  "COM", # flake8-commas
-  "D",   # pydocstyle
-  "F",   # pyflakes
-  "G",   # logging
-  "I",   # isort
-  "ICN", # import name conventions
-  "ISC", # implicit string concat rules
-  "N",   # pep8 naming
-  "NPY", # numpy
-  "PT",  # pytest
-  "PTH", # use pathlib
-  "RET", # return statements
-  "RUF", # ruff
-  "UP",  # pyupgrade
+  "A",    # built-in shadowing
+  "C4",   # comprehension
+  "COM",  # flake8-commas
+  "D",    # pydocstyle
+  "F",    # pyflakes
+  "G",    # logging
+  "I",    # isort
+  "ICN",  # import name conventions
+  "ISC",  # implicit string concat rules
+  "N",    # pep8 naming
+  "NPY",  # numpy
+  "PERF", # performance
+  "PT",   # pytest
+  "PTH",  # use pathlib
+  "RET",  # return statements
+  "RUF",  # ruff
+  "UP",   # pyupgrade
 ]
 lint.ignore = [
   "COM812", # incompatible with ruff format

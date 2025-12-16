@@ -68,8 +68,7 @@ def assert_n_showers_and_energy_range(file):
     simulation_config = {}
     with SimTelFile(file, skip_non_triggered=False) as f:
         simulation_config = f.mc_run_headers[0]
-        for event in f:
-            simulated_energies.append(event["mc_shower"]["energy"])
+        simulated_energies.extend(event["mc_shower"]["energy"] for event in f)
 
     # The relative tolerance is set to 1% because ~0.5% shower simulations do not
     # succeed, without resulting in an error. This tolerance therefore is not an issue.
