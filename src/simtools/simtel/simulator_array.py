@@ -219,9 +219,7 @@ class SimulatorArray(SimtelRunner):
             "fadc_sysvar_pedestal",
             "fadc_dev_pedestal",
         ]
-        null_command_parts = []
-        for param in null_values:
-            null_command_parts.append(super().get_config_option(param, 0.0))
+        null_command_parts = [super().get_config_option(param, 0.0) for param in null_values]
         command = " ".join(null_command_parts)
 
         one_values = [
@@ -230,9 +228,7 @@ class SimulatorArray(SimtelRunner):
             "fadc_lg_dev_pedestal",
             "fadc_lg_sysvar_pedestal",
         ]
-        one_command_parts = []
-        for param in one_values:
-            one_command_parts.append(super().get_config_option(param, -1.0))
+        one_command_parts = [super().get_config_option(param, -1.0) for param in one_values]
         command += " " + " ".join(one_command_parts)
         return command
 
