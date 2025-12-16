@@ -409,7 +409,7 @@ def test_corsika_configuration_debugging_parameters(corsika_config_mock_array_mo
 def test_rotate_azimuth_by_180deg(corsika_config_mock_array_model):
     """Test azimuth angle rotation with and without geomagnetic field alignment."""
     test_cases = [
-        # (input_angle, with_correction, expected_result)
+        # input_angle, with_correction, expected_result
         (0.0, False, 180.0),
         (360.0, False, 180.0),
         (450.0, False, 270.0),
