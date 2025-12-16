@@ -76,17 +76,16 @@ class CorsikaHistograms:
         )
 
         with IACTFile(self.input_file) as iact_file:
-            records = []
-            for event in iact_file:
-                records.append(
-                    (
-                        event.header["particle_id"],
-                        event.header["total_energy"],
-                        np.rad2deg(event.header["azimuth"]),
-                        np.rad2deg(event.header["zenith"]),
-                        0.0,  # filled later when reading photon bunches
-                    )
+            records = [
+                (
+                    event.header["particle_id"],
+                    event.header["total_energy"],
+                    np.rad2deg(event.header["azimuth"]),
+                    np.rad2deg(event.header["zenith"]),
+                    0.0,  # filled later when reading photon bunches
                 )
+                for event in iact_file
+            ]
 
         self.events = np.array(records, dtype=event_dtype)
 
