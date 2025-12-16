@@ -1,5 +1,3 @@
-import logging
-
 import astropy.units as u
 import numpy as np
 import pytest
@@ -65,31 +63,6 @@ def test_rotate_telescope_position(caplog) -> None:
         transf.rotate(x_new_array.to(u.cm), y_new_array, angle_deg)
     with pytest.raises(u.core.UnitsError):
         transf.rotate(x_new_array, y_new_array, 30 * u.m)
-
-
-def test_convert_2d_to_radial_distr(caplog) -> None:
-    # Test normal functioning
-    max_dist = 100
-    bins = 100
-    step = max_dist / bins
-    xaxis = np.arange(-max_dist, max_dist, step)
-    yaxis = np.arange(-max_dist, max_dist, step)
-    x2d, y2d = np.meshgrid(xaxis, yaxis)
-    distance_to_center_2d = np.sqrt((x2d) ** 2 + (y2d) ** 2)
-
-    distance_to_center_1d, radial_bin_edges = transf.convert_2d_to_radial_distr(
-        distance_to_center_2d, xaxis, yaxis, bins=bins, max_dist=max_dist
-    )
-    difference = radial_bin_edges[:-1] - distance_to_center_1d
-    assert pytest.approx(difference[:-1], abs=1) == 0  # last value deviates
-
-    # Test warning in caplog
-    with caplog.at_level(logging.WARNING):
-        transf.convert_2d_to_radial_distr(
-            distance_to_center_2d, xaxis, yaxis, bins=4 * bins, max_dist=max_dist
-        )
-    msg = "The histogram with number of bins"
-    assert msg in caplog.text
 
 
 def test_calculate_circular_mean():
