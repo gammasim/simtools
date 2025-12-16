@@ -189,13 +189,13 @@ def model_parameters(class_key_list=None):
     dict
         Model parameters definitions.
     """
-    _parameters = {}
     if class_key_list is None:
         return _load_model_parameters()
-    for key, value in _load_model_parameters().items():
-        if value.get("instrument", {}).get("class", "") in class_key_list:
-            _parameters[key] = value
-    return _parameters
+    return {
+        key: value
+        for key, value in _load_model_parameters().items()
+        if value.get("instrument", {}).get("class", "") in class_key_list
+    }
 
 
 def site_parameters():

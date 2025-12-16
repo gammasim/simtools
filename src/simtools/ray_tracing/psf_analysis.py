@@ -497,10 +497,10 @@ class PSFImage:
             radius_all = radius.to(u.cm).value if isinstance(radius, u.Quantity) else radius
         else:
             radius_all = list(np.linspace(0, 1.6 * self.get_psf(0.8), 30))
-
-        intensity = []
-        for rad in radius_all:
-            intensity.append(self._sum_photons_in_radius(rad) / self._number_of_detected_photons)
+        intensity = [
+            self._sum_photons_in_radius(rad) / self._number_of_detected_photons
+            for rad in radius_all
+        ]
         d_type = {
             "names": (self.__PSF_RADIUS, self.__PSF_CUMULATIVE),
             "formats": ("f8", "f8"),

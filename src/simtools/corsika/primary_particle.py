@@ -185,7 +185,7 @@ class PrimaryParticle:
             "silicon": {"corsika7_id": 2814},
             "iron": {"corsika7_id": 5626},
         }
-        for _, ids in particles.items():
+        for ids in particles.values():
             ids["pdg_id"] = Corsika7ID(ids["corsika7_id"]).to_pdgid().numerator
             ids["pdg_name"] = Particle.findall(pdgid=ids["pdg_id"])[0].name
 
