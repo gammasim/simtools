@@ -664,24 +664,21 @@ def plot_simtel_peak_timing(
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4), dpi=300)
 
-    edges = _histogram_edges(n_samp, timing_bins)
-    et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
     tel = source.subarray.tel[tel_id]
     tel_label = getattr(tel, "name", f"CT{tel_id}")
     _draw_peak_hist(
         ax1,
         peak_samples,
-        edges,
+        _histogram_edges(n_samp, timing_bins),
         mean_sample,
         std_sample,
         tel_label,
-        et_name,
+        getattr(getattr(event.trigger, "event_type", None), "name", "?"),
         pix_ids.size,
         found_count,
     )
 
-    readout = source.subarray.tel[tel_id].camera.readout
-    t = _time_axis_from_readout(readout, n_samp)
+    t = _time_axis_from_readout(source.subarray.tel[tel_id].camera.readout, n_samp)
 
     ex_ids = pix_ids[: max(1, int(examples))]
     for pid in ex_ids:
@@ -697,13 +694,12 @@ def plot_simtel_peak_timing(
     fig.tight_layout()
 
     if return_stats:
-        stats = {
+        return fig, {
             "considered": int(pix_ids.size),
             "found": int(found_count),
             "mean": float(mean_sample),
             "std": float(std_sample),
         }
-        return fig, stats
     return fig
 
 
