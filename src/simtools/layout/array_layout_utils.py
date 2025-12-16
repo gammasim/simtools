@@ -3,6 +3,9 @@
 import logging
 from pathlib import Path
 
+import astropy.units as u
+from astropy.table import QTable
+
 import simtools.utils.general as gen
 from simtools.data_model import data_reader
 from simtools.data_model.metadata_collector import MetadataCollector
@@ -394,3 +397,78 @@ def get_array_elements_from_db_for_layouts(layouts, site, model_version):
     for layout_name in layout_names:
         layout_dict[layout_name] = site_model.get_array_elements_for_layout(layout_name)
     return layout_dict
+
+
+def _get_array_name(array_name):
+    """
+    Return telescope size and number of telescopes from regular array name.
+
+    Finetuned to array names like "4MST", "1LST", etc.
+
+    Parameters
+    ----------
+    array_name : str
+        Name of the regular array (e.g. "4MST").
+
+    Returns
+    -------
+    tel_size : str
+        Telescope size (e.g. "MST").
+    n_tel : int
+        Number of telescopes (e.g. 4).
+    """
+    if len(array_name) < 2 or not array_name[0].isdigit():
+        raise ValueError(f"Invalid array_name: '{array_name}'")
+
+    return array_name[1:], int(array_name[0])
+
+
+def create_regular_array(array_name, site, telescope_distance):
+    """
+    Create a regular array layout table.
+
+    Parameters
+    ----------
+    array_name : str
+        Name of the regular array (e.g. "4MST").
+    site : str
+        Site identifier.
+    telescope_distance : dict
+        Dictionary with telescope distances per telescope type.
+
+    Returns
+    -------
+    astropy.table.Table
+        Table with the regular array layout.
+    """
+    tel_name, pos_x, pos_y, pos_z = [], [], [], []
+    tel_size, n_tel = _get_array_name(array_name)
+    tel_size = array_name[1:4]
+
+    # Single telescope at the center
+    if n_tel == 1:
+        tel_name.append(names.generate_array_element_name_from_type_site_id(tel_size, site, "01"))
+        pos_x.append(0 * u.m)
+        pos_y.append(0 * u.m)
+        pos_z.append(0 * u.m)
+    # 4 telescopes in a regular square grid
+    elif n_tel == 4:
+        for i in range(1, 5):
+            tel_name.append(
+                names.generate_array_element_name_from_type_site_id(tel_size, site, f"0{i}")
+            )
+            pos_x.append(telescope_distance[tel_size] * (-1) ** (i // 2))
+            pos_y.append(telescope_distance[tel_size] * (-1) ** (i % 2))
+            pos_z.append(0 * u.m)
+    else:
+        raise ValueError(f"Unsupported number of telescopes: {n_tel}.")
+
+    table = QTable(meta={"array_name": array_name, "site": site})
+    table["telescope_name"] = tel_name
+    table["position_x"] = pos_x
+    table["position_y"] = pos_y
+    table["position_z"] = pos_z
+    table.sort("telescope_name")
+    _logger.info(f"Regular array layout table:\n{table}")
+
+    return table
