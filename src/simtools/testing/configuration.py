@@ -76,8 +76,7 @@ def _read_configs_from_files(config_files):
         _dict = gen.remove_substring_recursively_from_dict(
             ascii_handler.collect_data_from_file(file_name=config_file), substring="\n"
         )
-        for application in _dict.get("applications", []):
-            configs.append(application)
+        configs.extend(_dict.get("applications", []))
     return configs
 
 
