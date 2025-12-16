@@ -1,0 +1,161 @@
+# syntax=docker/dockerfile:1.4
+# Dockerfile for CORSIKA7
+#
+# Image with different config variants of CORSIKA:
+#
+# - flat and curved atmosphere
+# - high- / and low-energy hadronic interaction models
+#
+# The variants are build depending on the configuration files provided by CTAO.
+#
+# CORSIKA can be build with or without optimization flags (AVX2/AVX512).
+
+ARG CORSIKA_VERSION="78010"
+ARG CORSIKA_OPT_PATCH_VERSION="v1.1.0"
+ARG CORSIKA_CONFIG_VERSION="78010"
+ARG AVX_FLAG="avx2"
+
+# hadolint global ignore=DL3013,DL3033,DL3041,DL4006,SC1091,SC2086
+# - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)
+# - DL4006: ignore pipefail warning (SHELL is set at stage level)
+# - SC1091: ignore warning about not being able to source the bashrc
+# - SC2086: ignore variable quoting in complex shell expressions
+
+# -----------------------------------------------------------------------------
+# STAGE 1: source code preparation
+# -----------------------------------------------------------------------------
+FROM almalinux:9.5-minimal AS source_preparation
+ARG CORSIKA_REPO="gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git"
+ARG CORSIKA_VERSION
+ARG CORSIKA_OPT_PATCH_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git"
+ARG CORSIKA_OPT_PATCH_VERSION
+ARG CORSIKA_CONFIG_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git"
+ARG CORSIKA_CONFIG_VERSION
+
+RUN microdnf update -y && microdnf install -y git && \
+    microdnf clean all
+
+WORKDIR /src
+
+# Clone CORSIKA configuration files from CTAO gitlab
+RUN git config --global advice.detachedHead false && \
+    git clone --depth 1 --branch "${CORSIKA_VERSION}" "http://${CORSIKA_CONFIG_REPO}" && \
+    cp -v corsika7-config/config/${CORSIKA_VERSION}/*.h . && \
+    rm -rf corsika7-config
+
+# Clone CORSIKA from KIT gitlab (note change in version tag format: e.g., v7.8010)
+RUN --mount=type=secret,id=corsika7_token \
+    CORSIKA7_TAG="v$(echo "${CORSIKA_VERSION}" | cut -c1).$(echo "${CORSIKA_VERSION}" | cut -c2-)" && \
+    git config --global advice.detachedHead false && \
+    git clone --depth 1 --branch "${CORSIKA7_TAG}" "https://oauth2:$(cat /run/secrets/corsika7_token)@${CORSIKA_REPO}"
+
+# Clone CORSIKA optimization patches from CTAO gitlab
+RUN git config --global advice.detachedHead false && \
+    git clone --depth 1 --branch "${CORSIKA_OPT_PATCH_VERSION}" "https://${CORSIKA_OPT_PATCH_REPO}" && \
+    cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/* corsika7/ && \
+    rm -rf corsika-opt-patches
+
+# autoconf 2.71 (tar files need to present in current directory)
+ADD autoconf.tar.gz .
+
+# -----------------------------------------------------------------------------
+# STAGE 2: build_image
+# -----------------------------------------------------------------------------
+FROM almalinux:9.5 AS build_image
+ARG AVX_FLAG
+ARG CORSIKA_VERSION
+ARG CORSIKA_OPT_PATCH_VERSION
+ARG CORSIKA_CONFIG_VERSION
+ARG C_SPECIFIC_FLAGS="-std=c99"
+ARG FORTRAN_SPECIFIC_FLAGS="-ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy"
+
+RUN yum update -y --setopt=tsflags=nodocs && \
+    yum install -y automake diffutils csh gcc gcc-c++ gcc-fortran libtool m4 patch && \
+    yum clean all
+
+WORKDIR /workdir/simulation_software
+COPY --from=source_preparation /src .
+
+# Install autoconf 2.71 - needed to apply CORSIKA patches
+WORKDIR /workdir/simulation_software/autoconf-2.71
+RUN ./configure --prefix=/usr && \
+    make && make install
+
+WORKDIR /workdir/simulation_software/corsika7
+
+# Apply patches for non-optimized / optimized CORSIKA
+RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
+        patch -b -p0 src/corsika.F < "../corsika-77550.patch"; \
+    fi && \
+    if [ "$AVX_FLAG" != "no_opt" ]; then \
+        ./corsika_opt_patching.sh && \
+        autoreconf; \
+    fi
+
+# Build all CORSIKA versions (each config*.h file results in one build)
+RUN ls ../config_*.h && for config_file in ../config_*.h; do \
+        ./coconut -d && rm -f ./*/*.a lib/*/*.a include/*.h && \
+        # Extract variant name (curved/flat) from config file name
+        variant=$(basename "$config_file" .h | sed 's/.*_\(curved\|flat\)$/\1/'); \
+        # CTAO specific CORSIKA configuration
+        cp -v "$config_file" include/config.h; \
+        # compilation flags (with or without optimization)
+        AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
+        if [ "$AVX_FLAG" = "no_opt" ] || [ "$variant" = "curved" ]; then \
+            BASE_FLAGS="-g -O3"; \
+        # Optimization config options
+        else \
+            BASE_FLAGS="-g -DCERENKOPT -DVLIBM -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
+            echo "#define __CERENKOPT__ 1" >> include/config.h; \
+            echo "#define __VLIBM__ 1" >> include/config.h; \
+            echo "#define __CACHE_CERENKOPT__" >> include/config.h; \
+            echo "#define __CACHE_VLIBM__" >> include/config.h; \
+        fi && \
+        CFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" && \
+        CXXFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" && \
+        FFLAGS="${BASE_FLAGS} ${FORTRAN_SPECIFIC_FLAGS}" && \
+        CORSIKA_USER_COMP=1 ./coconut --expert --without-root --without-COASTUSERLIB --without-conex < /dev/null; \
+        # cleanup and move built corsika binary and compile file to a separate directory
+        rm -v -f ./run/qgsdat-II-04 && \
+        CORSIKA_RUN_DIR="/workdir/corsika-run" && \
+        mkdir -p ${CORSIKA_RUN_DIR} && \
+        corsika_name=$(basename "$config_file" .h | sed 's/^config_/corsika_/'); \
+        mv -v -f "./run/corsika${CORSIKA_VERSION}Linux_"* "${CORSIKA_RUN_DIR}/${corsika_name}" && \
+        cp -v -r "./run/"* ${CORSIKA_RUN_DIR}/ && cp -v -r ./epos ${CORSIKA_RUN_DIR}/; \
+    done
+
+# Generate build_opts.yml with build information
+RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
+    { \
+        echo "corsika_version: \"${CORSIKA_VERSION}\""; \
+        echo "corsika_opt_patch_version: \"${CORSIKA_OPT_PATCH_VERSION}\""; \
+        echo "corsika_config_version: \"${CORSIKA_CONFIG_VERSION}\""; \
+        echo "avx_flag: \"${AVX_FLAG}\""; \
+        echo "variant:"; \
+    } > ${CORSIKA_RUN_DIR}/build_opts.yml && \
+    for config_file in ../config_*.h; do \
+        basename_file=$(basename "$config_file" .h); \
+        corsika_name=$(echo "$basename_file" | sed 's/^config_/corsika_/'); \
+        he_model=$(echo "$basename_file" | sed 's/^config_\([^_]*\)_.*/\1/'); \
+        le_model=$(echo "$basename_file" | sed 's/^config_[^_]*_\([^_]*\)_.*/\1/'); \
+        variant=$(echo "$basename_file" | sed 's/.*_\(curved\|flat\)$/\1/'); \
+        { \
+            echo "  - executable: \"${corsika_name}\""; \
+            echo "    config: \"${basename_file}\""; \
+            echo "    atmosphere_geometry: \"${variant}\""; \
+            echo "    he_hadronic_model: \"${he_model}\""; \
+            echo "    le_hadronic_model: \"${le_model}\""; \
+        } >> ${CORSIKA_RUN_DIR}/build_opts.yml; \
+    done
+
+# -----------------------------------------------------------------------------
+# STAGE 3: Runtime
+# -----------------------------------------------------------------------------
+FROM almalinux:9.5-minimal
+WORKDIR /workdir/simulation_software
+COPY --from=build_image /workdir/corsika-run /workdir/simulation_software/corsika7
+
+RUN microdnf update -y && microdnf install -y \
+    libgfortran && microdnf clean all
+
+WORKDIR /workdir/simulation_software/corsika7

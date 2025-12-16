@@ -1,5 +1,5 @@
 ---
-name: build-simtools
+name: build-simtools-legacy
 # Build and push simtools images using CORSIKA / sim_telarray base images.
 # Integration tests are running on the non-optimized ('no_opt') images.
 
@@ -10,7 +10,7 @@ on:
     types: [completed]
   pull_request:
     paths:
-      - docker/Dockerfile-simtools
+      - docker/Dockerfile-simtools-legacy
   release:
     types: [published]
   schedule:
@@ -91,7 +91,7 @@ jobs:
             BASE_IMAGE=${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABELS }}:latest
             BUILD_BRANCH=${{ env.BUILD_BRANCH }}
           push: ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
-          file: ./docker/Dockerfile-simtools
+          file: ./docker/Dockerfile-simtools-legacy
           tags: ${{ steps.meta-simtools.outputs.tags }}
           labels: ${{ steps.meta-simtools.outputs.labels }}-prod
 
@@ -112,7 +112,7 @@ jobs:
           # - {build_opt: 'prod6-sc', extra_def: ''} # currently not used
           - {build_opt: 'prod6-baseline', extra_def: ''}
         model_version:
-          - "6.0"
+          - "6.0.2"
     container:
       image: ghcr.io/gammasim/simtools-sim-telarray-${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.version.hadronic_model }}-${{ matrix.version.avx_instruction }}
       options: --user 0
@@ -159,7 +159,8 @@ jobs:
             echo "SIMTOOLS_DB_API_PORT=27017"
             echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}"
             echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}"
-            echo "SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray/"
+            echo "SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray/sim_telarray"
+            echo "SIMTOOLS_CORSIKA_PATH=/workdir/sim_telarray/corsika-run"
           } > .env
 
       - name: Upload data to MongoDB
@@ -179,4 +180,5 @@ jobs:
         run: |
           source /workdir/env/bin/activate
           pip install --no-cache-dir pytest pytest-cov pytest-requirements pytest-xdist
+          simtools-print-version
           pytest --model_version=${{ matrix.model_version }} --no-cov --color=yes -n auto tests/integration_tests/test_applications_from_config.py
