@@ -189,7 +189,7 @@ class EventDataWriter:
             zenith = np.degrees(event_header["zenith"])
             # Rotate to geographic north
             azimuth = np.degrees(
-                event_header["azimuth"] + event_header["angle_array_x_magnetic_north"]
+                event_header["azimuth"] - event_header["angle_array_x_magnetic_north"]
             )
             view_cone_min = event_header["viewcone_inner_angle"]
             view_cone_max = event_header["viewcone_outer_angle"]
