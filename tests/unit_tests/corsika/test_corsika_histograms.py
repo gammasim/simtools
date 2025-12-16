@@ -465,3 +465,33 @@ def test_normalize_density_histograms_without_weight_storage(monkeypatch):
     bin_edges_r = ch.hist["density_r"]["histogram"].axes.edges[0]
     bin_areas_r = np.pi * (bin_edges_r[1:] ** 2 - bin_edges_r[:-1] ** 2)
     assert np.allclose(density_r_view, 1 / bin_areas_r)
+
+
+def test__check_for_all_attributes_true():
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+
+    class DummyView:
+        dtype = type("dtype", (), {"names": ("value", "variance")})
+
+    view = DummyView()
+    assert ch._check_for_all_attributes(view) is True
+
+
+def test__check_for_all_attributes_false():
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+
+    class DummyView:
+        dtype = type("dtype", (), {"names": ("value",)})
+
+    view = DummyView()
+    assert ch._check_for_all_attributes(view) is False
+
+
+def test__check_for_all_attributes_no_dtype():
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+
+    class DummyView:
+        pass
+
+    view = DummyView()
+    assert ch._check_for_all_attributes(view) is False
