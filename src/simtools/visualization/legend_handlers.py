@@ -50,7 +50,7 @@ def get_telescope_config(telescope_type):
     config = TELESCOPE_CONFIG.get(telescope_type)
     if not config and len(telescope_type) >= 3:
         config = TELESCOPE_CONFIG.get(telescope_type[:3])
-    return config
+    return config.copy() if config else None
 
 
 def calculate_center(handlebox, width_factor=3, height_factor=3):
