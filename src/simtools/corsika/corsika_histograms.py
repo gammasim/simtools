@@ -1,4 +1,4 @@
-"""Extract Cherenkov photons from a CORSIKA IACT file and fills histograms."""
+"""Extract Cherenkov photons from a CORSIKA IACT file and fill histograms."""
 
 import functools
 import logging
@@ -15,7 +15,7 @@ from simtools.utils.geometry import rotate
 
 class CorsikaHistograms:
     """
-    Extracts Cherenkov photons from CORSIKA IACT file and fills histograms.
+    Extract Cherenkov photons from a CORSIKA IACT file and fill histograms.
 
     Parameters
     ----------
@@ -56,12 +56,10 @@ class CorsikaHistograms:
 
         with IACTFile(self.input_file) as f:
             telescope_positions = np.array(f.telescope_positions)
-            event_counter = 0
-            for event in f:
+            for event_counter, event in enumerate(f):
                 if hasattr(event, "photon_bunches"):
                     photons = list(event.photon_bunches.values())
                     self._fill_histograms(photons, event_counter, telescope_positions, True)
-                event_counter += 1
 
         self._update_distributions()
 
@@ -168,8 +166,8 @@ class CorsikaHistograms:
             else:
                 px, py = photon["x"], photon["y"]
 
-            px -= -telescope["x"]
-            py -= -telescope["y"]
+            px -= telescope["x"]
+            py -= telescope["y"]
             w = photon["photons"]
 
             pxm = px * u.cm.to(u.m)
@@ -188,7 +186,7 @@ class CorsikaHistograms:
             self.hist["counts_r"][hist_str].fill(r, weight=w)
             self.hist["density_r"][hist_str].fill(r, weight=w)
 
-            self.events["num_photons"][event_counter] += np.sum(photon["photons"] * w)
+            self.events["num_photons"][event_counter] += np.sum(w)
 
     def get_hist_2d_projection(self, hist):
         """
@@ -211,7 +209,7 @@ class CorsikaHistograms:
             Histogram uncertainties (sqrt of variance) if available.
         """
         view = hist.view()
-        if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
+        if self._check_for_all_attributes(view):
             counts = np.asarray([view["value"].T])
             uncertainties = np.asarray([np.sqrt(view["variance"].T)])
         else:
@@ -279,7 +277,7 @@ class CorsikaHistograms:
                 return None, None, None
             edges = histo_1d.axes.edges.T.flatten()[0]
             view = histo_1d.view()
-            if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
+            if self._check_for_all_attributes(view):
                 counts = np.asarray([view["value"].T])
                 uncertainties = np.asarray([np.sqrt(view["variance"].T)])
             else:
@@ -295,7 +293,7 @@ class CorsikaHistograms:
             h = histo_2d[sum, :]
         edges = h.axes.edges.T.flatten()[0]
         view = h.view()
-        if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
+        if self._check_for_all_attributes(view):
             counts = np.asarray([view["value"].T])
             uncertainties = np.asarray([np.sqrt(view["variance"].T)])
         else:
@@ -516,7 +514,7 @@ class CorsikaHistograms:
 
         def normalize_histogram(hist, bin_areas):
             view = hist.view()
-            if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
+            if self._check_for_all_attributes(view):
                 view["value"] /= bin_areas
                 view["variance"] /= bin_areas**2
             else:
@@ -524,13 +522,11 @@ class CorsikaHistograms:
 
         def normalize_histogram_1d(hist, bin_areas):
             view = hist.view()
-            if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
-                for i, area in enumerate(bin_areas):
-                    view["value"][i] /= area
-                    view["variance"][i] /= area**2
+            if self._check_for_all_attributes(view):
+                view["value"] /= bin_areas
+                view["variance"] /= bin_areas**2
             else:
-                for i, area in enumerate(bin_areas):
-                    view[i] /= area
+                view /= bin_areas
 
         density_xy_hist = self.hist["density_xy"]["histogram"]
         density_r_hist = self.hist["density_r"]["histogram"]
@@ -541,3 +537,9 @@ class CorsikaHistograms:
         bin_edges_r = density_r_hist.axes.edges[0]
         bin_areas_r = np.pi * (bin_edges_r[1:] ** 2 - bin_edges_r[:-1] ** 2)
         normalize_histogram_1d(density_r_hist, bin_areas_r)
+
+    def _check_for_all_attributes(self, view):
+        """Check if view has dtype fields ('value', 'variance')."""
+        if hasattr(view, "dtype") and view.dtype.names == ("value", "variance"):
+            return True
+        return False
