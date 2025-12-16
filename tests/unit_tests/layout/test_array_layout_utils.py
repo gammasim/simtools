@@ -738,6 +738,29 @@ def test_read_layouts_with_array_layout_name_background(minimal_args_dict):
         assert background == ["tel1", "tel2"]
         assert isinstance(layouts, list)
         assert layouts[0]["name"] == "main_layout"
+        # Assert get_array_layouts_from_db was called twice with expected arguments
+        expected_calls = [
+            (
+                (
+                    args["array_layout_name_background"],
+                    args["site"],
+                    args["model_version"],
+                    args["coordinate_system"],
+                ),
+            ),
+            (
+                (
+                    args["array_layout_name"],
+                    args["site"],
+                    args["model_version"],
+                    args["coordinate_system"],
+                ),
+            ),
+        ]
+        actual_calls = mock_get.call_args_list
+        assert len(actual_calls) == 2
+        for actual, expected in zip(actual_calls, expected_calls):
+            assert actual[0] == expected[0]
 
 
 def test_read_layouts_with_plot_all_layouts(minimal_args_dict):
