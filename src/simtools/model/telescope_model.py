@@ -322,13 +322,12 @@ class TelescopeModel(ModelParameter):
         average_curve: astropy.table.Table
             Instance of astropy.table.Table with the averaged curve.
         """
-        weights = []
-        for angle_now in curves["Angle"]:
-            weights.append(
-                incidence_angle_dist["Fraction"][
-                    np.nanargmin(np.abs(angle_now - incidence_angle_dist["Incidence angle"].value))
-                ]
-            )
+        weights = [
+            incidence_angle_dist["Fraction"][
+                np.nanargmin(np.abs(angle_now - incidence_angle_dist["Incidence angle"].value))
+            ]
+            for angle_now in curves["Angle"]
+        ]
 
         return Table(
             [curves["Wavelength"], np.average(curves["z"], weights=weights, axis=0)],
