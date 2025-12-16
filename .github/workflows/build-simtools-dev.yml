@@ -103,8 +103,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64/v8
           build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
-          push: true
-          # ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+          push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-simtools-${{ matrix.type }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}
