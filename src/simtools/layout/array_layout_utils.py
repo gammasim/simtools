@@ -412,8 +412,10 @@ def read_layouts(args_dict):
 
     Returns
     -------
-    list, list
-        List of array layouts and background layout (or None).
+    tuple
+        A tuple containing:
+            - list: List of array layouts.
+            - list or None: Background layout or None if not provided.
     """
     background_layout = None
     if args_dict.get("array_layout_name_background"):
