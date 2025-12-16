@@ -108,7 +108,7 @@ def test_update_distributions_runs(monkeypatch):
         ),
     )
     ch._update_distributions()
-    for key, value in ch.hist.items():
+    for value in ch.hist.values():
         assert "input_file_name" in value
         if value["is_1d"]:
             assert "hist_values" in value
