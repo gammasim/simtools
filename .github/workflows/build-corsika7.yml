@@ -81,7 +81,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ env.BASE_TAG }}
             type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}
             type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
-            type=raw,value={{date 'YYYYMMDD-HHmmss'}}-${{ env.BASE_TAG }}
+            type=raw,value={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: latest=false
 
