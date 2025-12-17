@@ -1,6 +1,6 @@
 ---
 name: build-corsika-simtel-legacy
-# **legacy build** - will be deprecated in near futurebuild-simtools-legacy.yml
+# **legacy build** - will be deprecated in near future
 # Build and push CORSIKA / sim_telarray base images for different CPU architectures.
 # The no_opt (non-optimized) images are built as multi-platform images (x86_64 and arm64).
 #
