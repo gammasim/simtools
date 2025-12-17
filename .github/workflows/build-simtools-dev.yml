@@ -88,15 +88,6 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/simtools-${{ matrix.type }}
           flavor: latest=true
 
-      - name: Build Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          build-args: SIMTOOLS_BRANCH=${{ env.SIMTOOLS_BRANCH }}
-          load: true
-          file: ./docker/Dockerfile-simtools-${{ matrix.type }}
-          tags: ${{ env.TEST_TAG }}
-
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:

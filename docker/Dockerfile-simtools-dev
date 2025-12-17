@@ -14,11 +14,11 @@
 ARG CORSIKA_IMAGE_VERSION="pr-1954-78010"
 ARG SIMTEL_BUILD_OPT="prod6-baseline"
 ARG SIMTEL_IMAGE_VERSION="latest"
-ARG AVX_INSTRUCTION="no_opt"
+ARG AVX_FLAG="no_opt"
 ARG PYTHON_VERSION="3.13"
 ARG SIMTOOLS_REPO="https://github.com/gammasim/simtools.git"
 
-FROM ghcr.io/gammasim/corsika7:${CORSIKA_IMAGE_VERSION}-${AVX_INSTRUCTION} AS corsika_img
+FROM ghcr.io/gammasim/corsika7:${CORSIKA_IMAGE_VERSION}-${AVX_FLAG} AS corsika_img
 FROM ghcr.io/gammasim/simtel-${SIMTEL_BUILD_OPT}:${SIMTEL_IMAGE_VERSION} AS simtel_img
 
 FROM almalinux:9.5-minimal
