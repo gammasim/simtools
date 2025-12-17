@@ -30,7 +30,7 @@ PATCH_CONTOUR = f"{MOD}.plt.contour"
 PATCH_COLORBAR = f"{MOD}.plt.colorbar"
 PATCH_CREATE_PLOT = f"{MOD}._create_plot"
 PATCH_CREATE_REBINNED = f"{MOD}._create_rebinned_plot"
-PATCH_REBIN = f"{MOD}.SimtelIOEventHistograms.rebin_2d_histogram"
+PATCH_REBIN = f"{MOD}.EventDataHistograms.rebin_2d_histogram"
 PATCH_HAS_DATA = f"{MOD}._has_data"
 PATCH_BUILD_FILENAME = f"{MOD}._build_plot_filename"
 
@@ -540,7 +540,6 @@ def test_execute_plotting_loop_rebin_and_failed_plot():
         # Rebinned plot should be created exactly once for plotA_cumulative
         mock_create_rebinned_plot.assert_called_once()
         args, _ = mock_create_rebinned_plot.call_args
-        # args: (plot_args_dict, filename, output_path, rebin_factor)
         assert args[1] == "plotA_cumulative.png"
         assert args[2] is output_path
         assert args[3] == rebin_factor

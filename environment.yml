@@ -5,6 +5,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.12
+  - adjustText
   - astropy-base
   - boost-histogram
   - ctao-dpps-cosmic-ray-spectra

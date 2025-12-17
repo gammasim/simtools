@@ -32,7 +32,7 @@ class SimulatorLightEmission(SimtelRunner):
         Label for the simulation
     """
 
-    def __init__(self, light_emission_config, db_config=None, label=None):
+    def __init__(self, light_emission_config, label=None):
         """Initialize SimulatorLightEmission."""
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
@@ -44,7 +44,6 @@ class SimulatorLightEmission(SimtelRunner):
         self.telescope_model, self.site_model, self.calibration_model = (
             initialize_simulation_models(
                 label=label,
-                db_config=db_config,
                 site=light_emission_config.get("site"),
                 telescope_name=light_emission_config.get("telescope"),
                 calibration_device_name=light_emission_config.get("light_source"),
@@ -505,6 +504,27 @@ class SimulatorLightEmission(SimtelRunner):
         )
         return focal_length - flasher_z
 
+    def _generate_lambertian_angular_distribution_table(self):
+        """Generate Lambertian angular distribution table via config writer and return path.
+
+        Uses a pure cosine profile normalized to 1 at 0 deg and spans 0..90 deg by default.
+        """
+        base_dir = self.io_handler.get_output_directory("angular_distributions")
+
+        def _sanitize_name(value):
+            return "".join(ch if (ch.isalnum() or ch in ("-", "_")) else "_" for ch in str(value))
+
+        tel = self.light_emission_config.get("telescope") or "telescope"
+        cal = self.light_emission_config.get("light_source") or "calibration"
+        fname = f"flasher_angular_distribution_{_sanitize_name(tel)}_{_sanitize_name(cal)}.dat"
+        table_path = base_dir / fname
+        SimtelConfigWriter.write_angular_distribution_table_lambertian(
+            file_path=table_path,
+            max_angle_deg=90.0,
+            n_samples=100,
+        )
+        return str(table_path)
+
     def _get_angular_distribution_string_for_sim_telarray(self):
         """
         Get the angular distribution string for sim_telarray.
@@ -516,6 +536,16 @@ class SimulatorLightEmission(SimtelRunner):
         """
         opt = self.calibration_model.get_parameter_value("flasher_angular_distribution")
         option_string = str(opt).lower() if opt is not None else ""
+        if option_string == "lambertian":
+            try:
+                return self._generate_lambertian_angular_distribution_table()
+            except (OSError, ValueError) as err:
+                self._logger.warning(
+                    f"Failed to write Lambertian angular distribution table: {err};"
+                    f" using token instead."
+                )
+                return option_string
+
         width = self.calibration_model.get_parameter_value_with_unit(
             "flasher_angular_distribution_width"
         )
@@ -532,12 +562,18 @@ class SimulatorLightEmission(SimtelRunner):
         """
         opt = self.calibration_model.get_parameter_value("flasher_pulse_shape")
         shape = opt[0].lower()
+        # Map internal shapes to sim_telarray expected tokens
+        # 'tophat' corresponds to a simple (flat) pulse in sim_telarray.
+        shape_token_map = {
+            "tophat": "simple",
+        }
+        shape_out = shape_token_map.get(shape, shape)
         width = opt[1]
         expv = opt[2]
-        if shape == "gauss-exponential" and width is not None and expv is not None:
-            return f"{shape}:{float(width)}:{float(expv)}"
-        if shape in ("gauss", "tophat") and width is not None:
-            return f"{shape}:{float(width)}"
-        if shape == "exponential" and expv is not None:
-            return f"{shape}:{float(expv)}"
-        return shape
+        if shape_out == "gauss-exponential" and width is not None and expv is not None:
+            return f"{shape_out}:{float(width)}:{float(expv)}"
+        if shape_out in ("gauss", "simple") and width is not None:
+            return f"{shape_out}:{float(width)}"
+        if shape_out == "exponential" and expv is not None:
+            return f"{shape_out}:{float(expv)}"
+        return shape_out

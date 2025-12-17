@@ -14,21 +14,19 @@ import subprocess
 
 import yaml
 
+from simtools import settings
 from simtools.io import ascii_handler
-from simtools.settings import config
 from simtools.version import __version__
 
 _logger = logging.getLogger(__name__)
 
 
-def get_version_string(db_config=None, run_time=None):
+def get_version_string(run_time=None):
     """
     Print the versions of the dependencies.
 
     Parameters
     ----------
-    db_config : dict, optional
-        Database configuration dictionary.
     run_time : list, optional
         Runtime environment command (e.g., Docker).
 
@@ -39,10 +37,13 @@ def get_version_string(db_config=None, run_time=None):
 
     """
     return (
-        f"Database name: {get_database_version_or_name(db_config, version=False)}\n"
-        f"Database version: {get_database_version_or_name(db_config, version=True)}\n"
+        f"Database name: {get_database_version_or_name(version=False)}\n"
+        f"Database version: {get_database_version_or_name(version=True)}\n"
         f"sim_telarray version: {get_sim_telarray_version(run_time)}\n"
+        "sim_telarray exe: "
+        f"{settings.config.sim_telarray_exe if settings.config.sim_telarray_exe else 'None'}\n"
         f"CORSIKA version: {get_corsika_version(run_time)}\n"
+        f"CORSIKA exe: {settings.config.corsika_exe if settings.config.corsika_exe else 'None'}\n"
         f"Build options: {get_build_options(run_time)}\n"
         f"Runtime environment: {run_time if run_time else 'None'}\n"
     )
@@ -72,14 +73,12 @@ def get_software_version(software):
         raise ValueError(f"Unknown software: {software}") from exc
 
 
-def get_database_version_or_name(db_config, version=True):
+def get_database_version_or_name(version=True):
     """
     Get the version or name of the simulation model data base used.
 
     Parameters
     ----------
-    db_config : dict
-        Dictionary containing the database configuration.
     version : bool
         If True, return the version of the database. If False, return the name.
 
@@ -90,8 +89,10 @@ def get_database_version_or_name(db_config, version=True):
 
     """
     if version:
-        return db_config and db_config.get("db_simulation_model_version")
-    return db_config and db_config.get("db_simulation_model")
+        return settings.config.db_config and settings.config.db_config.get(
+            "db_simulation_model_version"
+        )
+    return settings.config.db_config and settings.config.db_config.get("db_simulation_model")
 
 
 def get_sim_telarray_version(run_time=None):
@@ -110,10 +111,13 @@ def get_sim_telarray_version(run_time=None):
     str
         Version of the sim_telarray package.
     """
+    if settings.config.sim_telarray_exe is None:
+        _logger.warning("sim_telarray environment not configured.")
+        return None
     if run_time is None:
-        command = [str(config.sim_telarray_exe), "--version"]
+        command = [str(settings.config.sim_telarray_exe), "--version"]
     else:
-        command = [*run_time, str(config.sim_telarray_exe), "--version"]
+        command = [*run_time, str(settings.config.sim_telarray_exe), "--version"]
 
     _logger.debug(f"Running command: {command}")
     result = subprocess.run(command, capture_output=True, text=True, check=False)
@@ -144,17 +148,14 @@ def get_corsika_version(run_time=None):
     str
         Version of the CORSIKA package.
     """
-    if config.corsika_exe is None:
-        _logger.warning(
-            "SIMTOOLS_CORSIKA_PATH or SIMTOOLS_CORSIKA_EXECUTABLE environment "
-            "variables are not set."
-        )
+    if settings.config.corsika_exe is None:
+        _logger.warning("CORSIKA environment not configured.")
         return None
 
     if run_time is None:
-        command = [str(config.corsika_exe)]
+        command = [str(settings.config.corsika_exe)]
     else:
-        command = [*run_time, str(config.corsika_exe)]
+        command = [*run_time, str(settings.config.corsika_exe)]
 
     process = subprocess.Popen(  # pylint: disable=consider-using-with
         command,
@@ -210,7 +211,7 @@ def get_build_options(run_time=None):
     """
     build_opts = {}
     for package in ["corsika", "sim_telarray"]:
-        path = getattr(config, f"{package}_path")
+        path = getattr(settings.config, f"{package}_path")
         try:
             build_opts.update(_get_build_options_from_file(path / "build_opts.yml", run_time))
         except (FileNotFoundError, TypeError, ValueError):

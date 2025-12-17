@@ -116,9 +116,9 @@ def _parse():
         action="store_true",
     )
     return config.initialize(
+        db_config=True,
         output=True,
         require_command_line=True,
-        db_config=True,
         simulation_model=["model_version", "parameter_version", "site"],
     )
 
@@ -138,7 +138,6 @@ def main():
         validate_schema_file = metadata.get_data_model_schema_file_name()
 
     layout = array_layout.ArrayLayout(
-        db_config=app_context.db_config,
         model_version=app_context.args["model_version"],
         site=site,
         telescope_list_file=app_context.args["input"],

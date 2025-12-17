@@ -11,7 +11,6 @@ from simtools.utils import names
 
 def initialize_simulation_models(
     label,
-    db_config,
     model_version,
     site,
     telescope_name,
@@ -25,8 +24,6 @@ def initialize_simulation_models(
     ----------
     label: str
         Label for the simulation.
-    db_config: dict
-        Database configuration.
     model_version: str
         Version of the simulation model
     site: str
@@ -44,7 +41,6 @@ def initialize_simulation_models(
     tel_model = TelescopeModel(
         site=site,
         telescope_name=telescope_name,
-        db_config=db_config,
         model_version=model_version,
         label=label,
         overwrite_model_parameters=overwrite_model_parameters,
@@ -52,7 +48,6 @@ def initialize_simulation_models(
     site_model = SiteModel(
         site=site,
         model_version=model_version,
-        db_config=db_config,
         label=label,
         overwrite_model_parameters=overwrite_model_parameters,
     )
@@ -60,7 +55,6 @@ def initialize_simulation_models(
         calibration_model = CalibrationModel(
             site=site,
             calibration_device_model_name=calibration_device_name,
-            db_config=db_config,
             model_version=model_version,
             label=label,
             overwrite_model_parameters=overwrite_model_parameters,

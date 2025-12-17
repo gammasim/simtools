@@ -26,8 +26,6 @@ class TelescopeModel(ModelParameter):
         Site name (e.g., South or North).
     telescope_name: str
         Telescope name (ex. LSTN-01, LSTN-design, ...).
-    db_config: dict
-        Database configuration.
     model_version: str
         Model version.
     label: str, optional
@@ -42,7 +40,6 @@ class TelescopeModel(ModelParameter):
         self,
         site,
         telescope_name,
-        db_config,
         model_version,
         label=None,
         overwrite_model_parameters=None,
@@ -52,7 +49,6 @@ class TelescopeModel(ModelParameter):
         super().__init__(
             site=site,
             array_element_name=telescope_name,
-            db_config=db_config,
             model_version=model_version,
             label=label,
             overwrite_model_parameters=overwrite_model_parameters,
@@ -326,13 +322,12 @@ class TelescopeModel(ModelParameter):
         average_curve: astropy.table.Table
             Instance of astropy.table.Table with the averaged curve.
         """
-        weights = []
-        for angle_now in curves["Angle"]:
-            weights.append(
-                incidence_angle_dist["Fraction"][
-                    np.nanargmin(np.abs(angle_now - incidence_angle_dist["Incidence angle"].value))
-                ]
-            )
+        weights = [
+            incidence_angle_dist["Fraction"][
+                np.nanargmin(np.abs(angle_now - incidence_angle_dist["Incidence angle"].value))
+            ]
+            for angle_now in curves["Angle"]
+        ]
 
         return Table(
             [curves["Wavelength"], np.average(curves["z"], weights=weights, axis=0)],

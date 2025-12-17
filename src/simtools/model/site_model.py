@@ -26,8 +26,6 @@ class SiteModel(ModelParameter):
     ----------
     site: str
         Site name (e.g., South or North).
-    db_config: dict
-        Database configuration.
     model_version: str or list
         Model version or list of model versions (in which case only the first one is used).
     label: str, optional
@@ -41,7 +39,6 @@ class SiteModel(ModelParameter):
     def __init__(
         self,
         site,
-        db_config,
         model_version,
         label=None,
         overwrite_model_parameters=None,
@@ -52,7 +49,6 @@ class SiteModel(ModelParameter):
         self._logger.debug("Init SiteModel for site %s", site)
         super().__init__(
             site=site,
-            db_config=db_config,
             model_version=model_version,
             label=label,
             collection="sites",

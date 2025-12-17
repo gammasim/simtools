@@ -10,13 +10,13 @@ from astropy.table import Column, Table
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
 from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
-from simtools.simtel.simtel_io_event_histograms import SimtelIOEventHistograms
+from simtools.sim_events.histograms import EventDataHistograms
 from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
 
 
-def generate_corsika_limits_grid(args_dict, db_config=None):
+def generate_corsika_limits_grid(args_dict):
     """
     Generate CORSIKA limits.
 
@@ -24,15 +24,12 @@ def generate_corsika_limits_grid(args_dict, db_config=None):
     ----------
     args_dict : dict
         Dictionary containing command line arguments.
-    db_config : dict, optional
-        Database configuration dictionary.
     """
     if args_dict.get("array_layout_name"):
         telescope_configs = get_array_elements_from_db_for_layouts(
             args_dict["array_layout_name"],
             args_dict.get("site"),
             args_dict.get("model_version"),
-            db_config,
         )
     else:
         telescope_configs = ascii_handler.collect_data_from_file(args_dict["telescope_ids"])[
@@ -81,9 +78,7 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
     dict
         Dictionary containing the computed limits and metadata.
     """
-    histograms = SimtelIOEventHistograms(
-        file_path, array_name=array_name, telescope_list=telescope_ids
-    )
+    histograms = EventDataHistograms(file_path, array_name=array_name, telescope_list=telescope_ids)
     histograms.fill()
 
     limits = {
@@ -257,7 +252,7 @@ def compute_lower_energy_limit(histograms, loss_fraction):
 
     Parameters
     ----------
-    histograms : SimtelIOEventHistograms
+    histograms : EventDataHistograms
         Histograms.
     loss_fraction : float
         Fraction of events to be lost.
@@ -299,7 +294,7 @@ def compute_upper_radius_limit(histograms, loss_fraction):
 
     Parameters
     ----------
-    histograms : SimtelIOEventHistograms
+    histograms : EventDataHistograms
         Histograms.
     loss_fraction : float
         Fraction of events to be lost.
@@ -337,7 +332,7 @@ def compute_viewcone(histograms, loss_fraction):
 
     Parameters
     ----------
-    histograms : SimtelIOEventHistograms
+    histograms : EventDataHistograms
         Histograms.
     loss_fraction : float
         Fraction of events to be lost.

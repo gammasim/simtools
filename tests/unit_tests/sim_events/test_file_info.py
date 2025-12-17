@@ -2,8 +2,8 @@
 
 import warnings
 
-from simtools.io.eventio_handler import (
-    get_combined_corsika_run_header,
+from simtools.sim_events.file_info import (
+    get_combined_eventio_run_header,
     get_corsika_run_and_event_headers,
     get_corsika_run_number,
     get_simulated_events,
@@ -22,8 +22,8 @@ def test_get_corsika_run_number_without_run_header_real_file(sim_telarray_hdata_
     assert get_corsika_run_number(sim_telarray_hdata_file_gamma) is None
 
 
-def test_get_combined_corsika_run_header(sim_telarray_file_gamma):
-    run_header = get_combined_corsika_run_header(sim_telarray_file_gamma)
+def test_get_combined_eventio_run_header(sim_telarray_file_gamma):
+    run_header = get_combined_eventio_run_header(sim_telarray_file_gamma)
     assert isinstance(run_header, dict)
     assert run_header["run"] == 10
     assert run_header["primary_id"] == 0
@@ -53,7 +53,7 @@ def test_get_corsika_run_and_event_headers(corsika_file_gamma):
         assert run_header["run_number"] == 7  # Run number from file name
 
 
-def test_get_combined_corsika_run_header_incomplete(sim_telarray_hdata_file_gamma):
+def test_get_combined_eventio_run_header_incomplete(sim_telarray_hdata_file_gamma):
     # This file typically has incomplete header information
-    run_header = get_combined_corsika_run_header(sim_telarray_hdata_file_gamma)
+    run_header = get_combined_eventio_run_header(sim_telarray_hdata_file_gamma)
     assert run_header is None or isinstance(run_header, dict)
