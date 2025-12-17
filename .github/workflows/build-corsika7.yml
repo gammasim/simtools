@@ -4,6 +4,7 @@ name: build-corsika7
 # The no_opt (non-optimized) images are built as multi-platform images (x86_64 and arm64).
 #
 # The images are built and pushed when manually triggered (workflow_dispatch).
+#
 
 on:
   workflow_dispatch:
@@ -83,7 +84,7 @@ jobs:
             type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
             type=raw,value={{date 'YYYYMMDD-HHmmss'}}-${{ env.BASE_TAG }}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
-          flavor: latest=true
+          flavor: latest=false
 
       - name: Build and push
         uses: docker/build-push-action@v6

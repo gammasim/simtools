@@ -57,11 +57,11 @@ jobs:
       - name: Set build arguments (correct branch)
         run: |
           if [[ "${{ github.event_name }}" == 'pull_request' ]]; then
-            echo "BUILD_BRANCH=${GITHUB_HEAD_REF}" >> "$GITHUB_ENV"
+            echo "SIMTOOLS_BRANCH=${GITHUB_HEAD_REF}" >> "$GITHUB_ENV"
           else
-            echo "BUILD_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
+            echo "SIMTOOLS_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
           fi
-          echo "BUILD BRANCH ${{ env.BUILD_BRANCH }}"
+          echo "BUILD BRANCH ${{ env.SIMTOOLS_BRANCH }}"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -92,7 +92,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
+          build-args: SIMTOOLS_BRANCH=${{ env.SIMTOOLS_BRANCH }}
           load: true
           file: ./docker/Dockerfile-simtools-${{ matrix.type }}
           tags: ${{ env.TEST_TAG }}
@@ -102,7 +102,7 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64/v8
-          build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
+          build-args: SIMTOOLS_BRANCH=${{ env.SIMTOOLS_BRANCH }}
           push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-simtools-${{ matrix.type }}
           tags: ${{ steps.meta.outputs.tags }}
