@@ -32,7 +32,8 @@ jobs:
           - {build_opt: 'prod6-baseline', extra_def: '-DMAXIMUM_TELESCOPES=99'}
 
     env:
-      BASE_LABELS: "simtel-${{ matrix.production.build_opt }}"
+      BASE_LABEL: "simtel-${{ matrix.production.build_opt }}"
+      BASE_TAG: "simtel-${{ matrix.version.simtel_version }}"
 
     steps:
       - name: Checkout repository
@@ -53,12 +54,11 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           tags: |
-            type=ref,event=pr
-            type=semver,pattern={{major}}.{{minor}}.{{patch}}-simtel-${{ matrix.version.simtel_version }}
-            type=schedule,pattern={{date 'YYYYMMDD'}}-simtel-${{ matrix.version.simtel_version }}
-            type=raw,value={{date 'YYYYMMDD-HHmmss'}}
-            type=raw,value=simtel-${{ matrix.version.simtel_version }}
-          images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABELS }}
+            type=ref,event=pr,suffix=-${{ env.BASE_TAG }}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}
+            type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
+            type=raw,value={{date 'YYYYMMDD-HHmmss'}}-${{ env.BASE_TAG }}
+          images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: latest=true
 
       - name: Build /sim_telarray image
@@ -82,5 +82,5 @@ jobs:
 
       - name: Output image information
         run: |
-          echo "Built base image: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABELS }}:latest"
+          echo "Built base image: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}:latest"
           echo "Image tags: ${{ steps.meta-base.outputs.tags }}"

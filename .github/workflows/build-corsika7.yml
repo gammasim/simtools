@@ -50,7 +50,8 @@ jobs:
           - {corsika_version: '78010', avx_instruction: 'sse4'}
 
     env:
-      BASE_LABELS: "corsika7-${{ matrix.version.corsika_version }}-${{ matrix.version.avx_instruction }}"
+      BASE_LABEL: "corsika7"
+      BASE_TAG: "${{ matrix.version.corsika_version }}-${{ matrix.version.avx_instruction }}"
 
     steps:
       - name: Checkout repository
@@ -77,11 +78,11 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           tags: |
-            type=ref,event=pr
-            type=semver,pattern={{major}}.{{minor}}.{{patch}}
-            type=schedule,pattern={{date 'YYYYMMDD'}}
-            type=raw,value={{date 'YYYYMMDD-HHmmss'}}
-          images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABELS }}
+            type=ref,event=pr,suffix=-${{ env.BASE_TAG }}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}
+            type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
+            type=raw,value={{date 'YYYYMMDD-HHmmss'}}-${{ env.BASE_TAG }}
+          images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: latest=true
 
       - name: Build and push
@@ -102,5 +103,5 @@ jobs:
 
       - name: Output image information
         run: |
-          echo "Built base image: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABELS }}:latest"
+          echo "Built base image: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}:latest"
           echo "Image tags: ${{ steps.meta-base.outputs.tags }}"
