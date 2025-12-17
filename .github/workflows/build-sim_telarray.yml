@@ -49,7 +49,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for sim_telarray image (tags, labels)
+      - name: Extract metadata
         id: meta-base
         uses: docker/metadata-action@v5
         with:
@@ -72,9 +72,9 @@ jobs:
             STDTOOLS_VERSION=${{ matrix.version.stdtools_version }}
             EXTRA_DEF=${{ matrix.production.extra_def }}
           secrets: |
-            sim_telarray_token=${{ secrets.SIMTELARRAY_CTAO_GITLAB}}
-            hessio_token=${{ secrets.HESSIO_CTAO_GITLAB}}
-            stdtools_token=${{ secrets.STDTOOLS_CTAO_GITLAB}}
+            sim_telarray_token=${{ secrets.SIMTELARRAY_CTAO_GITLAB }}
+            hessio_token=${{ secrets.HESSIO_CTAO_GITLAB }}
+            stdtools_token=${{ secrets.STDTOOLS_CTAO_GITLAB }}
           push: ${{ github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-simtel_array
           tags: ${{ steps.meta-base.outputs.tags }}
