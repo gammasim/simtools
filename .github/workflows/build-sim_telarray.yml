@@ -32,7 +32,7 @@ jobs:
           - {build_opt: 'prod6-baseline', extra_def: '-DMAXIMUM_TELESCOPES=99'}
 
     env:
-      BASE_LABELS: "simtel-${{ matrix.version.simtel_version }}-${{ matrix.production.build_opt }}"
+      BASE_LABELS: "simtel-${{ matrix.production.build_opt }}"
 
     steps:
       - name: Checkout repository
@@ -54,9 +54,10 @@ jobs:
         with:
           tags: |
             type=ref,event=pr
-            type=semver,pattern={{major}}.{{minor}}.{{patch}}
-            type=schedule,pattern={{date 'YYYYMMDD'}}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}-simtel-${{ matrix.version.simtel_version }}
+            type=schedule,pattern={{date 'YYYYMMDD'}}-simtel-${{ matrix.version.simtel_version }}
             type=raw,value={{date 'YYYYMMDD-HHmmss'}}
+            type=raw,value=simtel-${{ matrix.version.simtel_version }}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABELS }}
           flavor: latest=true
 
