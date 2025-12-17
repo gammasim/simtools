@@ -351,6 +351,7 @@ def _plot_component_angles(
     out_path,
     bin_width_deg,
     log,
+    model_version=None,
 ):
     arrays = _gather_angle_arrays(results_by_offset, column, log)
     if not arrays:
@@ -365,6 +366,17 @@ def _plot_component_angles(
     ax.set_title(f"Incident angle {title_suffix} vs off-axis angle")
     ax.grid(True, alpha=0.3)
     ax.legend()
+    if model_version:
+        ax.text(
+            0.03,
+            0.97,
+            f"Model version: {model_version}",
+            transform=ax.transAxes,
+            fontsize=8,
+            verticalalignment="top",
+            horizontalalignment="left",
+            bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.5},
+        )
     plt.tight_layout()
     plt.savefig(out_path, dpi=300)
     plt.close(fig)
@@ -378,6 +390,7 @@ def plot_incident_angles(
     radius_bin_width_m=0.01,
     debug_plots=False,
     logger=None,
+    model_version=None,
 ):
     """Plot overlaid histograms of focal, primary, secondary angles, and primary hit radius."""
     log = logger or logging.getLogger(__name__)
@@ -402,6 +415,17 @@ def plot_incident_angles(
             ax.set_title("Incident angle distribution vs off-axis angle")
             ax.grid(True, alpha=0.3)
             ax.legend()
+            if model_version:
+                ax.text(
+                    0.03,
+                    0.97,
+                    f"Model version: {model_version}",
+                    transform=ax.transAxes,
+                    fontsize=8,
+                    verticalalignment="top",
+                    horizontalalignment="left",
+                    bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.5},
+                )
             plt.tight_layout()
             plt.savefig(out_dir / f"incident_angles_multi_{label}.png", dpi=300)
             plt.close(fig)
@@ -414,6 +438,7 @@ def plot_incident_angles(
         out_path=out_dir / f"incident_angles_primary_multi_{label}.png",
         bin_width_deg=bin_width_deg,
         log=log,
+        model_version=model_version,
     )
     _plot_component_angles(
         results_by_offset=results_by_offset,
@@ -422,6 +447,7 @@ def plot_incident_angles(
         out_path=out_dir / f"incident_angles_secondary_multi_{label}.png",
         bin_width_deg=bin_width_deg,
         log=log,
+        model_version=model_version,
     )
 
     # Debug plots

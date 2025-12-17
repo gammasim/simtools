@@ -158,6 +158,7 @@ def main():
         output_dir,
         label_with_telescope,
         debug_plots=app_context.args.get("debug_plots", False),
+        model_version=app_context.args.get("model_version", None),
     )
     total = sum(len(t) for t in results_by_offset.values())
     summary_msg = (
