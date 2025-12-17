@@ -32,8 +32,8 @@ jobs:
           - {build_opt: 'prod6-baseline', extra_def: '-DMAXIMUM_TELESCOPES=99'}
 
     env:
-      BASE_LABEL: "simtel-${{ matrix.production.build_opt }}"
-      BASE_TAG: "simtel-${{ matrix.version.simtel_version }}"
+      BASE_LABEL: "sim_telarray"
+      BASE_TAG: "${{ matrix.production.build_opt }}-${{ matrix.version.simtel_version }}"
 
     steps:
       - name: Checkout repository
