@@ -55,9 +55,9 @@ jobs:
       - name: Set build branch
         run: |
           if [[ "${{ github.event_name }}" == 'pull_request' ]]; then
-            echo "BUILD_BRANCH=${GITHUB_HEAD_REF}" >> "$GITHUB_ENV"
+            echo "SIMTOOLS_BRANCH=${GITHUB_HEAD_REF}" >> "$GITHUB_ENV"
           else
-            echo "BUILD_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
+            echo "SIMTOOLS_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
           fi
 
       - name: Set up Docker Buildx
@@ -89,7 +89,7 @@ jobs:
           platforms: linux/amd64
           build-args: |
             BASE_IMAGE=${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABELS }}:latest
-            BUILD_BRANCH=${{ env.BUILD_BRANCH }}
+            SIMTOOLS_BRANCH=${{ env.SIMTOOLS_BRANCH }}
           push: ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-simtools-legacy
           tags: ${{ steps.meta-simtools.outputs.tags }}
