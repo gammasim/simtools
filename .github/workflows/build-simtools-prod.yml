@@ -17,7 +17,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-simtools-images:
+  build-simtools-prod:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -25,10 +25,13 @@ jobs:
     strategy:
       matrix:
         version:
-          - {corsika_image: '78010', avx_flag: 'no_opt', simtel_image: 'latest'}
+          - {corsika: '78010', avx_flag: 'no_opt', simtel_image: 'latest'}
+          - {corsika: '78010', avx_flag: 'avx2', simtel_image: 'latest'}
+          - {corsika: '78010', avx_flag: 'avx512f', simtel_image: 'latest'}
+          - {corsika: '78010', avx_flag: 'sse4', simtel_image: 'latest'}
     env:
-      BASE_LABEL: "simtools"
-      BASE_TAG: "corsika${{ matrix.version.corsika_image }}-${{ matrix.version.avx_flag }}-simtel${{ matrix.version.simtel_image }}"
+      BASE_LABEL: "simtools-prod"
+      BASE_TAG: "corsika${{ matrix.version.corsika }}-${{ matrix.version.avx_flag }}-simtel${{ matrix.version.simtel_image }}"
 
     steps:
       - name: Checkout repository
@@ -61,9 +64,9 @@ jobs:
             type=ref,event=pr,suffix=-${{ env.BASE_TAG }}
             type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}
             type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
-            type=raw,value={{date 'YYYYMMDD-HHmmss'}}-${{ env.BASE_TAG }}
+            type=raw,value={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
-          flavor: latest=true
+          flavor: latest=false
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -72,12 +75,11 @@ jobs:
           # Build multi-platform only for no_opt (non-optimized) variant, others are x86-specific
           platforms: ${{ matrix.version.avx_flag == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
           build-args: |
-            CORSIKA_IMAGE_VERSION=${{ matrix.version.corsika_image }}
-            SIMTEL_BUILD_OPT=prod6-baseline
+            CORSIKA_IMAGE_VERSION=${{ matrix.version.corsika }}
             SIMTEL_IMAGE_VERSION=${{ matrix.version.simtel_image }}
             AVX_FLAG=${{ matrix.version.avx_flag }}
             SIMTOOLS_BRANCH=${{ env.SIMTOOLS_BRANCH }}
+          push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-simtools-prod
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
