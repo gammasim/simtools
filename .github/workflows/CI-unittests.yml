@@ -99,56 +99,11 @@ jobs:
         run: |
           pip install -e '.[tests]'
 
-      - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
-        run: |
-          SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL_VERSION=' .env_template | cut -d '=' -f2- | tr -d '"')
-          SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
-          SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
-          echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
-          echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION" >> "$GITHUB_ENV"
-          echo "Simulation model set to: $SIMTOOLS_DB_SIMULATION_MODEL version $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
-
-      - name: Determine simulation model branch
-        env:
-          HEAD_REF: ${{ github.head_ref }}
-          REF_NAME: ${{ github.ref_name }}
-          EVENT_NAME: ${{ github.event_name }}
-          INPUT_BRANCH: ${{ github.event.inputs.simulation_model_branch }}
-        run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_BRANCH" ]; then
-            BRANCH="$INPUT_BRANCH"
-          else
-            BRANCH="main"
-          fi
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            CURRENT_REF="$HEAD_REF"
-          else
-            CURRENT_REF="$REF_NAME"
-          fi
-          # release candidates (e.g., v1.2.3-rc or v1.2.3-rc3) should be tested against released versions of the
-          # simulation model database
-          if [[ "$CURRENT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]*$ ]]; then
-            echo "Detected RC version branch: $CURRENT_REF - setting branch to $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
-            BRANCH="$SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
-          fi
-          echo "SIMTOOLS_DB_SIMULATION_MODEL_BRANCH=$BRANCH" >> "$GITHUB_ENV"
-
-      - name: Print DB connection variables
-        run: |
-          echo "Event name: ${{ github.event_name }}"
-          echo "DB Server: $SIMTOOLS_DB_SERVER"
-          echo "DB API User: $SIMTOOLS_DB_API_USER"
-          echo "DB API Port: $SIMTOOLS_DB_API_PORT"
-          echo "DB Simulation Model: $SIMTOOLS_DB_SIMULATION_MODEL"
-          echo "DB Simulation Model Version: $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
-          echo "DB Simulation Model Branch: $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH"
-
-      - name: Upload data to MongoDB
-        run: |
-          simtools-db-upload-model-repository \
-            --db_simulation_model ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} \
-            --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }} \
-            --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH"
+      - name: Setup model database
+        uses: ./.github/actions/setup-model-database
+        with:
+          simulation_model_branch: ${{ github.event.inputs.simulation_model_branch || '' }}
+          skip_upload: 'false'
 
       - name: Unit tests
         shell: bash -l {0}
