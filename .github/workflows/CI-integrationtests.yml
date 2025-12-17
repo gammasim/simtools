@@ -37,6 +37,7 @@ jobs:
   test_building:
     # Build the package and check if it is installable
     # (tests among others that all components are there)
+    if: github.event_name != 'workflow_call'
     runs-on: ubuntu-latest
 
     defaults:
