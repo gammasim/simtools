@@ -19,7 +19,7 @@ env:
   CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
 jobs:
-  build-base-images:
+  build-sim_telarray:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -28,16 +28,13 @@ jobs:
       matrix:
         version:
           - {simtel_version: 'master', hessio_version: 'master', stdtools_version: 'master'}
-        production:
-          - {build_opt: 'prod6-baseline', extra_def: '-DMAXIMUM_TELESCOPES=99'}
-
     env:
       BASE_LABEL: "sim_telarray"
-      BASE_TAG: "${{ matrix.production.build_opt }}-${{ matrix.version.simtel_version }}"
+      BASE_TAG: "${{ matrix.version.simtel_version }}"
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -50,18 +47,18 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata
-        id: meta-base
+        id: meta
         uses: docker/metadata-action@v5
         with:
           tags: |
             type=ref,event=pr,suffix=-${{ env.BASE_TAG }}
             type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}
             type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
-            type=raw,value={{date 'YYYYMMDD-HHmmss'}}-${{ env.BASE_TAG }}
+            type=raw,value={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: latest=true
 
-      - name: Build /sim_telarray image
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -70,17 +67,11 @@ jobs:
             SIMTEL_VERSION=${{ matrix.version.simtel_version }}
             HESSIO_VERSION=${{ matrix.version.hessio_version }}
             STDTOOLS_VERSION=${{ matrix.version.stdtools_version }}
-            EXTRA_DEF=${{ matrix.production.extra_def }}
           secrets: |
             sim_telarray_token=${{ secrets.SIMTELARRAY_CTAO_GITLAB }}
             hessio_token=${{ secrets.HESSIO_CTAO_GITLAB }}
             stdtools_token=${{ secrets.STDTOOLS_CTAO_GITLAB }}
           push: ${{ github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-simtel_array
-          tags: ${{ steps.meta-base.outputs.tags }}
-          labels: ${{ steps.meta-base.outputs.labels }}
-
-      - name: Output image information
-        run: |
-          echo "Built base image: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}:latest"
-          echo "Image tags: ${{ steps.meta-base.outputs.tags }}"
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

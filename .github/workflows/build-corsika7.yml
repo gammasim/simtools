@@ -20,7 +20,6 @@ env:
   CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
 jobs:
-
   download-auxiliary-files:
     runs-on: ubuntu-latest
 
@@ -45,17 +44,17 @@ jobs:
     strategy:
       matrix:
         version:
-          - {corsika_version: '78010', avx_flag: 'no_opt'}
-          - {corsika_version: '78010', avx_flag: 'avx2'}
-          - {corsika_version: '78010', avx_flag: 'avx512f'}
-          - {corsika_version: '78010', avx_flag: 'sse4'}
+          - {corsika: '78010', avx_flag: 'no_opt', corsika_config: 'v0.1.0'}
+          - {corsika: '78010', avx_flag: 'avx2', corsika_config: 'v0.1.0'}
+          - {corsika: '78010', avx_flag: 'avx512f', corsika_config: 'v0.1.0'}
+          - {corsika: '78010', avx_flag: 'sse4', corsika_config: 'v0.1.0'}
     env:
       BASE_LABEL: "corsika7"
-      BASE_TAG: "${{ matrix.version.corsika_version }}-${{ matrix.version.avx_flag }}"
+      BASE_TAG: "${{ matrix.version.corsika }}-${{ matrix.version.avx_flag }}"
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Download auxiliary files
         uses: actions/download-artifact@v6
@@ -93,15 +92,11 @@ jobs:
           platforms: ${{ matrix.version.avx_flag == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
           build-args: |
             AVX_FLAG=${{ matrix.version.avx_flag }}
-            CORSIKA_VERSION=${{ matrix.version.corsika_version }}
+            CORSIKA_VERSION=${{ matrix.version.corsika }}
+            CORSIKA_CONFIG_VERSION=${{ matrix.version.corsika_config }}
           secrets: |
             corsika7_token=${{ secrets.CORSIKA7_KIT_GITLAB }}
           push: ${{ github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-corsika7
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Output image information
-        run: |
-          echo "Built base image: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}:latest"
-          echo "Image tags: ${{ steps.meta.outputs.tags }}"
