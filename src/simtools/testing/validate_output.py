@@ -13,6 +13,26 @@ from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
 
+
+def _versions_match(from_command_line, from_config_file):
+    """Return True if validations should run for the given versions.
+
+    Behavior:
+    - If no version is provided from the command line, run validations.
+    - If a filter is provided from the command line, run only when it matches
+        the version(s) from the config file.
+    """
+    if from_command_line is None:
+        return True
+
+    # Normalize to collections for comparison
+    cmd_versions = from_command_line if isinstance(from_command_line, list) else [from_command_line]
+    cfg_versions = from_config_file if isinstance(from_config_file, list) else [from_config_file]
+
+    # Consider a match if any overlap exists
+    return any(cv in cmd_versions for cv in cfg_versions)
+
+
 # Keys to ignore when comparing sim_telarray configuration files
 # (e.g., version numbers, system dependent parameters, CORSIKA options)
 cfg_ignore_keys = [
@@ -22,9 +42,7 @@ cfg_ignore_keys = [
 ]
 
 
-def validate_application_output(
-    config, from_command_line=None, from_config_file=None, db_config=None
-):
+def validate_application_output(config, from_command_line=None, from_config_file=None):
     """
     Validate application output against expected output.
 
@@ -52,8 +70,8 @@ def validate_application_output(
             f"from config file: {from_config_file}"
         )
 
-        if from_command_line == from_config_file:
-            _validate_output_files(config, integration_test, db_config)
+        if _versions_match(from_command_line, from_config_file):
+            _validate_output_files(config, integration_test)
 
             if "file_type" in integration_test:
                 assert assertions.assert_file_type(
@@ -65,7 +83,7 @@ def validate_application_output(
         _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file)
 
 
-def _validate_output_files(config, integration_test, db_config):
+def _validate_output_files(config, integration_test):
     """Validate output files."""
     if "reference_output_file" in integration_test:
         _validate_reference_output_file(config, integration_test)
@@ -77,11 +95,7 @@ def _validate_output_files(config, integration_test, db_config):
             [{"path_descriptor": "output_path", "file": integration_test["output_file"]}],
         )
     if "model_parameter_validation" in integration_test:
-        _validate_model_parameter_json_file(
-            config,
-            integration_test["model_parameter_validation"],
-            db_config,
-        )
+        _validate_model_parameter_json_file(config, integration_test["model_parameter_validation"])
 
 
 def _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file):
@@ -127,15 +141,20 @@ def _validate_output_path_and_file(config, integration_file_tests):
         try:
             assert output_file_path.exists()
         except AssertionError as exc:
-            raise AssertionError(f"Output file {output_file_path} does not exist. ") from exc
+            raise AssertionError(
+                f"Output file {output_file_path} does not exist. "
+                f"Directory contents: {list(output_file_path.parent.iterdir())}"
+            ) from exc
 
         if output_file_path.name.endswith(".simtel.zst"):
             assert assertions.check_output_from_sim_telarray(output_file_path, file_test)
         elif output_file_path.name.endswith(".log_hist.tar.gz"):
             assert assertions.check_simulation_logs(output_file_path, file_test)
+        elif output_file_path.suffix == ".log":
+            assert assertions.check_plain_log(output_file_path, file_test)
 
 
-def _validate_model_parameter_json_file(config, model_parameter_validation, db_config):
+def _validate_model_parameter_json_file(config, model_parameter_validation):
     """
     Validate model parameter json file and compare it with a reference parameter from the database.
 
@@ -150,7 +169,7 @@ def _validate_model_parameter_json_file(config, model_parameter_validation, db_c
 
     """
     _logger.info(f"Checking model parameter json file: {model_parameter_validation}")
-    db = db_handler.DatabaseHandler(db_config=db_config)
+    db = db_handler.DatabaseHandler()
 
     reference_parameter_name = model_parameter_validation.get("reference_parameter_name")
 

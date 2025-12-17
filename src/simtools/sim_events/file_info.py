@@ -24,7 +24,7 @@ def get_corsika_run_number(file):
     int, None
         CORSIKA run number. Returns None if not found.
     """
-    run_header = get_combined_corsika_run_header(file)
+    run_header = get_combined_eventio_run_header(file)
     if run_header and "run" in run_header:
         return run_header["run"]
     run_header, _ = get_corsika_run_and_event_headers(file)
@@ -34,9 +34,9 @@ def get_corsika_run_number(file):
         return None
 
 
-def get_combined_corsika_run_header(sim_telarray_file):
+def get_combined_eventio_run_header(sim_telarray_file):
     """
-    Return the CORSIKA run header information from an sim_telarray file.
+    Return the CORSIKA run header information from an eventio (sim_telarray) file.
 
     Reads both RunHeader and MCRunHeader object from file and returns a merged dictionary.
     Adds primary id from the first event.

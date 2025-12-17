@@ -108,8 +108,6 @@ language = "en"
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
-# The name of the Pygments (syntax highlighting) style to use.
-# pygments_style = "sphinx"
 default_role = "py:obj"
 
 # -- Options for HTML output -------------------------------------------------
@@ -161,7 +159,6 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable", None),
     "scipy": ("https://docs.scipy.org/doc/scipy", None),
     "astropy": ("https://docs.astropy.org/en/latest", None),
-    #    "matplotlib": ("https://matplotlib.org/stable", None),
 }
 
 # local dir

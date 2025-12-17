@@ -67,7 +67,7 @@ def main():
         app_context.logger.info(
             f"Using test database version {app_context.db_config['db_simulation_model_version']}"
         )
-    db = db_handler.DatabaseHandler(db_config=app_context.db_config)
+    db = db_handler.DatabaseHandler()
 
     files_to_insert = []
     if app_context.args.get("file_name", None) is not None:

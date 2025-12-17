@@ -613,10 +613,11 @@ class RayTracing:
         -------
         List of PSFImages
         """
-        images = []
-        for this_off_axis in self.off_axis_angle:
-            if self._psf_images and this_off_axis in self._psf_images:
-                images.append(self._psf_images[this_off_axis])
+        images = [
+            self._psf_images[this_off_axis]
+            for this_off_axis in self.off_axis_angle
+            if self._psf_images and this_off_axis in self._psf_images
+        ]
         if len(images) == 0:
             self._logger.warning("No image found")
             return None

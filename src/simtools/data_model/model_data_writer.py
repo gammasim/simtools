@@ -98,10 +98,10 @@ class ModelDataWriter:
         output_file,
         output_path=None,
         metadata_input_dict=None,
-        db_config=None,
         unit=None,
         meta_parameter=False,
         model_parameter_schema_version=None,
+        check_db_for_existing_parameter=True,
     ):
         """
         Generate DB-style model parameter dict and write it to json file.
@@ -122,14 +122,14 @@ class ModelDataWriter:
             Path to output file.
         metadata_input_dict: dict
             Input to metadata collector.
-        db_config: dict
-            Database configuration. If not None, check if parameter with the same version exists.
         unit: str
             Unit of the parameter value (if applicable and value is not of type astropy Quantity).
         meta_parameter: bool
             Setting for meta parameter flag.
         model_parameter_schema_version: str, None
             Version of the model parameter schema (if None, use schema version from schema dict).
+        check_db_for_existing_parameter: bool
+            If True, check if parameter with same version exists in DB before writing.
 
         Returns
         -------
@@ -142,10 +142,8 @@ class ModelDataWriter:
             args_dict=None,
             output_path=output_path,
         )
-        if db_config is not None:
-            writer.check_db_for_existing_parameter(
-                parameter_name, instrument, parameter_version, db_config
-            )
+        if check_db_for_existing_parameter:
+            writer.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
 
         unique_id = None
         if metadata_input_dict is not None:
@@ -170,9 +168,7 @@ class ModelDataWriter:
         writer.write_dict_to_model_parameter_json(output_file, _json_dict)
         return _json_dict
 
-    def check_db_for_existing_parameter(
-        self, parameter_name, instrument, parameter_version, db_config
-    ):
+    def check_db_for_existing_parameter(self, parameter_name, instrument, parameter_version):
         """
         Check if a parameter with the same version exists in the simulation model database.
 
@@ -184,15 +180,15 @@ class ModelDataWriter:
             Name of the instrument.
         parameter_version: str
             Version of the parameter.
-        db_config: dict
-            Database configuration.
 
         Raises
         ------
         ValueError
             If parameter with the same version exists in the database.
         """
-        db = db_handler.DatabaseHandler(db_config=db_config)
+        db = db_handler.DatabaseHandler()
+        if not db.is_configured():
+            return
         try:
             db.get_model_parameter(
                 parameter=parameter_name,
@@ -373,8 +369,10 @@ class ModelDataWriter:
         """
         try:
             unit_list = []
-            for data in self.schema_dict["data"]:
-                unit_list.append(data["unit"] if data["unit"] != "dimensionless" else None)
+            unit_list = [
+                data["unit"] if data["unit"] != "dimensionless" else None
+                for data in self.schema_dict["data"]
+            ]
             return unit_list if len(unit_list) > 1 else unit_list[0]
         except (KeyError, IndexError):
             pass

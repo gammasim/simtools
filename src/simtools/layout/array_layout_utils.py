@@ -3,6 +3,9 @@
 import logging
 from pathlib import Path
 
+import astropy.units as u
+from astropy.table import QTable
+
 import simtools.utils.general as gen
 from simtools.data_model import data_reader
 from simtools.data_model.metadata_collector import MetadataCollector
@@ -137,7 +140,7 @@ def merge_array_layouts(layouts_1, layouts_2):
     return merged_layout
 
 
-def write_array_layouts(array_layouts, args_dict, db_config):
+def write_array_layouts(array_layouts, args_dict):
     """
     Write array layouts as model parameter.
 
@@ -147,8 +150,6 @@ def write_array_layouts(array_layouts, args_dict, db_config):
         Command line arguments.
     array_layouts : dict
         Array layouts to be written.
-    db_config : dict
-        Database configuration.
     """
     site = args_dict.get("site") or array_layouts.get("site")
     _logger.info(f"Writing updated array layouts to the database for site {site}.")
@@ -165,7 +166,6 @@ def write_array_layouts(array_layouts, args_dict, db_config):
         instrument=f"OBS-{site}",
         parameter_version=args_dict.get("updated_parameter_version"),
         output_file=output_file,
-        db_config=db_config,
     )
     MetadataCollector.dump(
         args_dict,
@@ -208,9 +208,7 @@ def validate_array_layouts_with_db(production_table, array_layouts):
     return array_layouts
 
 
-def get_array_layouts_from_parameter_file(
-    file_path, model_version, db_config, coordinate_system="ground"
-):
+def get_array_layouts_from_parameter_file(file_path, model_version, coordinate_system="ground"):
     """
     Retrieve array layouts from parameter file.
 
@@ -220,8 +218,6 @@ def get_array_layouts_from_parameter_file(
         Path to the array layout parameter file.
     model_version : str
         Model version to retrieve.
-    db_config : dict
-        Database configuration.
     coordinate_system : str
         Coordinate system to use for the array elements (default is "ground").
 
@@ -237,24 +233,19 @@ def get_array_layouts_from_parameter_file(
         raise ValueError("Missing 'value' key in layout file.") from exc
     site = array_layouts.get("site")
 
-    layouts = []
-    for layout in value:
-        layouts.append(
-            _get_array_layout_dict(
-                db_config,
-                model_version,
-                site,
-                layout.get("elements"),
-                layout["name"],
-                coordinate_system,
-            )
+    return [
+        _get_array_layout_dict(
+            model_version,
+            site,
+            layout.get("elements"),
+            layout["name"],
+            coordinate_system,
         )
-    return layouts
+        for layout in value
+    ]
 
 
-def get_array_layouts_from_db(
-    layout_name, site, model_version, db_config, coordinate_system="ground"
-):
+def get_array_layouts_from_db(layout_name, site, model_version, coordinate_system="ground"):
     """
     Retrieve all array layouts from the database and return as list of astropy tables.
 
@@ -266,8 +257,6 @@ def get_array_layouts_from_db(
         Site identifier.
     model_version : str
         Model version to retrieve.
-    db_config : dict
-        Database configuration.
     coordinate_system : str
         Coordinate system to use for the array elements (default is "ground").
 
@@ -280,23 +269,20 @@ def get_array_layouts_from_db(
     if layout_name:
         layout_names = gen.ensure_iterable(layout_name)
     else:
-        site_model = SiteModel(site=site, model_version=model_version, db_config=db_config)
+        site_model = SiteModel(site=site, model_version=model_version)
         layout_names = site_model.get_list_of_array_layouts()
 
-    layouts = []
-    for _layout_name in layout_names:
-        layouts.append(
-            _get_array_layout_dict(
-                db_config, model_version, site, None, _layout_name, coordinate_system
-            )
-        )
+    layouts = [
+        _get_array_layout_dict(model_version, site, None, _layout_name, coordinate_system)
+        for _layout_name in layout_names
+    ]
     if len(layouts) == 1:
         return layouts[0]
     return layouts
 
 
 def get_array_layouts_using_telescope_lists_from_db(
-    telescope_lists, site, model_version, db_config, coordinate_system="ground"
+    telescope_lists, site, model_version, coordinate_system="ground"
 ):
     """
     Retrieve array layouts from the database using telescope lists.
@@ -309,8 +295,6 @@ def get_array_layouts_using_telescope_lists_from_db(
         Site identifier.
     model_version : str
         Model version to retrieve.
-    db_config : dict
-        Database configuration.
     coordinate_system : str
         Coordinate system to use for the array elements (default is "ground").
 
@@ -333,9 +317,7 @@ def get_array_layouts_using_telescope_lists_from_db(
             _site = sites.pop()
 
         layouts.append(
-            _get_array_layout_dict(
-                db_config, model_version, _site, telescope_list, None, coordinate_system
-            )
+            _get_array_layout_dict(model_version, _site, telescope_list, None, coordinate_system)
         )
     return layouts
 
@@ -357,23 +339,18 @@ def get_array_layouts_from_file(file_path):
     if isinstance(file_path, str | Path):
         file_path = [file_path]
 
-    layouts = []
-    for _file in file_path:
-        layouts.append(
-            {
-                "name": (Path(_file).name).split(".")[0],
-                "array_elements": data_reader.read_table_from_file(file_name=_file),
-            }
-        )
-    return layouts
+    return [
+        {
+            "name": Path(_file).stem,
+            "array_elements": data_reader.read_table_from_file(file_name=_file),
+        }
+        for _file in file_path
+    ]
 
 
-def _get_array_layout_dict(
-    db_config, model_version, site, telescope_list, layout_name, coordinate_system
-):
+def _get_array_layout_dict(model_version, site, telescope_list, layout_name, coordinate_system):
     """Return array layout dictionary for a given telescope list."""
     array_model = ArrayModel(
-        db_config=db_config,
         model_version=model_version,
         site=site,
         array_elements=telescope_list,
@@ -388,7 +365,7 @@ def _get_array_layout_dict(
     }
 
 
-def get_array_elements_from_db_for_layouts(layouts, site, model_version, db_config):
+def get_array_elements_from_db_for_layouts(layouts, site, model_version):
     """
     Get list of array elements from the database for given list of layout names.
 
@@ -408,17 +385,150 @@ def get_array_elements_from_db_for_layouts(layouts, site, model_version, db_conf
         Site name for the array layouts.
     model_version : str
         Model version for the array layouts.
-    db_config : dict
-        Database configuration dictionary.
 
     Returns
     -------
     dict
         Dictionary mapping layout names to telescope IDs.
     """
-    site_model = SiteModel(site=site, model_version=model_version, db_config=db_config)
+    site_model = SiteModel(site=site, model_version=model_version)
     layout_names = site_model.get_list_of_array_layouts() if layouts == ["all"] else layouts
     layout_dict = {}
     for layout_name in layout_names:
         layout_dict[layout_name] = site_model.get_array_elements_for_layout(layout_name)
     return layout_dict
+
+
+def read_layouts(args_dict):
+    """
+    Read array layouts from the database or parameter file.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary with command line arguments.
+
+    Returns
+    -------
+    tuple
+        A tuple containing:
+            - list: List of array layouts.
+            - list or None: Background layout or None if not provided.
+    """
+    background_layout = None
+    if args_dict.get("array_layout_name_background"):
+        background_layout = get_array_layouts_from_db(
+            args_dict["array_layout_name_background"],
+            args_dict["site"],
+            args_dict["model_version"],
+            args_dict["coordinate_system"],
+        )["array_elements"]
+
+    if args_dict["array_layout_name"] is not None or args_dict["plot_all_layouts"]:
+        _logger.info("Plotting array from DB using layout array name(s).")
+        layouts = get_array_layouts_from_db(
+            args_dict["array_layout_name"],
+            args_dict["site"],
+            args_dict["model_version"],
+            args_dict["coordinate_system"],
+        )
+        if isinstance(layouts, list):
+            return layouts, background_layout
+        return [layouts], background_layout
+
+    if args_dict["array_layout_parameter_file"] is not None:
+        _logger.info("Plotting array from parameter file(s).")
+        return get_array_layouts_from_parameter_file(
+            args_dict["array_layout_parameter_file"],
+            args_dict["model_version"],
+            args_dict["coordinate_system"],
+        ), background_layout
+
+    if args_dict["array_layout_file"] is not None:
+        _logger.info("Plotting array from telescope table file(s).")
+        return get_array_layouts_from_file(args_dict["array_layout_file"]), background_layout
+    if args_dict["array_element_list"] is not None:
+        _logger.info("Plotting array from list of array elements.")
+        return get_array_layouts_using_telescope_lists_from_db(
+            [args_dict["array_element_list"]],
+            args_dict["site"],
+            args_dict["model_version"],
+            args_dict["coordinate_system"],
+        ), background_layout
+
+    return [], background_layout
+
+
+def _get_array_name(array_name):
+    """
+    Return telescope size and number of telescopes from regular array name.
+
+    Finetuned to array names like "4MST", "1LST", etc.
+
+    Parameters
+    ----------
+    array_name : str
+        Name of the regular array (e.g. "4MST").
+
+    Returns
+    -------
+    tel_size : str
+        Telescope size (e.g. "MST").
+    n_tel : int
+        Number of telescopes (e.g. 4).
+    """
+    if len(array_name) < 2 or not array_name[0].isdigit():
+        raise ValueError(f"Invalid array_name: '{array_name}'")
+
+    return array_name[1:], int(array_name[0])
+
+
+def create_regular_array(array_name, site, telescope_distance):
+    """
+    Create a regular array layout table.
+
+    Parameters
+    ----------
+    array_name : str
+        Name of the regular array (e.g. "4MST").
+    site : str
+        Site identifier.
+    telescope_distance : dict
+        Dictionary with telescope distances per telescope type.
+
+    Returns
+    -------
+    astropy.table.Table
+        Table with the regular array layout.
+    """
+    tel_name, pos_x, pos_y, pos_z = [], [], [], []
+    tel_size, n_tel = _get_array_name(array_name)
+    tel_size = array_name[1:4]
+
+    # Single telescope at the center
+    if n_tel == 1:
+        tel_name.append(names.generate_array_element_name_from_type_site_id(tel_size, site, "01"))
+        pos_x.append(0 * u.m)
+        pos_y.append(0 * u.m)
+        pos_z.append(0 * u.m)
+    # 4 telescopes in a regular square grid
+    elif n_tel == 4:
+        for i in range(1, 5):
+            tel_name.append(
+                names.generate_array_element_name_from_type_site_id(tel_size, site, f"0{i}")
+            )
+            pos_x.append(telescope_distance[tel_size] * (-1) ** (i // 2))
+            pos_y.append(telescope_distance[tel_size] * (-1) ** (i % 2))
+            pos_z.append(0 * u.m)
+    else:
+        raise ValueError(f"Unsupported number of telescopes: {n_tel}.")
+
+    table = QTable(meta={"array_name": array_name, "site": site})
+    table["telescope_name"] = tel_name
+    table["position_x"] = pos_x
+    table["position_y"] = pos_y
+    table["position_z"] = pos_z
+    table.sort("telescope_name")
+    _logger.info(f"Regular array layout table:\n{table}")
+
+    return table

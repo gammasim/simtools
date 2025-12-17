@@ -9,7 +9,7 @@ from simtools import dependencies
 from simtools.io import ascii_handler
 
 
-def run_applications(args_dict, db_config, logger):
+def run_applications(args_dict, logger):
     """
     Run simtools applications step-by-step as defined in a configuration file.
 
@@ -17,8 +17,6 @@ def run_applications(args_dict, db_config, logger):
     ----------
     args_dict : dict
         Dictionary containing command line arguments.
-    db_config : dict
-        Database configuration
     logger : logging.Logger
         Logger for logging application output.
     """
@@ -33,7 +31,7 @@ def run_applications(args_dict, db_config, logger):
 
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
-        file.write(dependencies.get_version_string(db_config, run_time))
+        file.write(dependencies.get_version_string(run_time))
 
         for config in configurations:
             app = config.get("application")

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - './docker/Dockerfile-dev'
+      - './docker/Dockerfile-simtools-dev'
   release:
     types: [published]
   schedule:
@@ -16,11 +16,27 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   TEST_TAG: user/app:test
+  CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
 jobs:
 
+  download-qgsjet-tables:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download QGSJet
+        run: |
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download -O qgsdat-III.bz2
+      - name: Upload QGSJet files
+        uses: actions/upload-artifact@v5
+        with:
+          name: upload-qgsjet-tables
+          path: |
+            qgsdat-III.bz2
+          retention-days: 1
+
   build-simtools-container:
     runs-on: ubuntu-latest
+    needs: [download-qgsjet-tables]
     permissions:
       contents: read
       packages: write
@@ -30,7 +46,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
+
+      - name: Download QGSJet tables
+        uses: actions/download-artifact@v6
+        with:
+          name: upload-qgsjet-tables
+          path: .
 
       - name: Set build arguments (correct branch)
         run: |
@@ -72,7 +94,7 @@ jobs:
           context: .
           build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
           load: true
-          file: ./docker/Dockerfile-${{ matrix.type }}
+          file: ./docker/Dockerfile-simtools-${{ matrix.type }}
           tags: ${{ env.TEST_TAG }}
 
       - name: Build and push image
@@ -81,8 +103,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64/v8
           build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
-          push:
-            ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
-          file: ./docker/Dockerfile-${{ matrix.type }}
+          push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+          file: ./docker/Dockerfile-simtools-${{ matrix.type }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}

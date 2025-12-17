@@ -3,6 +3,7 @@
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
+import astropy.units as u
 import pytest
 
 import simtools.layout.array_layout_utils as cta_array_layouts
@@ -70,9 +71,7 @@ def test_write_array_layouts(
         "output_path": test_path,
         "updated_parameter_version": "v1",
     }
-    db_config = {"test": "config"}
-
-    write_array_layouts(array_layouts, args_dict, db_config)
+    write_array_layouts(array_layouts, args_dict)
 
     mock_io_handler.return_value.set_paths.assert_called_once_with(output_path=test_path)
     mock_io_handler.return_value.get_output_file.assert_called_once_with("array-layouts-v1.json")
@@ -83,7 +82,6 @@ def test_write_array_layouts(
         instrument="OBS-North",
         parameter_version="v1",
         output_file=test_output,
-        db_config={"test": "config"},
     )
 
     mock_metadata_collector.dump.assert_called_once_with(
@@ -344,7 +342,6 @@ def test_validate_array_layouts_with_db_partial_invalid():
 
 def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
     model_version = "6.0.0"
-    db_config = {"dummy": "config"}
     fake_data = {
         "value": [
             {"name": "array1"},
@@ -360,7 +357,7 @@ def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
     instance = mock_array_model.return_value
     instance.export_array_elements_as_table.return_value = fake_table
 
-    results = get_array_layouts_from_parameter_file("test_file.json", model_version, db_config)
+    results = get_array_layouts_from_parameter_file("test_file.json", model_version)
 
     assert isinstance(results, list)
     assert len(results) == 2
@@ -371,14 +368,12 @@ def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
 
     expected_calls = [
         mocker.call(
-            db_config=db_config,
             model_version=model_version,
             site="north",
             array_elements=None,
             layout_name="array1",
         ),
         mocker.call(
-            db_config=db_config,
             model_version=model_version,
             site="north",
             array_elements=None,
@@ -389,7 +384,6 @@ def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
 
 
 def test_get_array_layouts_from_parameter_file_missing_value_key(mocker):
-    db_config = {"dummy": "config"}
     fake_data = {
         "site": "north",
     }
@@ -400,7 +394,7 @@ def test_get_array_layouts_from_parameter_file_missing_value_key(mocker):
     )
 
     with pytest.raises(ValueError, match=r"Missing 'value' key in layout file."):
-        get_array_layouts_from_parameter_file("test_file.json", "6.0.0", db_config)
+        get_array_layouts_from_parameter_file("test_file.json", "6.0.0")
 
 
 def test_get_array_layouts_from_db_with_layout_name(mock_array_model):
@@ -408,7 +402,6 @@ def test_get_array_layouts_from_db_with_layout_name(mock_array_model):
     layout_name = "layout_test"
     site = "North"
     model_version = "6.0.0"
-    db_config = {"dummy": "config"}
     fake_table = ["tel1", "tel2"]
 
     # Patch ArrayModel so that export_array_elements_as_table returns fake_table.
@@ -417,9 +410,7 @@ def test_get_array_layouts_from_db_with_layout_name(mock_array_model):
     mock_array_model.return_value = instance
 
     # Call the function with layout_name provided.
-    result = cta_array_layouts.get_array_layouts_from_db(
-        layout_name, site, model_version, db_config
-    )
+    result = cta_array_layouts.get_array_layouts_from_db(layout_name, site, model_version)
 
     # Expected: a list with one dict corresponding to the provided layout_name.
     expected = {
@@ -430,7 +421,6 @@ def test_get_array_layouts_from_db_with_layout_name(mock_array_model):
 
     # Assert that ArrayModel was initialized with the correct parameters.
     mock_array_model.assert_called_once_with(
-        db_config=db_config,
         model_version=model_version,
         site=site,
         array_elements=None,
@@ -445,7 +435,6 @@ def test_get_array_layouts_from_db_without_layout_name(mocker, mock_array_model)
     layout_name = None
     site = "South"
     model_version = "7.0.0"
-    db_config = {"dummy": "config"}
     # Fake layout names returned by SiteModel.
     fake_layout_names = ["layout1", "layout2"]
 
@@ -471,9 +460,7 @@ def test_get_array_layouts_from_db_without_layout_name(mocker, mock_array_model)
     mock_array_model.side_effect = array_model_side_effect
 
     # Call the function with layout_name as None.
-    result = cta_array_layouts.get_array_layouts_from_db(
-        layout_name, site, model_version, db_config
-    )
+    result = cta_array_layouts.get_array_layouts_from_db(layout_name, site, model_version)
 
     # Expected: a list with two dicts.
     expected = [
@@ -482,22 +469,18 @@ def test_get_array_layouts_from_db_without_layout_name(mocker, mock_array_model)
     ]
 
     # Assert that SiteModel was correctly used.
-    mock_site_model.assert_called_once_with(
-        site=site, model_version=model_version, db_config=db_config
-    )
+    mock_site_model.assert_called_once_with(site=site, model_version=model_version)
     instance_site.get_list_of_array_layouts.assert_called_once()
 
     # Assert that ArrayModel was called for each layout returned by SiteModel.
     calls = [
         mocker.call(
-            db_config=db_config,
             model_version=model_version,
             site=site,
             array_elements=None,
             layout_name="layout1",
         ),
         mocker.call(
-            db_config=db_config,
             model_version=model_version,
             site=site,
             array_elements=None,
@@ -513,7 +496,6 @@ def test_get_array_layouts_from_db_without_layout_name(mocker, mock_array_model)
 def test_get_array_layouts_using_telescope_lists_from_db_with_site(mocker, mock_array_model):
     telescope_lists = [["tel1", "tel2"], ["tel3", "tel4"]]
     site = "North"
-    db_config = {"config": "dummy"}
     fake_table = ["fake", "elements"]
 
     # Patch ArrayModel to return a fake table via export_array_elements_as_table.
@@ -522,7 +504,7 @@ def test_get_array_layouts_using_telescope_lists_from_db_with_site(mocker, mock_
     mock_array_model.return_value = instance
 
     results = cta_array_layouts.get_array_layouts_using_telescope_lists_from_db(
-        telescope_lists, site, "6.0.0", db_config, coordinate_system="ground"
+        telescope_lists, site, "6.0.0", coordinate_system="ground"
     )
 
     assert isinstance(results, list)
@@ -541,7 +523,6 @@ def test_get_array_layouts_using_telescope_lists_from_db_without_site_single(
     # Case where site is None and all telescope list elements originate from the same site.
     telescope_lists = [["N_tel1", "N_tel2"]]
     site = None
-    db_config = {"config": "dummy"}
     fake_table = ["fake", "elements"]
 
     # Patch names.get_site_from_array_element_name to always return 'north'.
@@ -553,7 +534,7 @@ def test_get_array_layouts_using_telescope_lists_from_db_without_site_single(
     mock_array_model.return_value = instance
 
     results = cta_array_layouts.get_array_layouts_using_telescope_lists_from_db(
-        telescope_lists, site, "6.1.0", db_config, coordinate_system="ground"
+        telescope_lists, site, "6.1.0", coordinate_system="ground"
     )
 
     assert isinstance(results, list)
@@ -567,7 +548,6 @@ def test_get_array_layouts_using_telescope_lists_from_db_without_site_single(
 def test_get_array_layouts_using_telescope_lists_from_db_without_site_multiple_error(mocker):
     # Case where site is None and telescope list elements come from different sites.
     telescope_lists = [["N_tel1", "S_tel1"]]
-    db_config = {"config": "dummy"}
 
     def fake_get_site(name):
         return "North" if "N" in name else "South"
@@ -577,7 +557,7 @@ def test_get_array_layouts_using_telescope_lists_from_db_without_site_multiple_e
 
     with pytest.raises(ValueError, match="Telescope list contains elements from multiple sites:"):
         cta_array_layouts.get_array_layouts_using_telescope_lists_from_db(
-            telescope_lists, None, "6.2.0", db_config, coordinate_system="ground"
+            telescope_lists, None, "6.2.0", coordinate_system="ground"
         )
 
 
@@ -619,7 +599,6 @@ def test_get_array_layouts_from_file_list(mocker, mock_read_table_from_file):
 def test_get_array_layout_dict_with_layout_name(mock_array_model):
     """Test _get_array_layout_dict with a layout name provided."""
     # Setup test data
-    db_config = {"db": "config"}
     model_version = "6.0.0"
     site = "north"
     layout_name = "test_layout"
@@ -632,12 +611,11 @@ def test_get_array_layout_dict_with_layout_name(mock_array_model):
 
     # Call function
     result = cta_array_layouts._get_array_layout_dict(
-        db_config, model_version, site, None, layout_name, "ground"
+        model_version, site, None, layout_name, "ground"
     )
 
     # Verify ArrayModel initialization
     mock_array_model.assert_called_once_with(
-        db_config=db_config,
         model_version=model_version,
         site=site,
         array_elements=None,
@@ -654,7 +632,6 @@ def test_get_array_layout_dict_with_layout_name(mock_array_model):
 def test_get_array_layout_dict_with_telescope_list(mock_array_model):
     """Test _get_array_layout_dict with a telescope list provided."""
     # Setup test data
-    db_config = {"db": "config"}
     model_version = "6.0.0"
     site = "south"
     telescope_list = ["tel1", "tel2", "tel3"]
@@ -667,12 +644,11 @@ def test_get_array_layout_dict_with_telescope_list(mock_array_model):
 
     # Call function
     result = cta_array_layouts._get_array_layout_dict(
-        db_config, model_version, site, telescope_list, None, "ground"
+        model_version, site, telescope_list, None, "ground"
     )
 
     # Verify ArrayModel initialization
     mock_array_model.assert_called_once_with(
-        db_config=db_config,
         model_version=model_version,
         site=site,
         array_elements=telescope_list,
@@ -697,14 +673,11 @@ def test_read_array_layouts_from_db_specific_layouts(mocker):
     layouts = ["LST", "MST"]
     site = "North"
     model_version = "v1.0.0"
-    db_config = {"host": "localhost"}
 
-    result = get_array_elements_from_db_for_layouts(layouts, site, model_version, db_config)
+    result = get_array_elements_from_db_for_layouts(layouts, site, model_version)
 
     assert result == {"LST": [1, 2], "MST": [3, 4]}
-    mock_site_model.assert_called_once_with(
-        site=site, model_version=model_version, db_config=db_config
-    )
+    mock_site_model.assert_called_once_with(site=site, model_version=model_version)
     assert instance.get_array_elements_for_layout.call_count == 2
     instance.get_array_elements_for_layout.assert_any_call("LST")
     instance.get_array_elements_for_layout.assert_any_call("MST")
@@ -722,12 +695,168 @@ def test_read_array_layouts_from_db_all_layouts(mocker):
     layouts = ["all"]
     site = "South"
     model_version = "v2.0.0"
-    db_config = {"host": "db"}
 
-    result = get_array_elements_from_db_for_layouts(layouts, site, model_version, db_config)
+    result = get_array_elements_from_db_for_layouts(layouts, site, model_version)
 
     assert result == {"LST": [10, 20], "MST": [30, 40]}
     instance.get_list_of_array_layouts.assert_called_once()
     assert instance.get_array_elements_for_layout.call_count == 2
     instance.get_array_elements_for_layout.assert_any_call("LST")
     instance.get_array_elements_for_layout.assert_any_call("MST")
+
+
+@pytest.fixture
+def minimal_args_dict():
+    return {
+        "array_layout_name_background": None,
+        "array_layout_name": None,
+        "plot_all_layouts": False,
+        "array_layout_parameter_file": None,
+        "array_layout_file": None,
+        "array_element_list": None,
+        "site": "North",
+        "model_version": "1.0.0",
+        "coordinate_system": "ground",
+    }
+
+
+def test_read_layouts_returns_empty_lists_when_no_inputs(minimal_args_dict):
+    layouts, background = cta_array_layouts.read_layouts(minimal_args_dict)
+    assert layouts == []
+    assert background is None
+
+
+def test_read_layouts_with_array_layout_name_background(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["array_layout_name_background"] = "bg_layout"
+    args["array_layout_name"] = "main_layout"
+    with patch("simtools.layout.array_layout_utils.get_array_layouts_from_db") as mock_get:
+        mock_get.side_effect = [
+            {"array_elements": ["tel1", "tel2"]},
+            {"name": "main_layout", "site": "North", "array_elements": ["tel3", "tel4"]},
+        ]
+        layouts, background = cta_array_layouts.read_layouts(args)
+        assert background == ["tel1", "tel2"]
+        assert isinstance(layouts, list)
+        assert layouts[0]["name"] == "main_layout"
+        # Assert get_array_layouts_from_db was called twice with expected arguments
+        expected_calls = [
+            (
+                (
+                    args["array_layout_name_background"],
+                    args["site"],
+                    args["model_version"],
+                    args["coordinate_system"],
+                ),
+            ),
+            (
+                (
+                    args["array_layout_name"],
+                    args["site"],
+                    args["model_version"],
+                    args["coordinate_system"],
+                ),
+            ),
+        ]
+        actual_calls = mock_get.call_args_list
+        assert len(actual_calls) == 2
+        for actual, expected in zip(actual_calls, expected_calls):
+            assert actual[0] == expected[0]
+
+
+def test_read_layouts_with_plot_all_layouts(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["plot_all_layouts"] = True
+    with patch("simtools.layout.array_layout_utils.get_array_layouts_from_db") as mock_get:
+        mock_get.return_value = [{"name": "layout1", "array_elements": ["tel1"]}]
+        layouts, background = cta_array_layouts.read_layouts(args)
+        assert isinstance(layouts, list)
+        assert layouts[0]["name"] == "layout1"
+        assert background is None
+
+
+def test_read_layouts_with_array_layout_parameter_file(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["array_layout_parameter_file"] = "param_file.json"
+    with patch(
+        "simtools.layout.array_layout_utils.get_array_layouts_from_parameter_file"
+    ) as mock_get:
+        mock_get.return_value = [{"name": "layout_param", "array_elements": ["telA"]}]
+        layouts, background = cta_array_layouts.read_layouts(args)
+        assert isinstance(layouts, list)
+        assert layouts[0]["name"] == "layout_param"
+        assert background is None
+
+
+def test_read_layouts_with_array_layout_file(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["array_layout_file"] = "layout_file.txt"
+    with patch("simtools.layout.array_layout_utils.get_array_layouts_from_file") as mock_get:
+        mock_get.return_value = [{"name": "layout_file", "array_elements": ["telB"]}]
+        layouts, background = cta_array_layouts.read_layouts(args)
+        assert isinstance(layouts, list)
+        assert layouts[0]["name"] == "layout_file"
+        assert background is None
+
+
+def test_read_layouts_with_array_element_list(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["array_element_list"] = ["telC", "telD"]
+    with patch(
+        "simtools.layout.array_layout_utils.get_array_layouts_using_telescope_lists_from_db"
+    ) as mock_get:
+        mock_get.return_value = [{"name": "list", "array_elements": ["telC", "telD"]}]
+        layouts, background = cta_array_layouts.read_layouts(args)
+        assert isinstance(layouts, list)
+        assert layouts[0]["name"] == "list"
+        assert background is None
+
+
+def test_create_regular_array_simple():
+    telescope_distance = {"MST": 100 * u.m}
+    table = cta_array_layouts.create_regular_array("1MST", "North", telescope_distance)
+    assert len(table) == 1
+    assert table.meta["array_name"] == "1MST"
+    assert table.meta["site"] == "North"
+    assert table["position_x"][0].value == 0
+    assert table["position_y"][0].value == 0
+    assert table["position_z"][0].value == 0
+
+
+def test_create_regular_array_four_telescopes(mocker):
+    telescope_distance = {"MST": 120 * u.m}
+    # Patch names.generate_array_element_name_from_type_site_id to return predictable names
+    mocker.patch(
+        "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
+        side_effect=lambda tel_type, site, idx: f"{tel_type}_{site}_{idx}",
+    )
+    table = cta_array_layouts.create_regular_array("4MST", "South", telescope_distance)
+    assert len(table) == 4
+    assert table.meta["array_name"] == "4MST"
+    assert table.meta["site"] == "South"
+    # Check all telescope names
+    expected_names = {f"MST_South_0{i}" for i in range(1, 5)}
+    assert set(table["telescope_name"]) == expected_names
+    # Check all positions are multiples of the distance and z is zero
+    for x, y, z in zip(table["position_x"], table["position_y"], table["position_z"]):
+        assert abs(abs(x.value) - 120) < 1e-6 or abs(x.value) < 1e-6
+        assert abs(abs(y.value) - 120) < 1e-6 or abs(y.value) < 1e-6
+        assert z.value == 0
+
+    with pytest.raises(ValueError, match="Unsupported number of telescopes: 5"):
+        cta_array_layouts.create_regular_array("5MST", "South", telescope_distance)
+
+
+def test_get_array_name_valid():
+    assert cta_array_layouts._get_array_name("4MST") == ("MST", 4)
+    assert cta_array_layouts._get_array_name("1LST") == ("LST", 1)
+    assert cta_array_layouts._get_array_name("2SST") == ("SST", 2)
+
+
+def test_get_array_name_invalid():
+    with pytest.raises(ValueError, match="Invalid array_name: 'MST'"):
+        cta_array_layouts._get_array_name("MST")
+    with pytest.raises(ValueError, match="Invalid array_name: 'A4MST'"):
+        cta_array_layouts._get_array_name("A4MST")
+    with pytest.raises(ValueError, match="Invalid array_name: ''"):
+        cta_array_layouts._get_array_name("")

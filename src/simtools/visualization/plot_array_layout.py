@@ -5,15 +5,18 @@ from collections import Counter
 from typing import NamedTuple
 
 import astropy.units as u
+import matplotlib as mpl
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+from adjustText import adjust_text
 from astropy.table import Column
 from matplotlib.collections import PatchCollection
 
 from simtools.utils import geometry as transf
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
+from simtools.visualization import visualize
 
 
 class PlotBounds(NamedTuple):
@@ -29,6 +32,61 @@ class PlotBounds(NamedTuple):
 
     x_lim: tuple[float, float]
     y_lim: tuple[float, float]
+
+
+def plot_array_layouts(args_dict, output_path, layouts, background_layout=None):
+    """
+    Plot multiple array layouts.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Application arguments.
+    output_path : Path
+        Output path for figures.
+    layouts : dict
+        Dictionary of layout name to telescope table.
+    background_layout : Table or None
+        Optional background telescope table.
+
+    Returns
+    -------
+    figs : dict
+        Dictionary of layout name to matplotlib figure object.
+
+    """
+    mpl.use("Agg")
+    for layout in layouts:
+        fig_out = plot_array_layout(
+            telescopes=layout["array_elements"],
+            show_tel_label=args_dict["show_labels"],
+            axes_range=args_dict["axes_range"],
+            marker_scaling=args_dict["marker_scaling"],
+            background_telescopes=background_layout,
+            grayed_out_elements=args_dict["grayed_out_array_elements"],
+            highlighted_elements=args_dict["highlighted_array_elements"],
+            legend_location=args_dict["legend_location"],
+            bounds_mode=args_dict["bounds"],
+            padding=args_dict["padding"],
+            x_lim=tuple(args_dict["x_lim"]) if args_dict["x_lim"] else None,
+            y_lim=tuple(args_dict["y_lim"]) if args_dict["y_lim"] else None,
+        )
+        site_string = ""
+        if layout.get("site") is not None:
+            site_string = f"_{layout['site']}"
+        elif args_dict["site"] is not None:
+            site_string = f"_{args_dict['site']}"
+        coordinate_system_string = (
+            f"_{args_dict['coordinate_system']}"
+            if args_dict["coordinate_system"] not in layout["name"]
+            else ""
+        )
+        plot_file_name = args_dict["figure_name"] or (
+            f"array_layout_{layout['name']}{site_string}{coordinate_system_string}"
+        )
+
+        visualize.save_figure(fig_out, output_path / plot_file_name, dpi=400)
+        plt.close()
 
 
 def plot_array_layout(
@@ -89,7 +147,7 @@ def plot_array_layout(
     filter_x = x_lim
     filter_y = y_lim
 
-    patches, plot_range, highlighted_patches, bounds = get_patches(
+    patches, plot_range, highlighted_patches, bounds, text_objects = get_patches(
         ax,
         telescopes,
         show_tel_label,
@@ -121,6 +179,17 @@ def plot_array_layout(
     )
 
     finalize_plot(ax, patches, "Easting [m]", "Northing [m]", x_lim, y_lim, highlighted_patches)
+
+    if text_objects:
+        adjust_text(
+            text_objects,
+            ax=ax,
+            arrowprops={"arrowstyle": "->", "color": "grey", "alpha": 0.8, "lw": 0.8, "ls": "--"},
+            expand=(2.0, 2.0),
+            prevent_crossings=True,
+            min_arrow_len=8,
+            ensure_inside_axes=True,
+        )
 
     return fig
 
@@ -178,7 +247,7 @@ def _get_patches_for_background_telescopes(
     if background_telescopes is None:
         return plot_range, bounds
 
-    bg_patches, bg_range, _, bg_bounds = get_patches(
+    bg_patches, bg_range, _, bg_bounds, _ = get_patches(
         ax,
         background_telescopes,
         False,
@@ -268,6 +337,8 @@ def get_patches(
         List of highlighted telescope patches.
     bounds : PlotBounds
         Min/max for x and y in meters.
+    text_objects : list
+        List of text objects for labels.
     """
     pos_x, pos_y = get_positions(telescopes)
     tel_table, pos_x, pos_y = _apply_limits_filter(
@@ -277,7 +348,7 @@ def get_patches(
     tel_table["pos_x_rotated"] = Column(pos_x)
     tel_table["pos_y_rotated"] = Column(pos_y)
 
-    patches, radii, highlighted_patches = create_patches(
+    patches, radii, highlighted_patches, text_objects = create_patches(
         tel_table, marker_scaling, show_tel_label, ax, grayed_out_elements, highlighted_elements
     )
 
@@ -290,8 +361,8 @@ def get_patches(
     if len(pos_x) == 0:
         bounds = PlotBounds(x_lim=(0.0, 0.0), y_lim=(0.0, 0.0))
         if axes_range:
-            return patches, axes_range, highlighted_patches, bounds
-        return patches, 0.0, highlighted_patches, bounds
+            return patches, axes_range, highlighted_patches, bounds, text_objects
+        return patches, 0.0, highlighted_patches, bounds, text_objects
 
     x_min = float(np.nanmin(pos_x).to_value(u.m)) - r
     x_max = float(np.nanmax(pos_x).to_value(u.m)) + r
@@ -300,13 +371,13 @@ def get_patches(
     bounds = PlotBounds(x_lim=(x_min, x_max), y_lim=(y_min, y_max))
 
     if axes_range:
-        return patches, axes_range, highlighted_patches, bounds
+        return patches, axes_range, highlighted_patches, bounds, text_objects
 
     max_x = max(abs(x_min), abs(x_max))
     max_y = max(abs(y_min), abs(y_max))
     updated_axes_range = max(max_x, max_y) * 1.1
 
-    return patches, updated_axes_range, highlighted_patches, bounds
+    return patches, updated_axes_range, highlighted_patches, bounds, text_objects
 
 
 @u.quantity_input(x=u.m, y=u.m, radius=u.m)
@@ -417,8 +488,10 @@ def create_patches(
         Telescope radii.
     highlighted_patches : list
         List of highlighted telescope patches.
+    text_objects : list
+        List of text objects for labels.
     """
-    patches, radii, highlighted_patches = [], [], []
+    patches, radii, highlighted_patches, text_objects = [], [], [], []
     fontsize, scale_factor = (4, 2) if len(telescopes) > 30 else (8, 1)
 
     grayed_out_set = set(grayed_out_elements) if grayed_out_elements else set()
@@ -457,16 +530,18 @@ def create_patches(
             highlighted_patches.append(highlight_patch)
 
         if show_label:
-            ax.text(
-                tel["pos_x_rotated"].value,
-                tel["pos_y_rotated"].value + scale_factor * radius.value,
-                name,
-                ha="center",
-                va="bottom",
-                fontsize=fontsize * 0.8,
+            text_objects.append(
+                ax.text(
+                    tel["pos_x_rotated"].value,
+                    tel["pos_y_rotated"].value + scale_factor * radius.value,
+                    name,
+                    ha="center",
+                    va="center",
+                    fontsize=fontsize * 0.8,
+                )
             )
 
-    return patches, radii, highlighted_patches
+    return patches, radii, highlighted_patches, text_objects
 
 
 def get_telescope_name(tel):

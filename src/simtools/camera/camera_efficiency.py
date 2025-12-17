@@ -22,15 +22,13 @@ class CameraEfficiency:
 
     Parameters
     ----------
-    db_config: dict
-        Configuration for the database.
     label: str
         Instance label, optional.
     config_data: dict.
         Dict containing the configurable parameters.
     """
 
-    def __init__(self, config_data, label, db_config):
+    def __init__(self, config_data, label):
         """Initialize the CameraEfficiency class."""
         self._logger = logging.getLogger(__name__)
 
@@ -39,7 +37,6 @@ class CameraEfficiency:
         self.io_handler = io_handler.IOHandler()
         self.telescope_model, self.site_model, _ = initialize_simulation_models(
             label=self.label,
-            db_config=db_config,
             model_version=config_data["model_version"],
             site=config_data["site"],
             telescope_name=config_data["telescope"],

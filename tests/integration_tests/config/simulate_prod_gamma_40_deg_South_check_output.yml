@@ -40,7 +40,6 @@ applications:
         - "NUMBER OF GENERATED EVENTS =         10"
         - "========== END OF RUN ========"
         - "Sim_telarray finished at"
-        - "Run(s) completed as expected after 10 events (10 showers)."
         forbidden_pattern:
         - "CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE"
         - "CORSIKA was compiled with CURVED option."

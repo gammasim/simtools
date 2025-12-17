@@ -1140,3 +1140,50 @@ def test_write_simtools_parameters_attribute_error(simtel_config_writer, tmp_tes
         ):
             with open(test_file, "w") as f:
                 simtel_config_writer._write_simtools_parameters(f)
+
+
+def test_write_angular_distribution_table_lambertian(tmp_test_directory):
+    """Test write_angular_distribution_table_lambertian."""
+    file_path = Path(tmp_test_directory) / "lambertian.dat"
+
+    # Test default parameters
+    SimtelConfigWriter.write_angular_distribution_table_lambertian(
+        file_path=file_path,
+        max_angle_deg=90.0,
+        n_samples=100,
+    )
+
+    assert file_path.exists()
+    content = file_path.read_text().splitlines()
+
+    # Check header
+    assert content[0].startswith("# angle[deg] relative_intensity")
+
+    # Check number of lines (header + n_samples)
+    assert len(content) == 101
+
+    # Check first and last values
+    first_line = content[1].split()
+    last_line = content[-1].split()
+
+    # Angle 0 -> cos(0) = 1
+    assert float(first_line[0]) == pytest.approx(0.0)
+    assert float(first_line[1]) == pytest.approx(1.0)
+
+    # Angle 90 -> cos(90) = 0
+    assert float(last_line[0]) == pytest.approx(90.0)
+    assert float(last_line[1]) == pytest.approx(0.0, abs=1e-7)
+
+    # Test with max_angle > 90 (should be clipped to 0)
+    file_path_large = Path(tmp_test_directory) / "lambertian_large.dat"
+    SimtelConfigWriter.write_angular_distribution_table_lambertian(
+        file_path=file_path_large,
+        max_angle_deg=180.0,
+        n_samples=181,
+    )
+
+    content_large = file_path_large.read_text().splitlines()
+    # Angle 180 -> cos(180) = -1 -> clipped to 0
+    last_line_large = content_large[-1].split()
+    assert float(last_line_large[0]) == pytest.approx(180.0)
+    assert float(last_line_large[1]) == pytest.approx(0.0)

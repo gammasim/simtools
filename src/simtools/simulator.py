@@ -11,12 +11,13 @@ import numpy as np
 from astropy import units as u
 
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.io import eventio_handler, io_handler, table_handler
+from simtools.io import io_handler, table_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
-from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
+from simtools.sim_events import file_info
+from simtools.sim_events.writer import EventDataWriter
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
 from simtools.utils import general, names
@@ -42,8 +43,6 @@ class Simulator:
         Instance label.
     extra_commands: str or list of str
         Extra commands to be added to the run script before the run command.
-    db_config: dict
-        Database configuration.
     """
 
     def __init__(
@@ -51,14 +50,12 @@ class Simulator:
         args_dict,
         label=None,
         extra_commands=None,
-        db_config=None,
     ):
         """Initialize Simulator class."""
         self.logger = logging.getLogger(__name__)
         self.label = label
 
         self.args_dict = args_dict
-        self.db_config = db_config
         self.site = self.args_dict.get("site", None)
         self.model_version = self.args_dict.get("model_version", None)
 
@@ -114,7 +111,7 @@ class Simulator:
         }
 
         if self.args_dict.get("corsika_file"):
-            self.run_number = eventio_handler.get_corsika_run_number(self.args_dict["corsika_file"])
+            self.run_number = file_info.get_corsika_run_number(self.args_dict["corsika_file"])
         else:
             self.run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
                 "run_number", 1
@@ -140,7 +137,6 @@ class Simulator:
                     label=self.label,
                     site=self.site,
                     layout_name=self.args_dict.get("array_layout_name"),
-                    db_config=self.db_config,
                     model_version=version,
                     calibration_device_types=self._get_calibration_device_types(self.run_mode),
                     overwrite_model_parameters=self.args_dict.get("overwrite_model_parameters"),
@@ -151,7 +147,6 @@ class Simulator:
                     array_model=array_model[-1],
                     label=self.label,
                     args_dict=self.args_dict,
-                    db_config=self.db_config,
                     dummy_simulations=self._is_calibration_run(self.run_mode),
                 )
             )
@@ -443,7 +438,7 @@ class Simulator:
         input_files = self.get_file_list(file_type="simtel_output")
         output_files = self.get_file_list(file_type="event_data")
         for input_file, output_file in zip(input_files, output_files):
-            generator = SimtelIOEventDataWriter([input_file])
+            generator = EventDataWriter([input_file])
             table_handler.write_tables(
                 tables=generator.process_files(),
                 output_file=Path(output_file),
@@ -689,7 +684,7 @@ class Simulator:
 
         event_errors = []
         for file in self.get_file_list(file_type="corsika_output"):
-            shower_events, _ = eventio_handler.get_simulated_events(file)
+            shower_events, _ = file_info.get_simulated_events(file)
 
             if shower_events != expected_mc_events:
                 if consistent(shower_events, expected_mc_events, tol=tolerance):
@@ -734,7 +729,7 @@ class Simulator:
         """
         event_errors = []
         for file in self.get_file_list(file_type="simtel_output"):
-            shower_events, mc_events = eventio_handler.get_simulated_events(file)
+            shower_events, mc_events = file_info.get_simulated_events(file)
 
             if (shower_events, mc_events) != (expected_shower_events, expected_mc_events):
                 event_errors.append(

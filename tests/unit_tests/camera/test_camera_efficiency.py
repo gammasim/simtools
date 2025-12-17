@@ -25,12 +25,8 @@ def config_data_lst(model_version_prod5):
 
 
 @pytest.fixture
-def camera_efficiency_lst(db_config, config_data_lst):
-    return CameraEfficiency(
-        config_data=config_data_lst,
-        db_config=db_config,
-        label="validate_camera_efficiency",
-    )
+def camera_efficiency_lst(config_data_lst):
+    return CameraEfficiency(config_data=config_data_lst, label="validate_camera_efficiency")
 
 
 @pytest.fixture
