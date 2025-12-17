@@ -10,6 +10,18 @@ on:
         required: false
         type: string
         default: 'main'
+  workflow_call:
+    inputs:
+      container_image:
+        description: 'Container image to use for tests (default: simtools-dev:latest)'
+        required: false
+        type: string
+        default: 'ghcr.io/gammasim/simtools-dev:latest'
+      model_versions:
+        description: 'JSON array of model versions to test (e.g. ["7.0.0","6.0.2"])'
+        required: false
+        type: string
+        default: '["7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]'
   pull_request:
     types: [opened, synchronize]
     paths-ignore:
@@ -45,7 +57,7 @@ jobs:
   integration_tests:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/gammasim/simtools-dev:latest
+      image: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
       options: --user 0
 
     services:
@@ -63,7 +75,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model_version: ['7.0.0', '6.0.2', '5.0.0', '6.0.2,6.1.1']
+        model_version: ${{ fromJSON(inputs.model_versions || '["7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]') }}
 
     defaults:
       run:
@@ -153,22 +165,18 @@ jobs:
           echo "DB Simulation Model Version: $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
           echo "DB Simulation Model Branch: $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH"
 
+      - name: Install simtools (dev container only)
+        if: github.event_name != 'schedule' && !contains(inputs.container_image, 'simtools-prod')
+        run: |
+          pip install --no-cache-dir -e '.[tests,dev,doc]'
+
       - name: Upload data to MongoDB
         if: github.event_name != 'schedule'
         run: |
-          source /workdir/env/bin/activate
-          pip install --no-cache-dir -e '.[tests,dev,doc]'
           simtools-db-upload-model-repository \
             --db_simulation_model ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} \
             --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }} \
             --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH"
-
-      - name: Print versions
-        run: |
-          source /workdir/env/bin/activate
-          pip install --no-cache-dir -e .
-          cat .env
-          simtools-print-version
 
       - name: Integration tests
         shell: bash -l {0}
@@ -177,7 +185,7 @@ jobs:
           SIMTOOLS_DB_SIMULATION_MODEL_VERSION: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
           SIMTOOLS_DB_SERVER: ${{ github.event_name == 'schedule' && secrets.DB_SERVER || 'mongodb' }}
         run: |
-          source /workdir/env/bin/activate
-          pip install --no-cache-dir -e '.[tests,dev,doc]'
+          cat .env
+          simtools-print-version
           pytest --model_version=${{ matrix.model_version }} --color=yes --durations=20 \
            -n 4 --dist loadscope --retries 2 --retry-delay 5 --no-cov tests/integration_tests/

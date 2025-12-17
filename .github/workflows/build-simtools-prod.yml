@@ -22,6 +22,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      no_opt_tag: ${{ steps.export-tags.outputs.no_opt_tag }}
     strategy:
       matrix:
         version:
@@ -68,6 +70,15 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: latest=false
 
+      - name: Export no_opt tag for testing
+        id: export-tags
+        if: matrix.version.avx_flag == 'no_opt'
+        run: |
+          TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          TAG=${TAG##*/}
+          echo "no_opt_tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Exported no_opt tag: $TAG"
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -83,3 +94,11 @@ jobs:
           file: ./docker/Dockerfile-simtools-prod
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  test-simtools-prod:
+    needs: build-simtools-prod
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/CI-integrationtests.yml
+    with:
+      container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.no_opt_tag }}
+      model_versions: '["7.0.0","6.0.2"]'
