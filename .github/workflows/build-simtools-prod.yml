@@ -1,0 +1,83 @@
+---
+name: build-simtools-prod
+# Build simtools production images based on CORSIKA / sim_telarray images
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - docker/Dockerfile-simtools-prod
+  release:
+    types: [published]
+  schedule:
+    - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC (build only)
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-simtools-images:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        version:
+          - {corsika_image: '78010', avx_flag: 'no_opt', simtel_image: 'latest'}
+    env:
+      BASE_LABEL: "simtools"
+      BASE_TAG: "corsika${{ matrix.version.corsika_image }}-${{ matrix.version.avx_flag }}-simtel${{ matrix.version.simtel_image }}"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set build branch
+        run: |
+          if [[ "${{ github.event_name }}" == 'pull_request' ]]; then
+            echo "SIMTOOLS_BRANCH=${GITHUB_HEAD_REF}" >> "$GITHUB_ENV"
+          else
+            echo "SIMTOOLS_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
+          fi
+          echo "BUILD BRANCH ${{ env.SIMTOOLS_BRANCH }}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          tags: |
+            type=ref,event=pr,suffix=-${{ env.BASE_TAG }}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}
+            type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
+            type=raw,value={{date 'YYYYMMDD-HHmmss'}}-${{ env.BASE_TAG }}
+          images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
+          flavor: latest=true
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          # Build multi-platform only for no_opt (non-optimized) variant, others are x86-specific
+          platforms: ${{ matrix.version.avx_flag == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
+          build-args: |
+            CORSIKA_IMAGE_VERSION=${{ matrix.version.corsika_image }}
+            SIMTEL_BUILD_OPT=prod6-baseline
+            SIMTEL_IMAGE_VERSION=${{ matrix.version.simtel_image }}
+            AVX_FLAG=${{ matrix.version.avx_flag }}
+            SIMTOOLS_BRANCH=${{ env.SIMTOOLS_BRANCH }}
+          file: ./docker/Dockerfile-simtools-prod
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}

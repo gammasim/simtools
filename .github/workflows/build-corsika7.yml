@@ -45,14 +45,13 @@ jobs:
     strategy:
       matrix:
         version:
-          - {corsika_version: '78010', avx_instruction: 'no_opt'}
-          - {corsika_version: '78010', avx_instruction: 'avx2'}
-          - {corsika_version: '78010', avx_instruction: 'avx512f'}
-          - {corsika_version: '78010', avx_instruction: 'sse4'}
-
+          - {corsika_version: '78010', avx_flag: 'no_opt'}
+          - {corsika_version: '78010', avx_flag: 'avx2'}
+          - {corsika_version: '78010', avx_flag: 'avx512f'}
+          - {corsika_version: '78010', avx_flag: 'sse4'}
     env:
       BASE_LABEL: "corsika7"
-      BASE_TAG: "${{ matrix.version.corsika_version }}-${{ matrix.version.avx_instruction }}"
+      BASE_TAG: "${{ matrix.version.corsika_version }}-${{ matrix.version.avx_flag }}"
 
     steps:
       - name: Checkout repository
@@ -75,7 +74,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata
-        id: meta-base
+        id: meta
         uses: docker/metadata-action@v5
         with:
           tags: |
@@ -91,18 +90,18 @@ jobs:
         with:
           context: .
           # Build multi-platform only for no_opt (non-optimized) variant, others are x86-specific
-          platforms: ${{ matrix.version.avx_instruction == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
+          platforms: ${{ matrix.version.avx_flag == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
           build-args: |
-            AVX_FLAG=${{ matrix.version.avx_instruction }}
+            AVX_FLAG=${{ matrix.version.avx_flag }}
             CORSIKA_VERSION=${{ matrix.version.corsika_version }}
           secrets: |
             corsika7_token=${{ secrets.CORSIKA7_KIT_GITLAB }}
           push: ${{ github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-corsika7
-          tags: ${{ steps.meta-base.outputs.tags }}
-          labels: ${{ steps.meta-base.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
       - name: Output image information
         run: |
           echo "Built base image: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}:latest"
-          echo "Image tags: ${{ steps.meta-base.outputs.tags }}"
+          echo "Image tags: ${{ steps.meta.outputs.tags }}"
