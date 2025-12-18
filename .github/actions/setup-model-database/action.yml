@@ -65,6 +65,11 @@ runs:
         echo "DB Simulation Model Version: ${{ steps.extract.outputs.version }}"
         echo "DB Simulation Model Branch: ${{ steps.determine.outputs.branch }}"
 
+    - name: Install simtools
+      shell: bash
+      run: |
+        pip install -e .
+
     - name: Upload to MongoDB
       if: inputs.skip_upload != 'true'
       shell: bash
