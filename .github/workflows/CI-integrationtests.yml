@@ -173,6 +173,11 @@ jobs:
         run: |
           pip install --no-cache-dir -e '.[tests,dev,doc]'
 
+      - name: Install pytest (prod container only)
+        if: contains(inputs.container_image, 'simtools-prod')
+        run: |
+          pip install --no-cache-dir pytest pytest-cov pytest-requirements pytest-xdist
+
       - name: Upload data to MongoDB
         if: github.event_name != 'schedule'
         run: |
