@@ -12,70 +12,56 @@ inputs:
 outputs:
   simulation_model:
     description: 'Simulation model name'
-    value: ${{ steps.extract.outputs.model }}
+    value: ${{ steps.setup.outputs.model }}
   simulation_model_version:
     description: 'Simulation model version'
-    value: ${{ steps.extract.outputs.version }}
+    value: ${{ steps.setup.outputs.version }}
   simulation_model_branch:
     description: 'Simulation model branch'
-    value: ${{ steps.determine.outputs.branch }}
-runs:
-  using: 'composite'
-  steps:
-    - name: Extract simulation model variables
-      id: extract
-      shell: bash
-      run: |
-        VERSION=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL_VERSION=' .env_template | cut -d '=' -f2- | tr -d '"')
-        MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
-        MODEL="${MODEL//\'/}"
-        echo "model=$MODEL" >> "$GITHUB_OUTPUT"
-        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-        echo "SIMTOOLS_DB_SIMULATION_MODEL=$MODEL" >> "$GITHUB_ENV"
-        echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$VERSION" >> "$GITHUB_ENV"
-        echo "Simulation model set to: $MODEL version $VERSION"
+    value: ${{ steps.setup.outputs.branch }}
 
-    - name: Determine simulation model branch
-      id: determine
+runs:
+  using: composite
+  steps:
+
+    - name: Extract model variables and determine branch
+      id: setup
       shell: bash
       env:
         INPUT_BRANCH: ${{ inputs.simulation_model_branch }}
       run: |
-        if [ -n "$INPUT_BRANCH" ]; then
-          BRANCH="$INPUT_BRANCH"
-        else
-          BRANCH="main"
-        fi
+        set -euo pipefail
+        set -a
+        source .env_template
+        set +a
+
+        MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'}"
+        VERSION="$SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
+
+        # Default branch
+        BRANCH="${INPUT_BRANCH:-main}"
+
         CURRENT_REF="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+
+        # RC tags use released model version
         if [[ "$CURRENT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]*$ ]]; then
-          echo "Detected RC version branch: $CURRENT_REF - setting branch to ${{ steps.extract.outputs.version }}"
-          BRANCH="${{ steps.extract.outputs.version }}"
+          BRANCH="$VERSION"
         fi
+
+        echo "model=$MODEL"   >> "$GITHUB_OUTPUT"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
         echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
-        echo "SIMTOOLS_DB_SIMULATION_MODEL_BRANCH=$BRANCH" >> "$GITHUB_ENV"
 
-    - name: Print DB connection variables
-      shell: bash
-      run: |
-        echo "Event name: ${{ github.event_name }}"
-        echo "DB Server: $SIMTOOLS_DB_SERVER"
-        echo "DB API User: $SIMTOOLS_DB_API_USER"
-        echo "DB API Port: $SIMTOOLS_DB_API_PORT"
-        echo "DB Simulation Model: ${{ steps.extract.outputs.model }}"
-        echo "DB Simulation Model Version: ${{ steps.extract.outputs.version }}"
-        echo "DB Simulation Model Branch: ${{ steps.determine.outputs.branch }}"
-
-    - name: Install simtools
-      shell: bash
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install -e .
+        echo "Simulation model: $MODEL"
+        echo "Version: $VERSION"
+        echo "Branch: $BRANCH"
 
     - name: Upload to MongoDB
       if: inputs.skip_upload != 'true'
       shell: bash
       run: |
+        simtools-print-version
         simtools-db-upload-model-repository \
-          --db_simulation_model ${{ steps.extract.outputs.model }} \
-          --db_simulation_model_version ${{ steps.extract.outputs.version }} \
-          --branch "${{ steps.determine.outputs.branch }}"
+          --db_simulation_model "${{ steps.setup.outputs.model }}" \
+          --db_simulation_model_version "${{ steps.setup.outputs.version }}" \
+          --branch "${{ steps.setup.outputs.branch }}"
