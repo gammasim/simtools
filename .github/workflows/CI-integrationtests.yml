@@ -88,9 +88,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set sim_telarray path
+      - name: Set PATH entries
         run: |
-          echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
+          echo "/usr/bin" >> "$GITHUB_PATH"
+          echo "/usr/local/bin" >> "$GITHUB_PATH"
+          if [ -n "$SIMTOOLS_SIMTEL_PATH" ]; then echo "$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_PATH"; fi
 
       - name: Create environment file (remote DB; schedule only)
         if: ${{ github.event_name == 'schedule' }}
