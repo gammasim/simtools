@@ -1,5 +1,6 @@
 ---
-name: build-corsika-simtel
+name: build-corsika-simtel-legacy
+# **legacy build** - will be deprecated in near future
 # Build and push CORSIKA / sim_telarray base images for different CPU architectures.
 # The no_opt (non-optimized) images are built as multi-platform images (x86_64 and arm64).
 #
@@ -73,22 +74,22 @@ jobs:
       matrix:
         version:
           # list of avx instructions: 'avx2', 'avx512f', 'sse4', 'avx'
-          - {simtel_version: '240205', corsika_version: '77500', bernlohr_version: '1.67', hadronic_model: 'qgs2', avx_instruction: 'no_opt'}
-          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_instruction: 'no_opt'}
-          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_instruction: 'avx2'}
-          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_instruction: 'avx512f'}
-          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_instruction: 'sse4'}
-          - {simtel_version: '250903', corsika_version: '78010', bernlohr_version: '1.70', hadronic_model: 'qgs3', avx_instruction: 'no_opt'}
-          - {simtel_version: '250903', corsika_version: '78010', bernlohr_version: '1.70', hadronic_model: 'qgs3', avx_instruction: 'avx2'}
-          - {simtel_version: '250903', corsika_version: '78010', bernlohr_version: '1.70', hadronic_model: 'qgs3', avx_instruction: 'avx512f'}
-          - {simtel_version: '250903', corsika_version: '78010', bernlohr_version: '1.70', hadronic_model: 'qgs3', avx_instruction: 'sse4'}
+          - {simtel_version: '240205', corsika_version: '77500', bernlohr_version: '1.67', hadronic_model: 'qgs2', avx_flag: 'no_opt'}
+          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_flag: 'no_opt'}
+          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_flag: 'avx2'}
+          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_flag: 'avx512f'}
+          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2', avx_flag: 'sse4'}
+          - {simtel_version: '250903', corsika_version: '78010', bernlohr_version: '1.70', hadronic_model: 'qgs3', avx_flag: 'no_opt'}
+          - {simtel_version: '250903', corsika_version: '78010', bernlohr_version: '1.70', hadronic_model: 'qgs3', avx_flag: 'avx2'}
+          - {simtel_version: '250903', corsika_version: '78010', bernlohr_version: '1.70', hadronic_model: 'qgs3', avx_flag: 'avx512f'}
+          - {simtel_version: '250903', corsika_version: '78010', bernlohr_version: '1.70', hadronic_model: 'qgs3', avx_flag: 'sse4'}
         production:
           # list of productions build options: 'prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc'
           # - {build_opt: 'prod6-sc', extra_def: ''}  # currently not used
           - {build_opt: 'prod6-baseline', extra_def: ''}
 
     env:
-      BASE_LABELS: "corsika-simtel-${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.version.hadronic_model }}-${{ matrix.version.avx_instruction }}"
+      BASE_LABELS: "corsika-simtel-${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.version.hadronic_model }}-${{ matrix.version.avx_flag }}"
 
     steps:
       - name: Checkout repository
@@ -144,12 +145,12 @@ jobs:
         with:
           context: .
           # Build multi-platform only for no_opt (non-optimized) variant, others are x86-specific
-          platforms: ${{ matrix.version.avx_instruction == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
+          platforms: ${{ matrix.version.avx_flag == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
           build-args: |
             BUILD_OPT=${{ matrix.production.build_opt }}
             EXTRA_DEF=${{ matrix.production.extra_def }}
             HADRONIC_MODEL=${{ matrix.version.hadronic_model }}
-            AVX_FLAG=${{ matrix.version.avx_instruction }}
+            AVX_FLAG=${{ matrix.version.avx_flag }}
             CORSIKA_VERSION=${{ matrix.version.corsika_version }}
             BERNLOHR_VERSION=${{ matrix.version.bernlohr_version }}
           secrets: |
