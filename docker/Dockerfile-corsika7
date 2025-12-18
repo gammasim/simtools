@@ -39,7 +39,7 @@ WORKDIR /src
 
 # Clone CORSIKA configuration files from CTAO gitlab
 RUN git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${CORSIKA_CONFIG_VERSION}" "http://${CORSIKA_CONFIG_REPO}" && \
+    git clone --depth 1 --branch "${CORSIKA_CONFIG_VERSION}" "https://${CORSIKA_CONFIG_REPO}" && \
     cp -v corsika7-config/config/${CORSIKA_VERSION}/*.h . && \
     rm -rf corsika7-config
 
