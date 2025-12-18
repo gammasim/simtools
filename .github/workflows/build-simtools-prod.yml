@@ -100,6 +100,7 @@ jobs:
   test-simtools-prod:
     needs: build-simtools-prod
     uses: ./.github/workflows/CI-integrationtests.yml
+    secrets: inherit
     with:
       container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.no_opt_tag }}
       model_versions: '["7.0.0","6.0.2"]'

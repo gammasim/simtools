@@ -21,6 +21,17 @@ on:
         required: false
         type: string
         default: '["7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]'
+    secrets:
+      CLOUD_QGSJET3:
+        required: false
+      DB_SERVER:
+        required: false
+      DB_API_USER:
+        required: false
+      DB_API_PW:
+        required: false
+      DB_API_PORT:
+        required: false
   pull_request:
     types: [opened, synchronize]
     paths-ignore:
