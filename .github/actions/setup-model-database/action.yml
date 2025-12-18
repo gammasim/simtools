@@ -68,10 +68,8 @@ runs:
     - name: Install simtools
       shell: bash
       run: |
-        if ! command -v pip &> /dev/null; then
-          python -m ensurepip --upgrade
-        fi
-        pip install -e .
+        python -m pip install --upgrade pip
+        python -m pip install -e .
 
     - name: Upload to MongoDB
       if: inputs.skip_upload != 'true'
