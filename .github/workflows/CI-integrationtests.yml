@@ -31,6 +31,9 @@ on:
   release:
     types: [published]
 
+env:
+  CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
+
 jobs:
 
   test_building:
@@ -175,6 +178,14 @@ jobs:
             --db_simulation_model ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} \
             --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }} \
             --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH"
+
+      - name: Download QGSJet (prod images without tables)
+        if: contains(inputs.container_image, 'simtools-prod')
+        run: |
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download -O qgsdat-III.bz2
+          bunzip2 qgsdat-III.bz2
+          source .env
+          mv -v -f qgsdat-III ${{ env.SIMTOOLS_CORSIKA_PATH }}/
 
       - name: Integration tests
         shell: bash -l {0}
