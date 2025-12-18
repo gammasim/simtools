@@ -75,7 +75,7 @@ jobs:
         if: matrix.version.avx_flag == 'no_opt'
         run: |
           TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
-          TAG=${TAG##*/}
+          TAG=${TAG##*:}
           echo "no_opt_tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "Exported no_opt tag: $TAG"
 
