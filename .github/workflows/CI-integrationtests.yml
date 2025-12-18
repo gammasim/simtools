@@ -99,6 +99,16 @@ jobs:
           source /workdir/env/bin/activate
           pip install --no-cache-dir -e '.[tests,dev,doc]'
 
+      - name: Set local DB env for model database setup
+        if: github.event_name != 'schedule'
+        run: |
+          {
+            echo "SIMTOOLS_DB_SERVER=mongodb"
+            echo "SIMTOOLS_DB_API_USER=api"
+            echo "SIMTOOLS_DB_API_PW=password"
+            echo "SIMTOOLS_DB_API_PORT=27017"
+          } >> "$GITHUB_ENV"
+
       - name: Setup model database
         uses: ./.github/actions/setup-model-database
         with:
