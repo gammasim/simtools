@@ -81,10 +81,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extend PATH (optional)
-        run: |
-          [ -n "$SIMTOOLS_SIMTEL_PATH" ] && echo "$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_PATH"
-
       - name: Create runtime environment (.env)
         if: ${{ github.event_name == 'schedule' }}
         run: |
@@ -123,6 +119,11 @@ jobs:
             echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_HE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
             echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_LE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
           } > .env
+
+      - name: Extend PATH (simtel)
+        run: |
+          source .env
+          [ -n "$SIMTOOLS_SIMTEL_PATH" ] && echo "$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_PATH"
 
       - name: Determine simulation model branch
         env:
