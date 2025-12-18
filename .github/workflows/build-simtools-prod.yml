@@ -5,7 +5,7 @@ name: build-simtools-prod
 on:
   workflow_dispatch:
   pull_request:
-  #    paths:
+  #  TODO  paths:
   #      - docker/Dockerfile-simtools-prod
   release:
     types: [published]
@@ -84,7 +84,8 @@ jobs:
         with:
           context: .
           # Build multi-platform only for no_opt (non-optimized) variant, others are x86-specific
-          platforms: ${{ matrix.version.avx_flag == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
+          # TODO platforms: ${{ matrix.version.avx_flag == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
+          platforms: 'linux/arm64/v8'
           build-args: |
             CORSIKA_IMAGE_VERSION=${{ matrix.version.corsika }}
             SIMTEL_IMAGE_VERSION=${{ matrix.version.simtel_image }}
