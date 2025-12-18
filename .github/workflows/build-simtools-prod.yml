@@ -31,7 +31,7 @@ jobs:
           - {corsika: '20251217-78010', avx_flag: 'sse4', simtel_image: 'latest'}
     env:
       BASE_LABEL: "simtools-prod"
-      BASE_TAG: "corsika${{ matrix.version.corsika }}-${{ matrix.version.avx_flag }}-simtel${{ matrix.version.simtel_image }}"
+      BASE_TAG: "corsika-${{ matrix.version.corsika }}-${{ matrix.version.avx_flag }}-simtel-${{ matrix.version.simtel_image }}"
 
     steps:
       - name: Checkout repository
