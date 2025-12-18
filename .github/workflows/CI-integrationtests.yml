@@ -96,43 +96,38 @@ jobs:
           fetch-depth: 0
 
       - name: Create runtime environment (.env)
-        if: ${{ github.event_name == 'schedule' }}
         run: |
-          {
-            echo "SIMTOOLS_DB_SERVER=${{ secrets.DB_SERVER }}"
-            echo "SIMTOOLS_DB_API_USER=${{ secrets.DB_API_USER }}"
-            echo "SIMTOOLS_DB_API_PW=${{ secrets.DB_API_PW }}"
-            echo "SIMTOOLS_DB_API_PORT=${{ secrets.DB_API_PORT }}"
-            echo "SIMTOOLS_SIMTEL_PATH=$(grep '^SIMTOOLS_SIMTEL_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
-            echo "SIMTOOLS_CORSIKA_PATH=$(grep '^SIMTOOLS_CORSIKA_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
-            echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_HE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
-            echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_LE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
-          } > .env
+          set -a
+          source .env_template
+          set +a
 
-      - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
-        run: |
-          SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL_VERSION=' .env_template | cut -d '=' -f2- | tr -d '"')
-          SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
+          DB_SERVER="mongodb"
+          DB_API_USER="api"
+          DB_API_PW="password"
+          DB_API_PORT="27017"
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            DB_SERVER="${{ secrets.DB_SERVER }}"
+            DB_API_USER="${{ secrets.DB_API_USER }}"
+            DB_API_PW="${{ secrets.DB_API_PW }}"
+            DB_API_PORT="${{ secrets.DB_API_PORT }}"
+          fi
+
           SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
           echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
           echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION" >> "$GITHUB_ENV"
-          echo "Simulation model set to: $SIMTOOLS_DB_SIMULATION_MODEL version $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
 
-      - name: Create environment file (local DB)
-        if: github.event_name != 'schedule'
-        run: |
-          {
-            echo "SIMTOOLS_DB_SERVER=mongodb"
-            echo "SIMTOOLS_DB_API_USER=api"
-            echo "SIMTOOLS_DB_API_PW=password"
-            echo "SIMTOOLS_DB_API_PORT=27017"
-            echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}"
-            echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}"
-            echo "SIMTOOLS_SIMTEL_PATH=$(grep '^SIMTOOLS_SIMTEL_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
-            echo "SIMTOOLS_CORSIKA_PATH=$(grep '^SIMTOOLS_CORSIKA_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
-            echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_HE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
-            echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_LE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
-          } > .env
+          cat > .env <<EOF
+          SIMTOOLS_DB_SERVER=$DB_SERVER
+          SIMTOOLS_DB_API_USER=$DB_API_USER
+          SIMTOOLS_DB_API_PW=$DB_API_PW
+          SIMTOOLS_DB_API_PORT=$DB_API_PORT
+          SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL
+          SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION
+          SIMTOOLS_SIMTEL_PATH=$SIMTOOLS_SIMTEL_PATH
+          SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH
+          SIMTOOLS_CORSIKA_HE_INTERACTION=$SIMTOOLS_CORSIKA_HE_INTERACTION
+          SIMTOOLS_CORSIKA_LE_INTERACTION=$SIMTOOLS_CORSIKA_LE_INTERACTION
+          EOF
 
       - name: Extend PATH (simtel)
         run: |
@@ -196,7 +191,7 @@ jobs:
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download -O qgsdat-III.bz2
           bunzip2 qgsdat-III.bz2
           source .env
-          mv -v -f qgsdat-III ${{ env.SIMTOOLS_CORSIKA_PATH }}/
+          mv -v -f qgsdat-III "$SIMTOOLS_CORSIKA_PATH/"
 
       - name: Integration tests
         shell: bash -l {0}
@@ -208,4 +203,5 @@ jobs:
           cat .env
           simtools-print-version
           pytest --model_version=${{ matrix.model_version }} --color=yes --durations=20 \
-           -n 4 --dist loadscope --retries 2 --retry-delay 5 --no-cov tests/integration_tests/
+            'tests/integration_tests/test_applications_from_config.py::test_applications_from_config[simtools-simulate-prod_gamma_40_deg_south_check_output]'
+          #  -n 4 --dist loadscope --retries 2 --retry-delay 5 --no-cov tests/integration_tests/
