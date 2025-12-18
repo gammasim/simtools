@@ -91,7 +91,7 @@ jobs:
             SIMTEL_IMAGE_VERSION=${{ matrix.version.simtel_image }}
             AVX_FLAG=${{ matrix.version.avx_flag }}
             SIMTOOLS_BRANCH=${{ env.SIMTOOLS_BRANCH }}
-          push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+          push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' }}
           load: true
           file: ./docker/Dockerfile-simtools-prod
           tags: ${{ steps.meta.outputs.tags }}
@@ -99,7 +99,6 @@ jobs:
 
   test-simtools-prod:
     needs: build-simtools-prod
-    # TODO if: github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/CI-integrationtests.yml
     with:
       container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.no_opt_tag }}
