@@ -113,25 +113,21 @@ jobs:
           fi
 
           SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
-          echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
-          echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION" >> "$GITHUB_ENV"
-
-          cat > .env <<EOF
-          SIMTOOLS_DB_SERVER=$DB_SERVER
-          SIMTOOLS_DB_API_USER=$DB_API_USER
-          SIMTOOLS_DB_API_PW=$DB_API_PW
-          SIMTOOLS_DB_API_PORT=$DB_API_PORT
-          SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL
-          SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION
-          SIMTOOLS_SIMTEL_PATH=$SIMTOOLS_SIMTEL_PATH
-          SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH
-          SIMTOOLS_CORSIKA_HE_INTERACTION=$SIMTOOLS_CORSIKA_HE_INTERACTION
-          SIMTOOLS_CORSIKA_LE_INTERACTION=$SIMTOOLS_CORSIKA_LE_INTERACTION
-          EOF
+          {
+            echo "SIMTOOLS_DB_SERVER=$DB_SERVER"
+            echo "SIMTOOLS_DB_API_USER=$DB_API_USER"
+            echo "SIMTOOLS_DB_API_PW=$DB_API_PW"
+            echo "SIMTOOLS_DB_API_PORT=$DB_API_PORT"
+            echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL"
+            echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
+            echo "SIMTOOLS_SIMTEL_PATH=$SIMTOOLS_SIMTEL_PATH"
+            echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
+            echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$SIMTOOLS_CORSIKA_HE_INTERACTION"
+            echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$SIMTOOLS_CORSIKA_LE_INTERACTION"
+          } | tee .env >> "$GITHUB_ENV"
 
       - name: Extend PATH (simtel)
         run: |
-          source .env
           [ -n "$SIMTOOLS_SIMTEL_PATH" ] && echo "$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_PATH"
 
       - name: Determine simulation model branch
@@ -188,17 +184,11 @@ jobs:
       - name: Download QGSJet (prod images without tables)
         if: contains(inputs.container_image, 'simtools-prod')
         run: |
-          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download -O qgsdat-III.bz2
-          bunzip2 qgsdat-III.bz2
-          source .env
-          mv -v -f qgsdat-III "$SIMTOOLS_CORSIKA_PATH/"
+          wget -qO- "${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download" | \
+            bunzip2 > "${SIMTOOLS_CORSIKA_PATH}/qgsdat-III"
 
       - name: Integration tests
         shell: bash -l {0}
-        env:
-          SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
-          SIMTOOLS_DB_SIMULATION_MODEL_VERSION: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
-          SIMTOOLS_DB_SERVER: ${{ github.event_name == 'schedule' && secrets.DB_SERVER || 'mongodb' }}
         run: |
           cat .env
           simtools-print-version
