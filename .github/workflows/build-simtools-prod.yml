@@ -83,14 +83,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: 'linux/amd64'
+          platforms: ${{ matrix.version.avx_flag == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
           build-args: |
             CORSIKA_IMAGE_VERSION=${{ matrix.version.corsika }}
             SIMTEL_IMAGE_VERSION=${{ matrix.version.simtel_image }}
             AVX_FLAG=${{ matrix.version.avx_flag }}
             SIMTOOLS_BRANCH=${{ env.SIMTOOLS_BRANCH }}
           push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' }}
-          load: true
           file: ./docker/Dockerfile-simtools-prod
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
