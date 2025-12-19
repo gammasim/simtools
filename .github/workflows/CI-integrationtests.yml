@@ -174,7 +174,7 @@ jobs:
       - name: Download QGSJet (prod images without tables)
         if: contains(inputs.container_image, 'simtools-prod')
         run: |
-          wget -qO- "${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download" | \
+          wget -nv -O - "${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download" | \
             bunzip2 > "${SIMTOOLS_CORSIKA_PATH}/qgsdat-III"
 
       - name: Integration tests
