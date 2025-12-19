@@ -574,7 +574,7 @@ def write_array_elements_from_file_to_repository(
         parameter_name = "array_element_position_utm"
     else:
         raise ValueError(
-            f"Unsupported coordinate system: {coordinate_system}.Allowed are 'utm' and 'ground'."
+            f"Unsupported coordinate system: {coordinate_system}. Allowed are 'utm' and 'ground'."
         )
 
     for i, row in enumerate(array_elements):

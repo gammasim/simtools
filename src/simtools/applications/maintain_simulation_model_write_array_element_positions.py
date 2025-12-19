@@ -25,25 +25,23 @@
 
     .. code-block:: console
 
-        simtools-write-array-element-positions-to-repository \
+        simtools-maintain-simulation-model-write-array-element-positions \
             --input tests/resources/telescope_positions-North-ground.ecsv \
-            --repository_path /path/to/repository \
+            --output_path /path/to/repository \
             --parameter_version 0.1.0 \
-            --coordinate_system ground \
+            --coordinate_system ground
 
     Add array element positions to repository (utm coordinates):
 
     .. code-block:: console
 
-        simtools-write-array-element-positions-to-repository \
+        simtools-maintain-simulation-model-write-array-element-positions \
             --input tests/resources/telescope_positions-North-utm .ecsv \
-            --repository_path /path/to/repository \
+            --output_path /path/to/repository \
             --parameter_version 0.1.0 \
-            --coordinate_system utm \
+            --coordinate_system utm
 
 """
-
-from pathlib import Path
 
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
@@ -62,12 +60,6 @@ def _parse():
         required=False,
     )
     config.parser.add_argument(
-        "--repository_path",
-        help="Output path to model parameter repository.",
-        type=Path,
-        required=False,
-    )
-    config.parser.add_argument(
         "--coordinate_system",
         help="Coordinate system of array element positions (utm or ground).",
         default="ground",
@@ -76,7 +68,7 @@ def _parse():
         choices=["ground", "utm"],
     )
 
-    return config.initialize(db_config=True, simulation_model=["parameter_version"])
+    return config.initialize(db_config=True, output=True, simulation_model=["parameter_version"])
 
 
 def main():
@@ -86,7 +78,7 @@ def main():
     write_array_elements_from_file_to_repository(
         coordinate_system=app_context.args["coordinate_system"],
         input_file=app_context.args["input"],
-        repository_path=app_context.args["repository_path"],
+        repository_path=app_context.args["output_path"],
         parameter_version=app_context.args["parameter_version"],
     )
 
