@@ -163,13 +163,6 @@ jobs:
             --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }} \
             --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH"
 
-      - name: Print versions
-        run: |
-          source /workdir/env/bin/activate
-          pip install --no-cache-dir -e .
-          cat .env
-          simtools-print-version
-
       - name: Integration tests
         shell: bash -l {0}
         env:
