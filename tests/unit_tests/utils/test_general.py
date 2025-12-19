@@ -883,3 +883,41 @@ def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
 
     with pytest.raises(ValueError, match="Unsafe file path"):
         gen.pack_tar_file(tar_file_name, ["unsafe_file"])
+
+
+def test_load_environment_variables(tmp_test_directory, monkeypatch):
+    """Test load_environment_variables function."""
+    env_file = tmp_test_directory / ".env"
+
+    # Create a test .env file
+    with open(env_file, "w", encoding="utf-8") as f:
+        f.write('SIMTOOLS_VAR1="value1"\n')
+        f.write("SIMTOOLS_VAR2=value2\n")
+        f.write("SIMTOOLS_VAR3=value3 # comment\n")
+        f.write("SIMTOOLS_VAR4='value4'\n")
+
+    # Test loading all variables
+    result = gen.load_environment_variables(str(env_file))
+    assert result == {
+        "var1": "value1",
+        "var2": "value2",
+        "var3": "value3",
+        "var4": "value4",
+    }
+
+    # Test loading specific variables
+    result = gen.load_environment_variables(str(env_file), ["var1", "var3", "var5"])
+    assert "var1" in result
+    assert "var3" in result
+    assert result["var1"] == "value1"
+    assert result["var3"] == "value3"
+    assert "var5" not in result
+
+    # Test with non-existent env file
+    result = gen.load_environment_variables(str(tmp_test_directory / "non_existent.env"))
+    assert result == {}
+
+    # Test with environment variable set but not in file
+    monkeypatch.setenv("SIMTOOLS_EXTERNAL_VAR", "external_value")
+    result = gen.load_environment_variables(str(env_file), ["external_var"])
+    assert result.get("external_var") == "external_value"

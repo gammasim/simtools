@@ -1,11 +1,14 @@
 import logging
 import subprocess
+from pathlib import Path
 
 import pytest
 import yaml
 
 from simtools.dependencies import (
     _get_build_options_from_file,
+    _get_package_path,
+    export_build_info,
     get_build_options,
     get_corsika_version,
     get_database_version_or_name,
@@ -341,3 +344,101 @@ def test_get_corsika_version_with_run_time(mocker):
         stdin=subprocess.PIPE,
         text=True,
     )
+
+
+def test_export_build_info(mocker, tmp_path):
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.corsika_path = None
+    mock_config.sim_telarray_path = None
+    mock_write = mocker.patch("simtools.dependencies.ascii_handler.write_data_to_file")
+    mocker.patch(
+        "simtools.dependencies.get_build_options", return_value={"corsika_version": "78010"}
+    )
+    mocker.patch(
+        "simtools.dependencies.get_database_version_or_name", side_effect=["test_db", "1.2.3"]
+    )
+
+    output_file = tmp_path / "build_info.yml"
+    export_build_info(output_file, run_time=None)
+
+    mock_write.assert_called_once()
+    call_args = mock_write.call_args
+    assert call_args[1]["data"]["corsika_version"] == "78010"
+    assert call_args[1]["data"]["simtools"] == __version__
+    assert call_args[1]["data"]["database_name"] == "test_db"
+    assert call_args[1]["data"]["database_version"] == "1.2.3"
+
+
+def test_export_build_info_with_run_time(mocker, tmp_path):
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.corsika_path = None
+    mock_config.sim_telarray_path = None
+    mock_write = mocker.patch("simtools.dependencies.ascii_handler.write_data_to_file")
+    mock_get_build = mocker.patch(
+        "simtools.dependencies.get_build_options", return_value={"simtel_version": "master"}
+    )
+    mocker.patch(
+        "simtools.dependencies.get_database_version_or_name", side_effect=["prod_db", "2.0.0"]
+    )
+
+    output_file = tmp_path / "build_info.yml"
+    run_time = ["docker"]
+    export_build_info(output_file, run_time=run_time)
+
+    mock_get_build.assert_called_once_with(run_time)
+    mock_write.assert_called_once()
+    call_args = mock_write.call_args
+    assert call_args[1]["data"]["simtel_version"] == "master"
+    assert call_args[1]["data"]["database_name"] == "prod_db"
+    assert call_args[1]["data"]["database_version"] == "2.0.0"
+
+
+def test_get_package_path_from_config(mocker):
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.corsika_path = Path("/mocked/corsika")
+    result = _get_package_path("corsika")
+    assert result == Path("/mocked/corsika")
+
+
+def test_get_package_path_from_environment(mocker):
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.corsika_path = None
+    mock_load_env = mocker.patch("simtools.dependencies.gen.load_environment_variables")
+    mock_load_env.return_value = {"corsika_path": "/env/corsika"}
+    result = _get_package_path("corsika")
+    assert result == Path("/env/corsika")
+
+
+def test_get_package_path_sim_telarray_from_config(mocker):
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.sim_telarray_path = Path("/mocked/simtel")
+    result = _get_package_path("sim_telarray")
+    assert result == Path("/mocked/simtel")
+
+
+def test_get_package_path_sim_telarray_from_environment(mocker):
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.sim_telarray_path = None
+    mock_load_env = mocker.patch("simtools.dependencies.gen.load_environment_variables")
+    mock_load_env.return_value = {"sim_telarray_path": "/env/simtel"}
+    result = _get_package_path("sim_telarray")
+    assert result == Path("/env/simtel")
+
+
+def test_get_package_path_not_found(mocker):
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.corsika_path = None
+    mock_load_env = mocker.patch("simtools.dependencies.gen.load_environment_variables")
+    mock_load_env.return_value = {}
+    result = _get_package_path("corsika")
+    assert result is None
+
+
+def test_get_package_path_config_takes_precedence(mocker):
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.corsika_path = Path("/config/corsika")
+    mock_load_env = mocker.patch("simtools.dependencies.gen.load_environment_variables")
+    mock_load_env.return_value = {"corsika_path": "/env/corsika"}
+    result = _get_package_path("corsika")
+    assert result == Path("/config/corsika")
+    mock_load_env.assert_not_called()
