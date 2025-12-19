@@ -195,7 +195,7 @@ def get_build_options(run_time=None):
     Return CORSIKA / sim_telarray config and build options.
 
     For CORSIKA / sim_telarray build for simtools version >0.25.0:
-    expect build_opts.yml  file in each CORSIKA and sim_telarray
+    expects build_opts.yml file in each CORSIKA and sim_telarray
     directories.
 
     For CORSIKA / sim_telarray build for simtools version <=0.25.0:
