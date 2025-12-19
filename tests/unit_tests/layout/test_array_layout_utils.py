@@ -880,7 +880,7 @@ def test_write_array_elements_from_file_to_repository_utm(tmp_test_directory):
     assert para["parameter_version"] == "5.7.0"
     assert para["instrument"] == "MSTN-03"
     assert para["unit"] == "m"
-    assert pytest.approx(para["value"][0]) == 217401.1
+    assert para["value"][0] == pytest.approx(217401.1)
 
 
 def test_write_array_elements_from_file_to_repository_ground(tmp_test_directory):
@@ -898,7 +898,7 @@ def test_write_array_elements_from_file_to_repository_ground(tmp_test_directory)
     assert para["parameter_version"] == "5.7.0"
     assert para["instrument"] == "MSTN-03"
     assert para["unit"] == "m"
-    assert pytest.approx(para["value"][0]) == 26.86
+    assert para["value"][0] == pytest.approx(26.86)
 
 
 def test_write_array_elements_from_file_to_repository_error(tmp_test_directory):
