@@ -172,7 +172,11 @@ def _resolve_model_version_to_latest_patch(args_dict, logger):
 
 def _version_info(args_dict, io_handler_instance, logger):
     """Print and optionally write version information."""
-    build_options = dependencies.get_build_options(args_dict.get("run_time"))
+    try:
+        build_options = dependencies.get_build_options(args_dict.get("run_time"))
+    except FileNotFoundError:
+        logger.debug("No build options found.")
+        return
 
     logger.info(
         f"simtools: {version.__version__} "
