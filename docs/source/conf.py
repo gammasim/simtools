@@ -50,9 +50,6 @@ def get_python_version_from_pyproject():
 project = "simtools"
 copyright = "2024-2025, gammasim-tools, simtools developers"  # noqa A001
 author = get_authors_from_citation_file()
-rst_epilog = f"""
-.. |author| replace:: {author}
-"""
 
 python_min_requires, python_requires = get_python_version_from_pyproject()
 rst_epilog = f"""
