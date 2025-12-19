@@ -2,12 +2,10 @@
 
 import argparse
 import logging
-import os
 import sys
 import uuid
 
 import astropy.units as u
-from dotenv import load_dotenv
 
 import simtools.configuration.commandline_parser as argparser
 from simtools.db.mongo_db import jsonschema_db_dict
@@ -305,19 +303,16 @@ class Configurator:
         Only parameters which are not already configured are changed (i.e., parameter is None).
 
         """
+        _all_env_dict = gen.load_environment_variables(
+            env_file=self.config.get("env_file", None), env_list=self.config.keys()
+        )
+
         _env_dict = {}
-        try:
-            load_dotenv(self.config["env_file"])
-        except KeyError:
-            pass
         for key, value in self.config.items():
-            # environmental variables for simtools should always start with SIMTOOLS_
-            env_variable_to_read = f"SIMTOOLS_{key.upper()}"
             if value is None:
-                env_value = os.environ.get(env_variable_to_read)
+                env_value = _all_env_dict.get(key)
                 if env_value is not None:
-                    env_value = env_value.split("#")[0].strip().replace('"', "").replace("'", "")
-                _env_dict[key] = env_value
+                    _env_dict[key] = env_value
 
         self._fill_from_config_dict(_env_dict)
 

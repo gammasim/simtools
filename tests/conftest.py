@@ -30,8 +30,8 @@ def simtools_settings(tmp_test_directory, db_config):
     """Load simtools settings for the test session."""
     load_dotenv(".env")
     # Set defaults only if not already set (e.g. CI environment)
-    os.environ.setdefault("SIMTOOLS_SIMTEL_PATH", str(tmp_test_directory) + "/sim_telarray")
-    os.environ.setdefault("SIMTOOLS_SIMTEL_EXECUTABLE", "sim_telarray")
+    os.environ.setdefault("SIMTOOLS_SIM_TELARRAY_PATH", str(tmp_test_directory) + "/sim_telarray")
+    os.environ.setdefault("SIMTOOLS_SIM_TELARRAY_EXECUTABLE", "sim_telarray")
     os.environ.setdefault("SIMTOOLS_CORSIKA_PATH", str(tmp_test_directory) + "/corsika")
     os.environ.setdefault("SIMTOOLS_CORSIKA_EXECUTABLE", "corsika_flat")
     settings.config.load(db_config=db_config)
@@ -79,7 +79,7 @@ def _mock_settings_env_vars(tmp_test_directory):
     with mock.patch.dict(
         os.environ,
         {
-            "SIMTOOLS_SIMTEL_PATH": str(settings.config.sim_telarray_path),
+            "SIMTOOLS_SIM_TELARRAY_PATH": str(settings.config.sim_telarray_path),
             "SIMTOOLS_DB_API_USER": "db_user",
             "SIMTOOLS_DB_API_PW": "12345",
             "SIMTOOLS_DB_API_PORT": "42",

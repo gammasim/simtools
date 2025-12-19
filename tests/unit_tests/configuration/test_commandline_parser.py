@@ -438,3 +438,21 @@ def test_get_dictionary_with_corsika_configuration(mocker):
     assert corsika_config["correct_for_b_field_alignment"]["action"] == "store_true"
     assert corsika_config["correct_for_b_field_alignment"]["required"] is False
     assert corsika_config["correct_for_b_field_alignment"]["default"] is True
+
+
+def test_build_info_action(mocker):
+    mock_get_build_options = mocker.patch(
+        "simtools.dependencies.get_build_options",
+        return_value={"version": "1.0.0", "python": "3.9"},
+    )
+    mock_print = mocker.patch("builtins.print")
+    mock_exit = mocker.patch.object(argparse.ArgumentParser, "exit")
+
+    action = parser.BuildInfoAction(option_strings=["--build_info"], build_info="Test build info")
+    test_parser = parser.CommandLineParser()
+    action(test_parser, None, None, "--build_info")
+
+    assert mock_get_build_options.called
+    assert mock_print.called
+    assert mock_exit.called
+    assert mock_print.call_args_list[0][0][0] == "Test build info"
