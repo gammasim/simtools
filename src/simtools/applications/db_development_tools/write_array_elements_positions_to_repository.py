@@ -1,9 +1,12 @@
 #!/usr/bin/python3
 """
-    Read array element positions from file and add them to model repository.
+    Read array element positions from file and write model parameter files for each element.
 
     This is an application for experts and should not be used by the general user.
     Reading of input is fine-tuned to the array element files as provided by CTAO.
+
+    Writes one model parameter file per array element into a directory structure compatible
+    with the simtools model parameter repository.
 
     Command line arguments
 
@@ -13,35 +16,38 @@
         Path of local copy of model parameter repository.
     parameter_version : str
         Parameter version.
-    site : str
-        Observatory site.
     coordinate_system : str
         Coordinate system of array element positions (ground or utm).
 
     Examples
     --------
-    Add array element positions to repository:
+    Add array element positions to repository (ground coordinates):
 
     .. code-block:: console
 
         simtools-write-array-element-positions-to-repository \
-            --input /path/to/positions.txt \
+            --input tests/resources/telescope_positions-North-ground.ecsv \
             --repository_path /path/to/repository \
             --parameter_version 0.1.0 \
             --coordinate_system ground \
-            --site North
+
+    Add array element positions to repository (utm coordinates):
+
+    .. code-block:: console
+
+        simtools-write-array-element-positions-to-repository \
+            --input tests/resources/telescope_positions-North-utm .ecsv \
+            --repository_path /path/to/repository \
+            --parameter_version 0.1.0 \
+            --coordinate_system utm \
 
 """
 
 from pathlib import Path
 
-import astropy.table
-
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.data_model.model_data_writer import ModelDataWriter
-from simtools.io import ascii_handler
-from simtools.model.array_model import ArrayModel
+from simtools.layout.array_layout_utils import write_array_elements_from_file_to_repository
 
 
 def _parse():
@@ -70,85 +76,19 @@ def _parse():
         choices=["ground", "utm"],
     )
 
-    return config.initialize(db_config=True, simulation_model=["site", "parameter_version"])
-
-
-def write_utm_array_elements_to_repository(args_dict, logger):
-    """
-    Write UTM position of array elements to model repository.
-
-    Read array element positions from file. The ecsv row definition might
-    include telescope_name or asset_code and sequence_number.
-
-    Parameters
-    ----------
-    args_dict : dict
-        Command line arguments.
-    app_context.logger : app_context.logger
-        app_context.logger object.
-
-    """
-    array_elements = astropy.table.Table.read(args_dict["input"])
-    for row in array_elements:
-        instrument = (
-            row["telescope_name"]
-            if "telescope_name" in array_elements.colnames
-            else f"{row['asset_code']}-{row['sequence_number']}"
-        )
-        output_path = Path(args_dict["repository_path"]) / f"{instrument}"
-        output_path.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Writing array element positions (utm) to {output_path}")
-
-        ModelDataWriter.dump_model_parameter(
-            parameter_name="array_element_position_utm",
-            instrument=instrument,
-            value=f"{row['utm_east']} {row['utm_north']} {row['altitude']}",
-            parameter_version=args_dict["parameter_version"],
-            output_path=output_path,
-            output_file="array_element_position_utm.json",
-        )
-
-
-def write_ground_array_elements_to_repository(args_dict, logger):
-    """
-    Write ground position of array elements to model repository.
-
-    Parameters
-    ----------
-    args_dict : dict
-        Command line arguments.
-    logger : logger
-        logger object.
-
-    """
-    array_model = ArrayModel(
-        model_version=None,
-        site=args_dict["site"],
-        array_elements=args_dict["input"],
-    )
-    for element_name, data in array_model.array_elements.items():
-        output_path = Path(args_dict["repository_path"]) / f"{element_name}"
-        output_path.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Writing array element positions (ground) to {output_path}")
-        ascii_handler.write_data_to_file(
-            data=data,
-            output_file=output_path / "array_element_position_ground.json",
-            sort_keys=False,
-            numpy_types=True,
-        )
+    return config.initialize(db_config=True, simulation_model=["parameter_version"])
 
 
 def main():
     """Application main."""
     app_context = startup_application(_parse)
 
-    if app_context.args["coordinate_system"] == "utm":
-        write_utm_array_elements_to_repository(app_context.args, app_context.logger)
-    elif app_context.args["coordinate_system"] == "ground":
-        write_ground_array_elements_to_repository(app_context.args, app_context.logger)
-    else:
-        app_context.logger.error("Invalid coordinate system. Allowed are 'utm' and 'ground'.")
-        raise ValueError
+    write_array_elements_from_file_to_repository(
+        coordinate_system=app_context.args["coordinate_system"],
+        input_file=app_context.args["input"],
+        repository_path=app_context.args["repository_path"],
+        parameter_version=app_context.args["parameter_version"],
+    )
 
 
 if __name__ == "__main__":
