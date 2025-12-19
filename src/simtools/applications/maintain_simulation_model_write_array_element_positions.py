@@ -36,7 +36,7 @@
     .. code-block:: console
 
         simtools-maintain-simulation-model-write-array-element-positions \
-            --input tests/resources/telescope_positions-North-utm .ecsv \
+            --input tests/resources/telescope_positions-North-utm.ecsv \
             --output_path /path/to/repository \
             --parameter_version 0.1.0 \
             --coordinate_system utm
