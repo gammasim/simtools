@@ -865,6 +865,12 @@ def load_environment_variables(env_file=".env", env_list=None):
         Path to the .env file.
     env_list: list, optional
         List of environment variables to be read. If None, all variables are read.
+
+    Returns
+    -------
+    dict
+        Dictionary mapping environment variable names (lowercase, without the
+        ``SIMTOOLS_`` prefix) to their cleaned string values.
     """
     dotenv.load_dotenv(env_file or None)
     keys = (
