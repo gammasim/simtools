@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from simtools.application_control import (
     _resolve_model_version_to_latest_patch,
+    _version_info,
     get_application_label,
     startup_application,
 )
@@ -250,3 +251,98 @@ def test_resolve_model_version_to_latest_patch_list_mixed_with_exception():
                 _resolve_model_version_to_latest_patch(args_dict, logger)
 
                 assert args_dict["model_version"] == ["6.0.1", "6.1"]
+
+
+def test_version_info_with_build_options():
+    """Test _version_info with available build options."""
+    args_dict = {"run_time": "test_runtime"}
+    logger = logging.getLogger("test")
+    mock_io_handler = MagicMock()
+
+    with patch("simtools.application_control.dependencies.get_build_options") as mock_build:
+        with patch(
+            "simtools.application_control.dependencies.get_database_version_or_name"
+        ) as mock_db:
+            with patch("simtools.application_control.version.__version__", "1.0.0"):
+                mock_build.return_value = {
+                    "corsika_version": "7.7500",
+                    "simtel_version": "2021-09-01",
+                }
+                mock_db.side_effect = ["test_db", "1.0.0"]
+
+                _version_info(args_dict, mock_io_handler, logger)
+
+                mock_build.assert_called_once_with("test_runtime")
+
+
+def test_version_info_no_build_options():
+    """Test _version_info when build options file not found."""
+    args_dict = {}
+    logger = logging.getLogger("test")
+    mock_io_handler = MagicMock()
+
+    with patch(
+        "simtools.application_control.dependencies.get_build_options",
+        side_effect=FileNotFoundError("Build options not found"),
+    ):
+        _version_info(args_dict, mock_io_handler, logger)
+
+        mock_io_handler.get_output_file.assert_not_called()
+
+
+def test_version_info_export_build_info_with_io_handler():
+    """Test _version_info exports build info when io_handler is available."""
+    args_dict = {"run_time": "test_runtime", "export_build_info": "build_info.json"}
+    logger = logging.getLogger("test")
+    mock_io_handler = MagicMock()
+    mock_io_handler.get_output_file.return_value = "/output/build_info.json"
+
+    with patch("simtools.application_control.dependencies.get_build_options") as mock_build:
+        with patch("simtools.application_control.dependencies.get_database_version_or_name"):
+            with patch(
+                "simtools.application_control.dependencies.export_build_info"
+            ) as mock_export:
+                with patch("simtools.application_control.version.__version__", "1.0.0"):
+                    mock_build.return_value = {"corsika_version": "7.7500"}
+
+                    _version_info(args_dict, mock_io_handler, logger)
+
+                    mock_io_handler.get_output_file.assert_called_once_with("build_info.json")
+                    mock_export.assert_called_once_with("/output/build_info.json", "test_runtime")
+
+
+def test_version_info_export_build_info_without_io_handler():
+    """Test _version_info exports build info using file path when io_handler is None."""
+    args_dict = {"run_time": "test_runtime", "export_build_info": "/output/build_info.json"}
+    logger = logging.getLogger("test")
+
+    with patch("simtools.application_control.dependencies.get_build_options") as mock_build:
+        with patch("simtools.application_control.dependencies.get_database_version_or_name"):
+            with patch(
+                "simtools.application_control.dependencies.export_build_info"
+            ) as mock_export:
+                with patch("simtools.application_control.version.__version__", "1.0.0"):
+                    mock_build.return_value = {"corsika_version": "7.7500"}
+
+                    _version_info(args_dict, None, logger)
+
+                    mock_export.assert_called_once_with("/output/build_info.json", "test_runtime")
+
+
+def test_version_info_no_export_build_info():
+    """Test _version_info when export_build_info is not set."""
+    args_dict = {"run_time": "test_runtime"}
+    logger = logging.getLogger("test")
+    mock_io_handler = MagicMock()
+
+    with patch("simtools.application_control.dependencies.get_build_options") as mock_build:
+        with patch("simtools.application_control.dependencies.get_database_version_or_name"):
+            with patch(
+                "simtools.application_control.dependencies.export_build_info"
+            ) as mock_export:
+                with patch("simtools.application_control.version.__version__", "1.0.0"):
+                    mock_build.return_value = {"corsika_version": "7.7500"}
+
+                    _version_info(args_dict, mock_io_handler, logger)
+
+                    mock_export.assert_not_called()
