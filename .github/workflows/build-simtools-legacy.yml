@@ -140,7 +140,7 @@ jobs:
 
       - name: Set sim_telarray path
         run: |
-          echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
+          echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIM_TELARRAY_PATH" >> "$GITHUB_ENV"
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: |
@@ -159,7 +159,7 @@ jobs:
             echo "SIMTOOLS_DB_API_PORT=27017"
             echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}"
             echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}"
-            echo "SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray/sim_telarray"
+            echo "SIMTOOLS_SIM_TELARRAY_PATH=/workdir/sim_telarray/sim_telarray"
             echo "SIMTOOLS_CORSIKA_PATH=/workdir/sim_telarray/corsika-run"
           } > .env
 

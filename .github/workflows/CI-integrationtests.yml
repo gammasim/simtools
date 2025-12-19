@@ -77,7 +77,7 @@ jobs:
 
       - name: Set sim_telarray path
         run: |
-          echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
+          echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIM_TELARRAY_PATH" >> "$GITHUB_ENV"
 
       - name: Create environment file (remote DB; schedule only)
         if: ${{ github.event_name == 'schedule' }}
@@ -87,7 +87,7 @@ jobs:
             echo "SIMTOOLS_DB_API_USER=${{ secrets.DB_API_USER }}"
             echo "SIMTOOLS_DB_API_PW=${{ secrets.DB_API_PW }}"
             echo "SIMTOOLS_DB_API_PORT=${{ secrets.DB_API_PORT }}"
-            echo "SIMTOOLS_SIMTEL_PATH=$(grep '^SIMTOOLS_SIMTEL_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
+            echo "SIMTOOLS_SIM_TELARRAY_PATH=$(grep '^SIMTOOLS_SIM_TELARRAY_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
             echo "SIMTOOLS_CORSIKA_PATH=$(grep '^SIMTOOLS_CORSIKA_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
             echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_HE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
             echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_LE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
@@ -112,7 +112,7 @@ jobs:
             echo "SIMTOOLS_DB_API_PORT=27017"
             echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}"
             echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}"
-            echo "SIMTOOLS_SIMTEL_PATH=$(grep '^SIMTOOLS_SIMTEL_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
+            echo "SIMTOOLS_SIM_TELARRAY_PATH=$(grep '^SIMTOOLS_SIM_TELARRAY_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
             echo "SIMTOOLS_CORSIKA_PATH=$(grep '^SIMTOOLS_CORSIKA_PATH=' .env_template | cut -d '=' -f2- | tr -d '"')"
             echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_HE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
             echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$(grep '^SIMTOOLS_CORSIKA_LE_INTERACTION=' .env_template | cut -d '=' -f2- | tr -d '"')"
