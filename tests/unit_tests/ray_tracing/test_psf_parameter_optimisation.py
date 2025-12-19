@@ -8,7 +8,6 @@ import numpy as np
 import pytest
 
 import simtools.ray_tracing.psf_parameter_optimisation as psf_opt
-from simtools.ray_tracing.psf_parameter_optimisation import GradientStepResult
 
 TEST_OUTPUT_DIR = Path("/dummy_test_path")
 
@@ -561,7 +560,7 @@ def test_perform_gradient_step_with_retries(optimizer):
         )
 
         assert result is not None
-        assert isinstance(result, GradientStepResult)
+        assert isinstance(result, psf_opt.GradientStepResult)
         assert result.params == {"mirror_reflection_random_angle": [0.004]}
         assert result.step_accepted is True
 
@@ -982,7 +981,7 @@ def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
         mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
         mock_sim.return_value = (3.5, 0.05, 0.8, sample_data)
         mock_step.side_effect = [
-            GradientStepResult(
+            psf_opt.GradientStepResult(
                 params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
                 psf_diameter=3.4,
                 metric=0.008,
@@ -1006,7 +1005,7 @@ def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
     ):
         mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
         mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
-        mock_step.return_value = GradientStepResult(
+        mock_step.return_value = psf_opt.GradientStepResult(
             params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
             psf_diameter=3.4,
             metric=0.095,
@@ -1030,7 +1029,7 @@ def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
         mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
         mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
         mock_step.side_effect = [
-            GradientStepResult(
+            psf_opt.GradientStepResult(
                 params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
                 psf_diameter=3.4,
                 metric=0.08,
@@ -1039,7 +1038,7 @@ def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
                 step_accepted=True,
                 learning_rate=0.1,
             ),  # Better
-            GradientStepResult(
+            psf_opt.GradientStepResult(
                 params={"mirror_reflection_random_angle": [0.003, 0.15, 0.025]},
                 psf_diameter=3.3,
                 metric=0.05,
@@ -1048,7 +1047,7 @@ def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
                 step_accepted=True,
                 learning_rate=0.1,
             ),  # Best
-            GradientStepResult(
+            psf_opt.GradientStepResult(
                 params={"mirror_reflection_random_angle": [0.002, 0.15, 0.020]},
                 psf_diameter=3.2,
                 metric=0.12,
@@ -1092,7 +1091,7 @@ def test_perform_gradient_step_with_retries_learning_rate_reduction(
         )
 
         # Should fail and return GradientStepResult with False for step_accepted
-        assert isinstance(result, GradientStepResult)
+        assert isinstance(result, psf_opt.GradientStepResult)
         assert result.step_accepted is False
 
 
@@ -1451,7 +1450,7 @@ def test_run_gradient_descent_no_step_accepted(optimizer, sample_data):
         # First call: step not accepted
         # Second call: step accepted
         mock_step.side_effect = [
-            GradientStepResult(
+            psf_opt.GradientStepResult(
                 params=None,
                 psf_diameter=None,
                 metric=None,
@@ -1460,7 +1459,7 @@ def test_run_gradient_descent_no_step_accepted(optimizer, sample_data):
                 step_accepted=False,
                 learning_rate=0.1,
             ),
-            GradientStepResult(
+            psf_opt.GradientStepResult(
                 params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
                 psf_diameter=3.4,
                 metric=0.008,
@@ -1491,7 +1490,7 @@ def test_run_gradient_descent_learning_rate_cap(optimizer, sample_data):
 
         # Multiple steps not accepted to trigger learning rate increases
         mock_step.side_effect = [
-            GradientStepResult(
+            psf_opt.GradientStepResult(
                 params=None,
                 psf_diameter=None,
                 metric=None,
@@ -1500,7 +1499,7 @@ def test_run_gradient_descent_learning_rate_cap(optimizer, sample_data):
                 step_accepted=False,
                 learning_rate=0.5,
             ),
-            GradientStepResult(
+            psf_opt.GradientStepResult(
                 params=None,
                 psf_diameter=None,
                 metric=None,
@@ -1509,7 +1508,7 @@ def test_run_gradient_descent_learning_rate_cap(optimizer, sample_data):
                 step_accepted=False,
                 learning_rate=1.0,
             ),
-            GradientStepResult(
+            psf_opt.GradientStepResult(
                 params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
                 psf_diameter=3.4,
                 metric=0.008,

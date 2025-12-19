@@ -557,7 +557,8 @@ def test_write_seeds_use_test_seeds(corsika_config_mock_array_model):
     expected_calls = [_call.args[0] for _call in mock_file.write.call_args_list]
     expected_seeds = [534, 220, 1104, 382]
     for _call in expected_calls:
-        assert _call == (f"SEED {expected_seeds.pop(0)} 0 0\n")
+        seed = expected_seeds.pop(0)
+        assert _call == f"SEED {seed} 0 0\n"
 
 
 def test_get_corsika_telescope_list(corsika_config_mock_array_model):
