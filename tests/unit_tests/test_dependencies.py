@@ -165,10 +165,8 @@ def test_get_build_options_legacy(mocker):
         "corsika_version": "78010",
         "bernlohr_version": "1.70",
     }
-    # Calls order in legacy mode:
-    # 1) corsika new-style -> FileNotFoundError
-    # 2) sim_telarray new-style -> FileNotFoundError
-    # 3) sim_telarray legacy fallback -> returns legacy_opts
+    # Simulate the call sequence: corsika new-style fails, sim_telarray new-style fails
+    # (both raising FileNotFoundError), then sim_telarray legacy succeeds and returns legacy_opts.
     mock_ascii_handler.side_effect = [FileNotFoundError, FileNotFoundError, legacy_opts]
     opts = get_build_options()
     assert opts["build_opt"] == "prod6-baseline"
