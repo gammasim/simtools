@@ -6,7 +6,7 @@ The versions of simtools, the DB, sim_telarray, and CORSIKA are printed.
 
 """
 
-from simtools import dependencies, version
+from simtools import dependencies
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.io import ascii_handler
@@ -27,12 +27,10 @@ def main():
     app_context = startup_application(_parse)
 
     version_string = dependencies.get_version_string()
-    version_dict = {"simtools version": version.__version__}
+    version_dict = {}
 
     print()
-    # The loop below is not necessary, there is only one entry, but it is cleaner
-    for key, value in version_dict.items():  #
-        print(f"{key}: {value}")
+    return
     print(version_string)
 
     version_list = version_string.strip().split("\n")
