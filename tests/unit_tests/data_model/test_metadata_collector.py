@@ -296,7 +296,7 @@ def test_fill_context_sim_list(args_dict_site):
 
     # one entry with Nones only
     _test_def = [{"site": None, "class": None, "type": None, "subtype": None, "id:": None}]
-    _test_def = _collector._fill_context_sim_list(_test_def, _new_element)
+    _collector._fill_context_sim_list(_test_def, _new_element)
     assert _test_none == [_new_element]
 
 
