@@ -235,7 +235,7 @@ def _get_package_path(package):
     path = getattr(settings.config, f"{package}_path")
     if path is None:
         path = gen.load_environment_variables().get(f"{package}_path")
-    return Path(path)
+    return Path(path) if path else None
 
 
 def _get_build_options_from_file(build_opts_path, run_time=None):
