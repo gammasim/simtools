@@ -555,11 +555,6 @@ def write_array_elements_from_file_to_repository(
     """
     repository_path = Path(repository_path)
 
-    def _make_output_path(element_name):
-        output_path = repository_path / f"{element_name}"
-        output_path.mkdir(parents=True, exist_ok=True)
-        _logger.info(f"Writing array element positions ({coordinate_system}) to {output_path}")
-
     array_elements = Table.read(input_file)
 
     if coordinate_system == "ground":
@@ -583,7 +578,9 @@ def write_array_elements_from_file_to_repository(
             if "telescope_name" in array_elements.colnames
             else f"{row['asset_code']}-{row['sequence_number']}"
         )
-        _make_output_path(instrument)
+        output_path = repository_path / f"{instrument}"
+        output_path.mkdir(parents=True, exist_ok=True)
+        _logger.info(f"Writing array element positions ({coordinate_system}) to {output_path}")
 
         ModelDataWriter.dump_model_parameter(
             parameter_name=parameter_name,
