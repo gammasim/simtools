@@ -98,6 +98,9 @@ def test_get_corsika_version_simple(mocker):
         def __truediv__(self, other):
             return f"/mocked/path/{other}"
 
+        def __fspath__(self):
+            return "/mocked/path"
+
     mock_config.corsika_path = PathMock()
     mock_config.corsika_exe = "corsika"
     mock_popen = mocker.patch("simtools.dependencies.subprocess.Popen")
@@ -119,6 +122,9 @@ def test_get_build_options_corsika_and_simtelarray(mocker):
         @property
         def parent(self):
             return self
+
+        def __fspath__(self):
+            return "/mocked/path"
 
     mock_config.corsika_path = PathMock()
     mock_config.sim_telarray_path = PathMock()
@@ -149,14 +155,18 @@ def test_get_build_options_corsika_and_simtelarray(mocker):
 
 def test_get_build_options_legacy(mocker):
     mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.sim_telarray_path = mocker.Mock()
+    mock_config.sim_telarray_path = "/mocked/path"
     mock_ascii_handler = mocker.patch("simtools.dependencies.ascii_handler.collect_data_from_file")
     legacy_opts = {
         "build_opt": "prod6-baseline",
         "corsika_version": "78010",
         "bernlohr_version": "1.70",
     }
-    mock_ascii_handler.side_effect = [legacy_opts]
+    # Calls order in legacy mode:
+    # 1) corsika new-style -> FileNotFoundError
+    # 2) sim_telarray new-style -> FileNotFoundError
+    # 3) sim_telarray legacy fallback -> returns legacy_opts
+    mock_ascii_handler.side_effect = [FileNotFoundError, FileNotFoundError, legacy_opts]
     opts = get_build_options()
     assert opts["build_opt"] == "prod6-baseline"
     assert opts["corsika_version"] == "78010"
@@ -201,6 +211,9 @@ def test_get_corsika_version_no_version_but_build_opts(mocker):
         def __truediv__(self, other):
             return f"/mocked/path/{other}"
 
+        def __fspath__(self):
+            return "/mocked/path"
+
     mock_config.corsika_path = PathMock()
     mock_config.corsika_exe = "corsika"
     mock_popen = mocker.patch("simtools.dependencies.subprocess.Popen")
@@ -221,6 +234,9 @@ def test_get_corsika_version_no_build_opts(mocker):
     class PathMock:
         def __truediv__(self, other):
             return f"/mocked/path/{other}"
+
+        def __fspath__(self):
+            return "/mocked/path"
 
     mock_config.corsika_path = PathMock()
     mock_config.corsika_exe = "corsika"
@@ -244,6 +260,9 @@ def test_get_build_options_file_not_found(mocker):
         @property
         def parent(self):
             return self
+
+        def __fspath__(self):
+            return "/mocked/path"
 
     mock_config.corsika_path = PathMock()
     mock_config.sim_telarray_path = PathMock()
@@ -273,13 +292,12 @@ def test__get_build_options_from_file_subprocess_error(mocker):
 
 def test_get_build_options_debug_logging_on_exception(mocker, caplog):
     mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_path = mocker.Mock()
-    mock_path.parent = mocker.Mock()
-    mock_config.corsika_path = mock_path
-    mock_config.sim_telarray_path = mock_path
+    mock_config.corsika_path = "/mocked/corsika"
+    mock_config.sim_telarray_path = "/mocked/simtel"
     mock_ascii_handler = mocker.patch("simtools.dependencies.ascii_handler.collect_data_from_file")
     # First call raises FileNotFoundError, legacy fallback also raises
-    mock_ascii_handler.side_effect = [FileNotFoundError, FileNotFoundError]
+    # Ensure all attempted reads fail: corsika new-style, sim_telarray new-style, sim_telarray legacy
+    mock_ascii_handler.side_effect = [FileNotFoundError, FileNotFoundError, FileNotFoundError]
     caplog.set_level(logging.DEBUG)
     with pytest.raises(FileNotFoundError):
         get_build_options()

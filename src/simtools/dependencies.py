@@ -261,7 +261,7 @@ def _get_build_options_from_file(build_opts_path, run_time=None):
 
 def export_build_info(output_file, run_time=None):
     """
-    Export build information to a file.
+    Export build and version information to a file.
 
     Parameters
     ----------
@@ -269,8 +269,9 @@ def export_build_info(output_file, run_time=None):
         Path to the output file.
     run_time : list, optional
         Runtime environment command (e.g., Docker).
-
     """
     build_info = get_build_options(run_time)
     build_info["simtools"] = __version__
+    build_info["database_name"] = get_database_version_or_name(version=False)
+    build_info["database_version"] = get_database_version_or_name(version=True)
     ascii_handler.write_data_to_file(data=build_info, output_file=Path(output_file))
