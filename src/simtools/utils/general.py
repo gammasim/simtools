@@ -880,6 +880,4 @@ def load_environment_variables(env_file=".env", env_list=None):
             continue
         cleaned_value = env_value.split("#")[0].strip().replace('"', "").replace("'", "")
         env_values[key.removeprefix("SIMTOOLS_").lower()] = cleaned_value
-
-    _logger.debug("Loaded environment variables: %s", list(env_values.keys()))
     return env_values

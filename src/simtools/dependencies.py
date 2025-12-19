@@ -214,6 +214,8 @@ def get_build_options(run_time=None):
     build_opts = {}
     for package in ["corsika", "sim_telarray"]:
         path = _get_package_path(package)
+        if not path:
+            continue
         try:
             build_opts.update(_get_build_options_from_file(path / "build_opts.yml", run_time))
         except (FileNotFoundError, TypeError, ValueError):
