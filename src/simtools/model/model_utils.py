@@ -10,7 +10,12 @@ from simtools.utils import names
 
 
 def initialize_simulation_models(
-    label, model_version, site, telescope_name, calibration_device_name=None
+    label,
+    model_version,
+    site,
+    telescope_name,
+    calibration_device_name=None,
+    overwrite_model_parameters=None,
 ):
     """
     Initialize simulation models for a single telescope, site, and calibration device model.
@@ -38,11 +43,13 @@ def initialize_simulation_models(
         telescope_name=telescope_name,
         model_version=model_version,
         label=label,
+        overwrite_model_parameters=overwrite_model_parameters,
     )
     site_model = SiteModel(
         site=site,
         model_version=model_version,
         label=label,
+        overwrite_model_parameters=overwrite_model_parameters,
     )
     if calibration_device_name is not None:
         calibration_model = CalibrationModel(
@@ -50,6 +57,7 @@ def initialize_simulation_models(
             calibration_device_model_name=calibration_device_name,
             model_version=model_version,
             label=label,
+            overwrite_model_parameters=overwrite_model_parameters,
         )
     else:
         calibration_model = None
