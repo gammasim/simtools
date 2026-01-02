@@ -8,12 +8,8 @@ Follows CTAO top-level data model definition.
 
 """
 
-import logging
-
 import simtools.data_model.schema
 import simtools.utils.general as gen
-
-_logger = logging.getLogger(__name__)
 
 
 def get_default_metadata_dict(

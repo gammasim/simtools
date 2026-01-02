@@ -36,7 +36,8 @@ def num_gains_schema(num_gains_schema_file):
 def test_write(tmp_test_directory, args_dict_site):
     # both none (no exception expected)
     w_1 = writer.ModelDataWriter(output_path=tmp_test_directory)
-    assert w_1.write(metadata=None, product_data=None) is None
+    result = w_1.write(metadata=None, product_data=None)
+    assert result is None
 
     # metadata not none; no data and metadata file
     _metadata = metadata_collector.MetadataCollector(args_dict=args_dict_site)

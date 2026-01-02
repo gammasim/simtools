@@ -384,7 +384,6 @@ class PSFImage:
                 if radius is not found (found_radius is False)
             """
             r0, r1 = rad_min, rad_min + dr
-            s0, s1 = 0, 0
             found_radius = False
             while not found_radius:
                 s0, s1 = self._sum_photons_in_radius(r0), self._sum_photons_in_radius(r1)
