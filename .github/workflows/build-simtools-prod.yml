@@ -95,6 +95,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   test-simtools-prod:
+    permissions:
+      contents: read
     needs: build-simtools-prod
     uses: ./.github/workflows/CI-integrationtests.yml
     secrets: inherit
