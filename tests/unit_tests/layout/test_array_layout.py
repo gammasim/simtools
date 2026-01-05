@@ -428,7 +428,7 @@ def test_export_telescope_list_table(
 
     layout_utm._telescope_list = []
     try:
-        table_utm = layout_utm.export_telescope_list_table(crs_name="utm")
+        layout_utm.export_telescope_list_table(crs_name="utm")
     except IndexError:
         pytest.fail("IndexError raised")
 
