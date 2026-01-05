@@ -148,8 +148,10 @@ def test_validate_or_fix_nsb_spectrum_file_format(simulator_camera_efficiency):
                 if line.startswith("#"):
                     continue
                 entry = line.split()
-                assert float(entry[0]) == pytest.approx(wavelengths.pop(0))
-                assert float(entry[2]) == pytest.approx(nsbs.pop(0))
+                expected_wavelength = wavelengths.pop(0)
+                expected_nsb = nsbs.pop(0)
+                assert float(entry[0]) == pytest.approx(expected_wavelength)
+                assert float(entry[2]) == pytest.approx(expected_nsb)
                 assert len(entry) == 3
                 if len(wavelengths) == 0:
                     break
