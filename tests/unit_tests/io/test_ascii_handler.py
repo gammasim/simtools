@@ -12,7 +12,6 @@ import yaml
 
 import simtools.io.ascii_handler as ascii_handler
 from simtools.constants import MODEL_PARAMETER_METASCHEMA, MODEL_PARAMETER_SCHEMA_PATH
-from simtools.io.ascii_handler import read_file_encoded_in_utf_or_latin
 
 FAILED_TO_READ_FILE_ERROR = r"^Failed to read file"
 url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
@@ -194,7 +193,7 @@ def test_read_file_encoded_in_utf_or_latin_unicode_decode_error():
         with pytest.raises(
             UnicodeDecodeError, match=r"Unable to decode file.*using UTF-8 or Latin-1"
         ):
-            read_file_encoded_in_utf_or_latin(mock_file_name)
+            ascii_handler.read_file_encoded_in_utf_or_latin(mock_file_name)
 
 
 def test_json_numpy_encoder():

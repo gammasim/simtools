@@ -63,6 +63,7 @@ def test_plot_1d(db, io_handler, wavelength):
     logger.debug(f"Produced 1D plot ({plot_file}).")
 
     assert plot_file.exists()
+    plt.close(fig)
 
 
 def test_plot_table(io_handler):
@@ -81,6 +82,7 @@ def test_plot_table(io_handler):
     logger.debug(f"Produced 1D plot ({plot_file}).")
 
     assert plot_file.exists()
+    plt.close(fig)
 
 
 def test_add_unit(caplog, wavelength):
@@ -278,3 +280,4 @@ def test_save_figures_to_single_document(tmp_path):
     assert output_pdf.exists()
     plt.close(fig1)
     plt.close(fig2)
+    plt.close("all")
