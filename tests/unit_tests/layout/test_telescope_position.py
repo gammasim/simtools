@@ -171,9 +171,9 @@ def test_convert(crs_wgs84, crs_local, crs_utm):
 
     # errors
     with pytest.raises(pyproj.exceptions.CRSError):
-        _lat, _lon = tel._convert("crs_local", crs_wgs84, 0.0, 0.0)
+        tel._convert("crs_local", crs_wgs84, 0.0, 0.0)
     with pytest.raises(pyproj.exceptions.CRSError):
-        _lat, _lon = tel._convert(None, None, 0.0, 0.0)
+        tel._convert(None, None, 0.0, 0.0)
 
     _lat, _lon = tel._convert(crs_local, crs_wgs84, test_position["pos_x"], None)
     assert np.isnan(_lat)

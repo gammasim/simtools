@@ -54,10 +54,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Download auxiliary files
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: upload-auxiliary-files
           path: .
