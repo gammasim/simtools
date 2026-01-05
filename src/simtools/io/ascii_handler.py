@@ -208,9 +208,11 @@ def write_data_to_file(data, output_file, sort_keys=False, numpy_types=False):
     """
     output_file = Path(output_file)
     if output_file.suffix.lower() == ".json":
-        return _write_to_json(data, output_file, sort_keys, numpy_types)
+        _write_to_json(data, output_file, sort_keys, numpy_types)
+        return
     if output_file.suffix.lower() in [".yml", ".yaml"]:
-        return _write_to_yaml(data, output_file, sort_keys)
+        _write_to_yaml(data, output_file, sort_keys)
+        return
 
     raise ValueError(
         f"Unsupported file type {output_file.suffix}. Only .json, .yml, and .yaml are supported."
