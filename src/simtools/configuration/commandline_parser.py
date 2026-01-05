@@ -269,7 +269,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 type=self.telescope,
             )
         if "layout" in model_options or "layout_file" in model_options:
-            _job_group = self._add_model_option_layout(
+            self._add_model_option_layout(
                 job_group=_job_group,
                 model_options=model_options,
                 # layout info is always required for layout related tasks with the exception

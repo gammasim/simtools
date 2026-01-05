@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, mock_open, patch
 import pytest
 
 import simtools.job_execution.job_manager as jm
-from simtools.job_execution.job_manager import JobExecutionError
 
 LOG_EXCERPT = "log excerpt"
 OS_SYSTEM = "os.system"
@@ -117,7 +116,7 @@ def test_submit_local_real_failure(
     mock_subprocess = mocker.patch(subprocess_run)
     mock_subprocess.side_effect = subprocess.CalledProcessError(1, str(script_file))
 
-    with pytest.raises(JobExecutionError, match="See excerpt from log file above"):
+    with pytest.raises(jm.JobExecutionError, match="See excerpt from log file above"):
         job_submitter_real.submit(script_file, output_log, logfile_log)
 
     job_submitter_real._logger.info.assert_any_call(job_messages["script_message"])
@@ -164,7 +163,7 @@ def test_submit_local_success(
     mock_subprocess_run = mocker.patch(subprocess_run)
     mock_subprocess_run.return_value.returncode = 42
     with patch(builtins_open, mock_open(read_data="")):
-        with pytest.raises(JobExecutionError, match="Job submission failed with return code 42"):
+        with pytest.raises(jm.JobExecutionError, match="Job submission failed with return code 42"):
             job_submitter_real.submit(script_file, output_log, logfile_log)
 
 
