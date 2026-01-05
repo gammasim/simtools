@@ -1,12 +1,12 @@
 ---
-name: build-simtools-dev
-# Build simtools images for developers based on CORSIKA / sim_telarray images (no optimizations)
+name: build-simtools-prod
+# Build simtools production images based on CORSIKA / sim_telarray images
 
 on:
   workflow_dispatch:
   pull_request:
     paths:
-      - docker/Dockerfile-simtools-dev
+      - docker/Dockerfile-simtools-prod
   release:
     types: [published]
   schedule:
@@ -15,42 +15,27 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
 jobs:
-
-  download-qgsjet-tables:
+  build-simtools-prod:
     runs-on: ubuntu-latest
-    steps:
-      - name: Download QGSJet
-        run: |
-          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download -O qgsdat-III.bz2
-      - name: Upload QGSJet files
-        uses: actions/upload-artifact@v5
-        with:
-          name: upload-qgsjet-tables
-          path: |
-            qgsdat-III.bz2
-          retention-days: 1
-
-  build-simtools-dev:
-    runs-on: ubuntu-latest
-    needs: [download-qgsjet-tables]
     permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        version:
+          - {corsika: '20251217-78010', avx_flag: 'no_opt', simtel_image: 'latest'}
+          - {corsika: '20251217-78010', avx_flag: 'avx2', simtel_image: 'latest'}
+          - {corsika: '20251217-78010', avx_flag: 'avx512f', simtel_image: 'latest'}
+          - {corsika: '20251217-78010', avx_flag: 'sse4', simtel_image: 'latest'}
     env:
-      BASE_LABEL: "simtools-dev"
+      BASE_LABEL: "simtools-prod"
+      BASE_TAG: "corsika-${{ matrix.version.corsika }}-${{ matrix.version.avx_flag }}-simtel-${{ matrix.version.simtel_image }}"
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-
-      - name: Download QGSJet tables
-        uses: actions/download-artifact@v7
-        with:
-          name: upload-qgsjet-tables
-          path: .
 
       - name: Set build branch
         run: |
@@ -76,20 +61,25 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           tags: |
-            type=ref,event=pr
-            type=semver,pattern={{major}}.{{minor}}.{{patch}}
-            type=schedule,pattern={{date 'YYYYMMDD'}}
-            type=raw,value={{date 'YYYYMMDD'}}
+            type=ref,event=pr,suffix=-${{ env.BASE_TAG }}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}
+            type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
+            type=raw,value={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
-          flavor: latest=true
+          flavor: latest=false
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64/v8
-          build-args: SIMTOOLS_BRANCH=${{ env.SIMTOOLS_BRANCH }}
+          # Build multi-platform only for no_opt (non-optimized) variant, others are x86-specific
+          platforms: ${{ matrix.version.avx_flag == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
+          build-args: |
+            CORSIKA_IMAGE_VERSION=${{ matrix.version.corsika }}
+            SIMTEL_IMAGE_VERSION=${{ matrix.version.simtel_image }}
+            AVX_FLAG=${{ matrix.version.avx_flag }}
+            SIMTOOLS_BRANCH=${{ env.SIMTOOLS_BRANCH }}
           push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
-          file: ./docker/Dockerfile-simtools-dev
+          file: ./docker/Dockerfile-simtools-prod
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
