@@ -47,7 +47,7 @@ RUN git config --global advice.detachedHead false && \
 RUN --mount=type=secret,id=corsika7_token \
     CORSIKA7_TAG="v$(echo "${CORSIKA_VERSION}" | cut -c1).$(echo "${CORSIKA_VERSION}" | cut -c2-)" && \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${CORSIKA7_TAG}" "https://oauth2:$(cat /run/secrets/corsika7_token)@${CORSIKA_REPO}"
+    GIT_SSL_NO_VERIFY=1 git clone --depth 1 --branch "${CORSIKA7_TAG}" "https://oauth2:$(cat /run/secrets/corsika7_token)@${CORSIKA_REPO}"
 
 # Clone CORSIKA optimization patches from CTAO gitlab
 RUN git config --global advice.detachedHead false && \
