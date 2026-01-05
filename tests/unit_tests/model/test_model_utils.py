@@ -27,13 +27,8 @@ def test_compute_telescope_transmission():
     assert model_utils.compute_telescope_transmission(pars, off_axis) == pytest.approx(0.8938578)
 
 
-@pytest.fixture
-def mock_db_config():
-    return {"host": "localhost", "port": 27017}
-
-
 @pytest.mark.parametrize(("site", "telescope_name"), [("North", "LSTN-01"), ("South", "MSTN-01")])
-def test_initialize_simulation_models(mocker, mock_db_config, site, telescope_name):
+def test_initialize_simulation_models(mocker, site, telescope_name):
     mock_tel_model = mocker.patch("simtools.model.model_utils.TelescopeModel")
     mock_site_model = mocker.patch("simtools.model.model_utils.SiteModel")
 
@@ -42,7 +37,6 @@ def test_initialize_simulation_models(mocker, mock_db_config, site, telescope_na
 
     model_utils.initialize_simulation_models(
         label=label,
-        db_config=mock_db_config,
         site=site,
         telescope_name=telescope_name,
         model_version=model_version,
@@ -51,20 +45,17 @@ def test_initialize_simulation_models(mocker, mock_db_config, site, telescope_na
     mock_tel_model.assert_called_once_with(
         site=site,
         telescope_name=telescope_name,
-        db_config=mock_db_config,
         model_version=model_version,
         label=label,
     )
 
-    mock_site_model.assert_called_once_with(
-        site=site, model_version=model_version, db_config=mock_db_config, label=label
-    )
+    mock_site_model.assert_called_once_with(site=site, model_version=model_version, label=label)
 
     mock_tel_model.return_value.export_model_files.assert_called_once()
     mock_site_model.return_value.export_model_files.assert_called_once()
 
 
-def test_initialize_simulation_models_with_calibration_device(mocker, mock_db_config):
+def test_initialize_simulation_models_with_calibration_device(mocker):
     """Test initialize_simulation_models when calibration_device_name is provided."""
     mocker.patch("simtools.model.model_utils.TelescopeModel")
     mocker.patch("simtools.model.model_utils.SiteModel")
@@ -78,7 +69,6 @@ def test_initialize_simulation_models_with_calibration_device(mocker, mock_db_co
 
     _, _, calibration_model = model_utils.initialize_simulation_models(
         label=label,
-        db_config=mock_db_config,
         site=site,
         telescope_name=telescope_name,
         model_version=model_version,
@@ -88,14 +78,13 @@ def test_initialize_simulation_models_with_calibration_device(mocker, mock_db_co
     mock_cal_model.assert_called_once_with(
         site=site,
         calibration_device_model_name=calibration_device_name,
-        db_config=mock_db_config,
         model_version=model_version,
         label=label,
     )
     assert calibration_model == mock_cal_model.return_value
 
 
-def test_initialize_simulation_models_without_calibration_device(mocker, mock_db_config):
+def test_initialize_simulation_models_without_calibration_device(mocker):
     """Test initialize_simulation_models when calibration_device_name is None."""
     mocker.patch("simtools.model.model_utils.TelescopeModel")
     mocker.patch("simtools.model.model_utils.SiteModel")
@@ -108,7 +97,6 @@ def test_initialize_simulation_models_without_calibration_device(mocker, mock_db
 
     _, _, calibration_model = model_utils.initialize_simulation_models(
         label=label,
-        db_config=mock_db_config,
         site=site,
         telescope_name=telescope_name,
         model_version=model_version,

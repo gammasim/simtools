@@ -44,13 +44,12 @@ def telescope_model_lst_mock(mocker, tmp_test_directory, io_handler):
 
 
 @pytest.fixture
-def ray_tracing_lst(telescope_model_lst_mock, site_model_north, simtel_path):
+def ray_tracing_lst(telescope_model_lst_mock, site_model_north):
     """A RayTracing instance with results read in that were simulated before"""
 
     ray_tracing_lst = RayTracing(
         telescope_model=telescope_model_lst_mock,
         site_model=site_model_north,
-        simtel_path=simtel_path,
         label="validate_optics",
         source_distance=10 * u.km,
         zenith_angle=20 * u.deg,
@@ -72,12 +71,11 @@ def ray_tracing_lst(telescope_model_lst_mock, site_model_north, simtel_path):
 
 
 @pytest.fixture
-def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, site_model_north, simtel_path):
+def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, site_model_north):
     telescope_model_lst_mock.write_sim_telarray_config_file()
     return RayTracing(
         telescope_model=telescope_model_lst_mock,
         site_model=site_model_north,
-        simtel_path=simtel_path,
         label="validate_optics",
         source_distance=10 * u.km,
         zenith_angle=20 * u.deg,
@@ -87,12 +85,11 @@ def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, site_model_nort
     )
 
 
-def test_ray_tracing_init(simtel_path, telescope_model_lst_mock, site_model_north, caplog):
+def test_ray_tracing_init(telescope_model_lst_mock, site_model_north, caplog):
     with caplog.at_level(logging.DEBUG):
         ray = RayTracing(
             telescope_model=telescope_model_lst_mock,
             site_model=site_model_north,
-            simtel_path=simtel_path,
             zenith_angle=30 * u.deg,
             source_distance=10 * u.km,
             off_axis_angle=[0, 2] * u.deg,
@@ -101,20 +98,16 @@ def test_ray_tracing_init(simtel_path, telescope_model_lst_mock, site_model_nort
     assert ray.zenith_angle == pytest.approx(30)
     assert len(ray.off_axis_angle) == 2
     assert "Initializing RayTracing class" in caplog.text
-    assert ray.simtel_path == simtel_path
     assert repr(ray) == f"RayTracing(label={telescope_model_lst_mock.label})\n"
 
 
-def test_ray_tracing_single_mirror_mode(
-    simtel_path, telescope_model_lst_mock, site_model_north, caplog
-):
+def test_ray_tracing_single_mirror_mode(telescope_model_lst_mock, site_model_north, caplog):
     telescope_model_lst_mock.write_sim_telarray_config_file()
 
     with caplog.at_level(logging.DEBUG):
         ray = RayTracing(
             telescope_model=telescope_model_lst_mock,
             site_model=site_model_north,
-            simtel_path=simtel_path,
             zenith_angle=30 * u.deg,
             source_distance=10 * u.km,
             off_axis_angle=[0, 2] * u.deg,
@@ -130,13 +123,12 @@ def test_ray_tracing_single_mirror_mode(
 
 
 def test_ray_tracing_single_mirror_mode_mirror_numbers(
-    simtel_path, telescope_model_lst_mock, site_model_north, mocker
+    telescope_model_lst_mock, site_model_north, mocker
 ):
     telescope_model_lst_mock.write_sim_telarray_config_file()
     ray = RayTracing(
         telescope_model=telescope_model_lst_mock,
         site_model=site_model_north,
-        simtel_path=simtel_path,
         source_distance=10 * u.km,
         zenith_angle=30 * u.deg,
         off_axis_angle=[0, 2] * u.deg,
@@ -432,7 +424,6 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
 
     assert "Simulating RayTracing for off_axis=0.0, mirror=0" in caplog.text
     mock_simulator.assert_called_once_with(
-        simtel_path=ray_tracing_lst.simtel_path,
         telescope_model=ray_tracing_lst.telescope_model,
         site_model=site_model_north,
         test=True,
@@ -509,7 +500,6 @@ def test_create_psf_image(ray_tracing_lst, mocker, test_photons_file):
     mock_psf_image.assert_called_once_with(
         focal_length=focal_length,
         containment_fraction=containment_fraction,
-        simtel_path=ray_tracing_lst.simtel_path,
     )
     mock_process_photon_list.assert_called_once_with(test_photons_file, use_rx)
     assert ray_tracing_lst._psf_images[this_off_axis] == mock_psf_image_instance

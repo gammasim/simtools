@@ -154,14 +154,16 @@ def _data_columns_mirror_reflectivity(n_columns, n_dim):
         {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
     ]
     if n_dim:
-        for angle in n_dim:
-            _columns.append(
+        _columns.extend(
+            [
                 {
                     "name": f"reflectivity_{angle}deg",
                     "description": f"Mirror reflectivity at {angle} deg",
                     "unit": None,
-                },
-            )
+                }
+                for angle in n_dim
+            ]
+        )
     else:
         _columns.append(
             {

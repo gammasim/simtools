@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
+from simtools import settings
 from simtools.camera.single_photon_electron_spectrum import SinglePhotonElectronSpectrum
 
 
@@ -16,7 +17,6 @@ from simtools.camera.single_photon_electron_spectrum import SinglePhotonElectron
 def spe_spectrum():
     args_dict = {
         "output_file": "output_file",
-        "simtel_path": "/path/to/simtel",
         "step_size": 0.1,
         "max_amplitude": 1.0,
         "afterpulse_spectrum": None,
@@ -131,8 +131,9 @@ def test_derive_spectrum_norm_spe(
     )
 
     assert mock_get_input_data.call_count == 2
+    norm_spe_bin = str(settings.config.sim_telarray_path / "bin" / "norm_spe")
     mock_subprocess_run.assert_called_once_with(
-        ["/path/to/simtel/sim_telarray/bin/norm_spe", "-r", "0.1,1.0", ANY],
+        [norm_spe_bin, "-r", "0.1,1.0", ANY],
         capture_output=True,
         text=True,
         check=True,
@@ -156,7 +157,7 @@ def test_derive_spectrum_norm_spe(
 
     mock_subprocess_run.assert_called_with(
         [
-            "/path/to/simtel/sim_telarray/bin/norm_spe",
+            norm_spe_bin,
             "-r",
             "0.1,1.0",
             "-a",

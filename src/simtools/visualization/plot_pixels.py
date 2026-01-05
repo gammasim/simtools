@@ -21,7 +21,7 @@ from simtools.visualization import visualize
 logger = logging.getLogger(__name__)
 
 
-def plot(config, output_file, db_config=None):
+def plot(config, output_file):
     """
     Plot pixel layout based on configuration.
 
@@ -36,15 +36,13 @@ def plot(config, output_file, db_config=None):
         - telescope : str, name of the telescope
     output_file : str
         Path where to save the plot
-    db_config : dict, optional
-        Database configuration.
 
     Returns
     -------
     None
         The function saves the plot to the specified output file.
     """
-    db = db_handler.DatabaseHandler(db_config=db_config)
+    db = db_handler.DatabaseHandler()
     db.export_model_file(
         parameter=config["parameter"],
         site=config["site"],

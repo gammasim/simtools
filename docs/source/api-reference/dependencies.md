@@ -2,6 +2,15 @@
 
 # Application, dependency and version management.
 
+(settings)=
+
+## settings
+
+```{eval-rst}
+.. automodule:: simtools.settings
+   :members:
+```
+
 (application_control)=
 
 ## application_control

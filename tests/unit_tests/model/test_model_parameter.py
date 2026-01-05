@@ -15,6 +15,19 @@ from simtools.model.telescope_model import TelescopeModel
 logger = logging.getLogger()
 
 
+@pytest.fixture
+def num_gains_dict():
+    """Fixture for num_gains parameter dictionary."""
+    return {
+        "num_gains": {
+            "value": 999,
+            "parameter_version": "2.0.0",
+            "type": "int64",
+            "file": False,
+        }
+    }
+
+
 def test_get_parameter_type(telescope_model_lst, caplog):
     assert telescope_model_lst.get_parameter_type("num_gains") == "int64"
     telescope_model_copy = copy.deepcopy(telescope_model_lst)
@@ -214,13 +227,12 @@ def test_flen_type(telescope_model_lst):
     assert isinstance(flen_info["value"], float)
 
 
-def test_updating_export_model_files(db_config, model_version):
+def test_updating_export_model_files(model_version):
     tel = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
         model_version=model_version,
         label="test-telescope-model-2",
-        db_config=db_config,
     )
 
     logger.debug(
@@ -414,31 +426,25 @@ def test_get_parameter_version(telescope_model_lst):
     assert len(version.split(".")) == 3
 
 
-def test_check_model_parameter_software_versions_no_schema(telescope_model_lst, mocker):
-    """Test _check_model_parameter_software_versions when parameter not in schema."""
+def test_check_model_parameter_versions_no_schema(telescope_model_lst, mocker, num_gains_dict):
+    """Test _check_model_parameter_versions when parameter not in schema."""
     tel_model = copy.deepcopy(telescope_model_lst)
 
     # Mock names.model_parameters to return empty dict
     mocker.patch("simtools.model.model_parameter.names.model_parameters", return_value={})
 
     # Should not raise any error
-    tel_model._check_model_parameter_software_versions(["num_gains"])
+    tel_model._check_model_parameter_versions(num_gains_dict)
 
 
-def test_overwrite_model_parameter_with_parameter_version(telescope_model_lst, mocker):
+def test_overwrite_model_parameter_with_parameter_version(
+    telescope_model_lst, mocker, num_gains_dict
+):
     """Test overwrite_model_parameter with parameter_version but no value."""
     tel_model = copy.deepcopy(telescope_model_lst)
 
     # Mock get_model_parameter to return parameter dict
-    mock_param_dict = {
-        "num_gains": {
-            "value": 999,
-            "parameter_version": "2.0.0",
-            "type": "int64",
-            "file": False,
-        }
-    }
-    mocker.patch.object(tel_model.db, "get_model_parameter", return_value=mock_param_dict)
+    mocker.patch.object(tel_model.db, "get_model_parameter", return_value=num_gains_dict)
 
     # Call with only parameter_version (no value)
     tel_model.overwrite_model_parameter("num_gains", value=None, parameter_version="2.0.0")
@@ -515,7 +521,7 @@ def test_overwrite_parameters_with_version_dict(telescope_model_lst):
 
 
 def test_overwrite_parameters_with_simple_value(telescope_model_lst):
-    """Test overwrite_parameters with simple value (not a dict) - line 470."""
+    """Test overwrite_parameters with simple value (not a dict)."""
     tel_model = copy.deepcopy(telescope_model_lst)
 
     # Simple value (not a dict with 'value' or 'version' keys)
@@ -527,7 +533,7 @@ def test_overwrite_parameters_with_simple_value(telescope_model_lst):
 
 
 def test_overwrite_parameters_from_file_with_changes(telescope_model_lst, tmp_path):
-    """Test overwrite_parameters_from_file when changes exist - line 442."""
+    """Test overwrite_parameters_from_file when changes exist."""
     tel_model = copy.deepcopy(telescope_model_lst)
 
     # Create a valid file with changes for this model
@@ -552,10 +558,8 @@ def test_overwrite_parameters_from_file_with_changes(telescope_model_lst, tmp_pa
     assert tel_model.parameters["num_gains"]["value"] == 999
 
 
-def test_check_model_parameter_with_overwrite_file(
-    db_config, io_handler, model_version, tmp_path, mocker
-):
-    """Test _check_model_parameter_software_versions with overwrite_model_parameters - line 349."""
+def test_check_model_parameter_with_overwrite_file(io_handler, model_version, tmp_path, mocker):
+    """Test _check_model_parameter_versions with overwrite_model_parameters."""
 
     # Create a temporary overwrite file
     overwrite_file = tmp_path / "overwrite.yml"
@@ -581,7 +585,6 @@ def test_check_model_parameter_with_overwrite_file(
         site="North",
         telescope_name="LSTN-01",
         model_version=model_version,
-        db_config=db_config,
         label="test-telescope-model",
         overwrite_model_parameters=str(overwrite_file),
     )

@@ -22,30 +22,12 @@ This module include I/O related functionality.
    :members:
 ```
 
-(eventio_handler)=
-
-## eventio_handler
-
-```{eval-rst}
-.. automodule:: simtools.io.eventio_handler
-   :members:
-```
-
 (io_table_handler)=
 
 ## table_handler
 
 ```{eval-rst}
 .. automodule:: simtools.io.table_handler
-   :members:
-```
-
-(iohdf5)=
-
-## hdf5_handler
-
-```{eval-rst}
-.. automodule:: simtools.io.hdf5_handler
    :members:
 ```
 

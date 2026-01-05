@@ -141,14 +141,10 @@ Plot layout with some telescopes grayed out and others highlighted:
                                --legend_location "upper right"
 """
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-
 import simtools.layout.array_layout_utils as layout_utils
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.visualization import visualize
-from simtools.visualization.plot_array_layout import plot_array_layout
+from simtools.visualization.plot_array_layout import plot_array_layouts
 
 
 def _parse():
@@ -278,116 +274,14 @@ def _parse():
     )
 
 
-def read_layouts(args_dict, db_config, logger):
-    """
-    Read array layouts from the database or parameter file.
-
-    Parameters
-    ----------
-    args_dict : dict
-        Dictionary with command line arguments.
-    db_config : dict
-        Database configuration.
-    logger : logging.app_context.logger
-        app_context.logger instance.
-
-    Returns
-    -------
-    list
-        List of array layouts.
-    """
-    if args_dict["array_layout_name"] is not None or args_dict["plot_all_layouts"]:
-        logger.info("Plotting array from DB using layout array name(s).")
-        layouts = layout_utils.get_array_layouts_from_db(
-            args_dict["array_layout_name"],
-            args_dict["site"],
-            args_dict["model_version"],
-            db_config,
-            args_dict["coordinate_system"],
-        )
-        if isinstance(layouts, list):
-            return layouts
-        return [layouts]
-
-    if args_dict["array_layout_parameter_file"] is not None:
-        logger.info("Plotting array from parameter file(s).")
-        return layout_utils.get_array_layouts_from_parameter_file(
-            args_dict["array_layout_parameter_file"],
-            args_dict["model_version"],
-            db_config,
-            args_dict["coordinate_system"],
-        )
-
-    if args_dict["array_layout_file"] is not None:
-        logger.info("Plotting array from telescope table file(s).")
-        return layout_utils.get_array_layouts_from_file(args_dict["array_layout_file"])
-
-    if args_dict["array_element_list"] is not None:
-        logger.info("Plotting array from list of array elements.")
-        return layout_utils.get_array_layouts_using_telescope_lists_from_db(
-            [args_dict["array_element_list"]],
-            args_dict["site"],
-            args_dict["model_version"],
-            db_config,
-            args_dict["coordinate_system"],
-        )
-
-    return []
-
-
 def main():
     """Plot array layout application."""
     app_context = startup_application(_parse)
 
-    layouts = read_layouts(app_context.args, app_context.db_config, app_context.logger)
-
-    if app_context.args.get("array_layout_name_background"):
-        background_layout = layout_utils.get_array_layouts_from_db(
-            app_context.args["array_layout_name_background"],
-            app_context.args["site"],
-            app_context.args["model_version"],
-            app_context.db_config,
-            app_context.args["coordinate_system"],
-        )["array_elements"]
-    else:
-        background_layout = None
-
-    mpl.use("Agg")
-    for layout in layouts:
-        fig_out = plot_array_layout(
-            telescopes=layout["array_elements"],
-            show_tel_label=app_context.args["show_labels"],
-            axes_range=app_context.args["axes_range"],
-            marker_scaling=app_context.args["marker_scaling"],
-            background_telescopes=background_layout,
-            grayed_out_elements=app_context.args["grayed_out_array_elements"],
-            highlighted_elements=app_context.args["highlighted_array_elements"],
-            legend_location=app_context.args["legend_location"],
-            bounds_mode=app_context.args["bounds"],
-            padding=app_context.args["padding"],
-            x_lim=tuple(app_context.args["x_lim"]) if app_context.args["x_lim"] else None,
-            y_lim=tuple(app_context.args["y_lim"]) if app_context.args["y_lim"] else None,
-        )
-        site_string = ""
-        if layout.get("site") is not None:
-            site_string = f"_{layout['site']}"
-        elif app_context.args["site"] is not None:
-            site_string = f"_{app_context.args['site']}"
-        coordinate_system_string = (
-            f"_{app_context.args['coordinate_system']}"
-            if app_context.args["coordinate_system"] not in layout["name"]
-            else ""
-        )
-        plot_file_name = app_context.args["figure_name"] or (
-            f"array_layout_{layout['name']}{site_string}{coordinate_system_string}"
-        )
-
-        visualize.save_figure(
-            fig_out,
-            app_context.io_handler.get_output_directory() / plot_file_name,
-            dpi=400,
-        )
-        plt.close()
+    layouts, background_layout = layout_utils.read_layouts(app_context.args)
+    plot_array_layouts(
+        app_context.args, app_context.io_handler.get_output_directory(), layouts, background_layout
+    )
 
 
 if __name__ == "__main__":

@@ -94,8 +94,13 @@ def _exp_decay(t, tau):
     numpy.ndarray
         Exponential values at ``t`` (unitless), zero for ``t < 0``.
     """
-    tau = max(tau, 1e-9)
-    return np.where(t >= 0, np.exp(-t / tau), 0.0)
+    tau = max(float(tau), 1e-9)
+    t_arr = np.asarray(t, dtype=float)
+    expo = -t_arr / tau
+    expo = np.minimum(expo, 0.0)
+    with np.errstate(over="ignore", under="ignore", invalid="ignore"):
+        e = np.exp(expo)
+    return np.where(t_arr >= 0, e, 0.0)
 
 
 def generate_gauss_expconv_pulse(

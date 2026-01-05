@@ -14,24 +14,19 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def config_data_lst(model_version_prod5, simtel_path):
+def config_data_lst(model_version_prod5):
     return {
         "telescope": "LSTN-01",
         "site": "North",
         "model_version": model_version_prod5,
         "zenith_angle": 20 * u.deg,
         "azimuth_angle": 0 * u.deg,
-        "simtel_path": simtel_path,
     }
 
 
 @pytest.fixture
-def camera_efficiency_lst(db_config, config_data_lst):
-    return CameraEfficiency(
-        config_data=config_data_lst,
-        db_config=db_config,
-        label="validate_camera_efficiency",
-    )
+def camera_efficiency_lst(config_data_lst):
+    return CameraEfficiency(config_data=config_data_lst, label="validate_camera_efficiency")
 
 
 @pytest.fixture

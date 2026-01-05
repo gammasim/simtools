@@ -1,0 +1,33 @@
+---
+applications:
+- application: simtools-simulate-flasher
+  configuration:
+    run_mode: full_simulation
+    light_source: MSFx-FlashCam
+    model_version: 7.0.0
+    output_path: simtools-output
+    site: South
+    telescope: MSTS-04
+    run_number: 10
+    test: true
+    log_level: DEBUG
+  integration_tests:
+  - test_output_files:
+    - file: logfile.log
+      path_descriptor: output_path
+    - file: ff-1m.simtel.zst
+      path_descriptor: output_path
+    - expected_log_output:
+      pattern:
+      - "Sim_telarray finished at"
+      - "CORSIKA IACT finished at"
+      - "Finished."
+      forbidden_pattern:
+      - "Error"
+      - "had less photons than required and were skipped"
+      file: logfile.log
+      path_descriptor: output_path
+  model_version_use_current: true
+  test_name: full-simulation-msfx-flashcam-7.0.0
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

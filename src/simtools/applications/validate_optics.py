@@ -122,22 +122,10 @@ def main():
 
     tel_model, site_model, _ = initialize_simulation_models(
         label=Path(__file__).stem,
-        db_config=app_context.db_config,
         site=app_context.args["site"],
         telescope_name=app_context.args["telescope"],
         model_version=app_context.args["model_version"],
     )
-
-    ######################################################################
-    # This is here as an example how to change parameters when necessary.
-    ######################################################################
-    # pars_to_change = {
-    #     'mirror_focal_length': 1608.3,
-    #     'mirror_offset': -177.5,
-    #     'camera_body_diameter': 289.7,
-    #     'telescope_transmission': 1
-    # }
-    # tel_model.overwrite_parameters(pars_to_change)
 
     app_context.logger.info(
         f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n"
@@ -146,7 +134,6 @@ def main():
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
-        simtel_path=app_context.args["simtel_path"],
         zenith_angle=app_context.args["zenith"] * u.deg,
         source_distance=app_context.args["src_distance"] * u.km,
         off_axis_angle=np.linspace(

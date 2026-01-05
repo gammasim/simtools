@@ -10,7 +10,7 @@ import numpy as np
 
 import simtools.utils.general as gen
 import simtools.version
-from simtools.io import ascii_handler
+from simtools import dependencies, settings
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 from simtools.utils import names
 
@@ -56,8 +56,6 @@ class SimtelConfigWriter:
         Layout name.
     label: str
         Instance label. Important for output file naming.
-    simtel_path: str or Path
-        Path to the sim_telarray installation directory.
     """
 
     TAB = " " * 3
@@ -70,7 +68,6 @@ class SimtelConfigWriter:
         telescope_model_name=None,
         telescope_design_model=None,
         label=None,
-        simtel_path=None,
     ):
         """Initialize SimtelConfigWriter."""
         self._logger = logging.getLogger(__name__)
@@ -82,7 +79,6 @@ class SimtelConfigWriter:
         self._layout_name = layout_name
         self._telescope_model_name = telescope_model_name
         self._telescope_design_model = telescope_design_model
-        self._simtel_path = simtel_path
 
     def write_telescope_config_file(
         self, config_file_path, parameters, telescope_name=None, telescope_design_model=None
@@ -125,14 +121,14 @@ class SimtelConfigWriter:
                 file.write(f"{meta}\n")
 
     @staticmethod
-    def write_lightpulse_table_gauss_expconv(
+    def write_light_pulse_table_gauss_exp_conv(
         file_path,
-        width_ns=None,
-        exp_decay_ns=None,
+        width_ns,
+        exp_decay_ns,
+        fadc_sum_bins,
         dt_ns=0.1,
         rise_range=(0.1, 0.9),
         fall_range=(0.9, 0.1),
-        fadc_sum_bins=None,
         time_margin_ns=10.0,
     ):
         """Write a pulse table for a Gaussian convolved with a causal exponential.
@@ -143,22 +139,19 @@ class SimtelConfigWriter:
             Destination path of the ASCII pulse table to write. Parent directory must exist.
         width_ns : float
             Target rise time in ns between the fractional levels defined by ``rise_range``.
-            Defaults correspond to 10-90% rise time.
         exp_decay_ns : float
             Target fall time in ns between the fractional levels defined by ``fall_range``.
-            Defaults correspond to 90-10% fall time.
-        dt_ns : float, optional
-            Time sampling step in ns for the generated pulse table. Default is 0.1.
-        rise_range : tuple[float, float], optional
-            Fractional amplitude bounds (low, high) for rise-time definition. Default (0.1, 0.9).
-        fall_range : tuple[float, float], optional
-            Fractional amplitude bounds (high, low) for fall-time definition. Default (0.9, 0.1).
         fadc_sum_bins : int
             Length of the FADC integration window (treated as ns here) used to derive
             the internal time sampling window of the solver as [-(margin), bins + margin].
+        dt_ns : float, optional
+            Time sampling step in ns for the generated pulse table.
+        rise_range : tuple[float, float], optional
+            Fractional amplitude bounds (low, high) for rise-time definition.
+        fall_range : tuple[float, float], optional
+            Fractional amplitude bounds (high, low) for fall-time definition.
         time_margin_ns : float, optional
             Margin in ns to add to both ends of the FADC window when ``fadc_sum_bins`` is given.
-            Default is 5.0 ns.
 
         Returns
         -------
@@ -174,8 +167,10 @@ class SimtelConfigWriter:
         if width_ns is None or exp_decay_ns is None:
             raise ValueError("width_ns (rise 10-90) and exp_decay_ns (fall 90-10) are required")
         logger.info(
-            f"Generating lightpulse table with rise10-90={width_ns} ns, "
-            f"fall90-10={exp_decay_ns} ns, dt={dt_ns} ns"
+            "Generating pulse-shape table with "
+            f"rise{int(rise_range[0] * 100)}-{int(rise_range[1] * 100)}={width_ns} ns, "
+            f"fall{int(fall_range[0] * 100)}-{int(fall_range[1] * 100)}={exp_decay_ns} ns, "
+            f"dt={dt_ns} ns"
         )
         width = float(fadc_sum_bins)
         t_start_ns = -abs(time_margin_ns + width)
@@ -194,12 +189,57 @@ class SimtelConfigWriter:
         return SimtelConfigWriter._write_ascii_pulse_table(file_path, t, y)
 
     @staticmethod
+    def write_angular_distribution_table_lambertian(
+        file_path,
+        max_angle_deg,
+        n_samples=100,
+    ):
+        """Write a Lambertian angular distribution table (I(t) ~ cos(t)).
+
+        Parameters
+        ----------
+        file_path : str or pathlib.Path
+            Destination path of the ASCII table to write. Parent directory must exist.
+        max_angle_deg : float
+            Maximum angle (deg) for the distribution sampling range [0, max_angle_deg].
+        n_samples : int, optional
+            Number of samples (including end point) from 0 to max_angle_deg. Default 100.
+
+        Returns
+        -------
+        pathlib.Path
+            Path to created angular distribution table.
+        """
+        logger.info(
+            f"Generating Lambertian angular distribution table up to {max_angle_deg} deg "
+            f"with {n_samples} samples"
+        )
+        angles = np.linspace(0.0, float(max_angle_deg), int(n_samples), dtype=float)
+        intensities = np.cos(np.deg2rad(angles))
+        intensities[intensities < 0] = 0.0
+        if intensities.max() > 0:
+            intensities /= intensities.max()
+
+        return SimtelConfigWriter._write_ascii_angle_distribution_table(
+            file_path, angles, intensities
+        )
+
+    @staticmethod
     def _write_ascii_pulse_table(file_path, t, y):
         """Write two-column ASCII pulse table."""
         with open(file_path, "w", encoding="utf-8") as fh:
             fh.write("# time[ns] amplitude\n")
             for ti, yi in zip(t, y):
                 fh.write(f"{ti:.6f} {yi:.8f}\n")
+        return Path(file_path)
+
+    @staticmethod
+    def _write_ascii_angle_distribution_table(file_path, angles, intensities):
+        """Write two-column ASCII angular distribution table."""
+        with open(file_path, "w", encoding="utf-8") as fh:
+            fh.write("# angle[deg] relative_intensity\n")
+            for a, i in zip(angles, intensities):
+                fh.write(f"{a:.6f} {i:.8f}\n")
         return Path(file_path)
 
     def _get_parameters_for_sim_telarray(self, parameters, config_file_path):
@@ -257,28 +297,24 @@ class SimtelConfigWriter:
             Model parameters in sim_telarray format including flasher parameters.
 
         """
-        if "flasher_pulse_shape" not in parameters and "flasher_pulse_width" not in parameters:
+        if "flasher_pulse_shape" not in parameters:
             return simtel_par
 
         mapping = {
             "gauss": "laser_pulse_sigtime",
             "tophat": "laser_pulse_twidth",
+            "gauss-exponential": "laser_pulse_sigtime",
         }
 
-        shape = parameters.get("flasher_pulse_shape", {}).get("value", "").lower()
-        if "exponential" in shape:
-            simtel_par["laser_pulse_exptime"] = parameters.get("flasher_pulse_exp_decay", {}).get(
-                "value", 0.0
-            )
-        else:
-            simtel_par["laser_pulse_exptime"] = 0.0
+        shape_value = parameters.get("flasher_pulse_shape", {}).get("value")
+        shape = shape_value[0].lower()
+        width = shape_value[1]
+        exp_decay = shape_value[2]
 
-        width = parameters.get("flasher_pulse_width", {}).get("value", 0.0)
+        simtel_par["laser_pulse_exptime"] = exp_decay if ("exponential" in shape) else 0.0
 
         simtel_par.update(dict.fromkeys(mapping.values(), 0.0))
-        if shape == "gauss-exponential":
-            simtel_par["laser_pulse_sigtime"] = width
-        elif shape in mapping:
+        if shape in mapping:
             simtel_par[mapping[shape]] = width
         else:
             self._logger.warning(f"Flasher pulse shape '{shape}' without width definition")
@@ -576,17 +612,24 @@ class SimtelConfigWriter:
             "simtools_model_production_version": self._model_version,
         }
         try:
-            build_opts = ascii_handler.collect_data_from_file(
-                Path(self._simtel_path) / "build_opts.yml"
-            )
+            build_opts = dependencies.get_build_options()
             for key, value in build_opts.items():
                 meta_items[f"simtools_{key}"] = value
         except (FileNotFoundError, TypeError):
             pass  # don't expect build_opts.yml to be present on all systems
 
+        # CORSIKA executable without _flat/_curved suffix (do not know here if curved or flat)
+        try:
+            meta_items["simtools_corsika_exec"] = settings.config.corsika_exe.name.removesuffix(
+                "_flat"
+            )
+        except AttributeError as exc:
+            raise AttributeError("CORSIKA executable path is not set in settings.") from exc
+
         file.write(f"{self.TAB}% Simtools parameters\n")
         for key, value in meta_items.items():
-            file.write(f"{self.TAB}metaparam global set {key} = {value}\n")
+            if not isinstance(value, list):
+                file.write(f"{self.TAB}metaparam global set {key} = {value}\n")
 
     def _write_site_parameters(
         self, file, site_parameters, model_path, telescope_model, additional_metadata=None

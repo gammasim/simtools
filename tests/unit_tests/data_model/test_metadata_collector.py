@@ -14,7 +14,6 @@ import pytest
 import simtools.data_model.metadata_collector as metadata_collector
 from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
 from simtools.data_model import schema
-from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.utils import names
 
 logger = logging.getLogger()
@@ -120,7 +119,7 @@ def test_get_site(args_dict_site):
 
 
 def test_read_input_metadata_from_file(
-    args_dict_site, tmp_test_directory, caplog, sim_telarray_file_proton
+    args_dict_site, tmp_test_directory, caplog, sim_telarray_file_proton, corsika_file_gamma
 ):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
@@ -166,6 +165,11 @@ def test_read_input_metadata_from_file(
         metadata_1.args_dict["input_meta"] = sim_telarray_file_proton
         metadata_1._read_input_metadata_from_file()
     assert "Metadata extraction from sim_telarray files is not supported yet." in caplog.text
+
+    with caplog.at_level(logging.WARNING):
+        metadata_1.args_dict["input_meta"] = corsika_file_gamma
+        metadata_1._read_input_metadata_from_file()
+    assert "Metadata extraction from CORSIKA files is not supported yet." in caplog.text
 
     metadata_1.args_dict["input_meta"] = "tests/resources/test_file.list"
     with pytest.raises(ValueError, match=r"^Unknown metadata file format:"):
@@ -291,7 +295,7 @@ def test_fill_context_sim_list(args_dict_site):
 
     # one entry with Nones only
     _test_def = [{"site": None, "class": None, "type": None, "subtype": None, "id:": None}]
-    _test_def = _collector._fill_context_sim_list(_test_def, _new_element)
+    _collector._fill_context_sim_list(_test_def, _new_element)
     assert _test_none == [_new_element]
 
 
@@ -656,6 +660,6 @@ def test_fill_contact_meta_failed_system(args_dict_site, caplog, monkeypatch):
 
 
 def test_read_input_metadata_from_yml_or_json_no_file():
-    collector = MetadataCollector(args_dict={})
+    collector = metadata_collector.MetadataCollector(args_dict={})
     with pytest.raises(FileNotFoundError, match=r"Failed reading metadata from missing_file\.yml"):
         collector._read_input_metadata_from_yml_or_json("missing_file.yml")

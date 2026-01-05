@@ -14,17 +14,13 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def array_layout_north_instance(db_config, model_version):
-    return ArrayLayout(
-        site="North", db_config=db_config, model_version=model_version, name="test_layout"
-    )
+def array_layout_north_instance(model_version):
+    return ArrayLayout(site="North", model_version=model_version, name="test_layout")
 
 
 @pytest.fixture
-def array_layout_south_instance(db_config, model_version):
-    return ArrayLayout(
-        site="South", db_config=db_config, model_version=model_version, name="test_layout"
-    )
+def array_layout_south_instance(model_version):
+    return ArrayLayout(site="South", model_version=model_version, name="test_layout")
 
 
 @pytest.fixture
@@ -52,10 +48,9 @@ def south_layout_center_data_dict():
 
 
 @pytest.fixture
-def array_layout_north_four_lst_instance(db_config, model_version):
+def array_layout_north_four_lst_instance(model_version):
     return ArrayLayout(
         site="North",
-        db_config=db_config,
         label="test_layout",
         name="LST4",
         model_version=model_version,
@@ -63,10 +58,9 @@ def array_layout_north_four_lst_instance(db_config, model_version):
 
 
 @pytest.fixture
-def array_layout_south_four_lst_instance(db_config, model_version):
+def array_layout_south_four_lst_instance(model_version):
     return ArrayLayout(
         site="South",
-        db_config=db_config,
         label="test_layout",
         name="LST4",
         model_version=model_version,
@@ -74,8 +68,8 @@ def array_layout_south_four_lst_instance(db_config, model_version):
 
 
 def test_initialize_site_parameters_from_db():
-    with pytest.raises(ValueError, match="No database configuration provided"):
-        ArrayLayout(site="North", db_config=None, model_version="test_model_version")
+    with pytest.raises(ValueError, match="Invalid version string: test_model_version"):
+        ArrayLayout(site="North", model_version="test_model_version")
 
 
 def test_initialize_coordinate_systems(
@@ -121,14 +115,11 @@ def test_initialize_coordinate_systems(
     )
 
 
-def test_select_assets(
-    telescope_north_with_calibration_devices_test_file, db_config, model_version
-):
+def test_select_assets(telescope_north_with_calibration_devices_test_file, model_version):
     layout = ArrayLayout(
         site="North",
         name="test_layout",
         telescope_list_file=telescope_north_with_calibration_devices_test_file,
-        db_config=db_config,
         model_version=model_version,
     )
 
@@ -183,7 +174,6 @@ def test_build_layout(
     array_layout_north_four_lst_instance,
     array_layout_south_four_lst_instance,
     tmp_test_directory,
-    db_config,
     io_handler,
     capfd,
 ):
@@ -389,10 +379,9 @@ def test_try_set_coordinate(
     )
 
 
-def test_len(telescope_north_test_file, db_config, model_version):
+def test_len(telescope_north_test_file, model_version):
     layout = ArrayLayout(
         telescope_list_file=telescope_north_test_file,
-        db_config=db_config,
         model_version=model_version,
         site="North",
     )
@@ -400,10 +389,9 @@ def test_len(telescope_north_test_file, db_config, model_version):
     assert layout.get_number_of_telescopes() == 13
 
 
-def test_getitem(db_config, telescope_north_test_file, model_version):
+def test_getitem(telescope_north_test_file, model_version):
     layout = ArrayLayout(
         telescope_list_file=telescope_north_test_file,
-        db_config=db_config,
         model_version=model_version,
         site="North",
     )
@@ -412,10 +400,9 @@ def test_getitem(db_config, telescope_north_test_file, model_version):
 
 
 def test_export_telescope_list_table(
-    db_config, telescope_north_test_file, telescope_north_utm_test_file, model_version
+    telescope_north_test_file, telescope_north_utm_test_file, model_version
 ):
     layout = ArrayLayout(
-        db_config=db_config,
         site="North",
         model_version=model_version,
         telescope_list_file=telescope_north_test_file,
@@ -429,7 +416,6 @@ def test_export_telescope_list_table(
     assert "sequence_number" not in table.colnames
 
     layout_utm = ArrayLayout(
-        db_config=db_config,
         site="North",
         model_version=model_version,
         telescope_list_file=telescope_north_utm_test_file,
@@ -442,14 +428,13 @@ def test_export_telescope_list_table(
 
     layout_utm._telescope_list = []
     try:
-        table_utm = layout_utm.export_telescope_list_table(crs_name="utm")
+        layout_utm.export_telescope_list_table(crs_name="utm")
     except IndexError:
         pytest.fail("IndexError raised")
 
 
-def test_export_one_telescope_as_json(db_config, model_version, telescope_north_utm_test_file):
+def test_export_one_telescope_as_json(model_version, telescope_north_utm_test_file):
     layout = ArrayLayout(
-        db_config=db_config,
         site="North",
         model_version=model_version,
         telescope_list_file=(
@@ -469,7 +454,6 @@ def test_export_one_telescope_as_json(db_config, model_version, telescope_north_
     assert mercator_dict["parameter"] == "array_element_position_mercator"
 
     layout_utm = ArrayLayout(
-        db_config=db_config,
         site="North",
         model_version=model_version,
         telescope_list_file=telescope_north_utm_test_file,
@@ -478,10 +462,9 @@ def test_export_one_telescope_as_json(db_config, model_version, telescope_north_
         layout_utm.export_one_telescope_as_json(crs_name="ground")
 
 
-def test_read_table_from_json_file(db_config, model_version):
+def test_read_table_from_json_file(model_version):
     ground_table_file = "tests/resources/model_parameters/array_element_position_ground-2.0.0.json"
     layout = ArrayLayout(
-        db_config=db_config,
         site="North",
         model_version=model_version,
         telescope_list_file=ground_table_file,

@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import json
 import logging
 from pathlib import Path
@@ -10,6 +8,11 @@ import yaml
 from astropy.table import Table
 
 from simtools.testing import validate_output
+from simtools.testing.validate_output import (
+    _validate_output_path_and_file,
+    _versions_match,
+    validate_application_output,
+)
 
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -440,12 +443,18 @@ def test_validate_application_output_with_assertion_error(output_path):
         "configuration": {"output_path": output_path},
         "test_output_files": [{"path_descriptor": "output_path", "file": test_path}],
     }
-    with pytest.raises(
-        AssertionError, match=r"Output file /path/to/output/not_there does not exist."
+    dummy_dir_content = [Path("dummy_file")]
+    with (
+        patch("pathlib.Path.exists", return_value=False),
+        patch("pathlib.Path.iterdir", return_value=dummy_dir_content),
     ):
-        validate_output._validate_output_path_and_file(
-            config, [{"path_descriptor": "output_path", "file": test_path}]
-        )
+        with pytest.raises(
+            AssertionError,
+            match=r"Output file /path/to/output/not_there does not exist. Directory contents: \[PosixPath\('dummy_file'\)\]",
+        ):
+            validate_output._validate_output_path_and_file(
+                config, [{"path_descriptor": "output_path", "file": test_path}]
+            )
 
 
 def test_validate_application_output_with_file_type(
@@ -631,11 +640,9 @@ def test_validate_model_parameter_json_file(mocker, output_path):
         "tolerance": 1.0e-5,
     }
 
-    validate_output._validate_model_parameter_json_file(
-        config, model_parameter_validation, db_config=None
-    )
+    validate_output._validate_model_parameter_json_file(config, model_parameter_validation)
 
-    mock_db_handler.assert_called_once_with(db_config=None)
+    mock_db_handler.assert_called_once_with()
     mock_db_instance.get_model_parameter.assert_called_once_with(
         parameter="reference_param",
         site="test_site",
@@ -676,11 +683,9 @@ def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
     }
 
     with pytest.raises(AssertionError):
-        validate_output._validate_model_parameter_json_file(
-            config, model_parameter_validation, db_config=None
-        )
+        validate_output._validate_model_parameter_json_file(config, model_parameter_validation)
 
-    mock_db_handler.assert_called_once_with(db_config=None)
+    mock_db_handler.assert_called_once_with()
     mock_db_instance.get_model_parameter.assert_called_once_with(
         parameter="reference_param",
         site="test_site",
@@ -691,3 +696,82 @@ def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
         Path(output_path) / "test_telescope" / TEST_PARAM_JSON
     )
     mock_compare_value.assert_called_once_with([1.1, 2.1, 3.1], [1.0, 2.0, 3.0], 1.0e-5)
+
+
+def test_versions_match_semantics():
+    # No CLI filter, always validate
+    assert _versions_match(None, "6.0.0") is True
+
+    # Exact match
+    assert _versions_match("6.0.0", "6.0.0") is True
+
+    # No overlap
+    assert _versions_match("6.0.0", "7.0.0") is False
+
+    # Overlap where CLI provides multiple
+    assert _versions_match(["6.0.0", "7.0.0"], "7.0.0") is True
+
+    # Overlap where config provides multiple
+    assert _versions_match(["6.0.0"], ["7.0.0", "6.0.0"]) is True
+
+    # No overlap where config provides multiple
+    assert _versions_match("8.0.0", ["7.0.0", "6.0.0"]) is False
+
+
+def test_validate_output_path_and_file_routes_by_suffix(tmp_path: Path):
+    # Create three test files with expected suffixes
+    simtel = tmp_path / "out.simtel.zst"
+    tarlog = tmp_path / "logs.log_hist.tar.gz"
+    plain = tmp_path / "logfile.log"
+    for f in (simtel, tarlog, plain):
+        f.write_text("content", encoding="utf-8")
+
+    cfg = {"configuration": {"output_path": str(tmp_path)}}
+    file_tests = [
+        {"path_descriptor": "output_path", "file": simtel.name},
+        {"path_descriptor": "output_path", "file": tarlog.name, "expected_log_output": {}},
+        {"path_descriptor": "output_path", "file": plain.name, "expected_log_output": {}},
+    ]
+
+    with (
+        patch(
+            "simtools.testing.assertions.check_output_from_sim_telarray", return_value=True
+        ) as m_simtel,
+        patch("simtools.testing.assertions.check_simulation_logs", return_value=True) as m_tar,
+        patch("simtools.testing.assertions.check_plain_log", return_value=True) as m_plain,
+    ):
+        _validate_output_path_and_file(cfg, file_tests)
+
+        m_simtel.assert_called_once()
+        m_tar.assert_called_once()
+        m_plain.assert_called_once()
+
+
+def test_validate_output_path_and_file_missing_raises(tmp_path: Path):
+    cfg = {"configuration": {"output_path": str(tmp_path)}}
+    missing = "does_not_exist.log"
+    with pytest.raises(AssertionError, match=r"Output file .* does not exist"):
+        _validate_output_path_and_file(cfg, [{"path_descriptor": "output_path", "file": missing}])
+
+
+def test_validate_application_output_gating_calls(tmp_path: Path):
+    cfg = {
+        "configuration": {"output_path": str(tmp_path), "output_file": "x"},
+        "integration_tests": [{"output_file": "x"}],
+    }
+
+    with (
+        patch("simtools.testing.validate_output._validate_output_files") as m_validate,
+        patch("simtools.testing.validate_output._test_simtel_cfg_files"),
+    ):
+        # No CLI filter, should call validation
+        validate_application_output(cfg, from_command_line=None, from_config_file="6.0.0")
+        assert m_validate.called
+
+    with (
+        patch("simtools.testing.validate_output._validate_output_files") as m_validate,
+        patch("simtools.testing.validate_output._test_simtel_cfg_files"),
+    ):
+        # CLI filter not matching, should skip validations
+        validate_application_output(cfg, from_command_line="7.0.0", from_config_file="6.0.0")
+        m_validate.assert_not_called()

@@ -1,0 +1,42 @@
+# syntax=docker/dockerfile:1.4
+# Dockerfile for simtools build on top of CORSIKA/sim_telarray base image.
+#
+# This Dockerfile adds simtools to a base image that already contains
+# CORSIKA and sim_telarray.
+#
+# hadolint global ignore=DL3007,DL3013,DL3041,SC1091
+# - DL3007, DL3041: ignore warnings about using latest
+# - DL3013: ignore warnings about installing non-specific versions with microdnf)
+# - SC1091: ignore warning about not being able to source the bashrc
+
+ARG BASE_IMAGE
+ARG SIMTOOLS_BRANCH=main
+ARG SIMTOOLS_REPO="https://github.com/gammasim/simtools.git"
+ARG PYTHON_VERSION=3.12
+
+FROM ${BASE_IMAGE}
+ARG SIMTOOLS_BRANCH
+ARG SIMTOOLS_REPO
+ARG PYTHON_VERSION
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN microdnf update -y && microdnf install -y \
+    git gcc gcc-c++ \
+    python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
+    microdnf clean all && \
+    rm -rf /var/cache/dnf/* /tmp/* /var/tmp/* && \
+    ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
+
+RUN SIMTOOLS_BRANCH=${SIMTOOLS_BRANCH//refs\/tags\//} \
+  && git clone -b "$SIMTOOLS_BRANCH" "${SIMTOOLS_REPO}" --depth 1 \
+  && python${PYTHON_VERSION} -m venv env \
+  && . env/bin/activate \
+  && pip install --no-cache-dir -U pip \
+  && pip install --no-cache-dir "git+${SIMTOOLS_REPO}@${SIMTOOLS_BRANCH}" \
+  && pip cache purge && rm -rf /root/.cache \
+  && echo ". /workdir/env/bin/activate" >> ~/.bashrc
+
+ENV SIMTOOLS_SIMTEL_PATH="/workdir/sim_telarray/sim_telarray"
+ENV SIMTOOLS_CORSIKA_PATH="/workdir/sim_telarray/corsika-run"
+ENV PATH="/workdir/env/bin/:$PATH"

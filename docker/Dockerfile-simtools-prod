@@ -1,0 +1,52 @@
+# Dockerfile for simtools production.
+#
+# Uses CORSIKA and sim_telarray pre-built images; CORSIKA AVX optimization
+# (no_opt, avx2, avx512f, sse4) is selected via the AVX_FLAG build argument.
+# No QGSJet tables are included.
+#
+# hadolint global ignore=DL3013,DL3041
+# - DL3013, DL3041: ignore warnings about using latest
+
+ARG CORSIKA_IMAGE_VERSION="20251217-78010"
+ARG SIMTEL_IMAGE_VERSION="latest"
+ARG AVX_FLAG="no_opt"
+ARG PYTHON_VERSION="3.12"
+ARG SIMTOOLS_BRANCH=main
+
+FROM ghcr.io/gammasim/corsika7:${CORSIKA_IMAGE_VERSION}-${AVX_FLAG} AS corsika_img
+FROM ghcr.io/gammasim/sim_telarray:${SIMTEL_IMAGE_VERSION} AS simtel_img
+
+FROM almalinux:9.5-minimal
+ARG PYTHON_VERSION
+ARG SIMTOOLS_BRANCH
+ARG SIMTOOLS_REPO="https://github.com/gammasim/simtools.git"
+
+COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulation_software/corsika7
+COPY --from=simtel_img /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
+COPY --from=simtel_img /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
+COPY --from=simtel_img /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
+
+RUN microdnf update -y && microdnf install -y \
+    bc findutils gcc-c++ git gsl libgfortran procps wget zstd \
+    python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
+    microdnf clean all && \
+    rm -rf /var/cache/dnf/* /tmp/* /var/tmp/* && \
+    ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
+
+WORKDIR /workdir
+
+# hadolint ignore=DL4006
+RUN SIMTOOLS_BRANCH="$(printf '%s' "$SIMTOOLS_BRANCH" | sed 's#refs/tags/##')" \
+  && git clone -b "$SIMTOOLS_BRANCH" "${SIMTOOLS_REPO}" --depth 1 \
+  && python${PYTHON_VERSION} -m venv env \
+  && . env/bin/activate \
+  && pip install --no-cache-dir -U pip \
+  && pip install --no-cache-dir "git+${SIMTOOLS_REPO}@${SIMTOOLS_BRANCH}" \
+  && pip cache purge && rm -rf /root/.cache \
+  && echo ". /workdir/env/bin/activate" >> ~/.bashrc
+
+ENV SIMTOOLS_SIMTEL_PATH="/workdir/simulation_software/sim_telarray"
+ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
+ENV SIMTOOLS_CORSIKA_HE_INTERACTION="qgs3"
+ENV SIMTOOLS_CORSIKA_LE_INTERACTION="urqmd"
+ENV PATH="/workdir/env/bin/:$PATH"
