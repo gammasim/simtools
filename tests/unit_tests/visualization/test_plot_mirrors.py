@@ -5,6 +5,7 @@ from unittest import mock
 
 import astropy.units as u
 import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from astropy.table import Table
@@ -353,6 +354,7 @@ def test_plot_mirror_ring_segmentation(mock_subplots, tmp_path):
         )
 
         assert fig is not None
+        plt.close(fig)
         mock_ax.set_ylim.assert_called_once()
 
 
@@ -381,6 +383,7 @@ def test_plot_mirror_shape_segmentation(mock_subplots, tmp_path):
         )
 
         assert fig is not None
+        plt.close(fig)
         mock_ax.set_aspect.assert_called_once_with("equal")
         mock_ax.text.assert_called()
 
@@ -457,6 +460,7 @@ def test_plot_mirror_shape_segmentation_stats_variations(tmp_path):
         parameter_type="primary_mirror_segmentation",
     )
     assert fig1 is not None
+    plt.close(fig1)
 
     data_file.write_text("# No data\n")
     fig2 = plot_mirrors.plot_mirror_shape_segmentation(
@@ -465,6 +469,7 @@ def test_plot_mirror_shape_segmentation_stats_variations(tmp_path):
         parameter_type="primary_mirror_segmentation",
     )
     assert fig2 is not None
+    plt.close(fig2)
 
 
 @pytest.mark.parametrize(
@@ -487,6 +492,7 @@ def test_plot_mirror_ring_segmentation_various_ring_counts(tmp_path, ring_count,
         )
 
         assert fig is not None
+        plt.close(fig)
 
 
 def test__configure_mirror_plot_empty_data():
@@ -522,6 +528,7 @@ def test_plot_mirror_shape_segmentation_no_segment_ids(tmp_path):
         )
 
         assert fig is not None
+        plt.close(fig)
 
 
 def test__read_segmentation_file_with_invalid_x_y(tmp_path):
