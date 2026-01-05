@@ -73,7 +73,7 @@ jobs:
           ./bin/dotenv-linter check -i UnorderedKey .env*
 
       - name: Restore pre-commit cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: precommit-cache
         with:
           path: ~/.cache/pre-commit
@@ -87,7 +87,7 @@ jobs:
 
       - name: Save pre-commit cache
         if: success()  # only save if previous steps succeeded
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pre-commit
           key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
