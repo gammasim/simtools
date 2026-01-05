@@ -41,14 +41,12 @@ def main():
 
     if any([app_context.args.get("all_telescopes"), app_context.args.get("all_sites")]):
         ReportGenerator(
-            app_context.db_config,
             app_context.args,
             output_path,
         ).auto_generate_parameter_reports()
 
     else:
         ReadParameters(
-            app_context.db_config,
             app_context.args,
             output_path,
         ).produce_model_parameter_reports()

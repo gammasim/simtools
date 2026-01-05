@@ -9,6 +9,7 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
+from simtools import settings
 from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.runners.simtel_runner import SimtelRunner
@@ -31,21 +32,18 @@ class SimulatorLightEmission(SimtelRunner):
         Label for the simulation
     """
 
-    def __init__(self, light_emission_config, db_config=None, label=None):
+    def __init__(self, light_emission_config, label=None):
         """Initialize SimulatorLightEmission."""
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
 
-        super().__init__(
-            simtel_path=light_emission_config.get("simtel_path"), label=label, corsika_config=None
-        )
+        super().__init__(label=label, corsika_config=None)
 
         self.output_directory = self.io_handler.get_output_directory()
 
         self.telescope_model, self.site_model, self.calibration_model = (
             initialize_simulation_models(
                 label=label,
-                db_config=db_config,
                 site=light_emission_config.get("site"),
                 telescope_name=light_emission_config.get("telescope"),
                 calibration_device_name=light_emission_config.get("light_source"),
@@ -68,7 +66,7 @@ class SimulatorLightEmission(SimtelRunner):
         config["flasher_photons"] = (
             self.calibration_model.get_parameter_value("flasher_photons")
             if not config.get("test", False)
-            else 1e8
+            else 1e5
         )
 
         if config.get("light_source_position") is not None:
@@ -292,7 +290,7 @@ class SimulatorLightEmission(SimtelRunner):
             "corsika_observation_level"
         )
 
-        parts = [str(self._simtel_path / "sim_telarray/LightEmission") + f"/{app_name}"]
+        parts = [str(settings.config.sim_telarray_path / "LightEmission") + f"/{app_name}"]
         parts.extend(self._get_site_command(app_name, config_directory, corsika_observation_level))
         parts.extend(self._get_light_source_command())
         if self.light_emission_config["light_source_type"] == "illuminator":
@@ -312,7 +310,7 @@ class SimulatorLightEmission(SimtelRunner):
             atmo_id = self._prepare_flasher_atmosphere_files(config_directory)
             return [
                 "-I.",
-                f"-I{self._simtel_path / 'sim_telarray/cfg'}",
+                f"-I{settings.config.sim_telarray_path / 'cfg'}",
                 f"-I{config_directory}",
                 f"--altitude {corsika_observation_level.to(u.m).value}",
                 f"--atmosphere {atmo_id}",
@@ -349,16 +347,19 @@ class SimulatorLightEmission(SimtelRunner):
         dist_cm = self.calculate_distance_focal_plane_calibration_device().to(u.cm).value
         angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
 
-        # Build pulse table for ff-1m using model width/exp parameters; else use token.
+        # Build pulse table for ff-1m using unified list parameter [shape, width, exp]
+        pulse_shape_value = self.calibration_model.get_parameter_value("flasher_pulse_shape")
+        shape_name = pulse_shape_value[0]
+        width_ns = pulse_shape_value[1]
+        exp_ns = pulse_shape_value[2]
         pulse_arg = self._get_pulse_shape_string_for_sim_telarray()
-        pulse_shape = self.calibration_model.get_parameter_value("flasher_pulse_shape")
-        width_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
-        exp_q = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_exp_decay")
-        if (
-            isinstance(exp_q, u.Quantity)
-            and isinstance(width_q, u.Quantity)
-            and pulse_shape == "Gauss-Exponential"
-        ):
+
+        if shape_name == "Gauss-Exponential":
+            if width_ns <= 0 or exp_ns <= 0:
+                raise ValueError(
+                    "Gauss-Exponential pulse shape requires positive width"
+                    " and exponential decay values"
+                )
             try:
                 base_dir = self.io_handler.get_output_directory("pulse_shapes")
 
@@ -373,10 +374,10 @@ class SimulatorLightEmission(SimtelRunner):
                 table_path = base_dir / fname
                 fadc_bins = self.telescope_model.get_parameter_value("fadc_sum_bins")
 
-                SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+                SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
                     file_path=table_path,
-                    width_ns=width_q.to(u.ns).value,
-                    exp_decay_ns=exp_q.to(u.ns).value,
+                    width_ns=width_ns,
+                    exp_decay_ns=exp_ns,
                     fadc_sum_bins=fadc_bins,
                     time_margin_ns=5.0,
                 )
@@ -435,7 +436,7 @@ class SimulatorLightEmission(SimtelRunner):
         """
         theta, phi = self._get_telescope_pointing()
 
-        simtel_bin = self._simtel_path.joinpath("sim_telarray/bin/sim_telarray/")
+        simtel_bin = str(settings.config.sim_telarray_exe)
 
         parts = [
             f"{simtel_bin}",
@@ -503,6 +504,27 @@ class SimulatorLightEmission(SimtelRunner):
         )
         return focal_length - flasher_z
 
+    def _generate_lambertian_angular_distribution_table(self):
+        """Generate Lambertian angular distribution table via config writer and return path.
+
+        Uses a pure cosine profile normalized to 1 at 0 deg and spans 0..90 deg by default.
+        """
+        base_dir = self.io_handler.get_output_directory("angular_distributions")
+
+        def _sanitize_name(value):
+            return "".join(ch if (ch.isalnum() or ch in ("-", "_")) else "_" for ch in str(value))
+
+        tel = self.light_emission_config.get("telescope") or "telescope"
+        cal = self.light_emission_config.get("light_source") or "calibration"
+        fname = f"flasher_angular_distribution_{_sanitize_name(tel)}_{_sanitize_name(cal)}.dat"
+        table_path = base_dir / fname
+        SimtelConfigWriter.write_angular_distribution_table_lambertian(
+            file_path=table_path,
+            max_angle_deg=90.0,
+            n_samples=100,
+        )
+        return str(table_path)
+
     def _get_angular_distribution_string_for_sim_telarray(self):
         """
         Get the angular distribution string for sim_telarray.
@@ -514,6 +536,16 @@ class SimulatorLightEmission(SimtelRunner):
         """
         opt = self.calibration_model.get_parameter_value("flasher_angular_distribution")
         option_string = str(opt).lower() if opt is not None else ""
+        if option_string == "lambertian":
+            try:
+                return self._generate_lambertian_angular_distribution_table()
+            except (OSError, ValueError) as err:
+                self._logger.warning(
+                    f"Failed to write Lambertian angular distribution table: {err};"
+                    f" using token instead."
+                )
+                return option_string
+
         width = self.calibration_model.get_parameter_value_with_unit(
             "flasher_angular_distribution_width"
         )
@@ -529,6 +561,19 @@ class SimulatorLightEmission(SimtelRunner):
             The pulse shape string.
         """
         opt = self.calibration_model.get_parameter_value("flasher_pulse_shape")
-        option_string = str(opt).lower() if opt is not None else ""
-        width = self.calibration_model.get_parameter_value_with_unit("flasher_pulse_width")
-        return f"{option_string}:{width.to(u.ns).value}" if width is not None else option_string
+        shape = opt[0].lower()
+        # Map internal shapes to sim_telarray expected tokens
+        # 'tophat' corresponds to a simple (flat) pulse in sim_telarray.
+        shape_token_map = {
+            "tophat": "simple",
+        }
+        shape_out = shape_token_map.get(shape, shape)
+        width = opt[1]
+        expv = opt[2]
+        if shape_out == "gauss-exponential" and width is not None and expv is not None:
+            return f"{shape_out}:{float(width)}:{float(expv)}"
+        if shape_out in ("gauss", "simple") and width is not None:
+            return f"{shape_out}:{float(width)}"
+        if shape_out == "exponential" and expv is not None:
+            return f"{shape_out}:{float(expv)}"
+        return shape_out

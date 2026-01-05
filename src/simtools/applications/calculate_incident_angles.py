@@ -145,8 +145,6 @@ def main():
     label_with_telescope = f"{base_label}_{telescope_name}"
 
     calculator = IncidentAnglesCalculator(
-        simtel_path=app_context.args["simtel_path"],
-        db_config=app_context.db_config,
         config_data=app_context.args,
         output_dir=output_dir,
         label=base_label,

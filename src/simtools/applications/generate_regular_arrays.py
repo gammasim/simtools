@@ -27,12 +27,11 @@ Runtime < 10 s.
 from pathlib import Path
 
 import astropy.units as u
-from astropy.table import QTable
 
 import simtools.data_model.model_data_writer as writer
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
-from simtools.utils import names
+from simtools.layout.array_layout_utils import create_regular_array
 
 # Telescope distances for 4 tel square arrays
 # !HARDCODED
@@ -67,38 +66,9 @@ def main():
     for array_name in array_list:
         app_context.logger.info(f"Processing array {array_name}")
 
-        tel_name, pos_x, pos_y, pos_z = [], [], [], []
-        tel_size = array_name[1:4]
-
-        # Single telescope at the center
-        if array_name[0] == "1":
-            tel_name.append(
-                names.generate_array_element_name_from_type_site_id(
-                    tel_size, app_context.args["site"], "01"
-                )
-            )
-            pos_x.append(0 * u.m)
-            pos_y.append(0 * u.m)
-            pos_z.append(0 * u.m)
-        # 4 telescopes in a regular square grid
-        else:
-            for i in range(1, 5):
-                tel_name.append(
-                    names.generate_array_element_name_from_type_site_id(
-                        tel_size, app_context.args["site"], f"0{i}"
-                    )
-                )
-                pos_x.append(telescope_distance[tel_size] * (-1) ** (i // 2))
-                pos_y.append(telescope_distance[tel_size] * (-1) ** (i % 2))
-                pos_z.append(0 * u.m)
-
-        table = QTable(meta={"array_name": array_name, "site": app_context.args["site"]})
-        table["telescope_name"] = tel_name
-        table["position_x"] = pos_x
-        table["position_y"] = pos_y
-        table["position_z"] = pos_z
-        table.sort("telescope_name")
-        table.pprint()
+        array_table = create_regular_array(
+            array_name, app_context.args["site"], telescope_distance=telescope_distance
+        )
 
         output_file = app_context.args.get("output_file")
         if output_file:
@@ -110,7 +80,7 @@ def main():
             args_dict=app_context.args,
             output_file=output_file,
             metadata=None,
-            product_data=table,
+            product_data=array_table,
         )
 
 

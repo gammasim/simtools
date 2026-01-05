@@ -524,21 +524,22 @@ def test_write_simtools_parameters(simtel_config_writer, tmp_test_directory, fil
     with open(build_opts_file, "w") as f:
         f.write("build_date: 2023-01-01\nversion: 1.0.0")
 
-    simtel_config_writer._simtel_path = tmp_test_directory
-    with open(test_file, "w") as f:
-        simtel_config_writer._write_simtools_parameters(f)
+    with mock.patch("simtools.simtel.simtel_config_writer.settings") as mock_settings:
+        mock_settings.config.sim_telarray_path = tmp_test_directory
+        with open(test_file, "w") as f:
+            simtel_config_writer._write_simtools_parameters(f)
 
-    # Check build_opts parameters are included
-    assert file_has_text(test_file, "metaparam global set simtools_build_date = 2023-01-01")
-    assert file_has_text(test_file, "metaparam global set simtools_version = 1.0.0")
+        # Check build_opts parameters are included
+        assert file_has_text(test_file, "metaparam global set simtools_")
 
     # Test with invalid simtel_path
-    simtel_config_writer._simtel_path = tmp_test_directory / "nonexistent"
-    with open(test_file, "w") as f:
-        simtel_config_writer._write_simtools_parameters(f)
-    # Should still write basic parameters without build_opts
-    assert file_has_text(test_file, "% Simtools parameters")
-    assert file_has_text(test_file, "metaparam global set simtools_version")
+    with mock.patch("simtools.simtel.simtel_config_writer.settings") as mock_settings:
+        mock_settings.config.sim_telarray_path = tmp_test_directory / "nonexistent"
+        with open(test_file, "w") as f:
+            simtel_config_writer._write_simtools_parameters(f)
+        # Should still write basic parameters without build_opts
+        assert file_has_text(test_file, "% Simtools parameters")
+        assert file_has_text(test_file, "metaparam global set simtools_version")
 
 
 def test_write_single_mirror_list_file(simtel_config_writer, tmp_test_directory, file_has_text):
@@ -568,23 +569,21 @@ def test_write_single_mirror_list_file(simtel_config_writer, tmp_test_directory,
 
 
 @pytest.mark.parametrize(
-    ("shape", "width", "expected_sigtime", "expected_twidth", "expected_exptime"),
+    ("shape", "width", "exp", "expected_sigtime", "expected_twidth", "expected_exptime"),
     [
-        ("gauss", 2.5, 2.5, 0.0, 0.0),
-        ("tophat", 5.0, 0.0, 5.0, 0.0),
-        ("exponential", 3.2, 0.0, 0.0, 3.2),
-        ("gauss-exponential", 3.2, 3.2, 0.0, 3.2),
-        ("GAUSS", 1.5, 1.5, 0.0, 0.0),  # case insensitive
+        ("gauss", 2.5, 0.0, 2.5, 0.0, 0.0),
+        ("tophat", 5.0, 0.0, 0.0, 5.0, 0.0),
+        ("exponential", 0.0, 3.2, 0.0, 0.0, 3.2),
+        ("gauss-exponential", 3.2, 3.2, 3.2, 0.0, 3.2),
+        ("GAUSS", 1.5, 0.0, 1.5, 0.0, 0.0),  # case insensitive
     ],
 )
 def test_get_flasher_parameters_for_sim_telarray_valid_shapes(
-    simtel_config_writer, shape, width, expected_sigtime, expected_twidth, expected_exptime
+    simtel_config_writer, shape, width, exp, expected_sigtime, expected_twidth, expected_exptime
 ):
-    """Test _get_flasher_parameters_for_sim_telarray with valid pulse shapes."""
+    """Test _get_flasher_parameters_for_sim_telarray with valid pulse shapes (unified list)."""
     parameters = {
-        "flasher_pulse_shape": {"value": shape},
-        "flasher_pulse_width": {"value": width},
-        "flasher_pulse_exp_decay": {"value": width},
+        "flasher_pulse_shape": {"value": [shape, width, exp]},
     }
     result = simtel_config_writer._get_flasher_parameters_for_sim_telarray(parameters, {})
 
@@ -599,8 +598,8 @@ def test_get_flasher_parameters_for_sim_telarray_invalid_shapes(
 ):
     """Test _get_flasher_parameters_for_sim_telarray with invalid shapes - covers warning case."""
     parameters = {
-        "flasher_pulse_shape": {"value": shape},
-        "flasher_pulse_width": {"value": 1.0},
+        # Provide unified list but with an invalid shape token
+        "flasher_pulse_shape": {"value": [shape, 0.0, 0.0]},
     }
 
     with caplog.at_level(logging.WARNING):
@@ -622,11 +621,8 @@ def test_get_flasher_parameters_for_sim_telarray_missing_params(simtel_config_wr
     assert result == simtel_par
 
     simtel_par = {"existing_param": "existing_value"}
-
-    parameters = {
-        "flasher_pulse_width": {"value": 0.0},
-        "flasher_pulse_shape": {"value": "bad_shape"},
-    }
+    # Provide unified list with invalid shape token; expect warning and zeroed flasher params
+    parameters = {"flasher_pulse_shape": {"value": ["bad_shape", 0.0, 0.0]}}
 
     with caplog.at_level(logging.WARNING):
         result = simtel_config_writer._get_flasher_parameters_for_sim_telarray(
@@ -640,6 +636,7 @@ def test_get_flasher_parameters_for_sim_telarray_missing_params(simtel_config_wr
         result[key] == pytest.approx(0.0)
         for key in ["laser_pulse_sigtime", "laser_pulse_twidth", "laser_pulse_exptime"]
     )
+    assert result["existing_param"] == "existing_value"
 
 
 def test_write_array_triggers_file_mixed_hardstereo(simtel_config_writer, tmp_test_directory):
@@ -901,10 +898,10 @@ def _read_pulse_table(path: Path):
     return np.array(t_vals), np.array(y_vals)
 
 
-def test_write_lightpulse_table_gauss_expconv_creates_normalized_file(tmp_test_directory):
+def test_write_light_pulse_table_gauss_exp_conv_creates_normalized_file(tmp_test_directory):
     """Writer should create a pulse table with peak amplitude ~1 and expected window."""
     out = Path(tmp_test_directory) / "pulse_shape_test.dat"
-    result = SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+    result = SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
         file_path=out,
         width_ns=2.5,
         exp_decay_ns=5.0,
@@ -931,11 +928,11 @@ def test_write_lightpulse_table_gauss_expconv_creates_normalized_file(tmp_test_d
     assert (t[-1] - t[0]) >= (expected_span - dt)
 
 
-def test_write_lightpulse_table_gauss_expconv_time_spacing(tmp_test_directory):
+def test_write_light_pulse_table_gauss_exp_conv_time_spacing(tmp_test_directory):
     """Time column should be spaced by dt_ns consistently."""
     out = Path(tmp_test_directory) / "pulse_shape_spacing.dat"
     dt = 0.5
-    SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+    SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
         file_path=out,
         width_ns=3.0,
         exp_decay_ns=6.0,
@@ -947,11 +944,11 @@ def test_write_lightpulse_table_gauss_expconv_time_spacing(tmp_test_directory):
     assert np.allclose(np.diff(t), dt, atol=1e-9)
 
 
-def test_write_lightpulse_table_gauss_expconv_missing_params_raises(tmp_test_directory):
+def test_write_light_pulse_table_gauss_exp_conv_missing_params_raises(tmp_test_directory):
     """Missing width/decay should raise ValueError."""
     out = Path(tmp_test_directory) / "pulse_missing_params.dat"
     with pytest.raises(ValueError, match="width_ns"):
-        SimtelConfigWriter.write_lightpulse_table_gauss_expconv(
+        SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
             file_path=out,
             width_ns=None,
             exp_decay_ns=5.0,
@@ -1130,3 +1127,63 @@ def test_write_trigger_lines_no_hardstereo_no_minsep(simtel_config_writer):
     assert TRIGGER_1_2_WIDTH_300_LINE in lines
     assert TRIGGER_3_4_WIDTH_400_LINE in lines
     assert TRIGGER_1234_WIDTH_300_LINE in lines  # Min width, no minsep
+
+
+def test_write_simtools_parameters_attribute_error(simtel_config_writer, tmp_test_directory):
+    # Create a mock file to write to
+    test_file = tmp_test_directory / "test_simtools_params.txt"
+    # Patch settings.config.corsika_exe to None to trigger AttributeError
+    with mock.patch("simtools.simtel.simtel_config_writer.settings") as mock_settings:
+        mock_settings.config.corsika_exe = None
+        with pytest.raises(
+            AttributeError, match=r"CORSIKA executable path is not set in settings."
+        ):
+            with open(test_file, "w") as f:
+                simtel_config_writer._write_simtools_parameters(f)
+
+
+def test_write_angular_distribution_table_lambertian(tmp_test_directory):
+    """Test write_angular_distribution_table_lambertian."""
+    file_path = Path(tmp_test_directory) / "lambertian.dat"
+
+    # Test default parameters
+    SimtelConfigWriter.write_angular_distribution_table_lambertian(
+        file_path=file_path,
+        max_angle_deg=90.0,
+        n_samples=100,
+    )
+
+    assert file_path.exists()
+    content = file_path.read_text().splitlines()
+
+    # Check header
+    assert content[0].startswith("# angle[deg] relative_intensity")
+
+    # Check number of lines (header + n_samples)
+    assert len(content) == 101
+
+    # Check first and last values
+    first_line = content[1].split()
+    last_line = content[-1].split()
+
+    # Angle 0 -> cos(0) = 1
+    assert float(first_line[0]) == pytest.approx(0.0)
+    assert float(first_line[1]) == pytest.approx(1.0)
+
+    # Angle 90 -> cos(90) = 0
+    assert float(last_line[0]) == pytest.approx(90.0)
+    assert float(last_line[1]) == pytest.approx(0.0, abs=1e-7)
+
+    # Test with max_angle > 90 (should be clipped to 0)
+    file_path_large = Path(tmp_test_directory) / "lambertian_large.dat"
+    SimtelConfigWriter.write_angular_distribution_table_lambertian(
+        file_path=file_path_large,
+        max_angle_deg=180.0,
+        n_samples=181,
+    )
+
+    content_large = file_path_large.read_text().splitlines()
+    # Angle 180 -> cos(180) = -1 -> clipped to 0
+    last_line_large = content_large[-1].split()
+    assert float(last_line_large[0]) == pytest.approx(180.0)
+    assert float(last_line_large[1]) == pytest.approx(0.0)

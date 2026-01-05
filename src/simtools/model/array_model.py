@@ -1,4 +1,4 @@
-"""Definition of the ArrayModel class."""
+"""Array model represents an observatory consisting of site, telescopes, and further devices."""
 
 import logging
 from pathlib import Path
@@ -21,8 +21,6 @@ class ArrayModel:
 
     Parameters
     ----------
-    db_config: dict
-        Database configuration.
     model_version: str
         Model version.
     label: str, optional
@@ -36,28 +34,23 @@ class ArrayModel:
         the array element positions).
     calibration_device_types: List[str], optional
         List of calibration device types (e.g., 'flat_fielding') attached to each telescope.
-    simtel_path: str, Path, optional
-        Path to the sim_telarray installation directory.
     overwrite_model_parameters: str, optional
         File name to overwrite model parameters from DB with provided values.
     """
 
     def __init__(
         self,
-        db_config,
         model_version,
         label=None,
         site=None,
         layout_name=None,
         array_elements=None,
         calibration_device_types=None,
-        simtel_path=None,
         overwrite_model_parameters=None,
     ):
         """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init ArrayModel")
-        self.db_config = db_config
         self.model_version = model_version
         self.label = label
         self.layout_name = (
@@ -78,7 +71,6 @@ class ArrayModel:
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
         self._sim_telarray_seeds = None
-        self.simtel_path = simtel_path
 
     def _initialize(self, site, array_elements_config, calibration_device_types):
         """
@@ -105,7 +97,6 @@ class ArrayModel:
         self._logger.debug(f"Getting site parameters from DB ({site})")
         site_model = SiteModel(
             site=names.validate_site_name(site),
-            db_config=self.db_config,
             model_version=self.model_version,
             label=self.label,
             overwrite_model_parameters=self.overwrite_model_parameters,
@@ -250,7 +241,6 @@ class ArrayModel:
                 site=site_model.site,
                 telescope_name=element_name,
                 model_version=self.model_version,
-                db_config=self.db_config,
                 label=self.label,
                 overwrite_model_parameters=self.overwrite_model_parameters,
             )
@@ -282,7 +272,6 @@ class ArrayModel:
             calibration_models[device_name] = CalibrationModel(
                 site=site_model.site,
                 calibration_device_model_name=device_name,
-                db_config=self.db_config,
                 model_version=self.model_version,
                 label=self.label,
                 overwrite_model_parameters=self.overwrite_model_parameters,
@@ -322,7 +311,6 @@ class ArrayModel:
             layout_name=self.layout_name,
             model_version=self.model_version,
             label=self.label,
-            simtel_path=self.simtel_path,
         )
         simtel_writer.write_array_config_file(
             config_file_path=self.config_file_path,

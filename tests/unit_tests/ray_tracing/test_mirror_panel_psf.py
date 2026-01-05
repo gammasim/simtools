@@ -77,9 +77,8 @@ def mock_mirror_panel_psf(
 ):
     with patch(mock_telescope_model_string) as mock_init_models, patch(mock_find_file_string):
         mock_init_models.return_value = (dummy_tel, "dummy_site", None)
-        db_config = {"db": "config"}
         label = "test_label"
-        mirror_panel_psf = MirrorPanelPSF(label, mock_args_dict, db_config)
+        mirror_panel_psf = MirrorPanelPSF(label, mock_args_dict)
         yield mirror_panel_psf
 
 
@@ -146,15 +145,13 @@ def test_define_telescope_model(
 
         args_dict["mirror_list"] = None
         args_dict["random_focal_length"] = None
-        db_config = {"db": "config"}
         label = "test_label"
 
-        mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
+        mirror_panel_psf = MirrorPanelPSF(label, args_dict)
         tel = mirror_panel_psf.telescope_model
 
         mock_init_models.assert_called_once_with(
             label=label,
-            db_config=db_config,
             site=args_dict["site"],
             telescope_name=args_dict["telescope"],
             model_version=args_dict["model_version"],
@@ -173,15 +170,13 @@ def test_define_telescope_model(
         args_dict["mirror_list"] = "mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv"
         args_dict["model_path"] = "tests/resources"
         args_dict["random_focal_length"] = 0.1
-        db_config = {"db": "config"}
         label = "test_label"
 
-        mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
+        mirror_panel_psf = MirrorPanelPSF(label, args_dict)
         tel = mirror_panel_psf.telescope_model
 
         mock_init_models.assert_called_once_with(
             label=label,
-            db_config=db_config,
             site=args_dict["site"],
             telescope_name=args_dict["telescope"],
             model_version=args_dict["model_version"],
@@ -198,7 +193,6 @@ def test_init_with_test_mode(mock_args_dict, mock_telescope_model_string, dummy_
 
     with patch(mock_telescope_model_string) as mock_init_models:
         mock_init_models.return_value = (dummy_tel, "dummy_site", None)
-        db_config = {"db": "config"}
         label = "test_label"
 
         mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
@@ -528,9 +522,8 @@ def test_run_simulations_and_analysis(
         patch("simtools.ray_tracing.mirror_panel_psf.RayTracing") as mock_ray_tracing,
     ):
         mock_init_models.return_value = (dummy_tel, "dummy_site", None)
-        db_config = {"db": "config"}
         label = "test_label"
-        mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
+        mirror_panel_psf = MirrorPanelPSF(label, args_dict)
 
         mock_ray_instance = mock_ray_tracing.return_value
 

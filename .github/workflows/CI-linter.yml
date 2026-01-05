@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -63,12 +63,6 @@ jobs:
         with:
           args: "--validate"
 
-      - name: Install mamba dependencies
-        uses: mamba-org/setup-micromamba@v2
-        with:
-          environment-file: environment.yml
-          init-shell: bash
-
       - name: Python dependencies
         run: |
           pip install -e '.[tests,dev,doc]'
@@ -79,7 +73,7 @@ jobs:
           ./bin/dotenv-linter check -i UnorderedKey .env*
 
       - name: Restore pre-commit cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: precommit-cache
         with:
           path: ~/.cache/pre-commit
@@ -93,7 +87,7 @@ jobs:
 
       - name: Save pre-commit cache
         if: success()  # only save if previous steps succeeded
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pre-commit
           key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}

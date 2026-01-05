@@ -1,0 +1,20 @@
+---
+applications:
+- application: simtools-simulate-flasher
+  configuration:
+    run_mode: direct_injection
+    light_source: MSFx-NectarCam
+    array_layout_name: 1mst
+    label: test-flasher-direct-injection-mst-nectarcam
+    log_level: DEBUG
+    model_version: 7.0.0
+    number_of_events: 3
+    output_path: simtools-output
+    run_number: 10
+    sim_telarray_random_instrument_instances: 100
+    site: North
+  integration_tests:
+  - output_file: sim_telarray/data/run000010/direct_injection_run000010_za20deg_azm000deg_North_1mst_7.0.0_test-flasher-direct-injection-mst-nectarcam.simtel.zst
+  test_name: direction_injection_msfx_nectarcam_north
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

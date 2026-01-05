@@ -7,12 +7,10 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from dotenv import load_dotenv
 
 from simtools.testing import configuration, helpers, log_inspector, validate_output
 
 logger = logging.getLogger()
-load_dotenv(".env")
 
 config_files = sorted(Path(__file__).parent.glob("config/*.yml"))
 test_configs, test_ids = configuration.get_list_of_test_configurations(config_files)
@@ -30,7 +28,7 @@ for config, test_id in zip(test_configs, test_ids):
 
 
 @pytest.mark.parametrize("config", test_parameters)
-def test_applications_from_config(tmp_test_directory, config, request, db_config):
+def test_applications_from_config(tmp_test_directory, config, request):
     """
     Test all applications from config files found in the config directory.
 
@@ -78,5 +76,4 @@ def test_applications_from_config(tmp_test_directory, config, request, db_config
         tmp_config,
         model_version,
         config_file_model_version or model_version,
-        db_config=db_config,
     )

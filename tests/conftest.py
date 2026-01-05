@@ -4,15 +4,15 @@ import os
 import re
 import tarfile
 from contextlib import contextmanager
-from pathlib import Path
 from unittest import mock
 
 import matplotlib.pyplot as plt
 import pytest
 from astropy import units as u
-from dotenv import dotenv_values, load_dotenv
+from dotenv import load_dotenv
 
 import simtools.io.io_handler
+from simtools import settings
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.configuration.configurator import Configurator
 from simtools.corsika.corsika_config import CorsikaConfig
@@ -23,6 +23,18 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.runners.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
+
+
+@pytest.fixture(autouse=True)
+def simtools_settings(tmp_test_directory, db_config):
+    """Load simtools settings for the test session."""
+    load_dotenv(".env")
+    # Set defaults only if not already set (e.g. CI environment)
+    os.environ.setdefault("SIMTOOLS_SIMTEL_PATH", str(tmp_test_directory) + "/sim_telarray")
+    os.environ.setdefault("SIMTOOLS_SIMTEL_EXECUTABLE", "sim_telarray")
+    os.environ.setdefault("SIMTOOLS_CORSIKA_PATH", str(tmp_test_directory) + "/corsika")
+    os.environ.setdefault("SIMTOOLS_CORSIKA_EXECUTABLE", "corsika_flat")
+    settings.config.load(db_config=db_config)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -67,7 +79,7 @@ def _mock_settings_env_vars(tmp_test_directory):
     with mock.patch.dict(
         os.environ,
         {
-            "SIMTOOLS_SIMTEL_PATH": str(tmp_test_directory) + "/simtel",
+            "SIMTOOLS_SIMTEL_PATH": str(settings.config.sim_telarray_path),
             "SIMTOOLS_DB_API_USER": "db_user",
             "SIMTOOLS_DB_API_PW": "12345",
             "SIMTOOLS_DB_API_PORT": "42",
@@ -81,23 +93,7 @@ def _mock_settings_env_vars(tmp_test_directory):
 
 
 @pytest.fixture
-def simtel_path():
-    """Empty string used as placeholder for simtel_path."""
-    return Path()
-
-
-@pytest.fixture
-def simtel_path_no_mock():
-    """Simtel path as set by the .env file."""
-    load_dotenv(".env")
-    simtel_path = Path(os.path.expandvars("$SIMTOOLS_SIMTEL_PATH"))
-    if simtel_path.exists():
-        return simtel_path
-    return ""
-
-
-@pytest.fixture
-def args_dict(tmp_test_directory, simtel_path, data_path):
+def args_dict(tmp_test_directory, data_path):
     """Minimal configuration from command line."""
     return Configurator().default_config(
         (
@@ -105,14 +101,12 @@ def args_dict(tmp_test_directory, simtel_path, data_path):
             str(tmp_test_directory),
             "--data_path",
             data_path,
-            "--simtel_path",
-            str(simtel_path),
         ),
     )
 
 
 @pytest.fixture
-def args_dict_site(tmp_test_directory, simtel_path, data_path):
+def args_dict_site(tmp_test_directory, data_path):
     "Configuration include site and telescopes."
     return Configurator().default_config(
         (
@@ -120,8 +114,6 @@ def args_dict_site(tmp_test_directory, simtel_path, data_path):
             str(tmp_test_directory),
             "--data_path",
             data_path,
-            "--simtel_path",
-            str(simtel_path),
             "--site",
             "South",
             "--telescope",
@@ -143,11 +135,8 @@ def mongo_db_logger_settings():
 @pytest.fixture
 def db_config():
     """DB configuration from .env file."""
+    load_dotenv(".env")
 
-    db_config = {
-        key.lower().replace("simtools_", ""): value
-        for key, value in dict(dotenv_values(".env")).items()
-    }
     _db_para = (
         "db_api_user",
         "db_api_pw",
@@ -157,18 +146,16 @@ def db_config():
         "db_simulation_model",
         "db_simulation_model_version",
     )
-    for _para in _db_para:
-        if _para not in db_config:
-            db_config[_para] = os.environ.get(f"SIMTOOLS_{_para.upper()}")
+    db_config = {_para: os.environ.get(f"SIMTOOLS_{_para.upper()}") for _para in _db_para}
     if db_config["db_api_port"] is not None:
         db_config["db_api_port"] = int(db_config["db_api_port"])
     return db_config
 
 
 @pytest.fixture
-def db(db_config):
-    """Database object with configuration from .env file."""
-    return db_handler.DatabaseHandler(db_config=db_config)
+def db():
+    """Database object with configuration from settings.config.db_handler."""
+    return db_handler.DatabaseHandler()
 
 
 def pytest_addoption(parser):
@@ -189,96 +176,88 @@ def model_version_prod5():
 
 
 @pytest.fixture
-def array_model_north(io_handler, db_config, model_version):
+def array_model_north(io_handler, model_version):
     """Array model for North site."""
     return ArrayModel(
         label="test-lst-array",
         site="North",
         layout_name="test_layout",
-        db_config=db_config,
         model_version=model_version,
     )
 
 
 @pytest.fixture
-def array_model_south(io_handler, db_config, model_version):
+def array_model_south(io_handler, model_version):
     """Array model for South site."""
     return ArrayModel(
         label="test-lst-array",
         site="South",
         layout_name="test_layout",
-        db_config=db_config,
         model_version=model_version,
     )
 
 
 @pytest.fixture
-def site_model_south(db_config, model_version):
+def site_model_south(model_version):
     """Site model for South site."""
     return SiteModel(
         site="South",
-        db_config=db_config,
         label="site-south",
         model_version=model_version,
     )
 
 
 @pytest.fixture
-def site_model_north(db_config, model_version):
+def site_model_north(model_version):
     """Site model for North site."""
     return SiteModel(
         site="North",
-        db_config=db_config,
         label="site-north",
         model_version=model_version,
     )
 
 
 @pytest.fixture
-def telescope_model_lst(db_config, io_handler, model_version):
+def telescope_model_lst(io_handler, model_version):
     """Telescope model LST North."""
     return TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
         model_version=model_version,
-        db_config=db_config,
         label="test-telescope-model-lst",
     )
 
 
 @pytest.fixture
-def telescope_model_mst(db_config, io_handler, model_version):
+def telescope_model_mst(io_handler, model_version):
     """Telescope model MST FlashCam."""
     return TelescopeModel(
         site="South",
         telescope_name="MSTx-FlashCam",
         model_version=model_version,
         label="test-telescope-model-mst",
-        db_config=db_config,
     )
 
 
 @pytest.fixture
-def telescope_model_sst(db_config, io_handler, model_version):
+def telescope_model_sst(io_handler, model_version):
     """Telescope model SST South."""
     return TelescopeModel(
         site="South",
         telescope_name="SSTS-design",
         model_version=model_version,
-        db_config=db_config,
         label="test-telescope-model-sst",
     )
 
 
 # keep 5.0.0 model until a complete prod6 model is in the DB
 @pytest.fixture
-def telescope_model_sst_prod5(db_config, io_handler, model_version_prod5):
+def telescope_model_sst_prod5(io_handler, model_version_prod5):
     """Telescope model SST South (prod5/5.0.0)."""
     return TelescopeModel(
         site="South",
         telescope_name="SSTS-design",
         model_version=model_version_prod5,
-        db_config=db_config,
         label="test-telescope-model-sst",
     )
 
@@ -308,29 +287,6 @@ def telescope_south_test_file():
 
 
 @pytest.fixture
-def corsika_output_file_name():
-    """CORSIKA output file name for testing."""
-    return "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio"
-
-
-@pytest.fixture
-def corsika_histograms_instance(io_handler, corsika_output_file_name):
-    """Corsika histogram instance."""
-    from simtools.corsika.corsika_histograms import CorsikaHistograms
-
-    return CorsikaHistograms(
-        corsika_output_file_name, output_path=io_handler.get_output_directory()
-    )
-
-
-@pytest.fixture
-def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histograms_instance):
-    """Corsika histogram instance (fully configured)."""
-    corsika_histograms_instance.set_histograms()
-    return corsika_histograms_instance
-
-
-@pytest.fixture
 def corsika_config_data(model_version):
     """Corsika configuration data (as given by CorsikaConfig)."""
     return {
@@ -352,20 +308,19 @@ def corsika_config_data(model_version):
 
 
 @pytest.fixture
-def corsika_config(io_handler, db_config, corsika_config_data, array_model_south):
+def corsika_config(io_handler, corsika_config_data, array_model_south):
     """Corsika configuration object (using array model South)."""
     corsika_config = CorsikaConfig(
         array_model=array_model_south,
         label="test-corsika-config",
         args_dict=corsika_config_data,
-        db_config=db_config,
     )
     corsika_config.run_number = 1
     return corsika_config
 
 
 @pytest.fixture
-def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data, model_version):
+def corsika_config_mock_array_model(io_handler, corsika_config_data, model_version):
     """Corsika configuration object (using array model South)."""
     array_model = mock.MagicMock()
     array_model.layout_name = "test_layout"
@@ -409,7 +364,6 @@ def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data, 
             array_model=array_model,
             label="test-corsika-config",
             args_dict=corsika_config_data,
-            db_config=db_config,
         )
 
     corsika_config.run_number = 1
@@ -418,20 +372,18 @@ def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data, 
 
 
 @pytest.fixture
-def corsika_runner(corsika_config, io_handler, simtel_path):
+def corsika_runner(corsika_config, io_handler):
     return CorsikaRunner(
         corsika_config=corsika_config,
-        simtel_path=simtel_path,
         label="test-corsika-runner",
         use_multipipe=False,
     )
 
 
 @pytest.fixture
-def corsika_runner_mock_array_model(corsika_config_mock_array_model, io_handler, simtel_path):
+def corsika_runner_mock_array_model(corsika_config_mock_array_model, io_handler):
     return CorsikaRunner(
         corsika_config=corsika_config_mock_array_model,
-        simtel_path=simtel_path,
         label="test-corsika-runner",
         use_multipipe=False,
     )
@@ -477,7 +429,7 @@ def safe_tar_open():
 
 
 @pytest.fixture
-def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
+def camera_efficiency_sst(io_handler, model_version):
     return CameraEfficiency(
         config_data={
             "telescope": "SSTS-05",
@@ -485,9 +437,7 @@ def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
             "model_version": model_version,
             "zenith_angle": 20 * u.deg,
             "azimuth_angle": 0 * u.deg,
-            "simtel_path": simtel_path,
         },
-        db_config=db_config,
         label="validate_camera_efficiency",
     )
 

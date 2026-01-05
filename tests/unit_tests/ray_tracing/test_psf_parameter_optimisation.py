@@ -9,7 +9,6 @@ import numpy as np
 import pytest
 
 import simtools.ray_tracing.psf_parameter_optimisation as psf_opt
-from simtools.ray_tracing.psf_parameter_optimisation import GradientStepResult
 
 TEST_OUTPUT_DIR = Path("/dummy_test_path")
 
@@ -48,7 +47,6 @@ def mock_args_dict():
         "src_distance": 10.0,
         "monte_carlo_analysis": False,
         "rmsd_threshold": 0.01,
-        "simtel_path": "/path/to/simtel",
         "fraction": 0.8,
     }
 
@@ -306,7 +304,6 @@ def test__run_ray_tracing_simulation(
 ):
     """Test ray tracing simulation execution with normal parameters and error cases."""
     if should_raise_error:
-        mock_args_dict["simtel_path"] = "/path/to/simtel"
         with pytest.raises(ValueError, match="No best parameters found"):
             psf_opt._run_ray_tracing_simulation(
                 mock_telescope_model, mock_site_model, mock_args_dict, pars
@@ -632,7 +629,7 @@ def test_perform_gradient_step_with_retries(optimizer):
         )
 
         assert result is not None
-        assert isinstance(result, GradientStepResult)
+        assert isinstance(result, psf_opt.GradientStepResult)
         assert result.params == {"mirror_reflection_random_angle": [0.004]}
         assert result.step_accepted is True
 
@@ -1131,7 +1128,7 @@ def test_perform_gradient_step_with_retries_learning_rate_reduction(
         )
 
         # Should fail and return GradientStepResult with False for step_accepted
-        assert isinstance(result, GradientStepResult)
+        assert isinstance(result, psf_opt.GradientStepResult)
         assert result.step_accepted is False
 
 

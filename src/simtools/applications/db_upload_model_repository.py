@@ -87,7 +87,7 @@ def main():
     """Application main."""
     app_context = startup_application(_parse)
 
-    db = db_handler.DatabaseHandler(db_config=app_context.db_config)
+    db = db_handler.DatabaseHandler()
     db.print_connection_info()
 
     db_model_upload.add_complete_model(

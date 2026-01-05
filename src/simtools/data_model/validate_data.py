@@ -928,9 +928,7 @@ class DataValidator:
             """Return value as sorted list."""
             return [value] if isinstance(value, str) else sorted(value)
 
-        instrument_sites = []
-        for inst in instruments:
-            instrument_sites.append(names.get_site_from_array_element_name(inst))
+        instrument_sites = [names.get_site_from_array_element_name(inst) for inst in instruments]
         # names.get_site_from_array_element_name might return a list
         flat_sites = [
             s

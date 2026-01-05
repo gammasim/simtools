@@ -135,7 +135,6 @@ def main():
     label = app_context.args.get("label") or get_application_label(__file__)
     telescope_model, _, _ = initialize_simulation_models(
         label=label,
-        db_config=app_context.db_config,
         model_version=app_context.args["model_version"],
         site=site,
         telescope_name=app_context.args["telescope"],

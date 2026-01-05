@@ -85,7 +85,7 @@ def _parse():
     )
 
 
-def _layout_from_db(args_dict, db_config):
+def _layout_from_db(args_dict):
     """
     Read array elements and their positions from data base using the layout name.
 
@@ -93,8 +93,6 @@ def _layout_from_db(args_dict, db_config):
     ----------
     args_dict : dict
         Dictionary with the command line arguments.
-    db_config : dict
-        Database configuration.
 
     Returns
     -------
@@ -102,7 +100,6 @@ def _layout_from_db(args_dict, db_config):
         Table with array element positions.
     """
     array_model = ArrayModel(
-        db_config=db_config,
         model_version=args_dict["model_version"],
         site=args_dict["site"],
         layout_name=args_dict.get("array_layout_name", None),
@@ -121,14 +118,13 @@ def main():
         if app_context.args.get("site", None) is None:
             raise ValueError("Site must be provided to list available layouts.")
         site_model = SiteModel(
-            db_config=app_context.db_config,
             model_version=app_context.args["model_version"],
             site=app_context.args["site"],
         )
         print(site_model.get_list_of_array_layouts())
     else:
         app_context.logger.info("Array layout: %s", app_context.args["array_layout_name"])
-        layout = _layout_from_db(app_context.args, app_context.db_config)
+        layout = _layout_from_db(app_context.args)
         layout.pprint()
 
         if not app_context.args.get("output_file_from_default", False):

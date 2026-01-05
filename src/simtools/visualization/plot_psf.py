@@ -660,7 +660,6 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
-        simtel_path=args_dict["simtel_path"],
         zenith_angle=args_dict["zenith"] * u.deg,
         source_distance=args_dict["src_distance"] * u.km,
         off_axis_angle=off_axis_angles * u.deg,

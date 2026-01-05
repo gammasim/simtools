@@ -1,0 +1,13 @@
+---
+applications:
+- application: simtools-generate-corsika-histograms
+  configuration:
+    input_files: './tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio'
+    output_path: simtools-output
+    pdf_file_name: tel_output_10GeV-2-gamma-20deg-CTAO-South.pdf
+    file_labels: 'CORSIKA IO output'
+  integration_tests:
+  - output_file: tel_output_10GeV-2-gamma-20deg-CTAO-South.pdf
+  test_name: plot
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
