@@ -8,17 +8,11 @@ from simtools.io import io_handler
 from simtools.runners.runner_services import RunnerServices
 
 
-class MissingRequiredEntryInCorsikaConfigError(Exception):
-    """Exception for missing required entry in corsika config."""
-
-
 class CorsikaRunner:
     """
-    Generate run scripts and directories for CORSIKA simulations. Run simulations if requested.
+    Prepare and run CORSIKA simulations.
 
-    CorsikaRunner is responsible for configuring and running CORSIKA, using corsika_autoinputs
-    provided by the sim_telarray package. CorsikaRunner generates shell scripts to be run
-    externally or by the simulator module simulator.
+    Generate run scripts and directories for CORSIKA simulations. Run simulations if requested.
 
     CorsikaRunner is configured through a CorsikaConfig instance.
 

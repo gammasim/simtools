@@ -123,8 +123,8 @@ class Simulator:
 
         Returns
         -------
-        list
-            List of ArrayModel objects.
+        list, list
+            List of ArrayModel and CorsikaConfig objects.
         """
         versions = general.ensure_iterable(self.model_version)
 
