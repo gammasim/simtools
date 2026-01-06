@@ -12,6 +12,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib.colors import to_rgba
 
 from simtools.utils import geometry as transf
+from simtools.visualization import plot_array_layout as pal
 from simtools.visualization.plot_array_layout import (
     PlotBounds,
     create_patches,
@@ -24,6 +25,13 @@ from simtools.visualization.plot_array_layout import (
     plot_array_layout,
     update_legend,
 )
+
+
+@pytest.fixture(autouse=True)
+def close_figures():
+    """Automatically close all matplotlib figures after each test."""
+    yield
+    plt.close("all")
 
 
 @pytest.fixture
@@ -845,3 +853,59 @@ def test_get_patches_empty_with_axes_range():
 
     assert len(patches) == 0
     assert np.isclose(axes_range, 1000.0, rtol=1e-05, atol=1e-05)
+
+
+def test_plot_array_layouts(monkeypatch, tmp_path):
+    # Minimal test for plot_array_layouts: checks that it calls plot_array_layout and save_figure
+
+    called = {"plot_array_layout": False, "save_figure": False}
+
+    def dummy_plot_array_layout(**kwargs):
+        called["plot_array_layout"] = True
+
+        class DummyFig:
+            pass
+
+        return DummyFig()
+
+    def dummy_save_figure(fig, path, dpi):
+        called["save_figure"] = True
+        assert fig is not None
+        assert path.parent == tmp_path
+
+    monkeypatch.setattr(pal, "plot_array_layout", dummy_plot_array_layout)
+    monkeypatch.setattr(pal.visualize, "save_figure", dummy_save_figure)
+
+    args_dict = {
+        "show_labels": False,
+        "axes_range": 100,
+        "marker_scaling": 1.0,
+        "grayed_out_array_elements": [],
+        "highlighted_array_elements": [],
+        "legend_location": "best",
+        "bounds": "exact",
+        "padding": 0.1,
+        "x_lim": None,
+        "y_lim": None,
+        "figure_name": None,
+        "site": None,
+        "coordinate_system": "utm",
+    }
+    # Minimal layout: one telescope
+    layouts = [
+        {
+            "array_elements": QTable(
+                {
+                    "telescope_name": ["LSTN-01"],
+                    "position_x": [0] * u.m,
+                    "position_y": [0] * u.m,
+                    "sphere_radius": [12] * u.m,
+                }
+            ),
+            "name": "testlayout",
+            "site": None,
+        }
+    ]
+    pal.plot_array_layouts(args_dict, tmp_path, layouts)
+    assert called["plot_array_layout"]
+    assert called["save_figure"]

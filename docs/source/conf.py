@@ -50,9 +50,6 @@ def get_python_version_from_pyproject():
 project = "simtools"
 copyright = "2024-2025, gammasim-tools, simtools developers"  # noqa A001
 author = get_authors_from_citation_file()
-rst_epilog = f"""
-.. |author| replace:: {author}
-"""
 
 python_min_requires, python_requires = get_python_version_from_pyproject()
 rst_epilog = f"""
@@ -108,8 +105,6 @@ language = "en"
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
-# The name of the Pygments (syntax highlighting) style to use.
-# pygments_style = "sphinx"
 default_role = "py:obj"
 
 # -- Options for HTML output -------------------------------------------------
@@ -161,7 +156,6 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable", None),
     "scipy": ("https://docs.scipy.org/doc/scipy", None),
     "astropy": ("https://docs.astropy.org/en/latest", None),
-    #    "matplotlib": ("https://matplotlib.org/stable", None),
 }
 
 # local dir

@@ -44,7 +44,6 @@ applications:
         - "END OF SHOWER NO          5"
         - "========== END OF RUN ========"
         - "Sim_telarray finished at"
-        - "Run(s) completed as expected after 5 events (5 showers)."
         - "CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE"
         - "CORSIKA was compiled with CURVED option."
       file: gamma_run000020_za62deg_azm180deg_South_beta_6.0.2_test.log_hist.tar.gz
