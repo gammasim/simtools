@@ -74,7 +74,7 @@ def configure_runner_mock(io_handler):
     """Configure a runner patch with common behaviors used in tests."""
 
     def _configure(runner_patch, add_resources=False):
-        runner_patch.return_value.prepare_run_script.return_value = str(
+        runner_patch.return_value.prepare_run.return_value = str(
             io_handler.get_output_directory() / "test_run_script.sh"
         )
         runner_patch.return_value.get_file_name.side_effect = lambda file_type, **kwargs: str(
@@ -210,7 +210,7 @@ def test_simulate_shower_simulator(shower_simulator, io_handler):
     shower_simulator.simulate()
     assert len(shower_simulator._results["simtel_output"]) > 0
     assert len(shower_simulator._results["sub_out"]) > 0
-    run_script = shower_simulator._simulation_runner.prepare_run_script(run_number=2)
+    run_script = shower_simulator._simulation_runner.prepare_run(run_number=2)
     Path(run_script).parent.mkdir(parents=True, exist_ok=True)
     Path(run_script).touch()
     assert Path(run_script).exists()

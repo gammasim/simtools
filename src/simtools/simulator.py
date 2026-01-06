@@ -14,6 +14,7 @@ from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
+from simtools.runners import runner_services
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.sim_events import file_info
@@ -116,6 +117,7 @@ class Simulator:
             self.run_number = self.args_dict.get("run_number_offset", 0) + self.args_dict.get(
                 "run_number", 1
             )
+        self.run_number = runner_services.validate_corsika_run_number(self.run_number)
 
     def _initialize_array_models(self):
         """
@@ -146,7 +148,7 @@ class Simulator:
                 CorsikaConfig(
                     array_model=array_model[-1],
                     label=self.label,
-                    args_dict=self.args_dict,
+                    run_number=self.run_number,
                     dummy_simulations=self._is_calibration_run(self.run_mode),
                 )
             )
@@ -251,7 +253,7 @@ class Simulator:
         Writes submission scripts using the simulation runners and submits the
         run script to the job manager. Collects generated files.
         """
-        run_script = self._simulation_runner.prepare_run_script(
+        run_script = self._simulation_runner.prepare_run(
             run_number=self.run_number,
             input_file=self._get_corsika_file(),
             extra_commands=self._extra_commands,
@@ -264,7 +266,7 @@ class Simulator:
                 file_type="sub_log", run_number=self.run_number
             ),
             log_file=self._simulation_runner.get_file_name(
-                file_type=("log"), run_number=self.run_number
+                file_type="log", run_number=self.run_number
             ),
         )
 
@@ -300,7 +302,7 @@ class Simulator:
         def get_file_name(name, **kwargs):
             return str(self._simulation_runner.get_file_name(file_type=name, **kwargs))
 
-        results["sub_out"].append(get_file_name("sub_log", mode="out", run_number=self.run_number))
+        results["sub_out"].append(get_file_name("sub_out", run_number=self.run_number))
 
         for i in range(len(self.array_models)):
             results["simtel_output"].append(

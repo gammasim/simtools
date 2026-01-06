@@ -7,6 +7,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools import settings
 from simtools.runners.corsika_runner import CorsikaRunner
+from simtools.runners.runner_services import RunnerServices
 from simtools.simtel.simulator_array import SimulatorArray
 
 
@@ -54,7 +55,11 @@ class CorsikaSimtelRunner:
         self.label = label
         self.sequential = "--sequential" if sequential else ""
 
-        self.base_corsika_config.set_output_file_and_directory(use_multipipe)
+        self.runner_service = RunnerServices(self.base_corsika_config, label)
+        self._directory = self.runner_service.load_data_directories(
+            "corsika_sim_telarray" if use_multipipe else "sim_telarray"
+        )
+
         self.corsika_runner = CorsikaRunner(
             corsika_config=self.base_corsika_config,
             label=label,
@@ -76,9 +81,7 @@ class CorsikaSimtelRunner:
                 )
             )
 
-    def prepare_run_script(
-        self, run_number=None, input_file=None, extra_commands=None, use_pfp=False
-    ):
+    def prepare_run(self, run_number=None, input_file=None, extra_commands=None):
         """
         Get the full path of the run script file for a given run number.
 
@@ -86,8 +89,6 @@ class CorsikaSimtelRunner:
         ----------
         run_number: int
             Run number.
-        use_pfp: bool
-            Whether to use the preprocessor in preparing the CORSIKA input file
 
         Returns
         -------
@@ -95,12 +96,7 @@ class CorsikaSimtelRunner:
             Full path of the run script file.
         """
         self._export_multipipe_script(run_number)
-        return self.corsika_runner.prepare_run_script(
-            run_number=run_number,
-            input_file=input_file,
-            extra_commands=extra_commands,
-            use_pfp=use_pfp,
-        )
+        return self.corsika_runner.prepare_run(input_file=input_file, extra_commands=extra_commands)
 
     def _export_multipipe_script(self, run_number):
         """
@@ -116,9 +112,7 @@ class CorsikaSimtelRunner:
         Path:
             Full path of the run script file.
         """
-        multipipe_file = Path(self.base_corsika_config.config_file_path.parent).joinpath(
-            self.base_corsika_config.get_corsika_config_file_name("multipipe")
-        )
+        multipipe_file = self.runner_service.get_file_name("multipipe_config")
 
         with open(multipipe_file, "w", encoding="utf-8") as file:
             for simulator_array in self.simulator_array:
@@ -179,7 +173,6 @@ class CorsikaSimtelRunner:
         simulation_software=None,
         file_type=None,
         run_number=None,
-        mode=None,
         model_version_index=0,
     ):
         """
@@ -193,8 +186,6 @@ class CorsikaSimtelRunner:
             File type.
         run_number: int
             Run number.
-        mode: str
-            Mode to use for the file name.
         model_version_index: int
             Index of the model version.
             This is used to select the correct simulator_array instance
@@ -214,7 +205,7 @@ class CorsikaSimtelRunner:
             if simulation_software == "corsika"
             else self.simulator_array[model_version_index]
         )
-        return runner.get_file_name(file_type=file_type, run_number=run_number, mode=mode)
+        return runner.get_file_name(file_type=file_type, run_number=run_number)
 
     def get_resources(self, run_number=None):
         """Return computing resources used."""

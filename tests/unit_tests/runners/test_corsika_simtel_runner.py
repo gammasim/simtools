@@ -67,36 +67,31 @@ def test_corsika_simtel_runner(corsika_simtel_runner):
     assert isinstance(corsika_simtel_runner.simulator_array[0], SimulatorArray)
 
 
-def test_prepare_run_script(corsika_simtel_runner):
+def test_prepare_run(corsika_simtel_runner):
     # No run number is given
 
-    script = corsika_simtel_runner.prepare_run_script()
+    script = corsika_simtel_runner.prepare_run()
 
     assert script.exists()
     with open(script) as f:
         script_content = f.read()
         assert "/usr/bin/env bash" in script_content
-        assert "corsika_autoinputs" in script_content
-        assert "sim_telarray/bin/pfp" not in script_content
 
     # Run number is given
     run_number = 3
-    script = corsika_simtel_runner.prepare_run_script(run_number=run_number)
+    script = corsika_simtel_runner.prepare_run(run_number=run_number)
 
     assert script.exists()
     with open(script) as f:
         script_content = f.read()
         assert "/usr/bin/env bash" in script_content
-        assert "corsika_autoinputs" in script_content
-        assert "sim_telarray/bin/pfp" not in script_content
-        assert "-R 3" in script_content
 
 
-def test_prepare_run_script_with_invalid_run(corsika_simtel_runner):
+def test_prepare_run_with_invalid_run(corsika_simtel_runner):
     with pytest.raises(ValueError, match=r"^Invalid type of run number"):
-        _ = corsika_simtel_runner.prepare_run_script(run_number=-2)
+        _ = corsika_simtel_runner.prepare_run(run_number=-2)
     with pytest.raises(ValueError, match=r"^could not convert string to float"):
-        _ = corsika_simtel_runner.prepare_run_script(run_number="test")
+        _ = corsika_simtel_runner.prepare_run(run_number="test")
 
 
 def test_export_multipipe_script(corsika_simtel_runner_calibration, simtel_command, show_all):

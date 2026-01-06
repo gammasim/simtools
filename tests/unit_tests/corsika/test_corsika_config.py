@@ -594,19 +594,19 @@ def test_run_number(corsika_config_no_array_model):
     assert corsika_config_no_array_model.run_number == 25
 
 
-def test_validate_run_number(corsika_config_no_array_model):
-    assert corsika_config_no_array_model.validate_run_number(None) is None
-    assert corsika_config_no_array_model.validate_run_number(1)
-    assert corsika_config_no_array_model.validate_run_number(123456)
+def test_validate_corsika_run_number(corsika_config_no_array_model):
+    assert corsika_config_no_array_model.validate_corsika_run_number(None) is None
+    assert corsika_config_no_array_model.validate_corsika_run_number(1)
+    assert corsika_config_no_array_model.validate_corsika_run_number(123456)
     with pytest.raises(ValueError, match=r"^could not convert string to float"):
-        corsika_config_no_array_model.validate_run_number("test")
+        corsika_config_no_array_model.validate_corsika_run_number("test")
     invalid_run_number = r"^Invalid type of run number"
     with pytest.raises(ValueError, match=invalid_run_number):
-        corsika_config_no_array_model.validate_run_number(1.5)
+        corsika_config_no_array_model.validate_corsika_run_number(1.5)
     with pytest.raises(ValueError, match=invalid_run_number):
-        corsika_config_no_array_model.validate_run_number(-1)
+        corsika_config_no_array_model.validate_corsika_run_number(-1)
     with pytest.raises(ValueError, match=invalid_run_number):
-        corsika_config_no_array_model.validate_run_number(123456789)
+        corsika_config_no_array_model.validate_corsika_run_number(123456789)
 
 
 def test_assert_corsika_configurations_match_success(corsika_config_mock_array_model):
