@@ -1,0 +1,62 @@
+# Dockerfile for simtools development.
+#
+# Uses CORSIKA (no vector optimization) and sim_telarray pre-built images.
+#
+# Minimal CORSIKA version is 7.8x (otherwise QGSJet-II tables need to be added)
+#
+# All dependencies for simtools are installed, but not simtools itself.
+# It is expected that simtools is installed in an external directory
+# mounted in the container.
+#
+# hadolint global ignore=DL3013,DL3041
+# - DL3013, DL3041: ignore warnings about using latest
+
+ARG CORSIKA_IMAGE_VERSION="20251217-78010"
+ARG SIMTEL_IMAGE_VERSION="latest"
+ARG AVX_FLAG="no_opt"
+ARG PYTHON_VERSION="3.12"
+
+FROM ghcr.io/gammasim/corsika7:${CORSIKA_IMAGE_VERSION}-${AVX_FLAG} AS corsika_img
+FROM ghcr.io/gammasim/sim_telarray:${SIMTEL_IMAGE_VERSION} AS simtel_img
+
+FROM almalinux:9.5-minimal
+ARG PYTHON_VERSION
+ARG SIMTOOLS_REPO="https://github.com/gammasim/simtools.git"
+
+COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulation_software/corsika7
+COPY --from=simtel_img /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
+COPY --from=simtel_img /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
+COPY --from=simtel_img /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
+
+RUN microdnf update -y && microdnf install -y \
+    bc bzip2 findutils gcc-c++ git gsl libgfortran procps wget zstd \
+    python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
+    microdnf clean all && \
+    ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
+
+# Add QGSJet tables downloaded externally (large files!)
+WORKDIR /workdir/simulation_software/corsika7
+COPY qgsdat-III.bz2 .
+RUN if [ -f qgsdat-III.bz2 ]; then \
+        bzip2 -dq qgsdat-III.bz2; \
+    fi
+
+# Install simtools (main branch)
+WORKDIR /workdir
+RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproject.toml && \
+    python${PYTHON_VERSION} -m venv env && \
+    . env/bin/activate && \
+    pip install --no-cache-dir -U pip && \
+    pip install --no-cache-dir toml-to-requirements && \
+    toml-to-req --toml-file pyproject.toml --optional-lists dev,doc,tests && \
+    pip uninstall -y toml-to-requirements && \
+    pip install --no-cache-dir -r requirements.txt
+
+ENV SIMTEL_PATH="/workdir/simulation_software/sim_telarray"
+ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:\
+/workdir/simulation_software/stdtools/lib:\
+/workdir/simulation_software/sim_telarray/LightEmission/lib"
+ENV PATH="/workdir/env/bin/:$PATH"
+SHELL ["/bin/bash", "-c"]
+
+WORKDIR /workdir/external

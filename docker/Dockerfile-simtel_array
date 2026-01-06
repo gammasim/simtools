@@ -1,0 +1,145 @@
+# syntax=docker/dockerfile:1.4
+# Dockerfile for sim_telarray
+#
+# Image with sim_telarray and tools.
+#
+
+ARG EXTRA_DEFINES="-DCTA_PROD6 -DMAXIMUM_TELESCOPES=99"
+ARG SIMTEL_VERSION="master"
+ARG HESSIO_VERSION="master"
+ARG STDTOOLS_VERSION="master"
+
+# hadolint global ignore=DL3033,DL3041
+# - DL3033, DL3041: ignore warnings about installing non-specific versions with microdnf or yum)
+
+# -----------------------------------------------------------------------------
+# STAGE 1: source code preparation
+# -----------------------------------------------------------------------------
+FROM almalinux:9.5-minimal AS source_preparation
+ARG SIMTEL_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray.git"
+ARG SIMTEL_VERSION
+ARG HESSIO_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio.git"
+ARG HESSIO_VERSION
+ARG STDTOOLS_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools.git"
+ARG STDTOOLS_VERSION
+
+RUN microdnf update -y && microdnf install -y git && \
+    microdnf clean all
+
+WORKDIR /src
+
+# Clone sim_telarray from CTAO gitlab
+RUN --mount=type=secret,id=sim_telarray_token \
+    git config --global advice.detachedHead false && \
+    git clone --depth 1 --branch "${SIMTEL_VERSION}" "https://oauth2:$(cat /run/secrets/sim_telarray_token)@${SIMTEL_REPO}"
+
+# Clone hessio from CTAO gitlab
+RUN --mount=type=secret,id=hessio_token \
+    git config --global advice.detachedHead false && \
+    git clone --depth 1 --branch "${HESSIO_VERSION}" "https://oauth2:$(cat /run/secrets/hessio_token)@${HESSIO_REPO}"
+
+# Clone stdtools from CTAO gitlab
+RUN --mount=type=secret,id=stdtools_token \
+    git config --global advice.detachedHead false && \
+    git clone --depth 1 --branch "${STDTOOLS_VERSION}" "https://oauth2:$(cat /run/secrets/stdtools_token)@${STDTOOLS_REPO}"
+
+# -----------------------------------------------------------------------------
+# STAGE 2: build_image
+# -----------------------------------------------------------------------------
+FROM almalinux:9.5 AS build_image
+ARG EXTRA_DEFINES
+ARG SIMTEL_VERSION="master"
+ARG HESSIO_VERSION="master"
+ARG STDTOOLS_VERSION="master"
+ARG GSL_COMPILE="-DWITH_GSL -DWITH_GSL_RNG"
+
+ENV GCC_PATH="/usr/bin/"
+ENV HSEVENTIO="/workdir/simulation_software/hessioxxx/"
+ENV STDTOOLS_PATH="/workdir/simulation_software/stdtools/"
+
+RUN yum update -y && yum install -y \
+    gcc gcc-c++ gsl-devel \
+    automake csh patch perl \
+    make m4 which && \
+    yum clean all
+
+WORKDIR /workdir/simulation_software
+COPY --from=source_preparation /src .
+
+WORKDIR /workdir/simulation_software/hessio
+# Prepare hessioxxx from hessio (fudge to avoid installing dependencies like doxygen)
+RUN sed -i "s|hessioxxx-prepare: build-doc doc/eventio_en.pdf doc/hessio_refman.pdf|hessioxxx-prepare:|" Makefile && \
+    touch Makefile.LaTeX && touch Makefile.Common && touch ChangeLog && \
+    mkdir -p doc && touch doc/eventio_en.pdf && touch doc/hessio_refman.pdf && \
+    make hessioxxx-prepare && mv hessioxxx /workdir/simulation_software/
+
+WORKDIR /workdir/simulation_software/hessioxxx
+RUN rm -rf /workdir/simulation_software/hessio && make clean && make include/eventio_version.h && \
+    make WITH_RPATH=1 DEFINES="${EXTRA_DEFINES} ${GSL_COMPILE}" && \
+    rm -rf ./out ./doc ./root ./hessio_refman.pdf ./.git
+
+WORKDIR /workdir/simulation_software/stdtools
+RUN make WITH_RPATH=1 EXTRA_DEFINES="${EXTRA_DEFINES} ${GSL_COMPILE}" && \
+    mv -v -f out/libstdtools.so ./lib && rm -rf out ./.git
+
+WORKDIR /workdir/simulation_software/sim_telarray
+# Create version.h file
+RUN echo "#define VERSION \"$(date -u '+%Y.%j %H:%M:%S') UTC ($(whoami)@$(hostname))\"" > version.h && \
+    echo '#define RELEASE "2025.246.0 from 2025-09-03"' >> version.h && \
+    echo '#ifdef BASE_RELEASE' >> version.h && \
+    echo '# undef BASE_RELEASE' >> version.h && \
+    echo '#endif' >> version.h && \
+    echo '#define BASE_RELEASE "2025.246.0 from 2025-09-03"' >> version.h
+
+# build sim_telarray with debug trace (move binary to temporary location (to avoid being purged in next step)
+RUN make WITH_RPATH=1 EXTRA_DEFINES="${EXTRA_DEFINES} -DDEBUG_TRACE_99 ${GSL_COMPILE}" install && \
+    mv -v ./bin/sim_telarray ./sim_telarray_debug_trace
+
+# build std sim_telarray
+RUN make clean && \
+    make WITH_RPATH=1 EXTRA_DEFINES="${EXTRA_DEFINES} ${GSL_COMPILE}" install && \
+    mv ./sim_telarray_debug_trace ./bin/sim_telarray_debug_trace && \
+    rm -fr ./cfg/* ./hegra ./hess ./doc_src ./doc ./LightEmission/out ./.git && \
+    rm -vf LightEmission/LightSourcesPresentation.pdf && \
+    find . -name "*.o" -exec rm -f {} \;
+
+# Generate build_opts.yml with build information
+RUN { \
+    echo "simtel_version: \"${SIMTEL_VERSION}\""; \
+    echo "hessio_version: \"${HESSIO_VERSION}\""; \
+    echo "stdtools_version: \"${STDTOOLS_VERSION}\""; \
+    echo "extra_defines: \"${EXTRA_DEFINES}\""; \
+    echo "build_date: \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\""; \
+    echo "components:"; \
+    echo "  - name: \"hessioxxx\""; \
+    echo "    version: \"${HESSIO_VERSION}\""; \
+    echo "    build_flags: \"DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\""; \
+    echo "  - name: \"stdtools\""; \
+    echo "    version: \"${STDTOOLS_VERSION}\""; \
+    echo "    build_flags: \"EXTRA_DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\""; \
+    echo "  - name: \"sim_telarray\""; \
+    echo "    version: \"${SIMTEL_VERSION}\""; \
+    echo "    build_flags: \"EXTRA_DEFINES=${EXTRA_DEFINES} ${GSL_COMPILE}\""; \
+    echo "    executables:"; \
+    echo "      - \"sim_telarray\""; \
+    echo "  - name: \"sim_telarray_debug_trace\""; \
+    echo "    version: \"${SIMTEL_VERSION}\""; \
+    echo "    build_flags: \"EXTRA_DEFINES=${EXTRA_DEFINES} -DDEBUG_TRACE_99 ${GSL_COMPILE}\""; \
+    echo "    executables:"; \
+    echo "      - \"sim_telarray_debug_trace\""; \
+    } > build_opts.yml
+
+# -----------------------------------------------------------------------------
+# STAGE 3: Runtime Image
+# -----------------------------------------------------------------------------
+FROM almalinux:9.5-minimal
+WORKDIR /workdir/simulation_software
+COPY --from=build_image /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
+COPY --from=build_image /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
+COPY --from=build_image /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
+
+RUN microdnf update -y && microdnf install -y \
+    bc findutils gsl procps zstd && \
+    microdnf clean all
+
+WORKDIR /workdir/simulation_software/sim_telarray

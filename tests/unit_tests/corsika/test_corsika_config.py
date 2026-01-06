@@ -409,7 +409,7 @@ def test_corsika_configuration_debugging_parameters(corsika_config_mock_array_mo
 def test_rotate_azimuth_by_180deg(corsika_config_mock_array_model):
     """Test azimuth angle rotation with and without geomagnetic field alignment."""
     test_cases = [
-        # (input_angle, with_correction, expected_result)
+        # input_angle, with_correction, expected_result
         (0.0, False, 180.0),
         (360.0, False, 180.0),
         (450.0, False, 270.0),
@@ -557,7 +557,8 @@ def test_write_seeds_use_test_seeds(corsika_config_mock_array_model):
     expected_calls = [_call.args[0] for _call in mock_file.write.call_args_list]
     expected_seeds = [534, 220, 1104, 382]
     for _call in expected_calls:
-        assert _call == (f"SEED {expected_seeds.pop(0)} 0 0\n")
+        seed = expected_seeds.pop(0)
+        assert _call == f"SEED {seed} 0 0\n"
 
 
 def test_get_corsika_telescope_list(corsika_config_mock_array_model):
