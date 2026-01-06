@@ -2,7 +2,6 @@
 
 import logging
 import stat
-from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools import settings
@@ -54,11 +53,12 @@ class CorsikaSimtelRunner:
         self.sim_telarray_seeds = sim_telarray_seeds
         self.label = label
         self.sequential = "--sequential" if sequential else ""
+        self.simulation_software = "corsika_sim_telarray" if use_multipipe else "sim_telarray"
 
         self.runner_service = RunnerServices(self.base_corsika_config, label)
-        self._directory = self.runner_service.load_data_directories(
-            "corsika_sim_telarray" if use_multipipe else "sim_telarray"
-        )
+        self.runner_service.load_data_directories(self.simulation_software)
+
+        # TODO isn't multipipe always true here?
 
         self.corsika_runner = CorsikaRunner(
             corsika_config=self.base_corsika_config,
@@ -95,8 +95,11 @@ class CorsikaSimtelRunner:
         Path:
             Full path of the run script file.
         """
+        self.runner_service.load_files(self.simulation_software, run_number=run_number)
         self._export_multipipe_script(run_number)
-        return self.corsika_runner.prepare_run(input_file=input_file, extra_commands=extra_commands)
+        return self.corsika_runner.prepare_run(
+            input_file=input_file, extra_commands=extra_commands, run_number=run_number
+        )
 
     def _export_multipipe_script(self, run_number):
         """
@@ -112,7 +115,9 @@ class CorsikaSimtelRunner:
         Path:
             Full path of the run script file.
         """
-        multipipe_file = self.runner_service.get_file_name("multipipe_config")
+        multipipe_file = self.runner_service.get_file_name(
+            "multi_pipe_config", run_number=run_number
+        )
 
         with open(multipipe_file, "w", encoding="utf-8") as file:
             for simulator_array in self.simulator_array:
@@ -124,7 +129,7 @@ class CorsikaSimtelRunner:
                 file.write(f"{run_command}")
                 file.write("\n")
         self._logger.info(f"Multipipe script: {multipipe_file}")
-        self._write_multipipe_script(multipipe_file)
+        self._write_multipipe_script(multipipe_file, run_number)
 
     @staticmethod
     def _determine_pointing_option(label):
@@ -147,7 +152,7 @@ class CorsikaSimtelRunner:
             pass
         return False
 
-    def _write_multipipe_script(self, multipipe_file):
+    def _write_multipipe_script(self, multipipe_file, run_number):
         """
         Write script used to call the multipipe_corsika command.
 
@@ -155,9 +160,11 @@ class CorsikaSimtelRunner:
         ----------
         multipipe_file: str or Path
             The name of the multipipe file which contains all of the multipipe commands.
+        run_number: int
+            Run number.
         """
-        multipipe_script = Path(self.base_corsika_config.config_file_path.parent).joinpath(
-            "run_cta_multipipe"
+        multipipe_script = self.runner_service.get_file_name(
+            "multi_pipe_script", run_number=run_number
         )
         with open(multipipe_script, "w", encoding="utf-8") as file:
             multipipe_command = settings.config.sim_telarray_path.joinpath(

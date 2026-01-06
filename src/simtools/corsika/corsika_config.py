@@ -2,7 +2,6 @@
 
 import logging
 from collections.abc import Mapping
-from pathlib import Path
 
 import numpy as np
 from astropy import units as u
@@ -707,8 +706,7 @@ class CorsikaConfig:
 
             file.write("\n* [ OUTPUT FILE ]\n")
             if use_multipipe:
-                run_cta_script = Path(input_file.parent).joinpath("run_cta_multipipe")
-                file.write(f"TELFIL |{run_cta_script!s}\n")
+                file.write(f"TELFIL |{output_file!s}\n")
             else:
                 file.write(f"TELFIL {output_file.name}\n")
 

@@ -53,7 +53,8 @@ class CorsikaRunner:
         self.io_handler = io_handler.IOHandler()
 
         self.runner_service = RunnerServices(corsika_config, label)
-        self.runner_service.load_data_directories("corsika")
+        simulation_software = "corsika" if not self._use_multipipe else "corsika_sim_telarray"
+        self.runner_service.load_data_directories(simulation_software)
 
     def prepare_run(self, run_number=None, extra_commands=None, input_file=None):  # pylint: disable=unused-argument
         """
@@ -71,13 +72,17 @@ class CorsikaRunner:
         List:
             List of files defined for the run.
         """
-        run_files = self.runner_service.load_files("corsika", run_number=run_number)
+        run_files = self.runner_service.load_files(
+            "corsika" if not self._use_multipipe else "corsika_sim_telarray", run_number=run_number
+        )
 
         self.corsika_config.generate_corsika_input_file(
             self._use_multipipe,
             self._keep_seeds,
             run_files["corsika_input"],
-            run_files["corsika_output"],
+            run_files["corsika_output"]
+            if not self._use_multipipe
+            else run_files["multi_pipe_script"],
         )
 
         self._logger.debug(f"Extra commands to be added to the run script: {extra_commands}")
