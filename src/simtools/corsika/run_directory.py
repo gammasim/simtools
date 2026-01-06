@@ -10,9 +10,8 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-def link_corsika_tables(workdir, corsika_path):
-    """
-    Create symbolic links to CORSIKA data tables and configuration files.
+def link_run_directory(workdir, corsika_executable):
+    """Link CORSIKA executable and data tables to working directory.
 
     Parameters
     ----------
@@ -21,15 +20,11 @@ def link_corsika_tables(workdir, corsika_path):
     corsika_path : pathlib.Path
         Path to CORSIKA installation directory
     """
-    _link_interaction_tables(workdir, corsika_path)
+    _logger.info(f"Linking CORSIKA run directory in {workdir}")
+    _link_file_if_exists(corsika_executable, workdir)
+    corsika_path = corsika_executable.parent.resolve()
     _link_epos_files(workdir, corsika_path)
-
-
-def link_corsika_executable(workdir, corsika_executable):
-    """Link CORSIKA executable to working directory."""
-    src = corsika_executable
-    dst = workdir / "corsika"
-    _link_file_if_exists(src, dst)
+    _link_interaction_tables(workdir, corsika_path)
 
 
 def _link_file_if_exists(src, dst):
@@ -44,7 +39,7 @@ def _link_interaction_tables(workdir, corsika_path):
         "GLAUBTAR.DAT",
         "NUCNUCCS",
         "NUCLEAR.BIN",
-        "VENUSDAT",
+        "VENUSDAT",  # TODO needed? We probably never use VENUS
         "QGSDAT01",
         "SECTNU",
         "qgsdat-II-03",

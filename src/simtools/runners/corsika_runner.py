@@ -2,7 +2,10 @@
 
 import logging
 import stat
+from pathlib import Path
 
+from simtools import settings
+from simtools.corsika.run_directory import link_run_directory
 from simtools.io import io_handler
 from simtools.runners.runner_services import RunnerServices
 
@@ -50,9 +53,9 @@ class CorsikaRunner:
         self.io_handler = io_handler.IOHandler()
 
         self.runner_service = RunnerServices(corsika_config, label)
-        self._directory = self.runner_service.load_data_directories("corsika")
+        self.runner_service.load_data_directories("corsika")
 
-    def prepare_run(self, run_number=None, extra_commands=None, input_file=None):
+    def prepare_run(self, run_number=None, extra_commands=None, input_file=None):  # pylint: disable=unused-argument
         """
         Prepare CORSIKA run script and run directory.
 
@@ -65,22 +68,11 @@ class CorsikaRunner:
 
         Returns
         -------
-        Path:
-            Full path of the run script file.
+        List:
+            List of files defined for the run.
         """
-        if run_number is not None and run_number != self.corsika_config.run_number:
-            raise ValueError(
-                f"run_number mismatch (given {run_number}, "
-                f"expected {self.corsika_config.run_number})"
-            )
-        if input_file is not None:
-            self._logger.warning("input_file parameter is not used in CorsikaRunner")
+        run_files = self.runner_service.load_files("corsika", run_number=run_number)
 
-        run_files = {}
-        for file_type in ["sub_script", "corsika_log", "corsika_input", "corsika_output"]:
-            run_files[file_type] = self.get_file_name(
-                file_type=file_type, run_number=self.corsika_config.run_number
-            )
         self.corsika_config.generate_corsika_input_file(
             self._use_multipipe,
             self._keep_seeds,
@@ -89,15 +81,23 @@ class CorsikaRunner:
         )
 
         self._logger.debug(f"Extra commands to be added to the run script: {extra_commands}")
-        self._logger.debug(f"CORSIKA data will be set to {self._directory['corsika']}")
+        corsika_run_dir = run_files["corsika_output"].parent
+        link_run_directory(corsika_run_dir, self._corsika_executable())
 
-        for key, file_path in run_files.items():
-            self._logger.debug(f"{key}: {file_path}")
+        self._export_run_script(run_files, corsika_run_dir, extra_commands)
+        return run_files
 
-        return self._export_run_script(run_files, extra_commands)
+    def _corsika_executable(self):
+        """Get the CORSIKA executable path."""
+        if self.corsika_config.use_curved_atmosphere:
+            self._logger.debug("Using curved-atmosphere CORSIKA binary.")
+            return Path(settings.config.corsika_exe_curved)
+        self._logger.debug("Using flat-atmosphere CORSIKA binary.")
+        return Path(settings.config.corsika_exe)
 
-    def _export_run_script(self, run_files, extra_commands):
+    def _export_run_script(self, run_files, corsika_run_dir, extra_commands):
         """Export CORSIKA run script."""
+        corsika_log_file = run_files["corsika_log"].with_suffix("")
         with open(run_files["sub_script"], "w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n")
             file.write("set -e\n")
@@ -111,14 +111,17 @@ class CorsikaRunner:
                 file.write(f"{extra_commands}\n")
                 file.write("# End of extras\n\n")
 
-            file.write(f"export CORSIKA_DATA={self._directory['corsika']}\n")
+            file.write(f"export CORSIKA_DATA={corsika_run_dir}\n")
             file.write('mkdir -p "$CORSIKA_DATA"\n')
             file.write('cd "$CORSIKA_DATA" || exit 2\n')
 
             file.write("\n# Running corsika\n")
-            # TODO file.write(autoinputs_command)
+            file.write(
+                f"{self._corsika_executable()} < {run_files['corsika_input']} "
+                f"> {corsika_log_file} 2>&1\n"
+            )
             file.write("\n# Cleanup\n")
-            file.write(f"gzip {run_files['corsika_log']}\n")
+            file.write(f"gzip {corsika_log_file}\n")
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
