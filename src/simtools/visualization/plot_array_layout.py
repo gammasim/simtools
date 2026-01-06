@@ -5,6 +5,7 @@ from collections import Counter
 from typing import NamedTuple
 
 import astropy.units as u
+import matplotlib as mpl
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,6 +16,7 @@ from matplotlib.collections import PatchCollection
 from simtools.utils import geometry as transf
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
+from simtools.visualization import visualize
 
 
 class PlotBounds(NamedTuple):
@@ -30,6 +32,61 @@ class PlotBounds(NamedTuple):
 
     x_lim: tuple[float, float]
     y_lim: tuple[float, float]
+
+
+def plot_array_layouts(args_dict, output_path, layouts, background_layout=None):
+    """
+    Plot multiple array layouts.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Application arguments.
+    output_path : Path
+        Output path for figures.
+    layouts : dict
+        Dictionary of layout name to telescope table.
+    background_layout : Table or None
+        Optional background telescope table.
+
+    Returns
+    -------
+    figs : dict
+        Dictionary of layout name to matplotlib figure object.
+
+    """
+    mpl.use("Agg")
+    for layout in layouts:
+        fig_out = plot_array_layout(
+            telescopes=layout["array_elements"],
+            show_tel_label=args_dict["show_labels"],
+            axes_range=args_dict["axes_range"],
+            marker_scaling=args_dict["marker_scaling"],
+            background_telescopes=background_layout,
+            grayed_out_elements=args_dict["grayed_out_array_elements"],
+            highlighted_elements=args_dict["highlighted_array_elements"],
+            legend_location=args_dict["legend_location"],
+            bounds_mode=args_dict["bounds"],
+            padding=args_dict["padding"],
+            x_lim=tuple(args_dict["x_lim"]) if args_dict["x_lim"] else None,
+            y_lim=tuple(args_dict["y_lim"]) if args_dict["y_lim"] else None,
+        )
+        site_string = ""
+        if layout.get("site") is not None:
+            site_string = f"_{layout['site']}"
+        elif args_dict["site"] is not None:
+            site_string = f"_{args_dict['site']}"
+        coordinate_system_string = (
+            f"_{args_dict['coordinate_system']}"
+            if args_dict["coordinate_system"] not in layout["name"]
+            else ""
+        )
+        plot_file_name = args_dict["figure_name"] or (
+            f"array_layout_{layout['name']}{site_string}{coordinate_system_string}"
+        )
+
+        visualize.save_figure(fig_out, output_path / plot_file_name, dpi=400)
+        plt.close()
 
 
 def plot_array_layout(

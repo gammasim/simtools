@@ -425,7 +425,7 @@ class MetadataCollector:
         product_dict["creation_time"] = gen.now_date_time_in_isoformat()
         product_dict["description"] = self.schema_dict.get("description", None)
 
-        # DATA:CATEGORY
+        # metadata DATA:CATEGORY
         product_dict["data"]["category"] = "SIM"
         product_dict["data"]["level"] = "R1"
         product_dict["data"]["type"] = "Service"
@@ -434,7 +434,7 @@ class MetadataCollector:
         except KeyError:
             pass
 
-        # DATA:MODEL
+        # metadata DATA:MODEL
         product_dict["data"]["model"]["name"] = (
             self.schema_dict.get("name")
             or self.args_dict.get("metadata_product_data_name")

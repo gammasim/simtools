@@ -125,5 +125,5 @@ def test_pdg_id(caplog):
 
 
 def test_particle_names():
-    for _, ids in PrimaryParticle.particle_names().items():
+    for ids in PrimaryParticle.particle_names().values():
         assert Corsika7ID(ids["corsika7_id"]).to_pdgid().numerator
