@@ -174,9 +174,8 @@ class SimtelRunner:
         simulation_software="sim_telarray",
         file_type=None,
         run_number=None,
-        mode="",
         model_version_index=0,
-    ):
+    ):  # pylint: disable=unused-argument
         """
         Get the full path of a file for a given run number.
 
@@ -191,7 +190,7 @@ class SimtelRunner:
         model_version_index: int
             Index of the model version.
             This is used to select the correct simulator_array instance in case
-            multiple array models are simulated.
+            multiple array models are simulated (not used here).
 
         Returns
         -------
@@ -205,7 +204,5 @@ class SimtelRunner:
         return self.runner_service.get_file_name(
             file_type=file_type,
             run_number=run_number,
-            mode=mode,
-            _model_version_index=model_version_index,
             calibration_run_mode=self.calibration_run_mode,
         )
