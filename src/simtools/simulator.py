@@ -253,7 +253,7 @@ class Simulator:
         Writes submission scripts using the simulation runners and submits the
         run script to the job manager. Collects generated files.
         """
-        run_script = self._simulation_runner.prepare_run(
+        self._results = self._simulation_runner.prepare_run(
             run_number=self.run_number,
             input_file=self._get_corsika_file(),
             extra_commands=self._extra_commands,
@@ -261,16 +261,10 @@ class Simulator:
 
         job_manager = JobManager(test=self._test)
         job_manager.submit(
-            run_script=run_script,
-            run_out_file=self._simulation_runner.get_file_name(
-                file_type="sub_log", run_number=self.run_number
-            ),
-            log_file=self._simulation_runner.get_file_name(
-                file_type="log", run_number=self.run_number
-            ),
+            run_script=self._results["sub_script"],
+            run_out_file=self._results["sub_out"],
+            log_file=self._results["log"],
         )
-
-        self._fill_list_of_generated_files()
 
     def _get_corsika_file(self):
         """
@@ -284,55 +278,6 @@ class Simulator:
         if self.simulation_software == "sim_telarray":
             return self.args_dict.get("corsika_file", None)
         return None
-
-    def _fill_list_of_generated_files(self):
-        """Fill a dictionary with lists of generated files."""
-        keys = [
-            "simtel_output",
-            "sub_out",
-            "log",
-            "input",
-            "histogram",
-            "corsika_log",
-            "corsika_output",
-            "event_data",
-        ]
-        results = {key: [] for key in keys}
-
-        def get_file_name(name, **kwargs):
-            return str(self._simulation_runner.get_file_name(file_type=name, **kwargs))
-
-        results["sub_out"].append(get_file_name("sub_out", run_number=self.run_number))
-
-        for i in range(len(self.array_models)):
-            results["simtel_output"].append(
-                get_file_name("simtel_output", run_number=self.run_number, model_version_index=i)
-            )
-
-            if "sim_telarray" in self.simulation_software:
-                for file_type in ("log", "histogram", "event_data"):
-                    results[file_type].append(
-                        get_file_name(
-                            file_type,
-                            simulation_software="sim_telarray",
-                            run_number=self.run_number,
-                            model_version_index=i,
-                        )
-                    )
-
-            if "corsika" in self.simulation_software:
-                for file_type in ("corsika_output", "corsika_log"):
-                    results[file_type].append(
-                        get_file_name(
-                            file_type,
-                            simulation_software="corsika",
-                            run_number=self.run_number,
-                            model_version_index=i,
-                        )
-                    )
-
-        for key in keys:
-            self._results[key].extend(results[key])
 
     def get_file_list(self, file_type="simtel_output"):
         """
@@ -352,7 +297,8 @@ class Simulator:
             List with the full path of all output files.
 
         """
-        return self._results[file_type]
+        # TODO why is this a list? Do we simulate multiple runs per instance?
+        return [self._results[file_type]]
 
     def _make_resources_report(self, input_file_list):
         """
@@ -369,7 +315,7 @@ class Simulator:
            string reporting on computing resources
 
         """
-        if len(self._results["sub_out"]) == 0 and input_file_list is None:
+        if len(self.get_file_list(file_type="sub_out")) == 0 and input_file_list is None:
             return "Mean wall time/run [sec]: np.nan"
 
         runtime = []

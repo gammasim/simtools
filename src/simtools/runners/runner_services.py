@@ -208,6 +208,38 @@ class RunnerServices:
         self._logger.debug(f"Data directories for {simulation_software}: {self.directory}")
         return self.directory
 
+    def load_files(self, simulation_software, run_number=None):
+        """
+        Load files required for the simulation run.
+
+        Parameters
+        ----------
+        simulation_software : str
+            Simulation software to be used.
+        run_number: int
+            Run number.
+
+        Returns
+        -------
+        dict
+            Dictionary containing paths to files required for the simulation run.
+        """
+        run_files = {}
+        for key in self.file_description:
+            # sub files are always included
+            if key.startswith("sub_"):
+                run_files[key] = self.get_file_name(file_type=key, run_number=run_number)
+            # simulation software dependent files
+            if key.startswith(simulation_software.lower()):
+                run_files[key] = self.get_file_name(file_type=key, run_number=run_number)
+
+        # TODO this should be a list?
+        run_files["log"] = run_files.get(f"{simulation_software.lower()}_log", None)
+        for key, file_path in run_files.items():
+            self._logger.debug(f"{key}: {file_path}")
+
+        return run_files
+
     def _get_file_basename(self, run_number, file_type, calibration_run_mode):
         """
         Get the base name for the simulation files.
