@@ -13,8 +13,7 @@ from ctapipe.visualization import CameraDisplay
 from scipy import signal as _signal
 
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.visualization.plot_corsika_histograms import save_figs_to_pdf
-from simtools.visualization.visualize import save_figure
+from simtools.visualization.visualize import save_figure, save_figures_to_single_document
 
 _logger = logging.getLogger(__name__)
 
@@ -665,24 +664,21 @@ def plot_simtel_peak_timing(
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4), dpi=300)
 
-    edges = _histogram_edges(n_samp, timing_bins)
-    et_name = getattr(getattr(event.trigger, "event_type", None), "name", "?")
     tel = source.subarray.tel[tel_id]
     tel_label = getattr(tel, "name", f"CT{tel_id}")
     _draw_peak_hist(
         ax1,
         peak_samples,
-        edges,
+        _histogram_edges(n_samp, timing_bins),
         mean_sample,
         std_sample,
         tel_label,
-        et_name,
+        getattr(getattr(event.trigger, "event_type", None), "name", "?"),
         pix_ids.size,
         found_count,
     )
 
-    readout = source.subarray.tel[tel_id].camera.readout
-    t = _time_axis_from_readout(readout, n_samp)
+    t = _time_axis_from_readout(source.subarray.tel[tel_id].camera.readout, n_samp)
 
     ex_ids = pix_ids[: max(1, int(examples))]
     for pid in ex_ids:
@@ -698,13 +694,12 @@ def plot_simtel_peak_timing(
     fig.tight_layout()
 
     if return_stats:
-        stats = {
+        return fig, {
             "considered": int(pix_ids.size),
             "found": int(found_count),
             "mean": float(mean_sample),
             "std": float(std_sample),
         }
-        return fig, stats
     return fig
 
 
@@ -991,7 +986,7 @@ def generate_and_save_plots(
             continue
 
         try:
-            save_figs_to_pdf(figures, pdf_path)
+            save_figures_to_single_document(figures, pdf_path)
             _logger.info("Saved PDF: %s", pdf_path)
         except Exception as ex:  # pylint:disable=broad-except
             _logger.error("Failed to save PDF %s: %s", pdf_path, ex)
