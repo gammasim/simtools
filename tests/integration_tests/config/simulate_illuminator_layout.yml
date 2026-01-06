@@ -21,9 +21,11 @@ applications:
       - "Total number of photons produced in this run"
       - "Sim_telarray finished at"
       - "CORSIKA IACT finished at"
+      - "Tel. triggered:          "
       - "Finished."
       forbidden_pattern:
       - "Error"
+      - "No light source angular distribution given."
       file: logfile.log
       path_descriptor: output_path
   model_version_use_current: true
