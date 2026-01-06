@@ -7,6 +7,74 @@ from simtools.io import io_handler
 _logger = logging.getLogger(__name__)
 
 
+FILES_AND_PATHS = {
+    # CORSIKA
+    "corsika_input": {
+        "suffix": ".input",
+        "directory": "corsika",
+        "sub_dir_type": "run_number",
+    },
+    "corsika_output": {
+        "suffix": ".corsika.zst",
+        "directory": "corsika",
+        "sub_dir_type": "run_number",
+    },
+    "corsika_log": {
+        "suffix": ".corsika.log.gz",
+        "directory": "corsika",
+        "sub_dir_type": "run_number",
+    },
+    # sim_telarray
+    "sim_telarray_output": {
+        "suffix": ".simtel.zst",
+        "directory": "sim_telarray",
+        "sub_dir_type": "run_number",
+    },
+    "sim_telarray_histogram": {
+        "suffix": ".hdata.zst",
+        "directory": "sim_telarray",
+        "sub_dir_type": "run_number",
+    },
+    "sim_telarray_log": {
+        "suffix": ".simtel.log.gz",
+        "directory": "sim_telarray",
+        "sub_dir_type": "run_number",
+    },
+    "sim_telarray_event_data": {
+        "suffix": ".reduced_event_data.hdf5",
+        "directory": "sim_telarray",
+        "sub_dir_type": "run_number",
+    },
+    # multipipe
+    "multi_pipe_config": {
+        "suffix": ".multi_pipe.cfg",
+        "directory": "multi_pipe",
+        "sub_dir_type": "run_number",
+    },
+    "multi_pipe_script": {
+        "suffix": ".multi_pipe.sh",
+        "directory": "multi_pipe",
+        "sub_dir_type": "run_number",
+    },
+    # job submission
+    "sub_out": {
+        "suffix": ".out",
+        "directory": "output",
+        "sub_dir_type": "sub",
+    },
+    "sub_log": {
+        "suffix": ".log",
+        "directory": "output",
+        "sub_dir_type": "sub",
+    },
+    "sub_script": {
+        "suffix": ".sh",
+        "directory": "output",
+        "sub_dir_type": "sub",
+    },
+}
+
+
 def validate_corsika_run_number(run_number):
     """
     Validate run number and return it.
@@ -41,7 +109,7 @@ class RunnerServices:
 
     Parameters
     ----------
-    corsika_config : CorsikaConfig
+    corsika_config : CorsikaConfig, list of CorsikaConfig
         Configuration parameters for CORSIKA.
     label : str
         Label.
@@ -53,116 +121,6 @@ class RunnerServices:
         self.label = label
         self.corsika_config = corsika_config
         self.directory = {}
-        self.file_description = self._define_files_and_paths()
-
-    def _define_files_and_paths(self):
-        """
-        Define files and paths used by the runners.
-
-        Directories must be consistent with those generated with load_data_directories.
-        """
-        return {
-            # CORSIKA
-            "corsika_input": {
-                "suffix": ".input",
-                "directory": "corsika",
-                "sub_dir_type": "run_number",
-            },
-            "corsika_output": {
-                "suffix": ".corsika.zst",
-                "directory": "corsika",
-                "sub_dir_type": "run_number",
-            },
-            "corsika_log": {
-                "suffix": ".corsika.log.gz",
-                "directory": "corsika",
-                "sub_dir_type": "run_number",
-            },
-            # sim_telarray
-            "sim_telarray_output": {
-                "suffix": ".simtel.zst",
-                "directory": "sim_telarray",
-                "sub_dir_type": "run_number",
-            },
-            "sim_telarray_histogram": {
-                "suffix": ".hdata.zst",
-                "directory": "sim_telarray",
-                "sub_dir_type": "run_number",
-            },
-            "sim_telarray_log": {
-                "suffix": ".simtel.log.gz",
-                "directory": "sim_telarray",
-                "sub_dir_type": "run_number",
-            },
-            "multi_pipe_config": {
-                "suffix": ".multi_pipe.cfg",
-                "directory": "multi_pipe",
-                "sub_dir_type": "run_number",
-            },
-            "multi_pipe_script": {
-                "suffix": ".multi_pipe.sh",
-                "directory": "multi_pipe",
-                "sub_dir_type": "run_number",
-            },
-            # simtools
-            "event_data": {
-                "suffix": ".reduced_event_data.hdf5",
-                "directory": "data",
-                "sub_dir_type": "run_number",
-            },
-            # job submission
-            "sub_out": {
-                "suffix": ".out",
-                "directory": "output",
-                "sub_dir_type": "sub",
-            },
-            "sub_log": {
-                "suffix": ".log",
-                "directory": "output",
-                "sub_dir_type": "sub",
-            },
-            "sub_script": {
-                "suffix": ".sh",
-                "directory": "output",
-                "sub_dir_type": "sub",
-            },
-        }
-
-    def _get_info_for_file_name(self, run_number, calibration_run_mode=None):
-        """
-        Return dictionary for building names for simulation output files.
-
-        Parameters
-        ----------
-        run_number : int
-            Run number.
-        calibration_run_mode: str
-            Calibration run mode.
-
-        Returns
-        -------
-        dict
-            Dictionary with the keys or building the file names for simulation output files.
-        """
-        _vc_high = self.corsika_config.get_config_parameter("VIEWCONE")[1]
-        if calibration_run_mode is not None and calibration_run_mode != "":
-            primary_name = calibration_run_mode
-        else:
-            primary_name = self.corsika_config.primary_particle.name
-            if primary_name == "gamma" and _vc_high > 0:
-                primary_name = "gamma_diffuse"
-        return {
-            "run_number": validate_corsika_run_number(run_number),
-            "primary": primary_name,
-            "array_name": self.corsika_config.array_model.layout_name,
-            "site": self.corsika_config.array_model.site,
-            "label": self.label,
-            "model_version": self.corsika_config.array_model.model_version,
-            "zenith": self.corsika_config.zenith_angle,
-            "azimuth": self.corsika_config.azimuth_angle,
-            "vc_low": self.corsika_config.get_config_parameter("VIEWCONE")[0],
-            "vc_high": _vc_high,
-        }
 
     @staticmethod
     def _get_simulation_software_list(simulation_software):
@@ -225,7 +183,7 @@ class RunnerServices:
             Dictionary containing paths to files required for the simulation run.
         """
         run_files = {}
-        for key in self.file_description:
+        for key in FILES_AND_PATHS:
             # sub files are always included
             if key.startswith("sub_"):
                 run_files[key] = self.get_file_name(file_type=key, run_number=run_number)
@@ -257,22 +215,27 @@ class RunnerServices:
         str
             Base name for the simulation files.
         """
-        info_for_file_name = self._get_info_for_file_name(run_number, calibration_run_mode)
-
-        file_label = f"_{info_for_file_name['label']}" if info_for_file_name.get("label") else ""
+        vc_high = self.corsika_config.get_config_parameter("VIEWCONE")[1]
         zenith = self.corsika_config.get_config_parameter("THETAP")[0]
-        azimuth = self.corsika_config.azimuth_angle
-        run_number_string = self._get_run_number_string(info_for_file_name["run_number"])
-        prefix = (
-            f"{info_for_file_name['primary']}_{run_number_string}_"
-            if info_for_file_name["primary"]
-            else f"{run_number_string}_"
-        )
+
+        if calibration_run_mode is not None and calibration_run_mode != "":
+            primary_name = calibration_run_mode
+        else:
+            primary_name = self.corsika_config.primary_particle.name
+            if primary_name == "gamma" and vc_high > 0:
+                primary_name = "gamma_diffuse"
+
+        file_label = f"_{self.label}" if self.label else ""
+        run_number_string = self._get_run_number_string(run_number)
+
+        prefix = f"{primary_name}_{run_number_string}_" if primary_name else f"{run_number_string}_"
         return (
             prefix
-            + f"za{round(zenith):02}deg_azm{azimuth:03}deg_"
-            + f"{info_for_file_name['site']}_{info_for_file_name['array_name']}_"
-            + (info_for_file_name["model_version"] if not is_multi_pipe else "")
+            + f"za{round(zenith):02}deg_"
+            + f"azm{self.corsika_config.azimuth_angle:03}deg_"
+            + f"{self.corsika_config.array_model.site}_"
+            + f"{self.corsika_config.array_model.layout_name}_"
+            + (self.corsika_config.array_model.model_version if not is_multi_pipe else "")
             + file_label
         )
 
@@ -335,7 +298,7 @@ class RunnerServices:
         )
 
         try:
-            desc = self.file_description[file_type]
+            desc = FILES_AND_PATHS[file_type]
         except KeyError as exc:
             raise ValueError(f"Unknown file type: {file_type}") from exc
 
@@ -351,7 +314,7 @@ class RunnerServices:
                 f" or unknown sub directory type: {desc['sub_dir_type']}"
             ) from exc
 
-        return dir_path / f"{file_name}{desc['suffix']}"
+        return (dir_path / file_name).with_suffix(desc["suffix"])
 
     @staticmethod
     def _get_run_number_string(run_number):
@@ -368,6 +331,7 @@ class RunnerServices:
         str
             Run number string.
         """
+        run_number = validate_corsika_run_number(run_number)
         if run_number >= 10**6:
             raise ValueError("Run number cannot have more than 6 digits")
         return f"run{run_number:06d}"

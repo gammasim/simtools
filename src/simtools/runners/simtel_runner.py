@@ -4,6 +4,7 @@ import logging
 import subprocess
 
 import simtools.utils.general as gen
+from simtools import settings
 from simtools.runners.runner_services import RunnerServices
 
 
@@ -30,8 +31,8 @@ class SimtelRunner:
         CORSIKA configuration.
     use_multipipe: bool
         Use multipipe to run CORSIKA and sim_telarray.
-    calibration_run_mode: str
-        Calibration run mode.
+    is_calibration_run: bool
+        Flag to indicate if this is a calibration run.
     """
 
     def __init__(
@@ -39,21 +40,19 @@ class SimtelRunner:
         label=None,
         corsika_config=None,
         use_multipipe=False,
-        calibration_run_mode=None,
+        is_calibration_run=False,
     ):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
         self.label = label
         self._base_directory = None
-        self.calibration_run_mode = calibration_run_mode
+        self.is_calibration_run = is_calibration_run
 
         self.runs_per_set = 1
 
         self.runner_service = RunnerServices(corsika_config, label)
-        self._directory = self.runner_service.load_data_directories(
-            "corsika_sim_telarray" if use_multipipe else "sim_telarray"
-        )
+        self._directory = self.runner_service.load_data_directories("sim_telarray")
 
     def run(self, test=False, input_file=None, run_number=None):
         """
@@ -204,5 +203,7 @@ class SimtelRunner:
         return self.runner_service.get_file_name(
             file_type=file_type,
             run_number=run_number,
-            calibration_run_mode=self.calibration_run_mode,
+            calibration_run_mode=settings.config.args.get("run_mode")
+            if self.is_calibration_run
+            else None,
         )
