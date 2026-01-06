@@ -30,8 +30,8 @@ class CorsikaSimtelRunner:
         Use multipipe to run CORSIKA and sim_telarray.
     sim_telarray_seeds : dict
         Dictionary with configuration for sim_telarray random instrument setup.
-    calibration_config : dict
-        Configuration for the calibration of the sim_telarray data.
+    is_calibration_run : bool
+        Flag to indicate if this is a calibration run.
     """
 
     def __init__(
@@ -42,8 +42,8 @@ class CorsikaSimtelRunner:
         use_multipipe=False,
         sim_telarray_seeds=None,
         sequential=False,
-        calibration_config=None,
         curved_atmosphere_min_zenith_angle=None,
+        is_calibration_run=False,
     ):
         self._logger = logging.getLogger(__name__)
         self.corsika_config = gen.ensure_iterable(corsika_config)
@@ -53,7 +53,7 @@ class CorsikaSimtelRunner:
         self.sim_telarray_seeds = sim_telarray_seeds
         self.label = label
         self.sequential = "--sequential" if sequential else ""
-        self.simulation_software = "corsika_sim_telarray" if use_multipipe else "sim_telarray"
+        self.simulation_software = "corsika_sim_telarray"
 
         self.runner_service = RunnerServices(self.base_corsika_config, label)
         self.runner_service.load_data_directories(self.simulation_software)
@@ -77,7 +77,7 @@ class CorsikaSimtelRunner:
                     label=label,
                     use_multipipe=use_multipipe,
                     sim_telarray_seeds=sim_telarray_seeds,
-                    calibration_config=calibration_config,
+                    is_calibration_run=is_calibration_run,
                 )
             )
 
@@ -123,7 +123,7 @@ class CorsikaSimtelRunner:
             for simulator_array in self.simulator_array:
                 run_command = simulator_array.make_run_command(
                     run_number=run_number,
-                    input_file="-",  # instruct sim_telarray to take input from standard output
+                    corsika_input_file="-",  # instruct sim_telarray to take input from stdout
                     weak_pointing=self._determine_pointing_option(self.label),
                 )
                 file.write(f"{run_command}")
