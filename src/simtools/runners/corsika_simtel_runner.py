@@ -76,7 +76,7 @@ class CorsikaSimtelRunner:
                 )
             )
 
-    def prepare_run(self, run_number=None, sub_script=None, corsika_file=None, extra_commands=None):  # pylint: disable=unused-argument
+    def prepare_run(self, run_number=None, sub_script=None, corsika_file=None, extra_commands=None):
         """
         Get the full path of the run script file for a given run number.
 
@@ -96,7 +96,9 @@ class CorsikaSimtelRunner:
             sub_script=sub_script,
             corsika_file=self.runner_service.get_file_name(
                 file_type="multi_pipe_script", run_number=run_number
-            ),
+            )
+            if not corsika_file
+            else corsika_file,
             extra_commands=extra_commands,
         )
         self.update_file_list_from_runners()
