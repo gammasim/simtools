@@ -13,8 +13,6 @@ applications:
   - test_output_files:
     - file: logfile.log
       path_descriptor: output_path
-    - file: asasd
-      path_descriptor: output_path
     - file: xyzls.simtel.zst
       path_descriptor: output_path
     - expected_log_output:
