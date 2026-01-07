@@ -151,7 +151,7 @@ class RunnerServices:
 
         return run_files
 
-    def _get_file_basename(self, run_number, calibration_run_mode, is_multi_pipe=False):
+    def _get_file_basename(self, run_number, is_multi_pipe=False):
         """
         Get the base name for the simulation files.
 
@@ -161,8 +161,6 @@ class RunnerServices:
             Run number.
         file_type: str
             File type.
-        calibration_run_mode: str
-            Calibration run mode.
 
         Returns
         -------
@@ -172,8 +170,8 @@ class RunnerServices:
         vc_high = self.corsika_config.get_config_parameter("VIEWCONE")[1]
         zenith = self.corsika_config.get_config_parameter("THETAP")[0]
 
-        if calibration_run_mode is not None and calibration_run_mode != "":
-            primary_name = calibration_run_mode
+        if self.corsika_config.run_mode is not None and self.corsika_config.run_mode != "":
+            primary_name = self.corsika_config.run_mode
         else:
             primary_name = self.corsika_config.primary_particle.name
             if primary_name == "gamma" and vc_high > 0:
@@ -213,7 +211,7 @@ class RunnerServices:
         sub_dir.mkdir(parents=True, exist_ok=True)
         return sub_dir
 
-    def get_file_name(self, file_type, run_number=None, calibration_run_mode=None):
+    def get_file_name(self, file_type, run_number=None):
         """
         Get a file name depending on file type and run number.
 
@@ -223,8 +221,6 @@ class RunnerServices:
             The type of file (determines the file suffix).
         run_number : int
             Run number.
-        calibration_run_mode: str
-            Calibration run mode.
 
         Returns
         -------
@@ -236,9 +232,7 @@ class RunnerServices:
         ValueError
             If file_type is unknown.
         """
-        file_name = self._get_file_basename(
-            run_number, calibration_run_mode, file_type.startswith("multi_pipe")
-        )
+        file_name = self._get_file_basename(run_number, file_type.startswith("multi_pipe"))
 
         try:
             desc = FILES_AND_PATHS[file_type]
