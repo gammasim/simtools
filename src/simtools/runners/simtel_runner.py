@@ -29,8 +29,6 @@ class SimtelRunner:
         Instance label. Important for output file naming.
     corsika_config: CorsikaConfig
         CORSIKA configuration.
-    use_multipipe: bool
-        Use multipipe to run CORSIKA and sim_telarray.
     is_calibration_run: bool
         Flag to indicate if this is a calibration run.
     """
@@ -39,7 +37,6 @@ class SimtelRunner:
         self,
         label=None,
         corsika_config=None,
-        use_multipipe=False,
         is_calibration_run=False,
     ):
         """Initialize SimtelRunner."""
@@ -51,8 +48,8 @@ class SimtelRunner:
 
         self.runs_per_set = 1
 
-        self.runner_service = RunnerServices(corsika_config, label)
-        self._directory = self.runner_service.load_data_directories("sim_telarray")
+        self.runner_service = RunnerServices(corsika_config, "sim_telarray", label)
+        self.file_list = None
 
     def run(self, test=False, input_file=None, run_number=None):
         """

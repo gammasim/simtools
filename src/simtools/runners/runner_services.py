@@ -111,69 +111,40 @@ class RunnerServices:
     ----------
     corsika_config : CorsikaConfig, list of CorsikaConfig
         Configuration parameters for CORSIKA.
+    run_type : str
+        Type of simulation runner (see directory field of FILES_AND_PATHS).
     label : str
         Label.
     """
 
-    def __init__(self, corsika_config, label=None):
+    def __init__(self, corsika_config, run_type, label=None):
         """Initialize RunnerServices."""
         self._logger = logging.getLogger(__name__)
         self.label = label
         self.corsika_config = corsika_config
-        self.directory = {}
+        self.run_type = run_type
+        self.directory = self.load_data_directory()
 
-    @staticmethod
-    def _get_simulation_software_list(simulation_software):
+    def load_data_directory(self):
         """
-        Return a list of simulation software based on the input string.
-
-        Parameters
-        ----------
-        simulation_software: str
-            String representing the desired software.
+        Create and return directory for the given run type.
 
         Returns
         -------
-            List of simulation software names.
-        """
-        software_map = {
-            "corsika": ["corsika"],
-            "sim_telarray": ["sim_telarray"],
-            "corsika_sim_telarray": ["corsika", "sim_telarray", "multi_pipe"],
-        }
-        return software_map.get(simulation_software.lower(), [])
-
-    def load_data_directories(self, simulation_software):
-        """
-        Create and return directories for output, data, log and input.
-
-        Parameters
-        ----------
-        simulation_software : str
-            Simulation software to be used.
-
-        Returns
-        -------
-        dict
-            Dictionary containing paths requires for simulation configuration.
+        Path
+            Path to the created directory.
         """
         ioh = io_handler.IOHandler()
-        self.directory["output"] = ioh.get_output_directory()
+        directory = ioh.get_output_directory(self.run_type)
+        self._logger.debug(f"Data directories for {self.run_type}: {directory}")
+        return directory
 
-        for dir_name in ["sub", *self._get_simulation_software_list(simulation_software)]:
-            self.directory[dir_name] = ioh.get_output_directory(dir_name)
-
-        self._logger.debug(f"Data directories for {simulation_software}: {self.directory}")
-        return self.directory
-
-    def load_files(self, simulation_software, run_number=None):
+    def load_files(self, run_number=None):
         """
         Load files required for the simulation run.
 
         Parameters
         ----------
-        simulation_software : str
-            Simulation software to be used.
         run_number: int
             Run number.
 
@@ -183,14 +154,10 @@ class RunnerServices:
             Dictionary containing paths to files required for the simulation run.
         """
         run_files = {}
+        print("CCCC", self.run_type)
         for key in FILES_AND_PATHS:
-            # sub files are always included
-            if key.startswith("sub_"):
+            if key.startswith(self.run_type.lower()):
                 run_files[key] = self.get_file_name(file_type=key, run_number=run_number)
-            # simulation software dependent files
-            for name in self._get_simulation_software_list(simulation_software):
-                if key.startswith(name.lower()):
-                    run_files[key] = self.get_file_name(file_type=key, run_number=run_number)
 
         for key, file_path in run_files.items():
             self._logger.debug(f"{key}: {file_path}")
@@ -239,14 +206,12 @@ class RunnerServices:
             + file_label
         )
 
-    def _get_sub_directory(self, sub_dir_type, run_number, dir_path):
+    def _get_sub_directory(self, run_number, dir_path):
         """
-        Return sub directory depending on data type.
+        Return sub directory with / without run number.
 
         Parameters
         ----------
-        sub_dir_type: str
-            Sub directory type.
         run_number: int
             Run number.
         dir_path: Path
@@ -257,16 +222,7 @@ class RunnerServices:
         Path
             Child directory path.
         """
-        if sub_dir_type is None:
-            return dir_path
-
-        name = (
-            self._get_run_number_string(run_number)
-            if sub_dir_type == "run_number"
-            else sub_dir_type
-        )
-
-        sub_dir = dir_path / name
+        sub_dir = dir_path / self._get_run_number_string(run_number)
         sub_dir.mkdir(parents=True, exist_ok=True)
         return sub_dir
 
@@ -302,18 +258,10 @@ class RunnerServices:
         except KeyError as exc:
             raise ValueError(f"Unknown file type: {file_type}") from exc
 
-        try:
-            dir_path = self._get_sub_directory(
-                desc["sub_dir_type"],
-                run_number,
-                self.directory[desc["directory"]],
-            )
-        except KeyError as exc:
-            raise ValueError(
-                f"For file type {file_type}, unknown directory type: {desc['directory']}"
-                f" or unknown sub directory type: {desc['sub_dir_type']}"
-            ) from exc
-
+        if desc["sub_dir_type"] == "run_number":
+            dir_path = self._get_sub_directory(run_number, self.directory)
+        else:
+            dir_path = self.directory
         return (dir_path / file_name).with_suffix(desc["suffix"])
 
     @staticmethod
@@ -336,25 +284,24 @@ class RunnerServices:
             raise ValueError("Run number cannot have more than 6 digits")
         return f"run{run_number:06d}"
 
-    def get_resources(self, run_number=None):
+    def get_resources(self, sub_out_file):
         """
         Read run time of job from last line of submission log file.
 
         Parameters
         ----------
-        run_number: int
-            Run number.
+        sub_out_file: str or Path
+            Path to the submission output file.
 
         Returns
         -------
         dict
             run time and number of simulated events
         """
-        sub_out = self.get_file_name(file_type="sub_out", run_number=run_number)
-        _logger.debug(f"Reading resources from {sub_out}")
+        _logger.debug(f"Reading resources from {sub_out_file}")
 
         runtime = None
-        with open(sub_out, encoding="utf-8") as f:
+        with open(sub_out_file, encoding="utf-8") as f:
             for line in reversed(f.readlines()):
                 if "RUNTIME" in line:
                     runtime = int(line.split()[1])
