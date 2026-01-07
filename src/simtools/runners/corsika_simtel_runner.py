@@ -177,45 +177,6 @@ class CorsikaSimtelRunner:
 
         multipipe_script.chmod(multipipe_script.stat().st_mode | stat.S_IEXEC)
 
-    def get_file_name(
-        self,
-        simulation_software=None,
-        file_type=None,
-        run_number=None,
-        model_version_index=0,
-    ):
-        """
-        Get the full path of a file for a given run number.
-
-        Parameters
-        ----------
-        simulation_software: str
-            Simulation software.
-        file_type: str
-            File type.
-        run_number: int
-            Run number.
-        model_version_index: int
-            Index of the model version.
-            This is used to select the correct simulator_array instance
-            in case multiple array models are simulated.
-
-        Returns
-        -------
-        str
-            File name with full path.
-        """
-        if simulation_software is None:
-            # preference to sim_telarray output (multipipe)
-            simulation_software = "sim_telarray" if self.simulator_array else "corsika"
-
-        runner = (
-            self.corsika_runner
-            if simulation_software == "corsika"
-            else self.simulator_array[model_version_index]
-        )
-        return runner.get_file_name(file_type=file_type, run_number=run_number)
-
     def get_resources(self, run_number=None):
         """Return computing resources used."""
         return self.corsika_runner.get_resources(run_number)

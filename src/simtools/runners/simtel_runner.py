@@ -4,7 +4,6 @@ import logging
 import subprocess
 
 import simtools.utils.general as gen
-from simtools import settings
 from simtools.runners.runner_services import RunnerServices
 
 
@@ -164,43 +163,3 @@ class SimtelRunner:
     def get_resources(self, run_number=None):
         """Return computing resources used."""
         return self.runner_service.get_resources(run_number)
-
-    def get_file_name(
-        self,
-        simulation_software="sim_telarray",
-        file_type=None,
-        run_number=None,
-        model_version_index=0,
-    ):  # pylint: disable=unused-argument
-        """
-        Get the full path of a file for a given run number.
-
-        Parameters
-        ----------
-        simulation_software: str
-            Simulation software.
-        file_type: str
-            File type.
-        run_number: int
-            Run number.
-        model_version_index: int
-            Index of the model version.
-            This is used to select the correct simulator_array instance in case
-            multiple array models are simulated (not used here).
-
-        Returns
-        -------
-        str
-            File name with full path.
-        """
-        if simulation_software.lower() != "sim_telarray":
-            raise ValueError(
-                f"simulation_software ({simulation_software}) is not supported in SimulatorArray"
-            )
-        return self.runner_service.get_file_name(
-            file_type=file_type,
-            run_number=run_number,
-            calibration_run_mode=settings.config.args.get("run_mode")
-            if self.is_calibration_run
-            else None,
-        )
