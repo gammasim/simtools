@@ -46,7 +46,9 @@ class Simulator:
         self.site = settings.config.args.get("site", None)
         self.model_version = settings.config.args.get("model_version", None)
 
-        self.simulation_software = settings.config.args["simulation_software"]
+        self.simulation_software = settings.config.args.get(
+            "simulation_software", "corsika_sim_telarray"
+        )
         self.run_mode = settings.config.args.get("run_mode", None)
 
         self.io_handler = io_handler.IOHandler()
@@ -58,7 +60,9 @@ class Simulator:
         self.array_models, self.corsika_configurations = self._initialize_array_models()
         self._simulation_runner = self._initialize_simulation_runner()
         self.runner_service = runner_services.RunnerServices(
-            self._get_first_corsika_config(), "sub", label
+            self._get_first_corsika_config(),
+            "sub",
+            label,
         )
         self.file_list = self.runner_service.load_files(self.run_number)
 
@@ -137,7 +141,6 @@ class Simulator:
                     array_model=array_model[-1],
                     label=self.label,
                     run_number=self.run_number,
-                    dummy_simulations=self._is_calibration_run(self.run_mode),
                 )
             )
             array_model[-1].sim_telarray_seeds = {
@@ -227,7 +230,6 @@ class Simulator:
             runner_args["sim_telarray_seeds"] = self.sim_telarray_seeds
         if runner_class is CorsikaSimtelRunner:
             runner_args["sequential"] = settings.config.args.get("sequential", False)
-            runner_args["is_calibration_run"] = self._is_calibration_run(self.run_mode)
 
         return runner_class(**runner_args)
 
@@ -400,7 +402,7 @@ class Simulator:
             if not model_logs:
                 continue
 
-            tar_name = Path(model_logs[0]).name.replace("log.gz", "log_hist.tar.gz")
+            tar_name = Path(model_logs[0]).name.replace("simtel.log.gz", "log_hist.tar.gz")
             tar_path = directory_for_grid_upload / tar_name
 
             files_to_tar = (

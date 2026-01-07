@@ -31,12 +31,9 @@ class CorsikaConfig:
         Run number.
     label : str
         Instance label.
-    dummy_simulations : bool
-        If True, the configuration is generated for dummy simulations
-        (e.g., sim_telarray requires for some run modes a valid CORSIKA input file).
     """
 
-    def __init__(self, array_model, run_number, label=None, dummy_simulations=False):
+    def __init__(self, array_model, run_number, label=None):
         """Initialize CorsikaConfig."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaConfig")
@@ -48,7 +45,7 @@ class CorsikaConfig:
         self.run_number = run_number
         self.primary_particle = settings.config.args  # see setter for primary_particle
         self.use_curved_atmosphere = settings.config.args  # see setter for use_curved_atmosphere
-        self.dummy_simulations = dummy_simulations
+        self.run_mode = settings.config.args.get("run_mode")
 
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
@@ -132,7 +129,7 @@ class CorsikaConfig:
         config["RUNNR"] = [self.run_number]
         config["USER"] = [settings.config.user]
         config["HOST"] = [settings.config.hostname]
-        if self.dummy_simulations:
+        if self.is_calibration_run():
             config["USER_INPUT"] = self._corsika_configuration_for_dummy_simulations(args)
         elif args.get("corsika_file", None) is not None:
             config["USER_INPUT"] = self._corsika_configuration_from_corsika_file(
@@ -765,3 +762,24 @@ class CorsikaConfig:
             corsika_input_list += f"\t # {telescope_name}\n"
 
         return corsika_input_list
+
+    def is_calibration_run(self):
+        """
+        Check if this simulation is a calibration run.
+
+        Parameters
+        ----------
+        run_mode: str
+            Run mode of the simulation.
+
+        Returns
+        -------
+        bool
+            True if it is a calibration run, False otherwise.
+        """
+        return self.run_mode in [
+            "pedestals",
+            "pedestals_dark",
+            "pedestals_nsb_only",
+            "direct_injection",
+        ]
