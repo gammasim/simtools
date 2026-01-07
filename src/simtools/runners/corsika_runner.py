@@ -6,7 +6,6 @@ from pathlib import Path
 
 from simtools import settings
 from simtools.corsika.run_directory import link_run_directory
-from simtools.io import io_handler
 from simtools.runners.runner_services import RunnerServices
 
 
@@ -16,16 +15,14 @@ class CorsikaRunner:
 
     Generate run scripts and directories for CORSIKA simulations. Run simulations if requested.
 
-    CorsikaRunner is configured through a CorsikaConfig instance.
-
     Parameters
     ----------
     corsika_config_data: CorsikaConfig
         CORSIKA configuration.
     label: str
         Instance label.
-    keep_seeds: bool
-        Use seeds based on run number and primary particle. If False, use sim_telarray seeds.
+    corsika_seeds: list
+        List of fixed seeds used for CORSIKA random number generators.
     use_multipipe: bool
         Use multipipe to run CORSIKA and sim_telarray.
     curved_atmosphere_min_zenith_angle: Quantity
@@ -36,7 +33,7 @@ class CorsikaRunner:
         self,
         corsika_config,
         label=None,
-        keep_seeds=False,
+        corsika_seeds=None,
         use_multipipe=False,
         curved_atmosphere_min_zenith_angle=None,
     ):
@@ -46,11 +43,9 @@ class CorsikaRunner:
         self.label = label
 
         self.corsika_config = corsika_config
-        self._keep_seeds = keep_seeds
+        self._corsika_seeds = corsika_seeds
         self._use_multipipe = use_multipipe
         self.curved_atmosphere_min_zenith_angle = curved_atmosphere_min_zenith_angle
-
-        self.io_handler = io_handler.IOHandler()
 
         self.runner_service = RunnerServices(corsika_config, "corsika", label)
         self.file_list = None
@@ -76,7 +71,7 @@ class CorsikaRunner:
 
         self.corsika_config.generate_corsika_input_file(
             self._use_multipipe,
-            self._keep_seeds,
+            self._corsika_seeds,
             self.file_list["corsika_input"],
             self.file_list["corsika_output"] if not self._use_multipipe else corsika_file,
         )

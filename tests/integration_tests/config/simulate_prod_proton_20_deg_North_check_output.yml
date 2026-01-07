@@ -5,7 +5,7 @@ applications:
     array_layout_name: alpha
     azimuth_angle: South
     core_scatter: 5 500 m
-    corsika_test_seeds: true
+    corsika_seeds: [534, 220, 1104, 382]
     energy_range: 200 GeV 500 GeV
     label: check_output
     log_level: DEBUG

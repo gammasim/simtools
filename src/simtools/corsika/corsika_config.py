@@ -647,7 +647,7 @@ class CorsikaConfig:
             text += line
         return text
 
-    def generate_corsika_input_file(self, use_multipipe, use_test_seeds, input_file, output_file):
+    def generate_corsika_input_file(self, use_multipipe, corsika_seeds, input_file, output_file):
         """
         Generate a CORSIKA input file.
 
@@ -656,8 +656,8 @@ class CorsikaConfig:
         use_multipipe: bool
             Whether to set the CORSIKA Inputs file to pipe
             the output directly to sim_telarray.
-        use_test_seeds: bool
-            Whether to use test seeds for the simulation.
+        corsika_seeds: list
+            List of fixed seeds used for CORSIKA random number generators.
         input_file: Path
             Path to the input file to be generated.
         output_file: Path
@@ -684,7 +684,7 @@ class CorsikaConfig:
             file.write(f"IACT setenv AZM {self.azimuth_angle}\n")
 
             file.write("\n* [ SEEDS ]\n")
-            self._write_seeds(file, use_test_seeds)
+            self._write_seeds(file, corsika_seeds)
 
             file.write("\n* [ TELESCOPES ]\n")
             telescope_list_text = self.get_corsika_telescope_list()
@@ -725,7 +725,7 @@ class CorsikaConfig:
             model_directory=self.array_model.get_config_directory()
         )
 
-    def _write_seeds(self, file, use_test_seeds=False):
+    def _write_seeds(self, file, corsika_seeds=None):
         """
         Generate and write seeds in the CORSIKA input file.
 
@@ -734,12 +734,12 @@ class CorsikaConfig:
         file: stream
             File where the telescope positions will be written.
         """
-        # TODO should the seed be a configurable?
-        random_seed = self.get_config_parameter("PRMPAR") + self.run_number
-        rng = np.random.default_rng(random_seed)
-        corsika_seeds = [534, 220, 1104, 382]
-        if not use_test_seeds:
+        if not corsika_seeds:
+            random_seed = self.get_config_parameter("PRMPAR") + self.run_number
+            rng = np.random.default_rng(random_seed)
             corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
+        if len(corsika_seeds) != 4:
+            raise ValueError("Exactly 4 CORSIKA seeds must be provided.")
         for s in corsika_seeds:
             file.write(f"SEED {s} 0 0\n")
 

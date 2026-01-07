@@ -24,8 +24,8 @@ class CorsikaSimtelRunner:
         contain the CORSIKA configuration parameters.
     label : str
         Label.
-    keep_seeds : bool
-        Use seeds based on run number and primary particle. If False, use sim_telarray seeds.
+    corsika_seeds : list
+        List of fixed seeds used for CORSIKA random number generators.
     use_multipipe : bool
         Use multipipe to run CORSIKA and sim_telarray.
     sim_telarray_seeds : dict
@@ -38,7 +38,7 @@ class CorsikaSimtelRunner:
         self,
         corsika_config,
         label=None,
-        keep_seeds=False,
+        corsika_seeds=None,
         sim_telarray_seeds=None,
         sequential=False,
         curved_atmosphere_min_zenith_angle=None,
@@ -59,7 +59,7 @@ class CorsikaSimtelRunner:
         self.corsika_runner = CorsikaRunner(
             corsika_config=self.base_corsika_config,
             label=label,
-            keep_seeds=keep_seeds,
+            corsika_seeds=corsika_seeds,
             use_multipipe=True,
             curved_atmosphere_min_zenith_angle=curved_atmosphere_min_zenith_angle,
         )
