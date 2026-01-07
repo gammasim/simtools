@@ -39,7 +39,6 @@ class CorsikaSimtelRunner:
         corsika_config,
         label=None,
         keep_seeds=False,
-        use_multipipe=False,
         sim_telarray_seeds=None,
         sequential=False,
         curved_atmosphere_min_zenith_angle=None,
@@ -53,18 +52,15 @@ class CorsikaSimtelRunner:
         self.sim_telarray_seeds = sim_telarray_seeds
         self.label = label
         self.sequential = "--sequential" if sequential else ""
-        self.simulation_software = "corsika_sim_telarray"
 
-        self.runner_service = RunnerServices(self.base_corsika_config, label)
-        self.runner_service.load_data_directories(self.simulation_software)
-
-        # TODO isn't multipipe always true here?
+        self.runner_service = RunnerServices(self.base_corsika_config, "multi_pipe", label)
+        self.file_list = None
 
         self.corsika_runner = CorsikaRunner(
             corsika_config=self.base_corsika_config,
             label=label,
             keep_seeds=keep_seeds,
-            use_multipipe=use_multipipe,
+            use_multipipe=True,
             curved_atmosphere_min_zenith_angle=curved_atmosphere_min_zenith_angle,
         )
         # The simulator array should be defined for every CORSIKA configuration
@@ -75,13 +71,12 @@ class CorsikaSimtelRunner:
                 SimulatorArray(
                     corsika_config=_corsika_config,
                     label=label,
-                    use_multipipe=use_multipipe,
                     sim_telarray_seeds=sim_telarray_seeds,
                     is_calibration_run=is_calibration_run,
                 )
             )
 
-    def prepare_run(self, run_number=None, input_file=None, extra_commands=None):
+    def prepare_run(self, run_number=None, sub_script=None, corsika_file=None, extra_commands=None):  # pylint: disable=unused-argument
         """
         Get the full path of the run script file for a given run number.
 
@@ -89,17 +84,22 @@ class CorsikaSimtelRunner:
         ----------
         run_number: int
             Run number.
-
-        Returns
-        -------
-        Path:
-            Full path of the run script file.
+        corsika_file: str or Path
+            Path to the CORSIKA input file.
+        extra_commands: str
+            Additional commands for running simulations.
         """
-        self.runner_service.load_files(self.simulation_software, run_number=run_number)
+        self.file_list = self.runner_service.load_files(run_number=run_number)
         self._export_multipipe_script(run_number)
-        return self.corsika_runner.prepare_run(
-            input_file=input_file, extra_commands=extra_commands, run_number=run_number
+        self.corsika_runner.prepare_run(
+            run_number=run_number,
+            sub_script=sub_script,
+            corsika_file=self.runner_service.get_file_name(
+                file_type="multi_pipe_script", run_number=run_number
+            ),
+            extra_commands=extra_commands,
         )
+        self.update_file_list_from_runners()
 
     def _export_multipipe_script(self, run_number):
         """
@@ -217,3 +217,38 @@ class CorsikaSimtelRunner:
     def get_resources(self, run_number=None):
         """Return computing resources used."""
         return self.corsika_runner.get_resources(run_number)
+
+    def update_file_list_from_runners(self):
+        """
+        Get list of generated files (independent of type).
+
+        Parameters
+        ----------
+        file_type : str
+            File type to be listed.
+
+        Returns
+        -------
+        list
+            List with the full path of all output files.
+
+        """
+        if self.file_list is None:
+            self.file_list = self.corsika_runner.file_list
+        else:
+            self.file_list.update(self.corsika_runner.file_list)
+
+        for simulator_array in self.simulator_array:
+            _tmp_list = simulator_array.file_list
+            for key, data in _tmp_list.items():
+                if key in self.file_list:
+                    # in case of multiple sim_telarray instances, make list of files
+                    if not isinstance(self.file_list[key], list):
+                        self.file_list[key] = [self.file_list[key]]
+                    self.file_list[key].append(data)
+                else:
+                    self.file_list[key] = [data]
+
+        print("UUUUU", self.file_list)
+
+        return self.file_list

@@ -1,7 +1,7 @@
 """Simulation runner for array simulations."""
 
-import logging
 import stat
+from pathlib import Path
 
 from simtools import settings
 from simtools.io import io_handler
@@ -31,17 +31,13 @@ class SimulatorArray(SimtelRunner):
         self,
         corsika_config,
         label=None,
-        use_multipipe=False,
         sim_telarray_seeds=None,
         is_calibration_run=False,
     ):
         """Initialize SimulatorArray."""
-        self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init SimulatorArray")
         super().__init__(
             label=label,
             corsika_config=corsika_config,
-            use_multipipe=use_multipipe,
             is_calibration_run=is_calibration_run,
         )
 
@@ -51,36 +47,24 @@ class SimulatorArray(SimtelRunner):
         self.io_handler = io_handler.IOHandler()
         self._log_file = None
 
-    def prepare_run(
-        self, test=False, corsika_input_file=None, run_number=None, extra_commands=None
-    ):
+    def prepare_run(self, run_number=None, sub_script=None, corsika_file=None, extra_commands=None):
         """
         Build and return the full path of the bash run script containing the sim_telarray command.
 
         Parameters
         ----------
-        test: bool
-            Test flag for faster execution.
-        corsika_input_file: str or Path
-            Full path of the input CORSIKA file.
         run_number: int
             Run number.
+        corsika_file: str or Path
+            Full path of the input CORSIKA file.
         extra_commands: list[str]
             Additional commands for running simulations given in config.yml.
-
-        Returns
-        -------
-        Path
-            Full path of the run script.
         """
-        script_file_path = self.get_file_name(file_type="sub_script", run_number=run_number)
-        self._logger.debug(f"Run bash script - {script_file_path}")
+        command = self.make_run_command(run_number=run_number, corsika_input_file=corsika_file)
+        sub_script = Path(sub_script)
+        self._logger.debug(f"Run bash script - {sub_script}")
         self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
-
-        command = self.make_run_command(
-            run_number=run_number, corsika_input_file=corsika_input_file
-        )
-        with script_file_path.open("w", encoding="utf-8") as file:
+        with sub_script.open("w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n\n")
             file.write("set -e\n")
             file.write("set -o pipefail\n")
@@ -92,14 +76,12 @@ class SimulatorArray(SimtelRunner):
                     file.write(f"{line}\n")
                 file.write("# End of extras\n\n")
 
-            n = 1 if test else self.runs_per_set
-            for _ in range(n):
+            for _ in range(self.runs_per_set):
                 file.write(f"{command}\n\n")
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-        script_file_path.chmod(script_file_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
-        return script_file_path
+        sub_script.chmod(sub_script.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
 
     def make_run_command(self, run_number=None, corsika_input_file=None, weak_pointing=None):
         """
@@ -119,7 +101,7 @@ class SimulatorArray(SimtelRunner):
         str
             Command to run sim_telarray.
         """
-        self.runner_service.load_files("sim_telarray", run_number=run_number)
+        self.file_list = self.runner_service.load_files(run_number=run_number)
         command = self._common_run_command(run_number, weak_pointing)
 
         if self.is_calibration_run:

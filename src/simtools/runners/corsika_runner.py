@@ -52,11 +52,10 @@ class CorsikaRunner:
 
         self.io_handler = io_handler.IOHandler()
 
-        self.runner_service = RunnerServices(corsika_config, label)
-        simulation_software = "corsika" if not self._use_multipipe else "corsika_sim_telarray"
-        self.runner_service.load_data_directories(simulation_software)
+        self.runner_service = RunnerServices(corsika_config, "corsika", label)
+        self.file_list = None
 
-    def prepare_run(self, run_number=None, extra_commands=None, input_file=None):  # pylint: disable=unused-argument
+    def prepare_run(self, run_number, sub_script, extra_commands=None, corsika_file=None):
         """
         Prepare CORSIKA run script and run directory.
 
@@ -64,33 +63,30 @@ class CorsikaRunner:
 
         Parameters
         ----------
+        run_number: int
+            Run number.
+        sub_script: str or Path
+            Path to the CORSIKA run script to be created.
+        corsika_file: str or Path
+            Path to the multipipe script (used only if use_multipipe is True).
         extra_commands: str
             Additional commands for running simulations.
-
-        Returns
-        -------
-        List:
-            List of files defined for the run.
         """
-        run_files = self.runner_service.load_files(
-            "corsika" if not self._use_multipipe else "corsika_sim_telarray", run_number=run_number
-        )
+        self.file_list = self.runner_service.load_files(run_number=run_number)
 
         self.corsika_config.generate_corsika_input_file(
             self._use_multipipe,
             self._keep_seeds,
-            run_files["corsika_input"],
-            run_files["corsika_output"]
-            if not self._use_multipipe
-            else run_files["multi_pipe_script"],
+            self.file_list["corsika_input"],
+            self.file_list["corsika_output"] if not self._use_multipipe else corsika_file,
         )
 
         self._logger.debug(f"Extra commands to be added to the run script: {extra_commands}")
-        corsika_run_dir = run_files["corsika_output"].parent
+
+        corsika_run_dir = self.file_list["corsika_output"].parent
         link_run_directory(corsika_run_dir, self._corsika_executable())
 
-        self._export_run_script(run_files, corsika_run_dir, extra_commands)
-        return run_files
+        self._export_run_script(sub_script, corsika_run_dir, extra_commands)
 
     def _corsika_executable(self):
         """Get the CORSIKA executable path."""
@@ -100,10 +96,11 @@ class CorsikaRunner:
         self._logger.debug("Using flat-atmosphere CORSIKA binary.")
         return Path(settings.config.corsika_exe)
 
-    def _export_run_script(self, run_files, corsika_run_dir, extra_commands):
+    def _export_run_script(self, sub_script, corsika_run_dir, extra_commands):
         """Export CORSIKA run script."""
-        corsika_log_file = run_files["corsika_log"].with_suffix("")
-        with open(run_files["sub_script"], "w", encoding="utf-8") as file:
+        corsika_log_file = self.file_list["corsika_log"].with_suffix("")
+        sub_script = Path(sub_script)
+        with open(sub_script, "w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n")
             file.write("set -e\n")
             file.write("set -o pipefail\n")
@@ -122,7 +119,7 @@ class CorsikaRunner:
 
             file.write("\n# Running corsika\n")
             file.write(
-                f"{self._corsika_executable()} < {run_files['corsika_input']} "
+                f"{self._corsika_executable()} < {self.file_list['corsika_input']} "
                 f"> {corsika_log_file} 2>&1\n"
             )
             file.write("\n# Cleanup\n")
@@ -130,14 +127,11 @@ class CorsikaRunner:
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-        run_files["sub_script"].chmod(
-            run_files["sub_script"].stat().st_mode | stat.S_IXUSR | stat.S_IXGRP
-        )
-        return run_files["sub_script"]
+        sub_script.chmod(sub_script.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
 
-    def get_resources(self, run_number=None):
+    def get_resources(self, sub_out_file):
         """Return computing resources used."""
-        return self.runner_service.get_resources(run_number)
+        return self.runner_service.get_resources(sub_out_file)
 
     def get_file_name(
         self,
@@ -148,6 +142,8 @@ class CorsikaRunner:
     ):  # pylint: disable=unused-argument
         """
         Get the full path of a file for a given run number.
+
+        TODO can be removed?
 
         Parameters
         ----------
