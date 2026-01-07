@@ -328,17 +328,19 @@ class Simulator:
         )
 
     def save_file_lists(self):
-        """Save files lists for output and log files."""
-        for file_type in ["simtel_output", "log", "corsika_log", "histogram"]:
-            file_name = self.io_handler.get_output_directory().joinpath(f"{file_type}_files.txt")
-            file_list = self.get_files(file_type=file_type)
-            if all(element is not None for element in file_list) and len(file_list) > 0:
-                self.logger.info(f"Saving list of {file_type} files to {file_name}")
-                with open(file_name, "w", encoding="utf-8") as f:
-                    for line in self.get_files(file_type=file_type):
-                        f.write(f"{line}\n")
-            else:
+        """Save file lists for output and log files."""
+        outdir = self.io_handler.get_output_directory()
+
+        for file_type, files in self.file_list.items():
+            if not files or any(f is None for f in files):
                 self.logger.debug(f"No files to save for {file_type} files.")
+                continue
+
+            path = outdir / f"{file_type}_files.txt"
+            self.logger.info(f"Saving list of {file_type} files to {path}")
+
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("\n".join(map(str, files)) + "\n")
 
     def save_reduced_event_lists(self):
         """
@@ -441,28 +443,6 @@ class Simulator:
                 )
 
     @staticmethod
-    def _is_calibration_run(run_mode):
-        """
-        Check if this simulation is a calibration run.
-
-        Parameters
-        ----------
-        run_mode: str
-            Run mode of the simulation.
-
-        Returns
-        -------
-        bool
-            True if it is a calibration run, False otherwise.
-        """
-        return run_mode in [
-            "pedestals",
-            "pedestals_dark",
-            "pedestals_nsb_only",
-            "direct_injection",
-        ]
-
-    @staticmethod
     def _get_calibration_device_types(run_mode):
         """
         Get the list of calibration device types based on the run mode.
@@ -559,10 +539,11 @@ class Simulator:
                     f"Small mismatch in number of events in: {file}: "
                     f"shower events: {shower_events} (expected: {expected_mc_events})"
                 )
-            event_errors.append(
-                f"Number of simulated MC events ({shower_events}) does not match "
-                f"the expected number ({expected_mc_events}) in CORSIKA {file}."
-            )
+            else:
+                event_errors.append(
+                    f"Number of simulated MC events ({shower_events}) does not match "
+                    f"the expected number ({expected_mc_events}) in CORSIKA {file}."
+                )
         else:
             self.logger.info(
                 f"Consistent number of events in: {file}: shower events: {shower_events}"
