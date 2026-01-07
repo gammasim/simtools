@@ -1,8 +1,6 @@
 """Simulator class for managing simulations of showers and array of telescopes."""
 
-import gzip
 import logging
-import re
 import shutil
 from pathlib import Path
 
@@ -369,8 +367,6 @@ class Simulator:
 
         Creates separate tarballs for each model version's log files.
 
-        # TODO this can be simplified!
-
         Parameters
         ----------
         directory_for_grid_upload: str
@@ -378,11 +374,10 @@ class Simulator:
 
         """
         self.logger.info(
-            f"Packing the output files for registering on the grid ({directory_for_grid_upload})"
+            f"Packing output files for registering on the grid ({directory_for_grid_upload})"
         )
         output_files = self.get_files(file_type="sim_telarray_output")
         log_files = self.get_files(file_type="sim_telarray_log")
-        corsika_log_files = self.get_files(file_type="corsika_log")
         histogram_files = self.get_files(file_type="sim_telarray_histogram")
         reduced_event_files = (
             self.get_files(file_type="sim_telarray_event_data")
@@ -397,36 +392,32 @@ class Simulator:
         )
         directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
 
-        # If there are more than one model version,
-        # duplicate the corsika log file to have one for each model version with the "right name".
-        if len(self.array_models) > 1 and corsika_log_files:
-            self._copy_corsika_log_file_for_all_versions(corsika_log_files)
-
         # Group files by model version
         for model in self.array_models:
             model_version = model.model_version
-            model_files = general.ensure_iterable(model.pack_model_files())
-
-            # Filter files for this model version
             model_logs = [f for f in log_files if model_version in str(f)]
-            model_hists = [f for f in histogram_files if model_version in str(f)]
-            model_corsika_logs = [f for f in corsika_log_files if model_version in str(f)]
 
-            if model_logs:
-                tar_file_name = Path(model_logs[0]).name.replace("log.gz", "log_hist.tar.gz")
-                tar_file_path = directory_for_grid_upload.joinpath(tar_file_name)
-                # Add all relevant model, log, histogram, and CORSIKA log files to the tarball
-                files_to_tar = model_logs + model_hists + model_corsika_logs + model_files
-                general.pack_tar_file(tar_file_path, files_to_tar)
+            if not model_logs:
+                continue
+
+            tar_name = Path(model_logs[0]).name.replace("log.gz", "log_hist.tar.gz")
+            tar_path = directory_for_grid_upload / tar_name
+
+            files_to_tar = (
+                model_logs
+                + [f for f in histogram_files if model_version in str(f)]
+                + [str(self.get_files(file_type="corsika_log"))]
+                + list(general.ensure_iterable(model.pack_model_files()))
+            )
+            general.pack_tar_file(tar_path, files_to_tar)
 
         for file_to_move in output_files + reduced_event_files:
-            source_file = Path(file_to_move)
-            destination_file = directory_for_grid_upload / source_file.name
+            destination_file = directory_for_grid_upload / Path(file_to_move).name
             if destination_file.exists():
                 self.logger.warning(f"Overwriting existing file: {destination_file}")
-            shutil.move(source_file, destination_file)
+            shutil.move(file_to_move, destination_file)
 
-        self.logger.info(f"Output files for the grid placed in {directory_for_grid_upload!s}")
+        self.logger.info(f"Grid output files grid placed in {directory_for_grid_upload!s}")
 
     def validate_metadata(self):
         """Validate metadata in the sim_telarray output files."""
@@ -446,57 +437,6 @@ class Simulator:
                 self.logger.warning(
                     f"No sim_telarray file found for model version {model.model_version}: {files}"
                 )
-
-    def _copy_corsika_log_file_for_all_versions(self, corsika_log_files):
-        """
-        Create copies of the CORSIKA log file for each model version.
-
-        Adds a header comment to each copy explaining its relationship to the original.
-
-        Parameters
-        ----------
-        corsika_log_files: list
-            List containing the original CORSIKA log file path.
-        """
-        original_log = Path(corsika_log_files[0])
-        # Find which model version the original log belongs to
-        original_version = next(
-            (
-                model.model_version
-                for model in self.array_models
-                if re.search(
-                    rf"(?<![0-9A-Za-z]){re.escape(model.model_version)}(?![0-9A-Za-z])",
-                    original_log.name,
-                )
-            ),
-            self.array_models[0].model_version,
-        )
-
-        for model in self.array_models:
-            if model.model_version == original_version:
-                continue
-
-            new_log = original_log.parent / original_log.name.replace(
-                original_version, model.model_version
-            )
-
-            with gzip.open(new_log, "wt", encoding="utf-8") as new_file:
-                # Write the header to the new file
-                header = (
-                    f"###############################################################\n"
-                    f"Copy of CORSIKA log file from model version {original_version}.\n"
-                    f"Applicable also for {model.model_version} (same CORSIKA configuration,\n"
-                    f"different sim_telarray model versions in the same run).\n"
-                    f"###############################################################\n\n"
-                )
-                new_file.write(header)
-
-                # Copy the content of the original log file, ignoring invalid characters
-                with gzip.open(original_log, "rt", encoding="utf-8", errors="ignore") as orig_file:
-                    for line in orig_file:
-                        new_file.write(line)
-
-            corsika_log_files.append(str(new_log))
 
     @staticmethod
     def _is_calibration_run(run_mode):
@@ -728,5 +668,3 @@ class Simulator:
             self.file_list = self._simulation_runner.file_list
         else:
             self.file_list.update(self._simulation_runner.file_list)
-
-        print("AAAA", self.file_list)

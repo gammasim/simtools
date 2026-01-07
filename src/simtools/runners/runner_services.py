@@ -11,65 +11,53 @@ FILES_AND_PATHS = {
     # CORSIKA
     "corsika_input": {
         "suffix": ".input",
-        "directory": "corsika",
         "sub_dir_type": "run_number",
     },
     "corsika_output": {
         "suffix": ".corsika.zst",
-        "directory": "corsika",
         "sub_dir_type": "run_number",
     },
     "corsika_log": {
         "suffix": ".corsika.log.gz",
-        "directory": "corsika",
         "sub_dir_type": "run_number",
     },
     # sim_telarray
     "sim_telarray_output": {
         "suffix": ".simtel.zst",
-        "directory": "sim_telarray",
         "sub_dir_type": "run_number",
     },
     "sim_telarray_histogram": {
         "suffix": ".hdata.zst",
-        "directory": "sim_telarray",
         "sub_dir_type": "run_number",
     },
     "sim_telarray_log": {
         "suffix": ".simtel.log.gz",
-        "directory": "sim_telarray",
         "sub_dir_type": "run_number",
     },
     "sim_telarray_event_data": {
         "suffix": ".reduced_event_data.hdf5",
-        "directory": "sim_telarray",
         "sub_dir_type": "run_number",
     },
     # multipipe
     "multi_pipe_config": {
         "suffix": ".multi_pipe.cfg",
-        "directory": "multi_pipe",
         "sub_dir_type": "run_number",
     },
     "multi_pipe_script": {
         "suffix": ".multi_pipe.sh",
-        "directory": "multi_pipe",
         "sub_dir_type": "run_number",
     },
     # job submission
     "sub_out": {
         "suffix": ".out",
-        "directory": "output",
         "sub_dir_type": "sub",
     },
     "sub_log": {
         "suffix": ".log",
-        "directory": "output",
         "sub_dir_type": "sub",
     },
     "sub_script": {
         "suffix": ".sh",
-        "directory": "output",
         "sub_dir_type": "sub",
     },
 }
@@ -112,7 +100,7 @@ class RunnerServices:
     corsika_config : CorsikaConfig, list of CorsikaConfig
         Configuration parameters for CORSIKA.
     run_type : str
-        Type of simulation runner (see directory field of FILES_AND_PATHS).
+        Type of simulation runner.
     label : str
         Label.
     """
@@ -154,7 +142,6 @@ class RunnerServices:
             Dictionary containing paths to files required for the simulation run.
         """
         run_files = {}
-        print("CCCC", self.run_type)
         for key in FILES_AND_PATHS:
             if key.startswith(self.run_type.lower()):
                 run_files[key] = self.get_file_name(file_type=key, run_number=run_number)
@@ -262,7 +249,7 @@ class RunnerServices:
             dir_path = self._get_sub_directory(run_number, self.directory)
         else:
             dir_path = self.directory
-        return (dir_path / file_name).with_suffix(desc["suffix"])
+        return dir_path / f"{file_name}{desc['suffix']}"
 
     @staticmethod
     def _get_run_number_string(run_number):

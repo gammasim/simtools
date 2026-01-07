@@ -224,6 +224,8 @@ class CorsikaSimtelRunner:
         """
         Get list of generated files (independent of type).
 
+        Includes file lists from all runners.
+
         Parameters
         ----------
         file_type : str
@@ -250,7 +252,5 @@ class CorsikaSimtelRunner:
                     self.file_list[key].append(data)
                 else:
                     self.file_list[key] = [data]
-
-        print("UUUUU", self.file_list)
 
         return self.file_list
