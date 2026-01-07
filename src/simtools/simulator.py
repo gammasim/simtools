@@ -479,12 +479,15 @@ class Simulator:
         original_log = Path(corsika_log_files[0])
         # Find which model version the original log belongs to
         original_version = next(
-            model.model_version
-            for model in self.array_models
-            if re.search(
-                rf"(?<![0-9A-Za-z]){re.escape(model.model_version)}(?![0-9A-Za-z])",
-                original_log.name,
-            )
+            (
+                model.model_version
+                for model in self.array_models
+                if re.search(
+                    rf"(?<![0-9A-Za-z]){re.escape(model.model_version)}(?![0-9A-Za-z])",
+                    original_log.name,
+                )
+            ),
+            self.array_models[0].model_version,
         )
 
         for model in self.array_models:
