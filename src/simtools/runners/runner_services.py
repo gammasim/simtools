@@ -260,10 +260,7 @@ class RunnerServices:
         str
             Run number string.
         """
-        run_number = validate_corsika_run_number(run_number)
-        if run_number >= 10**6:
-            raise ValueError("Run number cannot have more than 6 digits")
-        return f"run{run_number:06d}"
+        return f"run{validate_corsika_run_number(run_number):06d}"
 
     def get_resources(self, sub_out_file):
         """
