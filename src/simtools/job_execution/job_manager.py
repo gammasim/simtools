@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools import settings
 
 logger = logging.getLogger(__name__)
 
@@ -60,17 +61,12 @@ class JobManager:
     Job manager for submitting jobs to a compute node.
 
     Expects that jobs can be described by shell scripts.
-
-    Parameters
-    ----------
-    test : bool
-        Testing mode without sub submission.
     """
 
-    def __init__(self, test=False):
+    def __init__(self):
         """Initialize JobManager."""
         self._logger = logging.getLogger(__name__)
-        self.test = test
+        self.test = settings.config.args.get("test", False)
         self.run_script = None
         self.run_out_file = None
 
