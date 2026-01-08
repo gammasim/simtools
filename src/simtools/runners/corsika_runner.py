@@ -5,7 +5,6 @@ import stat
 from pathlib import Path
 
 from simtools import settings
-from simtools.corsika.run_directory import link_run_directory
 from simtools.runners.runner_services import RunnerServices
 
 
@@ -79,7 +78,6 @@ class CorsikaRunner:
         self._logger.debug(f"Extra commands to be added to the run script: {extra_commands}")
 
         corsika_run_dir = self.file_list["corsika_output"].parent
-        link_run_directory(corsika_run_dir, self._corsika_executable())
 
         self._export_run_script(sub_script, corsika_run_dir, extra_commands)
 

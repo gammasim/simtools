@@ -10,7 +10,7 @@ _logger = logging.getLogger(__name__)
 FILES_AND_PATHS = {
     # CORSIKA
     "corsika_input": {
-        "suffix": ".input",
+        "suffix": ".corsika.input",
         "sub_dir_type": "run_number",
     },
     "corsika_output": {

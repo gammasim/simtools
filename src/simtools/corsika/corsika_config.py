@@ -706,6 +706,7 @@ class CorsikaConfig:
             file.write("\n* [ INTERACTION FLAGS ]\n")
             text_interaction_flags = self._get_text_single_line(self.config["INTERACTION_FLAGS"])
             file.write(text_interaction_flags)
+            file.write(f"DATDIR {self.interaction_table_path}\n")
 
             file.write("\n* [ CHERENKOV EMISSION PARAMETERS ]\n")
             text_cherenkov = self._get_text_single_line(
