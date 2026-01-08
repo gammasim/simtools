@@ -253,7 +253,7 @@ def test_get_power_law_for_sim_telarray_histograms_gamma():
     mock_primary = type("MockPrimary", (), {"name": "gamma"})()
 
     result = SimulatorArray.get_power_law_for_sim_telarray_histograms(mock_primary)
-    assert result == 2.5
+    assert result == pytest.approx(2.5)
 
 
 def test_get_power_law_for_sim_telarray_histograms_unknown():
@@ -261,4 +261,4 @@ def test_get_power_law_for_sim_telarray_histograms_unknown():
     mock_primary = type("MockPrimary", (), {"name": "proton"})()
 
     result = SimulatorArray.get_power_law_for_sim_telarray_histograms(mock_primary)
-    assert result == 2.68
+    assert result == pytest.approx(2.68)
