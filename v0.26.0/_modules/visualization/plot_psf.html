@@ -1,0 +1,1313 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>visualization.plot_psf &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=4aa2dafa"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/visualization/plot_psf';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.26.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">visualization.plot_psf</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for visualization.plot_psf</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Optical PSF plotting functions for parameter optimization visualization.</span>
+
+<span class="sd">This module provides plotting functionality for PSF parameter optimization,</span>
+<span class="sd">including parameter comparison plots, convergence plots, and PSF diameter vs off-axis plots.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.backends.backend_pdf</span><span class="w"> </span><span class="kn">import</span> <span class="n">PdfPages</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.ray_tracing.ray_tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">RayTracing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">visualize</span>
+
+<span class="c1"># Constants</span>
+<span class="n">RADIUS</span> <span class="o">=</span> <span class="s2">&quot;Radius [cm]&quot;</span>
+<span class="n">CUMULATIVE_PSF</span> <span class="o">=</span> <span class="s2">&quot;Cumulative PSF&quot;</span>
+<span class="n">MAX_OFFSET_DEFAULT</span> <span class="o">=</span> <span class="mf">4.5</span>  <span class="c1"># Maximum off-axis angle in degrees</span>
+<span class="n">OFFSET_STEPS_DEFAULT</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c1"># Step size for off-axis angle sampling</span>
+<span class="n">DEFAULT_FRACTION</span> <span class="o">=</span> <span class="mf">0.8</span>  <span class="c1"># Default PSF containment fraction</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_psf_diameter_label">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_psf.get_psf_diameter_label">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_psf_diameter_label</span><span class="p">(</span><span class="n">fraction</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;cm&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate PSF diameter label based on containment fraction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fraction : float</span>
+<span class="sd">        PSF containment fraction (e.g., 0.8 for D80, 0.95 for D95)</span>
+<span class="sd">    unit : str, optional</span>
+<span class="sd">        Unit for the label (default: &quot;cm&quot;)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Formatted PSF diameter label (e.g., &quot;D80 (cm)&quot;, &quot;D95 (cm)&quot;, &quot;D95&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">percentage</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fraction</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">unit</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;D</span><span class="si">{</span><span class="n">percentage</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;D</span><span class="si">{</span><span class="n">percentage</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="get_significance_label">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_psf.get_significance_label">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_significance_label</span><span class="p">(</span><span class="n">p_value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get significance label for p-value.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">p_value</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>  <span class="c1"># null hypothesis not rejected at the 95% level</span>
+        <span class="k">return</span> <span class="s2">&quot;GOOD&quot;</span>
+    <span class="k">if</span> <span class="n">p_value</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">:</span>  <span class="c1"># null hypothesis rejected at 95% but not at 99% level</span>
+        <span class="k">return</span> <span class="s2">&quot;FAIR&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;POOR&quot;</span>  <span class="c1"># null hypothesis rejected at 99% level</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_format_metric_text</span><span class="p">(</span>
+    <span class="n">psf_diameter</span><span class="p">,</span>
+    <span class="n">metric</span><span class="p">,</span>
+    <span class="n">fraction</span><span class="o">=</span><span class="n">DEFAULT_FRACTION</span><span class="p">,</span>
+    <span class="n">p_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">second_metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Format metric text for display in plots.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    psf_diameter : float</span>
+<span class="sd">        PSF diameter value</span>
+<span class="sd">    metric : float</span>
+<span class="sd">        Primary metric value (RMSD or KS statistic)</span>
+<span class="sd">    fraction : float, optional</span>
+<span class="sd">        PSF containment fraction (default: 0.8)</span>
+<span class="sd">    p_value : float, optional</span>
+<span class="sd">        P-value from KS test</span>
+<span class="sd">    use_ks_statistic : bool</span>
+<span class="sd">        If True, metric is KS statistic; if False, metric is RMSD</span>
+<span class="sd">    second_metric : float, optional</span>
+<span class="sd">        Second metric value to display alongside the primary metric</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Formatted metric text</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">psf_label</span> <span class="o">=</span> <span class="n">get_psf_diameter_label</span><span class="p">(</span><span class="n">fraction</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">psf_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">psf_label</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">psf_diameter</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2"> cm&quot;</span>
+
+    <span class="c1"># Create metric text based on the optimization method</span>
+    <span class="k">if</span> <span class="n">second_metric</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Special case: show both RMSD and KS statistic (for final best plot)</span>
+        <span class="n">metric_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;RMSD = </span><span class="si">{</span><span class="n">metric</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># metric is RMSD in this case</span>
+        <span class="n">metric_text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">KS statistic = </span><span class="si">{</span><span class="n">second_metric</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># second_metric is KS statistic</span>
+        <span class="k">if</span> <span class="n">p_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">metric_text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">p-value = </span><span class="si">{</span><span class="n">p_value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">elif</span> <span class="n">use_ks_statistic</span><span class="p">:</span>
+        <span class="n">metric_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;KS stat = </span><span class="si">{</span><span class="n">metric</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">p_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">significance</span> <span class="o">=</span> <span class="n">get_significance_label</span><span class="p">(</span><span class="n">p_value</span><span class="p">)</span>
+            <span class="n">metric_text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">p-value = </span><span class="si">{</span><span class="n">p_value</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">significance</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">metric_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;RMSD = </span><span class="si">{</span><span class="n">metric</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">psf_text</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">metric_text</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_base_plot_figure</span><span class="p">(</span><span class="n">data_to_plot</span><span class="p">,</span> <span class="n">simulated_data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create base figure for PSF parameter plots.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_to_plot : dict</span>
+<span class="sd">        Data dictionary for plotting</span>
+<span class="sd">    simulated_data : array, optional</span>
+<span class="sd">        Simulated data to add to the plot</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        (fig, ax) - figure and axis objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">plot_data</span> <span class="o">=</span> <span class="n">data_to_plot</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">simulated_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">plot_data</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">simulated_data</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">visualize</span><span class="o">.</span><span class="n">plot_1d</span><span class="p">(</span>
+        <span class="n">plot_data</span><span class="p">,</span>
+        <span class="n">plot_difference</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">no_markers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">get_axes</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.05</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">CUMULATIVE_PSF</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_parameter_title</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">is_best</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build parameter title string for plots.&quot;&quot;&quot;</span>
+    <span class="n">title_prefix</span> <span class="o">=</span> <span class="s2">&quot;* &quot;</span> <span class="k">if</span> <span class="n">is_best</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title_prefix</span><span class="si">}</span><span class="s2">reflection = &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_reflection_random_angle&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_reflection_random_angle&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_reflection_random_angle&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;align_vertical = </span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;align_horizontal = </span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_horizontal&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_horizontal&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_horizontal&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_horizontal&#39;</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_metric_text_box</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">metrics_text</span><span class="p">,</span> <span class="n">is_best</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add metric text box to plot.&quot;&quot;&quot;</span>
+    <span class="n">psf_color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span> <span class="k">if</span> <span class="n">is_best</span> <span class="k">else</span> <span class="s2">&quot;black&quot;</span>
+    <span class="n">psf_weight</span> <span class="o">=</span> <span class="s2">&quot;bold&quot;</span> <span class="k">if</span> <span class="n">is_best</span> <span class="k">else</span> <span class="s2">&quot;normal&quot;</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+        <span class="mf">0.5</span><span class="p">,</span>
+        <span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">metrics_text</span><span class="p">,</span>
+        <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+        <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">psf_color</span><span class="p">,</span>
+        <span class="n">weight</span><span class="o">=</span><span class="n">psf_weight</span><span class="p">,</span>
+        <span class="n">bbox</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;boxstyle&quot;</span><span class="p">:</span> <span class="s2">&quot;round,pad=0.3&quot;</span><span class="p">,</span> <span class="s2">&quot;facecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;yellow&quot;</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="mf">0.7</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">is_best</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_plot_annotations</span><span class="p">(</span>
+    <span class="n">ax</span><span class="p">,</span>
+    <span class="n">fig</span><span class="p">,</span>
+    <span class="n">pars</span><span class="p">,</span>
+    <span class="n">psf_diameter</span><span class="p">,</span>
+    <span class="n">metric</span><span class="p">,</span>
+    <span class="n">is_best</span><span class="p">,</span>
+    <span class="n">fraction</span><span class="o">=</span><span class="n">DEFAULT_FRACTION</span><span class="p">,</span>
+    <span class="n">p_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">second_metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add title, text annotations, and best parameter indicators to plot.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ax : matplotlib.axes.Axes</span>
+<span class="sd">        The plot axes</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        The plot figure</span>
+<span class="sd">    pars : dict</span>
+<span class="sd">        Parameter set dictionary</span>
+<span class="sd">    psf_diameter : float</span>
+<span class="sd">        PSF diameter value</span>
+<span class="sd">    metric : float</span>
+<span class="sd">        Primary metric value</span>
+<span class="sd">    is_best : bool</span>
+<span class="sd">        Whether this is the best parameter set</span>
+<span class="sd">    fraction : float, optional</span>
+<span class="sd">        PSF containment fraction (default: 0.8)</span>
+<span class="sd">    p_value : float, optional</span>
+<span class="sd">        P-value from KS test</span>
+<span class="sd">    use_ks_statistic : bool</span>
+<span class="sd">        If True, metric is KS statistic; if False, metric is RMSD</span>
+<span class="sd">    second_metric : float, optional</span>
+<span class="sd">        Second metric value to display</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">_build_parameter_title</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">is_best</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+
+    <span class="n">metrics_text</span> <span class="o">=</span> <span class="n">_format_metric_text</span><span class="p">(</span>
+        <span class="n">psf_diameter</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">fraction</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">use_ks_statistic</span><span class="p">,</span> <span class="n">second_metric</span>
+    <span class="p">)</span>
+    <span class="n">_add_metric_text_box</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">metrics_text</span><span class="p">,</span> <span class="n">is_best</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_best</span><span class="p">:</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+            <span class="mf">0.02</span><span class="p">,</span>
+            <span class="mf">0.02</span><span class="p">,</span>
+            <span class="s2">&quot;* Best parameter set (lowest RMSD)&quot;</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="s2">&quot;italic&quot;</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="create_psf_parameter_plot">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_psf.create_psf_parameter_plot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_psf_parameter_plot</span><span class="p">(</span>
+    <span class="n">data_to_plot</span><span class="p">,</span>
+    <span class="n">pars</span><span class="p">,</span>
+    <span class="n">psf_diameter</span><span class="p">,</span>
+    <span class="n">metric</span><span class="p">,</span>
+    <span class="n">is_best</span><span class="p">,</span>
+    <span class="n">pdf_pages</span><span class="p">,</span>
+    <span class="n">fraction</span><span class="o">=</span><span class="n">DEFAULT_FRACTION</span><span class="p">,</span>
+    <span class="n">p_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">second_metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a plot for PSF simulation results.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_to_plot : dict</span>
+<span class="sd">        Data dictionary for plotting.</span>
+<span class="sd">    pars : dict</span>
+<span class="sd">        Parameter set dictionary.</span>
+<span class="sd">    psf_diameter : float</span>
+<span class="sd">        PSF diameter value.</span>
+<span class="sd">    metric : float</span>
+<span class="sd">        RMSD value (if use_ks_statistic=False) or KS statistic (if use_ks_statistic=True).</span>
+<span class="sd">    is_best : bool</span>
+<span class="sd">        Whether this is the best parameter set.</span>
+<span class="sd">    pdf_pages : PdfPages</span>
+<span class="sd">        PDF pages object for saving plots.</span>
+<span class="sd">    fraction : float, optional</span>
+<span class="sd">        PSF containment fraction (default: 0.8).</span>
+<span class="sd">    p_value : float, optional</span>
+<span class="sd">        P-value from KS test (only used when use_ks_statistic=True).</span>
+<span class="sd">    use_ks_statistic : bool, optional</span>
+<span class="sd">        If True, metric is KS statistic; if False, metric is RMSD.</span>
+<span class="sd">    second_metric : float, optional</span>
+<span class="sd">        Second metric value to display alongside the primary metric (for final best plot).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">_create_base_plot_figure</span><span class="p">(</span><span class="n">data_to_plot</span><span class="p">)</span>
+
+    <span class="n">_add_plot_annotations</span><span class="p">(</span>
+        <span class="n">ax</span><span class="p">,</span>
+        <span class="n">fig</span><span class="p">,</span>
+        <span class="n">pars</span><span class="p">,</span>
+        <span class="n">psf_diameter</span><span class="p">,</span>
+        <span class="n">metric</span><span class="p">,</span>
+        <span class="n">is_best</span><span class="p">,</span>
+        <span class="n">fraction</span><span class="p">,</span>
+        <span class="n">p_value</span><span class="p">,</span>
+        <span class="n">use_ks_statistic</span><span class="p">,</span>
+        <span class="n">second_metric</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">pdf_pages</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="create_detailed_parameter_plot">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_psf.create_detailed_parameter_plot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_detailed_parameter_plot</span><span class="p">(</span>
+    <span class="n">pars</span><span class="p">,</span>
+    <span class="n">ks_statistic</span><span class="p">,</span>
+    <span class="n">psf_diameter</span><span class="p">,</span>
+    <span class="n">simulated_data</span><span class="p">,</span>
+    <span class="n">data_to_plot</span><span class="p">,</span>
+    <span class="n">is_best</span><span class="p">,</span>
+    <span class="n">pdf_pages</span><span class="p">,</span>
+    <span class="n">fraction</span><span class="o">=</span><span class="n">DEFAULT_FRACTION</span><span class="p">,</span>
+    <span class="n">p_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a detailed plot for a parameter set showing all parameter values.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pars : dict</span>
+<span class="sd">        Parameter set dictionary</span>
+<span class="sd">    ks_statistic : float</span>
+<span class="sd">        KS statistic value for this parameter set</span>
+<span class="sd">    psf_diameter : float</span>
+<span class="sd">        PSF diameter value for this parameter set</span>
+<span class="sd">    simulated_data : array</span>
+<span class="sd">        Simulated data for plotting</span>
+<span class="sd">    data_to_plot : dict</span>
+<span class="sd">        Data dictionary for plotting</span>
+<span class="sd">    is_best : bool</span>
+<span class="sd">        Whether this is the best parameter set</span>
+<span class="sd">    pdf_pages : PdfPages</span>
+<span class="sd">        PDF pages object to save the plot</span>
+<span class="sd">    fraction : float, optional</span>
+<span class="sd">        PSF containment fraction (default: 0.8)</span>
+<span class="sd">    p_value : float, optional</span>
+<span class="sd">        P-value from KS test for statistical significance</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check if we have valid simulated data for plotting</span>
+    <span class="k">if</span> <span class="n">simulated_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;No simulated data available for plotting this parameter set, skipping plot creation&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">_create_base_plot_figure</span><span class="p">(</span><span class="n">data_to_plot</span><span class="p">,</span> <span class="n">simulated_data</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to create plot for parameters: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">_add_plot_annotations</span><span class="p">(</span>
+        <span class="n">ax</span><span class="p">,</span>
+        <span class="n">fig</span><span class="p">,</span>
+        <span class="n">pars</span><span class="p">,</span>
+        <span class="n">psf_diameter</span><span class="p">,</span>
+        <span class="n">ks_statistic</span><span class="p">,</span>
+        <span class="n">is_best</span><span class="p">,</span>
+        <span class="n">fraction</span><span class="p">,</span>
+        <span class="n">p_value</span><span class="p">,</span>
+        <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">second_metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">pdf_pages</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="create_parameter_progression_plots">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_psf.create_parameter_progression_plots">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_parameter_progression_plots</span><span class="p">(</span>
+    <span class="n">results</span><span class="p">,</span> <span class="n">best_pars</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="n">DEFAULT_FRACTION</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create plots for all parameter sets showing optimization progression.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results : list</span>
+<span class="sd">        List of (pars, ks_statistic, p_value, psf_diameter, simulated_data) tuples</span>
+<span class="sd">    best_pars : dict</span>
+<span class="sd">        Best parameter set for highlighting</span>
+<span class="sd">    data_to_plot : dict</span>
+<span class="sd">        Data dictionary for plotting</span>
+<span class="sd">    pdf_pages : PdfPages</span>
+<span class="sd">        PDF pages object to save plots</span>
+<span class="sd">    fraction : float, optional</span>
+<span class="sd">        PSF containment fraction (default: 0.8)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating plots for all parameter sets...&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">ks_statistic</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">psf_diameter</span><span class="p">,</span> <span class="n">simulated_data</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">simulated_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No simulated data for iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, skipping plot&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">is_best</span> <span class="o">=</span> <span class="n">pars</span> <span class="ow">is</span> <span class="n">best_pars</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating plot </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}{</span><span class="s1">&#39; (BEST)&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">is_best</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">create_detailed_parameter_plot</span><span class="p">(</span>
+            <span class="n">pars</span><span class="p">,</span>
+            <span class="n">ks_statistic</span><span class="p">,</span>
+            <span class="n">psf_diameter</span><span class="p">,</span>
+            <span class="n">simulated_data</span><span class="p">,</span>
+            <span class="n">data_to_plot</span><span class="p">,</span>
+            <span class="n">is_best</span><span class="p">,</span>
+            <span class="n">pdf_pages</span><span class="p">,</span>
+            <span class="n">fraction</span><span class="p">,</span>
+            <span class="n">p_value</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_gradient_descent_convergence_plot">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_psf.create_gradient_descent_convergence_plot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_gradient_descent_convergence_plot</span><span class="p">(</span>
+    <span class="n">gd_results</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="n">DEFAULT_FRACTION</span><span class="p">,</span> <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create convergence plot during gradient descent.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    gd_results : list</span>
+<span class="sd">        List of (params, metric, p_value, psf_diameter, simulated_data) tuples from gradient descent</span>
+<span class="sd">    threshold : float</span>
+<span class="sd">        Optimization metric threshold used for convergence</span>
+<span class="sd">    output_file : Path</span>
+<span class="sd">        Output file path for saving the plot</span>
+<span class="sd">    fraction : float, optional</span>
+<span class="sd">        PSF containment fraction for labeling (default: 0.8)</span>
+<span class="sd">    use_ks_statistic : bool</span>
+<span class="sd">        Whether to use KS statistic or RMSD labels and titles</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating gradient descent convergence plot...&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check if results include p-values (for KS statistic mode)</span>
+    <span class="n">has_p_values</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gd_results</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">gd_results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">has_p_values</span> <span class="ow">and</span> <span class="n">use_ks_statistic</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">iterations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">gd_results</span><span class="p">)))</span>
+    <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">gd_results</span><span class="p">]</span>
+    <span class="n">psf_diameters</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">gd_results</span><span class="p">]</span>
+
+    <span class="n">metric_name</span> <span class="o">=</span> <span class="s2">&quot;KS Statistic&quot;</span> <span class="k">if</span> <span class="n">use_ks_statistic</span> <span class="k">else</span> <span class="s2">&quot;RMSD&quot;</span>
+    <span class="n">psf_label</span> <span class="o">=</span> <span class="n">get_psf_diameter_label</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span>
+
+    <span class="c1"># Plot optimization metric progression</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="s2">&quot;b.-&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Threshold: </span><span class="si">{</span><span class="n">threshold</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Iteration&quot;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">metric_name</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Gradient Descent Convergence - </span><span class="si">{</span><span class="n">metric_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+    <span class="c1"># Plot PSF diameter progression</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="n">psf_diameters</span><span class="p">,</span> <span class="s2">&quot;g.-&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Iteration&quot;</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">psf_label</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Gradient Descent Convergence - </span><span class="si">{</span><span class="n">get_psf_diameter_label</span><span class="p">(</span><span class="n">fraction</span><span class="p">,</span><span class="w"> </span><span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+    <span class="c1"># Plot p-value progression if available and using KS statistic</span>
+    <span class="k">if</span> <span class="n">has_p_values</span> <span class="ow">and</span> <span class="n">use_ks_statistic</span><span class="p">:</span>
+        <span class="n">p_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">gd_results</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">p_iterations</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gd_results</span><span class="p">)</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="n">ax3</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">p_iterations</span><span class="p">,</span> <span class="n">p_values</span><span class="p">,</span> <span class="s2">&quot;m.-&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span>
+            <span class="n">y</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;p = 0.05 (significance)&quot;</span>
+        <span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span>
+            <span class="n">y</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;p = 0.01 (high significance)&quot;</span>
+        <span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Iteration&quot;</span><span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;p-value&quot;</span><span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Gradient Descent Convergence - Statistical Significance&quot;</span><span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>  <span class="c1"># Log scale for p-values</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Convergence plot saved to </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_monte_carlo_uncertainty_plot">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_psf.create_monte_carlo_uncertainty_plot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_monte_carlo_uncertainty_plot</span><span class="p">(</span>
+    <span class="n">mc_results</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="n">DEFAULT_FRACTION</span><span class="p">,</span> <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create uncertainty analysis plots showing optimization metric and p-value distributions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mc_results : tuple</span>
+<span class="sd">        Results from Monte Carlo analysis: (mean_metric, std_metric, metric_values,</span>
+<span class="sd">        mean_p, std_p, p_values, mean_psf_diameter, std_psf_diameter, psf_diameter_values)</span>
+<span class="sd">    output_file : Path</span>
+<span class="sd">        Output file path for saving the plot</span>
+<span class="sd">    fraction : float, optional</span>
+<span class="sd">        PSF containment fraction for labeling (default: 0.8)</span>
+<span class="sd">    use_ks_statistic : bool, optional</span>
+<span class="sd">        Whether KS statistic mode is being used (affects filename suffix)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="p">(</span>
+        <span class="n">mean_metric</span><span class="p">,</span>
+        <span class="n">std_metric</span><span class="p">,</span>
+        <span class="n">metric_values</span><span class="p">,</span>
+        <span class="n">mean_p_value</span><span class="p">,</span>
+        <span class="n">_</span><span class="p">,</span>  <span class="c1"># std_p_value (unused)</span>
+        <span class="n">p_values</span><span class="p">,</span>
+        <span class="n">mean_psf_diameter</span><span class="p">,</span>
+        <span class="n">std_psf_diameter</span><span class="p">,</span>
+        <span class="n">psf_diameter_values</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">mc_results</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating Monte Carlo uncertainty analysis plot...&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check if we have valid p-values to determine if this is KS statistic or RMSD mode</span>
+    <span class="n">valid_p_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">p_values</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span> <span class="k">if</span> <span class="n">p_values</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="n">is_ks_mode</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_p_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="c1"># Create subplot layout based on mode</span>
+    <span class="k">if</span> <span class="n">is_ks_mode</span><span class="p">:</span>
+        <span class="c1"># KS mode: 2x2 layout with all 4 plots</span>
+        <span class="n">_</span><span class="p">,</span> <span class="p">((</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">),</span> <span class="p">(</span><span class="n">ax3</span><span class="p">,</span> <span class="n">ax4</span><span class="p">))</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># RMSD mode: 1x2 layout with only metric and PSF diameter plots</span>
+        <span class="n">_</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax3</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Metric histogram (KS statistic or RMSD)</span>
+    <span class="n">metric_name</span> <span class="o">=</span> <span class="s2">&quot;KS Statistic&quot;</span> <span class="k">if</span> <span class="n">is_ks_mode</span> <span class="k">else</span> <span class="s2">&quot;RMSD&quot;</span>
+    <span class="n">psf_label</span> <span class="o">=</span> <span class="n">get_psf_diameter_label</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span>
+
+    <span class="n">ax1</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">metric_values</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span>
+        <span class="n">mean_metric</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Mean: </span><span class="si">{</span><span class="n">mean_metric</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span>
+        <span class="n">mean_metric</span> <span class="o">-</span> <span class="n">std_metric</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span>
+        <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;$</span><span class="se">\\</span><span class="s2">sigma$: </span><span class="si">{</span><span class="n">std_metric</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">mean_metric</span> <span class="o">+</span> <span class="n">std_metric</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">metric_name</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Counts&quot;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric_name</span><span class="si">}</span><span class="s2"> Distribution&quot;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+    <span class="c1"># p-value histogram (only for KS statistic mode)</span>
+    <span class="k">if</span> <span class="n">is_ks_mode</span><span class="p">:</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">valid_p_values</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;magenta&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mean_p_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span>
+                <span class="n">mean_p_value</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span>
+                <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span>
+                <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Mean: </span><span class="si">{</span><span class="n">mean_p_value</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;p = 0.05&quot;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;p = 0.01&quot;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;p-value&quot;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Counts&quot;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;p-value Distribution&quot;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+    <span class="c1"># PSF diameter histogram</span>
+    <span class="n">ax3</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">psf_diameter_values</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+    <span class="n">ax3</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span>
+        <span class="n">mean_psf_diameter</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span>
+        <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span>
+        <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Mean: </span><span class="si">{</span><span class="n">mean_psf_diameter</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> cm&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax3</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span>
+        <span class="n">mean_psf_diameter</span> <span class="o">-</span> <span class="n">std_psf_diameter</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span>
+        <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;$</span><span class="se">\\</span><span class="s2">sigma$: </span><span class="si">{</span><span class="n">std_psf_diameter</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> cm&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax3</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">mean_psf_diameter</span> <span class="o">+</span> <span class="n">std_psf_diameter</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+    <span class="n">ax3</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">psf_label</span><span class="p">)</span>
+    <span class="n">ax3</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Counts&quot;</span><span class="p">)</span>
+    <span class="n">ax3</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">get_psf_diameter_label</span><span class="p">(</span><span class="n">fraction</span><span class="p">,</span><span class="w"> </span><span class="n">unit</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> Distribution&quot;</span><span class="p">)</span>
+    <span class="n">ax3</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">ax3</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+    <span class="c1"># Scatter plot: Metric vs p-value (only for KS statistic mode)</span>
+    <span class="k">if</span> <span class="n">is_ks_mode</span><span class="p">:</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">metric_values</span><span class="p">,</span> <span class="n">valid_p_values</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;purple&quot;</span><span class="p">)</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;p = 0.05&quot;</span><span class="p">)</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;p = 0.01&quot;</span><span class="p">)</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">metric_name</span><span class="p">)</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;p-value&quot;</span><span class="p">)</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric_name</span><span class="si">}</span><span class="s2"> vs p-value Correlation&quot;</span><span class="p">)</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+    <span class="c1"># Save plot in both PDF and PNG formats with appropriate suffix</span>
+    <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;_ks&quot;</span> <span class="k">if</span> <span class="n">use_ks_statistic</span> <span class="k">else</span> <span class="s2">&quot;_rmsd&quot;</span>
+
+    <span class="c1"># Generate base filename without extension</span>
+    <span class="n">base_path</span> <span class="o">=</span> <span class="n">output_file</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">base_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">base_path</span><span class="p">)</span>
+
+    <span class="c1"># Add suffix and save in both formats</span>
+    <span class="n">pdf_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_name</span><span class="si">}{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">.pdf&quot;</span>
+    <span class="n">png_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_name</span><span class="si">}{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">.png&quot;</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">pdf_file</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">png_file</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Monte Carlo uncertainty plot saved to </span><span class="si">{</span><span class="n">pdf_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Monte Carlo uncertainty plot saved to </span><span class="si">{</span><span class="n">png_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_psf_vs_offaxis_plot">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_psf.create_psf_vs_offaxis_plot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_psf_vs_offaxis_plot</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">best_pars</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create PSF diameter vs off-axis angle plot using the best parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tel_model : TelescopeModel</span>
+<span class="sd">        Telescope model object.</span>
+<span class="sd">    site_model : SiteModel</span>
+<span class="sd">        Site model object.</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing parsed command-line arguments.</span>
+<span class="sd">    best_pars : dict</span>
+<span class="sd">        Best parameter set.</span>
+<span class="sd">    output_dir : Path</span>
+<span class="sd">        Output directory for saving plots.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fraction</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="n">DEFAULT_FRACTION</span><span class="p">)</span>
+    <span class="n">psf_label_cm</span> <span class="o">=</span> <span class="n">get_psf_diameter_label</span><span class="p">(</span><span class="n">fraction</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;cm&quot;</span><span class="p">)</span>
+    <span class="n">psf_label_deg</span> <span class="o">=</span> <span class="n">get_psf_diameter_label</span><span class="p">(</span><span class="n">fraction</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;degrees&quot;</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating </span><span class="si">{</span><span class="n">psf_label_cm</span><span class="si">}</span><span class="s2"> vs off-axis angle plot with best parameters...&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Apply best parameters to telescope model</span>
+    <span class="n">tel_model</span><span class="o">.</span><span class="n">overwrite_parameters</span><span class="p">(</span><span class="n">best_pars</span><span class="p">)</span>
+
+    <span class="c1"># Create off-axis angle array</span>
+    <span class="n">max_offset</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_offset&quot;</span><span class="p">,</span> <span class="n">MAX_OFFSET_DEFAULT</span><span class="p">)</span>
+    <span class="n">offset_steps</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;offset_steps&quot;</span><span class="p">,</span> <span class="n">OFFSET_STEPS_DEFAULT</span><span class="p">)</span>
+    <span class="n">off_axis_angles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">max_offset</span><span class="p">,</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">max_offset</span> <span class="o">/</span> <span class="n">offset_steps</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="p">(</span>
+        <span class="n">telescope_model</span><span class="o">=</span><span class="n">tel_model</span><span class="p">,</span>
+        <span class="n">site_model</span><span class="o">=</span><span class="n">site_model</span><span class="p">,</span>
+        <span class="n">zenith_angle</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;zenith&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="n">source_distance</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;src_distance&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span>
+        <span class="n">off_axis_angle</span><span class="o">=</span><span class="n">off_axis_angles</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running ray tracing for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">off_axis_angles</span><span class="p">)</span><span class="si">}</span><span class="s2"> off-axis angles...&quot;</span><span class="p">)</span>
+    <span class="n">ray</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ray</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;d80_cm&quot;</span><span class="p">,</span> <span class="s2">&quot;d80_deg&quot;</span><span class="p">]:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">ray</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+
+        <span class="n">parameters_text</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Best Parameters: </span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;reflection=[&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">best_pars</span><span class="p">[</span><span class="s1">&#39;mirror_reflection_random_angle&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">],</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;align_horizontal=[&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">best_pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_horizontal&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">]</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;align_vertical=[&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">best_pars</span><span class="p">[</span><span class="s1">&#39;mirror_align_random_vertical&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">]</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">parameters_text</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Off-axis Angle (degrees)&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">psf_label_cm</span> <span class="k">if</span> <span class="s2">&quot;_cm&quot;</span> <span class="ow">in</span> <span class="n">key</span> <span class="k">else</span> <span class="n">psf_label_deg</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_offset</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+        <span class="c1"># Create dynamic file name based on fraction</span>
+        <span class="n">psf_identifier</span> <span class="o">=</span> <span class="n">get_psf_diameter_label</span><span class="p">(</span><span class="n">fraction</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>  <span class="c1"># e.g., &quot;d80&quot;, &quot;d95&quot;</span>
+        <span class="n">unit_suffix</span> <span class="o">=</span> <span class="s2">&quot;cm&quot;</span> <span class="k">if</span> <span class="s2">&quot;_cm&quot;</span> <span class="ow">in</span> <span class="n">key</span> <span class="k">else</span> <span class="s2">&quot;deg&quot;</span>
+        <span class="n">plot_file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_best_params_</span><span class="si">{</span><span class="n">psf_identifier</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">unit_suffix</span><span class="si">}</span><span class="s2">.png&quot;</span>
+        <span class="n">plot_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">plot_file_name</span><span class="p">)</span>
+        <span class="n">visualize</span><span class="o">.</span><span class="n">save_figure</span><span class="p">(</span>
+            <span class="n">plt</span><span class="p">,</span> <span class="n">plot_file</span><span class="p">,</span> <span class="n">figure_format</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;png&quot;</span><span class="p">],</span> <span class="n">log_title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">psf_label_cm</span><span class="si">}</span><span class="s2"> vs off-axis (</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="setup_pdf_plotting">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_psf.setup_pdf_plotting">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">setup_pdf_plotting</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">tel_model_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set up PDF plotting for gradient descent optimization if requested.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing command-line arguments with plot_all flag.</span>
+<span class="sd">    output_dir : Path</span>
+<span class="sd">        Directory where the PDF file will be saved.</span>
+<span class="sd">    tel_model_name : str</span>
+<span class="sd">        Name of the telescope model for filename generation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    PdfPages or None</span>
+<span class="sd">        PdfPages object for saving plots if plotting is requested, None otherwise.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Creates a PDF file for saving cumulative PSF plots during gradient descent</span>
+<span class="sd">    optimization. Returns None if plotting is not requested via the plot_all flag.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_all&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">pdf_filename</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;psf_gradient_descent_plots_</span><span class="si">{</span><span class="n">tel_model_name</span><span class="si">}</span><span class="s2">.pdf&quot;</span>
+    <span class="n">pdf_pages</span> <span class="o">=</span> <span class="n">PdfPages</span><span class="p">(</span><span class="n">pdf_filename</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating cumulative PSF plots for each iteration (saving to </span><span class="si">{</span><span class="n">pdf_filename</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pdf_pages</span></div>
+
+
+
+<div class="viewcode-block" id="create_optimization_plots">
+<a class="viewcode-back" href="../../api-reference/visualization.html#visualization.plot_psf.create_optimization_plots">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_optimization_plots</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">gd_results</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create optimization plots for all iterations if requested.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing command-line arguments with save_plots flag.</span>
+<span class="sd">    gd_results : list</span>
+<span class="sd">        List of (params, rmsd, _, psf_diameter, _) tuples from gradient descent optimization.</span>
+<span class="sd">    tel_model : TelescopeModel</span>
+<span class="sd">        Telescope model object for naming files.</span>
+<span class="sd">    data_to_plot : dict</span>
+<span class="sd">        Dictionary containing measured PSF data.</span>
+<span class="sd">    output_dir : Path</span>
+<span class="sd">        Directory where the PDF file will be saved.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Creates a PDF file with plots for optimization iterations. Only creates plots</span>
+<span class="sd">    every 5 iterations plus the final iteration to avoid excessively large files.</span>
+<span class="sd">    Returns early if save_plots flag is not set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save_plots&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="n">fraction</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="n">DEFAULT_FRACTION</span><span class="p">)</span>
+    <span class="n">pdf_filename</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;psf_optimization_results_</span><span class="si">{</span><span class="n">tel_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.pdf&quot;</span><span class="p">)</span>
+    <span class="n">pdf_pages</span> <span class="o">=</span> <span class="n">PdfPages</span><span class="p">(</span><span class="n">pdf_filename</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating PSF plots for each optimization iteration (saving to </span><span class="si">{</span><span class="n">pdf_filename</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">psf_diameter</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gd_results</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">5</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">gd_results</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">create_psf_parameter_plot</span><span class="p">(</span>
+                <span class="n">data_to_plot</span><span class="p">,</span>
+                <span class="n">params</span><span class="p">,</span>
+                <span class="n">psf_diameter</span><span class="p">,</span>
+                <span class="n">rmsd</span><span class="p">,</span>
+                <span class="n">is_best</span><span class="o">=</span><span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">gd_results</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">pdf_pages</span><span class="o">=</span><span class="n">pdf_pages</span><span class="p">,</span>
+                <span class="n">fraction</span><span class="o">=</span><span class="n">fraction</span><span class="p">,</span>
+                <span class="n">use_ks_statistic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="n">pdf_pages</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

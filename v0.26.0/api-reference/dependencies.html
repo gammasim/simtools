@@ -1,0 +1,1049 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Application, dependency and version management. &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=4aa2dafa"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/dependencies';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Database support" href="db_handler.html" />
+    <link rel="prev" title="Data Model" href="data_model.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.26.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="camera.html">Camera</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Application, dependency and version management.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="db_handler.html">Database support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array_layout.html">Layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mc_model.html">MC Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="production_configuration.html">Production Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runners.html">Runners for simulation software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_events.html">Simulation Event I/O and Processing Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">API</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Application, dependency and version management.</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="application-dependency-and-version-management">
+<span id="dependencymanagement"></span><h1>Application, dependency and version management.<a class="headerlink" href="#application-dependency-and-version-management" title="Link to this heading">#</a></h1>
+<section id="settings">
+<span id="id1"></span><h2>settings<a class="headerlink" href="#settings" title="Link to this heading">#</a></h2>
+<p id="module-simtools.settings">Centralized settings object with command line and environment variables.</p>
+</section>
+<section id="application-control">
+<span id="id2"></span><h2>application_control<a class="headerlink" href="#application-control" title="Link to this heading">#</a></h2>
+<p id="module-simtools.application_control">Application control utilities for startup and shutdown simtools applications.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simtools.application_control.ApplicationContext">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtools.application_control.</span></span><span class="sig-name descname"><span class="pre">ApplicationContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/logging.html#logging.Logger" title="(in Python v3.12)"><span class="pre">Logger</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="io.html#simtools.io.io_handler.IOHandler" title="simtools.io.io_handler.IOHandler"><span class="pre">IOHandler</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/application_control.html#ApplicationContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.application_control.ApplicationContext" title="Link to this definition">#</a></dt>
+<dd><p>Container for common application context elements.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.application_control.get_application_label">
+<span class="sig-prename descclassname"><span class="pre">simtools.application_control.</span></span><span class="sig-name descname"><span class="pre">get_application_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/application_control.html#get_application_label"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.application_control.get_application_label" title="Link to this definition">#</a></dt>
+<dd><p>Get application label from file path.</p>
+<p>This is a convenience function to extract the application name from __file__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_path</strong><span class="classifier">str</span></dt><dd><p>The __file__ variable from the calling application.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Application label (filename without extension).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">get_application_label</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+    <span class="c1"># label will be the filename without .py extension</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtools.application_control.startup_application">
+<span class="sig-prename descclassname"><span class="pre">simtools.application_control.</span></span><span class="sig-name descname"><span class="pre">startup_application</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parse_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setup_io_handler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtools/application_control.html#startup_application"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtools.application_control.startup_application" title="Link to this definition">#</a></dt>
+<dd><p>Initialize common application startup tasks.</p>
+<p>This function handles the repetitive startup tasks common to most simtools applications:</p>
+<ul class="simple">
+<li><p>Parse command line arguments and configuration</p></li>
+<li><p>Set up logging with appropriate level</p></li>
+<li><p>Optionally initialize IOHandler</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>parse_function</strong><span class="classifier">Callable</span></dt><dd><p>Function that parses configuration and returns (args_dict, db_config) tuple.
+This should be the application’s _parse() function.</p>
+</dd>
+<dt><strong>setup_io_handler</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to initialize and return an IOHandler instance. Default is True.</p>
+</dd>
+<dt><strong>logger_name</strong><span class="classifier">str, optional</span></dt><dd><p>Name for the logger. If None, uses the root logger. Default is None.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Parsed command line arguments and configuration.</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict</span></dt><dd><p>Database configuration dictionary.</p>
+</dd>
+<dt><strong>logger</strong><span class="classifier">logging.Logger</span></dt><dd><p>Configured logger instance.</p>
+</dd>
+<dt><strong>io_handler_instance</strong><span class="classifier">io_handler.IOHandler or None</span></dt><dd><p>IOHandler instance if setup_io_handler=True, None otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Basic usage in an application:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">)</span>
+
+    <span class="c1"># Application-specific code follows</span>
+    <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting application&quot;</span><span class="p">)</span>
+    <span class="c1"># ... rest of application logic</span>
+</pre></div>
+</div>
+<p>Usage without IOHandler:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">startup_application</span><span class="p">(</span><span class="n">_parse</span><span class="p">,</span> <span class="n">setup_io_handler</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Application-specific code follows</span>
+    <span class="n">app_context</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting application&quot;</span><span class="p">)</span>
+    <span class="c1"># ... rest of application logic</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="dependencies">
+<span id="id3"></span><h2>dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h2>
+<p id="module-dependencies">Simtools dependencies version management.</p>
+<p>This modules provides two main functionalities:</p>
+<ul class="simple">
+<li><p>retrieve the versions of simtools dependencies (e.g., databases, sim_telarray, CORSIKA)</p></li>
+<li><p>provide space for future implementations of version management</p></li>
+</ul>
+<dl class="py function">
+<dt class="sig sig-object py" id="dependencies.export_build_info">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">export_build_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#export_build_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.export_build_info" title="Link to this definition">#</a></dt>
+<dd><p>Export build and version information to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>output_file</strong><span class="classifier">str</span></dt><dd><p>Path to the output file.</p>
+</dd>
+<dt><strong>run_time</strong><span class="classifier">list, optional</span></dt><dd><p>Runtime environment command (e.g., Docker).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dependencies.get_build_options">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_build_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_build_options"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_build_options" title="Link to this definition">#</a></dt>
+<dd><p>Return CORSIKA / sim_telarray config and build options.</p>
+<p>For CORSIKA / sim_telarray build for simtools version &gt;0.25.0:
+expects build_opts.yml file in each CORSIKA and sim_telarray
+directories.</p>
+<p>For CORSIKA / sim_telarray build for simtools version &lt;=0.25.0:
+expects a build_opts.yml file in the sim_telarray directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>run_time</strong><span class="classifier">list, optional</span></dt><dd><p>Runtime environment command (e.g., Docker).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>CORSIKA / sim_telarray build options.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dependencies.get_corsika_version">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_corsika_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_corsika_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_corsika_version" title="Link to this definition">#</a></dt>
+<dd><p>Get the version of the CORSIKA package.</p>
+<p>Version strings for CORSIKA are of the form “7.7550” (major.minor with 4-digit minor).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>run_time</strong><span class="classifier">list, optional</span></dt><dd><p>Runtime environment command (e.g., Docker).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Version of the CORSIKA package.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dependencies.get_database_version_or_name">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_database_version_or_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_database_version_or_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_database_version_or_name" title="Link to this definition">#</a></dt>
+<dd><p>Get the version or name of the simulation model data base used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>version</strong><span class="classifier">bool</span></dt><dd><p>If True, return the version of the database. If False, return the name.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Version or name of the simulation model data base used.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dependencies.get_sim_telarray_version">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_sim_telarray_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_sim_telarray_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_sim_telarray_version" title="Link to this definition">#</a></dt>
+<dd><p>Get the version of the sim_telarray package using ‘sim_telarray –version’.</p>
+<p>Version strings for sim_telarray are of the form “2024.271.0” (year.day_of_year.patch).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>run_time</strong><span class="classifier">list, optional</span></dt><dd><p>Runtime environment command (e.g., Docker).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Version of the sim_telarray package.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dependencies.get_software_version">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_software_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">software</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_software_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_software_version" title="Link to this definition">#</a></dt>
+<dd><p>Return the version of the specified software package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>software</strong><span class="classifier">str</span></dt><dd><p>Name of the software package.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Version of the specified software package.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dependencies.get_version_string">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_version_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_version_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_version_string" title="Link to this definition">#</a></dt>
+<dd><p>Print the versions of the dependencies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>run_time</strong><span class="classifier">list, optional</span></dt><dd><p>Runtime environment command (e.g., Docker).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>String containing the versions of the dependencies.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="version">
+<span id="id4"></span><h2>version<a class="headerlink" href="#version" title="Link to this heading">#</a></h2>
+<p id="module-version">Software version setting.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="version.check_version_constraint">
+<span class="sig-prename descclassname"><span class="pre">version.</span></span><span class="sig-name descname"><span class="pre">check_version_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraint</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/version.html#check_version_constraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#version.check_version_constraint" title="Link to this definition">#</a></dt>
+<dd><p>Check if a version satisfies a constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>version_string</strong><span class="classifier">str</span></dt><dd><p>The version string to check (e.g., “6.0.2”).</p>
+</dd>
+<dt><strong>constraint</strong><span class="classifier">str</span></dt><dd><p>The version constraint to check against (e.g., “&gt;=6.0.0”).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if the version satisfies the constraint, False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="version.compare_versions">
+<span class="sig-prename descclassname"><span class="pre">version.</span></span><span class="sig-name descname"><span class="pre">compare_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version_string_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version_string_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'major.minor.patch'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/version.html#compare_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#version.compare_versions" title="Link to this definition">#</a></dt>
+<dd><p>Compare two versions at the given level: “major”, “major.minor”, “major.minor.patch”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>version_string_1</strong><span class="classifier">str</span></dt><dd><p>First version string to compare.</p>
+</dd>
+<dt><strong>version_string_2</strong><span class="classifier">str</span></dt><dd><p>Second version string to compare.</p>
+</dd>
+<dt><strong>level</strong><span class="classifier">str, optional</span></dt><dd><p>Level of comparison: “major”, “major.minor”, or “major.minor.patch”</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>int</dt><dd><dl class="simple">
+<dt>-1 if version_string_1 &lt; version_string_2</dt><dd><p>0 if version_string_1 == version_string_2
+1 if version_string_1 &gt; version_string_2</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="version.is_valid_semantic_version">
+<span class="sig-prename descclassname"><span class="pre">version.</span></span><span class="sig-name descname"><span class="pre">is_valid_semantic_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/version.html#is_valid_semantic_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#version.is_valid_semantic_version" title="Link to this definition">#</a></dt>
+<dd><p>Check if a string is a valid semantic version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>version_string</strong><span class="classifier">str</span></dt><dd><p>The version string to validate (e.g., “6.0.2”, “1.0.0-alpha”).</p>
+</dd>
+<dt><strong>strict</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, use PEP 440 validation (packaging.version.Version).
+If False, use SemVer 2.0.0 regex pattern (allows more flexible pre-release identifiers).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if the version string is valid, False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="version.resolve_version_to_latest_patch">
+<span class="sig-prename descclassname"><span class="pre">version.</span></span><span class="sig-name descname"><span class="pre">resolve_version_to_latest_patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">partial_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">available_versions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/version.html#resolve_version_to_latest_patch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#version.resolve_version_to_latest_patch" title="Link to this definition">#</a></dt>
+<dd><p>Resolve a partial version (major.minor) to the latest patch version.</p>
+<p>Given a partial version string (e.g., “6.0”) and a list of available versions,
+finds the latest patch version that matches the major.minor pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>partial_version</strong><span class="classifier">str</span></dt><dd><p>Partial version string in format “major.minor” (e.g., “6.0”, “5.2”)</p>
+</dd>
+<dt><strong>available_versions</strong><span class="classifier">list of str</span></dt><dd><p>List of available semantic versions (e.g., [“5.0.0”, “5.0.1”, “6.0.0”, “6.0.2”])</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Latest patch version matching the partial version pattern</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If partial_version is not in major.minor format</p>
+</dd>
+<dt>ValueError</dt><dd><p>If no matching versions are found</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">versions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;5.0.0&quot;</span><span class="p">,</span> <span class="s2">&quot;5.0.1&quot;</span><span class="p">,</span> <span class="s2">&quot;6.0.0&quot;</span><span class="p">,</span> <span class="s2">&quot;6.0.2&quot;</span><span class="p">,</span> <span class="s2">&quot;6.1.0&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_version_to_latest_patch</span><span class="p">(</span><span class="s2">&quot;6.0&quot;</span><span class="p">,</span> <span class="n">versions</span><span class="p">)</span>
+<span class="go">&#39;6.0.2&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_version_to_latest_patch</span><span class="p">(</span><span class="s2">&quot;5.0&quot;</span><span class="p">,</span> <span class="n">versions</span><span class="p">)</span>
+<span class="go">&#39;5.0.1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_version_to_latest_patch</span><span class="p">(</span><span class="s2">&quot;5.0.1&quot;</span><span class="p">,</span> <span class="n">versions</span><span class="p">)</span>
+<span class="go">&#39;5.0.1&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="version.semver_to_int">
+<span class="sig-prename descclassname"><span class="pre">version.</span></span><span class="sig-name descname"><span class="pre">semver_to_int</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version_string</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/version.html#semver_to_int"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#version.semver_to_int" title="Link to this definition">#</a></dt>
+<dd><p>Convert a semantic version string to an integer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>version_string</strong><span class="classifier">str</span></dt><dd><p>Semantic version string (e.g., “6.0.2”)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>int</dt><dd><p>Integer representation of the version (e.g., 60002 for “6.0.2”)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="version.sort_versions">
+<span class="sig-prename descclassname"><span class="pre">version.</span></span><span class="sig-name descname"><span class="pre">sort_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/version.html#sort_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#version.sort_versions" title="Link to this definition">#</a></dt>
+<dd><p>Sort a list of semantic version strings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>version_list</strong><span class="classifier">list of str</span></dt><dd><p>List of semantic version strings (e.g., [“5.0.0”, “6.0.2”, “5.1.0”])</p>
+</dd>
+<dt><strong>reverse</strong><span class="classifier">bool, optional</span></dt><dd><p>Sort in descending order if True (default False)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list of str</dt><dd><p>Sorted list of version strings.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="version.version_kind">
+<span class="sig-prename descclassname"><span class="pre">version.</span></span><span class="sig-name descname"><span class="pre">version_kind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version_string</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/version.html#version_kind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#version.version_kind" title="Link to this definition">#</a></dt>
+<dd><p>Determine the kind of version string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>version_string</strong><span class="classifier">str</span></dt><dd><p>The version string to analyze.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>The kind of version string (“major.minor”, “major.minor.patch”, or “major”).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="data_model.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Data Model</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="db_handler.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Database support</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#settings">settings</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#application-control">application_control</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.application_control.ApplicationContext"><code class="docutils literal notranslate"><span class="pre">ApplicationContext</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.application_control.get_application_label"><code class="docutils literal notranslate"><span class="pre">get_application_label()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools.application_control.startup_application"><code class="docutils literal notranslate"><span class="pre">startup_application()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">dependencies</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.export_build_info"><code class="docutils literal notranslate"><span class="pre">export_build_info()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_build_options"><code class="docutils literal notranslate"><span class="pre">get_build_options()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_corsika_version"><code class="docutils literal notranslate"><span class="pre">get_corsika_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_database_version_or_name"><code class="docutils literal notranslate"><span class="pre">get_database_version_or_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_sim_telarray_version"><code class="docutils literal notranslate"><span class="pre">get_sim_telarray_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_software_version"><code class="docutils literal notranslate"><span class="pre">get_software_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_version_string"><code class="docutils literal notranslate"><span class="pre">get_version_string()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version">version</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version.check_version_constraint"><code class="docutils literal notranslate"><span class="pre">check_version_constraint()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version.compare_versions"><code class="docutils literal notranslate"><span class="pre">compare_versions()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version.is_valid_semantic_version"><code class="docutils literal notranslate"><span class="pre">is_valid_semantic_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version.resolve_version_to_latest_patch"><code class="docutils literal notranslate"><span class="pre">resolve_version_to_latest_patch()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version.semver_to_int"><code class="docutils literal notranslate"><span class="pre">semver_to_int()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version.sort_versions"><code class="docutils literal notranslate"><span class="pre">sort_versions()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version.version_kind"><code class="docutils literal notranslate"><span class="pre">version_kind()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api-reference/dependencies.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2025, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
