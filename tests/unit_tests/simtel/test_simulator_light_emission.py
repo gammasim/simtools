@@ -1624,6 +1624,6 @@ def test__get_angular_distribution_string_for_sim_telarray_isotropic(simulator_i
     result = simulator_instance._get_angular_distribution_string_for_sim_telarray()
     assert result == "isotropic"
 
-    # Verify width was NOT requested (or at least not used in the return string)
-    # Based on implementation, width is requested AFTER the check, so it should NOT be called.
+    # Verify width was NOT requested: the implementation returns early for isotropic distributions
+    # before attempting to fetch the width via get_parameter_value_with_unit.
     simulator_instance.calibration_model.get_parameter_value_with_unit.assert_not_called()
