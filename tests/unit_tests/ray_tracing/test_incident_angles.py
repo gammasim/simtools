@@ -806,9 +806,13 @@ def test_save_model_parameters(calculator, tmp_test_directory, monkeypatch):
 
     calculator.save_model_parameters(results_by_offset)
 
-    # Check if ModelDataWriter was called
+    # ModelDataWriter should be instantiated for each written parameter
     assert mock_writer.call_count > 0
-    # Check if dump_model_parameter was called
+
+    writer_instance = mock_writer.return_value
+    assert writer_instance.write.call_count > 0
+
+    # dump_model_parameter is a class/static method and should be called as well
     assert mock_writer.dump_model_parameter.call_count > 0
 
 
