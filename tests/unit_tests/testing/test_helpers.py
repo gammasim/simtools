@@ -21,7 +21,7 @@ def builtins_open():
 
 
 def test_new_testeff_version_true(builtins_open):
-    with mock.patch.dict(os.environ, {"SIMTOOLS_SIMTEL_PATH": "/fake/path"}):
+    with mock.patch.dict(os.environ, {"SIMTOOLS_SIM_TELARRAY_PATH": "/fake/path"}):
         with mock.patch(
             builtins_open,
             mock.mock_open(
@@ -32,7 +32,7 @@ def test_new_testeff_version_true(builtins_open):
 
 
 def test_new_testeff_version_false(builtins_open):
-    with mock.patch.dict(os.environ, {"SIMTOOLS_SIMTEL_PATH": "/fake/path"}):
+    with mock.patch.dict(os.environ, {"SIMTOOLS_SIM_TELARRAY_PATH": "/fake/path"}):
         with mock.patch(builtins_open, mock.mock_open(read_data="Some other content")):
             assert helpers._new_testeff_version() is False
 
@@ -56,7 +56,7 @@ def test_skip_camera_efficiency_not_camera_efficiency():
 
 
 def test_new_testeff_version_file_not_found(builtins_open):
-    with mock.patch.dict(os.environ, {"SIMTOOLS_SIMTEL_PATH": "/fake_for_test/path"}):
+    with mock.patch.dict(os.environ, {"SIMTOOLS_SIM_TELARRAY_PATH": "/fake_for_test/path"}):
         with mock.patch(builtins_open, side_effect=FileNotFoundError):
             with pytest.raises(
                 FileNotFoundError, match=r"The testeff executable could not be found."
