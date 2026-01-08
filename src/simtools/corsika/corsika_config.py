@@ -49,6 +49,7 @@ class CorsikaConfig:
 
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
+        self.interaction_table_path = settings.config.corsika_path
         self.config = self._fill_corsika_configuration(settings.config.args)
         self._initialize_from_config(settings.config.args)
 
@@ -690,6 +691,7 @@ class CorsikaConfig:
             file.write("\n* [ INTERACTION FLAGS ]\n")
             text_interaction_flags = self._get_text_single_line(self.config["INTERACTION_FLAGS"])
             file.write(text_interaction_flags)
+            file.write(f"DATDIR {self.interaction_table_path}\n")
 
             file.write("\n* [ CHERENKOV EMISSION PARAMETERS ]\n")
             text_cherenkov = self._get_text_single_line(

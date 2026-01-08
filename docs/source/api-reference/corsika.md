@@ -29,10 +29,3 @@ Support modules for running CORSIKA.
    :members:
 
 ```
-
-## run_directory
-
-```{eval-rst}
-.. automodule:: corsika.run_directory
-   :members:
-```
