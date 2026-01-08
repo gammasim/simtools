@@ -1,6 +1,7 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 from eventio.simtel import (
     ArrayEvent,
@@ -432,6 +433,7 @@ def test_process_file_info_else(monkeypatch, tmp_path):
         "energy_max": 5.0,
         "zenith": 0.5,
         "azimuth": 1.0,
+        "angle_array_x_magnetic_north": 0.1,
         "viewcone_inner_angle": 0.1,
         "viewcone_outer_angle": 0.2,
     }
@@ -460,5 +462,5 @@ def test_process_file_info_else(monkeypatch, tmp_path):
     assert info["core_scatter_min"] == pytest.approx(0.0)
     assert info["core_scatter_max"] == pytest.approx(100.0)
     assert info["zenith"] == pytest.approx(28.64788975654116)
-    assert info["azimuth"] == pytest.approx(57.29577951308232)
+    assert info["azimuth"] == pytest.approx(np.rad2deg(1.0 - 0.1))
     assert info["nsb_level"] == pytest.approx(0.0)

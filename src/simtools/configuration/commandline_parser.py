@@ -106,7 +106,7 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         _job_group.add_argument(
-            "--simtel_path",
+            "--sim_telarray_path",
             help="path pointing to sim_telarray installation",
             type=Path,
             required=False,
@@ -159,6 +159,18 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         _job_group.add_argument(
             "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
+        )
+        _job_group.add_argument(
+            "--build_info",
+            action=BuildInfoAction,
+            build_info=f"%(prog)s {simtools.version.__version__}",
+            help="show build information and exit",
+        )
+        _job_group.add_argument(
+            "--export_build_info",
+            help="export build information to file",
+            required=False,
+            type=str,
         )
 
     def initialize_user_arguments(self):
@@ -269,7 +281,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 type=self.telescope,
             )
         if "layout" in model_options or "layout_file" in model_options:
-            _job_group = self._add_model_option_layout(
+            self._add_model_option_layout(
                 job_group=_job_group,
                 model_options=model_options,
                 # layout info is always required for layout related tasks with the exception
@@ -825,3 +837,24 @@ class CommandLineParser(argparse.ArgumentParser):
             raise ValueError("Input string does not contain an integer and a astropy quantity.")
 
         return (int(match.group(1)), u.Quantity(float(match.group(2)), match.group(3)))
+
+
+class BuildInfoAction(argparse.Action):
+    """Custom argparse action to display build information."""
+
+    def __init__(self, option_strings, dest=argparse.SUPPRESS, default=argparse.SUPPRESS, **kwargs):
+        """Initialize BuildInfoAction."""
+        self.build_info = kwargs.pop("build_info", "Build information")
+        kwargs.pop("nargs", None)
+        super().__init__(option_strings, dest=dest, default=default, nargs=0, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """Display build information and exit."""
+        # for efficiency reason, allow import here
+        from simtools import dependencies  # pylint: disable=C0415
+
+        build_options = dependencies.get_build_options()
+        print(f"{self.build_info}")
+        for key, value in build_options.items():
+            print(f"{key}: {value}")
+        parser.exit()

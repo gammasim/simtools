@@ -4,12 +4,6 @@ import pytest
 from astropy.table import Table
 
 import simtools.production_configuration.derive_corsika_limits as derive_corsika_limits
-from simtools.production_configuration.derive_corsika_limits import (
-    _create_results_table,
-    _round_value,
-    generate_corsika_limits_grid,
-    write_results,
-)
 
 # Constants
 SIM_EVENTS_HISTOGRAMS_PATH = (
@@ -78,7 +72,7 @@ def test_generate_corsika_limits_grid(mocker, mock_args_dict):
     )
 
     # Run function
-    generate_corsika_limits_grid(mock_args_dict)
+    derive_corsika_limits.generate_corsika_limits_grid(mock_args_dict)
 
     # Verify calls
     assert mock_collect.call_count == 1
@@ -134,7 +128,7 @@ def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory)
 
     mock_dump = mocker.patch("simtools.data_model.metadata_collector.MetadataCollector.dump")
 
-    write_results(mock_results, mock_args_dict)
+    derive_corsika_limits.write_results(mock_results, mock_args_dict)
 
     # Verify metadata was written
     mock_dump.assert_called_once()
@@ -144,7 +138,7 @@ def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory)
 
 def test_create_results_table(mock_results):
     """Test _create_results_table function."""
-    table = _create_results_table(mock_results, loss_fraction=0.2)
+    table = derive_corsika_limits._create_results_table(mock_results, loss_fraction=0.2)
     table.info()
 
     assert isinstance(table, Table)
@@ -160,26 +154,26 @@ def test_round_value():
     """Test _round_value function for different key types."""
 
     # Test lower_energy_limit rounding
-    assert _round_value("lower_energy_limit", 1.2345) == pytest.approx(1.234)
-    assert _round_value("lower_energy_limit", 0.9876) == pytest.approx(0.987)
-    assert _round_value("lower_energy_limit", 2.0) == pytest.approx(2.0)
+    assert derive_corsika_limits._round_value("lower_energy_limit", 1.2345) == pytest.approx(1.234)
+    assert derive_corsika_limits._round_value("lower_energy_limit", 0.9876) == pytest.approx(0.987)
+    assert derive_corsika_limits._round_value("lower_energy_limit", 2.0) == pytest.approx(2.0)
 
     # Test upper_radius_limit rounding
-    assert _round_value("upper_radius_limit", 123.4) == 125
-    assert _round_value("upper_radius_limit", 100.0) == 100
-    assert _round_value("upper_radius_limit", 101.0) == 125
-    assert _round_value("upper_radius_limit", 75.0) == 75
+    assert derive_corsika_limits._round_value("upper_radius_limit", 123.4) == 125
+    assert derive_corsika_limits._round_value("upper_radius_limit", 100.0) == 100
+    assert derive_corsika_limits._round_value("upper_radius_limit", 101.0) == 125
+    assert derive_corsika_limits._round_value("upper_radius_limit", 75.0) == 75
 
     # Test viewcone_radius rounding
-    assert _round_value("viewcone_radius", 1.1) == pytest.approx(1.25)
-    assert _round_value("viewcone_radius", 2.0) == pytest.approx(2.0)
-    assert _round_value("viewcone_radius", 2.1) == pytest.approx(2.25)
-    assert _round_value("viewcone_radius", 0.3) == pytest.approx(0.5)
+    assert derive_corsika_limits._round_value("viewcone_radius", 1.1) == pytest.approx(1.25)
+    assert derive_corsika_limits._round_value("viewcone_radius", 2.0) == pytest.approx(2.0)
+    assert derive_corsika_limits._round_value("viewcone_radius", 2.1) == pytest.approx(2.25)
+    assert derive_corsika_limits._round_value("viewcone_radius", 0.3) == pytest.approx(0.5)
 
     # Test other keys (no rounding)
-    assert _round_value("other_key", 1.2345) == pytest.approx(1.2345)
-    assert _round_value("zenith", 45.678) == pytest.approx(45.678)
-    assert _round_value("unknown", "string_value") == "string_value"
+    assert derive_corsika_limits._round_value("other_key", 1.2345) == pytest.approx(1.2345)
+    assert derive_corsika_limits._round_value("zenith", 45.678) == pytest.approx(45.678)
+    assert derive_corsika_limits._round_value("unknown", "string_value") == "string_value"
 
 
 def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
@@ -203,7 +197,7 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
         "simtools.production_configuration.derive_corsika_limits.write_results"
     )
 
-    generate_corsika_limits_grid(args)
+    derive_corsika_limits.generate_corsika_limits_grid(args)
 
     mock_read_layouts.assert_called_once_with(
         args["array_layout_name"], args["site"], args["model_version"]

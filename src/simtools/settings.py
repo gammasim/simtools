@@ -34,15 +34,15 @@ class _Config:
         self._args = MappingProxyType(args) if args is not None else {}
         self._db_config = MappingProxyType(db_config) if db_config is not None else {}
         self._sim_telarray_path = (
-            args.get("simtel_path")
-            if args is not None and "simtel_path" in args
-            else os.getenv("SIMTOOLS_SIMTEL_PATH")
+            args.get("sim_telarray_path")
+            if args is not None and "sim_telarray_path" in args
+            else os.getenv("SIMTOOLS_SIM_TELARRAY_PATH")
         )
 
         self._sim_telarray_exe = (
-            args.get("simtel_executable")
-            if args is not None and "simtel_executable" in args
-            else os.getenv("SIMTOOLS_SIMTEL_EXECUTABLE", "sim_telarray")
+            args.get("sim_telarray_executable")
+            if args is not None and "sim_telarray_executable" in args
+            else os.getenv("SIMTOOLS_SIM_TELARRAY_EXECUTABLE", "sim_telarray")
         )
 
         self._corsika_path = (

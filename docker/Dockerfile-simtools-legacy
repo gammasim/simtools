@@ -10,13 +10,13 @@
 # - SC1091: ignore warning about not being able to source the bashrc
 
 ARG BASE_IMAGE
-ARG BUILD_BRANCH=main
-ARG SIMTOOLS_REQUIREMENT="https://github.com/gammasim/simtools.git"
+ARG SIMTOOLS_BRANCH=main
+ARG SIMTOOLS_REPO="https://github.com/gammasim/simtools.git"
 ARG PYTHON_VERSION=3.12
 
 FROM ${BASE_IMAGE}
-ARG BUILD_BRANCH
-ARG SIMTOOLS_REQUIREMENT
+ARG SIMTOOLS_BRANCH
+ARG SIMTOOLS_REPO
 ARG PYTHON_VERSION
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -28,12 +28,12 @@ RUN microdnf update -y && microdnf install -y \
     rm -rf /var/cache/dnf/* /tmp/* /var/tmp/* && \
     ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
 
-RUN BUILD_BRANCH=${BUILD_BRANCH//refs\/tags\//} \
-  && git clone -b "$BUILD_BRANCH" "${SIMTOOLS_REQUIREMENT}" --depth 1 \
+RUN SIMTOOLS_BRANCH=${SIMTOOLS_BRANCH//refs\/tags\//} \
+  && git clone -b "$SIMTOOLS_BRANCH" "${SIMTOOLS_REPO}" --depth 1 \
   && python${PYTHON_VERSION} -m venv env \
   && . env/bin/activate \
   && pip install --no-cache-dir -U pip \
-  && pip install --no-cache-dir "git+${SIMTOOLS_REQUIREMENT}@${BUILD_BRANCH}" \
+  && pip install --no-cache-dir "git+${SIMTOOLS_REPO}@${SIMTOOLS_BRANCH}" \
   && pip cache purge && rm -rf /root/.cache \
   && echo ". /workdir/env/bin/activate" >> ~/.bashrc
 

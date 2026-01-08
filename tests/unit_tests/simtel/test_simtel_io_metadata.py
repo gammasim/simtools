@@ -5,20 +5,13 @@ from unittest import mock
 import pytest
 
 import simtools.simtel.simtel_io_metadata as simtel_io_metadata
-from simtools.simtel.simtel_io_metadata import (
-    _decode_dictionary,
-    _guess_telescope_name_for_legacy_files,
-    get_sim_telarray_telescope_id,
-    get_sim_telarray_telescope_id_to_telescope_name_mapping,
-    read_sim_telarray_metadata,
-)
 
 
 def test_decode_success():
     test_meta = {b"key1": b"value1", b"key2": b"value2"}
-    result = _decode_dictionary(test_meta)
+    result = simtel_io_metadata._decode_dictionary(test_meta)
     assert result == {"key1": "value1", "key2": "value2"}
-    result = _decode_dictionary(test_meta, encoding="ascii")
+    result = simtel_io_metadata._decode_dictionary(test_meta, encoding="ascii")
     assert result == {"key1": "value1", "key2": "value2"}
 
 
@@ -26,7 +19,7 @@ def test_decode_with_unicode_error(caplog):
     # Create metadata with invalid unicode bytes
     test_meta = {b"key1": b"value1", b"key2": b"\xff\xfe invalid utf8"}
 
-    result = _decode_dictionary(test_meta, encoding="utf-8")
+    result = simtel_io_metadata._decode_dictionary(test_meta, encoding="utf-8")
 
     assert "key1" in result
     assert "key2" in result
@@ -36,7 +29,9 @@ def test_decode_with_unicode_error(caplog):
 
 
 def test_read_sim_telarray_metadata(sim_telarray_file_gamma):
-    global_meta, telescope_meta = read_sim_telarray_metadata(sim_telarray_file_gamma)
+    global_meta, telescope_meta = simtel_io_metadata.read_sim_telarray_metadata(
+        sim_telarray_file_gamma
+    )
     assert global_meta is not None
     assert len(telescope_meta) > 0
     assert isinstance(telescope_meta, dict)
@@ -56,18 +51,21 @@ def test_read_sim_telarray_metadata(sim_telarray_file_gamma):
 def test_read_sim_telarray_metadata_attribute_error(mock_decode, sim_telarray_file_gamma):
     simtel_io_metadata.read_sim_telarray_metadata.cache_clear()
     with pytest.raises(AttributeError, match=r"^Error reading metadata from file"):
-        read_sim_telarray_metadata(sim_telarray_file_gamma)
+        simtel_io_metadata.read_sim_telarray_metadata(sim_telarray_file_gamma)
 
 
 def test_get_sim_telarray_telescope_id(sim_telarray_file_gamma):
-    assert get_sim_telarray_telescope_id("LSTN-01", sim_telarray_file_gamma) == 1
-    assert get_sim_telarray_telescope_id("MSTN-01", sim_telarray_file_gamma) == 5
-    assert get_sim_telarray_telescope_id("MSTS-01", sim_telarray_file_gamma) is None
+    assert simtel_io_metadata.get_sim_telarray_telescope_id("LSTN-01", sim_telarray_file_gamma) == 1
+    assert simtel_io_metadata.get_sim_telarray_telescope_id("MSTN-01", sim_telarray_file_gamma) == 5
+    assert (
+        simtel_io_metadata.get_sim_telarray_telescope_id("MSTS-01", sim_telarray_file_gamma) is None
+    )
 
 
 def test_get_sim_telarray_telescope_id_to_telescope_name_mapping(sim_telarray_file_gamma):
-    tel_mapping = get_sim_telarray_telescope_id_to_telescope_name_mapping(sim_telarray_file_gamma)
-
+    tel_mapping = simtel_io_metadata.get_sim_telarray_telescope_id_to_telescope_name_mapping(
+        sim_telarray_file_gamma
+    )
     assert isinstance(tel_mapping, dict)
     assert len(tel_mapping) > 0
     assert all(isinstance(k, int) for k in tel_mapping.keys())
@@ -171,11 +169,11 @@ def test_guess_telescope_name_for_legacy_files(monkeypatch):
     )
 
     # Should return the correct validated name for index 1
-    result = _guess_telescope_name_for_legacy_files(1, "dummy5.simtel")
+    result = simtel_io_metadata._guess_telescope_name_for_legacy_files(1, "dummy5.simtel")
     assert result == "MSTN-02"
 
     # Should return None for out-of-range index
-    result_none = _guess_telescope_name_for_legacy_files(10, "dummy5.simtel")
+    result_none = simtel_io_metadata._guess_telescope_name_for_legacy_files(10, "dummy5.simtel")
     assert result_none is None
 
 
@@ -195,5 +193,7 @@ def test_get_sim_telarray_telescope_id_to_telescope_name_mapping_value_error(mon
         "simtools.simtel.simtel_io_metadata.read_sim_telarray_metadata",
         lambda file: ({}, {1: {"optics_config_name": "bad"}, 2: {"optics_config_name": "bad2"}}),
     )
-    mapping = get_sim_telarray_telescope_id_to_telescope_name_mapping("dummy4.simtel")
+    mapping = simtel_io_metadata.get_sim_telarray_telescope_id_to_telescope_name_mapping(
+        "dummy4.simtel"
+    )
     assert mapping == {1: "FAKE-0", 2: "FAKE-1"}
