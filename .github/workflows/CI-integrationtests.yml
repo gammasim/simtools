@@ -122,15 +122,15 @@ jobs:
             echo "SIMTOOLS_DB_API_PORT=$DB_API_PORT"
             echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL"
             echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
-            echo "SIMTOOLS_SIMTEL_PATH=$SIMTOOLS_SIMTEL_PATH"
+            echo "SIMTOOLS_SIM_TELARRAY_PATH=$SIMTOOLS_SIM_TELARRAY_PATH"
             echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
             echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$SIMTOOLS_CORSIKA_HE_INTERACTION"
             echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$SIMTOOLS_CORSIKA_LE_INTERACTION"
           } | tee .env >> "$GITHUB_ENV"
 
-      - name: Extend PATH (simtel)
+      - name: Extend PATH (sim_telarray)
         run: |
-          [ -n "$SIMTOOLS_SIMTEL_PATH" ] && echo "$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_PATH"
+          [ -n "$SIMTOOLS_SIM_TELARRAY_PATH" ] && echo "$SIMTOOLS_SIM_TELARRAY_PATH" >> "$GITHUB_PATH"
 
       - name: Determine simulation model branch
         env:
