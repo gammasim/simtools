@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 import astropy.units as u
-from astropy.table import QTable
+from astropy.table import QTable, Table
 
 import simtools.utils.general as gen
 from simtools.data_model import data_reader
@@ -532,3 +532,62 @@ def create_regular_array(array_name, site, telescope_distance):
     _logger.info(f"Regular array layout table:\n{table}")
 
     return table
+
+
+def write_array_elements_from_file_to_repository(
+    coordinate_system, input_file, repository_path, parameter_version
+):
+    """
+    Read array elements from file and write their positions to model repository.
+
+    Writes one model parameter file per array elements.
+
+    Parameters
+    ----------
+    coordinate_system : str
+        Coordinate system of array element positions (utm or ground).
+    input_file : str or Path
+        Path to input file with array element positions.
+    repository_path : str or Path
+        Path to model repository.
+    parameter_version : str
+        Parameter version to use when writing to repository.
+    """
+    repository_path = Path(repository_path)
+
+    array_elements = Table.read(input_file)
+
+    if coordinate_system == "ground":
+        parameter_name = "array_element_position_ground"
+        x = array_elements["position_x"].quantity.to(u.m).value
+        y = array_elements["position_y"].quantity.to(u.m).value
+        alt = array_elements["position_z"].quantity.to(u.m).value
+    elif coordinate_system == "utm":
+        x = array_elements["utm_east"].quantity.to(u.m).value
+        y = array_elements["utm_north"].quantity.to(u.m).value
+        alt = array_elements["altitude"].quantity.to(u.m).value
+        parameter_name = "array_element_position_utm"
+    else:
+        raise ValueError(
+            f"Unsupported coordinate system: {coordinate_system}. Allowed are 'utm' and 'ground'."
+        )
+
+    for i, row in enumerate(array_elements):
+        instrument = (
+            row["telescope_name"]
+            if "telescope_name" in array_elements.colnames
+            else f"{row['asset_code']}-{row['sequence_number']}"
+        )
+        output_path = repository_path / f"{instrument}"
+        output_path.mkdir(parents=True, exist_ok=True)
+        _logger.info(f"Writing array element positions ({coordinate_system}) to {output_path}")
+
+        ModelDataWriter.dump_model_parameter(
+            parameter_name=parameter_name,
+            instrument=instrument,
+            value=f"{x[i]} {y[i]} {alt[i]}",
+            unit="m",
+            parameter_version=parameter_version,
+            output_path=repository_path / instrument,
+            output_file=f"{parameter_name}.json",
+        )
