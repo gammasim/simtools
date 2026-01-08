@@ -6,12 +6,14 @@ OCI-compatible container images are available for simtools users and support bot
 
 Below an overview of the most-relevant pre-built container images available from the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 
+All images use `almalinux:9.5` or `almalinux:9.5-minimal` with python 3.12 as base images.
+
 ### Simtools Production
 
 - registry page: [simtools-prod](https://github.com/gammasim/simtools/pkgs/container/simtools-prod)
 - docker file: [Dockerfile-simtools-prod](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtools-prod)
 
-| Image tag | simtools | CORSIKA | sim_telarray | AVX optimizations |
+| image tag | simtools | CORSIKA | sim_telarray | AVX optimizations |
 | --- | --- | --- | --- | --- |
 | [0.26.0-corsika-20251217-78010-no_opt-simtel-latest](ghcr.io/gammasim/simtools-prod:0.26.0-corsika-20251217-78010-no_opt-simtel-latest) | 0.26.0 | 20251217-78010 | latest | no_opt |
 | [0.26.0-corsika-20251217-78010-avx2-simtel-latest](ghcr.io/gammasim/simtools-prod:0.26.0-corsika-20251217-78010-avx2-simtel-latest) | 0.26.0 | 20251217-78010 | latest | avx2 |
@@ -25,7 +27,7 @@ The no_opt image is compatible with ARM and x86_64 CPUs, all other images are fo
 - registry page: [simtools-dev](https://github.com/gammasim/simtools/pkgs/container/simtools-dev)
 - docker file: [Dockerfile-simtools-dev](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtools-dev)
 
-| Image tag | simtools | CORSIKA | sim_telarray | remarks |
+| image tag | simtools | CORSIKA | sim_telarray | remarks |
 | --- | --- | --- | --- | --- |
 | [0.26.0](ghcr.io/gammasim/simtools-dev:0.26.0) | 0.26.0 | 7.8010 | latest | includes QGSJet3 tables |
 | [0.25.0](ghcr.io/gammasim/simtools-dev:0.25.0) | 0.25.0 | 7.8010 | latest | includes QGSJet3 tables  |
@@ -37,7 +39,7 @@ Developments are compatible with ARM and x86_64 CPUs.
 - registry page: [corsika7](https://github.com/gammasim/simtools/pkgs/container/corsika7)
 - docker file: [Dockerfile-corsika7](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-corsika7)
 
-| Image tag | CORSIKA | high-/low-energy interaction models | Compile Configuration | CORSIKA Patch (optimizations) | IACT/ATMO |
+| image tag | CORSIKA | high-/low-energy interaction models | compile configuration | CORSIKA patch (optimizations) | IACT/ATMO |
 | --- | --- | --- | --- | --- | --- |
 20251217-78010 | 7.8010 | QGSJet-III/URQMD; EPOS/URQMD | [v0.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config) | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches/-/releases/v1.1.0) | 1.69 |
 
