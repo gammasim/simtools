@@ -1,50 +1,53 @@
 # Container Images
 
-OCI-compatible container images are available for simtools users and support both application and development use cases.  Any runtime such as [Docker](https://www.docker.com/products/docker-desktop), [Podman](https://podman.io/), or [Apptainer](https://apptainer.org/) can be used.
+OCI-compatible container images are available for simtools users and support both application and development use cases. Runtimes such as [Docker](https://www.docker.com/products/docker-desktop), [Podman](https://podman.io/), or [Apptainer](https://apptainer.org/) can be used.
 
 ## Pre-built Images
 
 Below an overview of the most-relevant pre-built container images available from the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 
-### Simtools Production Images
+### Simtools Production
 
-[Dockerfile-simtools-prod](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtools-prod)
+- registry page: [simtools-prod](https://github.com/gammasim/simtools/pkgs/container/simtools-prod)
+- docker file: [Dockerfile-simtools-prod](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtools-prod)
 
-| Image tag | simtools version | CORSIKA image tag | sim_telarray image tag |
-| --- | --- | --- | --- |
-| latest | 0.26.0 | 20251216-095556 | 20251210-112343 |
+| Image tag | simtools | CORSIKA | sim_telarray | AVX optimizations |
+| --- | --- | --- | --- | --- |
+| [0.26.0-corsika-20251217-78010-no_opt-simtel-latest](ghcr.io/gammasim/simtools-prod:0.26.0-corsika-20251217-78010-no_opt-simtel-latest) | 0.26.0 | 20251217-78010 | latest | no_opt |
+| [0.26.0-corsika-20251217-78010-avx2-simtel-latest](ghcr.io/gammasim/simtools-prod:0.26.0-corsika-20251217-78010-avx2-simtel-latest) | 0.26.0 | 20251217-78010 | latest | avx2 |
+| [0.26.0-corsika-20251217-78010-avx512f-simtel-latest](ghcr.io/gammasim/simtools-prod:0.26.0-corsika-20251217-78010-avx512f-simtel-latest) | 0.26.0 | 20251217-78010 | latest | avx512f |
+| [0.26.0-corsika-20251217-78010-sse4-simtel-latest](ghcr.io/gammasim/simtools-prod:0.26.0-corsika-20251217-78010-sse4-simtel-latest) | 0.26.0 | 20251217-78010 | latest | sse4 |
 
-#### Legacy Simtools Production Images
+The no_opt image is compatible with ARM and x86_64 CPUs, all other images are for x86_64 CPUs only.
 
-[Dockerfile-simtools-legacy](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtools-legacy)
+### Simtools for Developers
 
-### Simtools Development Images
+- registry page: [simtools-dev](https://github.com/gammasim/simtools/pkgs/container/simtools-dev)
+- docker file: [Dockerfile-simtools-dev](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtools-dev)
 
-[Dockerfile-simtools-dev](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtools-dev)
+| Image tag | simtools | CORSIKA | sim_telarray | remarks |
+| --- | --- | --- | --- | --- |
+| [0.26.0](ghcr.io/gammasim/simtools-dev:0.26.0) | 0.26.0 | 7.8010 | latest | includes QGSJet3 tables |
+| [0.25.0](ghcr.io/gammasim/simtools-dev:0.25.0) | 0.25.0 | 7.8010 | latest | includes QGSJet3 tables  |
 
-package | simtools version | CORSIKA (patch) version | high-/low-energy interaction model | sim_telarray (IACT) version | remarks |
+Developments are compatible with ARM and x86_64 CPUs.
+
+### CORSIKA7
+
+- registry page: [corsika7](https://github.com/gammasim/simtools/pkgs/container/corsika7)
+- docker file: [Dockerfile-corsika7](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-corsika7)
+
+| Image tag | CORSIKA | high-/low-energy interaction models | Compile Configuration | CORSIKA Patch (optimizations) | IACT/ATMO |
 | --- | --- | --- | --- | --- | --- |
-| [20251216-102359](ghcr.io/gammasim/simtools-dev:20251216-102359) | 0.26.0  | 7.8010 (v1.1.0) | QGSJet-III/URQMD | 2025.246.0 (1.70) | CORSIKA/sim_telarray from gitlab (sim_telarray from master branch) |
-| [0.25.0](ghcr.io/gammasim/simtools-dev:0.25.0) | 0.25.0 | 7.8010 (v1.1.0) | QGSJet-III/URQMD | 2025.246.0 (1.70) | CORSIKA/sim_telarray installation from tar packages |
+20251217-78010 | 7.8010 | QGSJet-III/URQMD; EPOS/URQMD | [v0.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config) | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches/-/releases/v1.1.0) | 1.69 |
 
-### CORSIKA7 Images
-
-[Dockerfile-corsika7](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-corsika7)
-
-- [ ] TODO: release compile configurations and update link
-- [ ] TODO: change tag to released version
-
-| Image tag | CORSIKA version | high-/low-energy interaction model | Compile Configuration | Patch version (CPU optimizations) | Packages |
-| --- | --- | --- | --- | --- | --- |
-20251216-095556 | 7.8010 | QGSJet-III/URQMD | [v0.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config) | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches/-/releases/v1.1.0) | [no optimization](https://github.com/gammasim/simtools/pkgs/container/corsika7-78010-no_opt), [AVX2](https://github.com/gammasim/simtools/pkgs/container/corsika7-78010-avx2), [AVX512](https://github.com/gammasim/simtools/pkgs/container/corsika7-78010-avx512f), [sse4](https://github.com/gammasim/simtools/pkgs/container/corsika7-78010-sse4)|
+Images are provided for the following CPU optimizations (example links for version 20251217-78010): [no optimization](ghcr.io/gammasim/corsika7:20251217-78010-no_opt), [avx2]( ghcr.io/gammasim/corsika7:20251217-78010-avx2), [avx512f]( ghcr.io/gammasim/corsika7:20251217-78010-avx512f), [sse4](ghcr.io/gammasim/corsika7:20251217-78010-sse4). The no_opt image is compatible with ARM and x86_64 CPUs, all other images are for x86_64 CPUs only.
 
 ### sim_telarray Images
 
-[Dockerfile-sim_telarray](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtel_array)
+- registry page: [sim_telarray](https://github.com/gammasim/simtools/pkgs/container/sim_telarray)
+- docker file: [Dockerfile-sim_telarray](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtel_array)
 
-- [ ] TODO: assign version numbers to sim_telarray packages and release
-- [ ] TODO: change tag to released version
-
-Image tag | sim_telarray version | hessio version | stdtools version | Packages |
-| --- | --- | --- | --- | --- |
-20251210-112343 | [master](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray) | [master](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio) | [master](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools) | [prod6-baseline](https://github.com/gammasim/simtools/pkgs/container/simtel-251124-prod6-baseline)
+| Image tag | sim_telarray | hessio version | stdtools version |
+| --- | --- | --- | --- |
+20251217-master| [master](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray) | [master](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio) | [master](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools) |
