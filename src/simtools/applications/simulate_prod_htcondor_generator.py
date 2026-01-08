@@ -22,7 +22,7 @@ Requirements for the 'simtools-simulate-prod-htcondor-generator' application:
 - Environment parameters required to run CORSIKA and sim_telarray, as well as DB access
   credentials.  These should be listed similarly to a '.env' file and copied to
   'output_path/env.txt'.  Ensure that the path to the simulation software is correctly set to
-  'SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray'.
+  'SIMTOOLS_SIM_TELARRAY_PATH=/workdir/sim_telarray'.
 
 To submit jobs, change to the output directory and run:
 

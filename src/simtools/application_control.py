@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools import version
+from simtools import dependencies, version
 from simtools.db import db_handler
 from simtools.io import io_handler
 from simtools.settings import config
@@ -89,6 +89,8 @@ def startup_application(parse_function, setup_io_handler=True, logger_name=None)
 
     _resolve_model_version_to_latest_patch(args_dict, logger)
 
+    _version_info(args_dict, io_handler_instance, logger)
+
     return ApplicationContext(
         args=args_dict,
         db_config=db_config,
@@ -166,3 +168,29 @@ def _resolve_model_version_to_latest_patch(args_dict, logger):
 
     resolved = [resolve(v, k) for v, k in zip(versions, kinds)]
     args_dict["model_version"] = resolved if isinstance(mv, list) else resolved[0]
+
+
+def _version_info(args_dict, io_handler_instance, logger):
+    """Print and optionally write version information."""
+    try:
+        build_options = dependencies.get_build_options(args_dict.get("run_time"))
+    except FileNotFoundError:
+        logger.debug("No build options found.")
+        return
+
+    logger.info(
+        f"simtools: {version.__version__} "
+        f"DB: {dependencies.get_database_version_or_name(version=False)} "
+        f"{dependencies.get_database_version_or_name(version=True)} "
+        f"CORSIKA: {build_options.get('corsika_version')} "
+        f"sim_telarray: {build_options.get('simtel_version')}"
+    )
+    logger.debug(f"Build options:\n {build_options}")
+
+    if args_dict.get("export_build_info"):
+        output_path = (
+            io_handler_instance.get_output_file(args_dict["export_build_info"])
+            if io_handler_instance
+            else args_dict["export_build_info"]
+        )
+        dependencies.export_build_info(output_path, args_dict.get("run_time"))
