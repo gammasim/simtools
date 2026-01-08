@@ -550,7 +550,7 @@ class CorsikaConfig:
         """Return CORSIKA debugging output parameters."""
         return {
             "DEBUG": ["F", 6, "F", 1000000],
-            "DATBAS": ["yes"],
+            "DATBAS": ["F"],
             "DIRECT": ["./"],
             "PAROUT": ["F", "F"],
         }
