@@ -87,7 +87,7 @@ WORKDIR /workdir/simulation_software/corsika7
 RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
         patch -b -p0 src/corsika.F < "../corsika-77550.patch"; \
     fi && \
-    if [ "$AVX_FLAG" != "no_opt" ]; then \
+    if [ "$AVX_FLAG" != "generic" ]; then \
         ./corsika_opt_patching.sh && \
         autoreconf; \
     fi
@@ -101,7 +101,7 @@ RUN ls ../config_*.h && for config_file in ../config_*.h; do \
         cp -v "$config_file" include/config.h; \
         # compilation flags (with or without optimization)
         AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
-        if [ "$AVX_FLAG" = "no_opt" ] || [ "$variant" = "curved" ]; then \
+        if [ "$AVX_FLAG" = "generic" ] || [ "$variant" = "curved" ]; then \
             BASE_FLAGS="-g -O3"; \
         # Optimization config options
         else \
@@ -126,11 +126,13 @@ RUN ls ../config_*.h && for config_file in ../config_*.h; do \
 
 # Generate build_opts.yml with build information
 RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
+    IACT_ATMO_VERSION=$(grep -o '#define IACT_ATMO_VERSION "[^"]*"' bernlohr/iact.c | sed 's/#define IACT_ATMO_VERSION "\(.*\)"/\1/' || echo "unknown") && \
     { \
         echo "corsika_version: \"${CORSIKA_VERSION}\""; \
         echo "corsika_opt_patch_version: \"${CORSIKA_OPT_PATCH_VERSION}\""; \
         echo "corsika_config_version: \"${CORSIKA_CONFIG_VERSION}\""; \
         echo "avx_flag: \"${AVX_FLAG}\""; \
+        echo "iact_atmo_version: \"${IACT_ATMO_VERSION}\""; \
         echo "variant:"; \
     } > ${CORSIKA_RUN_DIR}/build_opts.yml && \
     for config_file in ../config_*.h; do \

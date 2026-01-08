@@ -1,6 +1,6 @@
 ---
 name: build-simtel_array
-# Build and push sim_telarray images
+# Build and push sim_telarray images.
 #
 # The images are built and pushed when manually triggered (workflow_dispatch).
 #
@@ -51,12 +51,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           tags: |
+            type=raw,value=${{ env.BASE_TAG }}
             type=ref,event=pr,suffix=-${{ env.BASE_TAG }}
             type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}
             type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
-            type=raw,value={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
-          flavor: latest=true
+          flavor: latest=false
 
       - name: Build and push
         uses: docker/build-push-action@v6
