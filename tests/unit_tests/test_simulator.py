@@ -139,7 +139,7 @@ def shower_simulator(
     mocker.patch("simtools.settings.config", mock_config)
 
     patch_simulator_core()
-    mock_runner = mocker.patch("simtools.simulator.CorsikaRunner")
+    mock_runner = mocker.patch("simtools.runners.corsika_runner.CorsikaRunner")
     configure_runner_mock(mock_runner, add_resources=True)
 
     return Simulator(
@@ -166,7 +166,7 @@ def shower_array_simulator(
     mocker.patch("simtools.settings.config", mock_config)
 
     patch_simulator_core()
-    mock_runner = mocker.patch("simtools.simulator.CorsikaSimtelRunner")
+    mock_runner = mocker.patch("simtools.runners.corsika_simtel_runner.CorsikaSimtelRunner")
     configure_runner_mock(mock_runner)
 
     return Simulator(
@@ -193,7 +193,7 @@ def calibration_simulator(
     mocker.patch("simtools.settings.config", mock_config)
 
     patch_simulator_core()
-    mock_runner = mocker.patch("simtools.simulator.CorsikaSimtelRunner")
+    mock_runner = mocker.patch("simtools.runners.corsika_simtel_runner.CorsikaSimtelRunner")
     configure_runner_mock(mock_runner)
 
     return Simulator(
@@ -328,7 +328,7 @@ def test_pack_for_register_with_multiple_versions(
     mock_corsika_config.primary_particle.name = "proton"  # from args
 
     mocker.patch("simtools.simulator.CorsikaConfig", return_value=mock_corsika_config)
-    mocker.patch("simtools.simulator.CorsikaSimtelRunner")
+    mocker.patch("simtools.runners.corsika_simtel_runner.CorsikaSimtelRunner")
 
     mock_config = mocker.Mock()
     mock_config.args = args_dict
@@ -455,7 +455,7 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
 
     mock_generator = mocker.MagicMock()
     mock_simtel_io_writer = mocker.patch(
-        "simtools.simulator.EventDataWriter", return_value=mock_generator
+        "simtools.sim_events.writer.EventDataWriter", return_value=mock_generator
     )
     mock_table_handler = mocker.patch("simtools.simulator.table_handler")
 
@@ -480,7 +480,7 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
 
 def test_save_reduced_event_lists_no_output_files(array_simulator, mocker):
     mocker.patch.object(array_simulator, "get_files", return_value=[])
-    mock_simtel_io_writer = mocker.patch("simtools.simulator.EventDataWriter")
+    mock_simtel_io_writer = mocker.patch("simtools.sim_events.writer.EventDataWriter")
     mock_io_table_handler = mocker.patch("simtools.simulator.table_handler")
 
     array_simulator.save_reduced_event_lists()
