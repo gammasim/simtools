@@ -519,7 +519,7 @@ def test_write_simtools_parameters(simtel_config_writer, tmp_test_directory, fil
         f"{simtel_config_writer._model_version}",
     )
 
-    # Test with simtel_path and build_opts.yml
+    # Test with sim_telarray_path and build_opts.yml
     build_opts_file = tmp_test_directory / "build_opts.yml"
     with open(build_opts_file, "w") as f:
         f.write("build_date: 2023-01-01\nversion: 1.0.0")
@@ -532,7 +532,7 @@ def test_write_simtools_parameters(simtel_config_writer, tmp_test_directory, fil
         # Check build_opts parameters are included
         assert file_has_text(test_file, "metaparam global set simtools_")
 
-    # Test with invalid simtel_path
+    # Test with invalid sim_telarray_path
     with mock.patch("simtools.simtel.simtel_config_writer.settings") as mock_settings:
         mock_settings.config.sim_telarray_path = tmp_test_directory / "nonexistent"
         with open(test_file, "w") as f:
