@@ -192,8 +192,8 @@ def test_load_files(runner_service_config_only):
         assert isinstance(file_path, pathlib.Path)
 
 
-def test_get_sub_directory(runner_service_config_only):
+def test_get_sub_directory(runner_service_config_only, tmp_path):
     dir_path = runner_service_config_only._get_sub_directory(
-        run_number=1, dir_path=pathlib.Path("/test/base/dir")
+        run_number=1, dir_path=tmp_path / "base" / "dir"
     )
-    assert dir_path == pathlib.Path("/test/base/dir/run000001")
+    assert dir_path == tmp_path / "base" / "dir" / "run000001"
