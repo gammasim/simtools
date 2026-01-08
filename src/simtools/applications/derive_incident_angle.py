@@ -121,7 +121,7 @@ def _parse():
     config.parser.add_argument(
         "--calculate_primary_secondary_angles",
         dest="calculate_primary_secondary_angles",
-        help="Also compute angles of incidence on primary and secondary mirrors",
+        help="Compute angles of incidence on primary and secondary mirrors",
         required=False,
         action="store_true",
     )
