@@ -644,7 +644,9 @@ class CorsikaConfig:
             text += line
         return text
 
-    def generate_corsika_input_file(self, use_multipipe, corsika_seeds, input_file, output_file):
+    def generate_corsika_input_file(
+        self, use_multipipe, corsika_seeds, input_file, output_file, corsika_path=None
+    ):
         """
         Generate a CORSIKA input file.
 
@@ -690,6 +692,8 @@ class CorsikaConfig:
             file.write("\n* [ INTERACTION FLAGS ]\n")
             text_interaction_flags = self._get_text_single_line(self.config["INTERACTION_FLAGS"])
             file.write(text_interaction_flags)
+            if corsika_path is not None:
+                file.write(f"DATDIR {corsika_path!s}\n")
 
             file.write("\n* [ CHERENKOV EMISSION PARAMETERS ]\n")
             text_cherenkov = self._get_text_single_line(

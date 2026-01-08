@@ -5,7 +5,6 @@ import stat
 from pathlib import Path
 
 from simtools import settings
-from simtools.corsika.run_directory import link_run_directory
 from simtools.runners.runner_services import RunnerServices
 
 
@@ -74,12 +73,14 @@ class CorsikaRunner:
             self._corsika_seeds,
             self.file_list["corsika_input"],
             self.file_list["corsika_output"] if not self._use_multipipe else corsika_file,
+            corsika_path=self._corsika_executable().parent.resolve(),
         )
 
         self._logger.debug(f"Extra commands to be added to the run script: {extra_commands}")
 
         corsika_run_dir = self.file_list["corsika_output"].parent
-        link_run_directory(corsika_run_dir, self._corsika_executable())
+        # TODO no link directory required (unless we will run FLUKA)
+        # link_run_directory(corsika_run_dir, self._corsika_executable())
 
         self._export_run_script(sub_script, corsika_run_dir, extra_commands)
 
