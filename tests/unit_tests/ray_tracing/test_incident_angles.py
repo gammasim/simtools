@@ -789,3 +789,45 @@ def test_update_indices_reflection_positive():
     desc = "X reflection point on primary mirror [cm]".lower()
     calc._update_indices_from_header_desc(desc, 15, indices)
     assert indices["prim_x"] == 14
+
+
+def test_save_model_parameters(calculator, tmp_test_directory, monkeypatch):
+    # Mock ModelDataWriter and MetadataCollector
+    mock_writer = MagicMock()
+    monkeypatch.setattr(ia, "ModelDataWriter", mock_writer)
+    monkeypatch.setattr(ia, "MetadataCollector", MagicMock())
+
+    # Create dummy results
+    t1 = QTable()
+    t1["angle_incidence_focal"] = [1.0, 2.0] * u.deg
+    t1["angle_incidence_primary"] = [10.0, 20.0] * u.deg
+
+    results_by_offset = {0.0: t1}
+
+    calculator.save_model_parameters(results_by_offset)
+
+    # ModelDataWriter should be instantiated for each written parameter
+    assert mock_writer.call_count > 0
+
+    writer_instance = mock_writer.return_value
+    assert writer_instance.write.call_count > 0
+
+    # dump_model_parameter is a class/static method and should be called as well
+    assert mock_writer.dump_model_parameter.call_count > 0
+
+
+def test_save_model_parameters_no_results_logs_warning(
+    caplog, calculator, tmp_test_directory, monkeypatch
+):
+    monkeypatch.setattr(
+        ia,
+        "ModelDataWriter",
+        MagicMock(side_effect=AssertionError("ModelDataWriter should not be called")),
+    )
+
+    caplog.set_level(logging.WARNING, logger=ia.__name__)
+    calculator.save_model_parameters({0.0: QTable()})
+    assert any("No results to write model parameters." in rec.message for rec in caplog.records)
+
+    assert not list(Path(tmp_test_directory).glob("*.ecsv"))
+    assert not list(Path(tmp_test_directory).glob("*.json"))
