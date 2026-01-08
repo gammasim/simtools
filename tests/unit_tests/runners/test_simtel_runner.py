@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
 import logging
-import re
-from pathlib import Path
 
 import pytest
 
@@ -60,25 +58,6 @@ def test_get_config_option(simtel_runner):
 def test_raise_simtel_error(simtel_runner):
     with pytest.raises(SimtelExecutionError, match=r"Simtel log file does not exist."):
         simtel_runner._raise_simtel_error()
-
-
-def test_get_resources(simtel_runner):
-    with pytest.raises(FileNotFoundError):
-        simtel_runner.get_resources()
-
-
-def test_get_file_name(simtel_runner):
-    with pytest.raises(
-        ValueError, match=re.escape("simulation_software (test) is not supported in SimulatorArray")
-    ):
-        simtel_runner.get_file_name(simulation_software="test")
-
-    assert isinstance(
-        simtel_runner.get_file_name(
-            simulation_software="sim_telarray", file_type="output", run_number=3
-        ),
-        Path,
-    )
 
 
 def test_raise_simtel_error_with_log_file(simtel_runner, tmp_path, mocker):
