@@ -855,7 +855,7 @@ def now_date_time_in_isoformat():
 
 def load_environment_variables(env_file=".env", env_list=None):
     """
-    Load environment variables from a .env file.
+    Load environment variables (from a .env file or directly from the environment).
 
     Allow to read a specific list of variables or all variables from the .env file.
 
