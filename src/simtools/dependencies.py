@@ -11,11 +11,13 @@ This modules provides two main functionalities:
 import logging
 import re
 import subprocess
+from pathlib import Path
 
 import yaml
 
 from simtools import settings
 from simtools.io import ascii_handler
+from simtools.utils import general as gen
 from simtools.version import __version__
 
 _logger = logging.getLogger(__name__)
@@ -192,11 +194,11 @@ def get_build_options(run_time=None):
     """
     Return CORSIKA / sim_telarray config and build options.
 
-    For CORSIKA / sim_telarray build simtools version >0.25.0:
-    expect build_opts.yml  file in each CORSIKA and sim_telarray
+    For CORSIKA / sim_telarray build for simtools version >0.25.0:
+    expects build_opts.yml file in each CORSIKA and sim_telarray
     directories.
 
-    For CORSIKA / sim_telarray build simtools version <=0.25.0:
+    For CORSIKA / sim_telarray build for simtools version <=0.25.0:
     expects a build_opts.yml file in the sim_telarray directory.
 
     Parameters
@@ -211,7 +213,9 @@ def get_build_options(run_time=None):
     """
     build_opts = {}
     for package in ["corsika", "sim_telarray"]:
-        path = getattr(settings.config, f"{package}_path")
+        path = _get_package_path(package)
+        if not path:
+            continue
         try:
             build_opts.update(_get_build_options_from_file(path / "build_opts.yml", run_time))
         except (FileNotFoundError, TypeError, ValueError):
@@ -226,6 +230,14 @@ def get_build_options(run_time=None):
         raise FileNotFoundError("No build option file found.")
 
     return build_opts
+
+
+def _get_package_path(package):
+    """Get the package path from settings or environment variables."""
+    path = getattr(settings.config, f"{package}_path")
+    if path is None:
+        path = gen.load_environment_variables().get(f"{package}_path")
+    return Path(path) if path else None
 
 
 def _get_build_options_from_file(build_opts_path, run_time=None):
@@ -247,3 +259,21 @@ def _get_build_options_from_file(build_opts_path, run_time=None):
         return yaml.safe_load(result.stdout)
     except yaml.YAMLError as exc:
         raise ValueError(f"Error parsing build_opts.yml from container: {exc}") from exc
+
+
+def export_build_info(output_file, run_time=None):
+    """
+    Export build and version information to a file.
+
+    Parameters
+    ----------
+    output_file : str
+        Path to the output file.
+    run_time : list, optional
+        Runtime environment command (e.g., Docker).
+    """
+    build_info = get_build_options(run_time)
+    build_info["simtools"] = __version__
+    build_info["database_name"] = get_database_version_or_name(version=False)
+    build_info["database_version"] = get_database_version_or_name(version=True)
+    ascii_handler.write_data_to_file(data=build_info, output_file=Path(output_file))
