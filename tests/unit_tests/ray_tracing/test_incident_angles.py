@@ -810,3 +810,20 @@ def test_save_model_parameters(calculator, tmp_test_directory, monkeypatch):
     assert mock_writer.call_count > 0
     # Check if dump_model_parameter was called
     assert mock_writer.dump_model_parameter.call_count > 0
+
+
+def test_save_model_parameters_no_results_logs_warning(
+    caplog, calculator, tmp_test_directory, monkeypatch
+):
+    monkeypatch.setattr(
+        ia,
+        "ModelDataWriter",
+        MagicMock(side_effect=AssertionError("ModelDataWriter should not be called")),
+    )
+
+    caplog.set_level(logging.WARNING, logger=ia.__name__)
+    calculator.save_model_parameters({0.0: QTable()})
+    assert any("No results to write model parameters." in rec.message for rec in caplog.records)
+
+    assert not list(Path(tmp_test_directory).glob("*.ecsv"))
+    assert not list(Path(tmp_test_directory).glob("*.json"))
