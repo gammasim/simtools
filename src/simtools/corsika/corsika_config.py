@@ -49,7 +49,6 @@ class CorsikaConfig:
 
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
-        self.corsika_exec = settings.config.corsika_exe
         self.interaction_table_path = settings.config.corsika_path
         self.config = self._fill_corsika_configuration(settings.config.args)
         self._initialize_from_config(settings.config.args)
