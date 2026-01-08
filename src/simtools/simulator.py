@@ -225,7 +225,7 @@ class Simulator:
             )
         if runner_class is not corsika_runner.CorsikaRunner:
             runner_args["sim_telarray_seeds"] = self.sim_telarray_seeds
-        if runner_class is not corsika_simtel_runner.CorsikaSimtelRunner:
+        if runner_class is corsika_simtel_runner.CorsikaSimtelRunner:
             runner_args["sequential"] = settings.config.args.get("sequential", False)
 
         return runner_class(**runner_args)
