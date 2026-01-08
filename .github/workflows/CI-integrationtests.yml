@@ -65,6 +65,8 @@ jobs:
 
   integration_tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container:
       image: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
       options: --user 0
