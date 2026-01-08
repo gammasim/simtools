@@ -79,8 +79,6 @@ class CorsikaRunner:
         self._logger.debug(f"Extra commands to be added to the run script: {extra_commands}")
 
         corsika_run_dir = self.file_list["corsika_output"].parent
-        # TODO no link directory required (unless we will run FLUKA)
-        # link_run_directory(corsika_run_dir, self._corsika_executable())
 
         self._export_run_script(sub_script, corsika_run_dir, extra_commands)
 
