@@ -111,7 +111,6 @@ scripts.simtools-plot-simtel-events = "simtools.applications.plot_simtel_events:
 scripts.simtools-plot-simulated-event-distributions = "simtools.applications.plot_simulated_event_distributions:main"
 scripts.simtools-plot-tabular-data = "simtools.applications.plot_tabular_data:main"
 scripts.simtools-plot-tabular-data-for-model-parameter = "simtools.applications.plot_tabular_data_for_model_parameter:main"
-scripts.simtools-print-version = "simtools.applications.print_version:main"
 scripts.simtools-production-derive-corsika-limits = "simtools.applications.production_derive_corsika_limits:main"
 scripts.simtools-production-derive-statistics = "simtools.applications.production_derive_statistics:main"
 scripts.simtools-production-generate-grid = "simtools.applications.production_generate_grid:main"
