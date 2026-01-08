@@ -73,7 +73,6 @@ class CorsikaRunner:
             self._corsika_seeds,
             self.file_list["corsika_input"],
             self.file_list["corsika_output"] if not self._use_multipipe else corsika_file,
-            corsika_path=self._corsika_executable().parent.resolve(),
         )
 
         self._logger.debug(f"Extra commands to be added to the run script: {extra_commands}")
