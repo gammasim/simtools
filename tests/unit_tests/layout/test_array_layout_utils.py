@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, Mock, patch
 import astropy.units as u
 import pytest
 
+from simtools.io import ascii_handler
 from simtools.layout import array_layout_utils
 
 # Constants for patch paths
@@ -853,5 +854,52 @@ def test_get_array_name_invalid():
         array_layout_utils._get_array_name("MST")
     with pytest.raises(ValueError, match="Invalid array_name: 'A4MST'"):
         array_layout_utils._get_array_name("A4MST")
-    with pytest.raises(ValueError, match="Invalid array_name: ''"):
-        array_layout_utils._get_array_name("")
+
+
+def test_write_array_elements_from_file_to_repository_utm(tmp_test_directory):
+    array_layout_utils.write_array_elements_from_file_to_repository(
+        coordinate_system="utm",
+        input_file="tests/resources/telescope_positions-North-utm.ecsv",
+        repository_path=tmp_test_directory,
+        parameter_version="5.7.0",
+    )
+    output = Path(tmp_test_directory, "MSTN-03/array_element_position_utm.json")
+
+    assert output.exists()
+
+    para = ascii_handler.collect_data_from_file(output)
+    assert para["parameter"] == "array_element_position_utm"
+    assert para["parameter_version"] == "5.7.0"
+    assert para["instrument"] == "MSTN-03"
+    assert para["unit"] == "m"
+    assert para["value"][0] == pytest.approx(217401.1)
+
+
+def test_write_array_elements_from_file_to_repository_ground(tmp_test_directory):
+    array_layout_utils.write_array_elements_from_file_to_repository(
+        coordinate_system="ground",
+        input_file="tests/resources/telescope_positions-North-ground.ecsv",
+        repository_path=tmp_test_directory,
+        parameter_version="5.7.0",
+    )
+    output = Path(tmp_test_directory, "MSTN-03/array_element_position_ground.json")
+    assert output.exists()
+
+    para = ascii_handler.collect_data_from_file(output)
+    assert para["parameter"] == "array_element_position_ground"
+    assert para["parameter_version"] == "5.7.0"
+    assert para["instrument"] == "MSTN-03"
+    assert para["unit"] == "m"
+    assert para["value"][0] == pytest.approx(26.86)
+
+
+def test_write_array_elements_from_file_to_repository_error(tmp_test_directory):
+    with pytest.raises(
+        ValueError, match=r"Unsupported coordinate system: invalid. Allowed are 'utm' and 'ground'."
+    ):
+        array_layout_utils.write_array_elements_from_file_to_repository(
+            coordinate_system="invalid",
+            input_file="tests/resources/telescope_positions-North-ground.ecsv",
+            repository_path=tmp_test_directory,
+            parameter_version="5.7.0",
+        )

@@ -12,7 +12,7 @@
 
 ARG CORSIKA_VERSION="78010"
 ARG CORSIKA_OPT_PATCH_VERSION="v1.1.0"
-ARG CORSIKA_CONFIG_VERSION="78010"
+ARG CORSIKA_CONFIG_VERSION="v0.1.0"
 ARG AVX_FLAG="avx2"
 
 # hadolint global ignore=DL3013,DL3033,DL3041,DL4006,SC1091,SC2086
@@ -39,7 +39,7 @@ WORKDIR /src
 
 # Clone CORSIKA configuration files from CTAO gitlab
 RUN git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${CORSIKA_VERSION}" "http://${CORSIKA_CONFIG_REPO}" && \
+    git clone --depth 1 --branch "${CORSIKA_CONFIG_VERSION}" "https://${CORSIKA_CONFIG_REPO}" && \
     cp -v corsika7-config/config/${CORSIKA_VERSION}/*.h . && \
     rm -rf corsika7-config
 
@@ -47,7 +47,7 @@ RUN git config --global advice.detachedHead false && \
 RUN --mount=type=secret,id=corsika7_token \
     CORSIKA7_TAG="v$(echo "${CORSIKA_VERSION}" | cut -c1).$(echo "${CORSIKA_VERSION}" | cut -c2-)" && \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${CORSIKA7_TAG}" "https://oauth2:$(cat /run/secrets/corsika7_token)@${CORSIKA_REPO}"
+    GIT_SSL_NO_VERIFY=1 git clone --depth 1 --branch "${CORSIKA7_TAG}" "https://oauth2:$(cat /run/secrets/corsika7_token)@${CORSIKA_REPO}"
 
 # Clone CORSIKA optimization patches from CTAO gitlab
 RUN git config --global advice.detachedHead false && \
