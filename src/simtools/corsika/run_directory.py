@@ -39,7 +39,6 @@ def _link_interaction_tables(workdir, corsika_path):
         "GLAUBTAR.DAT",
         "NUCNUCCS",
         "NUCLEAR.BIN",
-        "VENUSDAT",  # TODO needed? We probably never use VENUS
         "QGSDAT01",
         "SECTNU",
         "qgsdat-II-03",

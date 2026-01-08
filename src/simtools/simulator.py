@@ -12,11 +12,8 @@ from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
-from simtools.runners import runner_services
-from simtools.runners.corsika_runner import CorsikaRunner
-from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
-from simtools.sim_events import file_info
-from simtools.sim_events.writer import EventDataWriter
+from simtools.runners import corsika_runner, corsika_simtel_runner, runner_services
+from simtools.sim_events import file_info, writer
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
 from simtools.utils import general, names
@@ -211,9 +208,9 @@ class Simulator:
             Simulation runner object.
         """
         runner_class = {
-            "corsika": CorsikaRunner,
+            "corsika": corsika_runner.CorsikaRunner,
             "sim_telarray": SimulatorArray,
-            "corsika_sim_telarray": CorsikaSimtelRunner,
+            "corsika_sim_telarray": corsika_simtel_runner.CorsikaSimtelRunner,
         }.get(self.simulation_software)
 
         runner_args = {
@@ -226,9 +223,9 @@ class Simulator:
             runner_args["curved_atmosphere_min_zenith_angle"] = settings.config.args.get(
                 "curved_atmosphere_min_zenith_angle", 65 * u.deg
             )
-        if runner_class is not CorsikaRunner:
+        if runner_class is not corsika_runner.CorsikaRunner:
             runner_args["sim_telarray_seeds"] = self.sim_telarray_seeds
-        if runner_class is CorsikaSimtelRunner:
+        if runner_class is not corsika_simtel_runner.CorsikaSimtelRunner:
             runner_args["sequential"] = settings.config.args.get("sequential", False)
 
         return runner_class(**runner_args)
@@ -358,7 +355,7 @@ class Simulator:
         input_files = self.get_files(file_type="sim_telarray_output")
         output_files = self.get_files(file_type="sim_telarray_event_data")
         for input_file, output_file in zip(input_files, output_files):
-            generator = EventDataWriter([input_file])
+            generator = writer.EventDataWriter([input_file])
             table_handler.write_tables(
                 tables=generator.process_files(),
                 output_file=Path(output_file),
