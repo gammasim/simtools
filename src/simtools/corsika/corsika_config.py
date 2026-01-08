@@ -2,6 +2,7 @@
 
 import logging
 from collections.abc import Mapping
+from pathlib import Path
 
 import numpy as np
 from astropy import units as u
@@ -49,6 +50,8 @@ class CorsikaConfig:
 
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
+        self.corsika_exec = settings.config.corsika_exe
+        self.interaction_table_path = settings.config.corsika_path
         self.config = self._fill_corsika_configuration(settings.config.args)
         self._initialize_from_config(settings.config.args)
 
@@ -429,8 +432,21 @@ class CorsikaConfig:
         parameters["MAXPRT"] = ["10"]
         parameters["ECTMAP"] = ["1.e6"]
 
+        if "epos" in str(self.corsika_exec).lower():
+            parameters.update(self._epos_flags())
+
         self._logger.debug(f"Interaction parameters: {parameters}")
         return parameters
+
+    def _epos_flags(self):
+        """EPOS interaction model flags."""
+        epos_par = {}
+        epos_path = Path(self.interaction_table_path) / "epos"
+        epos_par["EPOPAR fname pathnx"] = [f"{epos_path}/"]
+        for epos_file in ["inics", "iniev", "inirj", "initl", "check"]:
+            epos_par[f"EPOPAR fname {epos_file}"] = [str(epos_path / f"epos.{epos_file}")]
+
+        return epos_par
 
     def _input_config_first_interaction_height(self, entry):
         """Return FIXHEI parameter CORSIKA format."""
