@@ -2,7 +2,7 @@
 name: build-simtools-legacy
 # **legacy build** - will be deprecated in near future
 # Build and push simtools images using CORSIKA / sim_telarray base images.
-# Integration tests are running on the non-optimized ('no_opt') images.
+# Integration tests are running on the generic (non-vector-optimized) images.
 
 on:
   workflow_dispatch:

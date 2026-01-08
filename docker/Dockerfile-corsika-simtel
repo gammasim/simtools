@@ -78,7 +78,7 @@ WORKDIR /workdir/sim_telarray/${CORSIKA_DIR}
 RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
         patch -b -p0 src/corsika.F < "../corsika-77550.patch"; \
     fi && \
-    if [ "$AVX_FLAG" != "no_opt" ]; then \
+    if [ "$AVX_FLAG" != "generic" ]; then \
         ./corsika_opt_patching.sh && \
         autoreconf; \
     fi
@@ -88,7 +88,7 @@ WORKDIR /workdir/sim_telarray
 # hadolint ignore=DL3003
 RUN for variant in curved ""; do \
         (cd ./${CORSIKA_DIR} && \
-        if [ "$AVX_FLAG" = "no_opt" ] || [ "$variant" = "curved" ]; then \
+        if [ "$AVX_FLAG" = "generic" ] || [ "$variant" = "curved" ]; then \
             ../corsika_build_script "$HADRONIC_MODEL" generic $variant; \
         else \
             ../corsika_build_script "$HADRONIC_MODEL" generic cerenkopt vlibm $variant; \
@@ -97,7 +97,7 @@ RUN for variant in curved ""; do \
         AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
         C_SPECIFIC_FLAGS="-std=c99" && \
         FORTRAN_SPECIFIC_FLAGS="-ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy" && \
-        if [ "$AVX_FLAG" = "no_opt" ] || [ "$variant" = "curved" ]; then \
+        if [ "$AVX_FLAG" = "generic" ] || [ "$variant" = "curved" ]; then \
             BASE_FLAGS="-g -O3"; \
         else \
             BASE_FLAGS="-g -DCERENKOPT -DVLIBM -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
