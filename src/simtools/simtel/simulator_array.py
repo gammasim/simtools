@@ -1,6 +1,6 @@
 """Simulation runner for array simulations."""
 
-import logging
+from pathlib import Path
 
 from simtools import settings
 from simtools.io import io_handler
@@ -21,59 +21,48 @@ class SimulatorArray(SimtelRunner):
         Use multipipe to run CORSIKA and sim_telarray.
     sim_telarray_seeds: dict
         Dictionary with configuration for sim_telarray random instrument setup.
+    is_calibration_run: bool
+        Flag to indicate if this is a calibration run.
     """
 
     def __init__(
         self,
         corsika_config,
         label=None,
-        use_multipipe=False,
         sim_telarray_seeds=None,
-        calibration_config=None,
+        is_calibration_run=False,
     ):
         """Initialize SimulatorArray."""
-        self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init SimulatorArray")
         super().__init__(
             label=label,
             corsika_config=corsika_config,
-            use_multipipe=use_multipipe,
-            calibration_run_mode=calibration_config.get("run_mode") if calibration_config else None,
+            is_calibration_run=is_calibration_run,
         )
 
         self.sim_telarray_seeds = sim_telarray_seeds
         self.corsika_config = corsika_config
-        self.calibration_config = calibration_config
+        self.is_calibration_run = is_calibration_run
         self.io_handler = io_handler.IOHandler()
         self._log_file = None
 
-    def prepare_run_script(self, test=False, input_file=None, run_number=None, extra_commands=None):
+    def prepare_run(self, run_number=None, sub_script=None, corsika_file=None, extra_commands=None):
         """
         Build and return the full path of the bash run script containing the sim_telarray command.
 
         Parameters
         ----------
-        test: bool
-            Test flag for faster execution.
-        input_file: str or Path
-            Full path of the input CORSIKA file.
         run_number: int
             Run number.
+        corsika_file: str or Path
+            Full path of the input CORSIKA file.
         extra_commands: list[str]
             Additional commands for running simulations given in config.yml.
-
-        Returns
-        -------
-        Path
-            Full path of the run script.
         """
-        script_file_path = self.get_file_name(file_type="sub_script", run_number=run_number)
-        self._logger.debug(f"Run bash script - {script_file_path}")
+        command = self.make_run_command(run_number=run_number, corsika_input_file=corsika_file)
+        sub_script = Path(sub_script)
+        self._logger.debug(f"Run bash script - {sub_script}")
         self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
-
-        command = self.make_run_command(run_number=run_number, input_file=input_file)
-        raise ValueError
-        with script_file_path.open("w", encoding="utf-8") as file:
+        with sub_script.open("w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n\n")
             file.write("set -e\n")
             file.write("set -o pipefail\n")
@@ -85,21 +74,18 @@ class SimulatorArray(SimtelRunner):
                     file.write(f"{line}\n")
                 file.write("# End of extras\n\n")
 
-            n = 1 if test else self.runs_per_set
-            for _ in range(n):
+            for _ in range(self.runs_per_set):
                 file.write(f"{command}\n\n")
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-        return script_file_path
-
-    def make_run_command(self, run_number=None, input_file=None):
+    def make_run_command(self, run_number=None, corsika_input_file=None):
         """
         Build and return the command to run sim_telarray.
 
         Parameters
         ----------
-        input_file: str
+        corsika_input_file: str
             Full path of the input CORSIKA file
         run_number: int (optional)
             run number
@@ -109,14 +95,16 @@ class SimulatorArray(SimtelRunner):
         str
             Command to run sim_telarray.
         """
+        self.file_list = self.runner_service.load_files(run_number=run_number)
         command = self._common_run_command(run_number)
-        if self.calibration_config:
+
+        if self.is_calibration_run:
             command += self._make_run_command_for_calibration_simulations()
         else:
             command += self._make_run_command_for_shower_simulations()
 
         # "-C show=all" should be the last option
-        return [*command, "-C", "show=all", input_file]
+        return [*command, "-C", "show=all", corsika_input_file]
 
     def _make_run_command_for_shower_simulations(self):
         """
@@ -139,7 +127,7 @@ class SimulatorArray(SimtelRunner):
 
     def _make_run_command_for_calibration_simulations(self):
         """Build sim_telarray command for calibration simulations."""
-        cfg = self.calibration_config
+        cfg = settings.config.args
         altitude = self.corsika_config.array_model.site_model.get_parameter_value_with_unit(
             "reference_point_altitude"
         ).to_value("m")
@@ -168,10 +156,15 @@ class SimulatorArray(SimtelRunner):
     def _common_run_command(self, run_number):
         """Build generic run command for sim_telarray."""
         config_dir = self.corsika_config.array_model.get_config_directory()
-        self._log_file = self.get_file_name(file_type="log", run_number=run_number)
-        histogram_file = self.get_file_name(file_type="histogram", run_number=run_number)
-        output_file = self.get_file_name(file_type="simtel_output", run_number=run_number)
-
+        self._log_file = self.runner_service.get_file_name(
+            file_type="sim_telarray_log", run_number=run_number
+        )
+        histogram_file = self.runner_service.get_file_name(
+            file_type="sim_telarray_histogram", run_number=run_number
+        )
+        output_file = self.runner_service.get_file_name(
+            file_type="sim_telarray_output", run_number=run_number
+        )
         self.corsika_config.array_model.export_all_simtel_config_files()
 
         cmd = [
@@ -251,7 +244,9 @@ class SimulatorArray(SimtelRunner):
         InvalidOutputFileError
             If sim_telarray output file does not exist.
         """
-        output_file = self.get_file_name(file_type="simtel_output", run_number=run_number)
+        output_file = self.runner_service.get_file_name(
+            file_type="simtel_output", run_number=run_number
+        )
         if not output_file.exists():
             raise InvalidOutputFileError(f"sim_telarray output file {output_file} does not exist.")
         self._logger.debug(f"sim_telarray output file {output_file} exists.")

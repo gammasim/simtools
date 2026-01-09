@@ -17,7 +17,7 @@ applications:
     stars: null
     nsb_scaling_factor: 1.
   integration_tests:
-  - output_file: sim_telarray/data/run000010/pedestals_dark_run000010_za20deg_azm000deg_North_1lst_6.0.2_test-dark-pedestal-production-North.simtel.zst
+  - output_file: sim_telarray/run000010/pedestals_dark_run000010_za20deg_azm000deg_North_1lst_6.0.2_test-dark-pedestal-production-North.simtel.zst
   test_name: pedestals_dark_20_deg_north
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
