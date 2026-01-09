@@ -6,7 +6,6 @@ from pathlib import Path
 from simtools import settings
 from simtools.io import ascii_handler
 from simtools.runners.simtel_runner import SimtelRunner
-from simtools.utils import general
 
 
 class SimulatorCameraEfficiency(SimtelRunner):
@@ -107,51 +106,72 @@ class SimulatorCameraEfficiency(SimtelRunner):
                 "mirror_reflectivity", "secondary_mirror_incidence_angle"
             )
 
-        command = str(settings.config.sim_telarray_path / "bin/testeff")
+        cmd = [str(settings.config.sim_telarray_path / "bin/testeff")]
+
         if self.skip_correction_to_nsb_spectrum:
-            command += " -nc"  # Do not apply correction to original altitude where B&E was derived
-        command += " -I"  # Clear the fall-back configuration directories
-        command += f" -I{self._telescope_model.config_file_directory}"
+            cmd.append("-nc")
+
+        cmd.extend(
+            [
+                "-I",
+                f"-I{self._telescope_model.config_file_directory}",
+            ]
+        )
+
         if self.nsb_spectrum is not None:
-            command += f" -fnsb {self.nsb_spectrum}"
-        command += " -nm -nsb-extra"
-        command += f" -alt {self._site_model.get_parameter_value('corsika_observation_level')}"
-        command += f" -fatm {self._site_model.get_parameter_value('atmospheric_transmission')}"
-        command += f" -flen {focal_length}"
-        command += f" -fcur {curvature_radius:.3f}"
-        command += f" {pixel_shape_cmd} {pixel_diameter}"
+            cmd.extend(["-fnsb", str(self.nsb_spectrum)])
+
+        cmd.extend(
+            [
+                "-nm",
+                "-nsb-extra",
+                "-alt",
+                str(self._site_model.get_parameter_value("corsika_observation_level")),
+                "-fatm",
+                str(self._site_model.get_parameter_value("atmospheric_transmission")),
+                "-flen",
+                str(focal_length),
+                "-fcur",
+                f"{curvature_radius:.3f}",
+                pixel_shape_cmd,
+                str(pixel_diameter),
+            ]
+        )
+
         if mirror_class == 0:
-            command += f" -fmir {self._telescope_model.get_parameter_value('mirror_list')}"
-        if mirror_class == 2:
-            command += f" -fmir {self._telescope_model.get_parameter_value('fake_mirror_list')}"
-        command += f" -fref {mirror_reflectivity}"
-        if mirror_class == 2:
-            command += " -m2"
-            command += f" -fref2 {mirror_reflectivity_secondary}"
-        command += " -teltrans "
-        command += f"{self._telescope_model.get_parameter_value('telescope_transmission')[0]}"
-        command += f" -camtrans {camera_transmission}"
-        command += f" -fflt {camera_filter_file}"
-        command += (
-            f" -fang {self._telescope_model.camera.get_lightguide_efficiency_angle_file_name()}"
-        )
-        command += (
-            f" -fwl {self._telescope_model.camera.get_lightguide_efficiency_wavelength_file_name()}"
-        )
-        command += f" -fqe {self._telescope_model.get_parameter_value('quantum_efficiency')}"
-        command += " 200 1000"  # lmin and lmax
-        command += " 300"  # Xmax
-        command += f" {self._site_model.get_parameter_value('atmospheric_profile')}"
-        command += f" {self.zenith_angle}"
+            cmd.extend(["-fmir", self._telescope_model.get_parameter_value("mirror_list")])
+        elif mirror_class == 2:
+            cmd.extend(["-fmir", self._telescope_model.get_parameter_value("fake_mirror_list")])
 
-        # Remove the default sim_telarray configuration directories
-        command = general.clear_default_sim_telarray_cfg_directories(command)
+        cmd.extend(["-fref", mirror_reflectivity])
 
-        return (
-            f"cd {settings.config.sim_telarray_path} && {command}",
-            self._file_simtel,
-            self._file_log,
+        if mirror_class == 2:
+            cmd.append("-m2")
+            cmd.extend(["-fref2", mirror_reflectivity_secondary])
+
+        cmd.extend(
+            [
+                "-teltrans",
+                str(self._telescope_model.get_parameter_value("telescope_transmission")[0]),
+                "-camtrans",
+                str(camera_transmission),
+                "-fflt",
+                camera_filter_file,
+                "-fang",
+                self._telescope_model.camera.get_lightguide_efficiency_angle_file_name(),
+                "-fwl",
+                self._telescope_model.camera.get_lightguide_efficiency_wavelength_file_name(),
+                "-fqe",
+                str(self._telescope_model.get_parameter_value("quantum_efficiency")),
+                "200",
+                "1000",
+                "300",  # lmin, lmax, Xmax
+                str(self._site_model.get_parameter_value("atmospheric_profile")),
+                str(self.zenith_angle),
+            ]
         )
+
+        return cmd, self._file_simtel, self._file_log
 
     def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
         """Check run results.

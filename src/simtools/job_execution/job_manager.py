@@ -1,6 +1,7 @@
 """Interface to workload managers to run jobs on a compute node."""
 
 import logging
+import os
 import stat
 import subprocess
 import time
@@ -58,11 +59,12 @@ def retry_command(command, max_attempts=3, delay=10):
 
 def submit(
     command,
-    out_file,
-    err_file,
+    out_file=None,
+    err_file=None,
     configuration=None,
     application_log=None,
     runtime_environment=None,
+    env=None,
     test=False,
 ):
     """
@@ -82,6 +84,8 @@ def submit(
         Configuration for the 'command' execution.
     runtime_environment: list
         Command to run the application in the specified runtime environment.
+    env: dict
+        Environment variables to set for the job execution.
     application_log: str or Path
         The log file of the actual application.
         Provided in order to print the log excerpt in case of run time error.
@@ -97,6 +101,12 @@ def submit(
         logger.info("Testing mode enabled")
         return None
 
+    sub_process_env = os.environ.copy()
+    if env:
+        for key, value in env.items():
+            sub_process_env[key] = value
+    logger.info(f"Setting environment variables for job execution: {sub_process_env}")
+
     # disable pylint warning about not closing files here (explicitly closed in finally block)
     stdout = open(out_file, "w", encoding="utf-8") if out_file else subprocess.PIPE  # pylint: disable=consider-using-with
     stderr = open(err_file, "w", encoding="utf-8") if err_file else subprocess.PIPE  # pylint: disable=consider-using-with
@@ -104,11 +114,12 @@ def submit(
     try:
         result = subprocess.run(
             command,
-            shell=True,
+            shell=isinstance(command, str),
             check=True,
             text=True,
             stdout=stdout,
             stderr=stderr,
+            env=sub_process_env,
         )
 
     except subprocess.CalledProcessError as exc:
@@ -186,6 +197,7 @@ def _raise_job_execution_error(exc, out_file, err_file, application_log):
         The log file of the actual application.
     """
     logger.error(f"Job execution failed with return code {exc.returncode}")
+    logger.error(f"stderr: {exc.stderr}")
 
     if out_file:
         logger.error(f"Output log excerpt from {out_file}:\n{gen.get_log_excerpt(out_file)}")

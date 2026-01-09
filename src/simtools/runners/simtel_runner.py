@@ -73,14 +73,23 @@ class SimtelRunner:
         command, stdout_file, stderr_file = self._make_run_command(
             run_number=run_number, input_file=input_file
         )
-
         if test:
             self._logger.info(f"Running (test) with command: {command}")
-            job_manager.submit(command, out_file=stdout_file, err_file=stderr_file)
+            job_manager.submit(
+                command,
+                out_file=stdout_file,
+                err_file=stderr_file,
+                env={"SIM_TELARRAY_CONFIG_PATH": ""},
+            )
         else:
             self._logger.debug(f"Running ({self.runs_per_set}x) with command: {command}")
             for _ in range(self.runs_per_set):
-                job_manager.submit(command, out_file=stdout_file, err_file=stderr_file)
+                job_manager.submit(
+                    command,
+                    out_file=stdout_file,
+                    err_file=stderr_file,
+                    env={"SIM_TELARRAY_CONFIG_PATH": ""},
+                )
 
     def _raise_simtel_error(self):
         """
@@ -99,33 +108,22 @@ class SimtelRunner:
         raise SimtelExecutionError(msg)
 
     def _make_run_command(self, run_number=None, input_file=None):
+        """
+        Make the sim_telarray run command.
+
+        Returns a list of command arguments.
+        """
         self._logger.debug(
             "make_run_command is being called from the base class - "
             "it should be implemented in the sub class"
         )
         input_file = input_file if input_file else "nofile"
         run_number = run_number if run_number else 1
-        return f"{input_file}-{run_number}", None, None
+        return [{input_file}, {run_number}], None, None
 
     @staticmethod
     def get_config_option(par, value=None, weak_option=False):
-        """
-        Build sim_telarray command.
-
-        Parameters
-        ----------
-        par: str
-            Parameter name.
-        value: str
-            Parameter value.
-        weak_option: bool
-            If True, use -W option instead of -C.
-
-        Returns
-        -------
-        str
-            Command for sim_telarray.
-        """
+        """Build sim_telarray command and return as string."""
         option_syntax = "-W" if weak_option else "-C"
         c = f" {option_syntax} {par}"
         c += f"={value}" if value is not None else ""
