@@ -659,12 +659,11 @@ def test_simulate(array_simulator, mocker):
     mocker.patch.object(array_simulator, "_get_corsika_file", return_value="/path/to/corsika.file")
     mocker.patch.object(array_simulator, "update_file_lists")
 
-    mock_job_manager = mocker.Mock()
-    mock_job_manager_class = mocker.patch(
-        "simtools.simulator.JobManager", return_value=mock_job_manager
-    )
+    mock_submit = mocker.patch("simtools.job_execution.job_manager.submit")
+
     array_simulator.simulate()
 
+    # Verify the simulation runner prepared the run
     mock_simulation_runner.prepare_run.assert_called_once_with(
         run_number=42,
         corsika_file="/path/to/corsika.file",
@@ -672,9 +671,13 @@ def test_simulate(array_simulator, mocker):
         extra_commands=["echo test"],
     )
 
-    array_simulator.update_file_lists.assert_called_once()
-    mock_job_manager_class.assert_called_once()
-    mock_job_manager.submit.assert_called_once_with("script_42.sh", "output_42.out")
+    # Verify the job manager submitted the job
+    mock_submit.assert_called_once_with(
+        command="script_42.sh",
+        out_file="output_42.out",
+        err_file="output_42.out",
+        env={"SIM_TELARRAY_CONFIG_PATH": ""},
+    )
 
 
 def test_save_file_lists(array_simulator, mocker, tmp_path, caplog):
