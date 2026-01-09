@@ -150,9 +150,9 @@ class PSFImage:
                 self._process_simtel_line(line)
 
         if not self._is_photon_positions_ok():
-            msg = "Problems reading sim_telarray file - invalid data"
-            self._logger.error(msg)
-            raise RuntimeError(msg)
+            raise RuntimeError(
+                f"Problems reading sim_telarray photons file {photons_file} - invalid data"
+            )
 
         self.centroid_x = np.mean(self.photon_pos_x)
         self.centroid_y = np.mean(self.photon_pos_y)
