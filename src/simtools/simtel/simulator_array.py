@@ -79,7 +79,7 @@ class SimulatorArray(SimtelRunner):
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-    def make_run_command(self, run_number=None, corsika_input_file=None):
+    def make_run_command(self, run_number=None, corsika_input_file=None, weak_pointing=None):
         """
         Build and return the command to run sim_telarray.
 
@@ -96,7 +96,7 @@ class SimulatorArray(SimtelRunner):
             Command to run sim_telarray.
         """
         self.file_list = self.runner_service.load_files(run_number=run_number)
-        command = self._common_run_command(run_number)
+        command = self._common_run_command(run_number, weak_pointing)
 
         if self.is_calibration_run:
             command += self._make_run_command_for_calibration_simulations()
@@ -153,7 +153,7 @@ class SimulatorArray(SimtelRunner):
 
         return command
 
-    def _common_run_command(self, run_number):
+    def _common_run_command(self, run_number, weak_pointing=None):
         """Build generic run command for sim_telarray."""
         config_dir = self.corsika_config.array_model.get_config_directory()
         self._log_file = self.runner_service.get_file_name(
@@ -173,9 +173,11 @@ class SimulatorArray(SimtelRunner):
             str(self.corsika_config.array_model.config_file_path),
             f"-I{config_dir}",
         ]
-        options = {
+        weak_options = {
             "telescope_theta": self.corsika_config.zenith_angle,
             "telescope_phi": self.corsika_config.azimuth_angle,
+        }
+        options = {
             "histogram_file": histogram_file,
             "random_state": "none",
             "output_file": output_file,
@@ -191,6 +193,8 @@ class SimulatorArray(SimtelRunner):
 
         for key, value in options.items():
             cmd.extend(["-C", f"{key}={value}"])
+        for key, value in weak_options.items():
+            cmd.extend([("-W" if weak_pointing else "-C"), f"{key}={value}"])
         return cmd
 
     def _pedestals_nsb_only_command(self):
