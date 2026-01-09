@@ -122,7 +122,9 @@ class CorsikaSimtelRunner:
         )
         with open(multipipe_file, "w", encoding="utf-8") as file:
             for simulator_array in self.simulator_array:
-                log_file = simulator_array.get_file_name(file_type="log", run_number=run_number)
+                log_file = simulator_array.runner_service.get_file_name(
+                    file_type="sim_telarray_log", run_number=run_number
+                )
                 run_command = simulator_array.make_run_command(
                     run_number=run_number,
                     corsika_input_file="-",  # instruct sim_telarray to take input from stdout
