@@ -318,7 +318,7 @@ class RunnerServices:
         dict
             run time and number of simulated events
         """
-        sub_log_file = self.get_file_name(file_type="sub_log", run_number=run_number, mode="out")
+        sub_log_file = self.get_file_name(file_type="sub_log", run_number=run_number)
         _logger.debug(f"Reading resources from {sub_log_file}")
 
         _resources = {}

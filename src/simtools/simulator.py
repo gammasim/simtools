@@ -12,7 +12,7 @@ from astropy import units as u
 
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
-from simtools.job_execution.job_manager import JobManager
+from simtools.job_execution import job_manager
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
@@ -257,15 +257,18 @@ class Simulator:
             extra_commands=self._extra_commands,
         )
 
-        job_manager = JobManager(test=self._test)
         job_manager.submit(
-            run_script=run_script,
-            run_out_file=self._simulation_runner.get_file_name(
+            command=run_script,
+            out_file=self._simulation_runner.get_file_name(
                 file_type="sub_log", run_number=self.run_number
             ),
-            log_file=self._simulation_runner.get_file_name(
+            err_file=self._simulation_runner.get_file_name(
+                file_type="sub_log", run_number=self.run_number
+            ),
+            application_log=self._simulation_runner.get_file_name(
                 file_type=("log"), run_number=self.run_number
             ),
+            test=self._test,
         )
 
         self._fill_list_of_generated_files()

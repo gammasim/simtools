@@ -2,8 +2,6 @@
 
 import logging
 import shutil
-import stat
-import subprocess
 from pathlib import Path
 
 import astropy.units as u
@@ -11,6 +9,7 @@ import numpy as np
 
 from simtools import settings
 from simtools.io import io_handler
+from simtools.job_execution import job_manager
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
@@ -87,15 +86,7 @@ class SimulatorLightEmission(SimtelRunner):
         """
         run_script = self.prepare_script()
         log_path = Path(self.output_directory) / "logfile.log"
-        with open(log_path, "w", encoding="utf-8") as fh:
-            subprocess.run(
-                run_script,
-                shell=False,
-                check=False,
-                text=True,
-                stdout=fh,
-                stderr=fh,
-            )
+        job_manager.submit(run_script, out_file=log_path, err_file=log_path.with_suffix(".err"))
         out = Path(self._get_simulation_output_filename())
         if not out.exists():
             self._logger.warning(f"Expected sim_telarray output not found: {out}")
@@ -135,7 +126,6 @@ class SimulatorLightEmission(SimtelRunner):
         ]
 
         script_file.write_text("".join(lines), encoding="utf-8")
-        script_file.chmod(script_file.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
         return script_file
 
     def _get_prefix(self):

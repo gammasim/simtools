@@ -1,7 +1,6 @@
 """Generate run scripts and directories for CORSIKA simulations."""
 
 import logging
-import stat
 
 from simtools import settings
 from simtools.io import io_handler
@@ -151,7 +150,6 @@ class CorsikaRunner:
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-        script_file_path.chmod(script_file_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
         return script_file_path
 
     def get_resources(self, run_number=None):

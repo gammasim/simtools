@@ -1215,11 +1215,6 @@ def test_prepare_script(simulator_instance, tmp_test_directory):
         assert "light_emission_cmd" in content
         assert "simtel_cmd" in content
 
-        # Verify script is executable
-        import stat
-
-        assert result.stat().st_mode & stat.S_IXUSR
-
 
 def test_prepare_script_output_file_exists(simulator_instance, tmp_test_directory):
     """Test prepare_script method when output file already exists."""
@@ -1241,8 +1236,6 @@ def test_prepare_script_output_file_exists(simulator_instance, tmp_test_director
 
 def test_simulate(simulator_instance, tmp_test_directory):
     """Test simulate method."""
-    from unittest.mock import mock_open
-
     # Setup
     simulator_instance.output_directory = Path(tmp_test_directory) / "output"
     simulator_instance.output_directory.mkdir(parents=True, exist_ok=True)
@@ -1258,8 +1251,7 @@ def test_simulate(simulator_instance, tmp_test_directory):
             "_get_simulation_output_filename",
             return_value=str(mock_output_file),
         ),
-        patch("subprocess.run") as mock_subprocess,
-        patch("builtins.open", mock_open()) as mock_file,
+        patch("simtools.job_execution.job_manager.submit") as mock_job_submit,
     ):
         # Create the output file to simulate successful run
         mock_output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -1267,17 +1259,16 @@ def test_simulate(simulator_instance, tmp_test_directory):
 
         result = simulator_instance.simulate()
 
-        # Verify subprocess was called correctly
-        mock_subprocess.assert_called_once()
-        call_args = mock_subprocess.call_args
+        # Verify job_manager.submit was called correctly
+        mock_job_submit.assert_called_once()
+        call_args = mock_job_submit.call_args
         assert call_args[0][0] == mock_script_path  # First positional arg is the script
-        assert call_args[1]["shell"] is False
-        assert call_args[1]["check"] is False
-        assert call_args[1]["text"] is True
 
-        # Verify log file was opened
+        # Check the out_file and err_file arguments
         expected_log_path = Path(tmp_test_directory) / "output" / "logfile.log"
-        mock_file.assert_called_once_with(expected_log_path, "w", encoding="utf-8")
+        expected_err_path = expected_log_path.with_suffix(".err")
+        assert call_args[1]["out_file"] == expected_log_path
+        assert call_args[1]["err_file"] == expected_err_path
 
         # Verify return value
         assert result == mock_output_file
@@ -1285,8 +1276,6 @@ def test_simulate(simulator_instance, tmp_test_directory):
 
 def test_simulate_output_file_missing(simulator_instance, tmp_test_directory):
     """Test simulate method when output file is missing (logs warning)."""
-    from unittest.mock import mock_open
-
     # Setup
     simulator_instance.output_directory = Path(tmp_test_directory) / "output"
     simulator_instance.output_directory.mkdir(parents=True, exist_ok=True)
@@ -1302,8 +1291,7 @@ def test_simulate_output_file_missing(simulator_instance, tmp_test_directory):
             "_get_simulation_output_filename",
             return_value=str(mock_output_file),
         ),
-        patch("subprocess.run"),
-        patch("builtins.open", mock_open()),
+        patch("simtools.job_execution.job_manager.submit"),
     ):
         # Don't create the output file to simulate missing output
         result = simulator_instance.simulate()
