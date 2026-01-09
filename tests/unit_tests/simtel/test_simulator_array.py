@@ -47,7 +47,7 @@ def test_init_simulator_array_with_seeds(corsika_config_mock_array_model):
 def test_prepare_run(simtel_runner, tmp_path, mocker):
     """Test prepare_run method creates script with correct content."""
     # Mock make_run_command
-    mocker.patch.object(simtel_runner, "make_run_command", return_value="echo 'test command'")
+    mocker.patch.object(simtel_runner, "make_run_command", return_value=["echo", "'test command'"])
 
     # Set up test data
     run_number = 42
@@ -71,12 +71,13 @@ def test_prepare_run(simtel_runner, tmp_path, mocker):
     assert "export TEST_VAR=1" in content
     assert "echo 'extra command'" in content
     assert "echo 'test command'" in content
+    assert "SECONDS=0" in content
     assert 'echo "RUNTIME: $SECONDS"' in content
 
 
 def test_prepare_run_no_extra_commands(simtel_runner, tmp_path, mocker):
     """Test prepare_run method without extra commands."""
-    mocker.patch.object(simtel_runner, "make_run_command", return_value="sim_telarray command")
+    mocker.patch.object(simtel_runner, "make_run_command", return_value=["sim_telarray", "command"])
 
     sub_script = tmp_path / "simple_script.sh"
     simtel_runner.prepare_run(run_number=1, sub_script=sub_script, corsika_file="test.corsika")
@@ -93,9 +94,9 @@ def test_make_run_command_shower_simulation(simtel_runner, mocker):
     simtel_runner.runner_service.load_files.return_value = {}
 
     # Mock the method calls we know will be made
-    mocker.patch.object(simtel_runner, "_common_run_command", return_value="common_command")
+    mocker.patch.object(simtel_runner, "_common_run_command", return_value=["common_command"])
     mocker.patch.object(
-        simtel_runner, "_make_run_command_for_shower_simulations", return_value=" shower_opts"
+        simtel_runner, "_make_run_command_for_shower_simulations", return_value=["shower_opts"]
     )
     mocker.patch(
         "simtools.utils.general.clear_default_sim_telarray_cfg_directories",
@@ -104,8 +105,12 @@ def test_make_run_command_shower_simulation(simtel_runner, mocker):
 
     result = simtel_runner.make_run_command(run_number=1, corsika_input_file="test.corsika")
 
-    # Just verify that the result contains expected components
-    assert isinstance(result, str)
+    # Verify that the result contains expected components
+    assert isinstance(result, list)
+    assert "common_command" in result
+    assert "shower_opts" in result
+    assert "-C" in result
+    assert "show=all" in result
     assert "test.corsika" in result
 
 
@@ -116,9 +121,9 @@ def test_make_run_command_calibration_simulation(simtel_runner, mocker):
     simtel_runner.runner_service.load_files.return_value = {}
 
     # Mock the methods
-    mocker.patch.object(simtel_runner, "_common_run_command", return_value="common_command")
+    mocker.patch.object(simtel_runner, "_common_run_command", return_value=["common_command"])
     mocker.patch.object(
-        simtel_runner, "_make_run_command_for_calibration_simulations", return_value=" calib_opts"
+        simtel_runner, "_make_run_command_for_calibration_simulations", return_value=["calib_opts"]
     )
     mocker.patch(
         "simtools.utils.general.clear_default_sim_telarray_cfg_directories",
@@ -127,7 +132,12 @@ def test_make_run_command_calibration_simulation(simtel_runner, mocker):
 
     result = simtel_runner.make_run_command(run_number=1, corsika_input_file="test.corsika")
 
-    assert isinstance(result, str)
+    # Verify that the result contains expected components
+    assert isinstance(result, list)
+    assert "common_command" in result
+    assert "calib_opts" in result
+    assert "-C" in result
+    assert "show=all" in result
     assert "test.corsika" in result
 
 
@@ -144,7 +154,9 @@ def test_make_run_command_for_shower_simulations(simtel_runner, mocker):
     mock_power_law.assert_called_once_with(simtel_runner.corsika_config.primary_particle)
 
     # The result should contain the power law configuration
-    assert isinstance(result, str)
+    assert isinstance(result, list)
+    assert "-C" in result
+    assert "power_law=2.5" in result
 
 
 def test_make_run_command_for_calibration_simulations_basic(simtel_runner, mocker):
@@ -203,7 +215,7 @@ def test_common_run_command_basic(simtel_runner, mocker):
     result = simtel_runner._common_run_command(run_number=42)
 
     # Should create basic command structure
-    assert isinstance(result, str)
+    assert isinstance(result, list)
     assert "/path/to/sim_telarray" in result
     simtel_runner.corsika_config.array_model.export_all_simtel_config_files.assert_called_once()
 
