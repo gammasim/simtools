@@ -32,12 +32,12 @@ def test_run(simtel_runner, caplog, mocker):
 
     with caplog.at_level(logging.INFO):
         simtel_runner.run(test=True, input_file="test", run_number=5)
-    assert "Running (test) with command: test-5" in caplog.text
+    assert "Running (test) with command: ['test-5']" in caplog.text
 
     simtel_runner.runs_per_set = 5
     with caplog.at_level(logging.DEBUG):
         simtel_runner.run(test=False, input_file="test", run_number=5)
-    assert "Running (5x) with command: test-5" in caplog.text
+    assert "Running (5x) with command: ['test-5']" in caplog.text
 
 
 def test_run_raises_simtel_error(simtel_runner):
@@ -51,7 +51,7 @@ def test_make_run_command(simtel_runner, caplog):
         command, stdout_file, stderr_file = simtel_runner._make_run_command(
             input_file="test", run_number=5
         )
-        assert command == "test-5"
+        assert command == ["test-5"]
         assert stdout_file is None
         assert stderr_file is None
     assert "make_run_command is being called from the base class" in caplog.text
@@ -139,7 +139,7 @@ def test_run_with_test_mode(simtel_runner, mocker):
 
     mock_make_run_command.assert_called_once_with(run_number=7, input_file="test_input")
     mock_job_manager_submit.assert_called_once_with(
-        "echo test", out_file=None, err_file=None, test=True
+        "echo test", out_file=None, err_file=None, env={"SIM_TELARRAY_CONFIG_PATH": ""}
     )
 
 

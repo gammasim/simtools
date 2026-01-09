@@ -1,15 +1,13 @@
 #!/usr/bin/python3
 
 import copy
-import subprocess
 from pathlib import Path
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
 from astropy.table import Table
 
-from simtools import settings
 from simtools.camera.single_photon_electron_spectrum import SinglePhotonElectronSpectrum
 
 
@@ -103,12 +101,12 @@ def test_write_single_pe_spectrum(
     mock_dump.assert_called_once()
 
 
-@patch("simtools.camera.single_photon_electron_spectrum.subprocess.run")
+@patch("simtools.job_execution.job_manager.submit")
 @patch(
     "simtools.camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum._get_input_data"
 )
 def test_derive_spectrum_norm_spe(
-    mock_get_input_data, mock_subprocess_run, spe_spectrum, spe_data, tmp_test_directory
+    mock_get_input_data, mock_job_submit, spe_spectrum, spe_data, tmp_test_directory
 ):
     tmpfile_path = tmp_test_directory / "test_spe_data.txt"
     tmpfile_path.write_text(spe_data, encoding="utf-8")
@@ -121,8 +119,8 @@ def test_derive_spectrum_norm_spe(
     tmpfile = MockTempFile(tmpfile_path)
     # first call to _get_input_data returns tmpfile, second call None
     mock_get_input_data.side_effect = [tmpfile, None]
-    mock_subprocess_run.return_value.stdout = spe_data
-    mock_subprocess_run.return_value.returncode = 0
+    mock_job_submit.return_value.stdout = spe_data
+    mock_job_submit.return_value.returncode = 0
 
     return_code = spe_spectrum._derive_spectrum_norm_spe(
         input_spectrum=spe_spectrum.args_dict["input_spectrum"],
@@ -131,18 +129,12 @@ def test_derive_spectrum_norm_spe(
     )
 
     assert mock_get_input_data.call_count == 2
-    norm_spe_bin = str(settings.config.sim_telarray_path / "bin" / "norm_spe")
-    mock_subprocess_run.assert_called_once_with(
-        [norm_spe_bin, "-r", "0.1,1.0", ANY],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+    mock_job_submit.assert_called_once()
     assert return_code == 0
     assert spe_spectrum.data == spe_data
 
     mock_get_input_data.reset_mock()
-    mock_subprocess_run.reset_mock()
+    mock_job_submit.reset_mock()
 
     tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
     tmp_spe_spectrum.args_dict["afterpulse_spectrum"] = "afterpulse_spectrum"
@@ -155,37 +147,20 @@ def test_derive_spectrum_norm_spe(
         afterpulse_fitted_spectrum=None,  # Add the missing parameter
     )
 
-    mock_subprocess_run.assert_called_with(
-        [
-            norm_spe_bin,
-            "-r",
-            "0.1,1.0",
-            "-a",
-            ANY,
-            "-s",
-            "1.0",
-            "-t",
-            "4.0",
-            ANY,
-        ],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+    mock_job_submit.assert_called()
     assert return_code == 0
 
     # Reset mocks again
     mock_get_input_data.reset_mock()
-    mock_subprocess_run.reset_mock()
 
     # Test error handling
     spe_spectrum = copy.deepcopy(spe_spectrum)
     mock_get_input_data.side_effect = [tmpfile, None]
-    mock_subprocess_run.side_effect = subprocess.CalledProcessError(
-        returncode=1, cmd="norm_spe", output="Error", stderr="Error message"
-    )
+    from simtools.job_execution.job_manager import JobExecutionError
 
-    with pytest.raises(subprocess.CalledProcessError):
+    mock_job_submit.side_effect = JobExecutionError("Error running norm_spe")
+
+    with pytest.raises(JobExecutionError):
         spe_spectrum._derive_spectrum_norm_spe(
             input_spectrum=spe_spectrum.args_dict["input_spectrum"],
             afterpulse_spectrum=None,

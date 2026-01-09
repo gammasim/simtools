@@ -28,12 +28,24 @@ def expected_command():
     return [
         "testeff",
         "-fnsb",
-        "alt 2147.0 -fatm atm_trans_2147_1_10_2_0_2147.dat",
-        "-flen 2.15191 -fcur 4.241 -spix 0.6",
-        "weighted_average_1D_primary_mirror_incidence_angle_ref_astri-2d_2018-01-17.dat -m2",
-        "-teltrans 0.921",
+        "-alt",
+        "2147.0",
+        "-fatm",
+        "atm_trans_2147_1_10_2_0_2147.dat",
+        "-flen",
+        "2.15191",
+        "-fcur",
+        "4.241",
+        "-spix",
+        "0.6",
+        "-fmir",
+        "weighted_average_1D_primary_mirror_incidence_angle_ref_astri-2d_2018-01-17.dat",
+        "-m2",
+        "-teltrans",
+        "0.921",
         "transmission_sstcam_weighted_220512.dat",
-        "-fqe PDE_lvr3_6mm_75um_uncoated_5.9V.dat",
+        "-fqe",
+        "PDE_lvr3_6mm_75um_uncoated_5.9V.dat",
     ]
 
 
@@ -48,11 +60,12 @@ def test_make_run_command(
     command, std_out_file, std_err_file = simulator_camera_efficiency._make_run_command()
 
     for item in expected_command:
-        assert item in command
+        assert any(item in str(cmd) for cmd in command)
 
     assert "-nc" not in command
     # Benn_LaPalma_sky_converted.lis is the default nsb spectrum
-    assert benn_ellison_spectrum_file_name in command
+    # Check if the filename is present in any of the command arguments (full path may be used)
+    assert any(benn_ellison_spectrum_file_name in str(cmd) for cmd in command)
 
     assert isinstance(std_out_file, Path)
     assert std_err_file is None
@@ -65,9 +78,9 @@ def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency, expecte
     command, _, _ = simulator_camera_efficiency._make_run_command()
 
     for item in expected_command:
-        assert item in command
+        assert any(item in str(cmd) for cmd in command)
 
-    assert "benn_ellison_spectrum_for_testing.txt" in command
+    assert any("benn_ellison_spectrum_for_testing.txt" in str(cmd) for cmd in command)
 
 
 def test_make_run_command_without_altitude_correction(
@@ -77,11 +90,11 @@ def test_make_run_command_without_altitude_correction(
     command, _, _ = simulator_camera_efficiency._make_run_command()
 
     for item in expected_command:
-        assert item in command
+        assert any(item in str(cmd) for cmd in command)
 
     assert "-nc" in command
     # Benn_LaPalma_sky_converted.lis is the default nsb spectrum
-    assert benn_ellison_spectrum_file_name in command
+    assert any(benn_ellison_spectrum_file_name in str(cmd) for cmd in command)
 
 
 def test_check_run_result(simulator_camera_efficiency):

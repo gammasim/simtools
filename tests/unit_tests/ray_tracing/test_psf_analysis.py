@@ -260,9 +260,14 @@ def test_process_simtel_file_using_rx_success(
     # Mock tempfile creation
     mock_temp_file = mocker.Mock()
     mock_temp_file.name = "/tmp/temp_photon_file"
+    mock_temp_file.write = mocker.Mock()
     mock_named_temp_file = mocker.patch("tempfile.NamedTemporaryFile", return_value=mock_temp_file)
     mock_temp_file.__enter__ = mocker.Mock(return_value=mock_temp_file)
     mock_temp_file.__exit__ = mocker.Mock(return_value=None)
+
+    # Mock file operations
+    mock_open_file = mocker.mock_open()
+    mocker.patch("builtins.open", mock_open_file)
 
     # Mock Path.unlink for cleanup
     mock_path_unlink = mocker.patch("pathlib.Path.unlink")
@@ -304,6 +309,18 @@ def test_process_simtel_file_using_rx_unexpected_output_format(
 ):
     image = psf_image
 
+    # Mock file operations
+    mock_temp_file = mocker.Mock()
+    mock_temp_file.name = "/tmp/temp_photon_file"
+    mock_temp_file.write = mocker.Mock()
+    mocker.patch("tempfile.NamedTemporaryFile", return_value=mock_temp_file)
+    mock_temp_file.__enter__ = mocker.Mock(return_value=mock_temp_file)
+    mock_temp_file.__exit__ = mocker.Mock(return_value=None)
+
+    mock_open_file = mocker.mock_open()
+    mocker.patch("builtins.open", mock_open_file)
+    mocker.patch("pathlib.Path.unlink")
+
     # Test case 1: Empty output
     mock_result = mocker.Mock()
     mock_result.stdout = ""
@@ -312,7 +329,7 @@ def test_process_simtel_file_using_rx_unexpected_output_format(
     dummy_data = b"dummy data"
     mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=dummy_data))
 
-    with pytest.raises(IndexError, match="Unexpected output format from rx"):
+    with pytest.raises(IndexError, match="Invalid RX output format"):
         image._process_simtel_file_using_rx(dummy_photon_file)
 
     # Test case 2: Insufficient data

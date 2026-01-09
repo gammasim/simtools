@@ -119,28 +119,18 @@ def test__make_simtel_script_bypass_optics_condition(simulator_instance):
             simulator_instance, "_get_light_emission_application_name", return_value="ff-1m"
         ),
         patch.object(simulator_instance, "_get_prefix", return_value=""),
-        patch(
-            "simtools.simtel.simulator_light_emission.clear_default_sim_telarray_cfg_directories"
-        ) as mock_clear,
         patch.object(
             simulator_instance.__class__.__bases__[0],
             "get_config_option",
             side_effect=mock_get_config_option,
         ) as mock_config,
     ):
-        mock_clear.return_value = "final_command"
-
         # Test flat_fielding - should include Bypass_Optics
         simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
 
-        simulator_instance._make_simtel_script()
-
-        # Verify Bypass_Optics was called for flat_fielding
-        bypass_calls = [
-            call for call in mock_config.call_args_list if call[0][0] == "Bypass_Optics"
-        ]
-        assert len(bypass_calls) == 1
-        assert bypass_calls[0][0] == ("Bypass_Optics", "1")
+        options = simulator_instance._make_simtel_script()
+        print("AAAAAAA", options)
+        assert "Bypass_Optics=1" in options
 
         # Reset for next test
         mock_config.reset_mock()

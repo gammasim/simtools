@@ -119,7 +119,7 @@ class SimtelRunner:
         )
         input_file = input_file if input_file else "nofile"
         run_number = run_number if run_number else 1
-        return [{input_file}, {run_number}], None, None
+        return [f"{input_file}-{run_number}"], None, None
 
     @staticmethod
     def get_config_option(par, value=None, weak_option=False):
