@@ -1610,3 +1610,20 @@ def test__calibration_pointing_direction_with_custom_params(simulator_instance):
     simulator_instance.telescope_model.get_parameter_value_with_unit.assert_called_with(
         "array_element_position_ground"
     )
+
+
+def test__get_angular_distribution_string_for_sim_telarray_isotropic(simulator_instance):
+    """Test isotropic distribution returns just the token."""
+    simulator_instance.calibration_model.get_parameter_value.return_value = "Isotropic"
+
+    # Even if width is available (though it shouldn't be for isotropic), it should be ignored
+    mock_width = Mock()
+    mock_width.to.return_value.value = 10.0
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = mock_width
+
+    result = simulator_instance._get_angular_distribution_string_for_sim_telarray()
+    assert result == "isotropic"
+
+    # Verify width was NOT requested: the implementation returns early for isotropic distributions
+    # before attempting to fetch the width via get_parameter_value_with_unit.
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_not_called()

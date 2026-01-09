@@ -49,7 +49,6 @@ Parameters with the same functionality are named consistently the same among all
 :glob: true
 :maxdepth: 1
 
-simtools-calculate-incident-angles <applications/simtools-calculate-incident-angles>
 simtools-convert-all-model-parameters-from-simtel <applications/simtools-convert-all-model-parameters-from-simtel>
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
 simtools-convert-model-parameter-from-simtel <applications/simtools-convert-model-parameter-from-simtel>
@@ -63,6 +62,7 @@ simtools-db-generate-compound-indexes <applications/simtools-db-generate-compoun
 simtools-db-inspect-databases <applications/simtools-db-inspect-databases>
 simtools-db-upload-model-repository <applications/simtools-db-upload-model-repository>
 simtools-derive-ctao-array-layouts <applications/simtools-derive-ctao-array-layouts>
+simtools-derive-incident-angle <applications/simtools-derive-incident-angle>
 simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
 simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-electron-spectrum>
 simtools-derive-pulse-shape-parameters <applications/simtools-derive-pulse-shape-parameters>
