@@ -7,9 +7,7 @@ Main functionalities are: computing centroids, psf containers etc.
 
 import gzip
 import logging
-import shlex
-import shutil
-import subprocess
+import tempfile
 from math import fabs, pi, sqrt
 from pathlib import Path
 
@@ -18,6 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools import settings
+from simtools.job_execution import job_manager
 from simtools.utils.general import collect_kwargs, set_default_kwargs
 
 
@@ -93,24 +92,40 @@ class PSFImage:
         photons_file: str
             Name of sim_telarray file with photon list.
         """
+        rx_command = (
+            f"{settings.config.sim_telarray_path}/bin/rx -f {self._containment_fraction:.2f} -v"
+        )
+
         try:
-            with subprocess.Popen(
-                shlex.split(
-                    f"{settings.config.sim_telarray_path}/bin/rx "
-                    f"-f {self._containment_fraction:.2f} -v"
-                ),
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-            ) as rx_process:
-                with gzip.open(photon_file, "rb") as _stdin:
-                    with rx_process.stdin:
-                        shutil.copyfileobj(_stdin, rx_process.stdin)
-                        try:
-                            rx_output = rx_process.communicate()[0].splitlines()[-1:][0].split()
-                        except IndexError as e:
-                            raise IndexError(
-                                f"Unexpected output format from rx: {rx_process}"
-                            ) from e
+            with tempfile.NamedTemporaryFile(mode="wb", delete=False) as tmp_file:
+                with gzip.open(photon_file, "rb") as gz:
+                    tmp_file.write(gz.read())
+                tmp_file_path = tmp_file.name
+
+            try:
+                with open(tmp_file_path) as tmp_f:
+                    result = job_manager.submit(rx_command, stdin=tmp_f)
+
+                try:
+                    lines = result.stdout.strip().split("\n")
+                    data_line = None
+                    for line in reversed(lines):
+                        line = line.strip()
+                        if line and not line.startswith("#"):
+                            data_line = line
+                            break
+
+                    if not data_line:
+                        raise IndexError("No data line found in RX output")
+
+                    rx_output = data_line.split()
+                except (IndexError, AttributeError) as e:
+                    raise IndexError(
+                        f"Unexpected output format from rx: {result.stdout if hasattr(result, 'stdout') else result}"
+                    ) from e
+            finally:
+                Path(tmp_file_path).unlink(missing_ok=True)
+
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Photon list file not found: {photon_file}") from e
 
