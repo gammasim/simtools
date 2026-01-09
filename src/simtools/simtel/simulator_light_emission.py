@@ -425,48 +425,49 @@ class SimulatorLightEmission(SimtelRunner):
             The command to run sim_telarray
         """
         theta, phi = self._get_telescope_pointing()
-
         simtel_bin = str(settings.config.sim_telarray_exe)
 
         parts = [
-            f"{simtel_bin}",
+            simtel_bin,
             f"-I{self.telescope_model.config_file_directory}",
             f"-I{simtel_bin}",
             f"-c {self.telescope_model.config_file_path}",
             "-DNUM_TELESCOPES=1",
-            super().get_config_option(
+        ]
+
+        options = [
+            (
                 "altitude",
                 self.site_model.get_parameter_value_with_unit("corsika_observation_level")
                 .to(u.m)
                 .value,
             ),
-            super().get_config_option(
+            (
                 "atmospheric_transmission",
                 self.site_model.get_parameter_value("atmospheric_transmission"),
             ),
-            super().get_config_option("TRIGGER_TELESCOPES", "1"),
-            super().get_config_option("TELTRIG_MIN_SIGSUM", "2"),
-            super().get_config_option("PULSE_ANALYSIS", "-30"),
-            super().get_config_option("MAXIMUM_TELESCOPES", 1),
-            super().get_config_option("telescope_theta", f"{theta}"),
-            super().get_config_option("telescope_phi", f"{phi}"),
+            ("TRIGGER_TELESCOPES", "1"),
+            ("TELTRIG_MIN_SIGSUM", "2"),
+            ("PULSE_ANALYSIS", "-30"),
+            ("MAXIMUM_TELESCOPES", 1),
+            ("telescope_theta", f"{theta}"),
+            ("telescope_phi", f"{phi}"),
         ]
 
         if self.light_emission_config["light_source_type"] == "flat_fielding":
-            parts.append(super().get_config_option("Bypass_Optics", "1"))
+            options.append(("Bypass_Optics", "1"))
 
         app_name = self._get_light_emission_application_name()
         pref = self._get_prefix()
-        parts += [
-            super().get_config_option("power_law", "2.68"),
-            super().get_config_option("input_file", f"{self.output_directory}/{app_name}.iact.gz"),
-            super().get_config_option(
-                "output_file", f"{self.output_directory}/{pref}{app_name}.simtel.zst"
-            ),
-            super().get_config_option(
-                "histogram_file", f"{self.output_directory}/{pref}{app_name}.ctsim.hdata\n"
-            ),
+
+        options += [
+            ("power_law", "2.68"),
+            ("input_file", f"{self.output_directory}/{app_name}.iact.gz"),
+            ("output_file", f"{self.output_directory}/{pref}{app_name}.simtel.zst"),
+            ("histogram_file", f"{self.output_directory}/{pref}{app_name}.ctsim.hdata"),
         ]
+
+        parts += [f"-C {key}={value}" for key, value in options]
 
         return clear_default_sim_telarray_cfg_directories(" ".join(parts))
 

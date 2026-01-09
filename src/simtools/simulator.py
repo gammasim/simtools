@@ -268,6 +268,7 @@ class Simulator:
             application_log=self._simulation_runner.get_file_name(
                 file_type=("log"), run_number=self.run_number
             ),
+            env={"SIM_TELARRAY_CONFIG_PATH": ""},
             test=self._test,
         )
 

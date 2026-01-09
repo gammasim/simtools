@@ -9,7 +9,6 @@ from simtools import settings
 from simtools.io import io_handler
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils import names
-from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 
 # pylint: disable=no-member
 # The line above is needed because there are members which are created
@@ -146,54 +145,56 @@ class SimulatorRayTracing(SimtelRunner):
                 self.telescope_model.get_parameter_value("mirror_focal_length")
             )
 
-        # RayTracing
-        command = str(settings.config.sim_telarray_exe)
-        command += f" -c {self.telescope_model.config_file_path}"
-        command += f" -I{self.telescope_model.config_file_directory}"
-        command += super().get_config_option("random_state", "none")
-        command += super().get_config_option("IMAGING_LIST", str(self._photons_file))
-        command += super().get_config_option("stars", str(self._stars_file))
-        command += super().get_config_option(
-            "altitude", self.site_model.get_parameter_value("corsika_observation_level")
-        )
-        command += super().get_config_option(
-            "telescope_theta",
-            self.config.zenith_angle + self.config.off_axis_angle,
-        )
-        command += super().get_config_option("star_photons", str(self.photons_per_run))
-        command += super().get_config_option("telescope_phi", "0")
-        command += super().get_config_option("camera_transmission", "1.0")
-        command += super().get_config_option("nightsky_background", "all:0.")
-        command += super().get_config_option("trigger_current_limit", "1e10")
-        command += super().get_config_option("telescope_random_angle", "0")
-        command += super().get_config_option("telescope_random_error", "0")
-        command += super().get_config_option("convergent_depth", "0")
-        command += super().get_config_option("maximum_telescopes", "1")
-        command += super().get_config_option("show", "all")
-        command += super().get_config_option("camera_filter", "none")
-        if self.config.single_mirror_mode:
-            command += super().get_config_option("focus_offset", "all:0.")
-            command += super().get_config_option("camera_config_file", "single_pixel_camera.dat")
-            command += super().get_config_option("camera_pixels", "1")
-            command += super().get_config_option("trigger_pixels", "1")
-            command += super().get_config_option("camera_body_diameter", "0")
-            command += super().get_config_option(
-                "mirror_list",
-                self.telescope_model.get_single_mirror_list_file(
-                    self.config.mirror_numbers, self.config.use_random_focal_length
-                ),
-            )
-            command += super().get_config_option(
-                "focal_length", self.config.source_distance * u.km.to(u.cm)
-            )
-            command += super().get_config_option("dish_shape_length", _mirror_focal_length)
-            command += super().get_config_option("mirror_focal_length", _mirror_focal_length)
-            command += super().get_config_option("parabolic_dish", "0")
-            command += super().get_config_option("mirror_align_random_distance", "0.")
-            command += super().get_config_option("mirror_align_random_vertical", "0.,28.,0.,0.")
-        command += " " + str(settings.config.corsika_dummy_file)
+        options = {
+            "random_state": "none",
+            "IMAGING_LIST": str(self._photons_file),
+            "stars": str(self._stars_file),
+            "altitude": self.site_model.get_parameter_value("corsika_observation_level"),
+            "telescope_theta": self.config.zenith_angle + self.config.off_axis_angle,
+            "star_photons": str(self.photons_per_run),
+            "telescope_phi": "0",
+            "camera_transmission": "1.0",
+            "nightsky_background": "all:0.",
+            "trigger_current_limit": "1e10",
+            "telescope_random_angle": "0",
+            "telescope_random_error": "0",
+            "convergent_depth": "0",
+            "maximum_telescopes": "1",
+            "show": "all",
+            "camera_filter": "none",
+        }
 
-        return clear_default_sim_telarray_cfg_directories(command), self._log_file, self._log_file
+        if self.config.single_mirror_mode:
+            options.update(
+                {
+                    "focus_offset": "all:0.",
+                    "camera_config_file": "single_pixel_camera.dat",
+                    "camera_pixels": "1",
+                    "trigger_pixels": "1",
+                    "camera_body_diameter": "0",
+                    "mirror_list": self.telescope_model.get_single_mirror_list_file(
+                        self.config.mirror_numbers, self.config.use_random_focal_length
+                    ),
+                    "focal_length": self.config.source_distance * u.km.to(u.cm),
+                    "dish_shape_length": _mirror_focal_length,
+                    "mirror_focal_length": _mirror_focal_length,
+                    "parabolic_dish": "0",
+                    "mirror_align_random_distance": "0.",
+                    "mirror_align_random_vertical": "0.,28.,0.,0.",
+                }
+            )
+
+        cmd = [
+            str(settings.config.sim_telarray_exe),
+            "-c",
+            str(self.telescope_model.config_file_path),
+            f"-I{self.telescope_model.config_file_directory}",
+        ]
+        for key, value in options.items():
+            cmd.extend(["-C", f"{key}={value}"])
+        cmd.append(str(settings.config.corsika_dummy_file))
+
+        return cmd, self._log_file, self._log_file
 
     def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
         """
