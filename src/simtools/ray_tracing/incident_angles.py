@@ -13,10 +13,12 @@ import subprocess
 from pathlib import Path
 
 import astropy.units as u
-from astropy.table import QTable
+import numpy as np
+from astropy.table import QTable, vstack
 
 from simtools import settings
 from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.model.model_utils import initialize_simulation_models
 
 
@@ -283,7 +285,7 @@ class IncidentAnglesCalculator:
         Column positions may differ between telescope types and sim_telarray versions.
         Header lines (``# Column N: ...``) are parsed to find indices; otherwise
         legacy positions (1-based) are used: focal=26, primary=32, secondary=36,
-        primary X/Y = 29/30, secondary X/Y = 33/34.
+        primary X/Y = 29/30, secondary X/Y=33/34.
 
         Parameters
         ----------
@@ -692,9 +694,92 @@ class IncidentAnglesCalculator:
             self.logger.warning("No results to save")
             return
         output_file = self.results_dir / f"incident_angles_{self._label_suffix()}.ecsv"
-        self.results.write(output_file, format="ascii.ecsv", overwrite=True)
+
+        data = self.results["angle_incidence_focal"].to(u.deg).value
+        bin_centers, hist = self._calculate_histogram(data, bins=1000)
+
+        output_table = QTable()
+        output_table["Incidence angle"] = bin_centers * u.deg
+        output_table["Fraction"] = hist
+
+        output_table.write(output_file, format="ascii.ecsv", overwrite=True)
 
         MetadataCollector.dump(
             args_dict=self.config_data,
             output_file=output_file.with_suffix(".yml"),
         )
+
+    def save_model_parameters(self, results_by_offset):
+        """
+        Write model parameters dictionary (json) + astropy table with incident angles.
+
+        Parameters
+        ----------
+        results_by_offset : dict
+            Dictionary with results for each offset.
+        """
+        # Combine results from all offsets
+        tables = [res for res in results_by_offset.values() if res is not None and len(res) > 0]
+        if not tables:
+            self.logger.warning("No results to write model parameters.")
+            return
+
+        combined_table = vstack(tables)
+
+        parameter_mapping = {
+            "camera_filter_incidence_angle": "angle_incidence_focal",
+            "primary_mirror_incidence_angle": "angle_incidence_primary",
+            "secondary_mirror_incidence_angle": "angle_incidence_secondary",
+        }
+
+        for param_name, col_name in parameter_mapping.items():
+            if col_name not in combined_table.colnames:
+                continue
+
+            data = combined_table[col_name].to(u.deg).value
+            # Create histogram
+            bin_centers, hist = self._calculate_histogram(data, bins=100)
+
+            table = QTable()
+            table["Incidence angle"] = bin_centers * u.deg
+            table["Fraction"] = hist
+
+            writer = ModelDataWriter(
+                product_data_file=self.output_dir / f"{param_name}.ecsv",
+                product_data_format="ecsv",
+                args_dict=self.config_data,
+            )
+            writer.write(
+                product_data=table,
+                metadata=MetadataCollector(args_dict=self.config_data),
+            )
+
+            ModelDataWriter.dump_model_parameter(
+                parameter_name=param_name,
+                value=f"{param_name}.ecsv",
+                instrument=self.config_data["telescope"],
+                parameter_version=self.config_data["model_version"],
+                output_file=f"{param_name}.json",
+                output_path=self.output_dir,
+                metadata_input_dict=self.config_data,
+            )
+
+    def _calculate_histogram(self, data, bins=100):
+        """
+        Calculate normalized histogram (density).
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Data to calculate histogram for.
+        bins : int
+            Number of bins.
+
+        Returns
+        -------
+        tuple
+            Bin centers and histogram values (density).
+        """
+        hist, bin_edges = np.histogram(data, bins=bins, density=True)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+        return bin_centers, hist
