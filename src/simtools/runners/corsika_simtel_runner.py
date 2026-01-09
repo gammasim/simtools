@@ -119,16 +119,21 @@ class CorsikaSimtelRunner:
         multipipe_file = Path(self.base_corsika_config.config_file_path.parent).joinpath(
             self.base_corsika_config.get_corsika_config_file_name("multipipe")
         )
-
         with open(multipipe_file, "w", encoding="utf-8") as file:
             for simulator_array in self.simulator_array:
+                log_file = simulator_array.get_file_name(file_type="log", run_number=run_number)
                 run_command = simulator_array.make_run_command(
                     run_number=run_number,
                     input_file="-",  # instruct sim_telarray to take input from standard output
                     weak_pointing=self._determine_pointing_option(self.label),
                 )
-                file.write(f"{run_command}")
+                file.write(
+                    "SIM_TELARRAY_CONFIG_PATH='' "
+                    + " ".join(run_command)
+                    + f" | gzip > {log_file} 2>&1\n"
+                )
                 file.write("\n")
+
         self._logger.info(f"Multipipe script: {multipipe_file}")
         self._write_multipipe_script(multipipe_file)
 
