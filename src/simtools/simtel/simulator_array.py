@@ -75,7 +75,7 @@ class SimulatorArray(SimtelRunner):
                 file.write("# End of extras\n\n")
 
             for _ in range(self.runs_per_set):
-                file.write(f"{command}\n\n")
+                file.write("SIM_TELARRAY_CONFIG_PATH='' " + " ".join(command) + "\n")
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
