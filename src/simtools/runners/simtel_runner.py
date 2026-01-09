@@ -76,11 +76,11 @@ class SimtelRunner:
 
         if test:
             self._logger.info(f"Running (test) with command: {command}")
-            job_manager.submit(command, out_file=stdout_file, err_file=stderr_file, test=test)
+            job_manager.submit(command, out_file=stdout_file, err_file=stderr_file)
         else:
             self._logger.debug(f"Running ({self.runs_per_set}x) with command: {command}")
             for _ in range(self.runs_per_set):
-                job_manager.submit(command, out_file=stdout_file, err_file=stderr_file, test=test)
+                job_manager.submit(command, out_file=stdout_file, err_file=stderr_file)
 
     def _raise_simtel_error(self):
         """
