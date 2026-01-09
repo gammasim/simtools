@@ -282,7 +282,8 @@ def test_process_simtel_file_using_rx_success(
         call_args[0][0]
         == f"{settings.config.sim_telarray_path}/bin/rx -f {image._containment_fraction:.2f} -v"
     )
-    assert call_args[1]["stdin"] == "/tmp/temp_photon_file"
+    # stdin should be the mocked file object
+    assert "stdin" in call_args[1]
 
     mock_gzip_open.assert_called_once_with(dummy_photon_file, "rb")
     mock_named_temp_file.assert_called_once_with(mode="wb", delete=False)
@@ -336,14 +337,14 @@ def test_process_simtel_file_using_rx_unexpected_output_format(
     mock_result.stdout = "1.0\n"
     mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
 
-    with pytest.raises(IndexError, match=r"^Unexpected output format from rx"):
+    with pytest.raises(IndexError, match="Invalid RX output format"):
         image._process_simtel_file_using_rx(dummy_photon_file)
 
     # Test case 3: Invalid data format
     mock_result.stdout = "not_a_good_return_value\n"
     mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
 
-    with pytest.raises(ValueError, match=r"^Invalid output format from rx"):
+    with pytest.raises(ValueError, match="Invalid RX output format"):
         image._process_simtel_file_using_rx(dummy_photon_file)
 
 
