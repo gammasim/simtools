@@ -2,9 +2,7 @@
 
 import gzip
 import logging
-import shlex
 import shutil
-import subprocess
 
 import numpy as np
 import pytest
@@ -87,7 +85,7 @@ def test_reading_simtel_file(io_handler, tmp_test_directory, mocker, caplog):
     mocker.patch.object(image_not_ok, "_is_photon_positions_ok", return_value=False)
     with (
         caplog.at_level(logging.ERROR),
-        pytest.raises(RuntimeError, match="Problems reading sim_telarray file - invalid data"),
+        pytest.raises(RuntimeError, match=r"Problems reading sim_telarray.*file.*- invalid data"),
     ):
         image_not_ok.read_photon_list_from_simtel_file(test_file)
 
@@ -251,28 +249,39 @@ def test_process_simtel_file_using_rx_success(
     mocker, psf_image, dummy_photon_file, mocker_gzip_open, shutil_copyfileobj
 ):
     image = psf_image
-    mock_rx_output = b"0.5 0.1 0.2 0.0 0.0 100.0\n"
+    mock_rx_output = "0.5 0.1 0.2 0.0 0.0 100.0\n"
 
-    mock_popen = mocker.patch("subprocess.Popen")
-    mock_process = mock_popen.return_value
-    mock_process.__enter__ = mocker.Mock(return_value=mock_process)
-    mock_process.__exit__ = mocker.Mock(return_value=None)
-    mock_process.communicate.return_value = (mock_rx_output,)
+    mock_result = mocker.Mock()
+    mock_result.stdout = mock_rx_output
+    mock_job_submit = mocker.patch(
+        "simtools.job_execution.job_manager.submit", return_value=mock_result
+    )
+
+    # Mock tempfile creation
+    mock_temp_file = mocker.Mock()
+    mock_temp_file.name = "/tmp/temp_photon_file"
+    mock_named_temp_file = mocker.patch("tempfile.NamedTemporaryFile", return_value=mock_temp_file)
+    mock_temp_file.__enter__ = mocker.Mock(return_value=mock_temp_file)
+    mock_temp_file.__exit__ = mocker.Mock(return_value=None)
+
+    # Mock Path.unlink for cleanup
+    mock_path_unlink = mocker.patch("pathlib.Path.unlink")
 
     mock_gzip_open = mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=b"dummy data"))
-    mock_shutil_copyfileobj = mocker.patch(shutil_copyfileobj)
 
     image._process_simtel_file_using_rx(dummy_photon_file)
 
-    mock_popen.assert_called_once_with(
-        shlex.split(
-            f"{settings.config.sim_telarray_path}/bin/rx -f {image._containment_fraction:.2f} -v"
-        ),
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
+    mock_job_submit.assert_called_once()
+    call_args = mock_job_submit.call_args
+    assert (
+        call_args[0][0]
+        == f"{settings.config.sim_telarray_path}/bin/rx -f {image._containment_fraction:.2f} -v"
     )
+    assert call_args[1]["stdin"] == "/tmp/temp_photon_file"
+
     mock_gzip_open.assert_called_once_with(dummy_photon_file, "rb")
-    mock_shutil_copyfileobj.assert_called_once()
+    mock_named_temp_file.assert_called_once_with(mode="wb", delete=False)
+    mock_path_unlink.assert_called_once()
 
     assert image._stored_psf[image._containment_fraction] == pytest.approx(1.0)  # 2 * 0.5
     assert image.centroid_x == pytest.approx(0.1)
@@ -294,35 +303,28 @@ def test_process_simtel_file_using_rx_unexpected_output_format(
     mocker, psf_image, dummy_photon_file, mocker_gzip_open, shutil_copyfileobj
 ):
     image = psf_image
-    mock_rx_output = b""
 
-    mock_popen = mocker.patch("subprocess.Popen")
-    mock_process = mock_popen.return_value
-    mock_process.__enter__ = mocker.Mock(return_value=mock_process)
-    mock_process.__exit__ = mocker.Mock(return_value=None)
-    mock_process.communicate.return_value = (mock_rx_output,)
+    # Test case 1: Empty output
+    mock_result = mocker.Mock()
+    mock_result.stdout = ""
+    mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
 
     dummy_data = b"dummy data"
     mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=dummy_data))
-    mocker.patch(shutil_copyfileobj)
 
     with pytest.raises(IndexError, match="Unexpected output format from rx"):
         image._process_simtel_file_using_rx(dummy_photon_file)
 
-    mock_rx_output = b"1.0\n"
-    mock_process.communicate.return_value = (mock_rx_output,)
-
-    mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=dummy_data))
-    mocker.patch(shutil_copyfileobj)
+    # Test case 2: Insufficient data
+    mock_result.stdout = "1.0\n"
+    mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
 
     with pytest.raises(IndexError, match=r"^Unexpected output format from rx"):
         image._process_simtel_file_using_rx(dummy_photon_file)
 
-    mock_rx_output = b"not_a_good_return_value\n"
-    mock_process.communicate.return_value = (mock_rx_output,)
-
-    mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=dummy_data))
-    mocker.patch(shutil_copyfileobj)
+    # Test case 3: Invalid data format
+    mock_result.stdout = "not_a_good_return_value\n"
+    mocker.patch("simtools.job_execution.job_manager.submit", return_value=mock_result)
 
     with pytest.raises(ValueError, match=r"^Invalid output format from rx"):
         image._process_simtel_file_using_rx(dummy_photon_file)

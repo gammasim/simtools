@@ -59,6 +59,7 @@ def retry_command(command, max_attempts=3, delay=10):
 
 def submit(
     command,
+    stdin=None,
     out_file=None,
     err_file=None,
     configuration=None,
@@ -76,6 +77,8 @@ def submit(
     ----------
     command: str
         Command or shell script to execute.
+    stdin: str or Path
+        Input stream.
     out_file: str or Path
         Output stream (stdout if out_file and err_file are None).
     err_file: str or Path
@@ -105,7 +108,7 @@ def submit(
     if env:
         for key, value in env.items():
             sub_process_env[key] = value
-    logger.info(f"Setting environment variables for job execution: {sub_process_env}")
+    logger.debug(f"Setting environment variables for job execution: {sub_process_env}")
 
     # disable pylint warning about not closing files here (explicitly closed in finally block)
     stdout = open(out_file, "w", encoding="utf-8") if out_file else subprocess.PIPE  # pylint: disable=consider-using-with
@@ -117,6 +120,7 @@ def submit(
             shell=isinstance(command, str),
             check=True,
             text=True,
+            stdin=stdin,
             stdout=stdout,
             stderr=stderr,
             env=sub_process_env,
