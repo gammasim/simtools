@@ -103,41 +103,35 @@ class PSFImage:
                 tmp_file_path = tmp_file.name
 
             try:
-                with open(tmp_file_path) as tmp_f:
+                with open(tmp_file_path, encoding="utf-8") as tmp_f:
                     result = job_manager.submit(rx_command, stdin=tmp_f)
 
-                try:
-                    lines = result.stdout.strip().split("\n")
-                    data_line = None
-                    for line in reversed(lines):
-                        line = line.strip()
-                        if line and not line.startswith("#"):
-                            data_line = line
-                            break
+                data_lines = [
+                    line.strip()
+                    for line in result.stdout.strip().split("\n")
+                    if line.strip() and not line.startswith("#")
+                ]
 
-                    if not data_line:
-                        raise IndexError("No data line found in RX output")
+                if not data_lines:
+                    raise IndexError("No data line found in RX output")
 
-                    rx_output = data_line.split()
-                except (IndexError, AttributeError) as e:
-                    raise IndexError(
-                        f"Unexpected output format from rx: {result.stdout if hasattr(result, 'stdout') else result}"
-                    ) from e
+                rx_output = data_lines[-1].split()
+                self.set_psf(
+                    2 * float(rx_output[0]), fraction=self._containment_fraction, unit="cm"
+                )
+                self.centroid_x = float(rx_output[1])
+                self.centroid_y = float(rx_output[2])
+                self._effective_area = float(rx_output[5])
+
             finally:
                 Path(tmp_file_path).unlink(missing_ok=True)
 
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Photon list file not found: {photon_file}") from e
-
-        try:
-            self.set_psf(2 * float(rx_output[0]), fraction=self._containment_fraction, unit="cm")
-            self.centroid_x = float(rx_output[1])
-            self.centroid_y = float(rx_output[2])
-            self._effective_area = float(rx_output[5])
-        except IndexError as e:
-            raise IndexError(f"Unexpected output format from rx: {rx_output}") from e
-        except ValueError as e:
-            raise ValueError(f"Invalid output format from rx: {rx_output}") from e
+        except (IndexError, ValueError) as e:
+            raise type(e)(
+                f"Invalid RX output format: {locals().get('rx_output', 'unknown')}"
+            ) from e
 
     def read_photon_list_from_simtel_file(self, photons_file):
         """
