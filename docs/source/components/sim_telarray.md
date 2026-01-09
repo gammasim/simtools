@@ -7,8 +7,6 @@ The following executables from the `sim_telarray` package are used by `simtools`
 - `sim_telarray`: Main ray-tracing and detector simulation executable.
 - `testeff`: Computes telescope and camera optical/electronic efficiency.
 - `rx`: Calculates the optical point spread function (PSF) (optional use).
-- `corsika_autoinputs`: Generates input parameters for CORSIKA.
-- `pfp`: Preprocessor for `sim_telarray`.
 - `xyzls`: Simulates a calibration light source at a specified position.
 - `ls-beam`: Simulates a laser beam calibration light source.
 
