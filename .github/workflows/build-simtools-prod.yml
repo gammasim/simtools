@@ -27,10 +27,10 @@ jobs:
     strategy:
       matrix:
         version:
-          - {corsika: '20251217-78010', avx_flag: 'generic', simtel_image: 'latest'}
-          - {corsika: '20251217-78010', avx_flag: 'avx2', simtel_image: 'latest'}
-          - {corsika: '20251217-78010', avx_flag: 'avx512f', simtel_image: 'latest'}
-          - {corsika: '20251217-78010', avx_flag: 'sse4', simtel_image: 'latest'}
+          - {corsika: 'v78010', avx_flag: 'generic', simtel_image: 'latest'}
+          - {corsika: 'v78010', avx_flag: 'avx2', simtel_image: 'latest'}
+          - {corsika: 'v78010', avx_flag: 'avx512f', simtel_image: 'latest'}
+          - {corsika: 'v78010', avx_flag: 'sse4', simtel_image: 'latest'}
     env:
       BASE_LABEL: "simtools-prod"
       BASE_TAG: "corsika-${{ matrix.version.corsika }}-${{ matrix.version.avx_flag }}-simtel-${{ matrix.version.simtel_image }}"
