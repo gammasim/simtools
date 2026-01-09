@@ -5,7 +5,6 @@ import logging
 from simtools import settings
 from simtools.io import io_handler
 from simtools.runners.simtel_runner import InvalidOutputFileError, SimtelRunner
-from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 
 
 class SimulatorArray(SimtelRunner):
@@ -73,6 +72,7 @@ class SimulatorArray(SimtelRunner):
         self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
 
         command = self.make_run_command(run_number=run_number, input_file=input_file)
+        raise ValueError
         with script_file_path.open("w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n\n")
             file.write("set -e\n")
@@ -93,7 +93,7 @@ class SimulatorArray(SimtelRunner):
 
         return script_file_path
 
-    def make_run_command(self, run_number=None, input_file=None, weak_pointing=None):
+    def make_run_command(self, run_number=None, input_file=None):
         """
         Build and return the command to run sim_telarray.
 
@@ -103,26 +103,20 @@ class SimulatorArray(SimtelRunner):
             Full path of the input CORSIKA file
         run_number: int (optional)
             run number
-        weak_pointing: bool (optional)
-            Specify weak pointing option for sim_telarray.
 
         Returns
         -------
         str
             Command to run sim_telarray.
         """
-        command = self._common_run_command(run_number, weak_pointing)
-
+        command = self._common_run_command(run_number)
         if self.calibration_config:
             command += self._make_run_command_for_calibration_simulations()
         else:
             command += self._make_run_command_for_shower_simulations()
 
         # "-C show=all" should be the last option
-        command += super().get_config_option("show", "all")
-        command += f" {input_file} | gzip > {self._log_file} 2>&1 || exit"
-
-        return clear_default_sim_telarray_cfg_directories(command)
+        return [*command, "-C", "show=all", input_file]
 
     def _make_run_command_for_shower_simulations(self):
         """
@@ -133,12 +127,15 @@ class SimulatorArray(SimtelRunner):
         str
             Command to run sim_telarray.
         """
-        return super().get_config_option(
-            "power_law",
-            SimulatorArray.get_power_law_for_sim_telarray_histograms(
-                self.corsika_config.primary_particle
-            ),
-        )
+        return [
+            "-C",
+            "power_law="
+            f"{
+                SimulatorArray.get_power_law_for_sim_telarray_histograms(
+                    self.corsika_config.primary_particle
+                )
+            }",
+        ]
 
     def _make_run_command_for_calibration_simulations(self):
         """Build sim_telarray command for calibration simulations."""
@@ -168,35 +165,40 @@ class SimulatorArray(SimtelRunner):
 
         return command
 
-    def _common_run_command(self, run_number, weak_pointing=None):
+    def _common_run_command(self, run_number):
         """Build generic run command for sim_telarray."""
         config_dir = self.corsika_config.array_model.get_config_directory()
         self._log_file = self.get_file_name(file_type="log", run_number=run_number)
         histogram_file = self.get_file_name(file_type="histogram", run_number=run_number)
         output_file = self.get_file_name(file_type="simtel_output", run_number=run_number)
+
         self.corsika_config.array_model.export_all_simtel_config_files()
 
-        command = str(settings.config.sim_telarray_exe)
-        command += f" -c {self.corsika_config.array_model.config_file_path}"
-        command += f" -I{config_dir}"
-        command += super().get_config_option(
-            "telescope_theta", self.corsika_config.zenith_angle, weak_pointing
-        )
-        command += super().get_config_option(
-            "telescope_phi", self.corsika_config.azimuth_angle, weak_pointing
-        )
-        command += super().get_config_option("histogram_file", histogram_file)
-        command += super().get_config_option("random_state", "none")
-        if self.sim_telarray_seeds and self.sim_telarray_seeds.get("random_instrument_instances"):
-            command += super().get_config_option(
-                "random_seed",
-                f"file-by-run:{config_dir}/{self.sim_telarray_seeds['seed_file_name']},auto",
-            )
-        elif self.sim_telarray_seeds and self.sim_telarray_seeds.get("seed"):
-            command += super().get_config_option("random_seed", self.sim_telarray_seeds["seed"])
-        command += super().get_config_option("output_file", output_file)
+        cmd = [
+            str(settings.config.sim_telarray_exe),
+            "-c",
+            str(self.corsika_config.array_model.config_file_path),
+            f"-I{config_dir}",
+        ]
+        options = {
+            "telescope_theta": self.corsika_config.zenith_angle,
+            "telescope_phi": self.corsika_config.azimuth_angle,
+            "histogram_file": histogram_file,
+            "random_state": "none",
+            "output_file": output_file,
+        }
 
-        return command
+        if self.sim_telarray_seeds:
+            if self.sim_telarray_seeds.get("random_instrument_instances"):
+                options["random_seed"] = (
+                    f"file-by-run:{config_dir}/{self.sim_telarray_seeds['seed_file_name']},auto"
+                )
+            elif self.sim_telarray_seeds.get("seed"):
+                options["random_seed"] = self.sim_telarray_seeds["seed"]
+
+        for key, value in options.items():
+            cmd.extend(["-C", f"{key}={value}"])
+        return cmd
 
     def _pedestals_nsb_only_command(self):
         """
