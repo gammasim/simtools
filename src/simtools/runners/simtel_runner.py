@@ -1,9 +1,9 @@
 """Base class for running sim_telarray simulations."""
 
 import logging
-import subprocess
 
 import simtools.utils.general as gen
+from simtools.job_execution import job_manager
 from simtools.runners.runner_services import RunnerServices
 
 
@@ -76,17 +76,11 @@ class SimtelRunner:
 
         if test:
             self._logger.info(f"Running (test) with command: {command}")
-            self._run_simtel_and_check_output(command, stdout_file, stderr_file)
+            job_manager.submit(command, out_file=stdout_file, err_file=stderr_file, test=test)
         else:
             self._logger.debug(f"Running ({self.runs_per_set}x) with command: {command}")
             for _ in range(self.runs_per_set):
-                self._run_simtel_and_check_output(command, stdout_file, stderr_file)
-
-        self._check_run_result(run_number=run_number)
-
-    def _check_run_result(self, run_number=None):  # pylint: disable=all
-        """Check if simtel output file exists."""
-        pass
+                job_manager.submit(command, out_file=stdout_file, err_file=stderr_file, test=test)
 
     def _raise_simtel_error(self):
         """
@@ -103,34 +97,6 @@ class SimtelRunner:
         else:
             msg = "Simtel log file does not exist."
         raise SimtelExecutionError(msg)
-
-    def _run_simtel_and_check_output(self, command, stdout_file, stderr_file):
-        """
-        Run the sim_telarray command and check the exit code.
-
-        Raises
-        ------
-        SimtelExecutionError
-            if run was not successful.
-        """
-        stdout_file = stdout_file if stdout_file else "/dev/null"
-        stderr_file = stderr_file if stderr_file else "/dev/null"
-        with (
-            open(f"{stdout_file}", "w", encoding="utf-8") as stdout,
-            open(f"{stderr_file}", "w", encoding="utf-8") as stderr,
-        ):
-            result = subprocess.run(
-                command,
-                shell=True,
-                text=True,
-                stdout=stdout,
-                stderr=stderr,
-            )
-
-        if result.returncode != 0:
-            self._logger.error(result.stderr)
-            self._raise_simtel_error()
-        return result.returncode
 
     def _make_run_command(self, run_number=None, input_file=None):
         self._logger.debug(

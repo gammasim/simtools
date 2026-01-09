@@ -242,7 +242,7 @@ def test_get_run_number_string(runner_service_config_only):
 
 def test_get_resources(runner_service_mock_array_model, caplog):
     sub_log_file = runner_service_mock_array_model.get_file_name(
-        file_type="sub_log", run_number=None, mode="out"
+        file_type="sub_log", run_number=None
     )
     with open(sub_log_file, "w", encoding="utf-8") as file:
         lines_to_write = ["RUNTIME 500\n"]

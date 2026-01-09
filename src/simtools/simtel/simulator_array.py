@@ -1,7 +1,6 @@
 """Simulation runner for array simulations."""
 
 import logging
-import stat
 
 from simtools import settings
 from simtools.io import io_handler
@@ -92,7 +91,6 @@ class SimulatorArray(SimtelRunner):
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-        script_file_path.chmod(script_file_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
         return script_file_path
 
     def make_run_command(self, run_number=None, input_file=None, weak_pointing=None):

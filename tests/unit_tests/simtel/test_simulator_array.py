@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import logging
-import stat
 from pathlib import Path
 
 import pytest
@@ -185,7 +184,6 @@ def test_prepare_run_script(simtel_runner, tmp_path):
     )
 
     assert script_path.exists()
-    assert script_path.stat().st_mode & stat.S_IXUSR
 
     content = script_path.read_text()
     assert "#!/usr/bin/env bash" in content
