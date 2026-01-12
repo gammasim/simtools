@@ -116,14 +116,6 @@ class SimtelRunner:
         run_number = run_number if run_number else 1
         return [f"{input_file}-{run_number}"], None, None
 
-    @staticmethod
-    def get_config_option(par, value=None, weak_option=False):
-        """Build sim_telarray command and return as string."""
-        option_syntax = "-W" if weak_option else "-C"
-        c = f" {option_syntax} {par}"
-        c += f"={value}" if value is not None else ""
-        return c
-
     def get_resources(self, run_number=None):
         """Return computing resources used."""
         return self.runner_service.get_resources(run_number)
