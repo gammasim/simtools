@@ -274,3 +274,310 @@ def test_determine_pointing_option(simtel_runner):
     assert copy_simtel_runner._determine_pointing_option() is True
     copy_simtel_runner.label = "test"
     assert copy_simtel_runner._determine_pointing_option() is False
+    copy_simtel_runner.label = None
+    assert copy_simtel_runner._determine_pointing_option() is False
+
+
+def test_common_run_command_with_seeds_by_run(simtel_runner, mocker):
+    """Test _common_run_command with random_instrument_instances seed configuration."""
+    mocker.patch("simtools.settings.config", mocker.Mock(sim_telarray_exe="/path/to/sim_telarray"))
+
+    simtel_runner.corsika_config.array_model.get_config_directory.return_value = "/config/dir"
+    simtel_runner.corsika_config.array_model.config_file_path = "/config/file.cfg"
+    simtel_runner.corsika_config.array_model.export_all_simtel_config_files = mocker.Mock()
+    simtel_runner.corsika_config.zenith_angle = 20.0
+    simtel_runner.corsika_config.azimuth_angle = 0.0
+
+    simtel_runner.sim_telarray_seeds = {
+        "random_instrument_instances": True,
+        "seed_file_name": "seeds.txt",
+    }
+
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.get_file_name.side_effect = lambda file_type, run_number: {
+        "sim_telarray_log": f"log_{run_number}.log",
+        "sim_telarray_histogram": f"hist_{run_number}.hist",
+        "sim_telarray_output": f"output_{run_number}.simtel.gz",
+    }[file_type]
+
+    result = simtel_runner._common_run_command(run_number=42)
+
+    assert isinstance(result, list)
+    assert "/path/to/sim_telarray" in result
+    assert any("file-by-run:" in str(item) for item in result)
+    assert any("seeds.txt" in str(item) for item in result)
+
+
+def test_common_run_command_with_fixed_seed(simtel_runner, mocker):
+    """Test _common_run_command with fixed seed configuration."""
+    mocker.patch("simtools.settings.config", mocker.Mock(sim_telarray_exe="/path/to/sim_telarray"))
+
+    simtel_runner.corsika_config.array_model.get_config_directory.return_value = "/config/dir"
+    simtel_runner.corsika_config.array_model.config_file_path = "/config/file.cfg"
+    simtel_runner.corsika_config.array_model.export_all_simtel_config_files = mocker.Mock()
+    simtel_runner.corsika_config.zenith_angle = 20.0
+    simtel_runner.corsika_config.azimuth_angle = 0.0
+
+    simtel_runner.sim_telarray_seeds = {"seed": 54321}
+
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.get_file_name.side_effect = lambda file_type, run_number: {
+        "sim_telarray_log": f"log_{run_number}.log",
+        "sim_telarray_histogram": f"hist_{run_number}.hist",
+        "sim_telarray_output": f"output_{run_number}.simtel.gz",
+    }[file_type]
+
+    result = simtel_runner._common_run_command(run_number=1)
+
+    assert isinstance(result, list)
+    assert any("random_seed=54321" in str(item) for item in result)
+
+
+def test_common_run_command_weak_pointing_divergent(simtel_runner, mocker):
+    """Test _common_run_command with weak pointing option for divergent observations."""
+    mocker.patch("simtools.settings.config", mocker.Mock(sim_telarray_exe="/path/to/sim_telarray"))
+
+    simtel_runner.label = "divergent"
+    simtel_runner.corsika_config.array_model.get_config_directory.return_value = "/config/dir"
+    simtel_runner.corsika_config.array_model.config_file_path = "/config/file.cfg"
+    simtel_runner.corsika_config.array_model.export_all_simtel_config_files = mocker.Mock()
+    simtel_runner.corsika_config.zenith_angle = 25.0
+    simtel_runner.corsika_config.azimuth_angle = 180.0
+
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.get_file_name.side_effect = lambda file_type, run_number: {
+        "sim_telarray_log": f"log_{run_number}.log",
+        "sim_telarray_histogram": f"hist_{run_number}.hist",
+        "sim_telarray_output": f"output_{run_number}.simtel.gz",
+    }[file_type]
+
+    result = simtel_runner._common_run_command(run_number=1)
+
+    assert isinstance(result, list)
+    assert "-W" in result
+    assert any("telescope_theta=25.0" in str(item) for item in result)
+
+
+def test_common_run_command_output_file_names(simtel_runner, mocker):
+    """Test _common_run_command generates correct output file references."""
+    mocker.patch("simtools.settings.config", mocker.Mock(sim_telarray_exe="/path/to/sim_telarray"))
+
+    simtel_runner.corsika_config.array_model.get_config_directory.return_value = "/config/dir"
+    simtel_runner.corsika_config.array_model.config_file_path = "/config/file.cfg"
+    simtel_runner.corsika_config.array_model.export_all_simtel_config_files = mocker.Mock()
+    simtel_runner.corsika_config.zenith_angle = 20.0
+    simtel_runner.corsika_config.azimuth_angle = 0.0
+
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.get_file_name.side_effect = lambda file_type, run_number: {
+        "sim_telarray_log": "/output/log_99.log",
+        "sim_telarray_histogram": "/output/hist_99.hist",
+        "sim_telarray_output": "/output/output_99.simtel.gz",
+    }[file_type]
+
+    result = simtel_runner._common_run_command(run_number=99)
+
+    assert any("histogram_file=/output/hist_99.hist" in str(item) for item in result)
+    assert any("output_file=/output/output_99.simtel.gz" in str(item) for item in result)
+    assert any("random_state=none" in str(item) for item in result)
+
+
+def test_common_run_command_config_file_path(simtel_runner, mocker):
+    """Test _common_run_command includes correct config file and directory."""
+    mocker.patch("simtools.settings.config", mocker.Mock(sim_telarray_exe="/usr/bin/sim_telarray"))
+
+    simtel_runner.corsika_config.array_model.get_config_directory.return_value = "/etc/sim_telarray"
+    simtel_runner.corsika_config.array_model.config_file_path = "/etc/sim_telarray/array.cfg"
+    simtel_runner.corsika_config.array_model.export_all_simtel_config_files = mocker.Mock()
+    simtel_runner.corsika_config.zenith_angle = 20.0
+    simtel_runner.corsika_config.azimuth_angle = 0.0
+
+    simtel_runner.runner_service = mocker.Mock()
+    simtel_runner.runner_service.get_file_name.side_effect = (
+        lambda file_type, run_number: f"{file_type}_{run_number}"
+    )
+
+    result = simtel_runner._common_run_command(run_number=1)
+
+    assert "/usr/bin/sim_telarray" in result
+    assert "/etc/sim_telarray/array.cfg" in result
+    assert "-I/etc/sim_telarray" in result
+
+
+def test_make_run_command_for_calibration_simulations_pedestals(simtel_runner, mocker):
+    """Test _make_run_command_for_calibration_simulations with pedestals mode."""
+    mock_config = mocker.Mock()
+    mock_config.args = {
+        "run_mode": "pedestals",
+        "number_of_events": 1000,
+        "number_of_pedestal_events": 500,
+    }
+    mocker.patch("simtools.settings.config", mock_config)
+
+    mock_param = mocker.Mock()
+    mock_param.to_value.return_value = 1800.0
+    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+
+    result = simtel_runner._make_run_command_for_calibration_simulations()
+
+    assert isinstance(result, list)
+    assert "-C" in result
+    assert "Altitude=1800.0" in result
+    assert "pedestal_events=500" in result
+
+
+def test_make_run_command_for_calibration_simulations_pedestals_default_events(
+    simtel_runner, mocker
+):
+    """Test _make_run_command_for_calibration_simulations with pedestals using default number_of_events."""
+    mock_config = mocker.Mock()
+    mock_config.args = {"run_mode": "pedestals", "number_of_events": 1000}
+    mocker.patch("simtools.settings.config", mock_config)
+
+    mock_param = mocker.Mock()
+    mock_param.to_value.return_value = 2000.0
+    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+
+    result = simtel_runner._make_run_command_for_calibration_simulations()
+
+    assert isinstance(result, list)
+    assert "pedestal_events=1000" in result
+
+
+def test_make_run_command_for_calibration_simulations_pedestals_nsb_only(simtel_runner, mocker):
+    """Test _make_run_command_for_calibration_simulations with pedestals_nsb_only mode."""
+    mock_config = mocker.Mock()
+    mock_config.args = {
+        "run_mode": "pedestals_nsb_only",
+        "number_of_events": 1000,
+        "number_of_pedestal_events": 800,
+    }
+    mocker.patch("simtools.settings.config", mock_config)
+
+    mock_param = mocker.Mock()
+    mock_param.to_value.return_value = 1800.0
+    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+
+    result = simtel_runner._make_run_command_for_calibration_simulations()
+
+    assert isinstance(result, list)
+    assert "pedestal_events=800" in result
+    assert any("fadc_noise=0.0" in str(item) for item in result)
+    assert any("gain_variation=0.0" in str(item) for item in result)
+
+
+def test_make_run_command_for_calibration_simulations_pedestals_dark(simtel_runner, mocker):
+    """Test _make_run_command_for_calibration_simulations with pedestals_dark mode."""
+    mock_config = mocker.Mock()
+    mock_config.args = {
+        "run_mode": "pedestals_dark",
+        "number_of_events": 1000,
+        "number_of_dark_events": 600,
+    }
+    mocker.patch("simtools.settings.config", mock_config)
+
+    mock_param = mocker.Mock()
+    mock_param.to_value.return_value = 1800.0
+    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+
+    result = simtel_runner._make_run_command_for_calibration_simulations()
+
+    assert isinstance(result, list)
+    assert "dark_events=600" in result
+
+
+def test_make_run_command_for_calibration_simulations_with_nsb_scaling(simtel_runner, mocker):
+    """Test _make_run_command_for_calibration_simulations with nsb_scaling_factor."""
+    mock_config = mocker.Mock()
+    mock_config.args = {
+        "run_mode": "pedestals",
+        "number_of_events": 1000,
+        "nsb_scaling_factor": 1.5,
+    }
+    mocker.patch("simtools.settings.config", mock_config)
+
+    mock_param = mocker.Mock()
+    mock_param.to_value.return_value = 1800.0
+    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+
+    result = simtel_runner._make_run_command_for_calibration_simulations()
+
+    assert isinstance(result, list)
+    assert "nsb_scaling_factor=1.5" in result
+
+
+def test_make_run_command_for_calibration_simulations_with_stars(simtel_runner, mocker):
+    """Test _make_run_command_for_calibration_simulations with stars parameter."""
+    mock_config = mocker.Mock()
+    mock_config.args = {
+        "run_mode": "pedestals",
+        "number_of_events": 1000,
+        "stars": 0,
+    }
+    mocker.patch("simtools.settings.config", mock_config)
+
+    mock_param = mocker.Mock()
+    mock_param.to_value.return_value = 1800.0
+    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+
+    result = simtel_runner._make_run_command_for_calibration_simulations()
+
+    assert isinstance(result, list)
+    assert "stars=0" in result
+
+
+def test_make_run_command_for_calibration_simulations_direct_injection_custom_events(
+    simtel_runner, mocker
+):
+    """Test _make_run_command_for_calibration_simulations with direct_injection and custom events."""
+    mock_config = mocker.Mock()
+    mock_config.args = {
+        "run_mode": "direct_injection",
+        "number_of_events": 1000,
+        "number_of_flasher_events": 250,
+    }
+    mocker.patch("simtools.settings.config", mock_config)
+
+    mock_param = mocker.Mock()
+    mock_param.to_value.return_value = 1800.0
+    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+
+    result = simtel_runner._make_run_command_for_calibration_simulations()
+
+    assert isinstance(result, list)
+    assert "laser_events=250" in result
+
+
+def test_make_run_command_for_calibration_simulations_altitude_conversion(simtel_runner, mocker):
+    """Test _make_run_command_for_calibration_simulations altitude conversion to meters."""
+    mock_config = mocker.Mock()
+    mock_config.args = {"run_mode": "pedestals", "number_of_events": 1000}
+    mocker.patch("simtools.settings.config", mock_config)
+
+    mock_param = mocker.Mock()
+    mock_param.to_value.return_value = 3737.0
+    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+
+    result = simtel_runner._make_run_command_for_calibration_simulations()
+
+    assert isinstance(result, list)
+    assert "Altitude=3737.0" in result
+
+
+def test_make_run_command_for_calibration_simulations_command_structure(simtel_runner, mocker):
+    """Test _make_run_command_for_calibration_simulations returns properly structured command."""
+    mock_config = mocker.Mock()
+    mock_config.args = {"run_mode": "pedestals", "number_of_events": 1000}
+    mocker.patch("simtools.settings.config", mock_config)
+
+    mock_param = mocker.Mock()
+    mock_param.to_value.return_value = 1800.0
+    simtel_runner.corsika_config.array_model.site_model.get_parameter_value_with_unit.return_value = mock_param
+
+    result = simtel_runner._make_run_command_for_calibration_simulations()
+
+    assert isinstance(result, list)
+    assert len(result) % 2 == 0
+    for i in range(0, len(result), 2):
+        assert result[i] == "-C"
+        assert "=" in result[i + 1]
