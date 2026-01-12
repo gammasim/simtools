@@ -1,6 +1,7 @@
 """Centralized settings object with command line and environment variables."""
 
 import os
+import socket
 from pathlib import Path
 from types import MappingProxyType
 
@@ -16,6 +17,8 @@ class _Config:
         self._sim_telarray_exe = None
         self._corsika_path = None
         self._corsika_exe = None
+        self.user = os.getenv("USER", "unknown")
+        self.hostname = socket.gethostname()
 
     def load(self, args=None, db_config=None):
         """
