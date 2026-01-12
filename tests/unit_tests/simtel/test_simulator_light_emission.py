@@ -1101,8 +1101,8 @@ def test__get_light_emission_application_name(simulator_instance):
     assert result == "xyzls"
 
 
-def test_prepare_script(simulator_instance, tmp_test_directory):
-    """Test prepare_script method."""
+def test_prepare_run(simulator_instance, tmp_test_directory):
+    """Test prepare_run method."""
     # Setup mocks
     simulator_instance.output_directory = Path(tmp_test_directory) / "output"
     simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
@@ -1122,7 +1122,7 @@ def test_prepare_script(simulator_instance, tmp_test_directory):
         ),
         patch.object(simulator_instance, "_make_simtel_script", return_value="simtel_cmd"),
     ):
-        result = simulator_instance.prepare_script()
+        result = simulator_instance.prepare_run()
 
         # Verify return value is the script path
         expected_path = Path(tmp_test_directory) / "output" / "scripts" / "xyzls-light_emission.sh"
@@ -1136,8 +1136,8 @@ def test_prepare_script(simulator_instance, tmp_test_directory):
         assert "simtel_cmd" in content
 
 
-def test_prepare_script_output_file_exists(simulator_instance, tmp_test_directory):
-    """Test prepare_script method when output file already exists."""
+def test_prepare_run_output_file_exists(simulator_instance, tmp_test_directory):
+    """Test prepare_run method when output file already exists."""
     simulator_instance.output_directory = Path(tmp_test_directory) / "output"
     simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
 
@@ -1151,7 +1151,7 @@ def test_prepare_script_output_file_exists(simulator_instance, tmp_test_director
     ):
         # Should raise FileExistsError
         with pytest.raises(FileExistsError, match="sim_telarray output file exists"):
-            simulator_instance.prepare_script()
+            simulator_instance.prepare_run()
 
 
 def test_simulate(simulator_instance, tmp_test_directory):
@@ -1165,7 +1165,7 @@ def test_simulate(simulator_instance, tmp_test_directory):
     mock_output_file = Path(tmp_test_directory) / "output" / "test_output.simtel.gz"
 
     with (
-        patch.object(simulator_instance, "prepare_script", return_value=mock_script_path),
+        patch.object(simulator_instance, "prepare_run", return_value=mock_script_path),
         patch.object(
             simulator_instance,
             "_get_simulation_output_filename",
@@ -1205,7 +1205,7 @@ def test_simulate_output_file_missing(simulator_instance, tmp_test_directory):
     mock_output_file = Path(tmp_test_directory) / "output" / "missing_output.simtel.gz"
 
     with (
-        patch.object(simulator_instance, "prepare_script", return_value=mock_script_path),
+        patch.object(simulator_instance, "prepare_run", return_value=mock_script_path),
         patch.object(
             simulator_instance,
             "_get_simulation_output_filename",

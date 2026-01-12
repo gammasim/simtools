@@ -81,7 +81,7 @@ class SimulatorLightEmission(SimtelRunner):
         Path
             The output simtel file path.
         """
-        run_script = self.prepare_script()
+        run_script = self.prepare_run()
         job_manager.submit(
             run_script,
             out_file=self.runner_service.get_file_name("sub_out"),
@@ -92,9 +92,9 @@ class SimulatorLightEmission(SimtelRunner):
             self._logger.warning(f"Expected sim_telarray output not found: {out}")
         return out
 
-    def prepare_script(self):
+    def prepare_run(self):
         """
-        Build and return bash run script containing the light-emission command.
+        Prepare the bash run script containing the light-emission command.
 
         Returns
         -------
@@ -103,13 +103,18 @@ class SimulatorLightEmission(SimtelRunner):
         """
         script_file = self.runner_service.get_file_name(file_type="sub_script")
         output_file = self.runner_service.get_file_name(file_type="sim_telarray_output")
-        iact_output = self.runner_service.get_file_name(file_type="iact_output")
         if output_file.exists():
             raise FileExistsError(
                 f"sim_telarray output file exists, cancelling simulation: {output_file}"
             )
+        lines = self.make_run_command()
+        script_file.write_text("".join(lines), encoding="utf-8")
+        return script_file
 
-        lines = [
+    def make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
+        """Light emission and sim_telarray run command."""
+        iact_output = self.runner_service.get_file_name(file_type="iact_output")
+        return [
             "#!/usr/bin/env bash\n",
             f"{self._make_light_emission_command(iact_output)}\n\n",
             (
@@ -119,9 +124,6 @@ class SimulatorLightEmission(SimtelRunner):
             f"{self._make_simtel_script()}\n\n",
             f"rm -f '{iact_output}'\n\n",
         ]
-
-        script_file.write_text("".join(lines), encoding="utf-8")
-        return script_file
 
     def _get_light_emission_application_name(self):
         """
@@ -553,6 +555,3 @@ class SimulatorLightEmission(SimtelRunner):
         if shape_out == "exponential" and expv is not None:
             return f"{shape_out}:{float(expv)}"
         return shape_out
-
-    def make_run_command(self, run_number=None, input_file=None):
-        """Temporary stub to avoid errors."""
