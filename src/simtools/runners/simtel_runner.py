@@ -2,17 +2,17 @@
 
 import logging
 
-import simtools.utils.general as gen
 from simtools.job_execution import job_manager
 from simtools.runners.runner_services import RunnerServices
 
+SIM_TELARRAY_ENV = {
+    "SIM_TELARRAY_CONFIG_PATH": "",
+}
 
-class SimtelExecutionError(Exception):
-    """Exception for sim_telarray execution error."""
 
-
-class InvalidOutputFileError(Exception):
-    """Exception for invalid output file."""
+def sim_telarray_env_as_string():
+    """Return the sim_telarray environment variables as a string."""
+    return " ".join(f'{key}="{value}" ' for key, value in SIM_TELARRAY_ENV.items())
 
 
 class SimtelRunner:
@@ -32,12 +32,7 @@ class SimtelRunner:
         Flag to indicate if this is a calibration run.
     """
 
-    def __init__(
-        self,
-        label=None,
-        corsika_config=None,
-        is_calibration_run=False,
-    ):
+    def __init__(self, label=None, corsika_config=None, is_calibration_run=False):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
@@ -65,56 +60,23 @@ class SimtelRunner:
         """
         self._logger.debug("Running sim_telarray")
 
-        command, stdout_file, stderr_file = self._make_run_command(
+        command, stdout_file, stderr_file = self.make_run_command(
             run_number=run_number, input_file=input_file
         )
-        if test:
-            self._logger.info(f"Running (test) with command: {command}")
+        runs = 1 if test else self.runs_per_set
+        label = "test" if test else f"{self.runs_per_set}x"
+        self._logger.info(f"Running ({label}) with command: {command}")
+        for _ in range(runs):
             job_manager.submit(
                 command,
                 out_file=stdout_file,
                 err_file=stderr_file,
-                env={"SIM_TELARRAY_CONFIG_PATH": ""},
+                env=SIM_TELARRAY_ENV,
             )
-        else:
-            self._logger.debug(f"Running ({self.runs_per_set}x) with command: {command}")
-            for _ in range(self.runs_per_set):
-                job_manager.submit(
-                    command,
-                    out_file=stdout_file,
-                    err_file=stderr_file,
-                    env={"SIM_TELARRAY_CONFIG_PATH": ""},
-                )
 
-    def _raise_simtel_error(self):
-        """
-        Raise sim_telarray execution error.
-
-        Final 30 lines from the log file are collected and printed.
-
-        Raises
-        ------
-        SimtelExecutionError
-        """
-        if hasattr(self, "_log_file"):
-            msg = gen.get_log_excerpt(self._log_file)
-        else:
-            msg = "Simtel log file does not exist."
-        raise SimtelExecutionError(msg)
-
-    def _make_run_command(self, run_number=None, input_file=None):
-        """
-        Make the sim_telarray run command.
-
-        Returns a list of command arguments.
-        """
-        self._logger.debug(
-            "make_run_command is being called from the base class - "
-            "it should be implemented in the sub class"
-        )
-        input_file = input_file if input_file else "nofile"
-        run_number = run_number if run_number else 1
-        return [f"{input_file}-{run_number}"], None, None
+    def make_run_command(self, run_number=None, input_file=None):
+        """Make the sim_telarray run command (to implemented in subclasses)."""
+        raise NotImplementedError("Must be implemented in concrete subclass")
 
     def get_resources(self, run_number=None):
         """Return computing resources used."""

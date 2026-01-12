@@ -4,7 +4,7 @@ import logging
 
 import pytest
 
-from simtools.runners.simtel_runner import SimtelExecutionError, SimtelRunner
+from simtools.runners.simtel_runner import SimtelRunner
 
 logger = logging.getLogger()
 
@@ -15,78 +15,13 @@ def simtel_runner(corsika_config_mock_array_model):
 
 
 def test_run(simtel_runner, caplog, mocker):
-    # The base SimtelRunner should raise an error because it's not meant to be used directly
-    # We can mock the job_manager.submit to raise an error, or we can mock _raise_simtel_error
-    # and have it called somewhere in the execution flow
-
-    # Let's make the job manager submission succeed, but then simulate that the run fails
-    # by having some method raise an error. Since _check_run_result no longer exists,
-    # we'll patch _raise_simtel_error and call it manually in our test
-    mocker.patch("simtools.job_execution.job_manager.submit", return_value=None)
-
-    # Instead of trying to mock internal behavior that might not exist,
-    # let's just verify that the run completes the logging as expected
-    # and test the error scenario separately
-
-    with caplog.at_level(logging.INFO):
+    with pytest.raises(NotImplementedError, match=r"Must be implemented in concrete subclass"):
         simtel_runner.run(test=True, input_file="test", run_number=5)
-    assert "Running (test) with command: ['test-5']" in caplog.text
-
-    simtel_runner.runs_per_set = 5
-    with caplog.at_level(logging.DEBUG):
-        simtel_runner.run(test=False, input_file="test", run_number=5)
-    assert "Running (5x) with command: ['test-5']" in caplog.text
-
-
-def test_run_raises_simtel_error(simtel_runner):
-    # Test the error raising behavior separately
-    with pytest.raises(SimtelExecutionError):
-        simtel_runner._raise_simtel_error()
-
-
-def test_make_run_command(simtel_runner, caplog):
-    with caplog.at_level(logging.DEBUG):
-        command, stdout_file, stderr_file = simtel_runner._make_run_command(
-            input_file="test", run_number=5
-        )
-        assert command == ["test-5"]
-        assert stdout_file is None
-        assert stderr_file is None
-    assert "make_run_command is being called from the base class" in caplog.text
-
-
-def test_simtel_execution_error(simtel_runner):
-    with pytest.raises(SimtelExecutionError):
-        simtel_runner._raise_simtel_error()
-
-
-def test_raise_simtel_error(simtel_runner):
-    with pytest.raises(SimtelExecutionError, match=r"Simtel log file does not exist."):
-        simtel_runner._raise_simtel_error()
-
-
-def test_raise_simtel_error_with_log_file(simtel_runner, tmp_path, mocker):
-    log_file = tmp_path / "test.log"
-    log_file.write_text("Line 1\nLine 2\nLine 3\nError occurred\n")
-    simtel_runner._log_file = log_file
-
-    mocker.patch("simtools.utils.general.get_log_excerpt", return_value="Error occurred")
-
-    with pytest.raises(SimtelExecutionError, match=r"Error occurred"):
-        simtel_runner._raise_simtel_error()
-
-
-def test_raise_simtel_error_without_log_file(simtel_runner):
-    if hasattr(simtel_runner, "_log_file"):
-        delattr(simtel_runner, "_log_file")
-
-    with pytest.raises(SimtelExecutionError, match=r"Simtel log file does not exist."):
-        simtel_runner._raise_simtel_error()
 
 
 def test_run_with_runs_per_set(simtel_runner, mocker):
     mock_make_run_command = mocker.patch.object(
-        simtel_runner, "_make_run_command", return_value=("echo test", None, None)
+        simtel_runner, "make_run_command", return_value=("echo test", None, None)
     )
     mock_job_manager_submit = mocker.patch(
         "simtools.job_execution.job_manager.submit", return_value=0
@@ -101,7 +36,7 @@ def test_run_with_runs_per_set(simtel_runner, mocker):
 
 def test_run_with_test_mode(simtel_runner, mocker):
     mock_make_run_command = mocker.patch.object(
-        simtel_runner, "_make_run_command", return_value=("echo test", None, None)
+        simtel_runner, "make_run_command", return_value=("echo test", None, None)
     )
     mock_job_manager_submit = mocker.patch(
         "simtools.job_execution.job_manager.submit", return_value=0
@@ -116,7 +51,7 @@ def test_run_with_test_mode(simtel_runner, mocker):
 
 
 def test_run_completes_successfully(simtel_runner, mocker):
-    mocker.patch.object(simtel_runner, "_make_run_command", return_value=("echo test", None, None))
+    mocker.patch.object(simtel_runner, "make_run_command", return_value=("echo test", None, None))
     mocker.patch("simtools.job_execution.job_manager.submit", return_value=0)
 
     # Test that run completes without error when properly mocked

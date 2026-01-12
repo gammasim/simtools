@@ -54,10 +54,10 @@ def benn_ellison_spectrum_file_name():
     return "Benn_LaPalma_sky_converted.lis"
 
 
-def test_make_run_command(
+def testmake_run_command(
     simulator_camera_efficiency, expected_command, benn_ellison_spectrum_file_name
 ):
-    command, std_out_file, std_err_file = simulator_camera_efficiency._make_run_command()
+    command, std_out_file, std_err_file = simulator_camera_efficiency.make_run_command()
 
     for item in expected_command:
         assert any(item in str(cmd) for cmd in command)
@@ -75,7 +75,7 @@ def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency, expecte
     simulator_camera_efficiency.nsb_spectrum = (
         "tests/resources/benn_ellison_spectrum_for_testing.txt"
     )
-    command, _, _ = simulator_camera_efficiency._make_run_command()
+    command, _, _ = simulator_camera_efficiency.make_run_command()
 
     for item in expected_command:
         assert any(item in str(cmd) for cmd in command)
@@ -87,7 +87,7 @@ def test_make_run_command_without_altitude_correction(
     simulator_camera_efficiency, expected_command, benn_ellison_spectrum_file_name
 ):
     simulator_camera_efficiency.skip_correction_to_nsb_spectrum = True
-    command, _, _ = simulator_camera_efficiency._make_run_command()
+    command, _, _ = simulator_camera_efficiency.make_run_command()
 
     for item in expected_command:
         assert any(item in str(cmd) for cmd in command)
