@@ -146,7 +146,7 @@ def test_load_required_files_single_mirror(
     )
 
 
-def testmake_run_command(simulator_ray_tracing_sst, model_version):
+def test_make_run_command(simulator_ray_tracing_sst, model_version):
     command, stdout_file, stderr_file = simulator_ray_tracing_sst.make_run_command()
 
     assert any("bin/sim_telarray" in str(cmd) for cmd in command)
