@@ -92,9 +92,12 @@ class PSFImage:
         photons_file: str
             Name of sim_telarray file with photon list.
         """
-        rx_command = (
-            f"{settings.config.sim_telarray_path}/bin/rx -f {self._containment_fraction:.2f} -v"
-        )
+        rx_command = [
+            f"{settings.config.sim_telarray_path}/bin/rx",
+            "-f",
+            f"{self._containment_fraction:.2f}",
+            "-v",
+        ]
 
         try:
             with tempfile.NamedTemporaryFile(mode="wb", delete=False) as tmp_file:

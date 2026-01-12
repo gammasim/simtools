@@ -54,7 +54,7 @@ def benn_ellison_spectrum_file_name():
     return "Benn_LaPalma_sky_converted.lis"
 
 
-def testmake_run_command(
+def test_make_run_command(
     simulator_camera_efficiency, expected_command, benn_ellison_spectrum_file_name
 ):
     command, std_out_file, std_err_file = simulator_camera_efficiency.make_run_command()
