@@ -92,7 +92,7 @@ class SimulatorArray(SimtelRunner):
 
         Returns
         -------
-        str
+        list
             Command to run sim_telarray.
         """
         self.file_list = self.runner_service.load_files(run_number=run_number)
