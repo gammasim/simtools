@@ -174,7 +174,8 @@ def test_make_run_command_for_calibration_simulations_basic(simtel_runner, mocke
     result = simtel_runner._make_run_command_for_calibration_simulations()
 
     # Should return a string with configuration options
-    assert isinstance(result, str)
+    assert isinstance(result, list)
+    assert any("Altitude" in str(item) for item in result)
 
 
 def test_make_run_command_for_calibration_direct_injection(simtel_runner, mocker):
@@ -189,7 +190,8 @@ def test_make_run_command_for_calibration_direct_injection(simtel_runner, mocker
 
     result = simtel_runner._make_run_command_for_calibration_simulations()
 
-    assert isinstance(result, str)
+    assert isinstance(result, list)
+    assert any("laser_events" in str(item) for item in result)
 
 
 def test_common_run_command_basic(simtel_runner, mocker):
@@ -221,11 +223,11 @@ def test_common_run_command_basic(simtel_runner, mocker):
 
 
 def test_pedestals_nsb_only_command_basic(simtel_runner):
-    """Test _pedestals_nsb_only_command method returns string."""
-    result = simtel_runner._pedestals_nsb_only_command()
+    """Test _pedestals_nsb_only_command method returns a dictionary."""
+    result = simtel_runner._pedestals_nsb_only_options()
 
-    # Should return a string with noise parameter configurations
-    assert isinstance(result, str)
+    # Should return a dictionary with noise parameter configurations
+    assert isinstance(result, dict)
     assert "fadc_noise" in result
 
 

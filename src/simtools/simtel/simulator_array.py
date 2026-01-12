@@ -132,26 +132,28 @@ class SimulatorArray(SimtelRunner):
             "reference_point_altitude"
         ).to_value("m")
 
-        command = super().get_config_option("Altitude", altitude)
-
+        options = {"Altitude": altitude}
         for key in ("nsb_scaling_factor", "stars"):
-            if cfg.get(key):
-                command += super().get_config_option(key, cfg[key])
+            if key in cfg:
+                options[key] = cfg[key]
 
         run_mode = cfg.get("run_mode")
         if run_mode in ("pedestals", "pedestals_nsb_only"):
             n_events = cfg.get("number_of_pedestal_events", cfg["number_of_events"])
-            command += super().get_config_option("pedestal_events", n_events)
+            options["pedestal_events"] = n_events
         if run_mode == "pedestals_nsb_only":
-            command += self._pedestals_nsb_only_command()
+            options.update(self._pedestals_nsb_only_options())
         if run_mode == "pedestals_dark":
             n_events = cfg.get("number_of_dark_events", cfg["number_of_events"])
-            command += super().get_config_option("dark_events", n_events)
+            options["dark_events"] = n_events
         if run_mode == "direct_injection":
             n_events = cfg.get("number_of_flasher_events", cfg["number_of_events"])
-            command += super().get_config_option("laser_events", n_events)
+            options["laser_events"] = n_events
 
-        return command
+        cmd = []
+        for key, value in options.items():
+            cmd.extend(["-C", f"{key}={value}"])
+        return cmd
 
     def _common_run_command(self, run_number, weak_pointing=None):
         """Build generic run command for sim_telarray."""
@@ -197,15 +199,17 @@ class SimulatorArray(SimtelRunner):
             cmd.extend([("-W" if weak_pointing else "-C"), f"{key}={value}"])
         return cmd
 
-    def _pedestals_nsb_only_command(self):
+    def _pedestals_nsb_only_options(self):
         """
-        Generate the command to run sim_telarray for nsb-only pedestal simulations.
+        Generate options to run sim_telarray for nsb-only pedestal simulations.
 
         Returns
         -------
-        str
+        dicts
             Command to run sim_telarray.
         """
+        options = {}
+
         null_values = [
             "fadc_noise",
             "fadc_lg_noise",
@@ -216,8 +220,8 @@ class SimulatorArray(SimtelRunner):
             "fadc_sysvar_pedestal",
             "fadc_dev_pedestal",
         ]
-        null_command_parts = [super().get_config_option(param, 0.0) for param in null_values]
-        command = " ".join(null_command_parts)
+        for param in null_values:
+            options[param] = 0.0
 
         one_values = [
             "fadc_lg_var_pedestal",
@@ -225,9 +229,10 @@ class SimulatorArray(SimtelRunner):
             "fadc_lg_dev_pedestal",
             "fadc_lg_sysvar_pedestal",
         ]
-        one_command_parts = [super().get_config_option(param, -1.0) for param in one_values]
-        command += " " + " ".join(one_command_parts)
-        return command
+        for param in one_values:
+            options[param] = -1.0
+
+        return options
 
     def _check_run_result(self, run_number=None):
         """
