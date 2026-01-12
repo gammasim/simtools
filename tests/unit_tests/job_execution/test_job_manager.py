@@ -196,3 +196,108 @@ def test_convert_dict_to_args_mixed_types():
     for item in expected_present:
         assert item in result
     assert "--disabled" not in result
+
+
+def test_raise_job_execution_error_with_all_logs(mocker, tmp_path):
+    mock_get_log_excerpt = mocker.patch("simtools.utils.general.get_log_excerpt")
+    mock_get_file_age = mocker.patch("simtools.utils.general.get_file_age", return_value=2)
+
+    out_file = tmp_path / "output.log"
+    err_file = tmp_path / "error.log"
+    app_log = tmp_path / "app.log"
+    out_file.write_text("output content")
+    err_file.write_text("error content")
+    app_log.write_text("app content")
+
+    exc = subprocess.CalledProcessError(1, "failing command")
+    exc.stderr = "stderr message"
+
+    with pytest.raises(jm.JobExecutionError):
+        jm._raise_job_execution_error(exc, out_file, err_file, app_log)
+
+    assert mock_get_log_excerpt.call_count == 3
+    mock_get_log_excerpt.assert_any_call(out_file)
+    mock_get_log_excerpt.assert_any_call(err_file)
+    mock_get_log_excerpt.assert_any_call(app_log)
+    mock_get_file_age.assert_called_once_with(app_log)
+
+
+def test_raise_job_execution_error_without_out_file(mocker, tmp_path):
+    mock_get_log_excerpt = mocker.patch("simtools.utils.general.get_log_excerpt")
+
+    err_file = tmp_path / "error.log"
+    app_log = tmp_path / "app.log"
+    err_file.write_text("error content")
+    app_log.write_text("app content")
+
+    exc = subprocess.CalledProcessError(1, "failing command")
+    exc.stderr = "stderr message"
+
+    with pytest.raises(jm.JobExecutionError):
+        jm._raise_job_execution_error(exc, None, err_file, app_log)
+
+    assert mock_get_log_excerpt.call_count == 2
+    mock_get_log_excerpt.assert_any_call(err_file)
+    mock_get_log_excerpt.assert_any_call(app_log)
+
+
+def test_raise_job_execution_error_without_err_file(mocker, tmp_path):
+    mock_get_log_excerpt = mocker.patch("simtools.utils.general.get_log_excerpt")
+
+    out_file = tmp_path / "output.log"
+    out_file.write_text("output content")
+
+    exc = subprocess.CalledProcessError(1, "failing command")
+    exc.stderr = "stderr message"
+
+    with pytest.raises(jm.JobExecutionError):
+        jm._raise_job_execution_error(exc, out_file, None, None)
+
+    mock_get_log_excerpt.assert_called_once_with(out_file)
+
+
+def test_raise_job_execution_error_app_log_too_old(mocker, tmp_path):
+    mock_get_log_excerpt = mocker.patch("simtools.utils.general.get_log_excerpt")
+    mocker.patch("simtools.utils.general.get_file_age", return_value=10)
+
+    err_file = tmp_path / "error.log"
+    app_log = tmp_path / "app.log"
+    err_file.write_text("error content")
+    app_log.write_text("app content")
+
+    exc = subprocess.CalledProcessError(1, "failing command")
+    exc.stderr = "stderr message"
+
+    with pytest.raises(jm.JobExecutionError):
+        jm._raise_job_execution_error(exc, None, err_file, app_log)
+
+    mock_get_log_excerpt.assert_called_once_with(err_file)
+    assert not any(call[0][0] == app_log for call in mock_get_log_excerpt.call_args_list)
+
+
+def test_raise_job_execution_error_app_log_missing(mocker, tmp_path):
+    mock_get_log_excerpt = mocker.patch("simtools.utils.general.get_log_excerpt")
+    mock_get_file_age = mocker.patch("simtools.utils.general.get_file_age")
+
+    err_file = tmp_path / "error.log"
+    app_log = tmp_path / "nonexistent.log"
+    err_file.write_text("error content")
+
+    exc = subprocess.CalledProcessError(1, "failing command")
+    exc.stderr = "stderr message"
+
+    with pytest.raises(jm.JobExecutionError):
+        jm._raise_job_execution_error(exc, None, err_file, app_log)
+
+    mock_get_log_excerpt.assert_called_once_with(err_file)
+    mock_get_file_age.assert_not_called()
+
+
+def test_raise_job_execution_error_no_logs(mocker):
+    exc = subprocess.CalledProcessError(1, "failing command")
+    exc.stderr = "stderr message"
+
+    with pytest.raises(jm.JobExecutionError) as exc_info:
+        jm._raise_job_execution_error(exc, None, None, None)
+
+    assert "See excerpt from log file above" in str(exc_info.value)

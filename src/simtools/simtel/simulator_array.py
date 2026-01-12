@@ -211,13 +211,11 @@ class SimulatorArray(SimtelRunner):
 
         Returns
         -------
-        str:
-            Pointing option.
+        bool:
+            True if weak pointing is to be used.
         """
-        try:
+        if isinstance(self.label, str):
             return any(pointing in self.label for pointing in ["divergent", "convergent"])
-        except TypeError:  # allow for pointing_option to be None
-            pass
         return False
 
     def _pedestals_nsb_only_options(self):
