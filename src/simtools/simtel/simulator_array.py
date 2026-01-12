@@ -224,7 +224,7 @@ class SimulatorArray(SimtelRunner):
 
         Returns
         -------
-        dicts
+        dict
             Command to run sim_telarray.
         """
         options = {}
