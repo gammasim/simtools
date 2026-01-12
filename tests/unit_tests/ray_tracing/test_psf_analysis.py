@@ -246,7 +246,7 @@ def test_process_photon_list_without_rx(mocker, psf_image, dummy_photon_file):
 
 
 def test_process_simtel_file_using_rx_success(
-    mocker, psf_image, dummy_photon_file, mocker_gzip_open, shutil_copyfileobj
+    mocker, psf_image, dummy_photon_file, mocker_gzip_open, tmp_test_directory
 ):
     image = psf_image
     mock_rx_output = "0.5 0.1 0.2 0.0 0.0 100.0\n"
@@ -259,7 +259,7 @@ def test_process_simtel_file_using_rx_success(
 
     # Mock tempfile creation
     mock_temp_file = mocker.Mock()
-    mock_temp_file.name = "/tmp/temp_photon_file"
+    mock_temp_file.name = f"{tmp_test_directory}/temp_photon_file"
     mock_temp_file.write = mocker.Mock()
     mock_named_temp_file = mocker.patch("tempfile.NamedTemporaryFile", return_value=mock_temp_file)
     mock_temp_file.__enter__ = mocker.Mock(return_value=mock_temp_file)
@@ -306,13 +306,13 @@ def test_process_simtel_file_using_rx_file_not_found(mocker, psf_image, mocker_g
 
 
 def test_process_simtel_file_using_rx_unexpected_output_format(
-    mocker, psf_image, dummy_photon_file, mocker_gzip_open, shutil_copyfileobj
+    mocker, psf_image, dummy_photon_file, mocker_gzip_open, tmp_test_directory
 ):
     image = psf_image
 
     # Mock file operations
     mock_temp_file = mocker.Mock()
-    mock_temp_file.name = "/tmp/temp_photon_file"
+    mock_temp_file.name = f"{tmp_test_directory}/temp_photon_file"
     mock_temp_file.write = mocker.Mock()
     mocker.patch("tempfile.NamedTemporaryFile", return_value=mock_temp_file)
     mock_temp_file.__enter__ = mocker.Mock(return_value=mock_temp_file)

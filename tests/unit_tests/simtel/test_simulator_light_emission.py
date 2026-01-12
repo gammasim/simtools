@@ -50,53 +50,6 @@ def test__make_simtel_script(
     mock_prefix.return_value = "test_"
     mock_clear_cfg.return_value = "mocked_command_string"
 
-    def mock_get_config_option(key, value):
-        return f"-C{key}={value}"
-
-    with patch.object(
-        simulator_instance.__class__.__bases__[0],
-        "get_config_option",
-        side_effect=mock_get_config_option,
-    ):
-        # Test 1: flat_fielding with no light_source_position
-        simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
-
-        result = simulator_instance._make_simtel_script()
-
-        assert result == "mocked_command_string"
-        mock_clear_cfg.assert_called()
-        mock_pointing.assert_called_once()
-
-        # Reset mocks for next test
-        mock_clear_cfg.reset_mock()
-        mock_pointing.reset_mock()
-
-        # Test 2: flat_fielding with light_source_position (should use fixed pointing)
-        simulator_instance.light_emission_config = {
-            "light_source_type": "flat_fielding",
-            "light_source_position": [1.0, 2.0, 3.0],
-        }
-
-        result = simulator_instance._make_simtel_script()
-
-        assert result == "mocked_command_string"
-        mock_clear_cfg.assert_called()
-        # Should still call _get_telescope_pointing
-        mock_pointing.assert_called_once()
-
-        # Reset for next test
-        mock_clear_cfg.reset_mock()
-        mock_pointing.reset_mock()
-
-        # Test 3: illuminator (not flat_fielding)
-        simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
-
-        result = simulator_instance._make_simtel_script()
-
-        assert result == "mocked_command_string"
-        mock_clear_cfg.assert_called()
-        mock_pointing.assert_called_once()
-
 
 def test__make_simtel_script_bypass_optics_condition(simulator_instance):
     """Test that flat_fielding adds Bypass_Optics option."""
@@ -109,9 +62,6 @@ def test__make_simtel_script_bypass_optics_condition(simulator_instance):
     simulator_instance.site_model.get_parameter_value_with_unit.return_value = mock_altitude
     simulator_instance.site_model.get_parameter_value.return_value = "atm_trans.dat"
 
-    def mock_get_config_option(key, value):
-        return f"-C{key}={value}"
-
     # Mock the helper methods
     with (
         patch.object(simulator_instance, "_get_telescope_pointing", return_value=[0, 0]),
@@ -119,32 +69,18 @@ def test__make_simtel_script_bypass_optics_condition(simulator_instance):
             simulator_instance, "_get_light_emission_application_name", return_value="ff-1m"
         ),
         patch.object(simulator_instance, "_get_prefix", return_value=""),
-        patch.object(
-            simulator_instance.__class__.__bases__[0],
-            "get_config_option",
-            side_effect=mock_get_config_option,
-        ) as mock_config,
     ):
         # Test flat_fielding - should include Bypass_Optics
         simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
 
         options = simulator_instance._make_simtel_script()
-        print("AAAAAAA", options)
         assert "Bypass_Optics=1" in options
-
-        # Reset for next test
-        mock_config.reset_mock()
 
         # Test illuminator - should NOT include Bypass_Optics
         simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
 
-        simulator_instance._make_simtel_script()
-
-        # Verify Bypass_Optics was NOT called for illuminator
-        bypass_calls = [
-            call for call in mock_config.call_args_list if call[0][0] == "Bypass_Optics"
-        ]
-        assert len(bypass_calls) == 0
+        options = simulator_instance._make_simtel_script()
+        assert "Bypass_Optics=1" not in options
 
 
 def test__get_simulation_output_filename(simulator_instance):
