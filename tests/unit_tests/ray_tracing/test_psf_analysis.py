@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 
+from simtools import settings
 from simtools.ray_tracing.psf_analysis import PSFImage
 
 
@@ -278,7 +279,7 @@ def test_process_simtel_file_using_rx_success(
     mock_job_submit.assert_called_once()
     call_args = mock_job_submit.call_args
     assert call_args[0][0] == [
-        "/workdir/simulation_software/sim_telarray/bin/rx",
+        f"{settings.config.sim_telarray_path}/bin/rx",
         "-f",
         "0.80",
         "-v",
