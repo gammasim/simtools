@@ -12,7 +12,7 @@ from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
 from simtools.job_execution import job_manager
 from simtools.model.array_model import ArrayModel
-from simtools.runners import corsika_runner, corsika_simtel_runner, runner_services
+from simtools.runners import corsika_runner, corsika_simtel_runner, runner_services, simtel_runner
 from simtools.sim_events import file_info, writer
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
@@ -248,8 +248,8 @@ class Simulator:
         job_manager.submit(
             command=self.runner_service.get_file_name("sub_script", self.run_number),
             out_file=self.runner_service.get_file_name("sub_out", self.run_number),
-            err_file=self.runner_service.get_file_name("sub_out", self.run_number),
-            env={"SIM_TELARRAY_CONFIG_PATH": ""},
+            err_file=self.runner_service.get_file_name("sub_err", self.run_number),
+            env=simtel_runner.SIM_TELARRAY_ENV,
         )
 
     def _get_corsika_file(self):

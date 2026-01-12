@@ -654,6 +654,7 @@ def test_simulate(array_simulator, mocker):
     mock_runner_service.get_file_name.side_effect = lambda file_type, run_num: {
         "sub_script": f"script_{run_num}.sh",
         "sub_out": f"output_{run_num}.out",
+        "sub_err": f"output_{run_num}.err",
     }[file_type]
 
     mocker.patch.object(array_simulator, "_get_corsika_file", return_value="/path/to/corsika.file")
@@ -675,7 +676,7 @@ def test_simulate(array_simulator, mocker):
     mock_submit.assert_called_once_with(
         command="script_42.sh",
         out_file="output_42.out",
-        err_file="output_42.out",
+        err_file="output_42.err",
         env={"SIM_TELARRAY_CONFIG_PATH": ""},
     )
 

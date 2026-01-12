@@ -11,9 +11,8 @@ from simtools import settings
 from simtools.io import io_handler
 from simtools.job_execution import job_manager
 from simtools.model.model_utils import initialize_simulation_models
-from simtools.runners.simtel_runner import SimtelRunner
+from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 from simtools.utils.geometry import fiducial_radius_from_shape
 
 
@@ -469,7 +468,7 @@ class SimulatorLightEmission(SimtelRunner):
 
         parts += [f"-C {key}={value}" for key, value in options]
 
-        return clear_default_sim_telarray_cfg_directories(" ".join(parts))
+        return sim_telarray_env_as_string() + " ".join(parts)
 
     def _get_simulation_output_filename(self):
         """Get the filename of the simulation output."""
@@ -571,3 +570,6 @@ class SimulatorLightEmission(SimtelRunner):
         if shape_out == "exponential" and expv is not None:
             return f"{shape_out}:{float(expv)}"
         return shape_out
+
+    def make_run_command(self, run_number=None, input_file=None):
+        """Temporary stub to avoid errors."""

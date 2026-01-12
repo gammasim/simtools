@@ -73,7 +73,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
                 / Path(self._site_model.get_parameter_value("nsb_reference_spectrum")).name
             )
 
-    def _make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
+    def make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
         """Prepare the command used to run testeff."""
         self._logger.debug("Preparing the command to run testeff")
 

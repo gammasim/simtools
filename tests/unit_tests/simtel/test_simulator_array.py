@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 import logging
+from copy import deepcopy
 
 import pytest
 
-from simtools.runners.simtel_runner import InvalidOutputFileError
 from simtools.simtel.simulator_array import SimulatorArray
 
 logger = logging.getLogger()
@@ -98,12 +98,8 @@ def test_make_run_command_shower_simulation(simtel_runner, mocker):
     mocker.patch.object(
         simtel_runner, "_make_run_command_for_shower_simulations", return_value=["shower_opts"]
     )
-    mocker.patch(
-        "simtools.utils.general.clear_default_sim_telarray_cfg_directories",
-        return_value="cleared_command",
-    )
 
-    result = simtel_runner.make_run_command(run_number=1, corsika_input_file="test.corsika")
+    result = simtel_runner.make_run_command(run_number=1, input_file="test.corsika")
 
     # Verify that the result contains expected components
     assert isinstance(result, list)
@@ -125,12 +121,8 @@ def test_make_run_command_calibration_simulation(simtel_runner, mocker):
     mocker.patch.object(
         simtel_runner, "_make_run_command_for_calibration_simulations", return_value=["calib_opts"]
     )
-    mocker.patch(
-        "simtools.utils.general.clear_default_sim_telarray_cfg_directories",
-        return_value="cleared_command",
-    )
 
-    result = simtel_runner.make_run_command(run_number=1, corsika_input_file="test.corsika")
+    result = simtel_runner.make_run_command(run_number=1, input_file="test.corsika")
 
     # Verify that the result contains expected components
     assert isinstance(result, list)
@@ -252,7 +244,7 @@ def test_check_run_result_file_not_exists(simtel_runner, mocker, tmp_path):
     simtel_runner.runner_service = mocker.Mock()
     simtel_runner.runner_service.get_file_name.return_value = output_file
 
-    with pytest.raises(InvalidOutputFileError, match=r"sim_telarray output file .* does not exist"):
+    with pytest.raises(FileNotFoundError, match=r"sim_telarray output file .* does not exist"):
         simtel_runner._check_run_result(run_number=1)
 
 
@@ -271,3 +263,14 @@ def test_get_power_law_for_sim_telarray_histograms_unknown():
 
     result = SimulatorArray.get_power_law_for_sim_telarray_histograms(mock_primary)
     assert result == pytest.approx(2.68)
+
+
+def test_determine_pointing_option(simtel_runner):
+    copy_simtel_runner = deepcopy(simtel_runner)
+    assert copy_simtel_runner._determine_pointing_option() is False
+
+    copy_simtel_runner.label = "divergent"
+    assert copy_simtel_runner._determine_pointing_option() is True
+    assert copy_simtel_runner._determine_pointing_option() is True
+    copy_simtel_runner.label = "test"
+    assert copy_simtel_runner._determine_pointing_option() is False

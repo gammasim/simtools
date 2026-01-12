@@ -29,13 +29,10 @@ def test_get_prefix_non_none_returns_with_underscore(simulator_instance):
     assert simulator_instance._get_prefix() == "pre_"
 
 
-@patch("simtools.simtel.simulator_light_emission.clear_default_sim_telarray_cfg_directories")
 @patch.object(SimulatorLightEmission, "_get_telescope_pointing")
 @patch.object(SimulatorLightEmission, "_get_light_emission_application_name")
 @patch.object(SimulatorLightEmission, "_get_prefix")
-def test__make_simtel_script(
-    mock_prefix, mock_app_name, mock_pointing, mock_clear_cfg, simulator_instance
-):
+def test__make_simtel_script(mock_prefix, mock_app_name, mock_pointing, simulator_instance):
     """Test _make_simtel_script method with different conditions."""
     simulator_instance.telescope_model.config_file_directory = "/mock/config"
     simulator_instance.telescope_model.config_file_path = "/mock/config/telescope.cfg"
@@ -48,7 +45,6 @@ def test__make_simtel_script(
     mock_pointing.return_value = [10.5, 20.0]
     mock_app_name.return_value = "test-app"
     mock_prefix.return_value = "test_"
-    mock_clear_cfg.return_value = "mocked_command_string"
 
 
 def test__make_simtel_script_bypass_optics_condition(simulator_instance):

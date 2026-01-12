@@ -146,8 +146,8 @@ def test_load_required_files_single_mirror(
     )
 
 
-def test_make_run_command(simulator_ray_tracing_sst, model_version):
-    command, stdout_file, stderr_file = simulator_ray_tracing_sst._make_run_command()
+def testmake_run_command(simulator_ray_tracing_sst, model_version):
+    command, stdout_file, stderr_file = simulator_ray_tracing_sst.make_run_command()
 
     assert any("bin/sim_telarray" in str(cmd) for cmd in command)
     assert any(
@@ -164,7 +164,7 @@ def test_make_run_command(simulator_ray_tracing_sst, model_version):
 
 
 def test_make_run_command_single_mirror(simulator_ray_tracing_single_mirror):
-    command, _, _ = simulator_ray_tracing_single_mirror._make_run_command()
+    command, _, _ = simulator_ray_tracing_single_mirror.make_run_command()
 
     assert any("bin/sim_telarray" in str(cmd) for cmd in command)
     assert any("focus_offset" in str(cmd) for cmd in command)

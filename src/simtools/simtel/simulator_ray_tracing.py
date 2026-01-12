@@ -131,7 +131,7 @@ class SimulatorRayTracing(SimtelRunner):
             self._logger.debug("For single mirror mode, need to prepare the single pixel camera.")
             self._write_out_single_pixel_camera_file()
 
-    def _make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
+    def make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
         """
         Generate sim_telarray run command. Export sim_telarray configuration file(s).
 
