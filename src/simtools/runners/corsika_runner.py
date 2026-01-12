@@ -70,13 +70,17 @@ class CorsikaRunner:
         self.corsika_config.generate_corsika_input_file(
             self._use_multipipe,
             self._corsika_seeds,
-            self.file_list["corsika_input"],
-            self.file_list["corsika_output"] if not self._use_multipipe else corsika_file,
+            self.runner_service.get_file_name("corsika_input", run_number=run_number),
+            self.runner_service.get_file_name("corsika_output", run_number=run_number)
+            if not self._use_multipipe
+            else corsika_file,
         )
 
         self._logger.debug(f"Extra commands to be added to the run script: {extra_commands}")
 
-        corsika_run_dir = self.file_list["corsika_output"].parent
+        corsika_run_dir = self.runner_service.get_file_name(
+            "corsika_output", run_number=run_number
+        ).parent
 
         self._export_run_script(sub_script, corsika_run_dir, extra_commands)
 
@@ -90,7 +94,8 @@ class CorsikaRunner:
 
     def _export_run_script(self, sub_script, corsika_run_dir, extra_commands):
         """Export CORSIKA run script."""
-        corsika_log_file = self.file_list["corsika_log"].with_suffix("")
+        corsika_log_file = self.runner_service.get_file_name("corsika_log").with_suffix("")
+        corsika_input = self.runner_service.get_file_name("corsika_input")
         sub_script = Path(sub_script)
         with open(sub_script, "w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n")
@@ -111,8 +116,7 @@ class CorsikaRunner:
 
             file.write("\n# Running corsika\n")
             file.write(
-                f"{self._corsika_executable()} < {self.file_list['corsika_input']} "
-                f"> {corsika_log_file} 2>&1\n"
+                f"{self._corsika_executable()} < {corsika_input} > {corsika_log_file} 2>&1\n"
             )
             file.write("\n# Cleanup\n")
             file.write(f"gzip {corsika_log_file}\n")

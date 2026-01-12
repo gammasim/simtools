@@ -21,6 +21,11 @@ FILES_AND_PATHS = {
         "suffix": ".corsika.log.gz",
         "sub_dir_type": "run_number",
     },
+    # Generic iact output
+    "iact_output": {
+        "suffix": ".iact.gz",
+        "sub_dir_type": "run_number",
+    },
     # sim_telarray
     "sim_telarray_output": {
         "suffix": ".simtel.zst",
@@ -103,17 +108,20 @@ class RunnerServices:
     ----------
     corsika_config : CorsikaConfig, list of CorsikaConfig
         Configuration parameters for CORSIKA.
+    core_config : dict
+        Core configuration parameters (less specific than CorsikaConfig).
     run_type : str
         Type of simulation runner.
     label : str
         Label.
     """
 
-    def __init__(self, corsika_config, run_type, label=None):
+    def __init__(self, corsika_config, core_config, run_type, label=None):
         """Initialize RunnerServices."""
         self._logger = logging.getLogger(__name__)
         self.label = label
         self.corsika_config = corsika_config
+        self.core_config = core_config
         self.run_type = run_type
         self.directory = self.load_data_directory()
 
@@ -171,8 +179,31 @@ class RunnerServices:
         str
             Base name for the simulation files.
         """
-        vc_high = self.corsika_config.get_config_parameter("VIEWCONE")[1]
+        if self.corsika_config:
+            return self._get_file_base_name_from_corsika_config(run_number, is_multi_pipe)
+        if self.core_config:
+            return self._get_file_base_name_from_core_config()
+        raise ValueError("Either corsika_config or core_config must be provided.")
+
+    def _get_file_base_name_from_core_config(self):
+        """Get file base name from core configuration."""
+        cfg = self.core_config
+        parts = [
+            f"{cfg.get('run_mode', '')}_",
+            f"{self._get_run_number_string(cfg.get('run_number'))}_" if "run_number" in cfg else "",
+            f"za{round(cfg['zenith_angle']):02}deg_" if "zenith_angle" in cfg else "",
+            f"azm{cfg['azimuth_angle']:03}deg_" if "azimuth_angle" in cfg else "",
+            f"{cfg['site']}_" if "site" in cfg else "",
+            f"{cfg['layout']}_" if "layout" in cfg else "",
+            cfg.get("model_version", ""),
+            f"_{self.label}" if self.label else "",
+        ]
+        return "".join(parts)
+
+    def _get_file_base_name_from_corsika_config(self, run_number, is_multi_pipe=False):
+        """Get file base name from CORSIKA configuration."""
         zenith = self.corsika_config.get_config_parameter("THETAP")[0]
+        vc_high = self.corsika_config.get_config_parameter("VIEWCONE")[1]
 
         if self.corsika_config.run_mode is not None and self.corsika_config.run_mode != "":
             primary_name = self.corsika_config.run_mode
@@ -264,6 +295,8 @@ class RunnerServices:
         str
             Run number string.
         """
+        if run_number is None:
+            return ""
         return f"run{validate_corsika_run_number(run_number):06d}"
 
     def get_resources(self, sub_out_file):

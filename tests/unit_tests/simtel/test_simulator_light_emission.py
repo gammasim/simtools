@@ -25,7 +25,7 @@ def simulator_instance():
 
 
 def test_get_prefix_non_none_returns_with_underscore(simulator_instance):
-    simulator_instance.light_emission_config = {"output_prefix": "pre", "number_of_events": 1}
+    simulator_instance.light_emission_config = {"number_of_events": 1}
     assert simulator_instance._get_prefix() == "pre_"
 
 
@@ -83,7 +83,6 @@ def test__get_simulation_output_filename(simulator_instance):
     # Test with flat_fielding and prefix
     simulator_instance.light_emission_config = {
         "light_source_type": "flat_fielding",
-        "output_prefix": "pre",
     }
     result = simulator_instance._get_simulation_output_filename()
     assert result == "/test/output/pre_ff-1m.simtel.zst"
@@ -91,7 +90,6 @@ def test__get_simulation_output_filename(simulator_instance):
     # Test with no prefix (should return empty string for prefix)
     simulator_instance.light_emission_config = {
         "light_source_type": "flat_fielding",
-        "output_prefix": None,
     }
     result = simulator_instance._get_simulation_output_filename()
     assert result == "/test/output/ff-1m.simtel.zst"
