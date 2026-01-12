@@ -28,32 +28,27 @@ class SimtelRunner:
         Instance label. Important for output file naming.
     corsika_config: CorsikaConfig
         CORSIKA configuration.
-    use_multipipe: bool
-        Use multipipe to run CORSIKA and sim_telarray.
-    calibration_run_mode: str
-        Calibration run mode.
+    is_calibration_run: bool
+        Flag to indicate if this is a calibration run.
     """
 
     def __init__(
         self,
         label=None,
         corsika_config=None,
-        use_multipipe=False,
-        calibration_run_mode=None,
+        is_calibration_run=False,
     ):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
         self.label = label
         self._base_directory = None
-        self.calibration_run_mode = calibration_run_mode
+        self.is_calibration_run = is_calibration_run
 
         self.runs_per_set = 1
 
-        self.runner_service = RunnerServices(corsika_config, label)
-        self._directory = self.runner_service.load_data_directories(
-            "corsika_sim_telarray" if use_multipipe else "sim_telarray"
-        )
+        self.runner_service = RunnerServices(corsika_config, "sim_telarray", label)
+        self.file_list = None
 
     def run(self, test=False, input_file=None, run_number=None):
         """
@@ -168,44 +163,3 @@ class SimtelRunner:
     def get_resources(self, run_number=None):
         """Return computing resources used."""
         return self.runner_service.get_resources(run_number)
-
-    def get_file_name(
-        self,
-        simulation_software="sim_telarray",
-        file_type=None,
-        run_number=None,
-        mode="",
-        model_version_index=0,
-    ):
-        """
-        Get the full path of a file for a given run number.
-
-        Parameters
-        ----------
-        simulation_software: str
-            Simulation software.
-        file_type: str
-            File type.
-        run_number: int
-            Run number.
-        model_version_index: int
-            Index of the model version.
-            This is used to select the correct simulator_array instance in case
-            multiple array models are simulated.
-
-        Returns
-        -------
-        str
-            File name with full path.
-        """
-        if simulation_software.lower() != "sim_telarray":
-            raise ValueError(
-                f"simulation_software ({simulation_software}) is not supported in SimulatorArray"
-            )
-        return self.runner_service.get_file_name(
-            file_type=file_type,
-            run_number=run_number,
-            mode=mode,
-            _model_version_index=model_version_index,
-            calibration_run_mode=self.calibration_run_mode,
-        )
