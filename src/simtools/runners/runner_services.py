@@ -190,18 +190,13 @@ class RunnerServices:
         zenith_angle = cfg.get("zenith_angle")
         azimuth_angle = cfg.get("azimuth_angle")
 
-        za_part = (
-            f"za{round(zenith_angle):02}deg_" if isinstance(zenith_angle, (int, float)) else ""
-        )
-        az_part = f"azm{azimuth_angle:03}deg_" if isinstance(azimuth_angle, (int, float)) else ""
-
         parts = [
-            f"{cfg.get('run_mode', '')}_",
+            f"{cfg['run_mode']}_" if cfg.get("run_mode") else "",
             f"{self._get_run_number_string(cfg.get('run_number'))}_" if "run_number" in cfg else "",
-            za_part,
-            az_part,
-            f"{cfg['site']}_" if "site" in cfg else "",
-            f"{cfg['layout']}_" if "layout" in cfg else "",
+            f"za{round(zenith_angle):02}deg_" if isinstance(zenith_angle, (int, float)) else "",
+            f"azm{round(azimuth_angle):03}deg_" if isinstance(azimuth_angle, (int, float)) else "",
+            f"{cfg['site']}_" if cfg.get("site") else "",
+            f"{cfg['layout']}_" if cfg.get("layout") else "",
             cfg.get("model_version", ""),
             f"_{self.label}" if self.label else "",
         ]
