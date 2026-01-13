@@ -33,16 +33,26 @@ class _Config:
         """
         self._args = MappingProxyType(args) if args is not None else {}
         self._db_config = MappingProxyType(db_config) if db_config is not None else {}
+        
+        # Debug: print environment variable
+        import os
+        import logging
+        logger = logging.getLogger(__name__)
+        env_val = os.getenv("SIMTOOLS_SIM_TELARRAY_PATH")
+        logger.debug(f"SIMTOOLS_SIM_TELARRAY_PATH env var: {env_val}")
+        logger.debug(f"args simtel_path: {args.get('simtel_path') if args else None}")
+        
         self._sim_telarray_path = (
             args.get("simtel_path")
             if args is not None and "simtel_path" in args
-            else os.getenv("SIMTOOLS_SIMTEL_PATH")
+            else os.getenv("SIMTOOLS_SIM_TELARRAY_PATH")
         )
+        logger.debug(f"_sim_telarray_path set to: {self._sim_telarray_path}")
 
         self._sim_telarray_exe = (
             args.get("simtel_executable")
             if args is not None and "simtel_executable" in args
-            else os.getenv("SIMTOOLS_SIMTEL_EXECUTABLE", "sim_telarray")
+            else os.getenv("SIMTOOLS_SIM_TELARRAY_EXECUTABLE", "sim_telarray")
         )
 
         self._corsika_path = (

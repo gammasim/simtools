@@ -191,6 +191,13 @@ class SimulatorRayTracing(SimtelRunner):
             command += super().get_config_option("parabolic_dish", "0")
             command += super().get_config_option("mirror_align_random_distance", "0.")
             command += super().get_config_option("mirror_align_random_vertical", "0.,28.,0.,0.")
+            # Pass mirror_reflection_random_angle on command line to override .cfg file
+            rnda = self.telescope_model.get_parameter_value("mirror_reflection_random_angle")
+            if isinstance(rnda, list):
+                rnda_str = ",".join(str(v) for v in rnda)
+            else:
+                rnda_str = str(rnda)
+            command += super().get_config_option("mirror_reflection_random_angle", rnda_str)
         command += " " + str(settings.config.corsika_dummy_file)
 
         return clear_default_sim_telarray_cfg_directories(command), self._log_file, self._log_file
