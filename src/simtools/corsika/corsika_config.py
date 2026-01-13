@@ -13,6 +13,7 @@ from simtools.io import io_handler
 from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
 from simtools.utils import general as gen
+from simtools.utils.random_seeds import seeds
 
 
 class CorsikaConfig:
@@ -749,9 +750,7 @@ class CorsikaConfig:
             File where the telescope positions will be written.
         """
         if not corsika_seeds:
-            random_seed = self.get_config_parameter("PRMPAR") + self.run_number
-            rng = np.random.default_rng(random_seed)
-            corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
+            corsika_seeds = seeds(n_seeds=4, max_seed=1e7)
         if len(corsika_seeds) != 4:
             raise ValueError("Exactly 4 CORSIKA seeds must be provided.")
         for s in corsika_seeds:
