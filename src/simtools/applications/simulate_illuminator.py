@@ -114,6 +114,7 @@ def main():
         label=app_context.args.get("label"),
     )
     light_source.simulate()
+    light_source.verify_simulations()
 
 
 if __name__ == "__main__":
