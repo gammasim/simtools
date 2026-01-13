@@ -64,10 +64,11 @@ RUN cd "autoconf-$AUTOCONF_VERSION" && \
     cd / && rm -rf /tmp/autoconf-*
 
 WORKDIR /workdir/sim_telarray
-ADD corsika_simtelarray.tar.gz .
+COPY corsika_simtelarray.tar.gz .
 COPY --from=patches_stage /corsika-patches ./${CORSIKA_DIR}/
 
-RUN tar -zxf ${CORSIKA_DIR}.tar.gz && \
+RUN tar -zxf corsika_simtelarray.tar.gz && \
+    tar -zxf ${CORSIKA_DIR}.tar.gz && \
     tar -zxf bernlohr-$BERNLOHR_VERSION.tar.gz -C ${CORSIKA_DIR}/bernlohr && \
     rm -f examples-with-data.tar.gz sim_telarray_config.tar.gz \
     corsika_simtelarray.tar.gz  ${CORSIKA_DIR}.tar.gz \
