@@ -108,7 +108,7 @@ def main():
     """Simulate pedestal events."""
     app_context = startup_application(_parse)
 
-    simulator = Simulator(label=app_context.args.get("label"), args_dict=app_context.args)
+    simulator = Simulator(label=app_context.args.get("label"))
     simulator.simulate()
 
 
