@@ -320,7 +320,7 @@ def corsika_config(io_handler, corsika_config_data, array_model_south):
 
 
 @pytest.fixture
-def corsika_config_mock_array_model(io_handler, corsika_config_data, model_version):
+def corsika_config_mock_array_model(corsika_config_data, model_version):
     """Corsika configuration object (using array model South)."""
     array_model = mock.MagicMock()
     array_model.layout_name = "test_layout"
@@ -339,8 +339,15 @@ def corsika_config_mock_array_model(io_handler, corsika_config_data, model_versi
     # Set the mock behavior
     array_model.site_model.get_parameter_value.side_effect = mock_get_parameter_value
 
-    # Avoid DB access by mocking ModelParameter inside CorsikaConfig for fixture creation
-    with mock.patch("simtools.corsika.corsika_config.ModelParameter") as mp:
+    with (
+        mock.patch("simtools.corsika.corsika_config.ModelParameter") as mp,
+        mock.patch.object(
+            settings._Config,
+            "args",
+            new_callable=mock.PropertyMock,
+            return_value=corsika_config_data,
+        ),
+    ):
         mp_instance = mp.return_value
         mp_instance.get_simulation_software_parameters.return_value = {
             "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
@@ -361,12 +368,9 @@ def corsika_config_mock_array_model(io_handler, corsika_config_data, model_versi
         }
 
         corsika_config = CorsikaConfig(
-            array_model=array_model,
-            label="test-corsika-config",
-            args_dict=corsika_config_data,
+            array_model=array_model, run_number=1, label="test-corsika-config"
         )
 
-    corsika_config.run_number = 1
     corsika_config.array_model.site = "South"
     return corsika_config
 
