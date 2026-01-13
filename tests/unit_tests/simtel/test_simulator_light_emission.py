@@ -1373,7 +1373,7 @@ def test__get_telescope_pointing(simulator_instance):
         simulator_instance._logger.info.assert_not_called()
 
 
-def test__write_telescope_position_file(simulator_instance):
+def test__write_telescope_position_file(simulator_instance, tmp_test_directory):
     """Test _write_telescope_position_file method."""
     simulator_instance.output_directory = Path("/output")
 
@@ -1393,27 +1393,29 @@ def test__write_telescope_position_file(simulator_instance):
         mock_radius,  # telescope_sphere_radius
     ]
 
-    # Mock io_handler to return a proper Path object
-    mock_output_dir = Path("/tmp/test_output")
+    # Use real temporary directory for file writing
+    mock_output_dir = Path(tmp_test_directory)
+    mock_output_dir.mkdir(parents=True, exist_ok=True)
     simulator_instance.io_handler.get_output_directory.return_value = mock_output_dir
     expected_file = mock_output_dir / "telescope_position.dat"
 
-    # Mock file writing
-    with patch.object(Path, "write_text") as mock_write:
-        result = simulator_instance._write_telescope_position_file()
+    # Call the method
+    result = simulator_instance._write_telescope_position_file()
 
-        # Should return the telescope position file path
-        assert result == expected_file
+    # Should return the telescope position file path
+    assert result == expected_file
 
-        # Should write coordinates and radius in correct format
-        expected_content = "100.0 200.0 300.0 1500.0\n"
-        mock_write.assert_called_once_with(expected_content, encoding="utf-8")
+    # Verify file was created with correct content
+    assert result.exists()
+    content = result.read_text(encoding="utf-8")
+    expected_content = "100.0 200.0 300.0 1500.0\n"
+    assert content == expected_content
 
-        # Verify unit conversions were called
-        mock_x.to.assert_called_once_with(u.cm)
-        mock_y.to.assert_called_once_with(u.cm)
-        mock_z.to.assert_called_once_with(u.cm)
-        mock_radius.to.assert_called_once_with(u.cm)
+    # Verify unit conversions were called
+    mock_x.to.assert_called_once_with(u.cm)
+    mock_y.to.assert_called_once_with(u.cm)
+    mock_z.to.assert_called_once_with(u.cm)
+    mock_radius.to.assert_called_once_with(u.cm)
 
 
 def test__calibration_pointing_direction(simulator_instance):

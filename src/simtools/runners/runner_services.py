@@ -191,15 +191,9 @@ class RunnerServices:
         azimuth_angle = cfg.get("azimuth_angle")
 
         za_part = (
-            f"za{round(zenith_angle):02}deg_"
-            if isinstance(zenith_angle, (int, float))
-            else ""
+            f"za{round(zenith_angle):02}deg_" if isinstance(zenith_angle, (int, float)) else ""
         )
-        az_part = (
-            f"azm{azimuth_angle:03}deg_"
-            if isinstance(azimuth_angle, (int, float))
-            else ""
-        )
+        az_part = f"azm{azimuth_angle:03}deg_" if isinstance(azimuth_angle, (int, float)) else ""
 
         parts = [
             f"{cfg.get('run_mode', '')}_",
