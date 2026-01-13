@@ -145,6 +145,8 @@ def test_get_run_number_string(runner_service_config_only):
     ):
         runner_service_config_only._get_run_number_string(1234567)
 
+    assert runner_service_config_only._get_run_number_string(None) == ""
+
 
 def test_get_resources(runner_service_mock_array_model, caplog):
     sub_log_file = runner_service_mock_array_model.get_file_name(file_type="sub_log", run_number=5)
@@ -166,6 +168,10 @@ def test_get_resources(runner_service_mock_array_model, caplog):
         resources = runner_service_mock_array_model.get_resources(sub_log_file)
     assert resources["runtime"] is None
     assert "RUNTIME was not found in run log file" in caplog.text
+
+    runner_service_mock_array_model.config = None
+    resources = runner_service_mock_array_model.get_resources(sub_log_file)
+    assert resources["runtime"] is None
 
 
 def test_validate_corsika_run_number():
@@ -203,3 +209,90 @@ def test__get_file_basename(runner_service_config_only):
     runner_service_config_only.config = None
     with pytest.raises(ValueError, match=r"Invalid configuration type: <class 'NoneType'>"):
         runner_service_config_only._get_file_basename(run_number=1)
+
+
+def test_get_file_base_name_from_core_config_full():
+    """Test file base name generation from core config with all parameters."""
+    config = {
+        "run_mode": "test_mode",
+        "run_number": 5,
+        "zenith_angle": 20.3,
+        "azimuth_angle": 45.7,
+        "site": "South",
+        "layout": "test_layout",
+        "model_version": "1.0.0",
+    }
+    runner_service = runner_services.RunnerServices(
+        config=config,
+        label="test-label",
+        run_type="corsika",
+    )
+    basename = runner_service._get_file_base_name_from_core_config()
+    assert basename == "test_mode_run000005_za20deg_azm046deg_South_test_layout_1.0.0_test-label"
+
+
+def test_get_file_base_name_from_core_config_minimal():
+    """Test file base name generation from core config with minimal parameters."""
+    config = {
+        "run_mode": "test_mode",
+        "model_version": "1.0.0",
+    }
+    runner_service = runner_services.RunnerServices(
+        config=config,
+        label=None,
+        run_type="corsika",
+    )
+    basename = runner_service._get_file_base_name_from_core_config()
+    assert basename == "test_mode_1.0.0"
+
+
+def test_get_file_base_name_from_core_config_no_run_mode():
+    """Test file base name generation without run_mode."""
+    config = {
+        "zenith_angle": 20,
+        "azimuth_angle": 45,
+        "site": "North",
+        "layout": "test_layout",
+        "model_version": "1.0.0",
+    }
+    runner_service = runner_services.RunnerServices(
+        config=config,
+        label="test-label",
+        run_type="corsika",
+    )
+    basename = runner_service._get_file_base_name_from_core_config()
+    assert basename == "za20deg_azm045deg_North_test_layout_1.0.0_test-label"
+
+
+def test_get_file_base_name_from_core_config_invalid_angles():
+    """Test file base name generation with invalid angle types."""
+    config = {
+        "run_mode": "test_mode",
+        "zenith_angle": "invalid",
+        "azimuth_angle": "invalid",
+        "model_version": "1.0.0",
+    }
+    runner_service = runner_services.RunnerServices(
+        config=config,
+        label=None,
+        run_type="corsika",
+    )
+    basename = runner_service._get_file_base_name_from_core_config()
+    assert basename == "test_mode_1.0.0"
+
+
+def test_get_file_base_name_from_core_config_none_values():
+    """Test file base name generation with None values in optional fields."""
+    config = {
+        "run_mode": "test_mode",
+        "site": None,
+        "layout": None,
+        "model_version": "1.0.0",
+    }
+    runner_service = runner_services.RunnerServices(
+        config=config,
+        label=None,
+        run_type="corsika",
+    )
+    basename = runner_service._get_file_base_name_from_core_config()
+    assert basename == "test_mode_1.0.0"

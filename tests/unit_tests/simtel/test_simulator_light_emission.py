@@ -1518,3 +1518,32 @@ def test__get_angular_distribution_string_for_sim_telarray_isotropic(simulator_i
     # Verify width was NOT requested: the implementation returns early for isotropic distributions
     # before attempting to fetch the width via get_parameter_value_with_unit.
     simulator_instance.calibration_model.get_parameter_value_with_unit.assert_not_called()
+
+
+def test_verify_simulations_success(simulator_instance, tmp_test_directory):
+    """Test verify_simulations returns True when output file exists."""
+    output_file = Path(tmp_test_directory) / "output.iact"
+    output_file.write_text("test data", encoding="utf-8")
+
+    simulator_instance.runner_service.get_file_name.return_value = output_file
+
+    result = simulator_instance.verify_simulations()
+
+    assert result is True
+    simulator_instance._logger.info.assert_called_once()
+    assert "sim_telarray output found" in str(simulator_instance._logger.info.call_args)
+
+
+def test_verify_simulations_missing_output(simulator_instance, tmp_test_directory):
+    """Test verify_simulations returns False when output file does not exist."""
+    output_file = Path(tmp_test_directory) / "nonexistent_output.iact"
+
+    simulator_instance.runner_service.get_file_name.return_value = output_file
+
+    result = simulator_instance.verify_simulations()
+
+    assert result is False
+    simulator_instance._logger.error.assert_called_once()
+    assert "Expected sim_telarray output not found" in str(
+        simulator_instance._logger.error.call_args
+    )
