@@ -744,13 +744,15 @@ class CorsikaConfig:
         """
         Generate and write seeds in the CORSIKA input file.
 
+        CORSIKA seeds consist of 4 integers in the range 1 to 900,000,000.
+
         Parameters
         ----------
         file: stream
             File where the telescope positions will be written.
         """
         if not corsika_seeds:
-            corsika_seeds = seeds(n_seeds=4, max_seed=1e7)
+            corsika_seeds = seeds(n_seeds=4, min_seed=1, max_seed=900_000_000)
         if len(corsika_seeds) != 4:
             raise ValueError("Exactly 4 CORSIKA seeds must be provided.")
         for s in corsika_seeds:
