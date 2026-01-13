@@ -144,8 +144,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          # Build multi-platform only for generic (non-optimized) variant, others are x86-specific
-          platforms: ${{ matrix.version.avx_flag == 'generic' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
+          platforms: 'linux/amd64'
           build-args: |
             BUILD_OPT=${{ matrix.production.build_opt }}
             EXTRA_DEF=${{ matrix.production.extra_def }}
