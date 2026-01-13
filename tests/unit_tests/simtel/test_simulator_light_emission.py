@@ -19,6 +19,7 @@ def simulator_instance():
     inst.telescope_model = Mock()
     inst.site_model = Mock()
     inst.light_emission_config = {}
+    inst.job_files = Mock()
     inst.output_directory = "/test/output"
     inst._logger = Mock()
     inst.runner_service = Mock()
@@ -1089,10 +1090,16 @@ def test_prepare_run(simulator_instance, tmp_test_directory):
     script_dir.mkdir(parents=True, exist_ok=True)
     script_path = script_dir / "xyzls-light_emission.sh"
 
-    # Mock runner_service.get_file_name to return paths
-    def get_file_name_side_effect(file_type):
+    # Mock job_files.get_file_name to return the script path
+    def job_files_get_file_name_side_effect(file_type):
         if file_type == "sub_script":
             return script_path
+        return Path(tmp_test_directory) / "output" / f"{file_type}.tmp"
+
+    simulator_instance.job_files.get_file_name.side_effect = job_files_get_file_name_side_effect
+
+    # Mock runner_service.get_file_name to return paths
+    def get_file_name_side_effect(file_type):
         if file_type == "sim_telarray_output":
             return Path(tmp_test_directory) / "output" / "test_output.simtel.gz"
         if file_type == "iact_output":
@@ -1160,10 +1167,16 @@ def test_simulate(simulator_instance, tmp_test_directory):
     mock_script_path.parent.mkdir(parents=True, exist_ok=True)
     mock_output_file = Path(tmp_test_directory) / "output" / "test_output.simtel.gz"
 
-    # Setup mock to return the script and output file
-    def get_file_name_side_effect(file_type):
+    # Setup job_files mock to return the script path
+    def job_files_get_file_name_side_effect(file_type):
         if file_type == "sub_script":
             return mock_script_path
+        return Path(tmp_test_directory) / "output" / f"{file_type}.tmp"
+
+    simulator_instance.job_files.get_file_name.side_effect = job_files_get_file_name_side_effect
+
+    # Setup runner_service mock to return the output file and other paths
+    def get_file_name_side_effect(file_type):
         if file_type == "sim_telarray_output":
             return mock_output_file
         if file_type == "sub_out":
@@ -1181,7 +1194,7 @@ def test_simulate(simulator_instance, tmp_test_directory):
         with patch.object(
             simulator_instance, "make_run_command", return_value=["#!/bin/bash\n", "echo test\n"]
         ):
-            result = simulator_instance.simulate()
+            simulator_instance.simulate()
 
         # Create the output file to simulate successful run (this happens during simulate())
         mock_output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -1191,9 +1204,6 @@ def test_simulate(simulator_instance, tmp_test_directory):
         mock_job_submit.assert_called_once()
         call_args = mock_job_submit.call_args
         assert call_args[0][0] == mock_script_path  # First positional arg is the script
-
-        # Verify return value - result will be the mock_output_file if it exists
-        assert result == mock_output_file
 
 
 def test__initialize_light_emission_configuration(simulator_instance):

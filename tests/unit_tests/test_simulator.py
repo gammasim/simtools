@@ -10,6 +10,7 @@ from unittest import mock
 
 import pytest
 
+from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.sim_events import file_info
 from simtools.simulator import Simulator
 
@@ -315,12 +316,14 @@ def test_pack_for_register_with_multiple_versions(
 
     mocker.patch("simtools.simulator.ArrayModel", side_effect=mock_array_models)
 
-    mock_corsika_config = mocker.MagicMock()
+    mock_corsika_config = mocker.MagicMock(CorsikaConfig, instance=True)
+    mock_corsika_config.array_model = mocker.MagicMock()
     mock_corsika_config.get_config_parameter.side_effect = lambda param: {
         "VIEWCONE": [0, 10],
         "THETAP": [20, 20],
     }.get(param, [0, 0])
     mock_corsika_config.azimuth_angle = 0  # from args
+    mock_corsika_config.zenith_angle = 20  # from args
     mock_corsika_config.array_model.site = "North"  # from args
     mock_corsika_config.array_model.layout_name = "test_layout"  # from args
     mock_corsika_config.array_model.model_version = model_versions[0]
