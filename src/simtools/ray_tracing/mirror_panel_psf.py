@@ -1,5 +1,8 @@
 """Mirror panel PSF calculation with per-mirror d80 optimization."""
 
+import os
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from multiprocessing import get_context
 import json
 import logging
 from pathlib import Path
@@ -11,6 +14,32 @@ from astropy.table import Table
 import simtools.utils.general as gen
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
+
+
+_WORKER_INSTANCE = None
+
+
+def _worker_init(label, args_dict, db_config):
+    """Initializer for per-process MirrorPanelPSF instance.
+
+    Important: DB configuration is stored in ``simtools.settings.config`` at runtime.
+    With the multiprocessing "spawn" start method, workers do not inherit that state,
+    so we must call ``config.load`` again in each worker.
+    """
+    global _WORKER_INSTANCE  # noqa: PLW0603
+    from simtools.settings import config as _config
+
+    _config.load(args=args_dict, db_config=db_config)
+    _WORKER_INSTANCE = MirrorPanelPSF(label=label, args_dict=args_dict)
+
+
+def _worker_optimize_mirror(mirror_idx):
+    """Optimize a single mirror index using the per-process instance."""
+    if _WORKER_INSTANCE is None:
+        raise RuntimeError("Worker not initialized")
+    measured_d80_mm = float(_WORKER_INSTANCE.measured_data["d80"][mirror_idx])
+    focal_length_m = float(_WORKER_INSTANCE.measured_data["focal_length"][mirror_idx])
+    return _WORKER_INSTANCE._optimize_single_mirror(mirror_idx, measured_d80_mm, focal_length_m)
 
 
 class MirrorPanelPSF:
@@ -33,6 +62,7 @@ class MirrorPanelPSF:
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initializing MirrorPanelPSF")
 
+        self.label = label
         self.args_dict = args_dict
         self.telescope_model, self.site_model = self._define_telescope_model(label)
 
@@ -119,18 +149,41 @@ class MirrorPanelPSF:
             "mirror_reflection_random_angle", rnda_values
         )
 
-        # Create ray tracing for single mirror
-        ray = RayTracing(
-            telescope_model=self.telescope_model,
-            site_model=self.site_model,
-            single_mirror_mode=True,
-            mirror_numbers=[mirror_idx],
-            use_random_focal_length=False,
-        )
+        # Create ray tracing for single mirror.
+        # Use a per-mirror label so parallel runs do not collide on output filenames.
+        # IMPORTANT: RayTracing and SimulatorRayTracing derive filenames from
+        # telescope_model.label. Passing RayTracing(label=...) alone breaks this link
+        # and causes FileNotFoundError when RayTracing looks for the photons file.
+        rt_label = f"{self.label}_m{mirror_idx + 1}"
+        old_label = getattr(self.telescope_model, "label", None)
+        old_config_file_path = getattr(self.telescope_model, "_config_file_path", None)
+        old_config_file_directory = getattr(self.telescope_model, "_config_file_directory", None)
+        try:
+            self.telescope_model.label = rt_label
+            # Force regeneration of config file path/name based on the new label.
+            # These attributes are cached inside ModelParameter.
+            if hasattr(self.telescope_model, "_config_file_path"):
+                self.telescope_model._config_file_path = None
+            if hasattr(self.telescope_model, "_config_file_directory"):
+                self.telescope_model._config_file_directory = None
+            ray = RayTracing(
+                telescope_model=self.telescope_model,
+                site_model=self.site_model,
+                single_mirror_mode=True,
+                mirror_numbers=[mirror_idx],
+                use_random_focal_length=False,
+            )
 
-        # Simulate and analyze
-        ray.simulate(test=self.args_dict.get("test", False), force=True)
-        ray.analyze(force=True)
+            # Simulate and analyze
+            ray.simulate(test=self.args_dict.get("test", False), force=True)
+            ray.analyze(force=True)
+        finally:
+            if old_label is not None:
+                self.telescope_model.label = old_label
+            if hasattr(self.telescope_model, "_config_file_path"):
+                self.telescope_model._config_file_path = old_config_file_path
+            if hasattr(self.telescope_model, "_config_file_directory"):
+                self.telescope_model._config_file_directory = old_config_file_directory
 
         # Get d80 from results (in cm, convert to mm)
         results = ray._results
@@ -294,6 +347,39 @@ class MirrorPanelPSF:
             "percentage_diff": best_pct_diff,
         }
 
+    def _optimize_mirrors_parallel(self, n_mirrors, n_workers):
+        # Ensure worker processes don't recursively attempt to parallelize.
+        worker_args = dict(self.args_dict)
+        worker_args["parallel"] = False
+
+        # Snapshot DB configuration from the parent process and pass to workers.
+        from simtools.settings import config as _config
+
+        worker_db_config = dict(_config.db_config) if _config.db_config else {}
+
+        mp_start_method = "fork" if os.name == "posix" else "spawn"
+        ctx = get_context(mp_start_method)
+
+        results = [None] * n_mirrors
+        with ProcessPoolExecutor(
+            max_workers=n_workers,
+            mp_context=ctx,
+            initializer=_worker_init,
+            initargs=(self.label, worker_args, worker_db_config),
+        ) as executor:
+            futures = {executor.submit(_worker_optimize_mirror, i): i for i in range(n_mirrors)}
+            for fut in as_completed(futures):
+                mirror_idx = futures[fut]
+                try:
+                    results[mirror_idx] = fut.result()
+                except Exception as exc:  # noqa: BLE001
+                    raise RuntimeError(
+                        "Parallel optimization failed for mirror "
+                        f"{mirror_idx + 1}. If you see repeated sim_telarray failures, "
+                        "try reducing --n_workers."
+                    ) from exc
+        return results
+
     def optimize_with_gradient_descent(self):
         """
         Optimize RNDA for each mirror individually using percentage difference metric.
@@ -305,14 +391,14 @@ class MirrorPanelPSF:
             n_mirrors = min(n_mirrors, self.args_dict.get("number_of_mirrors_to_test", 3))
 
         self._logger.info(f"Optimizing RNDA for {n_mirrors} mirrors...")
-        self.per_mirror_results = []
 
-        for i in range(n_mirrors):
-            measured_d80_mm = float(self.measured_data["d80"][i])
-            focal_length_m = float(self.measured_data["focal_length"][i])
+        n_workers = int(self.args_dict.get("n_workers", 0) or 0)
+        if n_workers <= 0:
+            n_workers = min(os.cpu_count() or 1, 8)
+        n_workers = max(1, n_workers)
 
-            result = self._optimize_single_mirror(i, measured_d80_mm, focal_length_m)
-            self.per_mirror_results.append(result)
+        self._logger.info(f"Running per-mirror optimization with {n_workers} worker processes")
+        self.per_mirror_results = self._optimize_mirrors_parallel(n_mirrors, n_workers)
 
         # Average the optimized RNDA values
         avg_rnda = [0.0, 0.0, 0.0]

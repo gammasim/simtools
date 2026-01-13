@@ -84,6 +84,13 @@ def _parse():
         required=False,
         default=0.0001,
     )
+    config.parser.add_argument(
+        "--n_workers",
+        help="Number of parallel worker processes to use (default: min(CPUs, 8)).",
+        type=int,
+        required=False,
+        default=0,
+    )
     return config.initialize(
         db_config=True,
         output=True,
@@ -94,10 +101,7 @@ def _parse():
 def main():
     """Derive mirror random reflection angle using per-mirror d80 optimization."""
     app_context = startup_application(_parse)
-
-    panel_psf = MirrorPanelPSF(
-        app_context.args.get("label"), app_context.args
-    )
+    panel_psf = MirrorPanelPSF(app_context.args.get("label"), app_context.args)
     panel_psf.optimize_with_gradient_descent()
     panel_psf.print_results()
     panel_psf.write_optimization_data()
