@@ -65,7 +65,6 @@ RUN cd "autoconf-$AUTOCONF_VERSION" && \
 
 WORKDIR /workdir/sim_telarray
 COPY corsika_simtelarray.tar.gz .
-COPY --from=patches_stage /corsika-patches ./${CORSIKA_DIR}/
 
 RUN tar -zxf corsika_simtelarray.tar.gz && \
     tar -zxf ${CORSIKA_DIR}.tar.gz && \
@@ -73,6 +72,8 @@ RUN tar -zxf corsika_simtelarray.tar.gz && \
     rm -f examples-with-data.tar.gz sim_telarray_config.tar.gz \
     corsika_simtelarray.tar.gz  ${CORSIKA_DIR}.tar.gz \
     bernlohr-$BERNLOHR_VERSION.tar.gz
+
+COPY --from=patches_stage /corsika-patches ./${CORSIKA_DIR}/
 
 # Apply patches for non-optimized / optimized CORSIKA
 WORKDIR /workdir/sim_telarray/${CORSIKA_DIR}
