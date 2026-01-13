@@ -15,7 +15,7 @@ logger = logging.getLogger()
 def runner_service(corsika_runner_mock_array_model):
     """Runner services object for corsika."""
     _runner_service = runner_services.RunnerServices(
-        corsika_config=corsika_runner_mock_array_model.corsika_config,
+        config=corsika_runner_mock_array_model.corsika_config,
         label="test-corsika-runner",
         run_type="corsika",
     )
@@ -27,7 +27,7 @@ def runner_service(corsika_runner_mock_array_model):
 def runner_service_mock_array_model(corsika_runner_mock_array_model):
     """Runner services object for corsika."""
     _runner_service = runner_services.RunnerServices(
-        corsika_config=corsika_runner_mock_array_model.corsika_config,
+        config=corsika_runner_mock_array_model.corsika_config,
         label="test-corsika-runner",
         run_type="corsika",
     )
@@ -39,7 +39,7 @@ def runner_service_mock_array_model(corsika_runner_mock_array_model):
 def runner_service_config_only(corsika_config_mock_array_model):
     """Runner services object with simplified config."""
     return runner_services.RunnerServices(
-        corsika_config=corsika_config_mock_array_model,
+        config=corsika_config_mock_array_model,
         label="test-corsika-runner",
         run_type="corsika",
     )
@@ -51,7 +51,7 @@ def runner_service_pedestals(corsika_config_mock_array_model):
     corsika_config_pedestals = copy.deepcopy(corsika_config_mock_array_model)
     corsika_config_pedestals.run_mode = "pedestals"
     return runner_services.RunnerServices(
-        corsika_config=corsika_config_pedestals,
+        config=corsika_config_pedestals,
         label="test-pedestals-runner",
         run_type="pedestals",
     )
@@ -66,7 +66,7 @@ def runner_service_config_only_diffuse_gamma(corsika_config_mock_array_model):
     }
 
     return runner_services.RunnerServices(
-        corsika_config=corsika_config_mock_array_model,
+        config=corsika_config_mock_array_model,
         label="test-corsika-runner",
         run_type="corsika",
     )
@@ -82,7 +82,7 @@ def file_base_name(model_version):
 
 def test_init_runner_services(runner_service_config_only):
     assert runner_service_config_only.label == "test-corsika-runner"
-    assert runner_service_config_only.corsika_config.primary_particle.name == "proton"
+    assert runner_service_config_only.config.primary_particle.name == "proton"
     assert str(runner_service_config_only.directory).endswith("corsika")
 
 
@@ -94,16 +94,16 @@ def test_get_file_basename(runner_service, file_base_name, model_version):
         f"proton_run000001_za20deg_azm000deg_South_test_layout_{model_version}"
     )
 
-    _runner_service_copy.corsika_config.primary_particle = None
+    _runner_service_copy.config.primary_particle = None
     assert _runner_service_copy._get_file_basename(1) == (
         f"run000001_za20deg_azm000deg_South_test_layout_{model_version}"
     )
 
-    _runner_service_copy.corsika_config.primary_particle = {
+    _runner_service_copy.config.primary_particle = {
         "primary_id_type": "common_name",
         "primary": "gamma",
     }
-    _runner_service_copy.corsika_config.config["USER_INPUT"]["VIEWCONE"] = [0, 5]
+    _runner_service_copy.config.config["USER_INPUT"]["VIEWCONE"] = [0, 5]
     assert _runner_service_copy._get_file_basename(1) == (
         f"gamma_diffuse_run000001_za20deg_azm000deg_South_test_layout_{model_version}"
     )
@@ -200,7 +200,6 @@ def test_get_sub_directory(runner_service_config_only, tmp_path):
 
 
 def test__get_file_basename(runner_service_config_only):
-    runner_service_config_only.corsika_config = None
-    runner_service_config_only.core_config = None
-    with pytest.raises(ValueError, match=r"Either corsika_config or core_config must be provided."):
+    runner_service_config_only.config = None
+    with pytest.raises(ValueError, match=r"Invalid configuration type: <class 'NoneType'>"):
         runner_service_config_only._get_file_basename(run_number=1)

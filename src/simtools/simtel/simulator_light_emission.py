@@ -11,6 +11,7 @@ from simtools import settings
 from simtools.io import io_handler
 from simtools.job_execution import job_manager
 from simtools.model.model_utils import initialize_simulation_models
+from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils.geometry import fiducial_radius_from_shape
@@ -36,6 +37,9 @@ class SimulatorLightEmission(SimtelRunner):
         self.io_handler = io_handler.IOHandler()
 
         super().__init__(label=label, config=light_emission_config)
+        self.job_files = runner_services.RunnerServices(
+            light_emission_config, run_type="sub", label=label
+        )
 
         self.telescope_model, self.site_model, self.calibration_model = (
             initialize_simulation_models(
@@ -73,24 +77,13 @@ class SimulatorLightEmission(SimtelRunner):
         return config
 
     def simulate(self):
-        """
-        Simulate light emission.
-
-        Returns
-        -------
-        Path
-            The output simtel file path.
-        """
+        """Simulate light emission."""
         run_script = self.prepare_run()
         job_manager.submit(
             run_script,
-            out_file=self.runner_service.get_file_name("sub_out"),
-            err_file=self.runner_service.get_file_name("sub_err"),
+            out_file=self.job_files.get_file_name("sub_out"),
+            err_file=self.job_files.get_file_name("sub_err"),
         )
-        out = Path(self.runner_service.get_file_name(file_type="sim_telarray_output"))
-        if not out.exists():
-            self._logger.warning(f"Expected sim_telarray output not found: {out}")
-        return out
 
     def prepare_run(self):
         """
@@ -101,7 +94,7 @@ class SimulatorLightEmission(SimtelRunner):
         Path
             Full path of the run script.
         """
-        script_file = self.runner_service.get_file_name(file_type="sub_script")
+        script_file = self.job_files.get_file_name(file_type="sub_script")
         output_file = self.runner_service.get_file_name(file_type="sim_telarray_output")
         if output_file.exists():
             raise FileExistsError(
@@ -555,3 +548,19 @@ class SimulatorLightEmission(SimtelRunner):
         if shape_out == "exponential" and expv is not None:
             return f"{shape_out}:{float(expv)}"
         return shape_out
+
+    def verify_simulations(self):
+        """
+        Verify that the simulations were successful.
+
+        Returns
+        -------
+        bool
+            True if simulations were successful, False otherwise.
+        """
+        out = Path(self.runner_service.get_file_name(file_type="sim_telarray_output"))
+        if not out.exists():
+            self._logger.error(f"Expected sim_telarray output not found: {out}")
+            return False
+        self._logger.info(f"sim_telarray output found: {out}")
+        return True
