@@ -33,11 +33,7 @@ class SimulatorArray(SimtelRunner):
         is_calibration_run=False,
     ):
         """Initialize SimulatorArray."""
-        super().__init__(
-            label=label,
-            corsika_config=corsika_config,
-            is_calibration_run=is_calibration_run,
-        )
+        super().__init__(label=label, config=corsika_config, is_calibration_run=is_calibration_run)
 
         self.sim_telarray_seeds = sim_telarray_seeds
         self.corsika_config = corsika_config

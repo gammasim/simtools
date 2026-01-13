@@ -45,7 +45,7 @@ class CorsikaRunner:
         self._use_multipipe = use_multipipe
         self.curved_atmosphere_min_zenith_angle = curved_atmosphere_min_zenith_angle
 
-        self.runner_service = RunnerServices(corsika_config, "corsika", label)
+        self.runner_service = RunnerServices(corsika_config, run_type="corsika", label=label)
         self.file_list = None
 
     def prepare_run(self, run_number, sub_script, extra_commands=None, corsika_file=None):
@@ -82,7 +82,7 @@ class CorsikaRunner:
             "corsika_output", run_number=run_number
         ).parent
 
-        self._export_run_script(sub_script, corsika_run_dir, extra_commands)
+        self._export_run_script(run_number, sub_script, corsika_run_dir, extra_commands)
 
     def _corsika_executable(self):
         """Get the CORSIKA executable path."""
@@ -92,10 +92,12 @@ class CorsikaRunner:
         self._logger.debug("Using flat-atmosphere CORSIKA binary.")
         return Path(settings.config.corsika_exe)
 
-    def _export_run_script(self, sub_script, corsika_run_dir, extra_commands):
+    def _export_run_script(self, run_number, sub_script, corsika_run_dir, extra_commands):
         """Export CORSIKA run script."""
-        corsika_log_file = self.runner_service.get_file_name("corsika_log").with_suffix("")
-        corsika_input = self.runner_service.get_file_name("corsika_input")
+        corsika_log_file = self.runner_service.get_file_name(
+            "corsika_log", run_number=run_number
+        ).with_suffix("")  # remove .gz from log file
+        corsika_input = self.runner_service.get_file_name("corsika_input", run_number=run_number)
         sub_script = Path(sub_script)
         with open(sub_script, "w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n")

@@ -35,7 +35,7 @@ class SimulatorLightEmission(SimtelRunner):
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
 
-        super().__init__(label=label, core_config=light_emission_config)
+        super().__init__(label=label, config=light_emission_config)
 
         self.telescope_model, self.site_model, self.calibration_model = (
             initialize_simulation_models(

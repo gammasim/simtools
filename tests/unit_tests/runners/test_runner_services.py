@@ -18,7 +18,6 @@ def runner_service(corsika_runner_mock_array_model):
         corsika_config=corsika_runner_mock_array_model.corsika_config,
         label="test-corsika-runner",
         run_type="corsika",
-        core_config=None,
     )
     _runner_service.load_data_directory()
     return _runner_service
@@ -31,7 +30,6 @@ def runner_service_mock_array_model(corsika_runner_mock_array_model):
         corsika_config=corsika_runner_mock_array_model.corsika_config,
         label="test-corsika-runner",
         run_type="corsika",
-        core_config=None,
     )
     _runner_service.load_data_directory()
     return _runner_service
@@ -44,7 +42,6 @@ def runner_service_config_only(corsika_config_mock_array_model):
         corsika_config=corsika_config_mock_array_model,
         label="test-corsika-runner",
         run_type="corsika",
-        core_config=None,
     )
 
 
@@ -57,7 +54,6 @@ def runner_service_pedestals(corsika_config_mock_array_model):
         corsika_config=corsika_config_pedestals,
         label="test-pedestals-runner",
         run_type="pedestals",
-        core_config=None,
     )
 
 
