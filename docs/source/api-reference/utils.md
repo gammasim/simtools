@@ -5,8 +5,13 @@
 In this section you find the reference documentation of the modules contained in
 the util module.
 
-- {ref}`general <utilsgeneral>`
-- {ref}`names <utilsnames>`
+
+## constants
+
+```{eval-rst}
+.. automodule:: constants
+   :members:
+```
 
 (utilsgeneral)=
 
@@ -36,16 +41,16 @@ the util module.
    :members:
 ```
 
+## random numbers
+
+```{eval-rst}
+.. automodule:: utils.random
+   :members:
+```
+
 ## value_conversion
 
 ```{eval-rst}
 .. automodule:: utils.value_conversion
-   :members:
-```
-
-## constants
-
-```{eval-rst}
-.. automodule:: constants
    :members:
 ```
