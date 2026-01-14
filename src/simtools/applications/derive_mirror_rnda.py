@@ -91,6 +91,22 @@ def _parse():
         required=False,
         default=0,
     )
+    config.parser.add_argument(
+        "--psf_pdf",
+        help="(deprecated) PSF plotting has been removed. Use --d80_hist instead.",
+        required=False,
+        default=None,
+    )
+    config.parser.add_argument(
+        "--d80_hist",
+        nargs="?",
+        const="d80_distributions.pdf",
+        default=None,
+        help=(
+            "Write a histogram comparing measured vs simulated d80 distributions. "
+            "Optionally provide a filename (relative to output dir unless absolute)."
+        ),
+    )
     return config.initialize(
         db_config=True,
         output=True,
@@ -105,6 +121,13 @@ def main():
     panel_psf.optimize_with_gradient_descent()
     panel_psf.print_results()
     panel_psf.write_optimization_data()
+    if app_context.args.get("d80_hist"):
+        hist_path = panel_psf.write_d80_histogram()
+        if hist_path:
+            print(f"d80 histogram written to: {hist_path}")
+
+    if app_context.args.get("psf_pdf"):
+        print("Note: --psf_pdf is deprecated/removed; use --d80_hist.")
 
 
 if __name__ == "__main__":
