@@ -6,11 +6,11 @@ import numpy as np
 
 from simtools.sim_events.file_info import get_corsika_run_number
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
-from simtools.simtel.simtel_config_writer import sim_telarray_random_seeds
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id,
     read_sim_telarray_metadata,
 )
+from simtools.utils import random
 
 _logger = logging.getLogger(__name__)
 
@@ -137,8 +137,10 @@ def _assert_sim_telarray_seed(metadata, sim_telarray_seeds, file=None):
         )
         if file:
             run_number_modified = get_corsika_run_number(file) - 1
-            test_seeds = sim_telarray_random_seeds(
-                int(metadata["instrument_seed"]), int(metadata["instrument_instances"])
+            test_seeds = random.seeds(
+                n_seeds=int(metadata["instrument_instances"]),
+                max_seed=np.iinfo(np.int32).max,
+                fixed_seed=int(metadata["instrument_seed"]),
             )
             # no +1 as in sim_telarray (as we count from 0)
             seed_used = run_number_modified % int(metadata["instrument_instances"])

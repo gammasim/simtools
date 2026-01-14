@@ -1,4 +1,4 @@
-"""Random seeds utilities."""
+"""Random numbers utilities."""
 
 import secrets
 

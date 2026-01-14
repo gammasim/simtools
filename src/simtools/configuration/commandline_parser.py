@@ -462,7 +462,7 @@ class CommandLineParser(argparse.ArgumentParser):
             },
             "sim_telarray_random_instrument_instances": {
                 "help": "Number of random instrument instances initialized in sim_telarray.",
-                "type": int,
+                "type": CommandLineParser.bounded_int(1, 1024),
                 "required": False,
             },
         }
@@ -837,6 +837,18 @@ class CommandLineParser(argparse.ArgumentParser):
             raise ValueError("Input string does not contain an integer and a astropy quantity.")
 
         return (int(match.group(1)), u.Quantity(float(match.group(2)), match.group(3)))
+
+    @staticmethod
+    def bounded_int(min_value, max_value):
+        """Argument parser type to check that an integer is within a given interval."""
+
+        def checker(value):
+            int_value = int(value)
+            if not min_value <= int_value <= max_value:
+                raise ValueError(f"{int_value} not in [{min_value},{max_value}]")
+            return int_value
+
+        return checker
 
 
 class BuildInfoAction(argparse.Action):

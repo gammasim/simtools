@@ -9,7 +9,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-from simtools.simtel.simtel_config_writer import SimtelConfigWriter, sim_telarray_random_seeds
+from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 
 logger = logging.getLogger()
 
@@ -481,27 +481,6 @@ def test_write_random_seeds_file(simtel_config_writer, tmp_test_directory):
         ValueError, match="Number of random instances of instrument must be less than 1024"
     ):
         simtel_config_writer._write_random_seeds_file(sim_telarray_seeds, config_file_directory)
-
-
-def test_sim_telarray_random_seeds():
-    seed = 12345
-    number = 5
-    seeds = sim_telarray_random_seeds(seed, number)
-    assert len(seeds) == number
-    assert all(isinstance(s, np.int32) for s in seeds)
-    assert all(s >= 1 for s in seeds)  # sim_telarray seeds needs to be >0
-
-    seed = 54321
-    number = 10
-    seeds = sim_telarray_random_seeds(seed, number)
-    assert len(seeds) == number
-    assert all(isinstance(s, np.int32) for s in seeds)
-
-    # Test with zero number of seeds
-    seed = 12345
-    number = 0
-    seeds = sim_telarray_random_seeds(seed, number)
-    assert len(seeds) == number
 
 
 def test_write_simtools_parameters(simtel_config_writer, tmp_test_directory, file_has_text):
