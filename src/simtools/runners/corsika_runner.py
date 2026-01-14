@@ -1,7 +1,6 @@
 """Generate run scripts and directories for CORSIKA simulations."""
 
 import logging
-import stat
 from pathlib import Path
 
 from simtools import settings
@@ -114,8 +113,6 @@ class CorsikaRunner:
             file.write(f"gzip {corsika_log_file}\n")
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
-
-        sub_script.chmod(sub_script.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
 
     def get_resources(self, sub_out_file):
         """Return computing resources used."""
