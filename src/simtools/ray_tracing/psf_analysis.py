@@ -106,7 +106,7 @@ class PSFImage:
                 tmp_file_path = tmp_file.name
 
             try:
-                with open(tmp_file_path, encoding="utf-8") as tmp_f:
+                with open(tmp_file_path, "rb") as tmp_f:
                     result = job_manager.submit(rx_command, stdin=tmp_f)
 
                 data_lines = [
