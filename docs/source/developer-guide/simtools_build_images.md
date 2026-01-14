@@ -8,7 +8,7 @@ Replace the command by the container run engine of your choice (e.g., Docker).
 First build the CORSIKA/sim_telarray container locally (or use the pre-built image from the package registry):
 
 ```bash
-podman buildx build --platform=linux/arm64 --secret id=gitlab_token,src=./my_secret --build-arg AVX_FLAG=no_opt  -f Dockerfile-corsika-simtel -t corsika-simtelarray .
+podman buildx build --platform=linux/arm64 --secret id=gitlab_token,src=./my_secret --build-arg AVX_FLAG=generic -f Dockerfile-corsika-simtel -t corsika-simtelarray .
 ```
 
 (requires a secret token to access the CTAO GitLab repository).
