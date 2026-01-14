@@ -1,12 +1,12 @@
 """Tools for running applications in the simtools framework."""
 
 import shutil
-import subprocess
 from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools import dependencies
 from simtools.io import ascii_handler
+from simtools.job_execution import job_manager
 
 
 def run_applications(args_dict, logger):
@@ -39,75 +39,15 @@ def run_applications(args_dict, logger):
                 logger.info(f"Skipping application: {app}")
                 continue
             logger.info(f"Running application: {app}")
-            stdout, stderr = run_application(run_time, app, config.get("configuration"), logger)
+            result = job_manager.submit(
+                app,
+                out_file=None,
+                err_file=None,
+                configuration=config.get("configuration"),
+                runtime_environment=run_time,
+            )
             file.write("=" * 80 + "\n")
-            file.write(f"Application: {app}\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}\n")
-
-
-def run_application(runtime_environment, application, configuration, logger):
-    """
-    Run a simtools application and return stdout and stderr.
-
-    Allow to specify a runtime environment (e.g., Docker) and a working directory.
-
-    Parameters
-    ----------
-    runtime_environment : list
-        Command to run the application in the specified runtime environment.
-    application : str
-        Name of the application to run.
-    configuration : dict
-        Configuration for the application.
-    logger : logging.Logger
-        Logger for logging application output.
-
-    Returns
-    -------
-    tuple
-        stdout and stderr from the application run.
-
-    """
-    command = [application, *_convert_dict_to_args(configuration)]
-    if runtime_environment:
-        command = runtime_environment + command
-    try:
-        result = subprocess.run(
-            command,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except subprocess.CalledProcessError as exc:
-        logger.error(f"Error running application {application}: {exc.stderr}")
-        raise exc
-
-    return result.stdout, result.stderr
-
-
-def _convert_dict_to_args(parameters):
-    """
-    Convert a dictionary of parameters to a list of command line arguments.
-
-    Parameters
-    ----------
-    parameters : dict
-        Dictionary containing parameters to convert.
-
-    Returns
-    -------
-    list
-        List of command line arguments.
-    """
-    args = []
-    for key, value in parameters.items():
-        if isinstance(value, bool):
-            if value:
-                args.append(f"--{key}")
-        elif isinstance(value, list):
-            args.extend([f"--{key}", *(str(item) for item in value)])
-        else:
-            args.extend([f"--{key}", str(value)])
-    return args
+            file.write(f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n")
 
 
 def _read_application_configuration(configuration_file, steps, logger):

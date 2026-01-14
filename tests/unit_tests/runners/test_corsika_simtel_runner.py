@@ -4,11 +4,9 @@ import logging
 
 import pytest
 
-from simtools.runners.corsika_simtel_runner import (
-    CorsikaRunner,
-    CorsikaSimtelRunner,
-    SimulatorArray,
-)
+from simtools.runners.corsika_runner import CorsikaRunner
+from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
+from simtools.simtel.simulator_array import SimulatorArray
 
 logger = logging.getLogger()
 
@@ -152,11 +150,3 @@ def test_write_multipipe_script_sequential(corsika_simtel_runner):
         assert f"-c {multipipe_file}" in script_content
         assert "'Fan-out failed'" in script_content
         assert "--sequential" in script_content
-
-
-def test_determine_pointing_option(corsika_simtel_runner):
-    assert corsika_simtel_runner._determine_pointing_option(None) is False
-
-    assert corsika_simtel_runner._determine_pointing_option("divergent") is True
-    assert corsika_simtel_runner._determine_pointing_option("convergent") is True
-    assert corsika_simtel_runner._determine_pointing_option("test") is False

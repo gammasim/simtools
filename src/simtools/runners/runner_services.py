@@ -52,6 +52,10 @@ FILES_AND_PATHS = {
         "suffix": ".out",
         "sub_dir_type": "sub",
     },
+    "sub_err": {
+        "suffix": ".err",
+        "sub_dir_type": "sub",
+    },
     "sub_log": {
         "suffix": ".log",
         "sub_dir_type": "sub",
