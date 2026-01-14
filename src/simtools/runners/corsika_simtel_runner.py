@@ -25,7 +25,6 @@ class CorsikaSimtelRunner:
         Label.
     use_multipipe : bool
         Use multipipe to run CORSIKA and sim_telarray.
-    sim_telarray_seeds : dict
         Dictionary with configuration for sim_telarray random instrument setup.
     is_calibration_run : bool
         Flag to indicate if this is a calibration run.
@@ -35,7 +34,6 @@ class CorsikaSimtelRunner:
         self,
         corsika_config,
         label=None,
-        sim_telarray_seeds=None,
         sequential=False,
         curved_atmosphere_min_zenith_angle=None,
         is_calibration_run=False,
@@ -67,7 +65,6 @@ class CorsikaSimtelRunner:
                 SimulatorArray(
                     corsika_config=_corsika_config,
                     label=label,
-                    sim_telarray_seeds=sim_telarray_seeds,
                     is_calibration_run=is_calibration_run,
                 )
             )

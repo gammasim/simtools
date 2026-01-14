@@ -33,14 +33,11 @@ def test_init_simulator_array(corsika_config_mock_array_model):
 
 def test_init_simulator_array_with_seeds(corsika_config_mock_array_model):
     """Test SimulatorArray initialization with sim_telarray_seeds."""
-    seeds = {"seed": 12345, "random_instrument_instances": True}
     simulator = SimulatorArray(
         corsika_config=corsika_config_mock_array_model,
         label="test-label",
-        sim_telarray_seeds=seeds,
         is_calibration_run=True,
     )
-    assert simulator.sim_telarray_seeds == seeds
     assert simulator.is_calibration_run is True
 
 
