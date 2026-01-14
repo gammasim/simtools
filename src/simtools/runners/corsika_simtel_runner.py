@@ -5,8 +5,7 @@ import stat
 
 import simtools.utils.general as gen
 from simtools import settings
-from simtools.runners.corsika_runner import CorsikaRunner
-from simtools.runners.runner_services import RunnerServices
+from simtools.runners import corsika_runner, runner_services, simtel_runner
 from simtools.simtel.simulator_array import SimulatorArray
 
 
@@ -53,10 +52,12 @@ class CorsikaSimtelRunner:
         self.label = label
         self.sequential = "--sequential" if sequential else ""
 
-        self.runner_service = RunnerServices(self.base_corsika_config, "multi_pipe", label)
+        self.runner_service = runner_services.RunnerServices(
+            self.base_corsika_config, "multi_pipe", label
+        )
         self.file_list = None
 
-        self.corsika_runner = CorsikaRunner(
+        self.corsika_runner = corsika_runner.CorsikaRunner(
             corsika_config=self.base_corsika_config,
             label=label,
             corsika_seeds=corsika_seeds,
@@ -120,39 +121,24 @@ class CorsikaSimtelRunner:
         multipipe_file = self.runner_service.get_file_name(
             "multi_pipe_config", run_number=run_number
         )
-
         with open(multipipe_file, "w", encoding="utf-8") as file:
             for simulator_array in self.simulator_array:
+                log_file = simulator_array.runner_service.get_file_name(
+                    file_type="sim_telarray_log", run_number=run_number
+                )
                 run_command = simulator_array.make_run_command(
                     run_number=run_number,
-                    corsika_input_file="-",  # instruct sim_telarray to take input from stdout
-                    weak_pointing=self._determine_pointing_option(self.label),
+                    input_file="-",  # instruct sim_telarray to take input from stdout
                 )
-                file.write(f"{run_command}")
+                file.write(
+                    f"{simtel_runner.sim_telarray_env_as_string()} "
+                    + " ".join(run_command)
+                    + f" | gzip > {log_file} 2>&1\n"
+                )
                 file.write("\n")
+
         self._logger.info(f"Multipipe script: {multipipe_file}")
         self._write_multipipe_script(multipipe_file, run_number)
-
-    @staticmethod
-    def _determine_pointing_option(label):
-        """
-        Determine the pointing option for sim_telarray.
-
-        Parameters
-        ----------
-        label: str
-            Label of the simulation.
-
-        Returns
-        -------
-        str:
-            Pointing option.
-        """
-        try:
-            return any(pointing in label for pointing in ["divergent", "convergent"])
-        except TypeError:  # allow for pointing_option to be None
-            pass
-        return False
 
     def _write_multipipe_script(self, multipipe_file, run_number):
         """

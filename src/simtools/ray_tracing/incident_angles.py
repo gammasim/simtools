@@ -9,7 +9,6 @@ Angle of incidence on to secondary mirror [deg] (if available).
 import logging
 import math
 import re
-import subprocess
 from pathlib import Path
 
 import astropy.units as u
@@ -19,6 +18,7 @@ from astropy.table import QTable, vstack
 from simtools import settings
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.model_data_writer import ModelDataWriter
+from simtools.job_execution import job_manager
 from simtools.model.model_utils import initialize_simulation_models
 
 
@@ -275,8 +275,8 @@ class IncidentAnglesCalculator:
         """
         self.logger.info("Executing %s (logging to %s)", script_path, log_file)
         try:
-            subprocess.check_call([str(script_path)])
-        except subprocess.CalledProcessError as exc:
+            job_manager.submit(script_path)
+        except job_manager.JobExecutionError as exc:
             raise RuntimeError(f"Incident angles run failed, see log: {log_file}") from exc
 
     def _compute_incidence_angles_from_imaging_list(self, photons_file):
