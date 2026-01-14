@@ -1,15 +1,15 @@
 # Dockerfile for simtools production.
 #
 # Uses CORSIKA and sim_telarray pre-built images; CORSIKA AVX optimization
-# (no_opt, avx2, avx512f, sse4) is selected via the AVX_FLAG build argument.
+# (generic, avx2, avx512f, sse4) is selected via the AVX_FLAG build argument.
 # No QGSJet tables are included.
 #
 # hadolint global ignore=DL3013,DL3041
 # - DL3013, DL3041: ignore warnings about using latest
 
-ARG CORSIKA_IMAGE_VERSION="20251217-78010"
+ARG CORSIKA_IMAGE_VERSION="v78010"
 ARG SIMTEL_IMAGE_VERSION="latest"
-ARG AVX_FLAG="no_opt"
+ARG AVX_FLAG="generic"
 ARG PYTHON_VERSION="3.12"
 ARG SIMTOOLS_BRANCH=main
 
