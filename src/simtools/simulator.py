@@ -219,7 +219,6 @@ class Simulator:
         }
 
         if runner_class is not SimulatorArray:
-            runner_args["corsika_seeds"] = settings.config.args.get("corsika_seeds", False)
             runner_args["curved_atmosphere_min_zenith_angle"] = settings.config.args.get(
                 "curved_atmosphere_min_zenith_angle", 65 * u.deg
             )

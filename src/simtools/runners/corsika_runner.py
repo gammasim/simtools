@@ -20,8 +20,6 @@ class CorsikaRunner:
         CORSIKA configuration.
     label: str
         Instance label.
-    corsika_seeds: list
-        List of fixed seeds used for CORSIKA random number generators.
     use_multipipe: bool
         Use multipipe to run CORSIKA and sim_telarray.
     curved_atmosphere_min_zenith_angle: Quantity
@@ -32,7 +30,6 @@ class CorsikaRunner:
         self,
         corsika_config,
         label=None,
-        corsika_seeds=None,
         use_multipipe=False,
         curved_atmosphere_min_zenith_angle=None,
     ):
@@ -42,7 +39,6 @@ class CorsikaRunner:
         self.label = label
 
         self.corsika_config = corsika_config
-        self._corsika_seeds = corsika_seeds
         self._use_multipipe = use_multipipe
         self.curved_atmosphere_min_zenith_angle = curved_atmosphere_min_zenith_angle
 
@@ -70,7 +66,6 @@ class CorsikaRunner:
 
         self.corsika_config.generate_corsika_input_file(
             self._use_multipipe,
-            self._corsika_seeds,
             self.file_list["corsika_input"],
             self.file_list["corsika_output"] if not self._use_multipipe else corsika_file,
         )

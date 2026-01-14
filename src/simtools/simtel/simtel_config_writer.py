@@ -12,30 +12,9 @@ import simtools.utils.general as gen
 import simtools.version
 from simtools import dependencies, settings
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
-from simtools.utils import names
+from simtools.utils import names, random
 
 logger = logging.getLogger(__name__)
-
-
-def sim_telarray_random_seeds(seed, number):
-    """
-    Generate random seeds to be used in sim_telarray.
-
-    Parameters
-    ----------
-    seed: int
-        Seed for the random number generator.
-    number: int
-        Number of random seeds to generate.
-
-    Returns
-    -------
-    list
-        List of random seeds.
-    """
-    rng = np.random.default_rng(seed)
-    max_int32 = np.iinfo(np.int32).max  # sim_telarray requires 32 bit integers
-    return list(rng.integers(low=1, high=max_int32, size=number, dtype=np.int32))
 
 
 class SimtelConfigWriter:
@@ -511,8 +490,10 @@ class SimtelConfigWriter:
         )
         if sim_telarray_seeds["random_instrument_instances"] > 1024:
             raise ValueError("Number of random instances of instrument must be less than 1024")
-        random_integers = sim_telarray_random_seeds(
-            sim_telarray_seeds["seed"], sim_telarray_seeds["random_instrument_instances"]
+        random_integers = random.seeds(
+            n_seeds=sim_telarray_seeds["random_instrument_instances"],
+            max_seed=np.iinfo(np.int32).max,
+            fixed_seed=sim_telarray_seeds["seed"],
         )
         with open(
             config_file_directory / sim_telarray_seeds["seed_file_name"], "w", encoding="utf-8"

@@ -57,7 +57,7 @@ r"""
 """
 
 from simtools.application_control import startup_application
-from simtools.configuration import configurator
+from simtools.configuration import commandline_parser, configurator
 from simtools.simulator import Simulator
 
 
@@ -100,7 +100,7 @@ def _parse():
         "--corsika_seeds",
         help="Use fixed random seeds for CORSIKA for testing purposes.",
         nargs=4,
-        type=int,
+        type=commandline_parser.CommandLineParser.bounded_int(1, 900_000_000),
         metavar=("S1", "S2", "S3", "S4"),
     )
     config.parser.add_argument(
