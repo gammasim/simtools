@@ -31,4 +31,4 @@ def seeds(n_seeds=1, min_seed=1, max_seed=2_000_000_000, fixed_seed=None):
 
     if n_seeds == 1:
         return int(seed_list[0])
-    return seed_list.tolist()
+    return [int(x) for x in seed_list]
