@@ -388,7 +388,7 @@ class MirrorPanelPSF:
         """
         n_mirrors = len(self.measured_data)
         if self.args_dict.get("test", False):
-            n_mirrors = min(n_mirrors, self.args_dict.get("number_of_mirrors_to_test", 3))
+            n_mirrors = min(n_mirrors, self.args_dict.get("number_of_mirrors_to_test", 10))
 
         self._logger.info(f"Optimizing RNDA for {n_mirrors} mirrors...")
 
