@@ -71,12 +71,17 @@ class MirrorPanelPSF:
 
         # Limit mirrors in test mode
         if self.args_dict.get("test", False):
-            self.args_dict["number_of_mirrors_to_test"] = 50
+            self.args_dict["number_of_mirrors_to_test"] = 198
 
         self.rnda_start = self.telescope_model.get_parameter_value("mirror_reflection_random_angle")
         self.rnda_opt = None
         self.per_mirror_results = []
         self.final_percentage_diff = None
+
+        if self.args_dict.get("psf_pdf"):
+            self._logger.warning(
+                "--psf_pdf is deprecated/removed; use --d80_hist to write d80 distributions."
+            )
 
     def _load_measured_data(self):
         """
@@ -149,12 +154,16 @@ class MirrorPanelPSF:
             "mirror_reflection_random_angle", rnda_values
         )
 
+        # RayTracing single_mirror_mode uses 0-based mirror indices.
+        mirror_sim_index = int(mirror_idx)
+        mirror_number = mirror_sim_index + 1  # user-facing label
+
         # Create ray tracing for single mirror.
         # Use a per-mirror label so parallel runs do not collide on output filenames.
         # IMPORTANT: RayTracing and SimulatorRayTracing derive filenames from
         # telescope_model.label. Passing RayTracing(label=...) alone breaks this link
         # and causes FileNotFoundError when RayTracing looks for the photons file.
-        rt_label = f"{self.label}_m{mirror_idx + 1}"
+        rt_label = f"{self.label}_m{mirror_number}"
         old_label = getattr(self.telescope_model, "label", None)
         old_config_file_path = getattr(self.telescope_model, "_config_file_path", None)
         old_config_file_directory = getattr(self.telescope_model, "_config_file_directory", None)
@@ -170,7 +179,7 @@ class MirrorPanelPSF:
                 telescope_model=self.telescope_model,
                 site_model=self.site_model,
                 single_mirror_mode=True,
-                mirror_numbers=[mirror_idx],
+                mirror_numbers=[mirror_sim_index],
                 use_random_focal_length=False,
             )
 
@@ -196,6 +205,116 @@ class MirrorPanelPSF:
         """Calculate signed percentage difference."""
         measured = float(measured_d80)
         return 100.0 * (float(simulated_d80) - measured) / measured
+
+    def _run_sigma1_gradient_descent(
+        self,
+        mirror_idx: int,
+        measured_d80_mm: float,
+        focal_length_m: float,
+        current_rnda,
+        threshold: float,
+        learning_rate: float,
+        n_runs_per_eval: int,
+        grad_clip: float,
+        max_log_step: float,
+        sigma_min: float,
+        sigma_max: float,
+        max_iterations: int,
+    ):
+        """Run the sigma1-only gradient descent loop.
+
+        Returns best_rnda, best_sim_d80, best_pct_diff.
+        """
+
+        def simulate_avg(rnda_values):
+            d80_values = [
+                self._simulate_single_mirror_d80(mirror_idx, focal_length_m, rnda_values)
+                for _ in range(max(1, n_runs_per_eval))
+            ]
+            return float(np.mean(d80_values))
+
+        def objective_from_sim(simulated_d80_mm):
+            signed_pct = self._calculate_percentage_difference(measured_d80_mm, simulated_d80_mm)
+            return float(signed_pct), float(signed_pct * signed_pct)
+
+        best_rnda = list(current_rnda)
+        sim_d80 = simulate_avg(current_rnda)
+        signed_pct, obj = objective_from_sim(sim_d80)
+        best_pct_diff = abs(signed_pct)
+        best_sim_d80 = sim_d80
+        best_obj = obj
+
+        self._logger.info(
+            f"  Initial: simulated d80 = {sim_d80:.3f} mm, signed pct diff = {signed_pct:.2f}%"
+        )
+
+        if best_pct_diff <= threshold * 100:
+            self._logger.info("  Already converged!")
+            return best_rnda, best_sim_d80, best_pct_diff
+
+        for iteration in range(max_iterations):
+            sigma1 = float(current_rnda[0])
+            epsilon = max(1e-6, 0.05 * sigma1)
+
+            rnda_plus = list(current_rnda)
+            rnda_minus = list(current_rnda)
+            rnda_plus[0] = min(sigma_max, sigma1 + epsilon)
+            rnda_minus[0] = max(sigma_min, sigma1 - epsilon)
+
+            sim_plus = simulate_avg(rnda_plus)
+            _, obj_plus = objective_from_sim(sim_plus)
+
+            sim_minus = simulate_avg(rnda_minus)
+            _, obj_minus = objective_from_sim(sim_minus)
+
+            denom = (rnda_plus[0] - rnda_minus[0])
+            if denom <= 0:
+                self._logger.info("  Sigma1 step collapsed; stopping.")
+                break
+
+            grad_sigma = (obj_plus - obj_minus) / denom
+            grad_log = float(np.clip(grad_sigma * sigma1, -grad_clip, grad_clip))
+
+            log_step = float(np.clip(-learning_rate * grad_log, -max_log_step, max_log_step))
+            new_sigma1 = float(np.clip(sigma1 * float(np.exp(log_step)), sigma_min, sigma_max))
+
+            new_rnda = list(current_rnda)
+            new_rnda[0] = new_sigma1
+
+            new_sim_d80 = simulate_avg(new_rnda)
+            new_signed_pct, new_obj = objective_from_sim(new_sim_d80)
+            new_pct_diff = abs(new_signed_pct)
+
+            self._logger.info(
+                f"  Iter {iteration + 1}: sigma1={sigma1:.6f} -> {new_sigma1:.6f}, "
+                f"d80={best_sim_d80:.3f}mm, d80_new={new_sim_d80:.3f}mm, "
+                f"|pct|={best_pct_diff:.2f}% -> {new_pct_diff:.2f}%, "
+                f"grad_log={grad_log:.3g}, log_step={log_step:.3g}, lr={learning_rate:.3g}"
+            )
+
+            if new_obj < best_obj:
+                best_obj = new_obj
+                best_pct_diff = new_pct_diff
+                best_rnda = list(new_rnda)
+                best_sim_d80 = new_sim_d80
+                current_rnda = list(new_rnda)
+                learning_rate *= 1.1
+            else:
+                learning_rate *= 0.5
+
+            if best_pct_diff <= threshold * 100:
+                self._logger.info(f"  Converged at iteration {iteration + 1}!")
+                break
+
+            if learning_rate < 1e-12:
+                self._logger.info("  Learning rate too small, stopping.")
+                break
+
+        self._logger.info(
+            f"  Final: simulated d80 = {best_sim_d80:.3f} mm, pct diff = {best_pct_diff:.2f}%"
+        )
+        return best_rnda, best_sim_d80, best_pct_diff
+
 
     def _optimize_single_mirror(self, mirror_idx, measured_d80_mm, focal_length_m):
         """
@@ -224,121 +343,29 @@ class MirrorPanelPSF:
         sigma_max = float(self.args_dict.get("sigma1_max", 0.1))
         max_iterations = 100
 
-        # Start with current RNDA values
         current_rnda = list(self.rnda_start)
-        best_rnda = list(current_rnda)
 
         self._logger.info(
             f"Mirror {mirror_idx + 1}: measured d80 = {measured_d80_mm:.3f} mm, "
             f"focal_length = {focal_length_m:.3f} m"
         )
 
-        def simulate_avg(rnda_values):
-            d80_values = [
-                self._simulate_single_mirror_d80(mirror_idx, focal_length_m, rnda_values)
-                for _ in range(max(1, n_runs_per_eval))
-            ]
-            return float(np.mean(d80_values))
-
-        def objective_from_sim(simulated_d80_mm):
-            signed_pct = self._calculate_percentage_difference(measured_d80_mm, simulated_d80_mm)
-            return float(signed_pct), float(signed_pct * signed_pct)
-
-        # Get initial simulation
-        sim_d80 = simulate_avg(current_rnda)
-        signed_pct, obj = objective_from_sim(sim_d80)
-        best_pct_diff = abs(signed_pct)
-        best_sim_d80 = sim_d80
-        best_obj = obj
-
-        self._logger.info(
-            f"  Initial: simulated d80 = {sim_d80:.3f} mm, signed pct diff = {signed_pct:.2f}%"
+        best_rnda, best_sim_d80, best_pct_diff = self._run_sigma1_gradient_descent(
+            mirror_idx=mirror_idx,
+            measured_d80_mm=measured_d80_mm,
+            focal_length_m=focal_length_m,
+            current_rnda=current_rnda,
+            threshold=threshold,
+            learning_rate=learning_rate,
+            n_runs_per_eval=n_runs_per_eval,
+            grad_clip=grad_clip,
+            max_log_step=max_log_step,
+            sigma_min=sigma_min,
+            sigma_max=sigma_max,
+            max_iterations=max_iterations,
         )
 
-        if best_pct_diff <= threshold * 100:
-            self._logger.info("  Already converged!")
-            return {
-                "mirror": mirror_idx + 1,
-                "measured_d80_mm": measured_d80_mm,
-                "focal_length_m": focal_length_m,
-                "optimized_rnda": best_rnda,
-                "simulated_d80_mm": best_sim_d80,
-                "percentage_diff": best_pct_diff,
-            }
-
-        # Gradient descent on sigma1 (primary component)
-        # - Use a smooth objective: squared signed percentage difference
-        # - Use central differences with a relative step in sigma1
-        # - Update in log-space to avoid huge absolute steps when sigma1 is small
-        for iteration in range(max_iterations):
-            sigma1 = float(current_rnda[0])
-            # Relative finite-difference step (avoid eps too small)
-            epsilon = max(1e-6, 0.05 * sigma1)
-
-            rnda_plus = list(current_rnda)
-            rnda_minus = list(current_rnda)
-            rnda_plus[0] = min(sigma_max, sigma1 + epsilon)
-            rnda_minus[0] = max(sigma_min, sigma1 - epsilon)
-
-            sim_plus = simulate_avg(rnda_plus)
-            _, obj_plus = objective_from_sim(sim_plus)
-
-            sim_minus = simulate_avg(rnda_minus)
-            _, obj_minus = objective_from_sim(sim_minus)
-
-            denom = (rnda_plus[0] - rnda_minus[0])
-            if denom <= 0:
-                self._logger.info("  Sigma1 step collapsed; stopping.")
-                break
-
-            # d(obj)/d(sigma1)
-            grad_sigma = (obj_plus - obj_minus) / denom
-            # Convert to d(obj)/d(log(sigma1)) = d(obj)/d(sigma1) * sigma1
-            grad_log = grad_sigma * sigma1
-            grad_log = float(np.clip(grad_log, -grad_clip, grad_clip))
-
-            # Propose log-space update with clipping
-            log_step = float(np.clip(-learning_rate * grad_log, -max_log_step, max_log_step))
-            new_sigma1 = float(np.clip(sigma1 * float(np.exp(log_step)), sigma_min, sigma_max))
-
-            new_rnda = list(current_rnda)
-            new_rnda[0] = new_sigma1
-
-            new_sim_d80 = simulate_avg(new_rnda)
-            new_signed_pct, new_obj = objective_from_sim(new_sim_d80)
-            new_pct_diff = abs(new_signed_pct)
-
-            # Debug: print gradient info (now for smooth objective)
-            self._logger.info(
-                f"  Iter {iteration + 1}: sigma1={sigma1:.6f} -> {new_sigma1:.6f}, "
-                f"d80={best_sim_d80:.3f}mm, d80_new={new_sim_d80:.3f}mm, "
-                f"|pct|={best_pct_diff:.2f}% -> {new_pct_diff:.2f}%, "
-                f"grad_log={grad_log:.3g}, log_step={log_step:.3g}, lr={learning_rate:.3g}"
-            )
-
-            if new_obj < best_obj:
-                best_obj = new_obj
-                best_pct_diff = new_pct_diff
-                best_rnda = list(new_rnda)
-                best_sim_d80 = new_sim_d80
-                current_rnda = list(new_rnda)
-                learning_rate *= 1.1  # Increase LR on success
-            else:
-                learning_rate *= 0.5  # Decrease LR on failure
-
-            if best_pct_diff <= threshold * 100:
-                self._logger.info(f"  Converged at iteration {iteration + 1}!")
-                break
-
-            if learning_rate < 1e-12:
-                self._logger.info("  Learning rate too small, stopping.")
-                break
-
-        self._logger.info(
-            f"  Final: simulated d80 = {best_sim_d80:.3f} mm, pct diff = {best_pct_diff:.2f}%"
-        )
-
-        return {
+        result = {
             "mirror": mirror_idx + 1,
             "measured_d80_mm": measured_d80_mm,
             "focal_length_m": focal_length_m,
@@ -346,6 +373,7 @@ class MirrorPanelPSF:
             "simulated_d80_mm": best_sim_d80,
             "percentage_diff": best_pct_diff,
         }
+        return result
 
     def _optimize_mirrors_parallel(self, n_mirrors, n_workers):
         # Ensure worker processes don't recursively attempt to parallelize.
@@ -428,20 +456,45 @@ class MirrorPanelPSF:
         print(f"\nNumber of mirrors optimized: {len(self.per_mirror_results)}")
         print(f"Mean percentage difference: {self.final_percentage_diff:.2f}%")
 
+        have_plot_d80 = any(
+            (isinstance(r, dict) and ("simulated_d80_mm_plot" in r or "percentage_diff_plot" in r))
+            for r in self.per_mirror_results
+        )
+
         print("\nPer-mirror results:")
-        print("-" * 90)
-        print(f"{'Mirror':>6} {'Meas d80':>10} {'Sim d80':>10} {'Pct Diff':>10} {'Optimized RNDA [sigma1, frac2, sigma2]':<40}")
-        print(f"{'':>6} {'(mm)':>10} {'(mm)':>10} {'(%)':>10} {'(deg, -, deg)':<40}")
-        print("-" * 90)
+        print("-" * 120 if have_plot_d80 else "-" * 90)
+        if have_plot_d80:
+            print(
+                f"{'Mirror':>6} {'Meas d80':>10} {'Sim d80':>10} {'Pct Diff':>10} "
+                f"{'Plot Sim':>10} {'Plot %':>10} {'Optimized RNDA [sigma1, frac2, sigma2]':<40}"
+            )
+            print(
+                f"{'':>6} {'(mm)':>10} {'(mm)':>10} {'(%)':>10} "
+                f"{'(mm)':>10} {'(%)':>10} {'(deg, -, deg)':<40}"
+            )
+        else:
+            print(
+                f"{'Mirror':>6} {'Meas d80':>10} {'Sim d80':>10} {'Pct Diff':>10} {'Optimized RNDA [sigma1, frac2, sigma2]':<40}"
+            )
+            print(f"{'':>6} {'(mm)':>10} {'(mm)':>10} {'(%)':>10} {'(deg, -, deg)':<40}")
+        print("-" * 120 if have_plot_d80 else "-" * 90)
 
         for r in self.per_mirror_results:
             rnda_str = f"[{r['optimized_rnda'][0]:.6f}, {r['optimized_rnda'][1]:.6f}, {r['optimized_rnda'][2]:.6f}]"
-            print(
-                f"{r['mirror']:>6} {r['measured_d80_mm']:>10.3f} {r['simulated_d80_mm']:>10.3f} "
-                f"{r['percentage_diff']:>10.2f} {rnda_str:<40}"
-            )
+            if have_plot_d80:
+                plot_sim = r.get("simulated_d80_mm_plot", float("nan"))
+                plot_pct = r.get("percentage_diff_plot", float("nan"))
+                print(
+                    f"{r['mirror']:>6} {r['measured_d80_mm']:>10.3f} {r['simulated_d80_mm']:>10.3f} "
+                    f"{r['percentage_diff']:>10.2f} {plot_sim:>10.3f} {plot_pct:>10.2f} {rnda_str:<40}"
+                )
+            else:
+                print(
+                    f"{r['mirror']:>6} {r['measured_d80_mm']:>10.3f} {r['simulated_d80_mm']:>10.3f} "
+                    f"{r['percentage_diff']:>10.2f} {rnda_str:<40}"
+                )
 
-        print("-" * 90)
+        print("-" * 120 if have_plot_d80 else "-" * 90)
         print("\nmirror_reflection_random_angle [sigma1, fraction2, sigma2]")
         print(f"Previous values = {[f'{x:.6f}' for x in self.rnda_start]}")
         print(f"Optimized values (averaged) = {[f'{x:.6f}' for x in self.rnda_opt]}\n")
@@ -467,3 +520,93 @@ class MirrorPanelPSF:
             json.dump(results_data, f, indent=2)
 
         self._logger.info(f"Results written to {output_file}")
+
+    def write_d80_histogram(self):
+        """Write histogram comparing measured vs simulated d80 distributions.
+
+        Returns
+        -------
+        str | None
+            Path to the written file, or None if nothing was written.
+        """
+        out_name = self.args_dict.get("d80_hist")
+        if not out_name:
+            return None
+
+        try:
+            import matplotlib
+
+            matplotlib.use("Agg", force=True)
+            import matplotlib.pyplot as plt
+        except Exception as exc:  # noqa: BLE001
+            raise RuntimeError(f"matplotlib is required to write d80 histogram: {exc}") from exc
+
+        output_dir = Path(self.args_dict.get("output_path", "."))
+        out_path = Path(out_name)
+        if not out_path.is_absolute():
+            out_path = output_dir / out_path
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        measured = np.asarray(
+            [r.get("measured_d80_mm") for r in (self.per_mirror_results or [])], dtype=float
+        )
+        simulated = np.asarray(
+            [r.get("simulated_d80_mm") for r in (self.per_mirror_results or [])], dtype=float
+        )
+
+        measured = measured[np.isfinite(measured)]
+        simulated = simulated[np.isfinite(simulated)]
+
+        if measured.size == 0 or simulated.size == 0:
+            self._logger.warning("No valid d80 values available to plot histogram")
+            return None
+
+        bins = 25
+
+        all_vals = np.concatenate([measured, simulated])
+        x_min = float(np.nanmin(all_vals))
+        x_max = float(np.nanmax(all_vals))
+        if not np.isfinite(x_min) or not np.isfinite(x_max) or x_max <= x_min:
+            self._logger.warning("Invalid d80 range for histogram")
+            return None
+
+        bin_edges = np.linspace(x_min, x_max, bins + 1)
+
+        meas_mean = float(np.mean(measured))
+        meas_rms = float(np.std(measured, ddof=0))
+        sim_mean = float(np.mean(simulated))
+        sim_rms = float(np.std(simulated, ddof=0))
+
+        fig, ax = plt.subplots(figsize=(7.5, 4.5), constrained_layout=True)
+        ax.hist(
+            measured,
+            bins=bin_edges,
+            alpha=0.55,
+            color="tab:red",
+            edgecolor="white",
+            label=f"Measured (mean={meas_mean:.2f} mm, rms={meas_rms:.2f} mm)",
+        )
+        ax.hist(
+            simulated,
+            bins=bin_edges,
+            alpha=0.55,
+            color="tab:blue",
+            edgecolor="white",
+            label=f"Simulated (mean={sim_mean:.2f} mm, rms={sim_rms:.2f} mm)",
+        )
+
+        ax.axvline(meas_mean, color="tab:red", linestyle="--", linewidth=1)
+        ax.axvline(sim_mean, color="tab:blue", linestyle="--", linewidth=1)
+
+        ax.set_xlabel("d80 (mm)")
+        ax.set_ylabel("Count")
+        ax.set_title(
+            f"d80 distributions ({self.args_dict.get('telescope', '')} {self.args_dict.get('model_version', '')})"
+        )
+        ax.legend(loc="best", fontsize=9, frameon=True)
+
+        fig.savefig(out_path)
+        plt.close(fig)
+
+        self._logger.info("d80 histogram written to %s", str(out_path))
+        return str(out_path)
