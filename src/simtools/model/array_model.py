@@ -6,6 +6,7 @@ from pathlib import Path
 import astropy.units as u
 from astropy.table import QTable
 
+from simtools import settings
 from simtools.data_model import data_reader, schema
 from simtools.io import io_handler
 from simtools.model.calibration_model import CalibrationModel
@@ -13,6 +14,7 @@ from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import general, names
+from simtools.version import semver_to_int
 
 
 class ArrayModel:
@@ -70,7 +72,7 @@ class ArrayModel:
 
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
-        self._sim_telarray_seeds = None
+        self.instrument_seed = None
 
     def _initialize(self, site, array_elements_config, calibration_device_types):
         """
@@ -126,41 +128,6 @@ class ArrayModel:
         )
 
         return array_elements, site_model, telescope_models, calibration_models
-
-    @property
-    def sim_telarray_seeds(self):
-        """
-        Return sim_telarray seeds.
-
-        Returns
-        -------
-        dict
-            Dictionary with sim_telarray seeds.
-        """
-        return self._sim_telarray_seeds
-
-    @sim_telarray_seeds.setter
-    def sim_telarray_seeds(self, value):
-        """
-        Set sim_telarray seeds.
-
-        Parameters
-        ----------
-        value: dict
-            Dictionary with sim_telarray seeds.
-        """
-        if isinstance(value, dict):
-            required_keys = {
-                "seed",
-                "random_instrument_instances",
-                "seed_file_name",
-            }
-            if not required_keys.issubset(value):
-                raise ValueError(
-                    "sim_telarray_seeds dictionary must contain the following keys: "
-                    f"{required_keys}"
-                )
-        self._sim_telarray_seeds = value
 
     @property
     def config_file_path(self):
@@ -531,10 +498,36 @@ class ArrayModel:
         dict
             Dictionary with additional metadata.
         """
-        metadata = {}
-        if self.sim_telarray_seeds is not None:
-            metadata.update(self.sim_telarray_seeds)
+        return {
+            "seed": self.instrument_seed,
+            "nsb_integrated_flux": self.site_model.get_nsb_integrated_flux(),
+        }
 
-        metadata["nsb_integrated_flux"] = self.site_model.get_nsb_integrated_flux()
+    def set_seed_for_random_instrument_instances(self, zenith_angle, azimuth_angle):
+        """
+        Generate seed for random instances of the instrument (if not provided).
 
-        return metadata
+        Parameters
+        ----------
+        zenith_angle: float
+            Zenith angle of the observation (in degrees).
+        azimuth_angle: float
+            Azimuth angle of the observation (in degrees).
+        """
+        seed = settings.config.args.get("sim_telarray_instrument_seeds")
+        if seed:
+            self._logger.debug(f"Using provided sim_telarray instrument seed: {seed}")
+            self.instrument_seed = int(seed.split(",")[0].strip())
+            return
+
+        def key_index(key):
+            try:
+                return list(names.site_names()).index(key) + 1
+            except ValueError:
+                return 1
+
+        seed = semver_to_int(self.model_version) * 10000000
+        seed = seed + key_index(self.site) * 1000000
+        seed = seed + (int)(zenith_angle) * 1000
+        self.instrument_seed = seed + (int)(azimuth_angle)
+        self._logger.debug(f"Generated sim_telarray instrument seed: {self.instrument_seed}")

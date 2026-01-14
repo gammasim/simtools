@@ -19,8 +19,6 @@ class SimulatorArray(SimtelRunner):
         Instance label.
     use_multipipe: bool
         Use multipipe to run CORSIKA and sim_telarray.
-    sim_telarray_seeds: dict
-        Dictionary with configuration for sim_telarray random instrument setup.
     is_calibration_run: bool
         Flag to indicate if this is a calibration run.
     """
@@ -29,7 +27,6 @@ class SimulatorArray(SimtelRunner):
         self,
         corsika_config,
         label=None,
-        sim_telarray_seeds=None,
         is_calibration_run=False,
     ):
         """Initialize SimulatorArray."""
@@ -39,7 +36,6 @@ class SimulatorArray(SimtelRunner):
             is_calibration_run=is_calibration_run,
         )
 
-        self.sim_telarray_seeds = sim_telarray_seeds
         self.corsika_config = corsika_config
         self.is_calibration_run = is_calibration_run
         self.io_handler = io_handler.IOHandler()
@@ -186,13 +182,11 @@ class SimulatorArray(SimtelRunner):
             "output_file": output_file,
         }
 
-        if self.sim_telarray_seeds:
-            if self.sim_telarray_seeds.get("random_instrument_instances"):
-                options["random_seed"] = (
-                    f"file-by-run:{config_dir}/{self.sim_telarray_seeds['seed_file_name']},auto"
-                )
-            elif self.sim_telarray_seeds.get("seed"):
-                options["random_seed"] = self.sim_telarray_seeds["seed"]
+        if settings.config.args.get("sim_telarray_random_instrument_instances"):
+            seed_file = settings.config.args.get("sim_telarray_seeds_file")
+            options["random_seed"] = f"file-by-run:{config_dir}/{seed_file},auto"
+        elif settings.config.args.get("sim_telarray_instrument_seeds"):
+            options["random_seed"] = settings.config.args.get("sim_telarray_instrument_seeds")
 
         for key, value in options.items():
             cmd.extend(["-C", f"{key}={value}"])

@@ -471,37 +471,37 @@ class SimtelConfigWriter:
                 file.write(f"# include <{tel_config_file}>\n\n")
             file.write("#endif \n\n")  # configuration files need to end with \n\n
 
-        if additional_metadata and additional_metadata.get("random_instrument_instances"):
-            self._write_random_seeds_file(additional_metadata, config_file_directory)
+        if settings.config.args.get("sim_telarray_random_instrument_instances"):
+            self._write_random_seeds_file(additional_metadata.get("seed"), config_file_directory)
 
-    def _write_random_seeds_file(self, sim_telarray_seeds, config_file_directory):
+    def _write_random_seeds_file(self, instrument_seed, config_file_directory):
         """
         Write list of random number used to generate random instances of instrument.
 
         Parameters
         ----------
-        random_instrument_instances: int
-            Number of random instances of the instrument.
+        instrument_seed : int
+            Seed for random instances of instrument.
+        config_file_directory: str or Path
+            Directory where to write the seed file.
         """
+        n_instruments = settings.config.args.get("sim_telarray_random_instrument_instances")
+        seed_file = settings.config.args.get("sim_telarray_seeds_file")
         self._logger.info(
-            "Writing random seed file "
-            f"{config_file_directory}/{sim_telarray_seeds['seed_file_name']}"
-            f" (global seed {sim_telarray_seeds['seed']})"
+            f"Writing random seed file {config_file_directory}/{seed_file}"
+            f" (global seed {instrument_seed})"
         )
-        if sim_telarray_seeds["random_instrument_instances"] > 1024:
+        if n_instruments > 1024:
             raise ValueError("Number of random instances of instrument must be less than 1024")
         random_integers = random.seeds(
-            n_seeds=sim_telarray_seeds["random_instrument_instances"],
+            n_seeds=n_instruments,
             max_seed=np.iinfo(np.int32).max,
-            fixed_seed=sim_telarray_seeds["seed"],
+            fixed_seed=instrument_seed,
         )
-        with open(
-            config_file_directory / sim_telarray_seeds["seed_file_name"], "w", encoding="utf-8"
-        ) as file:
+        with open(config_file_directory / seed_file, "w", encoding="utf-8") as file:
             file.write(
                 "# Random seeds for instrument configuration generated with seed "
-                f"{sim_telarray_seeds['seed']}"
-                f" (model version {self._model_version}, site {self._site})\n"
+                f"{instrument_seed} (model version {self._model_version}, site {self._site})\n"
             )
             for number in random_integers:
                 file.write(f"{number}\n")

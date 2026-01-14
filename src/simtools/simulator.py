@@ -16,8 +16,7 @@ from simtools.runners import corsika_runner, corsika_simtel_runner, runner_servi
 from simtools.sim_events import file_info, writer
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
-from simtools.utils import general, names
-from simtools.version import semver_to_int
+from simtools.utils import general
 
 
 class Simulator:
@@ -51,7 +50,6 @@ class Simulator:
         self.io_handler = io_handler.IOHandler()
 
         self._extra_commands = extra_commands
-        self.sim_telarray_seeds = None
         self.run_number = self._initialize_from_tool_configuration()
 
         self.array_models, self.corsika_configurations = self._initialize_array_models()
@@ -90,14 +88,6 @@ class Simulator:
 
     def _initialize_from_tool_configuration(self):
         """Initialize simulator from tool configuration."""
-        self.sim_telarray_seeds = {
-            "seed": settings.config.args.get("sim_telarray_instrument_seeds"),
-            "random_instrument_instances": settings.config.args.get(
-                "sim_telarray_random_instrument_instances"
-            ),
-            "seed_file_name": "sim_telarray_instrument_seeds.txt",  # name only; no directory
-        }
-
         if settings.config.args.get("corsika_file"):
             run_number = file_info.get_corsika_run_number(settings.config.args["corsika_file"])
         else:
@@ -140,18 +130,10 @@ class Simulator:
                     run_number=self.run_number,
                 )
             )
-            array_model[-1].sim_telarray_seeds = {
-                "seed": self._get_seed_for_random_instrument_instances(
-                    self.sim_telarray_seeds["seed"],
-                    version,
-                    corsika_configurations[-1].zenith_angle,
-                    corsika_configurations[-1].azimuth_angle,
-                ),
-                "random_instrument_instances": self.sim_telarray_seeds[
-                    "random_instrument_instances"
-                ],
-                "seed_file_name": self.sim_telarray_seeds["seed_file_name"],
-            }
+            array_model[-1].set_seed_for_random_instrument_instances(
+                corsika_configurations[-1].zenith_angle,
+                corsika_configurations[-1].azimuth_angle,
+            )
 
         #  'corsika_sim_telarray' allows for multiple model versions (multipipe option)
         corsika_configurations = (
@@ -161,42 +143,6 @@ class Simulator:
         )
 
         return array_model, corsika_configurations
-
-    def _get_seed_for_random_instrument_instances(
-        self, seed, model_version, zenith_angle, azimuth_angle
-    ):
-        """
-        Generate seed for random instances of the instrument.
-
-        Parameters
-        ----------
-        seed : str
-            Seed string given through configuration.
-        model_version: str
-            Model version.
-        zenith_angle: float
-            Zenith angle of the observation (in degrees).
-        azimuth_angle: float
-            Azimuth angle of the observation (in degrees).
-
-        Returns
-        -------
-        int
-            Seed for random instances of the instrument.
-        """
-        if seed:
-            return int(seed.split(",")[0].strip())
-
-        def key_index(key):
-            try:
-                return list(names.site_names()).index(key) + 1
-            except ValueError:
-                return 1
-
-        seed = semver_to_int(model_version) * 10000000
-        seed = seed + key_index(self.site) * 1000000
-        seed = seed + (int)(zenith_angle) * 1000
-        return seed + (int)(azimuth_angle)
 
     def _initialize_simulation_runner(self):
         """
@@ -222,8 +168,6 @@ class Simulator:
             runner_args["curved_atmosphere_min_zenith_angle"] = settings.config.args.get(
                 "curved_atmosphere_min_zenith_angle", 65 * u.deg
             )
-        if runner_class is not corsika_runner.CorsikaRunner:
-            runner_args["sim_telarray_seeds"] = self.sim_telarray_seeds
         if runner_class is corsika_simtel_runner.CorsikaSimtelRunner:
             runner_args["sequential"] = settings.config.args.get("sequential", False)
 

@@ -465,6 +465,14 @@ class CommandLineParser(argparse.ArgumentParser):
                 "type": CommandLineParser.bounded_int(1, 1024),
                 "required": False,
             },
+            # hidden argument to specify the sim_telarray seeds file name
+            # (defined it here for convenience)
+            "sim_telarray_seeds_file": {
+                "help": argparse.SUPPRESS,
+                "type": str,
+                "required": False,
+                "default": "sim_telarray_instrument_seeds.txt",
+            },
         }
 
     def _initialize_simulation_configuration(
