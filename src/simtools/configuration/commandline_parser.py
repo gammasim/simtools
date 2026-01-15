@@ -466,7 +466,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 "help": (
                     "Random seed used for sim_telarray shower simulation "
                     "Single value: seed for shower simulations. "
-                    "Two values: instrument and shower simulation seeds (use for testing only)."
+                    "Two values: [instrument_seed, simulation_seed] (use for testing only)."
                 ),
                 "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
                 "nargs": "+",

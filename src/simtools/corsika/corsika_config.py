@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 
 from simtools import settings
+from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.io import io_handler
 from simtools.model.model_parameter import ModelParameter
@@ -742,7 +743,7 @@ class CorsikaConfig:
         """
         Generate and write seeds in the CORSIKA input file.
 
-        CORSIKA seeds consist of 4 integers in the range 1 to 900,000,000.
+        CORSIKA seeds consist of 4 integers.
 
         Parameters
         ----------
@@ -751,7 +752,7 @@ class CorsikaConfig:
         """
         corsika_seeds = settings.config.args.get("corsika_seeds", False)
         if not corsika_seeds:
-            corsika_seeds = seeds(n_seeds=4, max_seed=900_000_000)
+            corsika_seeds = seeds(n_seeds=4, max_seed=CORSIKA_MAX_SEED)
         if len(corsika_seeds) != 4:
             raise ValueError("Exactly 4 CORSIKA seeds must be provided.")
         for s in corsika_seeds:
