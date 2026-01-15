@@ -5,11 +5,10 @@
 In this section you find the reference documentation of the modules contained in
 the util module.
 
-
 ## constants
 
 ```{eval-rst}
-.. automodule:: constants
+.. automodule:: utils.constants
    :members:
 ```
 

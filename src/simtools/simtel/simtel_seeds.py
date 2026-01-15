@@ -58,7 +58,7 @@ class SimtelSeeds:
         if not self.simulation_seed:
             self.simulation_seed = random.seeds(max_seed=SIMTEL_MAX_SEED)
 
-        if not self.instruments or self.instruments == 1:
+        if not self.instruments or self.instruments <= 1:
             return self._generate_seed_pair()
 
         return self._generate_seeds_with_file(site, model_version, zenith_angle, azimuth_angle)
