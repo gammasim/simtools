@@ -182,17 +182,57 @@ class SimulatorArray(SimtelRunner):
             "output_file": output_file,
         }
 
-        if settings.config.args.get("sim_telarray_random_instrument_instances"):
-            seed_file = settings.config.args.get("sim_telarray_seeds_file")
-            options["random_seed"] = f"file-by-run:{config_dir}/{seed_file},auto"
-        elif settings.config.args.get("sim_telarray_instrument_seeds"):
-            options["random_seed"] = settings.config.args.get("sim_telarray_instrument_seeds")
+        options["random_seed"] = self._get_random_seed_config(config_dir)
 
         for key, value in options.items():
             cmd.extend(["-C", f"{key}={value}"])
         for key, value in weak_options.items():
             cmd.extend([("-W" if weak_pointing else "-C"), f"{key}={value}"])
         return cmd
+
+    def _get_random_seed_config(self, config_dir):
+        """
+        Get the random seed configuration for sim_telarray.
+
+        The following possibility are considered (in order of priority):
+
+        1) If 'sim_telarray_random_instrument_instances' is set, use a seed file to
+           generate random instrument instance seeds.
+        2) If 'sim_telarray_instrument_seeds' is set, use it as instrument seed and
+           'auto' for simulation seed.
+        3) If 'sim_telarray_seeds' is an integer, use it as seed and 'auto' for simulation seed.
+        4) If 'sim_telarray_seeds' is a string of the form 'seed_conf,seed_sim', use it directly.
+        5) Otherwise, use 'auto'.
+
+        Returns
+        -------
+        str
+            Random seed configuration.
+        """
+        cfg = settings.config.args
+
+        if cfg.get("sim_telarray_random_instrument_instances"):
+            seed_file = cfg.get("sim_telarray_seeds_file")
+            return f"file-by-run:{config_dir}/{seed_file},auto"
+
+        if cfg.get("sim_telarray_instrument_seeds"):
+            return f"{cfg.get('sim_telarray_instrument_seeds')},auto"
+
+        seed = cfg.get("sim_telarray_seeds")
+        try:
+            seed = int(seed)
+            return f"{seed},auto"
+        except (TypeError, ValueError):
+            pass
+
+        if isinstance(seed, str):
+            try:
+                seed_conf, seed_sim = seed.split(",", 1)
+                return f"{seed_conf},{seed_sim}"
+            except ValueError:
+                pass
+
+        return "auto"
 
     def _determine_pointing_option(self):
         """

@@ -450,19 +450,25 @@ class CommandLineParser(argparse.ArgumentParser):
     def _get_dictionary_with_sim_telarray_configuration():
         """Return dictionary with sim_telarray configuration parameters."""
         return {
-            "sim_telarray_instrument_seeds": {
-                "help": (
-                    "Random seed used for sim_telarray instrument setup. "
-                    "If '--sim_telarray_random_instrument_instances' is not set: "
-                    "use as sim_telarray seed ('random_seed' parameter). Otherwise: "
-                    "use as base seed to generate the random instrument instance seeds."
-                ),
-                "type": str,
+            "sim_telarray_instrument_seed": {
+                "help": "Random seed used for sim_telarray instrument setup.",
+                "type": int,
                 "required": False,
             },
             "sim_telarray_random_instrument_instances": {
                 "help": "Number of random instrument instances initialized in sim_telarray.",
                 "type": CommandLineParser.bounded_int(1, 1024),
+                "required": False,
+                "default": 1,
+            },
+            "sim_telarray_seed": {
+                "help": (
+                    "Random seed used for sim_telarray shower simulation "
+                    "Single value: seed for shower simulations. "
+                    "Two values: instrument and shower simulation seeds (testing only)."
+                ),
+                "type": CommandLineParser.bounded_int(1, 1024),
+                "nargs": "+",
                 "required": False,
             },
             # hidden argument to specify the sim_telarray seeds file name
