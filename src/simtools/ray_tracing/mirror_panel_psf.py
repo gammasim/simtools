@@ -699,10 +699,10 @@ class MirrorPanelPSF:
         return str(out_path)
 
     def write_optimization_data(self):
-        """Write optimization results as a JSON file.
+        """Write optimization results.
 
-        In addition to the per-mirror results JSON, this also exports the averaged
-        ``mirror_reflection_random_angle`` as a DB-style model parameter JSON file
+        In addition to the per-mirror results, this also exports the averaged
+        ``mirror_reflection_random_angle`` as a DB-style model parameter file
         (same format as other simulation model parameter exporters).
         """
         output_dir = Path(self.args_dict.get("output_path", "."))
@@ -714,10 +714,27 @@ class MirrorPanelPSF:
         parameter_output_path = output_dir.joinpath(str(telescope))
         parameter_output_path.mkdir(parents=True, exist_ok=True)
         output_file = parameter_output_path / "per_mirror_rnda.json"
+        per_mirror_results_out = []
+        for r in self.per_mirror_results:
+            out = dict(r)
+            for key in (
+                "measured_d80_mm",
+                "focal_length_m",
+                "simulated_d80_mm",
+                "percentage_diff",
+                "simulated_d80_mm_plot",
+                "percentage_diff_plot",
+            ):
+                if key in out:
+                    out[key] = float(f"{float(out[key]):.4f}")
+            if "optimized_rnda" in out:
+                out["optimized_rnda"] = [float(f"{float(v):.4f}") for v in out["optimized_rnda"]]
+            per_mirror_results_out.append(out)
+
         results_data = {
             "telescope": telescope,
             "model_version": self.args_dict.get("model_version"),
-            "per_mirror_results": self.per_mirror_results,
+            "per_mirror_results": per_mirror_results_out,
         }
 
         with open(output_file, "w", encoding="utf-8") as f:
@@ -727,13 +744,10 @@ class MirrorPanelPSF:
 
         if telescope and parameter_version and self.rnda_opt is not None:
             try:
+                rnda_opt_rounded = [float(f"{float(v):.4f}") for v in self.rnda_opt]
                 model_data_writer.ModelDataWriter.dump_model_parameter(
                     parameter_name=parameter_name,
-                    value=[
-                        float(self.rnda_opt[0]),
-                        float(self.rnda_opt[1]),
-                        float(self.rnda_opt[2]),
-                    ],
+                    value=rnda_opt_rounded,
                     instrument=str(telescope),
                     parameter_version=str(parameter_version),
                     output_file=f"{parameter_name}-{parameter_version}.json",
