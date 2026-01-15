@@ -6,15 +6,13 @@ from pathlib import Path
 import astropy.units as u
 from astropy.table import QTable
 
-from simtools import settings
 from simtools.data_model import data_reader, schema
 from simtools.io import io_handler
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
-from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.simtel import simtel_config_writer, simtel_seeds
 from simtools.utils import general, names
-from simtools.version import semver_to_int
 
 
 class ArrayModel:
@@ -60,6 +58,7 @@ class ArrayModel:
             if isinstance(layout_name, list) and len(layout_name) == 1
             else layout_name
         )
+        # TODO what is the difference between path and directory?
         self._config_file_path = None
         self._config_file_directory = None
         self.io_handler = io_handler.IOHandler()
@@ -72,7 +71,7 @@ class ArrayModel:
 
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
-        self.instrument_seed = None
+        self.sim_telarray_seed = None
 
     def _initialize(self, site, array_elements_config, calibration_device_types):
         """
@@ -273,10 +272,10 @@ class ArrayModel:
         self.site_model.export_model_files()
 
         self._logger.info(f"Writing array configuration file into {self.config_file_path}")
-        simtel_writer = SimtelConfigWriter(
+        simtel_writer = simtel_config_writer.SimtelConfigWriter(
             site=self.site_model.site,
-            layout_name=self.layout_name,
             model_version=self.model_version,
+            layout_name=self.layout_name,
             label=self.label,
         )
         simtel_writer.write_array_config_file(
@@ -499,35 +498,15 @@ class ArrayModel:
             Dictionary with additional metadata.
         """
         return {
-            "seed": self.instrument_seed,
             "nsb_integrated_flux": self.site_model.get_nsb_integrated_flux(),
         }
 
-    def set_seed_for_random_instrument_instances(self, zenith_angle, azimuth_angle):
-        """
-        Generate seed for random instances of the instrument (if not provided).
-
-        Parameters
-        ----------
-        zenith_angle: float
-            Zenith angle of the observation (in degrees).
-        azimuth_angle: float
-            Azimuth angle of the observation (in degrees).
-        """
-        seed = settings.config.args.get("sim_telarray_instrument_seeds")
-        if seed is not None:
-            self._logger.debug(f"Using provided sim_telarray instrument seed: {seed}")
-            self.instrument_seed = seed
-            return
-
-        def key_index(key):
-            try:
-                return list(names.site_names()).index(key) + 1
-            except ValueError:
-                return 1
-
-        seed = semver_to_int(self.model_version) * 10000000
-        seed = seed + key_index(self.site) * 1000000
-        seed = seed + (int)(zenith_angle) * 1000
-        self.instrument_seed = seed + (int)(azimuth_angle)
-        self._logger.debug(f"Generated sim_telarray instrument seed: {self.instrument_seed}")
+    def initialize_seeds(self, zenith_angle=None, azimuth_angle=None):
+        """Initialize sim_telarray seeds for instrument and shower simulations."""
+        self.sim_telarray_seed = simtel_seeds.SimtelSeeds(
+            output_path=self.get_config_directory(),
+            site=self.site_model.site,
+            model_version=self.model_version,
+            zenith_angle=zenith_angle,
+            azimuth_angle=azimuth_angle,
+        )
