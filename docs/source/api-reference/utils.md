@@ -8,7 +8,7 @@ the util module.
 ## constants
 
 ```{eval-rst}
-.. automodule:: utils.constants
+.. automodule:: constants
    :members:
 ```
 
