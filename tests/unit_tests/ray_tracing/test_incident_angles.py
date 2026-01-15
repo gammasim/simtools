@@ -4,7 +4,6 @@
 import logging
 import math
 import re
-import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -170,9 +169,9 @@ def test_run_script_raises_runtime_error_on_failure(monkeypatch, calculator, tmp
     log_file = tmp_test_directory / "run.log"
 
     def _raise(*a, **k):
-        raise subprocess.CalledProcessError(1, "cmd")
+        raise ia.job_manager.JobExecutionError("Mock job execution failed")
 
-    monkeypatch.setattr(ia.subprocess, "check_call", lambda *a, **k: _raise())
+    monkeypatch.setattr(ia.job_manager, "submit", lambda *a, **k: _raise())
 
     with pytest.raises(RuntimeError, match="Incident angles run failed, see log"):
         calculator._run_script(script, log_file)

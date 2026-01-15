@@ -7,9 +7,7 @@ Main functionalities are: computing centroids, psf containers etc.
 
 import gzip
 import logging
-import shlex
-import shutil
-import subprocess
+import tempfile
 from math import fabs, pi, sqrt
 from pathlib import Path
 
@@ -18,6 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools import settings
+from simtools.job_execution import job_manager
 from simtools.utils.general import collect_kwargs, set_default_kwargs
 
 
@@ -93,36 +92,49 @@ class PSFImage:
         photons_file: str
             Name of sim_telarray file with photon list.
         """
-        try:
-            with subprocess.Popen(
-                shlex.split(
-                    f"{settings.config.sim_telarray_path}/bin/rx "
-                    f"-f {self._containment_fraction:.2f} -v"
-                ),
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-            ) as rx_process:
-                with gzip.open(photon_file, "rb") as _stdin:
-                    with rx_process.stdin:
-                        shutil.copyfileobj(_stdin, rx_process.stdin)
-                        try:
-                            rx_output = rx_process.communicate()[0].splitlines()[-1:][0].split()
-                        except IndexError as e:
-                            raise IndexError(
-                                f"Unexpected output format from rx: {rx_process}"
-                            ) from e
-        except FileNotFoundError as e:
-            raise FileNotFoundError(f"Photon list file not found: {photon_file}") from e
+        rx_command = [
+            f"{settings.config.sim_telarray_path}/bin/rx",
+            "-f",
+            f"{self._containment_fraction:.2f}",
+            "-v",
+        ]
 
         try:
-            self.set_psf(2 * float(rx_output[0]), fraction=self._containment_fraction, unit="cm")
-            self.centroid_x = float(rx_output[1])
-            self.centroid_y = float(rx_output[2])
-            self._effective_area = float(rx_output[5])
-        except IndexError as e:
-            raise IndexError(f"Unexpected output format from rx: {rx_output}") from e
-        except ValueError as e:
-            raise ValueError(f"Invalid output format from rx: {rx_output}") from e
+            with tempfile.NamedTemporaryFile(mode="wb", delete=False) as tmp_file:
+                with gzip.open(photon_file, "rb") as gz:
+                    tmp_file.write(gz.read())
+                tmp_file_path = tmp_file.name
+
+            try:
+                with open(tmp_file_path, "rb") as tmp_f:
+                    result = job_manager.submit(rx_command, stdin=tmp_f)
+
+                data_lines = [
+                    line.strip()
+                    for line in result.stdout.strip().split("\n")
+                    if line.strip() and not line.startswith("#")
+                ]
+
+                if not data_lines:
+                    raise IndexError("No data line found in RX output")
+
+                rx_output = data_lines[-1].split()
+                self.set_psf(
+                    2 * float(rx_output[0]), fraction=self._containment_fraction, unit="cm"
+                )
+                self.centroid_x = float(rx_output[1])
+                self.centroid_y = float(rx_output[2])
+                self._effective_area = float(rx_output[5])
+
+            finally:
+                Path(tmp_file_path).unlink(missing_ok=True)
+
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Photon list file not found: {photon_file}") from e
+        except (IndexError, ValueError) as e:
+            raise type(e)(
+                f"Invalid RX output format: {locals().get('rx_output', 'unknown')}"
+            ) from e
 
     def read_photon_list_from_simtel_file(self, photons_file):
         """
@@ -150,9 +162,9 @@ class PSFImage:
                 self._process_simtel_line(line)
 
         if not self._is_photon_positions_ok():
-            msg = "Problems reading sim_telarray file - invalid data"
-            self._logger.error(msg)
-            raise RuntimeError(msg)
+            raise RuntimeError(
+                f"Problems reading sim_telarray photons file {photons_file} - invalid data"
+            )
 
         self.centroid_x = np.mean(self.photon_pos_x)
         self.centroid_y = np.mean(self.photon_pos_y)

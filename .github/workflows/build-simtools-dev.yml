@@ -1,6 +1,6 @@
 ---
 name: build-simtools-dev
-# Build simtools images for developers based on CORSIKA / sim_telarray images (no optimizations)
+# Build simtools images for developers based on CORSIKA / sim_telarray images (no optimizations).
 
 on:
   workflow_dispatch:

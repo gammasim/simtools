@@ -147,21 +147,27 @@ def test_load_required_files_single_mirror(
 
 
 def test_make_run_command(simulator_ray_tracing_sst, model_version):
-    command, stdout_file, stderr_file = simulator_ray_tracing_sst._make_run_command()
+    command, stdout_file, stderr_file = simulator_ray_tracing_sst.make_run_command()
 
-    assert "bin/sim_telarray" in command
-    assert f"model/{model_version}/CTA-South-SSTS-design_test-telescope-model-sst.cfg" in command
-    assert "altitude=2147.0 -C telescope_theta=20.0 -C star_photons=100000" in command
+    assert any("bin/sim_telarray" in str(cmd) for cmd in command)
+    assert any(
+        f"model/{model_version}/CTA-South-SSTS-design_test-telescope-model-sst.cfg" in str(cmd)
+        for cmd in command
+    )
+    # Check that the relevant options are present as substrings in the command
+    assert any("altitude=2147.0" in str(cmd) for cmd in command)
+    assert any("telescope_theta=20.0" in str(cmd) for cmd in command)
+    assert any("star_photons=100000" in str(cmd) for cmd in command)
     log_file = f"ray_tracing_log_South_SSTS-design_d10.0km_za20.0deg_off0.000deg_{LABEL}.log"
     assert stdout_file.name == log_file
     assert stderr_file.name == log_file
 
 
 def test_make_run_command_single_mirror(simulator_ray_tracing_single_mirror):
-    command, _, _ = simulator_ray_tracing_single_mirror._make_run_command()
+    command, _, _ = simulator_ray_tracing_single_mirror.make_run_command()
 
-    assert "bin/sim_telarray" in command
-    assert "focus_offset" in command
+    assert any("bin/sim_telarray" in str(cmd) for cmd in command)
+    assert any("focus_offset" in str(cmd) for cmd in command)
 
 
 def test_check_run_result(simulator_ray_tracing_sst):
