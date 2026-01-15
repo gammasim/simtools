@@ -130,6 +130,8 @@ class SimtelSeeds:
 
         Parameters
         ----------
+        site : str or None
+            Site name.
         model_version : str or None
             Model version.
         zenith_angle : float or None
