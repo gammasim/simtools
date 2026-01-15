@@ -1,62 +1,66 @@
 #!/usr/bin/python3
 
-r"""
-    Derive mirror random reflection angle based on per-mirror d80 optimization.
+r"""Derive mirror random reflection angle based on per-mirror d80 optimization.
 
-    Description
-    -----------
+Description
+-----------
 
-    This application derives the value of the simulation model parameter
-    *mirror_reflection_random_angle* using measurements of the d80 (spot size)
-    and focal length of individual mirror panels.
+This application derives the value of the simulation model parameter
+*mirror_reflection_random_angle* using measurements of the d80 (spot size)
+and focal length of individual mirror panels.
 
-    The optimization uses percentage difference as the metric:
-        pct_diff = 100 * (simulated_d80 - measured_d80) / measured_d80
+The optimization uses percentage difference as the metric::
 
-    Each mirror is optimized individually, and the final RNDA is the average
-    of all per-mirror optimized values.
+    pct_diff = 100 * (simulated_d80 - measured_d80) / measured_d80
 
-    Command line arguments
-    ----------------------
-    site (str, required)
-        North or South.
-    telescope (str, required)
-        Telescope name (e.g. LSTN-01, SSTS-25)
-    model_version (str, optional)
-        Model version
-    data (str, required)
-        ECSV file with d80 (mm) and focal_length (m) columns per mirror.
-    threshold (float, optional)
-        Convergence threshold for percentage difference (e.g. 0.05 for 5%). Default: 0.05
-    learning_rate (float, optional)
-        Learning rate for gradient descent. Default: 0.001
-    test (activation mode, optional)
-        If activated, only optimize a small number of mirrors.
-    n_workers (int, optional)
-        Number of parallel worker processes to use. Default: 0 (auto chooses maximum).
-    d80_hist (str, optional)
-        If activated, write a histogram comparing measured vs simulated d80 distributions.
-    cleanup (activation mode, optional)
-        If activated, remove intermediate files (patterns: *.log, *.lis*, *.dat) from output.
+Each mirror is optimized individually, and the final RNDA is the average of all
+per-mirror optimized values.
 
-    Example
-    -------
-    .. code-block:: console
+Command line arguments
+----------------------
 
-        simtools-derive-mirror-rnda \\
-            --site North \\
-            --telescope LSTN-01 \\
-            --model_version 7.0.0 \\
-            --data tests/resources/198mir_190925.ecsv \\
-            --test --d80_hist
+site (str, required)
+    North or South.
+telescope (str, required)
+    Telescope name (e.g. LSTN-01, SSTS-25).
+model_version (str, optional)
+    Model version.
+data (str, required)
+    ECSV file with d80 (mm) and focal_length (m) columns per mirror.
+threshold (float, optional)
+    Convergence threshold for percentage difference (e.g. 0.05 for 5%).
+    Default: 0.05.
+learning_rate (float, optional)
+    Learning rate for gradient descent. Default: 0.001.
+test (activation mode, optional)
+    If activated, only optimize a small number of mirrors.
+n_workers (int, optional)
+    Number of parallel worker processes to use. Default: 0 (auto chooses maximum).
+d80_hist (str, optional)
+    If activated, write a histogram comparing measured vs simulated d80 distributions.
+cleanup (activation mode, optional)
+    If activated, remove intermediate files (patterns: *.log, *.lis*, *.dat) from output.
 
+Example
+-------
 
-    Example Log Output
-    ------------------
-    .. code-block:: text
-    ======================================================================
+.. code-block:: console
+
+    simtools-derive-mirror-rnda \
+        --site North \
+        --telescope LSTN-01 \
+        --model_version 7.0.0 \
+        --data tests/resources/198mir_190925.ecsv \
+        --test --d80_hist
+
+Example log output
+------------------
+
+.. code-block:: text
+
+    =====================================================================
     Single-Mirror d80 Optimization Results (Percentage Difference Metric)
-    ======================================================================
+    =====================================================================
 
     Number of mirrors optimized: 10
     Mean percentage difference: 1.58%
@@ -81,7 +85,6 @@ r"""
     mirror_reflection_random_angle [sigma1, fraction2, sigma2]
     Previous values = ['0.007500', '0.220000', '0.022000']
     Optimized values (averaged) = ['0.003926', '0.004544', '0.015182']
-
 """
 
 from pathlib import Path
@@ -105,6 +108,16 @@ def _parse():
         required=True,
     )
     config.parser.add_argument(
+        "--mirror_list",
+        help=(
+            "Mirror list file to use (overrides the telescope model default). "
+            "Useful for testing or for custom mirror layouts."
+        ),
+        type=str,
+        required=False,
+        default=None,
+    )
+    config.parser.add_argument(
         "--threshold",
         help="Convergence threshold for percentage difference (e.g. 0.05 for 5%).",
         type=float,
@@ -124,6 +137,19 @@ def _parse():
         type=int,
         required=False,
         default=0,
+    )
+    config.parser.add_argument(
+        "--use_random_focal_length",
+        action="store_true",
+        default=False,
+        help="Enable random variation of mirror-panel focal length (single-mirror mode).",
+    )
+    config.parser.add_argument(
+        "--random_focal_length_seed",
+        type=int,
+        required=False,
+        default=None,
+        help="Seed for the random focal length generator.",
     )
     config.parser.add_argument(
         "--d80_hist",

@@ -12,11 +12,16 @@ from astropy.table import Table
 import simtools.ray_tracing.mirror_panel_psf as mpp
 
 
-def _make_dummy_tel(*, label: str = "orig"):
+def _make_dummy_tel(*, label: str = "orig", config_dir: Path | None = None):
+    config_file_path = None
+    config_file_directory = None
+    if config_dir is not None:
+        config_file_path = str(config_dir / "orig.cfg")
+        config_file_directory = str(config_dir)
     return SimpleNamespace(
         label=label,
-        _config_file_path="/tmp/orig.cfg",
-        _config_file_directory="/tmp",
+        _config_file_path=config_file_path,
+        _config_file_directory=config_file_directory,
         overwrite_model_parameter=MagicMock(name="overwrite_model_parameter"),
         overwrite_model_file=MagicMock(name="overwrite_model_file"),
         get_parameter_value=MagicMock(
@@ -26,13 +31,16 @@ def _make_dummy_tel(*, label: str = "orig"):
 
 
 def _make_minimal_instance(
-    *, label: str = "base", args_dict: dict | None = None
+    *,
+    label: str = "base",
+    args_dict: dict | None = None,
+    telescope_model: SimpleNamespace | None = None,
 ) -> mpp.MirrorPanelPSF:
     inst = mpp.MirrorPanelPSF.__new__(mpp.MirrorPanelPSF)
     inst._logger = logging.getLogger(__name__)
     inst.label = label
     inst.args_dict = args_dict or {}
-    inst.telescope_model = _make_dummy_tel(label="orig")
+    inst.telescope_model = telescope_model or _make_dummy_tel(label="orig")
     inst.site_model = object()
     inst.measured_data = Table({"d80": [10.0], "focal_length": [28.0]})
     inst.rnda_start = [0.0075, 0.22, 0.022]
@@ -156,9 +164,9 @@ def test_worker_optimize_mirror_uses_measured_data_and_calls_optimizer(monkeypat
     assert result == {"ok": True}
 
 
-def test_simulate_single_mirror_d80_success_and_restores_label(mocker):
-    inst = _make_minimal_instance(label="base")
-    tel = inst.telescope_model
+def test_simulate_single_mirror_d80_success_and_restores_label(mocker, tmp_path):
+    tel = _make_dummy_tel(label="orig", config_dir=tmp_path)
+    inst = _make_minimal_instance(label="base", telescope_model=tel)
 
     class OkRay:
         def __init__(self, **kwargs):
@@ -178,8 +186,8 @@ def test_simulate_single_mirror_d80_success_and_restores_label(mocker):
     d80_mm = inst._simulate_single_mirror_d80(0, 28.0, [0.01, 0.22, 0.022])
     assert d80_mm == pytest.approx(15.0)
     assert tel.label == "orig"
-    assert tel._config_file_path == "/tmp/orig.cfg"
-    assert tel._config_file_directory == "/tmp"
+    assert tel._config_file_path == str(tmp_path / "orig.cfg")
+    assert tel._config_file_directory == str(tmp_path)
 
 
 def test_run_rnda_gradient_descent_converges_immediately(mocker):

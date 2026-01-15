@@ -67,6 +67,10 @@ class SimulatorRayTracing(SimtelRunner):
         self.runs_per_set = 1 if self.config.single_mirror_mode else 20
         self.photons_per_run = 100000 if not test else 5000
 
+        # Initialized here for pylint; values are set in single-mirror mode.
+        self._single_pixel_camera_file = None
+        self._funnel_file = None
+
         self._load_required_files(force_simulate)
 
     def _load_required_files(self, force_simulate):
@@ -168,7 +172,7 @@ class SimulatorRayTracing(SimtelRunner):
             options.update(
                 {
                     "focus_offset": "all:0.",
-                    "camera_config_file": "single_pixel_camera.dat",
+                    "camera_config_file": str(self._single_pixel_camera_file),
                     "camera_pixels": "1",
                     "trigger_pixels": "1",
                     "camera_body_diameter": "0",
@@ -224,7 +228,9 @@ class SimulatorRayTracing(SimtelRunner):
         These files are referenced by sim_telarray and must not be shared across
         parallel worker processes (otherwise they can be truncated mid-read).
         """
-        self._single_pixel_camera_file = self._base_directory / f"single_pixel_camera_{self.label}.dat"
+        self._single_pixel_camera_file = (
+            self._base_directory / f"single_pixel_camera_{self.label}.dat"
+        )
         self._funnel_file = self._base_directory / f"funnel_perfect_{self.label}.dat"
 
         # Funnel file (referenced by absolute path from the camera file).
@@ -240,9 +246,7 @@ class SimulatorRayTracing(SimtelRunner):
         # Camera config.
         with self._single_pixel_camera_file.open("w", encoding="utf-8") as file:
             file.write("# Single pixel camera\n")
-            file.write(
-                f'PixType 1   0  0 300   1 300 0.00   "{self._funnel_file}"\n'
-            )
+            file.write(f'PixType 1   0  0 300   1 300 0.00   "{self._funnel_file}"\n')
             file.write("Pixel 0 1 0. 0.  0  0  0 0x00 1\n")
             file.write("Trigger 1 of 0\n")
 

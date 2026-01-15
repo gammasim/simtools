@@ -3,17 +3,17 @@ applications:
 - application: simtools-derive-mirror-rnda
   configuration:
     log_level: DEBUG
-    model_version: 6.0.2
+    model_version: 7.0.0
+    parameter_version: 1.0.0
     output_path: simtools-output
-    data: tests/resources/PSFcurve_data_v2.ecsv
-    mirror_list: tests/resources/mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv
+    data: tests/resources/198mir_190925.ecsv
     site: North
     telescope: LSTN-01
+    n_workers: 2
     test: true
-    use_random_focal_length: false
   integration_tests:
   - test_output_files:
-    - file: LSTN-01_final_psf_comparison.png
+    - file: LSTN-01/mirror_reflection_random_angle-1.0.0.json
       path_descriptor: output_path
   test_name: psf_measurement
 schema_name: application_workflow.metaschema
