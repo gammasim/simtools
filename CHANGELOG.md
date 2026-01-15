@@ -372,7 +372,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Add default plotting configuration for tabular data. Introduce consistent lower-cases for keys in plotting configuration schema. ([#1635](https://github.com/gammasim/simtools/pull/1635))
 
 
-## [0.17.0](https://github.com/gammasim/simtools/releases/tag/v0.17.0) - 2025-06-10
+## [v0.17.0](https://github.com/gammasim/simtools/releases/tag/v0.17.0) - 2025-06-10
 
 ### Bugfixes
 
@@ -471,7 +471,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Skip testing of DB upload for simpipe integration tests. ([#1488](https://github.com/gammasim/simtools/pull/1488))
 
 
-## [0.14.0](https://github.com/gammasim/simtools/releases/tag/v0.14.0) - 2025-04-03
+## [v0.14.0](https://github.com/gammasim/simtools/releases/tag/v0.14.0) - 2025-04-03
 
 ### Bugfixes
 
@@ -508,7 +508,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Store arrays in model parameters as arrays and not as strings. ([#1466](https://github.com/gammasim/simtools/pull/1466))
 
 
-## [0.13.0](https://github.com/gammasim/simtools/releases/tag/v0.13.0) - 2025-03-19
+## [v0.13.0](https://github.com/gammasim/simtools/releases/tag/v0.13.0) - 2025-03-19
 
 ### Bugfixes
 
@@ -532,7 +532,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Robust getting of username in metadata collector in case no user is defined on system level. ([#1442](https://github.com/gammasim/simtools/pull/1442))
 
 
-## [0.12.0](https://github.com/gammasim/simtools/releases/tag/v0.12.0) - 2025-03-11
+## [v0.12.0](https://github.com/gammasim/simtools/releases/tag/v0.12.0) - 2025-03-11
 
 ### Bugfixes
 
@@ -540,7 +540,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Fix setting of `db_api_authentication_database` through env variable. ([#1425](https://github.com/gammasim/simtools/pull/1425))
 
 
-## [0.11.0](https://github.com/gammasim/simtools/releases/tag/v0.11.0) - 2025-03-05
+## [v0.11.0](https://github.com/gammasim/simtools/releases/tag/v0.11.0) - 2025-03-05
 
 ### Bugfixes
 
@@ -577,7 +577,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Introduce MSTx-NectarCam and MSTx-FlashCam design models for MSTs (allow both sites). ([#1362](https://github.com/gammasim/simtools/pull/1362))
 
 
-## [0.10.0](https://github.com/gammasim/simtools/releases/tag/v0.10.0) - 2025-02-17
+## [v0.10.0](https://github.com/gammasim/simtools/releases/tag/v0.10.0) - 2025-02-17
 
 ### Bugfixes
 
@@ -598,7 +598,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Remove database sandboxes . ([#1336](https://github.com/gammasim/simtools/pull/1336))
 
 
-## [0.9.0](https://github.com/gammasim/simtools/tree/v0.9.0) - 2025-01-22
+## [v0.9.0](https://github.com/gammasim/simtools/tree/v0.9.0) - 2025-01-22
 
 ### Bugfixes
 
@@ -618,7 +618,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Remove pytest dependent from user installation. ([#1286](https://github.com/gammasim/simtools/pull/1286))
 
 
-## [0.8.2](https://github.com/gammasim/simtools/tree/v0.8.2) - 2024-12-03
+## [v0.8.2](https://github.com/gammasim/simtools/tree/v0.8.2) - 2024-12-03
 
 ### Maintenance
 
@@ -665,7 +665,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Allow for class Telescope in model parameters. ([#1173](https://github.com/gammasim/simtools/pull/1173))
 
 
-## [0.7.0](https://github.com/gammasim/simtools/tree/v0.7.0) - 2024-11-12
+## [v0.7.0](https://github.com/gammasim/simtools/tree/v0.7.0) - 2024-11-12
 
 ### New Features
 

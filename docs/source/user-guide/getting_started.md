@@ -24,7 +24,7 @@ The most important types of images are:
 - **Simtools Production images** ([simtools-prod](https://github.com/gammasim/simtools/pkgs/container/simtools-sim-telarray-250903-corsika-78010-bernlohr-1.70-prod6-baseline-qgs3-no_opt)): Include CORSIKA, sim_telarray, and simtools applications. Variants are available with:
   - Different CORSIKA/sim_telarray versions
   - Compile options (e.g., `prod5`, `prod6`)
-  - CPU optimizations (e.g., `avx2`, `avx512`, `no_opt`)
+  - CPU optimizations (e.g., `avx2`, `avx512`, `generic`)
 - **Simtools Development images** ([simtools-dev](https://github.com/gammasim/simtools/pkgs/container/simtools-dev)): Include all dependencies for simtools development, as well as CORSIKA and sim_telarray, but do not contain simtools itself.
 
 Pre-built images are hosted on the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools). Authentication may be required; follow [GitHub's guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) to configure access (`docker login`).

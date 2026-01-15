@@ -1,6 +1,6 @@
 ---
 name: build-simtools-prod
-# Build simtools production images based on CORSIKA / sim_telarray images
+# Build simtools images for production based on CORSIKA / sim_telarray images.
 
 on:
   workflow_dispatch:
@@ -23,17 +23,16 @@ jobs:
       contents: read
       packages: write
     outputs:
-      no_opt_tag: ${{ steps.export-tags.outputs.no_opt_tag }}
+      generic_tag: ${{ steps.export-tags.outputs.generic_tag }}
     strategy:
       matrix:
         version:
-          - {corsika: '20251217-78010', avx_flag: 'no_opt', simtel_image: 'latest'}
-          - {corsika: '20251217-78010', avx_flag: 'avx2', simtel_image: 'latest'}
-          - {corsika: '20251217-78010', avx_flag: 'avx512f', simtel_image: 'latest'}
-          - {corsika: '20251217-78010', avx_flag: 'sse4', simtel_image: 'latest'}
+          - {corsika: 'v78010', avx_flag: 'generic', simtel_image: 'latest'}
+          - {corsika: 'v78010', avx_flag: 'avx2', simtel_image: 'latest'}
+          - {corsika: 'v78010', avx_flag: 'avx512f', simtel_image: 'latest'}
+          - {corsika: 'v78010', avx_flag: 'sse4', simtel_image: 'latest'}
     env:
       BASE_LABEL: "simtools-prod"
-      BASE_TAG: "corsika-${{ matrix.version.corsika }}-${{ matrix.version.avx_flag }}-simtel-${{ matrix.version.simtel_image }}"
 
     steps:
       - name: Checkout repository
@@ -62,28 +61,30 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          tags: |
-            type=ref,event=pr,suffix=-${{ env.BASE_TAG }}
-            type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}
-            type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
-            type=raw,value={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
-          flavor: latest=false
+          flavor: |
+            latest=false
+            suffix=-${{ matrix.version.avx_flag }}
+          tags: |
+            type=ref,event=pr
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}
+            type=schedule,pattern={{date 'YYYYMMDD'}}
+            type=raw,value={{date 'YYYYMMDD'}}
 
-      - name: Export no_opt tag for testing
+      - name: Export generic tag for testing
         id: export-tags
-        if: matrix.version.avx_flag == 'no_opt'
+        if: matrix.version.avx_flag == 'generic'
         run: |
           TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
           TAG=${TAG##*:}
-          echo "no_opt_tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "Exported no_opt tag: $TAG"
+          echo "generic_tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Exported generic tag: $TAG"
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: ${{ matrix.version.avx_flag == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
+          platforms: ${{ matrix.version.avx_flag == 'generic' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
           build-args: |
             CORSIKA_IMAGE_VERSION=${{ matrix.version.corsika }}
             SIMTEL_IMAGE_VERSION=${{ matrix.version.simtel_image }}
@@ -101,5 +102,5 @@ jobs:
     uses: ./.github/workflows/CI-integrationtests.yml
     secrets: inherit
     with:
-      container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.no_opt_tag }}
+      container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.generic_tag }}
       model_versions: '["7.0.0","6.0.2"]'

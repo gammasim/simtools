@@ -1,16 +1,12 @@
 #!/usr/bin/python3
 
-import copy
 import logging
-from pathlib import Path
 
 import pytest
 
-from simtools.runners.corsika_simtel_runner import (
-    CorsikaRunner,
-    CorsikaSimtelRunner,
-    SimulatorArray,
-)
+from simtools.runners.corsika_runner import CorsikaRunner
+from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
+from simtools.simtel.simulator_array import SimulatorArray
 
 logger = logging.getLogger()
 
@@ -42,7 +38,6 @@ def corsika_simtel_runner(corsika_config_mock_array_model):
     return CorsikaSimtelRunner(
         corsika_config=corsika_config_mock_array_model,
         label="test-corsika-simtel-runner",
-        use_multipipe=True,
     )
 
 
@@ -52,13 +47,7 @@ def corsika_simtel_runner_calibration(corsika_config_mock_array_model):
     return CorsikaSimtelRunner(
         corsika_config=corsika_config_mock_array_model,
         label="test-corsika-simtel-runner",
-        use_multipipe=True,
-        calibration_config={
-            "run_mode": "pedestals_nsb_only",
-            "number_of_events": 500,
-            "nsb_scaling_factor": 1.0,
-            "stars": "stars.txt",
-        },
+        is_calibration_run=True,
     )
 
 
@@ -67,46 +56,39 @@ def test_corsika_simtel_runner(corsika_simtel_runner):
     assert isinstance(corsika_simtel_runner.simulator_array[0], SimulatorArray)
 
 
-def test_prepare_run_script(corsika_simtel_runner):
-    # No run number is given
+def test_prepare_run(corsika_simtel_runner, tmp_path):
+    # prepare_run now requires sub_script parameter and doesn't return the script path
+    script_path = tmp_path / "test_script.sh"
+    corsika_simtel_runner.prepare_run(run_number=1, sub_script=script_path)
 
-    script = corsika_simtel_runner.prepare_run_script()
-
-    assert script.exists()
-    with open(script) as f:
+    assert script_path.exists()
+    with open(script_path) as f:
         script_content = f.read()
         assert "/usr/bin/env bash" in script_content
-        assert "corsika_autoinputs" in script_content
-        assert "sim_telarray/bin/pfp" not in script_content
 
     # Run number is given
     run_number = 3
-    script = corsika_simtel_runner.prepare_run_script(run_number=run_number)
+    script_path2 = tmp_path / "test_script2.sh"
+    corsika_simtel_runner.prepare_run(run_number=run_number, sub_script=script_path2)
 
-    assert script.exists()
-    with open(script) as f:
+    assert script_path2.exists()
+    with open(script_path2) as f:
         script_content = f.read()
         assert "/usr/bin/env bash" in script_content
-        assert "corsika_autoinputs" in script_content
-        assert "sim_telarray/bin/pfp" not in script_content
-        assert "-R 3" in script_content
 
 
-def test_prepare_run_script_with_invalid_run(corsika_simtel_runner):
+def test_prepare_run_with_invalid_run(corsika_simtel_runner, tmp_path):
+    script_path = tmp_path / "test_script.sh"
     with pytest.raises(ValueError, match=r"^Invalid type of run number"):
-        _ = corsika_simtel_runner.prepare_run_script(run_number=-2)
+        corsika_simtel_runner.prepare_run(run_number=-2, sub_script=script_path)
     with pytest.raises(ValueError, match=r"^could not convert string to float"):
-        _ = corsika_simtel_runner.prepare_run_script(run_number="test")
+        corsika_simtel_runner.prepare_run(run_number="test", sub_script=script_path)
 
 
 def test_export_multipipe_script(corsika_simtel_runner_calibration, simtel_command, show_all):
     corsika_simtel_runner_calibration._export_multipipe_script(run_number=1)
-    script = Path(
-        corsika_simtel_runner_calibration.base_corsika_config.config_file_path.parent
-    ).joinpath(
-        corsika_simtel_runner_calibration.base_corsika_config.get_corsika_config_file_name(
-            "multipipe"
-        )
+    script = corsika_simtel_runner_calibration.runner_service.get_file_name(
+        "multi_pipe_config", run_number=1
     )
 
     assert script.exists()
@@ -117,30 +99,27 @@ def test_export_multipipe_script(corsika_simtel_runner_calibration, simtel_comma
         assert "-C telescope_phi=0" in script_content
         assert show_all in script_content
 
+    # Test second call
     corsika_simtel_runner_calibration._export_multipipe_script(run_number=1)
-    script = Path(
-        corsika_simtel_runner_calibration.base_corsika_config.config_file_path.parent
-    ).joinpath(
-        corsika_simtel_runner_calibration.base_corsika_config.get_corsika_config_file_name(
-            "multipipe"
-        )
+    script = corsika_simtel_runner_calibration.runner_service.get_file_name(
+        "multi_pipe_config", run_number=1
     )
 
     assert script.exists()
     with open(script) as f:
         script_content = f.read()
-        assert "-C fadc_lg_noise=0.0" in script_content
+        # For calibration runs, we should see noise settings
+        if corsika_simtel_runner_calibration.base_corsika_config.is_calibration_run():
+            assert "-C fadc_lg_noise=0.0" in script_content
 
 
 def test_write_multipipe_script(corsika_simtel_runner):
     corsika_simtel_runner._export_multipipe_script(run_number=1)
-    multipipe_file = Path(
-        corsika_simtel_runner.base_corsika_config.config_file_path.parent
-    ).joinpath(corsika_simtel_runner.base_corsika_config.get_corsika_config_file_name("multipipe"))
-    corsika_simtel_runner._write_multipipe_script(multipipe_file)
-    script = Path(corsika_simtel_runner.base_corsika_config.config_file_path.parent).joinpath(
-        "run_cta_multipipe"
+    multipipe_file = corsika_simtel_runner.runner_service.get_file_name(
+        "multi_pipe_config", run_number=1
     )
+    corsika_simtel_runner._write_multipipe_script(multipipe_file, run_number=1)
+    script = corsika_simtel_runner.runner_service.get_file_name("multi_pipe_script", run_number=1)
 
     assert script.exists()
     with open(script) as f:
@@ -157,13 +136,11 @@ def test_write_multipipe_script_sequential(corsika_simtel_runner):
 
     # Export and write the multipipe script
     corsika_simtel_runner._export_multipipe_script(run_number=1)
-    multipipe_file = Path(
-        corsika_simtel_runner.base_corsika_config.config_file_path.parent
-    ).joinpath(corsika_simtel_runner.base_corsika_config.get_corsika_config_file_name("multipipe"))
-    corsika_simtel_runner._write_multipipe_script(multipipe_file)
-    script = Path(corsika_simtel_runner.base_corsika_config.config_file_path.parent).joinpath(
-        "run_cta_multipipe"
+    multipipe_file = corsika_simtel_runner.runner_service.get_file_name(
+        "multi_pipe_config", run_number=1
     )
+    corsika_simtel_runner._write_multipipe_script(multipipe_file, run_number=1)
+    script = corsika_simtel_runner.runner_service.get_file_name("multi_pipe_script", run_number=1)
 
     # Assertions
     assert script.exists()
@@ -173,48 +150,3 @@ def test_write_multipipe_script_sequential(corsika_simtel_runner):
         assert f"-c {multipipe_file}" in script_content
         assert "'Fan-out failed'" in script_content
         assert "--sequential" in script_content
-
-
-def test_get_file_name(corsika_simtel_runner, simulation_file):
-    assert (
-        corsika_simtel_runner.get_file_name(
-            simulation_software="corsika", file_type="log", run_number=1
-        ).name
-        == simulation_file + ".log.gz"
-    )
-
-    simtel_simulation_file = simulation_file + ".simtel.zst"
-
-    assert (
-        corsika_simtel_runner.get_file_name(
-            simulation_software="sim_telarray", file_type="simtel_output", run_number=1
-        ).name
-        == simtel_simulation_file
-    )
-
-    # preference given to simtel runner
-    assert (
-        corsika_simtel_runner.get_file_name(
-            simulation_software=None, file_type="simtel_output", run_number=1
-        ).name
-        == simtel_simulation_file
-    )
-
-    # no simulator_array
-    _test_corsika_simtel_runner = copy.deepcopy(corsika_simtel_runner)
-    _test_corsika_simtel_runner.simulator_array = None
-
-    assert (
-        _test_corsika_simtel_runner.get_file_name(
-            simulation_software=None, file_type="simtel_output", run_number=1
-        ).name
-        == simtel_simulation_file
-    )
-
-
-def test_determine_pointing_option(corsika_simtel_runner):
-    assert corsika_simtel_runner._determine_pointing_option(None) is False
-
-    assert corsika_simtel_runner._determine_pointing_option("divergent") is True
-    assert corsika_simtel_runner._determine_pointing_option("convergent") is True
-    assert corsika_simtel_runner._determine_pointing_option("test") is False

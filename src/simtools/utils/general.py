@@ -796,23 +796,6 @@ def find_differences_in_json_objects(obj1, obj2, path=""):
     return diffs
 
 
-def clear_default_sim_telarray_cfg_directories(command):
-    """Prefix the command to clear default sim_telarray configuration directories.
-
-    Parameters
-    ----------
-    command: str
-        Command to be prefixed.
-
-    Returns
-    -------
-    str
-        Prefixed command.
-
-    """
-    return f"SIM_TELARRAY_CONFIG_PATH='' {command}"
-
-
 def get_list_of_files_from_command_line(file_names, suffix_list):
     """
     Get a list of files from the command line.

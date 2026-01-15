@@ -97,11 +97,11 @@ def _parse():
         default=False,
     )
     config.parser.add_argument(
-        "--corsika_test_seeds",
-        help="Use predefined random seeds for CORSIKA for testing purposes.",
-        action="store_true",
-        required=False,
-        default=False,
+        "--corsika_seeds",
+        help="Use fixed random seeds for CORSIKA for testing purposes.",
+        nargs=4,
+        type=int,
+        metavar=("S1", "S2", "S3", "S4"),
     )
     config.parser.add_argument(
         "--sequential",
@@ -127,7 +127,7 @@ def main():
     """Run simulations for productions."""
     app_context = startup_application(_parse, setup_io_handler=False)
 
-    simulator = Simulator(label=app_context.args.get("label"), args_dict=app_context.args)
+    simulator = Simulator(label=app_context.args.get("label"))
 
     simulator.simulate()
     simulator.validate_metadata()
