@@ -1,6 +1,7 @@
 """Centralized settings object with command line and environment variables."""
 
 import os
+import socket
 from pathlib import Path
 from types import MappingProxyType
 
@@ -16,6 +17,8 @@ class _Config:
         self._sim_telarray_exe = None
         self._corsika_path = None
         self._corsika_exe = None
+        self.user = os.getenv("USER", "unknown")
+        self.hostname = socket.gethostname()
 
     def load(self, args=None, db_config=None):
         """
@@ -33,25 +36,15 @@ class _Config:
         """
         self._args = MappingProxyType(args) if args is not None else {}
         self._db_config = MappingProxyType(db_config) if db_config is not None else {}
-        
-        # Debug: print environment variable
-        import os
-        import logging
-        logger = logging.getLogger(__name__)
-        env_val = os.getenv("SIMTOOLS_SIM_TELARRAY_PATH")
-        logger.debug(f"SIMTOOLS_SIM_TELARRAY_PATH env var: {env_val}")
-        logger.debug(f"args simtel_path: {args.get('simtel_path') if args else None}")
-        
         self._sim_telarray_path = (
-            args.get("simtel_path")
-            if args is not None and "simtel_path" in args
+            args.get("sim_telarray_path")
+            if args is not None and "sim_telarray_path" in args
             else os.getenv("SIMTOOLS_SIM_TELARRAY_PATH")
         )
-        logger.debug(f"_sim_telarray_path set to: {self._sim_telarray_path}")
 
         self._sim_telarray_exe = (
-            args.get("simtel_executable")
-            if args is not None and "simtel_executable" in args
+            args.get("sim_telarray_executable")
+            if args is not None and "sim_telarray_executable" in args
             else os.getenv("SIMTOOLS_SIM_TELARRAY_EXECUTABLE", "sim_telarray")
         )
 
