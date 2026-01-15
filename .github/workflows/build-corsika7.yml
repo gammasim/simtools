@@ -50,7 +50,7 @@ jobs:
             corsika_config: 'v0.1.0'
             corsika_opt_patch: 'v1.1.0'
           - corsika: '78050'
-            corsika_config: 'v0.2.0'
+            corsika_config: 'v1.0.0'
             corsika_opt_patch: 'v1.2.0'
     env:
       BASE_LABEL: "corsika7"
