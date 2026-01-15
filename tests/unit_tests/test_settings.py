@@ -25,7 +25,7 @@ def test_init(config_instance):
 
 @patch.dict(os.environ, {}, clear=True)
 def test_load_with_args(config_instance):
-    args = {"simtel_path": "/path/to/simtel", "corsika_path": "/path/to/corsika"}
+    args = {"sim_telarray_path": "/path/to/simtel", "corsika_path": "/path/to/corsika"}
     config_instance.load(args=args)
     assert config_instance._args == args
     assert config_instance._sim_telarray_path == "/path/to/simtel"
@@ -39,7 +39,7 @@ def test_load_with_db_config(config_instance):
     assert config_instance._db_config == db_config
 
 
-@patch.dict(os.environ, {"SIMTOOLS_SIMTEL_PATH": "/env/simtel"})
+@patch.dict(os.environ, {"SIMTOOLS_SIM_TELARRAY_PATH": "/env/simtel"})
 def test_load_with_env_vars(config_instance):
     config_instance.load()
     assert config_instance._sim_telarray_path == "/env/simtel"
@@ -61,7 +61,7 @@ def test_db_config_property(config_instance):
 
 @patch.dict(os.environ, {}, clear=True)
 def test_sim_telarray_path_property(config_instance):
-    config_instance.load(args={"simtel_path": "/path/to/simtel"})
+    config_instance.load(args={"sim_telarray_path": "/path/to/simtel"})
     assert config_instance.sim_telarray_path == Path("/path/to/simtel")
 
 
@@ -73,7 +73,7 @@ def test_sim_telarray_path_property_none(config_instance):
 
 @patch.dict(os.environ, {}, clear=True)
 def test_sim_telarray_exe_property(config_instance):
-    config_instance.load(args={"simtel_path": "/path/to/simtel"})
+    config_instance.load(args={"sim_telarray_path": "/path/to/simtel"})
     assert config_instance.sim_telarray_exe == Path("/path/to/simtel/bin/sim_telarray")
 
 
@@ -85,7 +85,7 @@ def test_sim_telarray_exe_property_none(config_instance):
 
 @patch.dict(os.environ, {}, clear=True)
 def test_sim_telarray_exe_debug_trace_property(config_instance):
-    config_instance.load(args={"simtel_path": "/path/to/simtel"})
+    config_instance.load(args={"sim_telarray_path": "/path/to/simtel"})
     assert config_instance.sim_telarray_exe_debug_trace == Path(
         "/path/to/simtel/bin/sim_telarray_debug_trace"
     )
@@ -121,7 +121,7 @@ def test_corsika_exe_curved_property(config_instance):
 
 @patch.dict(os.environ, {}, clear=True)
 def test_corsika_dummy_file_property(config_instance):
-    config_instance.load(args={"simtel_path": "/path/to/simtel"})
+    config_instance.load(args={"sim_telarray_path": "/path/to/simtel"})
     assert config_instance.corsika_dummy_file == Path("/path/to/simtel/run9991.corsika.gz")
 
 

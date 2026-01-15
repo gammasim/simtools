@@ -1,6 +1,7 @@
 """CORSIKA configuration."""
 
 import logging
+from collections.abc import Mapping
 from pathlib import Path
 
 import numpy as np
@@ -27,16 +28,13 @@ class CorsikaConfig:
     ----------
     array_model : ArrayModel
         Array model.
-    args_dict : dict
-        Configuration dictionary.
+    run_number : int
+        Run number.
     label : str
         Instance label.
-    dummy_simulations : bool
-        If True, the configuration is generated for dummy simulations
-        (e.g., sim_telarray requires for some run modes a valid CORSIKA input file).
     """
 
-    def __init__(self, array_model, args_dict, label=None, dummy_simulations=False):
+    def __init__(self, array_model, run_number, label=None):
         """Initialize CorsikaConfig."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaConfig")
@@ -45,17 +43,17 @@ class CorsikaConfig:
         self.shower_events = self.mc_events = None
         self.zenith_angle = self.azimuth_angle = None
         self.curved_atmosphere_min_zenith_angle = None
-        self._run_number = None
-        self.config_file_path = None
-        self.primary_particle = args_dict  # see setter for primary_particle
-        self.use_curved_atmosphere = args_dict  # see setter for use_curved_atmosphere
-        self.dummy_simulations = dummy_simulations
+        self.run_number = run_number
+        self.primary_particle = settings.config.args  # see setter for primary_particle
+        self.use_curved_atmosphere = settings.config.args  # see setter for use_curved_atmosphere
+        self.run_mode = settings.config.args.get("run_mode")
 
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
-        self.config = self._fill_corsika_configuration(args_dict)
-        self._initialize_from_config(args_dict)
-        self.is_file_updated = False
+        self.corsika_exec = settings.config.corsika_exe
+        self.interaction_table_path = settings.config.corsika_path
+        self.config = self._fill_corsika_configuration(settings.config.args)
+        self._initialize_from_config(settings.config.args)
 
     @property
     def primary_particle(self):
@@ -76,7 +74,7 @@ class CorsikaConfig:
             Configuration dictionary
         """
         if (
-            isinstance(args, dict)
+            isinstance(args, Mapping)  # dict-like (includes mappingproxy)
             and args.get("primary_id_type") is not None
             and args.get("primary") is not None
         ):
@@ -101,7 +99,7 @@ class CorsikaConfig:
         self._use_curved_atmosphere = False
         if isinstance(args, bool):
             self._use_curved_atmosphere = args
-        elif isinstance(args, dict):
+        elif isinstance(args, Mapping):  # dict-like (includes mappingproxy)
             try:
                 self._use_curved_atmosphere = (
                     args.get("zenith_angle", 0.0 * u.deg).to("deg").value
@@ -110,7 +108,7 @@ class CorsikaConfig:
             except KeyError:
                 self._use_curved_atmosphere = False
 
-    def _fill_corsika_configuration(self, args_dict):
+    def _fill_corsika_configuration(self, args):
         """
         Fill CORSIKA configuration.
 
@@ -119,7 +117,7 @@ class CorsikaConfig:
 
         Parameters
         ----------
-        args_dict : dict
+        args: dict
             Configuration dictionary.
 
         Returns
@@ -127,23 +125,24 @@ class CorsikaConfig:
         dict
             Dictionary with CORSIKA parameters.
         """
-        if args_dict is None:
+        if args is None:
             return {}
 
         config = {}
-        if self.dummy_simulations:
-            config["USER_INPUT"] = self._corsika_configuration_for_dummy_simulations(args_dict)
-        elif args_dict.get("corsika_file", None) is not None:
+        config["RUNNR"] = [self.run_number]
+        config["USER"] = [settings.config.user]
+        config["HOST"] = [settings.config.hostname]
+        if self.is_calibration_run():
+            config["USER_INPUT"] = self._corsika_configuration_for_dummy_simulations(args)
+        elif args.get("corsika_file", None) is not None:
             config["USER_INPUT"] = self._corsika_configuration_from_corsika_file(
-                args_dict["corsika_file"]
+                args["corsika_file"]
             )
         else:
-            config["USER_INPUT"] = self._corsika_configuration_from_user_input(args_dict)
+            config["USER_INPUT"] = self._corsika_configuration_from_user_input(args)
 
         config.update(
-            self._fill_corsika_configuration_from_db(
-                gen.ensure_iterable(args_dict.get("model_version"))
-            )
+            self._fill_corsika_configuration_from_db(gen.ensure_iterable(args.get("model_version")))
         )
         return config
 
@@ -172,13 +171,17 @@ class CorsikaConfig:
         config["IACT_PARAMETERS"] = self._corsika_configuration_iact_parameters(parameters_from_db)
         return config
 
-    def _initialize_from_config(self, args_dict):
+    def _initialize_from_config(self, args):
         """
         Initialize additional parameters either from command line args or from derived config.
 
         Takes into account that in the case of a given CORSIKA input file, some parameters are read
         from the file instead of the command line args.
 
+        Parameters
+        ----------
+        args: dict
+            Command line arguments.
         """
         self.primary_particle = int(self.config.get("USER_INPUT", {}).get("PRMPAR", [1])[0])
         self.shower_events = int(self.config.get("USER_INPUT", {}).get("NSHOW", [0])[0])
@@ -186,7 +189,7 @@ class CorsikaConfig:
             self.shower_events * self.config.get("USER_INPUT", {}).get("CSCAT", [1])[0]
         )
 
-        if args_dict.get("corsika_file", None) is not None:
+        if args.get("corsika_file", None) is not None:
             azimuth = self._rotate_azimuth_by_180deg(
                 0.5 * (self.config["USER_INPUT"]["PHIP"][0] + self.config["USER_INPUT"]["PHIP"][1]),
                 invert_operation=True,
@@ -195,14 +198,14 @@ class CorsikaConfig:
                 self.config["USER_INPUT"]["THETAP"][0] + self.config["USER_INPUT"]["THETAP"][1]
             )
         else:
-            azimuth = args_dict.get("azimuth_angle", 0.0 * u.deg).to("deg").value
-            zenith = args_dict.get("zenith_angle", 20.0 * u.deg).to("deg").value
+            azimuth = args.get("azimuth_angle", 0.0 * u.deg).to("deg").value
+            zenith = args.get("zenith_angle", 20.0 * u.deg).to("deg").value
 
         self.azimuth_angle = round(azimuth)
         self.zenith_angle = round(zenith)
 
         self.curved_atmosphere_min_zenith_angle = (
-            args_dict.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
+            args.get("curved_atmosphere_min_zenith_angle", 90.0 * u.deg).to("deg").value
         )
 
     def assert_corsika_configurations_match(self, model_versions):
@@ -261,6 +264,7 @@ class CorsikaConfig:
 
         Settings are such that that the simulations are fast
         and none (or not many) Cherenkov photons are generated.
+        This is e.g. used for some calibration run modes in sim_telarray.
 
         Returns
         -------
@@ -268,6 +272,7 @@ class CorsikaConfig:
             Dictionary with CORSIKA parameters for dummy simulations.
         """
         theta, phi = self._get_corsika_theta_phi(args_dict)
+        self._logger.info("Using CORSIKA configuration for dummy simulations.")
         return {
             "EVTNR": [1],
             "NSHOW": [1],
@@ -427,8 +432,21 @@ class CorsikaConfig:
         parameters["MAXPRT"] = ["10"]
         parameters["ECTMAP"] = ["1.e6"]
 
+        if "epos" in str(self.corsika_exec).lower():
+            parameters.update(self._epos_flags())
+
         self._logger.debug(f"Interaction parameters: {parameters}")
         return parameters
+
+    def _epos_flags(self):
+        """EPOS interaction model flags."""
+        epos_par = {}
+        epos_path = Path(self.interaction_table_path) / "epos"
+        epos_par["EPOPAR fname pathnx"] = [f"{epos_path}/"]
+        for epos_file in ["inics", "iniev", "inirj", "initl", "check"]:
+            epos_par[f"EPOPAR fname {epos_file}"] = [str(epos_path / f"epos.{epos_file}")]
+
+        return epos_par
 
     def _input_config_first_interaction_height(self, entry):
         """Return FIXHEI parameter CORSIKA format."""
@@ -548,7 +566,7 @@ class CorsikaConfig:
         """Return CORSIKA debugging output parameters."""
         return {
             "DEBUG": ["F", 6, "F", 1000000],
-            "DATBAS": ["yes"],
+            "DATBAS": ["F"],
             "DIRECT": ["./"],
             "PAROUT": ["F", "F"],
         }
@@ -590,11 +608,6 @@ class CorsikaConfig:
         if invert_operation:
             return (az - 180 - b_field_declination) % 360
         return (az + 180 + b_field_declination) % 360
-
-    @property
-    def primary(self):
-        """Primary particle name."""
-        return self.primary_particle.name
 
     def get_config_parameter(self, par_name):
         """
@@ -647,7 +660,7 @@ class CorsikaConfig:
             text += line
         return text
 
-    def generate_corsika_input_file(self, use_multipipe=False, use_test_seeds=False):
+    def generate_corsika_input_file(self, use_multipipe, corsika_seeds, input_file, output_file):
         """
         Generate a CORSIKA input file.
 
@@ -656,16 +669,16 @@ class CorsikaConfig:
         use_multipipe: bool
             Whether to set the CORSIKA Inputs file to pipe
             the output directly to sim_telarray.
-
+        corsika_seeds: list
+            List of fixed seeds used for CORSIKA random number generators.
+        input_file: Path
+            Path to the input file to be generated.
+        output_file: Path
+            Path to the output file to be generated.
         """
-        if self.is_file_updated:
-            self._logger.debug(f"CORSIKA input file already updated: {self.config_file_path}")
-            return self.config_file_path
-        self._logger.info(f"Exporting CORSIKA input file to {self.config_file_path}")
-        _output_generic_file_name = self.set_output_file_and_directory(use_multipipe=use_multipipe)
-        self._logger.info(f"Output generic file name: {_output_generic_file_name}")
+        self._logger.info(f"Exporting CORSIKA input file to {input_file}")
 
-        with open(self.config_file_path, "w", encoding="utf-8") as file:
+        with open(input_file, "w", encoding="utf-8") as file:
             file.write("\n* [ RUN PARAMETERS ]\n")
             text_parameters = self._get_text_single_line(self.config["USER_INPUT"])
             file.write(text_parameters)
@@ -684,7 +697,7 @@ class CorsikaConfig:
             file.write(f"IACT setenv AZM {self.azimuth_angle}\n")
 
             file.write("\n* [ SEEDS ]\n")
-            self._write_seeds(file, use_test_seeds)
+            self._write_seeds(file, corsika_seeds)
 
             file.write("\n* [ TELESCOPES ]\n")
             telescope_list_text = self.get_corsika_telescope_list()
@@ -693,6 +706,7 @@ class CorsikaConfig:
             file.write("\n* [ INTERACTION FLAGS ]\n")
             text_interaction_flags = self._get_text_single_line(self.config["INTERACTION_FLAGS"])
             file.write(text_interaction_flags)
+            file.write(f"DATDIR {self.interaction_table_path}\n")
 
             file.write("\n* [ CHERENKOV EMISSION PARAMETERS ]\n")
             text_cherenkov = self._get_text_single_line(
@@ -706,10 +720,9 @@ class CorsikaConfig:
 
             file.write("\n* [ OUTPUT FILE ]\n")
             if use_multipipe:
-                run_cta_script = Path(self.config_file_path.parent).joinpath("run_cta_multipipe")
-                file.write(f"TELFIL |{run_cta_script!s}\n")
+                file.write(f"TELFIL |{output_file!s}\n")
             else:
-                file.write(f"TELFIL {_output_generic_file_name}\n")
+                file.write(f"TELFIL {output_file.name}\n")
 
             file.write("\n* [ IACT TUNING PARAMETERS ]\n")
             text_iact = self._get_text_single_line(
@@ -726,98 +739,7 @@ class CorsikaConfig:
             model_directory=self.array_model.get_config_directory()
         )
 
-        self.is_file_updated = True
-        return self.config_file_path
-
-    def get_corsika_config_file_name(self, file_type, run_number=None):
-        """
-        Get a CORSIKA config style file name for various configuration file types.
-
-        Parameters
-        ----------
-        file_type: str
-            The type of file (determines the file suffix).
-            Choices are config_tmp, config or output_generic.
-        run_number: int
-            Run number.
-
-        Returns
-        -------
-        str
-            for file_type="config_tmp":
-                Return CORSIKA input file name for one specific run.
-                This is the input file after being pre-processed by sim_telarray (pfp).
-            for file_type="config":
-                Return generic CORSIKA config input file name.
-            for file_type="output_generic"
-                Return generic file name for the TELFIL option in the CORSIKA inputs file.
-            for file_type="multipipe"
-                Return multipipe "file name" for the TELFIL option in the CORSIKA inputs file.
-
-        Raises
-        ------
-        ValueError
-            If file_type is unknown or if the run number is not given for file_type==config_tmp.
-        """
-        if file_type == "config_tmp" and run_number is None:
-            raise ValueError("Must provide a run number for a temporary CORSIKA config file")
-
-        file_label = f"_{self.label}" if self.label is not None else ""
-
-        _vc_low = self.get_config_parameter("VIEWCONE")[0]
-        _vc_high = self.get_config_parameter("VIEWCONE")[1]
-        view_cone = (
-            f"_cone{int(_vc_low):d}-{int(_vc_high):d}" if _vc_low != 0 or _vc_high != 0 else ""
-        )
-
-        run_number_in_file_name = ""
-        if file_type == "output_generic":
-            # The XXXXXX will be replaced by the run number after the pfp step with sed
-            run_number_in_file_name = "runXXXXXX_"
-        if file_type == "config_tmp":
-            run_number_in_file_name = f"run{run_number:06}_"
-
-        base_name = (
-            f"{self.primary_particle.name}_{run_number_in_file_name}"
-            f"za{int(self.get_config_parameter('THETAP')[0]):02}deg_"
-            f"azm{self.azimuth_angle:03}deg{view_cone}_"
-            f"{self.array_model.site}_{self.array_model.layout_name}_"
-            f"{self.array_model.model_version}{file_label}"
-        )
-
-        if file_type == "config_tmp":
-            return f"corsika_config_{base_name}.txt"
-        if file_type == "config":
-            return f"corsika_config_{base_name}.input"
-        if file_type == "output_generic":
-            return f"{base_name}.corsika.zst"
-        if file_type == "multipipe":
-            return f"multi_cta-{self.array_model.site}-{self.array_model.layout_name}.cfg"
-
-        raise ValueError(f"The requested file type ({file_type}) is unknown")
-
-    def set_output_file_and_directory(self, use_multipipe=False):
-        """
-        Set output file names and directories.
-
-        Parameters
-        ----------
-        use_multipipe: bool
-            Whether to set the CORSIKA Inputs file to pipe
-            the output directly to sim_telarray. Defines directory names.
-
-        Returns
-        -------
-        str
-            Output file name.
-        """
-        self.config_file_path = self.io_handler.get_output_file(
-            file_name=self.get_corsika_config_file_name(file_type="config"),
-            sub_dir="corsika_sim_telarray" if use_multipipe else "corsika",
-        )
-        return self.get_corsika_config_file_name(file_type="output_generic")
-
-    def _write_seeds(self, file, use_test_seeds=False):
+    def _write_seeds(self, file, corsika_seeds=None):
         """
         Generate and write seeds in the CORSIKA input file.
 
@@ -826,11 +748,12 @@ class CorsikaConfig:
         file: stream
             File where the telescope positions will be written.
         """
-        random_seed = self.get_config_parameter("PRMPAR") + self.run_number
-        rng = np.random.default_rng(random_seed)
-        corsika_seeds = [534, 220, 1104, 382]
-        if not use_test_seeds:
+        if not corsika_seeds:
+            random_seed = self.get_config_parameter("PRMPAR") + self.run_number
+            rng = np.random.default_rng(random_seed)
             corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
+        if len(corsika_seeds) != 4:
+            raise ValueError("Exactly 4 CORSIKA seeds must be provided.")
         for s in corsika_seeds:
             file.write(f"SEED {s} 0 0\n")
 
@@ -857,46 +780,23 @@ class CorsikaConfig:
 
         return corsika_input_list
 
-    @property
-    def run_number(self):
-        """Set run number."""
-        return self._run_number
-
-    @run_number.setter
-    def run_number(self, run_number):
+    def is_calibration_run(self):
         """
-        Set run number and validate it.
+        Check if this simulation is a calibration run.
 
         Parameters
         ----------
-        run_number: int
-            Run number.
-        """
-        self._run_number = self.validate_run_number(run_number)
-
-    def validate_run_number(self, run_number):
-        """
-        Validate run number and return it. Return run number from configuration if None.
-
-        Parameters
-        ----------
-        run_number: int
-            Run number.
+        run_mode: str
+            Run mode of the simulation.
 
         Returns
         -------
-        int
-            Run number.
-
-        Raises
-        ------
-        ValueError
-            If run_number is not a valid value (< 1 or > 999999).
+        bool
+            True if it is a calibration run, False otherwise.
         """
-        if run_number is None:
-            return self.run_number
-        if not float(run_number).is_integer() or run_number < 1 or run_number > 999999:
-            raise ValueError(
-                f"Invalid type of run number ({run_number}) - it must be an uint < 1000000."
-            )
-        return run_number
+        return self.run_mode in [
+            "pedestals",
+            "pedestals_dark",
+            "pedestals_nsb_only",
+            "direct_injection",
+        ]

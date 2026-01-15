@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 r"""
-Calculate photon incident angles on focal plane and primary/secondary mirrors.
+Derive photon incident angles on focal plane and primary/secondary mirrors.
 
 Creates photon files with additional columns for incident angles calculation.
 Outputs files and histograms of the incidence angles at
@@ -14,7 +14,7 @@ Example usage
 
 .. code-block:: console
 
-    simtools-calculate-incident-angles \
+    simtools-derive-incident-angle \
         --off_axis_angles 0 1 2 3 4 \
         --source_distance 10 \
         --number_of_photons 1000000 \
@@ -47,27 +47,27 @@ The application writes:
 
 Example of a focal-plane incident angle plot for a SST:
 
-.. _plot_calculate_incident_angles_plot:
-.. image:: images/incident_angles_multi_calculate_incident_angles_SSTS-04.png
+.. _plot_derive_incident_angle_plot:
+.. image:: images/incident_angles_multi_derive_incident_angle_SSTS-04.png
     :width: 49 %
 
 Example of a primary mirror incident angle plot for a SST:
 
-.. _plot_calculate_incident_angles_plot_primary:
-.. image:: images/incident_angles_primary_multi_calculate_incident_angles_SSTS-04.png
+.. _plot_derive_incident_angle_plot_primary:
+.. image:: images/incident_angles_primary_multi_derive_incident_angle_SSTS-04.png
     :width: 49 %
 
 Note also the relation between radius and primary mirror incident angles, and how this relates to
 the peak seen in the primary mirror incident angle distribution:
 
-.. _plot_calculate_incident_angles_plot_angle_vs_radius:
+.. _plot_derive_incident_angle_plot_angle_vs_radius:
 .. image:: images/primary_angle_vs_radius.png
     :width: 49 %
 
 Example of a secondary mirror incident angle plot for a SST:
 
-.. _plot_calculate_incident_angles_plot_secondary:
-.. image:: images/incident_angles_secondary_multi_calculate_incident_angles_SSTS-04.png
+.. _plot_derive_incident_angle_plot_secondary:
+.. image:: images/incident_angles_secondary_multi_derive_incident_angle_SSTS-04.png
     :width: 49 %
 """
 
@@ -82,9 +82,7 @@ def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
         label=get_application_label(__file__),
-        description=(
-            "Calculate photon incident angles on focal plane and primary/secondary mirrors."
-        ),
+        description=("Derive photon incident angles on focal plane and primary/secondary mirrors."),
     )
     config.parser.add_argument(
         "--off_axis_angles",
@@ -123,7 +121,7 @@ def _parse():
     config.parser.add_argument(
         "--calculate_primary_secondary_angles",
         dest="calculate_primary_secondary_angles",
-        help="Also compute angles of incidence on primary and secondary mirrors",
+        help="Compute angles of incidence on primary and secondary mirrors",
         required=False,
         action="store_true",
     )
@@ -134,10 +132,10 @@ def _parse():
 
 
 def main():
-    """Calculate photon incident angles on focal plane and primary/secondary mirrors."""
+    """Derive photon incident angles on focal plane and primary/secondary mirrors."""
     app_context = startup_application(_parse)
 
-    app_context.logger.info("Starting calculation of incident angles")
+    app_context.logger.info("Starting derivation of incident angles")
 
     output_dir = app_context.io_handler.get_output_directory()
     base_label = app_context.args.get("label", get_application_label(__file__))
@@ -158,9 +156,10 @@ def main():
         label_with_telescope,
         debug_plots=app_context.args.get("debug_plots", False),
     )
+    calculator.save_model_parameters(results_by_offset)
     total = sum(len(t) for t in results_by_offset.values())
     summary_msg = (
-        f"Calculated incident angles for {len(results_by_offset)} offsets,\n"
+        f"Derived incident angles for {len(results_by_offset)} offsets,\n"
         f"total photon statistics {total}"
     )
     if total < 1_000_000:

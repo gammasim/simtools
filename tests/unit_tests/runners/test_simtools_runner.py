@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
 import shutil
-import subprocess
 from pathlib import Path
 from unittest import mock
 
 import pytest
 
+from simtools.job_execution.job_manager import JobExecutionError
 from simtools.runners import simtools_runner
 
 TEST_OUTPUT_PATH = Path("output/test")
@@ -14,8 +14,6 @@ DUMMY_CONFIG_FILE = "dummy.yml"
 TEST_WORKDIR = "/workdir/external/"
 TEST_FILE1 = "file1.txt"
 TEST_FILE2 = "file2.txt"
-MOCK_STDOUT_OUTPUT = "stdout output"
-MOCK_STDERR_OUTPUT = "stderr output"
 
 
 @pytest.fixture
@@ -173,49 +171,6 @@ def test_read_application_configuration_empty_applications(
     assert isinstance(log_file, Path)
 
 
-def test_run_application_success(monkeypatch, mock_logger, tmp_test_directory):
-    mock_result = mock.Mock()
-    mock_result.stdout = MOCK_STDOUT_OUTPUT
-    mock_result.stderr = MOCK_STDERR_OUTPUT
-
-    monkeypatch.setattr(subprocess, "run", mock.Mock(return_value=mock_result))
-
-    application = "dummy_app"
-    configuration = {"key": "value"}
-    runtime_environment = []
-    stdout, stderr = simtools_runner.run_application(
-        runtime_environment, application, configuration, mock_logger
-    )
-
-    assert stdout == MOCK_STDOUT_OUTPUT
-    assert stderr == MOCK_STDERR_OUTPUT
-    subprocess.run.assert_called_once()
-    args, kwargs = subprocess.run.call_args
-    assert args[0][0] == application
-    assert args[0][1] == "--key"
-    assert args[0][2] == "value"
-    assert kwargs["check"] is True
-    assert kwargs["capture_output"] is True
-    assert kwargs["text"] is True
-
-
-def test_run_application_failure(monkeypatch, mock_logger):
-    exc = subprocess.CalledProcessError(
-        returncode=1, cmd=["dummy_app", "--config", DUMMY_CONFIG_FILE], stderr="error occurred"
-    )
-    monkeypatch.setattr(subprocess, "run", mock.Mock(side_effect=exc))
-
-    application = "dummy_app"
-    configuration = {"key": "value"}
-    runtime_environment = []
-
-    with pytest.raises(subprocess.CalledProcessError):
-        simtools_runner.run_application(
-            runtime_environment, application, configuration, mock_logger
-        )
-    mock_logger.error.assert_called_once_with("Error running application dummy_app: error occurred")
-
-
 def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     # Prepare mocks
     mock_logger = mock.Mock()
@@ -245,11 +200,14 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
         mock.Mock(return_value="simtools version: 1.2.3\n"),
     )
 
-    # Patch run_application
-    def mock_run_application(runtime_env, app, config, logger):
-        return f"{app}_stdout", f"{app}_stderr"
+    # Patch job_manager.submit
+    def mock_submit(app, out_file, err_file, configuration=None, runtime_environment=None):
+        result_mock = mock.Mock()
+        result_mock.stdout = f"{app}_stdout"
+        result_mock.stderr = f"{app}_stderr"
+        return result_mock
 
-    monkeypatch.setattr("simtools.runners.simtools_runner.run_application", mock_run_application)
+    monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit)
 
     simtools_runner.run_applications(mock_args_dict, mock_logger)
 
@@ -272,7 +230,7 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     mock_logger.info.assert_any_call("Running application: app3")
 
 
-def test_run_applications_handles_run_application_exception(monkeypatch, tmp_test_directory):
+def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_directory):
     mock_logger = mock.Mock()
     mock_args_dict = {
         "configuration_file": "dummy_config.yml",
@@ -294,57 +252,16 @@ def test_run_applications_handles_run_application_exception(monkeypatch, tmp_tes
         mock.Mock(return_value="simtools version: 1.2.3\n"),
     )
 
-    def mock_run_application(runtime_env, app, config, logger):
-        raise subprocess.CalledProcessError(returncode=1, cmd=app, stderr="fail")
+    def mock_submit_failure(app, out_file, err_file, configuration=None, runtime_environment=None):
+        raise JobExecutionError("Job failed")
 
-    monkeypatch.setattr("simtools.runners.simtools_runner.run_application", mock_run_application)
+    monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit_failure)
 
-    with pytest.raises(subprocess.CalledProcessError):
+    with pytest.raises(JobExecutionError):
         simtools_runner.run_applications(mock_args_dict, mock_logger)
 
 
-def test_convert_dict_to_args_with_boolean():
-    parameters = {"flag": True, "other_flag": False}
-    result = simtools_runner._convert_dict_to_args(parameters)
-    assert result == ["--flag"]
-
-
-def test_convert_dict_to_args_with_list():
-    parameters = {"files": [TEST_FILE1, TEST_FILE2]}
-    result = simtools_runner._convert_dict_to_args(parameters)
-    assert result == ["--files", TEST_FILE1, TEST_FILE2]
-
-
-def test_convert_dict_to_args_with_string():
-    parameters = {"key": "value"}
-    result = simtools_runner._convert_dict_to_args(parameters)
-    assert result == ["--key", "value"]
-
-
-def test_convert_dict_to_args_with_mixed_types():
-    parameters = {
-        "flag": True,
-        "files": [TEST_FILE1, TEST_FILE2],
-        "key": "value",
-        "number": 42,
-    }
-    result = simtools_runner._convert_dict_to_args(parameters)
-    assert result == [
-        "--flag",
-        "--files",
-        TEST_FILE1,
-        TEST_FILE2,
-        "--key",
-        "value",
-        "--number",
-        "42",
-    ]
-
-
-def test_convert_dict_to_args_with_empty_dict():
-    parameters = {}
-    result = simtools_runner._convert_dict_to_args(parameters)
-    assert result == []
+# Note: _convert_dict_to_args is now handled by job_manager module
 
 
 def test_read_runtime_environment_with_full_options(monkeypatch):
@@ -444,71 +361,120 @@ def test_read_runtime_environment_with_missing_options(monkeypatch):
     assert result == expected_command
 
 
-def test_run_application_with_runtime_environment(monkeypatch, mock_logger):
-    mock_result = mock.Mock()
-    mock_result.stdout = MOCK_STDOUT_OUTPUT
-    mock_result.stderr = MOCK_STDERR_OUTPUT
+# Note: run_application function has been replaced by job_manager.submit
 
-    monkeypatch.setattr(subprocess, "run", mock.Mock(return_value=mock_result))
 
-    runtime_environment = ["docker", "run", "--rm", "-it", "image_name"]
-    application = "dummy_app"
-    configuration = {"key": "value"}
-    stdout, stderr = simtools_runner.run_application(
-        runtime_environment, application, configuration, mock_logger
+def test_run_applications_with_runtime_environment_ignored(monkeypatch, tmp_test_directory):
+    """Test that runtime environment is ignored when ignore_runtime_environment is True."""
+    mock_logger = mock.Mock()
+    mock_args_dict = {
+        "configuration_file": "dummy_config.yml",
+        "steps": [1],
+        "ignore_runtime_environment": True,
+    }
+
+    mock_configurations = [
+        {"application": "app1", "run_application": True, "configuration": {"key": "value1"}},
+    ]
+    runtime_environment = {"image": "test-image", "container_engine": "docker"}
+    log_file_path = tmp_test_directory / "simtools.log"
+
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._read_application_configuration",
+        mock.Mock(return_value=(mock_configurations, runtime_environment, log_file_path)),
+    )
+    monkeypatch.setattr(
+        "simtools.dependencies.get_version_string",
+        mock.Mock(return_value="simtools version: 1.2.3\n"),
     )
 
-    assert stdout == MOCK_STDOUT_OUTPUT
-    assert stderr == MOCK_STDERR_OUTPUT
-    subprocess.run.assert_called_once()
-    args, kwargs = subprocess.run.call_args
-    assert args[0][0:5] == runtime_environment
-    assert args[0][5] == application
-    assert args[0][6] == "--key"
-    assert args[0][7] == "value"
-    assert kwargs["check"] is True
-    assert kwargs["capture_output"] is True
-    assert kwargs["text"] is True
+    # Mock job_manager.submit to verify no runtime_environment is passed
+    def mock_submit(app, out_file, err_file, configuration=None, runtime_environment=None):
+        assert runtime_environment == []  # Should be empty list when ignored
+        result_mock = mock.Mock()
+        result_mock.stdout = f"{app}_stdout"
+        result_mock.stderr = f"{app}_stderr"
+        return result_mock
+
+    monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit)
+
+    simtools_runner.run_applications(mock_args_dict, mock_logger)
 
 
-def test_run_application_without_runtime_environment(monkeypatch, mock_logger):
-    mock_result = mock.Mock()
-    mock_result.stdout = MOCK_STDOUT_OUTPUT
-    mock_result.stderr = MOCK_STDERR_OUTPUT
+def test_read_runtime_environment_error_handling(monkeypatch):
+    """Test error handling in read_runtime_environment."""
+    # Test with container engine not found
+    runtime_environment = {"image": "test-image", "container_engine": "nonexistent"}
 
-    monkeypatch.setattr(subprocess, "run", mock.Mock(return_value=mock_result))
+    # Mock shutil.which to return None (engine not found)
+    monkeypatch.setattr(shutil, "which", mock.Mock(return_value=None))
 
-    runtime_environment = []
-    application = "dummy_app"
-    configuration = {"key": "value"}
-    stdout, stderr = simtools_runner.run_application(
-        runtime_environment, application, configuration, mock_logger
+    with pytest.raises(RuntimeError, match="Container engine 'nonexistent' not found"):
+        simtools_runner.read_runtime_environment(runtime_environment)
+
+
+def test_read_runtime_environment_with_env_file_and_options(monkeypatch):
+    """Test read_runtime_environment with env_file and various options."""
+    runtime_environment = {
+        "image": "test-image",
+        "container_engine": "podman",
+        "env_file": ".env",
+        "options": ["--privileged", "--user", "root"],
+    }
+
+    monkeypatch.setattr(shutil, "which", mock.Mock(return_value="podman"))
+
+    result = simtools_runner.read_runtime_environment(runtime_environment)
+
+    expected = [
+        "podman",
+        "run",
+        "--rm",
+        "-v",
+        f"{Path.cwd()}:/workdir/external/",
+        "-w",
+        "/workdir/external/",
+        "--privileged",
+        "--user",
+        "root",
+        "--env-file",
+        ".env",
+        "test-image",
+    ]
+    assert result == expected
+
+
+def test_run_applications_with_empty_configuration_list(monkeypatch, tmp_test_directory):
+    """Test run_applications with empty configuration list."""
+    mock_logger = mock.Mock()
+    mock_args_dict = {
+        "configuration_file": "empty_config.yml",
+        "steps": None,
+        "ignore_runtime_environment": False,
+    }
+
+    log_file_path = tmp_test_directory / "simtools.log"
+
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._read_application_configuration",
+        mock.Mock(return_value=([], None, log_file_path)),
+    )
+    monkeypatch.setattr(
+        "simtools.dependencies.get_version_string",
+        mock.Mock(return_value="simtools version: 1.2.3\n"),
     )
 
-    assert stdout == MOCK_STDOUT_OUTPUT
-    assert stderr == MOCK_STDERR_OUTPUT
-    subprocess.run.assert_called_once()
-    args, kwargs = subprocess.run.call_args
-    assert args[0][0] == application
-    assert args[0][1] == "--key"
-    assert args[0][2] == "value"
-    assert kwargs["check"] is True
-    assert kwargs["capture_output"] is True
-    assert kwargs["text"] is True
+    # Should not call job_manager.submit at all
+    mock_submit = mock.Mock()
+    monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit)
 
+    simtools_runner.run_applications(mock_args_dict, mock_logger)
 
-def test_run_application_handles_subprocess_error(monkeypatch, mock_logger):
-    exc = subprocess.CalledProcessError(
-        returncode=1, cmd=["dummy_app", "--key", "value"], stderr="error occurred"
-    )
-    monkeypatch.setattr(subprocess, "run", mock.Mock(side_effect=exc))
+    # Check log file was created with version info
+    with log_file_path.open("r", encoding="utf-8") as f:
+        content = f.read()
+    assert "Running simtools applications" in content
+    assert "simtools version: 1.2.3" in content
 
-    runtime_environment = []
-    application = "dummy_app"
-    configuration = {"key": "value"}
-
-    with pytest.raises(subprocess.CalledProcessError):
-        simtools_runner.run_application(
-            runtime_environment, application, configuration, mock_logger
-        )
-    mock_logger.error.assert_called_once_with("Error running application dummy_app: error occurred")
+    # Verify no applications were submitted
+    mock_submit.assert_not_called()
