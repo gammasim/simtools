@@ -1,18 +1,18 @@
 """Base class for running sim_telarray simulations."""
 
 import logging
-import subprocess
 
-import simtools.utils.general as gen
+from simtools.job_execution import job_manager
 from simtools.runners.runner_services import RunnerServices
 
+SIM_TELARRAY_ENV = {
+    "SIM_TELARRAY_CONFIG_PATH": "",
+}
 
-class SimtelExecutionError(Exception):
-    """Exception for sim_telarray execution error."""
 
-
-class InvalidOutputFileError(Exception):
-    """Exception for invalid output file."""
+def sim_telarray_env_as_string():
+    """Return the sim_telarray environment variables as a string."""
+    return " ".join(f'{key}="{value}" ' for key, value in SIM_TELARRAY_ENV.items())
 
 
 class SimtelRunner:
@@ -28,32 +28,22 @@ class SimtelRunner:
         Instance label. Important for output file naming.
     corsika_config: CorsikaConfig
         CORSIKA configuration.
-    use_multipipe: bool
-        Use multipipe to run CORSIKA and sim_telarray.
-    calibration_run_mode: str
-        Calibration run mode.
+    is_calibration_run: bool
+        Flag to indicate if this is a calibration run.
     """
 
-    def __init__(
-        self,
-        label=None,
-        corsika_config=None,
-        use_multipipe=False,
-        calibration_run_mode=None,
-    ):
+    def __init__(self, label=None, corsika_config=None, is_calibration_run=False):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
         self.label = label
         self._base_directory = None
-        self.calibration_run_mode = calibration_run_mode
+        self.is_calibration_run = is_calibration_run
 
         self.runs_per_set = 1
 
-        self.runner_service = RunnerServices(corsika_config, label)
-        self._directory = self.runner_service.load_data_directories(
-            "corsika_sim_telarray" if use_multipipe else "sim_telarray"
-        )
+        self.runner_service = RunnerServices(corsika_config, "sim_telarray", label)
+        self.file_list = None
 
     def run(self, test=False, input_file=None, run_number=None):
         """
@@ -70,142 +60,24 @@ class SimtelRunner:
         """
         self._logger.debug("Running sim_telarray")
 
-        command, stdout_file, stderr_file = self._make_run_command(
+        command, stdout_file, stderr_file = self.make_run_command(
             run_number=run_number, input_file=input_file
         )
-
-        if test:
-            self._logger.info(f"Running (test) with command: {command}")
-            self._run_simtel_and_check_output(command, stdout_file, stderr_file)
-        else:
-            self._logger.debug(f"Running ({self.runs_per_set}x) with command: {command}")
-            for _ in range(self.runs_per_set):
-                self._run_simtel_and_check_output(command, stdout_file, stderr_file)
-
-        self._check_run_result(run_number=run_number)
-
-    def _check_run_result(self, run_number=None):  # pylint: disable=all
-        """Check if simtel output file exists."""
-        pass
-
-    def _raise_simtel_error(self):
-        """
-        Raise sim_telarray execution error.
-
-        Final 30 lines from the log file are collected and printed.
-
-        Raises
-        ------
-        SimtelExecutionError
-        """
-        if hasattr(self, "_log_file"):
-            msg = gen.get_log_excerpt(self._log_file)
-        else:
-            msg = "Simtel log file does not exist."
-        raise SimtelExecutionError(msg)
-
-    def _run_simtel_and_check_output(self, command, stdout_file, stderr_file):
-        """
-        Run the sim_telarray command and check the exit code.
-
-        Raises
-        ------
-        SimtelExecutionError
-            if run was not successful.
-        """
-        stdout_file = stdout_file if stdout_file else "/dev/null"
-        stderr_file = stderr_file if stderr_file else "/dev/null"
-        with (
-            open(f"{stdout_file}", "w", encoding="utf-8") as stdout,
-            open(f"{stderr_file}", "w", encoding="utf-8") as stderr,
-        ):
-            result = subprocess.run(
+        runs = 1 if test else self.runs_per_set
+        label = "test" if test else f"{self.runs_per_set}x"
+        self._logger.info(f"Running ({label}) with command: {command}")
+        for _ in range(runs):
+            job_manager.submit(
                 command,
-                shell=True,
-                text=True,
-                stdout=stdout,
-                stderr=stderr,
+                out_file=stdout_file,
+                err_file=stderr_file,
+                env=SIM_TELARRAY_ENV,
             )
 
-        if result.returncode != 0:
-            self._logger.error(result.stderr)
-            self._raise_simtel_error()
-        return result.returncode
-
-    def _make_run_command(self, run_number=None, input_file=None):
-        self._logger.debug(
-            "make_run_command is being called from the base class - "
-            "it should be implemented in the sub class"
-        )
-        input_file = input_file if input_file else "nofile"
-        run_number = run_number if run_number else 1
-        return f"{input_file}-{run_number}", None, None
-
-    @staticmethod
-    def get_config_option(par, value=None, weak_option=False):
-        """
-        Build sim_telarray command.
-
-        Parameters
-        ----------
-        par: str
-            Parameter name.
-        value: str
-            Parameter value.
-        weak_option: bool
-            If True, use -W option instead of -C.
-
-        Returns
-        -------
-        str
-            Command for sim_telarray.
-        """
-        option_syntax = "-W" if weak_option else "-C"
-        c = f" {option_syntax} {par}"
-        c += f"={value}" if value is not None else ""
-        return c
+    def make_run_command(self, run_number=None, input_file=None):
+        """Make the sim_telarray run command (to implemented in subclasses)."""
+        raise NotImplementedError("Must be implemented in concrete subclass")
 
     def get_resources(self, run_number=None):
         """Return computing resources used."""
         return self.runner_service.get_resources(run_number)
-
-    def get_file_name(
-        self,
-        simulation_software="sim_telarray",
-        file_type=None,
-        run_number=None,
-        mode="",
-        model_version_index=0,
-    ):
-        """
-        Get the full path of a file for a given run number.
-
-        Parameters
-        ----------
-        simulation_software: str
-            Simulation software.
-        file_type: str
-            File type.
-        run_number: int
-            Run number.
-        model_version_index: int
-            Index of the model version.
-            This is used to select the correct simulator_array instance in case
-            multiple array models are simulated.
-
-        Returns
-        -------
-        str
-            File name with full path.
-        """
-        if simulation_software.lower() != "sim_telarray":
-            raise ValueError(
-                f"simulation_software ({simulation_software}) is not supported in SimulatorArray"
-            )
-        return self.runner_service.get_file_name(
-            file_type=file_type,
-            run_number=run_number,
-            mode=mode,
-            _model_version_index=model_version_index,
-            calibration_run_mode=self.calibration_run_mode,
-        )

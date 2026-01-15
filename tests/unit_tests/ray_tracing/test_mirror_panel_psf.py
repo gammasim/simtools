@@ -253,7 +253,16 @@ def test_init_sets_test_mirror_limit_in_test_mode(mocker):
         "data": "data.ecsv",
         "site": "North",
         "telescope": "LSTN-01",
-        "model_version": "1.0",
+        "model_version": "test_version",
+        "mirror_list": None,
+        "random_focal_length": None,
+        "no_tuning": False,
+        "rnda": 0,
+        "sim_telarray_path": "path/to/simtel",
+        "number_of_mirrors_to_test": 2,
+        "use_random_focal_length": False,
+        "containment_fraction": 0.8,
+        "output_path": "",
     }
     inst = MirrorPanelPSF("lbl", args)
     assert inst.args_dict["number_of_mirrors_to_test"] == 10

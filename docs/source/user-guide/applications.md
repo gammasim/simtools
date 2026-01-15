@@ -49,7 +49,6 @@ Parameters with the same functionality are named consistently the same among all
 :glob: true
 :maxdepth: 1
 
-simtools-calculate-incident-angles <applications/simtools-calculate-incident-angles>
 simtools-convert-all-model-parameters-from-simtel <applications/simtools-convert-all-model-parameters-from-simtel>
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
 simtools-convert-model-parameter-from-simtel <applications/simtools-convert-model-parameter-from-simtel>
@@ -63,6 +62,7 @@ simtools-db-generate-compound-indexes <applications/simtools-db-generate-compoun
 simtools-db-inspect-databases <applications/simtools-db-inspect-databases>
 simtools-db-upload-model-repository <applications/simtools-db-upload-model-repository>
 simtools-derive-ctao-array-layouts <applications/simtools-derive-ctao-array-layouts>
+simtools-derive-incident-angle <applications/simtools-derive-incident-angle>
 simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
 simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-electron-spectrum>
 simtools-derive-pulse-shape-parameters <applications/simtools-derive-pulse-shape-parameters>
@@ -80,13 +80,13 @@ simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event
 simtools-maintain-simulation-model-add-production <applications/simtools-maintain-simulation-model-add-production>
 simtools-maintain-simulation-model-compare-productions <applications/simtools-maintain-simulation-model-compare-productions>
 simtools-maintain-simulation-model-verify-production-tables <applications/simtools-maintain-simulation-model-verify-production-tables>
+simtools-maintain-simulation-model-write-array-element-positions <applications/simtools-maintain-simulation-model-write-array-element-positions>
 simtools-merge-tables <applications/simtools-merge-tables>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabular-data-for-model-parameter>
 simtools-plot-simtel-events <applications/simtools-plot-simtel-events>
 simtools-plot-simulated-event-distributions <applications/simtools-plot-simulated-event-distributions>
-simtools-print-version <applications/simtools-print-version>
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
 simtools-production-derive-statistics <applications/simtools-production-derive-statistics>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>

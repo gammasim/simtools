@@ -22,7 +22,7 @@ These images eliminate all manual installation steps and allow direct execution 
 - **Production images** (`simtools`): Include CORSIKA, sim_telarray, and simtools applications. Variants are available with:
   - Different CORSIKA/sim_telarray versions
   - Compile options (e.g., `prod5`, `prod6`)
-  - CPU optimizations (e.g., `avx2`, `avx512`, `no_opt`)
+  - CPU optimizations (e.g., `avx2`, `avx512`, `generic`)
 - **Development images** (`simtools-dev`): Include all dependencies for simtools development, as well as CORSIKA and sim_telarray, but do not contain simtools itself.
 
 Pre-built images are hosted on the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools). Authentication may be required; follow [GitHub's guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) to configure access (`docker login`).

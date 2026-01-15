@@ -11,6 +11,7 @@ import urllib.request
 from pathlib import Path
 from urllib.parse import urlparse
 
+import dotenv
 import numpy as np
 
 _logger = logging.getLogger(__name__)
@@ -795,23 +796,6 @@ def find_differences_in_json_objects(obj1, obj2, path=""):
     return diffs
 
 
-def clear_default_sim_telarray_cfg_directories(command):
-    """Prefix the command to clear default sim_telarray configuration directories.
-
-    Parameters
-    ----------
-    command: str
-        Command to be prefixed.
-
-    Returns
-    -------
-    str
-        Prefixed command.
-
-    """
-    return f"SIM_TELARRAY_CONFIG_PATH='' {command}"
-
-
 def get_list_of_files_from_command_line(file_names, suffix_list):
     """
     Get a list of files from the command line.
@@ -850,3 +834,39 @@ def get_list_of_files_from_command_line(file_names, suffix_list):
 def now_date_time_in_isoformat():
     """Return date and time in isoformat and second accuracy."""
     return datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")
+
+
+def load_environment_variables(env_file=".env", env_list=None):
+    """
+    Load environment variables (from a .env file or directly from the environment).
+
+    Allow to read a specific list of variables or all variables from the .env file.
+
+    Parameters
+    ----------
+    env_file: str
+        Path to the .env file.
+    env_list: list, optional
+        List of environment variables to be read. If None, all variables are read.
+
+    Returns
+    -------
+    dict
+        Dictionary mapping environment variable names (lowercase, without the
+        ``SIMTOOLS_`` prefix) to their cleaned string values.
+    """
+    dotenv.load_dotenv(env_file or None)
+    keys = (
+        list(dotenv.dotenv_values(env_file).keys())
+        if env_list is None
+        else [f"SIMTOOLS_{s.upper()}" for s in env_list]
+    )
+
+    env_values = {}
+    for key in keys:
+        env_value = os.environ.get(key)
+        if env_value is None:
+            continue
+        cleaned_value = env_value.split("#")[0].strip().replace('"', "").replace("'", "")
+        env_values[key.removeprefix("SIMTOOLS_").lower()] = cleaned_value
+    return env_values

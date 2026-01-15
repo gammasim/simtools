@@ -7,6 +7,110 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.26.0](https://github.com/gammasim/simtools/releases/tag/v0.26.0) - 2026-01-08
+
+### API Changes
+
+- Changes in the environment variables set in the `.env` file.
+
+  Added explicit setting of the simulation software branches:
+
+  - CORSIKA: e.g., `SIMTOOLS_CORSIKA_PATH=/workdir/simulation_software/corsika7`
+  - sim_telarray: e.g., `SIMTOOLS_SIMTEL_PATH=/workdir/simulation_software/sim_telarray`
+
+  Added explicit setting of the interaction models:
+
+  - high-energy interaction model: e.g., `SIMTOOLS_CORSIKA_HE_INTERACTION=qgs3`
+  - low-energy interaction model: e.g., `SIMTOOLS_CORSIKA_LE_INTERACTION=urqmd`
+
+  For images generated before this change, it is enough to set one single variable:
+
+  `SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray/sim_telarray`
+
+  ([#1917](https://github.com/gammasim/simtools/pull/1917))
+- Change in naming of simtools docker images:
+
+  - [CORSIKA image](https://github.com/gammasim/simtools/pkgs/container/corsika7) is called e.g. `ghcr.io/gammasim/corsika7:0.26.0-78010-avx512f`
+  - [sim_telarray image](https://github.com/gammasim/simtools/pkgs/container/sim_telarray) is called e.g. `ghcr.io/gammasim/sim_telarray:0.26.0-<sim_telarray version>`
+  - [simtools-dev image](https://github.com/gammasim/simtools/pkgs/container/simtools-dev) is called e.g. `ghcr.io/gammasim/simtools-dev:latest` (safe to use the latest tag here)
+  - [simtools-prod image](https://github.com/gammasim/simtools/pkgs/container/simtools-prod) is called e.g. `ghcr.io/gammasim/simtools-prod:0.26.0-corsika<corsika version>-<avx flag>-simtel<sim_telarray version>`
+
+  ([#1954](https://github.com/gammasim/simtools/pull/1954))
+- Changed path to `sim_telarray` to `SIMTOOLS_SIM_TELARRAY_PATH` (from `SIMTOOLS_SIMTEL_PATH`). Requires changes by the users to their `.env` files. ([#1957](https://github.com/gammasim/simtools/pull/1957))
+
+### New Features
+
+- Add integration tests for newly added flasher types  MSFx-NectarCam,  MSFx-FlashCam, LSFN-design, LSFS-design. ([#1817](https://github.com/gammasim/simtools/pull/1817))
+- Improve handling of model parameters with output schema definition: introduce a legacy model parameter handler. ([#1910](https://github.com/gammasim/simtools/pull/1910))
+- Allow output of flasher angular distribution tables for Lambertian distribution. ([#1916](https://github.com/gammasim/simtools/pull/1916))
+- Refactoring the image building process (CORSIKA/sim_telarray/simtools):
+
+  - separate images for CORSIKA and sim_telarray
+  - simtools image combined both plus adds for the development image the QGSJet tables
+  - main directory changed to `/workdir/simulation_software/` with e.g.
+     - `/workdir/simulation_software/corsika`
+     - `/workdir/simulation_software/sim_telarray`
+  - simulation software packages pulled from git repositories
+     - CORSIKA7 from KIT gitlab and CORSIKA build configuration from CTAO gitlab
+     - sim_telarray, hessio, and stdtools from CTAO gitlab
+  - new build process for CORSIKA7 using coconut and configuration files
+
+  ([#1917](https://github.com/gammasim/simtools/pull/1917))
+- - Introduce central settings module for configuration args, db_config, and path definitions.
+  - Use new `settings.config``for simtel_path`usage through all modules.
+  - Introduce `corsika_path` and `corsika_he_interaction` , `corsika_le_interaction` settings to indicate CORSIKA installation path and interaction models.
+  - Ensure backwards compatibility to legacy simtools images for paths and build opts configuration files.
+
+  ([#1921](https://github.com/gammasim/simtools/pull/1921))
+- Allow to fill and plot simulated event distributions from both CORSIKA and sim_telarray output files.
+  Add simple plotting application `simtools-plot-simulated-event-distributions`. ([#1934](https://github.com/gammasim/simtools/pull/1934))
+- Use adjustText for the labels in the array layout plot to avoid overlapping labels. ([#1937](https://github.com/gammasim/simtools/pull/1937))
+- Improved functionality to plot Cherenkov photon distributions read from CORSIKA IACT files:
+
+  - allow to compare distributions from different files
+  - additional 1D and 2D distributions with improved plotting
+  - several bug fixes in relation of weighting and density calculation
+
+  This includes a complete refactoring of the class with focus on plotting.
+
+  ([#1939](https://github.com/gammasim/simtools/pull/1939))
+- Add building workflow for simtools-prod image.
+  Update docker files and building workflows for CORSIKA, sim_telarray, and simtools.
+  Simplify package naming. ([#1954](https://github.com/gammasim/simtools/pull/1954))
+- Add integration test run to updated production image building. Reuse existing integration tests and simplify building steps. ([#1955](https://github.com/gammasim/simtools/pull/1955))
+- Improved version and build info handling:
+
+  - simtools application prints at startup now the simtools, database, CORSIKA, and sim_telarray versions
+  - simtools applications output full build information for log level `DEBUG`
+  - added two new command line options:
+    - `--build_info` to print detailed build information of the application
+    - `--export_build_info EXPORT_BUILD_INFO` export build information to file (json or yaml format)
+  - removed applications `simtools-print-version` (above functionality replaces it)
+  - Changed path to `sim_telarray` to `SIMTOOLS_SIM_TELARRAY_PATH` (from `SIMTOOLS_SIMTEL_PATH`). This is consistent with the naming of the simulation software packages and the schema values.
+
+  ([#1957](https://github.com/gammasim/simtools/pull/1957))
+
+### Maintenance
+
+- Integrate the new unified flasher pulse shape parameter `flasher_pulse_shape` (now a 3-element list `[shape, width_ns, exp_decay_ns]`). ([#1900](https://github.com/gammasim/simtools/pull/1900))
+- Allow test_generate_production_grid.py::test_convert_altaz_to_radec_and_coordinates to xfail due to intermittent network issues. ([#1914](https://github.com/gammasim/simtools/pull/1914))
+- Add logfile pattern checks for full flasher simulations, update integration test files and add a pulse shape mapping. ([#1924](https://github.com/gammasim/simtools/pull/1924))
+- Replace `db_config` by `settings.config.db_config` throughout all modules. ([#1927](https://github.com/gammasim/simtools/pull/1927))
+- Moved `simtel_io_event_*` modules to `sim_events` submodule and renamed `eventio_handler` to `file_info`.
+  Updated imports and class names across dependent modules to reflect generalized event file handling. ([#1936](https://github.com/gammasim/simtools/pull/1936))
+- Add ERA (Found commented-out code) to ruff configuration (used with precommit). ([#1942](https://github.com/gammasim/simtools/pull/1942))
+- Add PERF settings to ruff (used by pre-commit) for improved maintainability. ([#1943](https://github.com/gammasim/simtools/pull/1943))
+- Update pylint configuration to be more aligned with SonarQ requirements. ([#1944](https://github.com/gammasim/simtools/pull/1944))
+- Move and rename application `simtools-write-array-element-positions-to-repository` to `simtools-maintain-simulation-model-write-array-element-positions`.
+  Add integration and unit tests. ([#1958](https://github.com/gammasim/simtools/pull/1958))
+- Minor code quality improvements reported by GitHub Code QL. ([#1959](https://github.com/gammasim/simtools/pull/1959))
+- Fixed failing unit tests for `test_visualize` by adding missing `plt.close()`. ([#1967](https://github.com/gammasim/simtools/pull/1967))
+
+### Simulation model
+
+- Change default simulation models version to 0.12.0. ([#1918](https://github.com/gammasim/simtools/pull/1918))
+
+
 ## [v0.25.0](https://github.com/gammasim/simtools/releases/tag/v0.25.0) - 2025-11-19
 
 ### Bugfixes
@@ -268,7 +372,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Add default plotting configuration for tabular data. Introduce consistent lower-cases for keys in plotting configuration schema. ([#1635](https://github.com/gammasim/simtools/pull/1635))
 
 
-## [0.17.0](https://github.com/gammasim/simtools/releases/tag/v0.17.0) - 2025-06-10
+## [v0.17.0](https://github.com/gammasim/simtools/releases/tag/v0.17.0) - 2025-06-10
 
 ### Bugfixes
 
@@ -367,7 +471,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Skip testing of DB upload for simpipe integration tests. ([#1488](https://github.com/gammasim/simtools/pull/1488))
 
 
-## [0.14.0](https://github.com/gammasim/simtools/releases/tag/v0.14.0) - 2025-04-03
+## [v0.14.0](https://github.com/gammasim/simtools/releases/tag/v0.14.0) - 2025-04-03
 
 ### Bugfixes
 
@@ -404,7 +508,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Store arrays in model parameters as arrays and not as strings. ([#1466](https://github.com/gammasim/simtools/pull/1466))
 
 
-## [0.13.0](https://github.com/gammasim/simtools/releases/tag/v0.13.0) - 2025-03-19
+## [v0.13.0](https://github.com/gammasim/simtools/releases/tag/v0.13.0) - 2025-03-19
 
 ### Bugfixes
 
@@ -428,7 +532,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Robust getting of username in metadata collector in case no user is defined on system level. ([#1442](https://github.com/gammasim/simtools/pull/1442))
 
 
-## [0.12.0](https://github.com/gammasim/simtools/releases/tag/v0.12.0) - 2025-03-11
+## [v0.12.0](https://github.com/gammasim/simtools/releases/tag/v0.12.0) - 2025-03-11
 
 ### Bugfixes
 
@@ -436,7 +540,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Fix setting of `db_api_authentication_database` through env variable. ([#1425](https://github.com/gammasim/simtools/pull/1425))
 
 
-## [0.11.0](https://github.com/gammasim/simtools/releases/tag/v0.11.0) - 2025-03-05
+## [v0.11.0](https://github.com/gammasim/simtools/releases/tag/v0.11.0) - 2025-03-05
 
 ### Bugfixes
 
@@ -473,7 +577,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Introduce MSTx-NectarCam and MSTx-FlashCam design models for MSTs (allow both sites). ([#1362](https://github.com/gammasim/simtools/pull/1362))
 
 
-## [0.10.0](https://github.com/gammasim/simtools/releases/tag/v0.10.0) - 2025-02-17
+## [v0.10.0](https://github.com/gammasim/simtools/releases/tag/v0.10.0) - 2025-02-17
 
 ### Bugfixes
 
@@ -494,7 +598,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Remove database sandboxes . ([#1336](https://github.com/gammasim/simtools/pull/1336))
 
 
-## [0.9.0](https://github.com/gammasim/simtools/tree/v0.9.0) - 2025-01-22
+## [v0.9.0](https://github.com/gammasim/simtools/tree/v0.9.0) - 2025-01-22
 
 ### Bugfixes
 
@@ -514,7 +618,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Remove pytest dependent from user installation. ([#1286](https://github.com/gammasim/simtools/pull/1286))
 
 
-## [0.8.2](https://github.com/gammasim/simtools/tree/v0.8.2) - 2024-12-03
+## [v0.8.2](https://github.com/gammasim/simtools/tree/v0.8.2) - 2024-12-03
 
 ### Maintenance
 
@@ -561,7 +665,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Allow for class Telescope in model parameters. ([#1173](https://github.com/gammasim/simtools/pull/1173))
 
 
-## [0.7.0](https://github.com/gammasim/simtools/tree/v0.7.0) - 2024-11-12
+## [v0.7.0](https://github.com/gammasim/simtools/tree/v0.7.0) - 2024-11-12
 
 ### New Features
 

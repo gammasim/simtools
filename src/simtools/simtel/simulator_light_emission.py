@@ -2,8 +2,6 @@
 
 import logging
 import shutil
-import stat
-import subprocess
 from pathlib import Path
 
 import astropy.units as u
@@ -11,10 +9,10 @@ import numpy as np
 
 from simtools import settings
 from simtools.io import io_handler
+from simtools.job_execution import job_manager
 from simtools.model.model_utils import initialize_simulation_models
-from simtools.runners.simtel_runner import SimtelRunner
+from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 from simtools.utils.geometry import fiducial_radius_from_shape
 
 
@@ -87,15 +85,7 @@ class SimulatorLightEmission(SimtelRunner):
         """
         run_script = self.prepare_script()
         log_path = Path(self.output_directory) / "logfile.log"
-        with open(log_path, "w", encoding="utf-8") as fh:
-            subprocess.run(
-                run_script,
-                shell=False,
-                check=False,
-                text=True,
-                stdout=fh,
-                stderr=fh,
-            )
+        job_manager.submit(run_script, out_file=log_path, err_file=log_path.with_suffix(".err"))
         out = Path(self._get_simulation_output_filename())
         if not out.exists():
             self._logger.warning(f"Expected sim_telarray output not found: {out}")
@@ -135,7 +125,6 @@ class SimulatorLightEmission(SimtelRunner):
         ]
 
         script_file.write_text("".join(lines), encoding="utf-8")
-        script_file.chmod(script_file.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
         return script_file
 
     def _get_prefix(self):
@@ -435,50 +424,51 @@ class SimulatorLightEmission(SimtelRunner):
             The command to run sim_telarray
         """
         theta, phi = self._get_telescope_pointing()
-
         simtel_bin = str(settings.config.sim_telarray_exe)
 
         parts = [
-            f"{simtel_bin}",
+            simtel_bin,
             f"-I{self.telescope_model.config_file_directory}",
             f"-I{simtel_bin}",
             f"-c {self.telescope_model.config_file_path}",
             "-DNUM_TELESCOPES=1",
-            super().get_config_option(
+        ]
+
+        options = [
+            (
                 "altitude",
                 self.site_model.get_parameter_value_with_unit("corsika_observation_level")
                 .to(u.m)
                 .value,
             ),
-            super().get_config_option(
+            (
                 "atmospheric_transmission",
                 self.site_model.get_parameter_value("atmospheric_transmission"),
             ),
-            super().get_config_option("TRIGGER_TELESCOPES", "1"),
-            super().get_config_option("TELTRIG_MIN_SIGSUM", "2"),
-            super().get_config_option("PULSE_ANALYSIS", "-30"),
-            super().get_config_option("MAXIMUM_TELESCOPES", 1),
-            super().get_config_option("telescope_theta", f"{theta}"),
-            super().get_config_option("telescope_phi", f"{phi}"),
+            ("TRIGGER_TELESCOPES", "1"),
+            ("TELTRIG_MIN_SIGSUM", "2"),
+            ("PULSE_ANALYSIS", "-30"),
+            ("MAXIMUM_TELESCOPES", 1),
+            ("telescope_theta", f"{theta}"),
+            ("telescope_phi", f"{phi}"),
         ]
 
         if self.light_emission_config["light_source_type"] == "flat_fielding":
-            parts.append(super().get_config_option("Bypass_Optics", "1"))
+            options.append(("Bypass_Optics", "1"))
 
         app_name = self._get_light_emission_application_name()
         pref = self._get_prefix()
-        parts += [
-            super().get_config_option("power_law", "2.68"),
-            super().get_config_option("input_file", f"{self.output_directory}/{app_name}.iact.gz"),
-            super().get_config_option(
-                "output_file", f"{self.output_directory}/{pref}{app_name}.simtel.zst"
-            ),
-            super().get_config_option(
-                "histogram_file", f"{self.output_directory}/{pref}{app_name}.ctsim.hdata\n"
-            ),
+
+        options += [
+            ("power_law", "2.68"),
+            ("input_file", f"{self.output_directory}/{app_name}.iact.gz"),
+            ("output_file", f"{self.output_directory}/{pref}{app_name}.simtel.zst"),
+            ("histogram_file", f"{self.output_directory}/{pref}{app_name}.ctsim.hdata"),
         ]
 
-        return clear_default_sim_telarray_cfg_directories(" ".join(parts))
+        parts += [f"-C {key}={value}" for key, value in options]
+
+        return sim_telarray_env_as_string() + " ".join(parts)
 
     def _get_simulation_output_filename(self):
         """Get the filename of the simulation output."""
@@ -546,6 +536,9 @@ class SimulatorLightEmission(SimtelRunner):
                 )
                 return option_string
 
+        if option_string == "isotropic":
+            return option_string
+
         width = self.calibration_model.get_parameter_value_with_unit(
             "flasher_angular_distribution_width"
         )
@@ -577,3 +570,6 @@ class SimulatorLightEmission(SimtelRunner):
         if shape_out == "exponential" and expv is not None:
             return f"{shape_out}:{float(expv)}"
         return shape_out
+
+    def make_run_command(self, run_number=None, input_file=None):
+        """Temporary stub to avoid errors."""
