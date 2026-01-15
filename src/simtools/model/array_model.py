@@ -274,8 +274,8 @@ class ArrayModel:
         self._logger.info(f"Writing array configuration file into {self.config_file_path}")
         simtel_writer = simtel_config_writer.SimtelConfigWriter(
             site=self.site_model.site,
-            model_version=self.model_version,
             layout_name=self.layout_name,
+            model_version=self.model_version,
             label=self.label,
         )
         simtel_writer.write_array_config_file(
