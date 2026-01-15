@@ -99,7 +99,6 @@ jobs:
             CORSIKA_VERSION=${{ matrix.corsika }}
             CORSIKA_CONFIG_VERSION=${{ matrix.corsika_config }}
             CORSIKA_OPT_PATCH_VERSION=${{ matrix.corsika_opt_patch }}
-            CORSIKA_CONFIG_VERSION=${{ matrix.corsika_config }}
           secrets: |
             corsika7_token=${{ secrets.CORSIKA7_KIT_GITLAB }}
           push: ${{ github.event_name == 'workflow_dispatch' }}
