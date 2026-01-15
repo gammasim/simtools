@@ -662,7 +662,7 @@ class MirrorPanelPSF:
         return lines
 
     def write_results_log(self, filename: str | None = None):
-        """Write the same table as :meth:`print_results` to a .log file.
+        """Write the results table to a ``.log`` file.
 
         Parameters
         ----------

@@ -482,9 +482,9 @@ def test_plot_image_writes_file(monkeypatch, tmp_path):
     # Avoid triggering PSF computation path.
     image._stored_psf[0.8] = 2.0
 
-    import matplotlib
+    import matplotlib as mpl
 
-    matplotlib.use("Agg", force=True)
+    mpl.use("Agg", force=True)
 
     out_file = tmp_path / "img.png"
     image.plot_image(centralized=False, file_name=str(out_file))
