@@ -39,7 +39,8 @@ n_workers (int, optional)
 d80_hist (str, optional)
     If activated, write a histogram comparing measured vs simulated d80 distributions.
 cleanup (activation mode, optional)
-    If activated, remove intermediate files (patterns: *.log, *.lis*, *.dat) from output.
+    If activated, remove intermediate files (patterns: ``*.log``, ``*.lis*``, ``*.dat``)
+    from output.
 
 Example
 -------
