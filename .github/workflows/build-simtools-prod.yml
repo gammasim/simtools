@@ -62,7 +62,7 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: |
             latest=false
-            suffix=${{ matrix.corsika }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
+            suffix=-${{ matrix.corsika }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
           tags: |
             type=ref,event=pr
             type=semver,pattern={{major}}.{{minor}}.{{patch}}
