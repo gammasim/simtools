@@ -111,29 +111,19 @@ class Simulator:
         corsika_configurations = []
 
         for version in versions:
-            array_model.append(
-                ArrayModel(
-                    label=self.label,
-                    site=self.site,
-                    layout_name=settings.config.args.get("array_layout_name"),
-                    model_version=version,
-                    calibration_device_types=self._get_calibration_device_types(self.run_mode),
-                    overwrite_model_parameters=settings.config.args.get(
-                        "overwrite_model_parameters"
-                    ),
-                )
+            model = ArrayModel(
+                label=self.label,
+                site=self.site,
+                layout_name=settings.config.args.get("array_layout_name"),
+                model_version=version,
+                calibration_device_types=self._get_calibration_device_types(self.run_mode),
+                overwrite_model_parameters=settings.config.args.get("overwrite_model_parameters"),
             )
-            corsika_configurations.append(
-                CorsikaConfig(
-                    array_model=array_model[-1],
-                    label=self.label,
-                    run_number=self.run_number,
-                )
-            )
-            array_model[-1].set_seed_for_random_instrument_instances(
-                corsika_configurations[-1].zenith_angle,
-                corsika_configurations[-1].azimuth_angle,
-            )
+            cfg = CorsikaConfig(array_model=model, label=self.label, run_number=self.run_number)
+            model.initialize_seeds(cfg.zenith_angle, cfg.azimuth_angle)
+
+            array_model.append(model)
+            corsika_configurations.append(cfg)
 
         #  'corsika_sim_telarray' allows for multiple model versions (multipipe option)
         corsika_configurations = (

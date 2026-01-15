@@ -8,6 +8,7 @@ from pathlib import Path
 import astropy.units as u
 
 import simtools.version
+from simtools import constants
 from simtools.utils import names
 
 
@@ -452,7 +453,7 @@ class CommandLineParser(argparse.ArgumentParser):
         return {
             "sim_telarray_instrument_seed": {
                 "help": "Random seed used for sim_telarray instrument setup.",
-                "type": int,
+                "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
                 "required": False,
             },
             "sim_telarray_random_instrument_instances": {
@@ -465,15 +466,15 @@ class CommandLineParser(argparse.ArgumentParser):
                 "help": (
                     "Random seed used for sim_telarray shower simulation "
                     "Single value: seed for shower simulations. "
-                    "Two values: instrument and shower simulation seeds (testing only)."
+                    "Two values: instrument and shower simulation seeds (use for testing only)."
                 ),
-                "type": CommandLineParser.bounded_int(1, 1024),
+                "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
                 "nargs": "+",
                 "required": False,
             },
             # hidden argument to specify the sim_telarray seeds file name
             # (defined it here for convenience)
-            "sim_telarray_seeds_file": {
+            "sim_telarray_seed_file": {
                 "help": argparse.SUPPRESS,
                 "type": str,
                 "required": False,
@@ -858,7 +859,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         def checker(value):
             int_value = int(value)
-            if not min_value <= int_value <= max_value:
+            if int_value < min_value or int_value > max_value:
                 raise ValueError(f"{int_value} not in [{min_value},{max_value}]")
             return int_value
 

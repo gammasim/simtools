@@ -30,7 +30,7 @@ def assert_sim_telarray_metadata(file, array_model):
     _logger.info(f"Found metadata in sim_telarray file for {len(telescope_meta)} telescopes")
     site_parameter_mismatch = _assert_model_parameters(global_meta, array_model.site_model)
     sim_telarray_seed_mismatch = _assert_sim_telarray_seed(
-        global_meta, array_model.instrument_seed, file
+        global_meta, array_model.sim_telarray_seed, file
     )
     if sim_telarray_seed_mismatch:
         site_parameter_mismatch.append(sim_telarray_seed_mismatch)
@@ -111,8 +111,8 @@ def _assert_sim_telarray_seed(metadata, sim_telarray_seed, file=None):
     ----------
     metadata: dict
         Metadata dictionary.
-    sim_telarray_seed: int
-        Sim_telarray seed.
+    sim_telarray_seed: SimtelSeeds
+        sim_telarray seed.
     file : Path
         Path to the sim_telarray file.
 
@@ -123,14 +123,14 @@ def _assert_sim_telarray_seed(metadata, sim_telarray_seed, file=None):
 
     """
     if "instrument_seed" in metadata.keys() and "instrument_instances" in metadata.keys():
-        if str(metadata.get("instrument_seed")) != str(sim_telarray_seed):
+        if str(metadata.get("instrument_seed")) != str(sim_telarray_seed.instrument_seed):
             return (
                 "Parameter instrument_seed mismatch between sim_telarray file: "
-                f"{metadata['instrument_seed']}, and model: {sim_telarray_seed}"
+                f"{metadata['instrument_seed']}, and model: {sim_telarray_seed.instrument_seed}"
             )
         _logger.info(
             f"sim_telarray_seed in sim_telarray file: {metadata['instrument_seed']}, "
-            f"and model: {sim_telarray_seed}"
+            f"and model: {sim_telarray_seed.instrument_seed}"
         )
         if file:
             run_number_modified = get_corsika_run_number(file) - 1

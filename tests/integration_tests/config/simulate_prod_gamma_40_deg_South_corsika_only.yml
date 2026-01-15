@@ -14,7 +14,7 @@ applications:
     output_path: simtools-output
     primary: gamma
     run_number: 7
-    sim_telarray_instrument_seeds: 1745,290
+    sim_telarray_seed: [1745, 290]
     simulation_software: corsika
     site: South
     zenith_angle: 40
