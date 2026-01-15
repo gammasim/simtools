@@ -431,3 +431,39 @@ def test_plot_cumulative(psf_image, mocker):
     assert np.array_equal(args[1], image.get_cumulative_data()[image._PSFImage__PSF_CUMULATIVE])
     assert kwargs["color"] == "blue"
     assert kwargs["linestyle"] == "--"
+
+
+def test_plot_cumulative_writes_file_and_marks_d80(psf_image, mocker, tmp_path):
+    image = psf_image
+    mock_subplot = mocker.patch("matplotlib.pyplot.subplots")
+    mock_fig = mocker.Mock()
+    mock_ax = mocker.Mock()
+    mock_subplot.return_value = (mock_fig, mock_ax)
+    mock_close = mocker.patch("matplotlib.pyplot.close")
+
+    out_file = tmp_path / "cum.png"
+    image.plot_cumulative(file_name=str(out_file), d80=4.0, color="k")
+
+    # One axvline for default 0.8 PSF, one for d80.
+    assert mock_ax.axvline.call_count == 2
+    mock_fig.savefig.assert_called_once_with(str(out_file))
+    mock_close.assert_called_once_with(mock_fig)
+
+
+def test_plot_image_writes_file(monkeypatch, tmp_path):
+    # Keep this test isolated from other matplotlib tests.
+    image = PSFImage(focal_length=2800.0)
+    image.photon_pos_x = [0.0, 1.0, 2.0]
+    image.photon_pos_y = [0.0, -1.0, -2.0]
+    image.centroid_x = 1.0
+    image.centroid_y = -1.0
+    # Avoid triggering PSF computation path.
+    image._stored_psf[0.8] = 2.0
+
+    import matplotlib
+
+    matplotlib.use("Agg", force=True)
+
+    out_file = tmp_path / "img.png"
+    image.plot_image(centralized=False, file_name=str(out_file))
+    assert out_file.exists()
