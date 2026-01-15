@@ -58,7 +58,6 @@ class ArrayModel:
             if isinstance(layout_name, list) and len(layout_name) == 1
             else layout_name
         )
-        # TODO what is the difference between path and directory?
         self._config_file_path = None
         self._config_file_directory = None
         self.io_handler = io_handler.IOHandler()

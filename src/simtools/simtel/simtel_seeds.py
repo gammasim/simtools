@@ -11,7 +11,7 @@ from simtools.version import semver_to_int
 
 
 class SimtelSeeds:
-    """Manage random seeds for sim_telarray simulations."""
+    """Manage seeds for sim_telarray simulations."""
 
     def __init__(
         self, output_path=None, site=None, model_version=None, zenith_angle=None, azimuth_angle=None
