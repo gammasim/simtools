@@ -13,6 +13,8 @@ def seeds(n_seeds=1, min_seed=1, max_seed=2_000_000_000, fixed_seed=None):
     ----------
     n_seeds : int
         Number of seeds to generate.
+    min_seed : int
+        Lower limit for the seed (inclusive).
     max_seed : int
         Upper limit for the seed (exclusive).
     fixed_seed : int or None
