@@ -120,7 +120,7 @@ def _parse():
     )
     config.parser.add_argument(
         "--threshold",
-        help="Convergence threshold for percentage difference (e.g. 0.05 for 5%).",
+        help="Convergence threshold for percentage difference (e.g. 0.05 for 5%%).",
         type=float,
         required=False,
         default=0.05,
