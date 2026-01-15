@@ -400,7 +400,8 @@ def test_optimize_mirrors_parallel_collects_results_and_returns_list(monkeypatch
     results = inst._optimize_mirrors_parallel(n_mirrors=3, n_workers=2)
     assert [r["mirror"] for r in results] == [1, 2, 3]
 
-    (ex,) = created_executors
+    assert len(created_executors) == 1
+    ex = next(iter(created_executors))
     assert ex.max_workers == 2
     assert ex.mp_context is ctx_sentinel
     assert ex.initializer is mpp._worker_init
