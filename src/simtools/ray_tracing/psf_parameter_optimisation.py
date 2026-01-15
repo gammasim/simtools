@@ -9,6 +9,8 @@ optical system, and RMSD (Root Mean Squared Deviation) is used as the optimizati
 to quantify the difference between measured and simulated PSF curves.
 """
 
+# pylint: disable=too-many-lines
+
 import logging
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -886,7 +888,6 @@ def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
     ray_kwargs = {
         "telescope_model": tel_model,
         "site_model": site_model,
-        "simtel_path": args_dict.get("simtel_path"),
     }
 
     # Add single mirror mode parameters if requested
@@ -1421,7 +1422,7 @@ def cleanup_intermediate_files(output_dir):
     output_dir : Path
         Directory containing output files to clean up.
     """
-    patterns = ["*.log", "*.lis*"]
+    patterns = ["*.log", "*.lis*", "*.dat"]
     files_removed = 0
 
     for pattern in patterns:
