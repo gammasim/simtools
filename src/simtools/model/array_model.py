@@ -515,9 +515,9 @@ class ArrayModel:
             Azimuth angle of the observation (in degrees).
         """
         seed = settings.config.args.get("sim_telarray_instrument_seeds")
-        if seed:
+        if seed is not None:
             self._logger.debug(f"Using provided sim_telarray instrument seed: {seed}")
-            self.instrument_seed = int(seed.split(",")[0].strip())
+            self.instrument_seed = seed
             return
 
         def key_index(key):
