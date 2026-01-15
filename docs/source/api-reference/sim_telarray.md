@@ -22,6 +22,15 @@ Support modules for running sim_telarray.
    :members:
 ```
 
+## simtel_seeds
+
+(simtel-seeds-1)=
+
+```{eval-rst}
+.. automodule:: simtel.simtel_seeds
+   :members:
+```
+
 ## simtel_table_reader
 
 (simtel-table-reader-1)=

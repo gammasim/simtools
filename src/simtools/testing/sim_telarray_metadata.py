@@ -122,6 +122,9 @@ def _assert_sim_telarray_seed(metadata, sim_telarray_seed, file=None):
         Error message if sim_telarray seeds do not match.
 
     """
+    if sim_telarray_seed is None:
+        return None
+
     if "instrument_seed" in metadata.keys() and "instrument_instances" in metadata.keys():
         if str(metadata.get("instrument_seed")) != str(sim_telarray_seed.instrument_seed):
             return (
