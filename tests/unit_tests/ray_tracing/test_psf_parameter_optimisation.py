@@ -169,7 +169,7 @@ def _create_gradient_step_result(
     """Helper function to create GradientStepResult objects with default values."""
     if params is None:
         params = {"mirror_reflection_random_angle": [0.004, 0.15, 0.028]}
-    return GradientStepResult(
+    return psf_opt.GradientStepResult(
         params=params,
         metric=metric,
         p_value=p_value,

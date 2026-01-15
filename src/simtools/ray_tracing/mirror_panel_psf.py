@@ -71,17 +71,12 @@ class MirrorPanelPSF:
 
         # Limit mirrors in test mode
         if self.args_dict.get("test", False):
-            self.args_dict["number_of_mirrors_to_test"] = 198
+            self.args_dict["number_of_mirrors_to_test"] = 10
 
         self.rnda_start = self.telescope_model.get_parameter_value("mirror_reflection_random_angle")
         self.rnda_opt = None
         self.per_mirror_results = []
         self.final_percentage_diff = None
-
-        if self.args_dict.get("psf_pdf"):
-            self._logger.warning(
-                "--psf_pdf is deprecated/removed; use --d80_hist to write d80 distributions."
-            )
 
     def _load_measured_data(self):
         """
@@ -154,7 +149,6 @@ class MirrorPanelPSF:
             "mirror_reflection_random_angle", rnda_values
         )
 
-        # RayTracing single_mirror_mode uses 0-based mirror indices.
         mirror_sim_index = int(mirror_idx)
         mirror_number = mirror_sim_index + 1  # user-facing label
 
@@ -398,14 +392,7 @@ class MirrorPanelPSF:
             futures = {executor.submit(_worker_optimize_mirror, i): i for i in range(n_mirrors)}
             for fut in as_completed(futures):
                 mirror_idx = futures[fut]
-                try:
-                    results[mirror_idx] = fut.result()
-                except Exception as exc:  # noqa: BLE001
-                    raise RuntimeError(
-                        "Parallel optimization failed for mirror "
-                        f"{mirror_idx + 1}. If you see repeated sim_telarray failures, "
-                        "try reducing --n_workers."
-                    ) from exc
+                results[mirror_idx] = fut.result()
         return results
 
     def optimize_with_gradient_descent(self):
@@ -422,8 +409,7 @@ class MirrorPanelPSF:
 
         n_workers = int(self.args_dict.get("n_workers", 0) or 0)
         if n_workers <= 0:
-            n_workers = min(os.cpu_count() or 1, 8)
-        n_workers = max(1, n_workers)
+            n_workers = os.cpu_count()
 
         self._logger.info(f"Running per-mirror optimization with {n_workers} worker processes")
         self.per_mirror_results = self._optimize_mirrors_parallel(n_mirrors, n_workers)
@@ -533,13 +519,10 @@ class MirrorPanelPSF:
         if not out_name:
             return None
 
-        try:
-            import matplotlib
+        import matplotlib
 
-            matplotlib.use("Agg", force=True)
-            import matplotlib.pyplot as plt
-        except Exception as exc:  # noqa: BLE001
-            raise RuntimeError(f"matplotlib is required to write d80 histogram: {exc}") from exc
+        matplotlib.use("Agg", force=True)
+        import matplotlib.pyplot as plt
 
         output_dir = Path(self.args_dict.get("output_path", "."))
         out_path = Path(out_name)

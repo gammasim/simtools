@@ -661,3 +661,60 @@ def test_plot_invalid_key(ray_tracing_lst, off_axis_string):
 
     with pytest.raises(KeyError, match=INVALID_KEY_TO_PLOT):
         ray_tracing_lst.plot(key="invalid_key", save=True)
+
+
+def test_plot_save_writes_psf_images_and_cumulative(ray_tracing_lst, mocker, off_axis_string):
+    """Cover the save=True branch that exports PSF images and cumulative plots."""
+
+    mock_visualize_plot_table = mocker.patch(
+        "simtools.ray_tracing.ray_tracing.visualize.plot_table"
+    )
+    mock_plot = mock_visualize_plot_table.return_value
+    mocker.patch.object(mock_plot, "savefig")
+
+    # Avoid real filesystem writes; only validate paths passed to methods.
+    mocker.patch("pathlib.Path.mkdir")
+
+    def _fake_name(*, file_type, suffix, off_axis_angle=None, mirror_number=None, extra_label=None):
+        assert file_type == "ray_tracing"
+        assert suffix == ".pdf"
+        if off_axis_angle is None:
+            return f"main_{extra_label}.pdf"
+        return f"{extra_label}_off{float(off_axis_angle):.3f}.pdf"
+
+    mocker.patch.object(ray_tracing_lst, "_generate_file_name", side_effect=_fake_name)
+
+    # Provide two fake PSFImage instances.
+    img0 = mocker.Mock()
+    img1 = mocker.Mock()
+    ray_tracing_lst._psf_images = {0.0: img0, 2.0: img1}
+
+    ray_tracing_lst._results = QTable(
+        {
+            off_axis_string: [0.0, 2.0],
+            "d80_cm": [4.2, 4.3],
+            "d80_deg": [0.1, 0.2],
+            "eff_area": [100.0, 110.0],
+            "eff_flen": [200.0, 210.0],
+        }
+    )
+
+    ray_tracing_lst.plot(key="d80_cm", save=True, d80=12.3)
+
+    # Per-off-axis image export
+    img0.plot_image.assert_called_once()
+    img1.plot_image.assert_called_once()
+    f0 = img0.plot_image.call_args.kwargs["file_name"]
+    f1 = img1.plot_image.call_args.kwargs["file_name"]
+    assert str(f0).endswith("image_d80_cm_off0.000.pdf")
+    assert str(f1).endswith("image_d80_cm_off2.000.pdf")
+
+    # Per-off-axis cumulative export
+    img0.plot_cumulative.assert_called_once()
+    img1.plot_cumulative.assert_called_once()
+    c0 = img0.plot_cumulative.call_args.kwargs["file_name"]
+    c1 = img1.plot_cumulative.call_args.kwargs["file_name"]
+    assert str(c0).endswith("cumulative_psf_d80_cm_off0.000.pdf")
+    assert str(c1).endswith("cumulative_psf_d80_cm_off2.000.pdf")
+    assert img0.plot_cumulative.call_args.kwargs["d80"] == pytest.approx(12.3)
+    assert img1.plot_cumulative.call_args.kwargs["d80"] == pytest.approx(12.3)

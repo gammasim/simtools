@@ -1,634 +1,465 @@
 #!/usr/bin/python3
 
-import copy
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+import json
+import logging
+from types import SimpleNamespace
+from unittest.mock import MagicMock
 
-import numpy as np
+import astropy.units as u
 import pytest
+from astropy.table import Table
 
+import simtools.ray_tracing.mirror_panel_psf as mpp
 from simtools.ray_tracing.mirror_panel_psf import MirrorPanelPSF
 
 
-def _create_sample_psf_data():
-    """Create sample PSF data for testing."""
-    radius = np.linspace(0, 10, 21)
-    cumulative = np.linspace(0, 1, 21)
-    dtype = {"names": ("Radius [cm]", "Cumulative PSF"), "formats": ("f8", "f8")}
-    data = np.empty(21, dtype=dtype)
-    data["Radius [cm]"] = radius
-    data["Cumulative PSF"] = cumulative
-    return data
+def _make_dummy_tel(*, label: str = "orig"):
+    return SimpleNamespace(
+        label=label,
+        _config_file_path="/tmp/orig.cfg",
+        _config_file_directory="/tmp",
+        overwrite_model_parameter=MagicMock(name="overwrite_model_parameter"),
+        overwrite_model_file=MagicMock(name="overwrite_model_file"),
+        get_parameter_value=MagicMock(
+            name="get_parameter_value", return_value=[0.0075, 0.22, 0.022]
+        ),
+    )
 
 
-@pytest.fixture
-def mock_args_dict(tmp_test_directory):
-    return {
-        "test": False,
-        "data": "tests/resources/PSFcurve_data_v2.ecsv",
+def _make_minimal_instance(*, label: str = "base", args_dict: dict | None = None) -> MirrorPanelPSF:
+    inst = MirrorPanelPSF.__new__(MirrorPanelPSF)
+    inst._logger = logging.getLogger(__name__)
+    inst.label = label
+    inst.args_dict = args_dict or {}
+    inst.telescope_model = _make_dummy_tel(label="orig")
+    inst.site_model = object()
+    inst.measured_data = Table({"d80": [10.0], "focal_length": [28.0]})
+    inst.rnda_start = [0.0075, 0.22, 0.022]
+    inst.rnda_opt = None
+    inst.per_mirror_results = []
+    inst.final_percentage_diff = None
+    return inst
+
+
+def _run_sigma1_gradient_descent(inst: MirrorPanelPSF, **overrides):
+    params = {
+        "mirror_idx": 0,
+        "measured_d80_mm": 10.0,
+        "focal_length_m": 28.0,
+        "current_rnda": [0.01, 0.22, 0.022],
+        "threshold": 0.05,
+        "learning_rate": 1e-4,
+        "n_runs_per_eval": 1,
+        "grad_clip": 1e4,
+        "max_log_step": 0.25,
+        "sigma_min": 1e-4,
+        "sigma_max": 0.1,
+        "max_iterations": 10,
+    }
+    params.update(overrides)
+    return inst._run_sigma1_gradient_descent(**params)
+
+
+def test_load_measured_data_reads_ecsv_and_validates_columns(mocker):
+    inst = _make_minimal_instance(args_dict={"data": "data.ecsv", "model_path": "."})
+    mocker.patch.object(mpp.gen, "find_file", return_value="/abs/data.ecsv")
+    mocker.patch.object(
+        mpp.Table,
+        "read",
+        return_value=Table({"d80": [10.0, 11.0], "focal_length": [28.0, 28.0]}),
+    )
+
+    table = inst._load_measured_data()
+    assert len(table) == 2
+    assert "d80" in table.colnames
+    assert "focal_length" in table.colnames
+
+
+def test_load_measured_data_raises_when_columns_missing(mocker):
+    inst = _make_minimal_instance(args_dict={"data": "data.ecsv", "model_path": "."})
+    mocker.patch.object(mpp.gen, "find_file", return_value="/abs/data.ecsv")
+    mocker.patch.object(mpp.Table, "read", return_value=Table({"d80": [10.0]}))
+
+    with pytest.raises(ValueError, match="must contain 'd80' and 'focal_length'"):
+        inst._load_measured_data()
+
+
+@pytest.mark.parametrize(
+    "mirror_list,model_path,expected_site",
+    [
+        (None, None, "dummy_site"),
+        ("mirrors.ecsv", "/models", "site"),
+    ],
+)
+def test_define_telescope_model_mirror_list_handling(mocker, mirror_list, model_path, expected_site):
+    args_dict = {
         "site": "North",
         "telescope": "LSTN-01",
-        "model_version": "test_version",
-        "mirror_list": None,
-        "random_focal_length": None,
-        "simtel_path": "path/to/simtel",
-        "number_of_mirrors_to_test": 2,
-        "use_random_focal_length": False,
-        "output_path": tmp_test_directory,
-        "threshold": 0.03,
-        "learning_rate": 0.00001,
-        "model_path": "tests/resources",
-        "random_focal_length_seed": None,
-        "parameter_version": "1.0.0",
+        "model_version": "1.2.3",
+        "mirror_list": mirror_list,
     }
+    if model_path is not None:
+        args_dict["model_path"] = model_path
+    inst = _make_minimal_instance(args_dict=args_dict)
+
+    dummy_tel = _make_dummy_tel(label="dummy")
+    mock_init = mocker.patch.object(
+        mpp,
+        "initialize_simulation_models",
+        return_value=(dummy_tel, expected_site, None),
+    )
+    mock_find = mocker.patch.object(mpp.gen, "find_file", return_value=f"{model_path}/{mirror_list}")
+
+    tel_model, site_model = inst._define_telescope_model("lbl")
+    assert tel_model is dummy_tel
+    assert site_model == expected_site
+    mock_init.assert_called_once_with(
+        label="lbl",
+        site="North",
+        telescope_name="LSTN-01",
+        model_version="1.2.3",
+    )
+
+    if mirror_list is None:
+        mock_find.assert_not_called()
+        dummy_tel.overwrite_model_parameter.assert_not_called()
+        dummy_tel.overwrite_model_file.assert_not_called()
+    else:
+        mock_find.assert_called_once_with(name="mirrors.ecsv", loc="/models")
+        dummy_tel.overwrite_model_parameter.assert_called_once_with("mirror_list", "mirrors.ecsv")
+        dummy_tel.overwrite_model_file.assert_called_once_with("mirror_list", "/models/mirrors.ecsv")
 
 
-@pytest.fixture
-def mock_telescope_model_string():
-    return "simtools.ray_tracing.mirror_panel_psf.initialize_simulation_models"
+def test_optimize_with_gradient_descent_uses_cpu_count_when_n_workers_zero(mocker):
+    inst = _make_minimal_instance(args_dict={"n_workers": 0})
+    inst.measured_data = Table({"d80": [10.0, 11.0], "focal_length": [28.0, 28.0]})
+
+    mocker.patch("os.cpu_count", return_value=4)
+
+    def _fake_parallel(n_mirrors, n_workers):
+        assert n_mirrors == 2
+        assert n_workers == 4
+        return [
+            {"optimized_rnda": [0.01, 0.2, 0.03], "percentage_diff": 10.0},
+            {"optimized_rnda": [0.03, 0.2, 0.01], "percentage_diff": 30.0},
+        ]
+
+    mocker.patch.object(inst, "_optimize_mirrors_parallel", side_effect=_fake_parallel)
+    inst.optimize_with_gradient_descent()
+
+    assert inst.rnda_opt == pytest.approx([0.02, 0.2, 0.02])
+    assert inst.final_percentage_diff == pytest.approx(20.0)
 
 
-@pytest.fixture
-def mock_find_file_string():
-    return "simtools.ray_tracing.mirror_panel_psf.gen.find_file"
 
 
-@pytest.fixture
-def mock_run_simulations_and_analysis_string():
-    return "simtools.ray_tracing.mirror_panel_psf.MirrorPanelPSF.run_simulations_and_analysis"
+def test_worker_optimize_mirror_requires_init(monkeypatch):
+    monkeypatch.setattr(mpp, "_WORKER_INSTANCE", None)
+    with pytest.raises(RuntimeError, match="Worker not initialized"):
+        mpp._worker_optimize_mirror(0)
 
 
-@pytest.fixture
-def dummy_tel():
-    class DummyTel:
-        def __init__(self):
-            self.overwrite_model_parameter = MagicMock(name="overwrite_model_parameter")
-            self.overwrite_model_file = MagicMock(name="overwrite_model_file")
-            self.get_parameter_value = MagicMock(
-                name="get_parameter_value", return_value=[0.0075, 0.22, 0.022]
+def test_worker_init_loads_config_and_creates_instance(monkeypatch):
+    created = object()
+    import simtools.settings as settings
+
+    mock_load = MagicMock()
+    monkeypatch.setattr(settings.config, "load", mock_load)
+    monkeypatch.setattr(mpp, "MirrorPanelPSF", MagicMock(return_value=created))
+    monkeypatch.setattr(mpp, "_WORKER_INSTANCE", None)
+
+    args = {"x": 1}
+    db_config = {"db": "cfg"}
+    mpp._worker_init("lbl", args, db_config)
+    mock_load.assert_called_once_with(args=args, db_config=db_config)
+    assert mpp._WORKER_INSTANCE is created
+
+
+def test_worker_optimize_mirror_uses_measured_data_and_calls_optimizer(monkeypatch):
+    dummy = SimpleNamespace(
+        measured_data=Table({"d80": [11.5, 12.25], "focal_length": [27.0, 28.5]}),
+        _optimize_single_mirror=MagicMock(return_value={"ok": True}),
+    )
+    monkeypatch.setattr(mpp, "_WORKER_INSTANCE", dummy)
+    result = mpp._worker_optimize_mirror(1)
+    dummy._optimize_single_mirror.assert_called_once_with(1, 12.25, 28.5)
+    assert result == {"ok": True}
+
+
+def test_simulate_single_mirror_d80_success_and_restores_label(mocker):
+    inst = _make_minimal_instance(label="base")
+    tel = inst.telescope_model
+
+    class OkRay:
+        def __init__(self, **kwargs):
+            assert kwargs["telescope_model"].label == "base_m1"
+            self._results = {"d80_cm": [SimpleNamespace(value=1.5)]}
+
+        def simulate(self, **kwargs):
+            return None
+
+        def analyze(self, **kwargs):
+            return None
+
+    mocker.patch("simtools.ray_tracing.mirror_panel_psf.RayTracing", OkRay)
+    d80_mm = inst._simulate_single_mirror_d80(0, 28.0, [0.01, 0.22, 0.022])
+    assert d80_mm == pytest.approx(15.0)
+    assert tel.label == "orig"
+ 
+
+def test_run_sigma1_gradient_descent_converges_immediately(mocker):
+    inst = _make_minimal_instance()
+    mocker.patch.object(inst, "_simulate_single_mirror_d80", return_value=12.0)
+    best_rnda, best_sim_d80, best_pct_diff = _run_sigma1_gradient_descent(
+        inst,
+        measured_d80_mm=12.0,
+        threshold=0.05,
+        n_runs_per_eval=3,
+        max_iterations=10,
+    )
+    assert best_rnda == [0.01, 0.22, 0.022]
+    assert best_sim_d80 == pytest.approx(12.0)
+    assert best_pct_diff == pytest.approx(0.0)
+
+
+def test_run_sigma1_gradient_descent_denominator_collapse_breaks(mocker):
+    inst = _make_minimal_instance()
+    mocker.patch.object(inst, "_simulate_single_mirror_d80", return_value=20.0)
+    best_rnda, best_sim_d80, best_pct_diff = _run_sigma1_gradient_descent(
+        inst,
+        measured_d80_mm=10.0,
+        threshold=0.01,
+        n_runs_per_eval=1,
+        sigma_min=0.01,
+        sigma_max=0.01,
+        max_iterations=10,
+    )
+    assert best_rnda == [0.01, 0.22, 0.022]
+    assert best_sim_d80 == pytest.approx(20.0)
+    assert best_pct_diff == pytest.approx(100.0)
+
+
+def test_run_sigma1_gradient_descent_stops_when_learning_rate_too_small(mocker):
+    inst = _make_minimal_instance()
+    mock_sim = mocker.patch.object(inst, "_simulate_single_mirror_d80", return_value=20.0)
+    best_rnda, best_sim_d80, best_pct_diff = _run_sigma1_gradient_descent(
+        inst,
+        measured_d80_mm=10.0,
+        threshold=0.0,
+        n_runs_per_eval=1,
+        sigma_min=1e-4,
+        sigma_max=0.1,
+        max_iterations=200,
+    )
+    assert best_rnda == [0.01, 0.22, 0.022]
+    assert best_sim_d80 == pytest.approx(20.0)
+    assert best_pct_diff == pytest.approx(100.0)
+    assert mock_sim.call_count > 50
+
+
+def test_init_sets_test_mirror_limit_in_test_mode(mocker):
+    dummy_tel = _make_dummy_tel(label="tel")
+    dummy_tel.get_parameter_value = MagicMock(return_value=[0.0075, 0.22, 0.022])
+    mocker.patch.object(MirrorPanelPSF, "_define_telescope_model", return_value=(dummy_tel, object()))
+    mocker.patch.object(
+        MirrorPanelPSF,
+        "_load_measured_data",
+        return_value=Table({"d80": [10.0], "focal_length": [28.0]}),
+    )
+
+    args = {
+        "test": True,
+        "data": "data.ecsv",
+        "site": "North",
+        "telescope": "LSTN-01",
+        "model_version": "1.0",
+    }
+    inst = MirrorPanelPSF("lbl", args)
+    assert inst.args_dict["number_of_mirrors_to_test"] == 10
+
+
+def test_run_sigma1_gradient_descent_accepts_improvement_and_converges(mocker):
+    inst = _make_minimal_instance()
+    # For n_runs_per_eval=1, the first iteration triggers 4 simulations:
+    # initial, plus, minus, new.
+    mocker.patch.object(
+        inst,
+        "_simulate_single_mirror_d80",
+        side_effect=[20.0, 19.0, 21.0, 10.1],
+    )
+
+    best_rnda, best_sim_d80, best_pct_diff = _run_sigma1_gradient_descent(
+        inst,
+        measured_d80_mm=10.0,
+        threshold=0.05,
+        n_runs_per_eval=1,
+        max_iterations=10,
+    )
+    assert best_sim_d80 == pytest.approx(10.1)
+    assert best_pct_diff == pytest.approx(1.0)
+    assert best_rnda[0] != pytest.approx(0.01)
+
+
+def test_optimize_single_mirror_returns_expected_dict(mocker):
+    inst = _make_minimal_instance(args_dict={"threshold": 0.05, "learning_rate": 1e-4})
+    mocker.patch.object(
+        inst,
+        "_run_sigma1_gradient_descent",
+        return_value=([0.002, 0.22, 0.022], 15.0, 5.0),
+    )
+    result = inst._optimize_single_mirror(0, 14.0, 28.0)
+    assert result["mirror"] == 1
+    assert result["measured_d80_mm"] == pytest.approx(14.0)
+    assert result["focal_length_m"] == pytest.approx(28.0)
+    assert result["optimized_rnda"] == [0.002, 0.22, 0.022]
+    assert result["simulated_d80_mm"] == pytest.approx(15.0)
+    assert result["percentage_diff"] == pytest.approx(5.0)
+
+
+
+def test_optimize_mirrors_parallel_collects_results_and_returns_list(monkeypatch):
+    inst = _make_minimal_instance(args_dict={"parallel": True})
+
+    import simtools.settings as settings
+
+    # Use the public API to set DB config; db_config is a read-only property.
+    settings.config.load(args={}, db_config={"k": "v"})
+
+    ctx_sentinel = object()
+    monkeypatch.setattr(mpp, "get_context", MagicMock(return_value=ctx_sentinel))
+
+    created_executors = []
+
+    class FakeFuture:
+        def __init__(self, value=None):
+            self._value = value
+
+        def result(self):
+            return self._value
+
+    class FakeExecutor:
+        def __init__(self, *, max_workers, mp_context, initializer, initargs):
+            self.max_workers = max_workers
+            self.mp_context = mp_context
+            self.initializer = initializer
+            self.initargs = initargs
+            created_executors.append(self)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def submit(self, func, i):
+            assert func is mpp._worker_optimize_mirror
+            return FakeFuture(
+                value={
+                    "mirror": i + 1,
+                    "optimized_rnda": [float(i), 0.0, 0.0],
+                    "percentage_diff": 0.0,
+                }
             )
 
-    return DummyTel()
+    monkeypatch.setattr(mpp, "ProcessPoolExecutor", lambda **kw: FakeExecutor(**kw))
+    monkeypatch.setattr(mpp, "as_completed", lambda futs: list(reversed(list(futs))))
+
+    results = inst._optimize_mirrors_parallel(n_mirrors=3, n_workers=2)
+    assert [r["mirror"] for r in results] == [1, 2, 3]
+
+    assert len(created_executors) == 1
+    ex = created_executors[0]
+    assert ex.max_workers == 2
+    assert ex.mp_context is ctx_sentinel
+    assert ex.initializer is mpp._worker_init
+    assert ex.initargs[0] == inst.label
+    assert ex.initargs[1]["parallel"] is False
+    assert ex.initargs[2] == {"k": "v"}
 
 
-@pytest.fixture
-def mock_mirror_panel_psf(
-    mock_args_dict, mock_telescope_model_string, mock_find_file_string, dummy_tel
-):
-    with patch(mock_telescope_model_string) as mock_init_models, patch(mock_find_file_string):
-        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
-        label = "test_label"
-        mirror_panel_psf = MirrorPanelPSF(label, mock_args_dict)
-        yield mirror_panel_psf
-
-
-@pytest.fixture
-def mock_gradient_descent_setup():
-    """Factory fixture for common gradient descent setup patches."""
-
-    def _create_patches(best_params=None, final_metric=0.020, gd_results=None, sample_data=None):
-        """Create mock patches for gradient descent optimization tests.
-
-        Parameters
-        ----------
-        best_params : dict, optional
-            Best parameters from optimization
-        final_metric : float, optional
-            Final RMSD metric
-        gd_results : list, optional
-            List of gradient descent results
-        sample_data : np.ndarray, optional
-            Sample PSF data
-
-        Returns
-        -------
-        tuple
-            (best_params, final_psf_diameter, gd_results)
-        """
-        if sample_data is None:
-            sample_data = _create_sample_psf_data()
-
-        if best_params is None:
-            best_params = {"mirror_reflection_random_angle": [0.008, 0.18, 0.025]}
-
-        if gd_results is None:
-            gd_results = [(best_params, final_metric, None, 3.4, sample_data)]
-
-        return best_params, 3.4, gd_results
-
-    return _create_patches
-
-
-def _setup_mirror_panel_psf_for_gd_test(
-    mock_load, mock_optimizer_class, best_params, final_psf, gd_results, sample_data
-):
-    """Helper to set up common mocks for gradient descent tests."""
-    mock_load.return_value = ({"measured": sample_data}, sample_data["Radius [cm]"])
-
-    mock_optimizer = MagicMock()
-    mock_optimizer_class.return_value = mock_optimizer
-    mock_optimizer.run_gradient_descent.return_value = (best_params, final_psf, gd_results)
-
-    return mock_optimizer
-
-
-def test_define_telescope_model(
-    mock_args_dict, mock_telescope_model_string, mock_find_file_string, dummy_tel
-):
-    args_dict = copy.deepcopy(mock_args_dict)
-    # no mirror list, no random focal length
-    with (
-        patch(mock_telescope_model_string) as mock_init_models,
-        patch(mock_find_file_string) as mock_find_file,
-    ):
-        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
-
-        args_dict["mirror_list"] = None
-        args_dict["random_focal_length"] = None
-        label = "test_label"
-
-        mirror_panel_psf = MirrorPanelPSF(label, args_dict)
-        tel = mirror_panel_psf.telescope_model
-
-        mock_init_models.assert_called_once_with(
-            label=label,
-            site=args_dict["site"],
-            telescope_name=args_dict["telescope"],
-            model_version=args_dict["model_version"],
-        )
-        mock_find_file.assert_not_called()
-        tel.overwrite_model_parameter.assert_not_called()
-        tel.overwrite_model_file.assert_not_called()
-
-    # mirror list and random focal length
-    with (
-        patch(mock_telescope_model_string) as mock_init_models,
-        patch(mock_find_file_string) as mock_find_file,
-    ):
-        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
-
-        args_dict["mirror_list"] = "mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv"
-        args_dict["model_path"] = "tests/resources"
-        args_dict["random_focal_length"] = 0.1
-        label = "test_label"
-
-        mirror_panel_psf = MirrorPanelPSF(label, args_dict)
-        tel = mirror_panel_psf.telescope_model
-
-        mock_init_models.assert_called_once_with(
-            label=label,
-            site=args_dict["site"],
-            telescope_name=args_dict["telescope"],
-            model_version=args_dict["model_version"],
-        )
-        mock_find_file.assert_called_once()
-        assert tel.overwrite_model_parameter.call_count == 2
-        tel.overwrite_model_file.assert_called_once()
-
-
-def test_init_with_test_mode(mock_args_dict, mock_telescope_model_string, dummy_tel):
-    """Test initialization in test mode sets number_of_mirrors_to_test to 10."""
-    args_dict = copy.deepcopy(mock_args_dict)
-    args_dict["test"] = True
-
-    with patch(mock_telescope_model_string) as mock_init_models:
-        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
-        label = "test_label"
-
-        mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
-
-        assert mirror_panel_psf.args_dict["number_of_mirrors_to_test"] == 10
-        assert mirror_panel_psf.rnda_start == [0.0075, 0.22, 0.022]
-        assert mirror_panel_psf.rnda_opt is None
-        assert mirror_panel_psf.gd_optimizer is None
-        assert mirror_panel_psf.final_rmsd is None
-
-
-def test_optimize_with_gradient_descent_success(mock_mirror_panel_psf, mock_gradient_descent_setup):
-    """Test successful gradient descent optimization."""
-    mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
-
-    sample_data = _create_sample_psf_data()
-    mock_best_params, final_psf, mock_gd_results = mock_gradient_descent_setup(
-        sample_data=sample_data
+def test_write_optimization_data_writes_json(tmp_path):
+    inst = _make_minimal_instance(
+        args_dict={"output_path": str(tmp_path), "telescope": "LSTN-01", "model_version": "6.0.0"}
     )
-    mock_gd_results = [
-        (mock_best_params, 0.025, None, 3.5, sample_data),
-        (mock_best_params, 0.020, None, 3.4, sample_data),
+    inst.rnda_opt = [0.002, 0.22, 0.022]
+    inst.final_percentage_diff = 12.34
+    inst.per_mirror_results = [
+        {
+            "mirror": 1,
+            "measured_d80_mm": 10.0,
+            "focal_length_m": 28.0,
+            "optimized_rnda": [0.002, 0.22, 0.022],
+            "simulated_d80_mm": 11.0,
+            "percentage_diff": 10.0,
+        }
     ]
-
-    with (
-        patch("simtools.ray_tracing.mirror_panel_psf.psf_opt.load_and_process_data") as mock_load,
-        patch(
-            "simtools.ray_tracing.mirror_panel_psf.psf_opt.PSFParameterOptimizer"
-        ) as mock_optimizer_class,
-        patch(
-            "simtools.ray_tracing.mirror_panel_psf.plot_psf.create_final_psf_comparison_plot"
-        ) as mock_plot,
-    ):
-        mock_optimizer = _setup_mirror_panel_psf_for_gd_test(
-            mock_load,
-            mock_optimizer_class,
-            mock_best_params,
-            final_psf,
-            mock_gd_results,
-            sample_data,
-        )
-
-        mirror_psf.optimize_with_gradient_descent()
-
-        # Verify optimizer was created with correct parameters
-        mock_optimizer_class.assert_called_once()
-        call_args = mock_optimizer_class.call_args
-        assert call_args[1]["optimize_only"] == ["mirror_reflection_random_angle"]
-
-        # Verify gradient descent was run
-        mock_optimizer.run_gradient_descent.assert_called_once()
-        call_args = mock_optimizer.run_gradient_descent.call_args
-        assert call_args[1]["rmsd_threshold"] == mirror_psf.args_dict["threshold"]
-        assert call_args[1]["learning_rate"] == mirror_psf.args_dict["learning_rate"]
-
-        # Verify results were stored
-        assert mirror_psf.rnda_opt == [0.008, 0.18, 0.025]
-        assert mirror_psf.final_rmsd == pytest.approx(0.020)
-
-        # Verify plot was created
-        mock_plot.assert_called_once()
+    inst.write_optimization_data()
+    out_file = tmp_path / "per_mirror_optimization_results.json"
+    assert out_file.exists()
+    data = json.loads(out_file.read_text())
+    assert data["optimization_metric"] == "percentage_difference"
+    assert data["optimized_rnda_averaged"] == [0.002, 0.22, 0.022]
+    assert len(data["per_mirror_results"]) == 1
 
 
-def test_optimize_with_gradient_descent_failure(mock_mirror_panel_psf):
-    """Test gradient descent optimization when it fails to find parameters."""
-    mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
+def test_print_results_formats_table_with_and_without_plot_columns(capsys):
+    inst = _make_minimal_instance()
+    inst.rnda_opt = [0.002, 0.22, 0.022]
+    inst.final_percentage_diff = 12.34
 
-    sample_data = _create_sample_psf_data()
-
-    with (
-        patch("simtools.ray_tracing.mirror_panel_psf.psf_opt.load_and_process_data") as mock_load,
-        patch(
-            "simtools.ray_tracing.mirror_panel_psf.psf_opt.PSFParameterOptimizer"
-        ) as mock_optimizer_class,
-    ):
-        mock_load.return_value = ({"measured": sample_data}, sample_data["Radius [cm]"])
-
-        mock_optimizer = MagicMock()
-        mock_optimizer_class.return_value = mock_optimizer
-        mock_optimizer.run_gradient_descent.return_value = (None, None, [])
-
-        with pytest.raises(ValueError, match="Gradient descent optimization failed"):
-            mirror_psf.optimize_with_gradient_descent()
-
-
-def test_optimize_with_gradient_descent_test_mode(
-    mock_mirror_panel_psf, mock_gradient_descent_setup
-):
-    """Test gradient descent uses correct mirror numbers in test mode."""
-    mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
-    mirror_psf.args_dict["test"] = True
-    mirror_psf.args_dict["number_of_mirrors_to_test"] = 10
-
-    sample_data = _create_sample_psf_data()
-    mock_best_params, final_psf, mock_gd_results = mock_gradient_descent_setup(
-        sample_data=sample_data
-    )
-
-    with (
-        patch("simtools.ray_tracing.mirror_panel_psf.psf_opt.load_and_process_data") as mock_load,
-        patch(
-            "simtools.ray_tracing.mirror_panel_psf.psf_opt.PSFParameterOptimizer"
-        ) as mock_optimizer_class,
-        patch("simtools.ray_tracing.mirror_panel_psf.plot_psf.create_final_psf_comparison_plot"),
-    ):
-        _setup_mirror_panel_psf_for_gd_test(
-            mock_load,
-            mock_optimizer_class,
-            mock_best_params,
-            final_psf,
-            mock_gd_results,
-            sample_data,
-        )
-
-        mirror_psf.optimize_with_gradient_descent()
-
-        # Check that optimizer_args has correct mirror_numbers
-        call_args = mock_optimizer_class.call_args
-        optimizer_args = call_args[1]["args_dict"]
-        assert optimizer_args["single_mirror_mode"] is True
-        assert optimizer_args["mirror_numbers"] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
-
-def test_optimize_with_gradient_descent_production_mode(
-    mock_mirror_panel_psf, mock_gradient_descent_setup
-):
-    """Test gradient descent uses 'all' mirrors in production mode."""
-    mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
-    mirror_psf.args_dict["test"] = False
-
-    sample_data = _create_sample_psf_data()
-    mock_best_params, final_psf, mock_gd_results = mock_gradient_descent_setup(
-        sample_data=sample_data
-    )
-
-    with (
-        patch("simtools.ray_tracing.mirror_panel_psf.psf_opt.load_and_process_data") as mock_load,
-        patch(
-            "simtools.ray_tracing.mirror_panel_psf.psf_opt.PSFParameterOptimizer"
-        ) as mock_optimizer_class,
-        patch("simtools.ray_tracing.mirror_panel_psf.plot_psf.create_final_psf_comparison_plot"),
-    ):
-        _setup_mirror_panel_psf_for_gd_test(
-            mock_load,
-            mock_optimizer_class,
-            mock_best_params,
-            final_psf,
-            mock_gd_results,
-            sample_data,
-        )
-
-        mirror_psf.optimize_with_gradient_descent()
-
-        # Check that optimizer_args has 'all' mirrors
-        call_args = mock_optimizer_class.call_args
-        optimizer_args = call_args[1]["args_dict"]
-        assert optimizer_args["mirror_numbers"] == "all"
-
-
-def test_optimize_with_gradient_descent_with_random_focal_length(
-    mock_mirror_panel_psf, mock_gradient_descent_setup
-):
-    """Test gradient descent with random focal length settings."""
-    mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
-    mirror_psf.args_dict["use_random_focal_length"] = True
-    mirror_psf.args_dict["random_focal_length_seed"] = 42
-
-    sample_data = _create_sample_psf_data()
-    mock_best_params, final_psf, mock_gd_results = mock_gradient_descent_setup(
-        sample_data=sample_data
-    )
-
-    with (
-        patch("simtools.ray_tracing.mirror_panel_psf.psf_opt.load_and_process_data") as mock_load,
-        patch(
-            "simtools.ray_tracing.mirror_panel_psf.psf_opt.PSFParameterOptimizer"
-        ) as mock_optimizer_class,
-        patch("simtools.ray_tracing.mirror_panel_psf.plot_psf.create_final_psf_comparison_plot"),
-    ):
-        _setup_mirror_panel_psf_for_gd_test(
-            mock_load,
-            mock_optimizer_class,
-            mock_best_params,
-            final_psf,
-            mock_gd_results,
-            sample_data,
-        )
-
-        mirror_psf.optimize_with_gradient_descent()
-
-        # Check random focal length settings
-        call_args = mock_optimizer_class.call_args
-        optimizer_args = call_args[1]["args_dict"]
-        assert optimizer_args["use_random_focal_length"] is True
-        assert optimizer_args["random_focal_length_seed"] == 42
-
-
-def test_optimize_with_gradient_descent_no_simulated_data(
-    mock_mirror_panel_psf, mock_gradient_descent_setup
-):
-    """Test gradient descent when final result has no simulated data."""
-    mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
-
-    sample_data = _create_sample_psf_data()
-    mock_best_params, final_psf, _ = mock_gradient_descent_setup(sample_data=sample_data)
-    # Last result has None for simulated data
-    mock_gd_results = [(mock_best_params, 0.020, None, 3.4, None)]
-
-    with (
-        patch("simtools.ray_tracing.mirror_panel_psf.psf_opt.load_and_process_data") as mock_load,
-        patch(
-            "simtools.ray_tracing.mirror_panel_psf.psf_opt.PSFParameterOptimizer"
-        ) as mock_optimizer_class,
-        patch(
-            "simtools.ray_tracing.mirror_panel_psf.plot_psf.create_final_psf_comparison_plot"
-        ) as mock_plot,
-    ):
-        _setup_mirror_panel_psf_for_gd_test(
-            mock_load,
-            mock_optimizer_class,
-            mock_best_params,
-            final_psf,
-            mock_gd_results,
-            sample_data,
-        )
-
-        mirror_psf.optimize_with_gradient_descent()
-
-        # Verify plot was NOT created when simulated_data is None
-        mock_plot.assert_not_called()
-
-
-def test_write_optimization_data(mock_mirror_panel_psf):
-    """Test writing optimization data to file."""
-    mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
-    mirror_psf.rnda_opt = [0.008, 0.18, 0.025]
-
-    with patch(
-        "simtools.ray_tracing.mirror_panel_psf.psf_opt.export_psf_parameters"
-    ) as mock_export:
-        mirror_psf.write_optimization_data()
-
-        mock_export.assert_called_once()
-        call_args = mock_export.call_args
-        assert call_args[1]["best_pars"] == {"mirror_reflection_random_angle": [0.008, 0.18, 0.025]}
-        assert call_args[1]["telescope"] == "LSTN-01"
-        assert call_args[1]["parameter_version"] == "1.0.0"
-        assert isinstance(call_args[1]["output_dir"], Path)
-
-
-def test_write_optimization_data_default_version(mock_mirror_panel_psf):
-    """Test writing optimization data with default version when not provided."""
-    mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
-    mirror_psf.rnda_opt = [0.008, 0.18, 0.025]
-    mirror_psf.args_dict["parameter_version"] = None
-
-    with patch(
-        "simtools.ray_tracing.mirror_panel_psf.psf_opt.export_psf_parameters"
-    ) as mock_export:
-        mirror_psf.write_optimization_data()
-
-        call_args = mock_export.call_args
-        assert call_args[1]["parameter_version"] == "0.0.0"
-
-
-def test_print_results(mock_mirror_panel_psf, capsys):
-    """Test printing optimization results to stdout."""
-    mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
-    mirror_psf.rnda_start = [0.0075, 0.22, 0.022]
-    mirror_psf.rnda_opt = [0.008, 0.18, 0.025]
-    mirror_psf.final_rmsd = 0.0234
-
-    mirror_psf.print_results()
+    inst.per_mirror_results = [
+        {
+            "mirror": 1,
+            "measured_d80_mm": 10.0,
+            "simulated_d80_mm": 11.0,
+            "percentage_diff": 10.0,
+            "optimized_rnda": [0.002, 0.22, 0.022],
+        }
+    ]
+    inst.print_results()
     out = capsys.readouterr().out
+    assert "Single-Mirror d80 Optimization Results" in out
 
-    assert "Optimization Results (RMSD-based)" in out
-    assert "RMSD (full PSF curve): 0.023400" in out
-    assert "mirror_reflection_random_angle [sigma1, fraction2, sigma2]" in out
-    assert "Previous values" in out
-    assert "0.007500" in out
-    assert "Optimized values" in out
-    assert "0.008000" in out
-
-
-def test_print_results_no_rmsd(mock_mirror_panel_psf, capsys):
-    """Test printing results when final_rmsd is not set."""
-    mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
-    mirror_psf.rnda_start = [0.0075, 0.22, 0.022]
-    mirror_psf.rnda_opt = [0.008, 0.18, 0.025]
-    mirror_psf.final_rmsd = None
-
-    mirror_psf.print_results()
-    out = capsys.readouterr().out
-
-    assert "Optimization Results (RMSD-based)" in out
-    assert "RMSD (full PSF curve)" not in out
-    assert "mirror_reflection_random_angle" in out
+    inst.per_mirror_results = [
+        {
+            "mirror": 1,
+            "measured_d80_mm": 10.0,
+            "simulated_d80_mm": 11.0,
+            "percentage_diff": 10.0,
+            "simulated_d80_mm_plot": 10.5,
+            "percentage_diff_plot": 5.0,
+            "optimized_rnda": [0.002, 0.22, 0.022],
+        }
+    ]
+    inst.print_results()
+    out2 = capsys.readouterr().out
+    assert "Plot Sim" in out2
+    assert "Plot %" in out2
 
 
-def test_run_simulations_and_analysis(
-    mock_telescope_model_string, mock_find_file_string, dummy_tel
-):
-    """Test running ray tracing simulations for single mirror mode."""
-    rnda = [0.008, 0.18, 0.025]
-    args_dict = {
-        "test": False,
-        "data": "tests/resources/PSFcurve_data_v2.ecsv",
-        "site": "North",
-        "telescope": "LSTN-01",
-        "model_version": "test_version",
-        "mirror_list": None,
-        "random_focal_length": None,
-        "simtel_path": "path/to/simtel",
-        "number_of_mirrors_to_test": 5,
-        "use_random_focal_length": False,
-        "output_path": "",
-        "threshold": 0.03,
-        "learning_rate": 0.00001,
-        "model_path": "tests/resources",
-        "random_focal_length_seed": None,
-        "parameter_version": "1.0.0",
-    }
+def test_write_d80_histogram_all_branches(tmp_path, caplog):
+    inst = _make_minimal_instance(args_dict={"output_path": str(tmp_path)})
 
-    with (
-        patch(mock_telescope_model_string) as mock_init_models,
-        patch(mock_find_file_string),
-        patch("simtools.ray_tracing.mirror_panel_psf.RayTracing") as mock_ray_tracing,
-    ):
-        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
-        label = "test_label"
-        mirror_panel_psf = MirrorPanelPSF(label, args_dict)
+    assert inst.write_d80_histogram() is None
 
-        mock_ray_instance = mock_ray_tracing.return_value
+    inst.args_dict["d80_hist"] = "hist.png"
+    inst.per_mirror_results = []
+    with caplog.at_level(logging.WARNING):
+        assert inst.write_d80_histogram() is None
+    assert "No valid d80 values" in caplog.text
 
-        mirror_panel_psf.run_simulations_and_analysis(rnda)
+    inst.per_mirror_results = [
+        {"measured_d80_mm": 10.0, "simulated_d80_mm": 10.0},
+        {"measured_d80_mm": 10.0, "simulated_d80_mm": 10.0},
+    ]
+    with caplog.at_level(logging.WARNING):
+        assert inst.write_d80_histogram() is None
+    assert "Invalid d80 range" in caplog.text
 
-        # Verify telescope parameter was updated
-        dummy_tel.overwrite_model_parameter.assert_called_with(
-            "mirror_reflection_random_angle", rnda
-        )
-
-        # Verify RayTracing was initialized with correct parameters
-        mock_ray_tracing.assert_called_once()
-        call_kwargs = mock_ray_tracing.call_args[1]
-        assert call_kwargs["single_mirror_mode"] is True
-        assert call_kwargs["mirror_numbers"] == "all"
-        assert call_kwargs["use_random_focal_length"] is False
-
-        # Verify simulate and analyze were called
-        mock_ray_instance.simulate.assert_called_once_with(test=False, force=True)
-        mock_ray_instance.analyze.assert_called_once_with(force=True)
-
-
-def test_run_simulations_and_analysis_test_mode(
-    mock_telescope_model_string, mock_find_file_string, dummy_tel
-):
-    """Test running simulations in test mode with limited mirrors."""
-    rnda = [0.008, 0.18, 0.025]
-    args_dict = {
-        "test": True,
-        "data": "tests/resources/PSFcurve_data_v2.ecsv",
-        "site": "North",
-        "telescope": "LSTN-01",
-        "model_version": "test_version",
-        "mirror_list": None,
-        "random_focal_length": None,
-        "simtel_path": "path/to/simtel",
-        "number_of_mirrors_to_test": 10,
-        "use_random_focal_length": False,
-        "output_path": "",
-        "threshold": 0.03,
-        "learning_rate": 0.00001,
-        "model_path": "tests/resources",
-        "random_focal_length_seed": None,
-        "parameter_version": "1.0.0",
-    }
-
-    with (
-        patch(mock_telescope_model_string) as mock_init_models,
-        patch(mock_find_file_string),
-        patch("simtools.ray_tracing.mirror_panel_psf.RayTracing") as mock_ray_tracing,
-    ):
-        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
-        db_config = {"db": "config"}
-        label = "test_label"
-        mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
-
-        mock_ray_instance = mock_ray_tracing.return_value
-
-        mirror_panel_psf.run_simulations_and_analysis(rnda)
-
-        # Verify mirror_numbers for test mode
-        call_kwargs = mock_ray_tracing.call_args[1]
-        assert call_kwargs["mirror_numbers"] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
-        # Verify simulate was called with test=True
-        mock_ray_instance.simulate.assert_called_once_with(test=True, force=True)
-
-
-def test_run_simulations_and_analysis_with_random_focal_length(
-    mock_telescope_model_string, mock_find_file_string, dummy_tel
-):
-    """Test running simulations with random focal length enabled."""
-    rnda = [0.008, 0.18, 0.025]
-    args_dict = {
-        "test": False,
-        "data": "tests/resources/PSFcurve_data_v2.ecsv",
-        "site": "North",
-        "telescope": "LSTN-01",
-        "model_version": "test_version",
-        "mirror_list": None,
-        "random_focal_length": None,
-        "simtel_path": "path/to/simtel",
-        "number_of_mirrors_to_test": 5,
-        "use_random_focal_length": True,
-        "random_focal_length_seed": 123,
-        "output_path": "",
-        "threshold": 0.03,
-        "learning_rate": 0.00001,
-        "model_path": "tests/resources",
-        "parameter_version": "1.0.0",
-    }
-
-    with (
-        patch(mock_telescope_model_string) as mock_init_models,
-        patch(mock_find_file_string),
-        patch("simtools.ray_tracing.mirror_panel_psf.RayTracing") as mock_ray_tracing,
-    ):
-        mock_init_models.return_value = (dummy_tel, "dummy_site", None)
-        db_config = {"db": "config"}
-        label = "test_label"
-        mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
-
-        mirror_panel_psf.run_simulations_and_analysis(rnda)
-
-        # Verify random focal length settings
-        call_kwargs = mock_ray_tracing.call_args[1]
-        assert call_kwargs["use_random_focal_length"] is True
-        assert call_kwargs["random_focal_length_seed"] == 123
+    inst.per_mirror_results = [
+        {"measured_d80_mm": 10.0, "simulated_d80_mm": 12.0},
+        {"measured_d80_mm": 11.0, "simulated_d80_mm": 13.0},
+    ]
+    out_path = inst.write_d80_histogram()
+    assert out_path is not None
+    assert (tmp_path / "hist.png").exists()

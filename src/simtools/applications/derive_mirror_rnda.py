@@ -86,16 +86,10 @@ def _parse():
     )
     config.parser.add_argument(
         "--n_workers",
-        help="Number of parallel worker processes to use (default: min(CPUs, 8)).",
+        help="Number of parallel worker processes to use.",
         type=int,
         required=False,
         default=0,
-    )
-    config.parser.add_argument(
-        "--psf_pdf",
-        help="(deprecated) PSF plotting has been removed. Use --d80_hist instead.",
-        required=False,
-        default=None,
     )
     config.parser.add_argument(
         "--d80_hist",
@@ -125,9 +119,6 @@ def main():
         hist_path = panel_psf.write_d80_histogram()
         if hist_path:
             print(f"d80 histogram written to: {hist_path}")
-
-    if app_context.args.get("psf_pdf"):
-        print("Note: --psf_pdf is deprecated/removed; use --d80_hist.")
 
 
 if __name__ == "__main__":
