@@ -10,7 +10,6 @@ import pytest
 from astropy.table import Table
 
 import simtools.ray_tracing.mirror_panel_psf as mpp
-from simtools.ray_tracing.mirror_panel_psf import MirrorPanelPSF
 
 
 def _make_dummy_tel(*, label: str = "orig"):
@@ -26,8 +25,10 @@ def _make_dummy_tel(*, label: str = "orig"):
     )
 
 
-def _make_minimal_instance(*, label: str = "base", args_dict: dict | None = None) -> MirrorPanelPSF:
-    inst = MirrorPanelPSF.__new__(MirrorPanelPSF)
+def _make_minimal_instance(
+    *, label: str = "base", args_dict: dict | None = None
+) -> mpp.MirrorPanelPSF:
+    inst = mpp.MirrorPanelPSF.__new__(mpp.MirrorPanelPSF)
     inst._logger = logging.getLogger(__name__)
     inst.label = label
     inst.args_dict = args_dict or {}
@@ -240,10 +241,10 @@ def test_init_sets_test_mirror_limit_in_test_mode(mocker):
     dummy_tel = _make_dummy_tel(label="tel")
     dummy_tel.get_parameter_value = MagicMock(return_value=[0.0075, 0.22, 0.022])
     mocker.patch.object(
-        MirrorPanelPSF, "_define_telescope_model", return_value=(dummy_tel, object())
+        mpp.MirrorPanelPSF, "_define_telescope_model", return_value=(dummy_tel, object())
     )
     mocker.patch.object(
-        MirrorPanelPSF,
+        mpp.MirrorPanelPSF,
         "_load_measured_data",
         return_value=Table({"d80": [10.0], "focal_length": [28.0]}),
     )
@@ -253,18 +254,9 @@ def test_init_sets_test_mirror_limit_in_test_mode(mocker):
         "data": "data.ecsv",
         "site": "North",
         "telescope": "LSTN-01",
-        "model_version": "test_version",
-        "mirror_list": None,
-        "random_focal_length": None,
-        "no_tuning": False,
-        "rnda": 0,
-        "sim_telarray_path": "path/to/simtel",
-        "number_of_mirrors_to_test": 2,
-        "use_random_focal_length": False,
-        "containment_fraction": 0.8,
-        "output_path": "",
+        "model_version": "1.0",
     }
-    inst = MirrorPanelPSF("lbl", args)
+    inst = mpp.MirrorPanelPSF("lbl", args)
     assert inst.args_dict["number_of_mirrors_to_test"] == 10
 
 
