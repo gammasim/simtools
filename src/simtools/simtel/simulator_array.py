@@ -182,7 +182,10 @@ class SimulatorArray(SimtelRunner):
             "output_file": output_file,
         }
 
-        options["random_seed"] = self.corsika_config.array_model.sim_telarray_seed.seed_string
+        try:
+            options["random_seed"] = self.corsika_config.array_model.sim_telarray_seed.seed_string
+        except AttributeError:
+            pass
 
         for key, value in options.items():
             cmd.extend(["-C", f"{key}={value}"])
