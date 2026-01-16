@@ -26,11 +26,9 @@ jobs:
       generic_tag: ${{ steps.export-tags.outputs.generic_tag }}
     strategy:
       matrix:
-        version:
-          - {corsika: 'v78010', avx_flag: 'generic', simtel_image: 'latest'}
-          - {corsika: 'v78010', avx_flag: 'avx2', simtel_image: 'latest'}
-          - {corsika: 'v78010', avx_flag: 'avx512f', simtel_image: 'latest'}
-          - {corsika: 'v78010', avx_flag: 'sse4', simtel_image: 'latest'}
+        corsika: ['v78010']
+        sim_telarray: ['latest']
+        avx_flag: ['generic', 'avx2', 'avx512f', 'sse4']
     env:
       BASE_LABEL: "simtools-prod"
 
@@ -45,7 +43,7 @@ jobs:
           else
             echo "SIMTOOLS_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
           fi
-          echo "BUILD BRANCH ${{ env.SIMTOOLS_BRANCH }}"
+          echo "BUILD BRANCH $SIMTOOLS_BRANCH"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -64,7 +62,7 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: |
             latest=false
-            suffix=-${{ matrix.version.avx_flag }}
+            suffix=-${{ matrix.corsika }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
           tags: |
             type=ref,event=pr
             type=semver,pattern={{major}}.{{minor}}.{{patch}}
@@ -73,7 +71,7 @@ jobs:
 
       - name: Export generic tag for testing
         id: export-tags
-        if: matrix.version.avx_flag == 'generic'
+        if: matrix.avx_flag == 'generic'
         run: |
           TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
           TAG=${TAG##*:}
@@ -84,13 +82,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: ${{ matrix.version.avx_flag == 'generic' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
+          platforms: ${{ matrix.avx_flag == 'generic' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
           build-args: |
-            CORSIKA_IMAGE_VERSION=${{ matrix.version.corsika }}
-            SIMTEL_IMAGE_VERSION=${{ matrix.version.simtel_image }}
-            AVX_FLAG=${{ matrix.version.avx_flag }}
+            CORSIKA_IMAGE_VERSION=${{ matrix.corsika }}
+            SIMTEL_IMAGE_VERSION=${{ matrix.sim_telarray }}
+            AVX_FLAG=${{ matrix.avx_flag }}
             SIMTOOLS_BRANCH=${{ env.SIMTOOLS_BRANCH }}
-          push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' }}
+          push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-simtools-prod
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
