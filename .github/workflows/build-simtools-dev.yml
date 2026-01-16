@@ -16,8 +16,9 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
-  CORSIKA_IMAGE_VERSION: "v78010-generic"
+  CORSIKA_IMAGE_VERSION: "v78010"
   SIMTEL_IMAGE_VERSION: "v2025-11-30-rc"
+  AVX_FLAG: "generic"
 
 jobs:
 
@@ -94,6 +95,7 @@ jobs:
             SIMTOOLS_BRANCH=${{ env.SIMTOOLS_BRANCH }}
             CORSIKA_IMAGE_VERSION=${{ env.CORSIKA_IMAGE_VERSION }}
             SIMTEL_IMAGE_VERSION=${{ env.SIMTEL_IMAGE_VERSION }}
+            AVX_FLAG=${{ env.AVX_FLAG }}
           push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-simtools-dev
           tags: ${{ steps.meta.outputs.tags }}
