@@ -11,7 +11,7 @@ All images use `almalinux:9.5` or `almalinux:9.5-minimal` with Python 3.12 as ba
 ### Simtools for Production
 
 - registry page: [simtools-prod](https://github.com/gammasim/simtools/pkgs/container/simtools-prod)
-- docker file: [Dockerfile-simtools-prod](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtools-prod)
+- Docker file: [Dockerfile-simtools-prod](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtools-prod)
 
 | image tag | simtools | CORSIKA | sim_telarray | remarks |
 | --- | --- | --- | --- | --- |
@@ -22,18 +22,18 @@ The generic image is compatible with ARM and x86_64 CPUs, all other images are f
 ### Simtools for Developers
 
 - registry page: [simtools-dev](https://github.com/gammasim/simtools/pkgs/container/simtools-dev)
-- docker file: [Dockerfile-simtools-dev](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtools-dev)
+- Docker file: [Dockerfile-simtools-dev](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtools-dev)
 
 | image tag | simtools | CORSIKA | sim_telarray | remarks |
 | --- | --- | --- | --- | --- |
 | [v0.27.0](ghcr.io/gammasim/simtools-dev:0.27.0) | v0.27.0 | v7.8010 | v2025-11-30-rc | includes QGSJet3 tables |
 
-Developments are compatible with ARM and x86_64 CPUs.
+Images are compatible with ARM and x86_64 CPUs.
 
 ### CORSIKA7
 
 - registry page: [corsika7](https://github.com/gammasim/simtools/pkgs/container/corsika7)
-- docker file: [Dockerfile-corsika7](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-corsika7)
+- Docker file: [Dockerfile-corsika7](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-corsika7)
 
 | image tag | CORSIKA | high-/low-energy <br>interaction models | compile <br>configuration | optimization <br> patches | IACT/ATMO |
 | --- | --- | --- | --- | --- | --- |
@@ -44,10 +44,10 @@ The `generic` image is compatible with ARM and x86_64 CPUs, all other images are
 ### sim_telarray Images
 
 - registry page: [sim_telarray](https://github.com/gammasim/simtools/pkgs/container/sim_telarray)
-- docker file: [Dockerfile-sim_telarray](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtel_array)
+- Docker file: [Dockerfile-sim_telarray](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtel_array)
 
 | Image tag | sim_telarray | hessio version | stdtools version |
 | --- | --- | --- | --- |
-[v2025-11-30-rc](ghcr.io/gammasim/sim_telarray:v2025-11-30-rc) | [v2025-11-30-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray/-/releases/v2025-11-30-rc)) | [v2025-12-01-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio/-/releases/v2025-12-01-rc) | [v2025-06-16-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools/-/releases/v2025-06-16-rc) |
+| [v2025-11-30-rc](ghcr.io/gammasim/sim_telarray:v2025-11-30-rc) | [v2025-11-30-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray/-/releases/v2025-11-30-rc)) | [v2025-12-01-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio/-/releases/v2025-12-01-rc) | [v2025-06-16-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools/-/releases/v2025-06-16-rc) |
 
 Note: Version names should be replaced with actual version numbers when releases are available.
