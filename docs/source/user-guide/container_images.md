@@ -6,7 +6,7 @@ OCI-compatible container images are available for simtools users and support bot
 
 Below is an overview of the most-relevant pre-built container images available from the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 
-All images use `almalinux:9.5` or `almalinux:9.5-minimal` with python 3.12 as base images.
+All images use `almalinux:9.5` or `almalinux:9.5-minimal` with Python 3.12 as base images.
 
 ### Simtools for Production
 
