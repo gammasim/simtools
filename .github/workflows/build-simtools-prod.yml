@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         corsika: ['v78010']
-        sim_telarray: ['latest']
+        sim_telarray: ['v2025-11-30-rc']
         avx_flag: ['generic', 'avx2', 'avx512f', 'sse4']
     env:
       BASE_LABEL: "simtools-prod"
@@ -65,7 +65,7 @@ jobs:
             suffix=-${{ matrix.corsika }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
           tags: |
             type=ref,event=pr
-            type=semver,pattern={{major}}.{{minor}}.{{patch}}
+            type=semver,pattern=v{{major}}.{{minor}}.{{patch}}
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value={{date 'YYYYMMDD'}}
 

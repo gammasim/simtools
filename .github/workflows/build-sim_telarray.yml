@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         version:
-          - {simtel_version: 'master', hessio_version: 'master', stdtools_version: 'master'}
+          - {simtel_version: 'v2025-11-30-rc', hessio_version: 'v2025-12-01-rc', stdtools_version: 'v2025-06-16-rc'}
     env:
       BASE_LABEL: "sim_telarray"
       BASE_TAG: "${{ matrix.version.simtel_version }}"
