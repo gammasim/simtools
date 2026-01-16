@@ -32,14 +32,14 @@ threshold (float, optional)
     Default: 0.05.
 learning_rate (float, optional)
     Learning rate for gradient descent. Default: 0.001.
-test (activation mode, optional)
-    If activated, only optimize a small number of mirrors.
+test (ptional)
+    Only optimize a small number of mirrors.
 n_workers (int, optional)
     Number of parallel worker processes to use. Default: 0 (auto chooses maximum).
 d80_hist (str, optional)
     If activated, write a histogram comparing measured vs simulated d80 distributions.
-cleanup (activation mode, optional)
-    If activated, remove intermediate files (patterns: ``*.log``, ``*.lis*``, ``*.dat``)
+cleanup (optional)
+    Remove intermediate files (patterns: ``*.log``, ``*.lis*``, ``*.dat``)
     from output.
 
 Example
@@ -59,33 +59,33 @@ Example log output
 
 .. code-block:: text
 
-    =====================================================================
+    ======================================================================
     Single-Mirror d80 Optimization Results (Percentage Difference Metric)
-    =====================================================================
+    ======================================================================
 
     Number of mirrors optimized: 10
-    Mean percentage difference: 1.58%
+    Mean percentage difference: 1.73%
 
     Per-mirror results:
     ------------------------------------------------------------------------------------------
     Mirror   Meas d80    Sim d80   Pct Diff Optimized RNDA [sigma1, frac2, sigma2]
                 (mm)       (mm)        (%) (deg, -, deg)
     ------------------------------------------------------------------------------------------
-        1     14.285     14.350       0.45 [0.003827, 0.004825, 0.010393]
-        2     15.275     15.446       1.12 [0.004148, 0.000000, 0.013305]
-        3     15.195     15.267       0.48 [0.004201, 0.000000, 0.013502]
-        4     14.270     14.041       1.60 [0.003881, 0.000000, 0.017040]
-        5     13.695     13.390       2.23 [0.003695, 0.000000, 0.010499]
-        6     14.950     15.475       3.51 [0.003980, 0.036984, 0.015252]
-        7     13.770     13.463       2.23 [0.003612, 0.003628, 0.028229]
-        8     13.375     12.950       3.18 [0.003543, 0.000000, 0.017134]
-        9     15.200     15.334       0.88 [0.004123, 0.000000, 0.013361]
-        10    15.145     15.120       0.17 [0.004249, 0.000000, 0.013110]
+        1     14.285     14.635       2.45 [0.0038, 0.0266, 0.0172]
+        2     15.275     15.180       0.62 [0.0042, 0.0000, 0.0133]
+        3     15.195     15.053       0.94 [0.0042, 0.0000, 0.0132]
+        4     14.270     14.237       0.23 [0.0036, 0.0687, 0.0104]
+        5     13.695     13.882       1.37 [0.0037, 0.0278, 0.0283]
+        6     14.950     14.313       4.26 [0.0038, 0.0077, 0.0166]
+        7     13.770     14.237       3.39 [0.0037, 0.0597, 0.0104]
+        8     13.375     12.881       3.70 [0.0035, 0.0000, 0.0104]
+        9     15.200     15.142       0.38 [0.0041, 0.0000, 0.0134]
+       10     15.145     15.145       0.00 [0.0042, 0.0000, 0.0222]
     ------------------------------------------------------------------------------------------
 
     mirror_reflection_random_angle [sigma1, fraction2, sigma2]
-    Previous values = ['0.007500', '0.220000', '0.022000']
-    Optimized values (averaged) = ['0.003926', '0.004544', '0.015182']
+    Previous values = ['0.0075', '0.2200', '0.0220']
+    Optimized values (averaged) = ['0.0039', '0.0191', '0.0155']
 """
 
 from pathlib import Path
@@ -109,18 +109,8 @@ def _parse():
         required=True,
     )
     config.parser.add_argument(
-        "--mirror_list",
-        help=(
-            "Mirror list file to use (overrides the telescope model default). "
-            "Useful for testing or for custom mirror layouts."
-        ),
-        type=str,
-        required=False,
-        default=None,
-    )
-    config.parser.add_argument(
         "--threshold",
-        help="Convergence threshold for percentage difference (e.g. 0.05 for 5%%).",
+        help="Convergence threshold for percentage difference.",
         type=float,
         required=False,
         default=0.05,
@@ -138,19 +128,6 @@ def _parse():
         type=int,
         required=False,
         default=0,
-    )
-    config.parser.add_argument(
-        "--use_random_focal_length",
-        action="store_true",
-        default=False,
-        help="Enable random variation of mirror-panel focal length (single-mirror mode).",
-    )
-    config.parser.add_argument(
-        "--random_focal_length_seed",
-        type=int,
-        required=False,
-        default=None,
-        help="Seed for the random focal length generator.",
     )
     config.parser.add_argument(
         "--d80_hist",
@@ -183,6 +160,7 @@ def main():
     panel_psf = MirrorPanelPSF(app_context.args.get("label"), app_context.args)
     panel_psf.optimize_with_gradient_descent()
     panel_psf.write_optimization_data()
+    panel_psf.write_results_log()
     if app_context.args.get("d80_hist"):
         hist_path = panel_psf.write_d80_histogram()
         if hist_path:

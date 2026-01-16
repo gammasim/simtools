@@ -156,11 +156,11 @@ def test_worker_init_loads_config_and_creates_instance(monkeypatch):
 def test_worker_optimize_mirror_uses_measured_data_and_calls_optimizer(monkeypatch):
     dummy = SimpleNamespace(
         measured_data=Table({"d80": [11.5, 12.25], "focal_length": [27.0, 28.5]}),
-        _optimize_single_mirror=MagicMock(return_value={"ok": True}),
+        optimize_single_mirror=MagicMock(return_value={"ok": True}),
     )
     monkeypatch.setattr(mpp, "_WORKER_INSTANCE", dummy)
     result = mpp._worker_optimize_mirror(1)
-    dummy._optimize_single_mirror.assert_called_once_with(1, 12.25, 28.5)
+    dummy.optimize_single_mirror.assert_called_once_with(1, 12.25, 28.5)
     assert result == {"ok": True}
 
 
@@ -174,13 +174,17 @@ def test_simulate_single_mirror_d80_success_and_restores_label(mocker, tmp_path)
             # Ensure MirrorPanelPSF resets cached config path/directory when relabeling.
             assert kwargs["telescope_model"]._config_file_path is None
             assert kwargs["telescope_model"]._config_file_directory is None
-            self._results = {"d80_cm": [SimpleNamespace(value=1.5)]}
+            self._d80_cm = 1.5
 
         def simulate(self, **kwargs):
             return None
 
         def analyze(self, **kwargs):
             return None
+
+        def get_d80_mm(self, row_index: int = 0):
+            assert row_index == 0
+            return self._d80_cm * 10.0
 
     mocker.patch("simtools.ray_tracing.mirror_panel_psf.RayTracing", OkRay)
     d80_mm = inst._simulate_single_mirror_d80(0, 28.0, [0.01, 0.22, 0.022])
@@ -275,7 +279,7 @@ def test_optimize_single_mirror_returns_expected_dict(mocker):
         "_run_rnda_gradient_descent",
         return_value=([0.002, 0.23, 0.020], 15.0, 5.0),
     )
-    result = inst._optimize_single_mirror(0, 14.0, 28.0)
+    result = inst.optimize_single_mirror(0, 14.0, 28.0)
     assert result["mirror"] == 1
     assert result["measured_d80_mm"] == pytest.approx(14.0)
     assert result["focal_length_m"] == pytest.approx(28.0)
@@ -292,7 +296,7 @@ def test_optimize_single_mirror_uses_rnda_optimizer(mocker):
         return_value=([0.003, 0.25, 0.010], 12.0, 2.0),
     )
 
-    result = inst._optimize_single_mirror(0, 12.0, 28.0)
+    result = inst.optimize_single_mirror(0, 12.0, 28.0)
     assert result["optimized_rnda"] == [0.003, 0.25, 0.010]
     assert result["percentage_diff"] == pytest.approx(2.0)
     assert mock_run.call_count == 1
@@ -321,7 +325,7 @@ def test_optimize_single_mirror_schema_fallback_branches(mocker, monkeypatch):
         return_value=([0.002, 0.23, 0.020], 15.0, 5.0),
     )
 
-    result = inst._optimize_single_mirror(0, 14.0, 28.0)
+    result = inst.optimize_single_mirror(0, 14.0, 28.0)
     assert result["mirror"] == 1
 
 

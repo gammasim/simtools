@@ -9,8 +9,6 @@ optical system, and RMSD (Root Mean Squared Deviation) is used as the optimizati
 to quantify the difference between measured and simulated PSF curves.
 """
 
-# pylint: disable=too-many-lines
-
 import logging
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -51,7 +49,7 @@ class GradientStepResult:
         Optimization metric value (RMSD or KS statistic), None if step failed.
     p_value : float or None
         P-value from KS test (None if using RMSD or if step failed).
-    simulated_data : np.ndarray or None
+    simulated_data : numpy.ndarray or None
         Simulated PSF data, None if step failed.
     step_accepted : bool
         True if the step improved the metric, False otherwise.
@@ -82,7 +80,7 @@ class PSFParameterOptimizer:
         Dictionary containing simulation configuration arguments.
     data_to_plot : dict
         Dictionary containing measured PSF data under "measured" key.
-    radius : np.ndarray
+    radius : numpy.ndarray
         Radius values in cm for PSF evaluation.
     output_dir : Path
         Directory for saving optimization results and plots.
@@ -102,9 +100,7 @@ class PSFParameterOptimizer:
     LR_MAXIMUM_THRESHOLD = 0.01
     LR_RESET_VALUE = 0.0001
 
-    def __init__(
-        self, tel_model, site_model, args_dict, data_to_plot, radius, output_dir, optimize_only=None
-    ):
+    def __init__(self, tel_model, site_model, args_dict, data_to_plot, radius, output_dir):
         """Initialize the PSF parameter optimizer."""
         self.tel_model = tel_model
         self.site_model = site_model
@@ -117,16 +113,6 @@ class PSFParameterOptimizer:
         self.simulation_cache = {}
         self.cache_hits = 0
         self.cache_misses = 0
-
-        # Set which parameters to optimize
-        if optimize_only is None:
-            self.optimize_only = [
-                "mirror_reflection_random_angle",
-                "mirror_align_random_horizontal",
-                "mirror_align_random_vertical",
-            ]
-        else:
-            self.optimize_only = optimize_only
 
     def _params_to_cache_key(self, params):
         """Convert parameters dict to a hashable cache key."""
@@ -182,9 +168,9 @@ class PSFParameterOptimizer:
         Returns
         -------
         dict
-            Dictionary of current parameter values for parameters being optimized.
+            Dictionary of current parameter values.
         """
-        return get_previous_values(self.tel_model, self.optimize_only)
+        return get_previous_values(self.tel_model)
 
     def run_simulation(
         self, pars, pdf_pages=None, is_best=False, use_cache=True, use_ks_statistic=None
@@ -239,7 +225,7 @@ class PSFParameterOptimizer:
 
         return result
 
-    def calculate_gradient(self, current_params, current_metric, epsilon=0.0002):
+    def calculate_gradient(self, current_params, current_metric, epsilon=0.0005):
         """
         Calculate numerical gradients for all optimization parameters.
 
@@ -250,7 +236,7 @@ class PSFParameterOptimizer:
         current_metric : float
             Current RMSD or KS statistic value.
         epsilon : float, optional
-            Perturbation value for finite difference calculation (default: 0.0002).
+            Perturbation value for finite difference calculation.
 
         Returns
         -------
@@ -371,7 +357,7 @@ class PSFParameterOptimizer:
         return param_gradients[0] if not isinstance(param_values, list) else param_gradients
 
     def perform_gradient_step_with_retries(
-        self, current_params, current_metric, learning_rate, max_retries=3, epsilon=0.0002
+        self, current_params, current_metric, learning_rate, max_retries=3
     ):
         """
         Attempt gradient descent step with adaptive learning rate reduction.
@@ -386,8 +372,6 @@ class PSFParameterOptimizer:
             Initial learning rate for the gradient descent step.
         max_retries : int, optional
             Maximum number of attempts with learning rate reduction.
-        epsilon : float, optional
-            Perturbation value for finite difference gradient calculation.
 
         Returns
         -------
@@ -398,7 +382,7 @@ class PSFParameterOptimizer:
 
         for attempt in range(max_retries):
             try:
-                gradients = self.calculate_gradient(current_params, current_metric, epsilon=epsilon)
+                gradients = self.calculate_gradient(current_params, current_metric)
 
                 if gradients is None:
                     logger.warning(
@@ -525,9 +509,7 @@ class PSFParameterOptimizer:
         pdf_pages.close()
         logger.info("Cumulative PSF plots saved")
 
-    def run_gradient_descent(
-        self, rmsd_threshold, learning_rate, max_iterations=200, epsilon=0.0002
-    ):
+    def run_gradient_descent(self, rmsd_threshold, learning_rate, max_iterations=200):
         """
         Run gradient descent optimization to minimize PSF fitting metric.
 
@@ -538,9 +520,7 @@ class PSFParameterOptimizer:
         learning_rate : float
             Initial learning rate for gradient descent steps.
         max_iterations : int, optional
-            Maximum number of optimization iterations (default: 200).
-        epsilon : float, optional
-            Perturbation value for finite difference gradient calculation (default: 0.0002).
+            Maximum number of optimization iterations.
 
         Returns
         -------
@@ -587,11 +567,10 @@ class PSFParameterOptimizer:
         current_lr = learning_rate
 
         while iteration < max_iterations:
-            tolerance = 0.0001  # 0.01% tolerance
-            if current_metric <= (rmsd_threshold + tolerance):
+            if current_metric <= rmsd_threshold:
                 logger.info(
                     f"Optimization converged: RMSD {current_metric:.6f} <= "
-                    f"threshold {rmsd_threshold:.6f} (with tolerance {tolerance:.6f})"
+                    f"threshold {rmsd_threshold:.6f}"
                 )
                 break
 
@@ -602,26 +581,18 @@ class PSFParameterOptimizer:
                 current_params,
                 current_metric,
                 current_lr,
-                epsilon=epsilon,
             )
 
             if not step_result.step_accepted or step_result.params is None:
-                current_lr = self._reduce_learning_rate(current_lr)
-                logger.info(f"No step accepted, reducing learning rate to {current_lr:.6f}")
+                current_lr = self._increase_learning_rate(current_lr)
+                logger.info(f"No step accepted, increasing learning rate to {current_lr:.6f}")
                 continue
 
             # Step was accepted - update state
             current_params = step_result.params
             current_metric = step_result.metric
             current_psf_diameter = step_result.psf_diameter
-
-            # Only increase learning rate if step succeeded without needing retries
-            # (i.e., the returned LR equals the input LR, meaning no reduction occurred)
-            if step_result.learning_rate == current_lr:
-                current_lr = self._increase_learning_rate(current_lr)
-            else:
-                # Step succeeded but needed retries, use the reduced LR from retries
-                current_lr = step_result.learning_rate
+            current_lr = step_result.learning_rate
 
             results.append(
                 (
@@ -851,7 +822,7 @@ def calculate_ks_statistic(data, sim):
     return stats.ks_2samp(data, sim)
 
 
-def get_previous_values(tel_model, param_names=None):
+def get_previous_values(tel_model):
     """
     Retrieve current PSF parameter values from the telescope model.
 
@@ -859,22 +830,26 @@ def get_previous_values(tel_model, param_names=None):
     ----------
     tel_model : TelescopeModel
         Telescope model object containing parameter configurations.
-    param_names : list of str, optional
-        List of parameter names to retrieve. If None, retrieves all three parameter groups.
 
     Returns
     -------
     dict
-        Dictionary containing current values of requested PSF optimization parameters.
+        Dictionary containing current values of PSF optimization parameters:
+        - 'mirror_reflection_random_angle': Random reflection angle parameters
+        - 'mirror_align_random_horizontal': Horizontal alignment parameters
+        - 'mirror_align_random_vertical': Vertical alignment parameters
     """
-    if param_names is None:
-        param_names = [
-            "mirror_reflection_random_angle",
-            "mirror_align_random_horizontal",
-            "mirror_align_random_vertical",
-        ]
-
-    return {name: tel_model.get_parameter_value(name) for name in param_names}
+    return {
+        "mirror_reflection_random_angle": tel_model.get_parameter_value(
+            "mirror_reflection_random_angle"
+        ),
+        "mirror_align_random_horizontal": tel_model.get_parameter_value(
+            "mirror_align_random_horizontal"
+        ),
+        "mirror_align_random_vertical": tel_model.get_parameter_value(
+            "mirror_align_random_vertical"
+        ),
+    }
 
 
 def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
@@ -883,27 +858,13 @@ def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
         raise ValueError("No best parameters found")
 
     tel_model.overwrite_parameters(pars)
-
-    # Support both full telescope and single mirror mode
-    ray_kwargs = {
-        "telescope_model": tel_model,
-        "site_model": site_model,
-    }
-
-    # Add single mirror mode parameters if requested
-    if args_dict.get("single_mirror_mode", False):
-        ray_kwargs["single_mirror_mode"] = True
-        ray_kwargs["mirror_numbers"] = args_dict.get("mirror_numbers", "all")
-        ray_kwargs["use_random_focal_length"] = args_dict.get("use_random_focal_length", False)
-        if args_dict.get("random_focal_length_seed") is not None:
-            ray_kwargs["random_focal_length_seed"] = args_dict["random_focal_length_seed"]
-    else:
-        # Full telescope mode
-        ray_kwargs["zenith_angle"] = args_dict["zenith"] * u.deg
-        ray_kwargs["source_distance"] = args_dict["src_distance"] * u.km
-        ray_kwargs["off_axis_angle"] = [0.0] * u.deg
-
-    ray = RayTracing(**ray_kwargs)
+    ray = RayTracing(
+        telescope_model=tel_model,
+        site_model=site_model,
+        zenith_angle=args_dict["zenith"] * u.deg,
+        source_distance=args_dict["src_distance"] * u.km,
+        off_axis_angle=[0.0] * u.deg,
+    )
     ray.simulate(test=args_dict.get("test", False), force=True)
     ray.analyze(force=True, use_rx=False)
     im = ray.images()[0]
@@ -937,7 +898,7 @@ def run_psf_simulation(
         Dictionary of parameter values to test in the simulation.
     data_to_plot : dict
         Dictionary containing measured PSF data under "measured" key.
-    radius : np.ndarray
+    radius : numpy.ndarray
         Radius values in cm for PSF evaluation.
     pdf_pages : PdfPages, optional
         PDF pages object for saving plots (default: None).
@@ -960,8 +921,6 @@ def run_psf_simulation(
         raise ValueError("Radius data is not available.")
 
     simulated_data = im.get_cumulative_data(radius * u.cm)
-    # Normalize simulated data to max = 1.0 to match measured data normalization
-    simulated_data[CUMULATIVE_PSF] /= np.max(np.abs(simulated_data[CUMULATIVE_PSF]))
 
     if use_ks_statistic:
         ks_statistic, p_value = calculate_ks_statistic(
@@ -1422,7 +1381,7 @@ def cleanup_intermediate_files(output_dir):
     output_dir : Path
         Directory containing output files to clean up.
     """
-    patterns = ["*.log", "*.lis*", "*.dat"]
+    patterns = ["*.log", "*.lis*"]
     files_removed = 0
 
     for pattern in patterns:
