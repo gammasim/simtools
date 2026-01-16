@@ -15,7 +15,7 @@ All images use `almalinux:9.5` or `almalinux:9.5-minimal` with python 3.12 as ba
 
 | image tag | simtools | CORSIKA | sim_telarray |
 | --- | --- | --- | --- |
-| 0.27.0-[generic](ghcr.io/gammasim/simtools-prod:0.27.0-generic), [avx2](ghcr.io/gammasim/simtools-prod:0.27.0-avx2), [avx512f](ghcr.io/gammasim/simtools-prod:0.27.0-avx512f), [sse4](ghcr.io/gammasim/simtools-prod:0.27.0-sse4) | 0.27.0 | v78010 | master |
+| 0.27.0-[generic](ghcr.io/gammasim/simtools-prod:0.27.0-generic), [avx2](ghcr.io/gammasim/simtools-prod:0.27.0-avx2), [avx512f](ghcr.io/gammasim/simtools-prod:0.27.0-avx512f), [sse4](ghcr.io/gammasim/simtools-prod:0.27.0-sse4) | 0.27.0 | v78010 | v2025-11-30-rc |
 
 The generic image is compatible with ARM and x86_64 CPUs, all other images are for x86_64 CPUs only.
 
@@ -26,7 +26,7 @@ The generic image is compatible with ARM and x86_64 CPUs, all other images are f
 
 | image tag | simtools | CORSIKA | sim_telarray | remarks |
 | --- | --- | --- | --- | --- |
-| [0.27.0](ghcr.io/gammasim/simtools-dev:0.27.0) | 0.27.0 | 7.8010 | master | includes QGSJet3 tables |
+| [0.27.0](ghcr.io/gammasim/simtools-dev:0.27.0) | 0.27.0 | 7.8010 | 2025-11-30-rc | includes QGSJet3 tables |
 | [0.26.0](ghcr.io/gammasim/simtools-dev:0.26.0) | 0.26.0 | 7.8010 | master | includes QGSJet3 tables |
 | [0.25.0](ghcr.io/gammasim/simtools-dev:0.25.0) | 0.25.0 | 7.8010 | master | includes QGSJet3 tables  |
 
@@ -39,7 +39,7 @@ Developments are compatible with ARM and x86_64 CPUs.
 
 | image tag | CORSIKA | high-/low-energy <br>interaction models | compile <br>configuration | optimization <br> patches | IACT/ATMO |
 | --- | --- | --- | --- | --- | --- |
-| 78010-[generic](ghcr.io/gammasim/corsika7:v78010-generic), [avx2](ghcr.io/gammasim/corsika7:v78010-avx2), [avx512f](ghcr.io/gammasim/corsika7:v78010-avx512f), [sse4](ghcr.io/gammasim/corsika7:v78010-sse4) | 7.8010 | QGSJet-III/URQMD; EPOS/URQMD | [v0.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config) | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches/-/releases/v1.1.0) | 1.69 |
+| v78010-[generic](ghcr.io/gammasim/corsika7:v78010-generic), [avx2](ghcr.io/gammasim/corsika7:v78010-avx2), [avx512f](ghcr.io/gammasim/corsika7:v78010-avx512f), [sse4](ghcr.io/gammasim/corsika7:v78010-sse4) | 7.8010 | QGSJet-III/URQMD; EPOS/URQMD | [v0.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config) | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches/-/releases/v1.1.0) | 1.69 |
 
 The `generic` image is compatible with ARM and x86_64 CPUs, all other images are for x86_64 CPUs only.
 
@@ -50,6 +50,6 @@ The `generic` image is compatible with ARM and x86_64 CPUs, all other images are
 
 | Image tag | sim_telarray | hessio version | stdtools version |
 | --- | --- | --- | --- |
-master| [master](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray) | [master](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio) | [master](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools) |
+v2025-11-30-rc | [v2025-11-30-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray) | [v2025-12-01-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio) | [v2025-06-16-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools) |
 
 Note: Version names should be replaced with actual version numbers when releases are available.
