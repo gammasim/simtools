@@ -5,6 +5,7 @@ import logging
 import shutil
 from math import pi, tan
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import call
 
 import astropy.units as u
@@ -565,6 +566,43 @@ def test_read_results(ray_tracing_lst, mocker):
 
     mock_read.assert_called_once_with(ray_tracing_lst._file_results, format="ecsv")
     assert isinstance(ray_tracing_lst._results, QTable)
+
+
+def test_get_d80_mm_raises_when_no_results(ray_tracing_lst):
+    ray = copy.deepcopy(ray_tracing_lst)
+    ray._results = None
+    with pytest.raises(RuntimeError, match=r"run analyze\(\) first"):
+        ray.get_d80_mm()
+
+
+def test_get_d80_mm_returns_mm_for_quantity(ray_tracing_lst):
+    ray = copy.deepcopy(ray_tracing_lst)
+    ray._results = QTable(
+        {
+            "d80_cm": [1.5 * u.cm],
+        }
+    )
+    assert ray.get_d80_mm() == pytest.approx(15.0)
+
+
+def test_get_d80_mm_returns_mm_for_value_attribute(ray_tracing_lst):
+    ray = copy.deepcopy(ray_tracing_lst)
+    ray._results = QTable(
+        {
+            "d80_cm": [SimpleNamespace(value=1.5)],
+        }
+    )
+    assert ray.get_d80_mm() == pytest.approx(15.0)
+
+
+def test_get_d80_mm_returns_mm_for_plain_float(ray_tracing_lst):
+    ray = copy.deepcopy(ray_tracing_lst)
+    ray._results = QTable(
+        {
+            "d80_cm": [1.5],
+        }
+    )
+    assert ray.get_d80_mm() == pytest.approx(15.0)
 
 
 def test_plot_histogram_valid_key(ray_tracing_lst, mocker):

@@ -7,7 +7,6 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
 from multiprocessing import get_context
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 from astropy.table import Table
@@ -68,8 +67,7 @@ def _worker_optimize_mirror(mirror_idx):
         raise RuntimeError("Worker not initialized")
     measured_d80_mm = float(_WORKER_INSTANCE.measured_data["d80"][mirror_idx])
     focal_length_m = float(_WORKER_INSTANCE.measured_data["focal_length"][mirror_idx])
-    # pylint: disable=protected-access
-    return _WORKER_INSTANCE._optimize_single_mirror(mirror_idx, measured_d80_mm, focal_length_m)
+    return _WORKER_INSTANCE.optimize_single_mirror(mirror_idx, measured_d80_mm, focal_length_m)
 
 
 class MirrorPanelPSF:
@@ -212,10 +210,7 @@ class MirrorPanelPSF:
             if hasattr(self.telescope_model, "_config_file_directory"):
                 setattr(self.telescope_model, "_config_file_directory", old_config_file_directory)
 
-        # Get d80 from results (in cm, convert to mm)
-        results: Any = ray._results  # pylint: disable=protected-access
-        d80_cm = results["d80_cm"][0].value
-        return d80_cm * 10.0
+        return float(ray.get_d80_mm())
 
     def _calculate_percentage_difference(self, measured_d80, simulated_d80):
         """Calculate signed percentage difference."""
@@ -442,7 +437,7 @@ class MirrorPanelPSF:
         )
         return best_rnda, best_sim_d80, best_pct_diff
 
-    def _optimize_single_mirror(self, mirror_idx, measured_d80_mm, focal_length_m):
+    def optimize_single_mirror(self, mirror_idx, measured_d80_mm, focal_length_m):
         """
         Optimize RNDA for a single mirror using gradient descent.
 
@@ -634,8 +629,8 @@ class MirrorPanelPSF:
 
         for r in self.per_mirror_results:
             rnda_str = (
-                f"[{r['optimized_rnda'][0]:.6f}, {r['optimized_rnda'][1]:.6f}, "
-                f"{r['optimized_rnda'][2]:.6f}]"
+                f"[{r['optimized_rnda'][0]:.4f}, {r['optimized_rnda'][1]:.4f}, "
+                f"{r['optimized_rnda'][2]:.4f}]"
             )
             if have_plot_d80:
                 plot_sim = r.get("simulated_d80_mm_plot", float("nan"))
@@ -655,37 +650,23 @@ class MirrorPanelPSF:
         lines.append("-" * 120 if have_plot_d80 else "-" * 90)
         lines.append("")
         lines.append("mirror_reflection_random_angle [sigma1, fraction2, sigma2]")
-        lines.append(f"Previous values = {[f'{x:.6f}' for x in self.rnda_start]}")
-        lines.append(f"Optimized values (averaged) = {[f'{x:.6f}' for x in self.rnda_opt]}")
+        lines.append(f"Previous values = {[f'{x:.4f}' for x in self.rnda_start]}")
+        lines.append(f"Optimized values (averaged) = {[f'{x:.4f}' for x in self.rnda_opt]}")
         lines.append("")
 
         return lines
 
-    def write_results_log(self, filename: str | None = None):
-        """Write the results table to a ``.log`` file.
-
-        Parameters
-        ----------
-        filename : str | None
-            Output filename. If relative, it is created under ``output_path``.
-            If None, a default name is used.
-
-        Returns
-        -------
-        str
-            Path to the written log file.
-        """
+    def write_results_log(self):
+        """Write the results table to a ``.log`` file."""
         output_dir = Path(self.args_dict.get("output_path", "."))
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        if filename is None:
-            tel = str(self.args_dict.get("telescope", "")).strip()
-            model_version = str(self.args_dict.get("model_version", "")).strip()
-            suffix = ""
-            if tel or model_version:
-                suffix = f"_{tel}_{model_version}".strip("_")
-                suffix = f"_{suffix}" if suffix else ""
-            filename = f"mirror_rnda_results{suffix}.log"
+        tel = str(self.args_dict.get("telescope", "")).strip()
+        model_version = str(self.args_dict.get("model_version", "")).strip()
+        suffix = ""
+        if tel or model_version:
+            suffix = f"_{tel}_{model_version}"
+        filename = f"mirror_rnda_results{suffix}.log"
 
         out_path = Path(filename)
         if not out_path.is_absolute():
