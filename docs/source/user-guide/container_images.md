@@ -13,9 +13,9 @@ All images use `almalinux:9.5` or `almalinux:9.5-minimal` with python 3.12 as ba
 - registry page: [simtools-prod](https://github.com/gammasim/simtools/pkgs/container/simtools-prod)
 - docker file: [Dockerfile-simtools-prod](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-simtools-prod)
 
-| image tag | simtools | CORSIKA | sim_telarray |
-| --- | --- | --- | --- |
-| 0.27.0-[generic](ghcr.io/gammasim/simtools-prod:0.27.0-generic), [avx2](ghcr.io/gammasim/simtools-prod:0.27.0-avx2), [avx512f](ghcr.io/gammasim/simtools-prod:0.27.0-avx512f), [sse4](ghcr.io/gammasim/simtools-prod:0.27.0-sse4) | 0.27.0 | v78010 | v2025-11-30-rc |
+| image tag | simtools | CORSIKA | sim_telarray | remarks |
+| --- | --- | --- | --- | --- |
+| v0.27.0-v78010-v2025-11-30-rc-[generic](ghcr.io/gammasim/simtools-prod:v0.27.0-generic), [avx2](ghcr.io/gammasim/simtools-prod:v0.27.0-v78010-v2025-11-30-rc-avx2), [avx512f](ghcr.io/gammasim/simtools-prod:v0.27.0-v78010-v2025-11-30-rc-avx512f), [sse4](ghcr.io/gammasim/simtools-prod:v0.27.0-v78010-v2025-11-30-rc-sse4) | v0.27.0 | v78010 | v2025-11-30-rc | no QGSJet2/3 tables included |
 
 The generic image is compatible with ARM and x86_64 CPUs, all other images are for x86_64 CPUs only.
 
@@ -26,9 +26,7 @@ The generic image is compatible with ARM and x86_64 CPUs, all other images are f
 
 | image tag | simtools | CORSIKA | sim_telarray | remarks |
 | --- | --- | --- | --- | --- |
-| [0.27.0](ghcr.io/gammasim/simtools-dev:0.27.0) | 0.27.0 | 7.8010 | 2025-11-30-rc | includes QGSJet3 tables |
-| [0.26.0](ghcr.io/gammasim/simtools-dev:0.26.0) | 0.26.0 | 7.8010 | master | includes QGSJet3 tables |
-| [0.25.0](ghcr.io/gammasim/simtools-dev:0.25.0) | 0.25.0 | 7.8010 | master | includes QGSJet3 tables  |
+| [v0.27.0](ghcr.io/gammasim/simtools-dev:0.27.0) | v0.27.0 | v7.8010 | v2025-11-30-rc | includes QGSJet3 tables |
 
 Developments are compatible with ARM and x86_64 CPUs.
 
@@ -39,7 +37,7 @@ Developments are compatible with ARM and x86_64 CPUs.
 
 | image tag | CORSIKA | high-/low-energy <br>interaction models | compile <br>configuration | optimization <br> patches | IACT/ATMO |
 | --- | --- | --- | --- | --- | --- |
-| v78010-[generic](ghcr.io/gammasim/corsika7:v78010-generic), [avx2](ghcr.io/gammasim/corsika7:v78010-avx2), [avx512f](ghcr.io/gammasim/corsika7:v78010-avx512f), [sse4](ghcr.io/gammasim/corsika7:v78010-sse4) | 7.8010 | QGSJet-III/URQMD; EPOS/URQMD | [v0.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config) | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches/-/releases/v1.1.0) | 1.69 |
+| v78010-[generic](ghcr.io/gammasim/corsika7:v78010-generic), [avx2](ghcr.io/gammasim/corsika7:v78010-avx2), [avx512f](ghcr.io/gammasim/corsika7:v78010-avx512f), [sse4](ghcr.io/gammasim/corsika7:v78010-sse4) | v7.8010 | QGSJet-III/URQMD; EPOS/URQMD | [v0.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config) | [v1.1.0](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches/-/releases/v1.1.0) | 1.69 |
 
 The `generic` image is compatible with ARM and x86_64 CPUs, all other images are for x86_64 CPUs only.
 
@@ -50,6 +48,6 @@ The `generic` image is compatible with ARM and x86_64 CPUs, all other images are
 
 | Image tag | sim_telarray | hessio version | stdtools version |
 | --- | --- | --- | --- |
-v2025-11-30-rc | [v2025-11-30-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray) | [v2025-12-01-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio) | [v2025-06-16-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools) |
+[v2025-11-30-rc](ghcr.io/gammasim/sim_telarray:v2025-11-30-rc) | [v2025-11-30-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray/-/releases/v2025-11-30-rc)) | [v2025-12-01-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio/-/releases/v2025-12-01-rc) | [v2025-06-16-rc](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools/-/releases/v2025-06-16-rc) |
 
 Note: Version names should be replaced with actual version numbers when releases are available.
