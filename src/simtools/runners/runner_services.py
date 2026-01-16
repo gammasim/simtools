@@ -2,6 +2,7 @@
 
 import logging
 
+from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler
 
 _logger = logging.getLogger(__name__)
@@ -19,6 +20,11 @@ FILES_AND_PATHS = {
     },
     "corsika_log": {
         "suffix": ".corsika.log.gz",
+        "sub_dir_type": "run_number",
+    },
+    # Generic iact output
+    "iact_output": {
+        "suffix": ".iact.gz",
         "sub_dir_type": "run_number",
     },
     # sim_telarray
@@ -101,19 +107,19 @@ class RunnerServices:
 
     Parameters
     ----------
-    corsika_config : CorsikaConfig, list of CorsikaConfig
-        Configuration parameters for CORSIKA.
+    config: CorsikaConfig, dict
+        Configuration parameters.
     run_type : str
         Type of simulation runner.
     label : str
         Label.
     """
 
-    def __init__(self, corsika_config, run_type, label=None):
+    def __init__(self, config, run_type, label=None):
         """Initialize RunnerServices."""
         self._logger = logging.getLogger(__name__)
         self.label = label
-        self.corsika_config = corsika_config
+        self.config = config
         self.run_type = run_type
         self.directory = self.load_data_directory()
 
@@ -129,6 +135,7 @@ class RunnerServices:
         ioh = io_handler.IOHandler()
         directory = ioh.get_output_directory(self.run_type)
         self._logger.debug(f"Data directories for {self.run_type}: {directory}")
+
         return directory
 
     def load_files(self, run_number=None):
@@ -171,13 +178,39 @@ class RunnerServices:
         str
             Base name for the simulation files.
         """
-        vc_high = self.corsika_config.get_config_parameter("VIEWCONE")[1]
-        zenith = self.corsika_config.get_config_parameter("THETAP")[0]
+        if isinstance(self.config, CorsikaConfig):
+            return self._get_file_base_name_from_corsika_config(run_number, is_multi_pipe)
+        if isinstance(self.config, dict):
+            return self._get_file_base_name_from_core_config()
+        raise ValueError(f"Invalid configuration type: {type(self.config)}")
 
-        if self.corsika_config.run_mode is not None and self.corsika_config.run_mode != "":
-            primary_name = self.corsika_config.run_mode
+    def _get_file_base_name_from_core_config(self):
+        """Get file base name from core configuration."""
+        cfg = self.config
+        zenith_angle = cfg.get("zenith_angle")
+        azimuth_angle = cfg.get("azimuth_angle")
+
+        parts = [
+            f"{cfg['run_mode']}_" if cfg.get("run_mode") else "",
+            f"{self._get_run_number_string(cfg.get('run_number'))}_" if "run_number" in cfg else "",
+            f"za{round(zenith_angle):02}deg_" if isinstance(zenith_angle, (int, float)) else "",
+            f"azm{round(azimuth_angle):03}deg_" if isinstance(azimuth_angle, (int, float)) else "",
+            f"{cfg['site']}_" if cfg.get("site") else "",
+            f"{cfg['layout']}_" if cfg.get("layout") else "",
+            cfg.get("model_version", ""),
+            f"_{self.label}" if self.label else "",
+        ]
+        return "".join(parts)
+
+    def _get_file_base_name_from_corsika_config(self, run_number, is_multi_pipe=False):
+        """Get file base name from CORSIKA configuration."""
+        zenith = self.config.get_config_parameter("THETAP")[0]
+        vc_high = self.config.get_config_parameter("VIEWCONE")[1]
+
+        if self.config.run_mode is not None and self.config.run_mode != "":
+            primary_name = self.config.run_mode
         else:
-            primary_name = self.corsika_config.primary_particle.name
+            primary_name = self.config.primary_particle.name
             if primary_name == "gamma" and vc_high > 0:
                 primary_name = "gamma_diffuse"
 
@@ -188,10 +221,10 @@ class RunnerServices:
         return (
             prefix
             + f"za{round(zenith):02}deg_"
-            + f"azm{self.corsika_config.azimuth_angle:03}deg_"
-            + f"{self.corsika_config.array_model.site}_"
-            + f"{self.corsika_config.array_model.layout_name}_"
-            + (self.corsika_config.array_model.model_version if not is_multi_pipe else "")
+            + f"azm{self.config.azimuth_angle:03}deg_"
+            + f"{self.config.array_model.site}_"
+            + f"{self.config.array_model.layout_name}_"
+            + (self.config.array_model.model_version if not is_multi_pipe else "")
             + file_label
         )
 
@@ -264,6 +297,8 @@ class RunnerServices:
         str
             Run number string.
         """
+        if run_number is None:
+            return ""
         return f"run{validate_corsika_run_number(run_number):06d}"
 
     def get_resources(self, sub_out_file):
@@ -292,7 +327,10 @@ class RunnerServices:
         if runtime is None:
             _logger.debug("RUNTIME was not found in run log file")
 
-        return {
-            "runtime": runtime,
-            "n_events": int(self.corsika_config.get_config_parameter("NSHOW")),
-        }
+        if isinstance(self.config, CorsikaConfig):
+            return {
+                "runtime": runtime,
+                "n_events": int(self.config.get_config_parameter("NSHOW")),
+            }
+        self._logger.warning("Number of events cannot be determined from non-CORSIKA config.")
+        return {"runtime": runtime, "n_events": None}

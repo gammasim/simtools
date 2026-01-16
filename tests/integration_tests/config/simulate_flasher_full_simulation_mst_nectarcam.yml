@@ -13,9 +13,9 @@ applications:
     log_level: DEBUG
   integration_tests:
   - test_output_files:
-    - file: logfile.log
+    - file: sub/full_simulation_run000010_North_7.0.0_simulate_flasher.out
       path_descriptor: output_path
-    - file: ff-1m.simtel.zst
+    - file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher.simtel.zst
       path_descriptor: output_path
     - expected_log_output:
       pattern:
@@ -25,7 +25,7 @@ applications:
       forbidden_pattern:
       - "Error"
       - "had less photons than required and were skipped"
-      file: logfile.log
+      file: sub/full_simulation_run000010_North_7.0.0_simulate_flasher.out
       path_descriptor: output_path
   model_version_use_current: true
   test_name: full-simulation_msfx_nectarcam-7.0.0
