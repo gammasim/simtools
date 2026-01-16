@@ -11,9 +11,9 @@
 # hadolint global ignore=DL3013,DL3041
 # - DL3013, DL3041: ignore warnings about using latest
 
-ARG CORSIKA_IMAGE_VERSION="20251217-78010"
+ARG CORSIKA_IMAGE_VERSION="v78010"
 ARG SIMTEL_IMAGE_VERSION="latest"
-ARG AVX_FLAG="no_opt"
+ARG AVX_FLAG="generic"
 ARG PYTHON_VERSION="3.12"
 
 FROM ghcr.io/gammasim/corsika7:${CORSIKA_IMAGE_VERSION}-${AVX_FLAG} AS corsika_img

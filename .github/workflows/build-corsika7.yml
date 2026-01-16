@@ -1,7 +1,7 @@
 ---
 name: build-corsika7
 # Build and push CORSIKA7 images for different CPU architectures.
-# The no_opt (non-optimized) images are built as multi-platform images (x86_64 and arm64).
+# The generic (non-optimized) images are built as multi-platform images (x86_64 and arm64).
 #
 # The images are built and pushed when manually triggered (workflow_dispatch).
 #
@@ -43,14 +43,18 @@ jobs:
       packages: write
     strategy:
       matrix:
-        version:
-          - {corsika: '78010', avx_flag: 'no_opt', corsika_config: 'v0.1.0'}
-          - {corsika: '78010', avx_flag: 'avx2', corsika_config: 'v0.1.0'}
-          - {corsika: '78010', avx_flag: 'avx512f', corsika_config: 'v0.1.0'}
-          - {corsika: '78010', avx_flag: 'sse4', corsika_config: 'v0.1.0'}
+        corsika: ['78010', '78050']
+        avx_flag: ['generic', 'avx2', 'avx512f', 'sse4']
+        include:
+          - corsika: '78010'
+            corsika_config: 'v0.1.0'
+            corsika_opt_patch: 'v1.1.0'
+          - corsika: '78050'
+            corsika_config: 'v1.0.0'
+            corsika_opt_patch: 'v1.2.0'
     env:
       BASE_LABEL: "corsika7"
-      BASE_TAG: "${{ matrix.version.corsika }}-${{ matrix.version.avx_flag }}"
+      BASE_TAG: "v${{ matrix.corsika }}-${{ matrix.avx_flag }}"
 
     steps:
       - name: Checkout repository
@@ -77,10 +81,10 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           tags: |
+            type=raw,value=${{ env.BASE_TAG }}
             type=ref,event=pr,suffix=-${{ env.BASE_TAG }}
             type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}
             type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
-            type=raw,value={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: latest=false
 
@@ -88,12 +92,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          # Build multi-platform only for no_opt (non-optimized) variant, others are x86-specific
-          platforms: ${{ matrix.version.avx_flag == 'no_opt' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
+          # Build multi-platform only for generic (non-optimized) variant, others are x86-specific
+          platforms: ${{ matrix.avx_flag == 'generic' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
           build-args: |
-            AVX_FLAG=${{ matrix.version.avx_flag }}
-            CORSIKA_VERSION=${{ matrix.version.corsika }}
-            CORSIKA_CONFIG_VERSION=${{ matrix.version.corsika_config }}
+            AVX_FLAG=${{ matrix.avx_flag }}
+            CORSIKA_VERSION=${{ matrix.corsika }}
+            CORSIKA_CONFIG_VERSION=${{ matrix.corsika_config }}
+            CORSIKA_OPT_PATCH_VERSION=${{ matrix.corsika_opt_patch }}
           secrets: |
             corsika7_token=${{ secrets.CORSIKA7_KIT_GITLAB }}
           push: ${{ github.event_name == 'workflow_dispatch' }}
