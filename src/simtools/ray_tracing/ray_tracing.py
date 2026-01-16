@@ -468,6 +468,34 @@ class RayTracing:
         else:
             self._logger.error("No results to export")
 
+    def get_d80_mm(self, row_index: int = 0) -> float:
+        """Return d80 from the analysis results in mm.
+
+        Parameters
+        ----------
+        row_index : int
+            Row index into the results table (default: 0).
+
+        Returns
+        -------
+        float
+            d80 in millimeters.
+        """
+        if self._results is None:
+            raise RuntimeError("No results available; run analyze() first")
+
+        d80 = self._results["d80_cm"][row_index]
+
+        # d80 is typically an astropy Quantity. Fall back gracefully if not.
+        if hasattr(d80, "to_value"):
+            d80_cm = float(d80.to_value(u.cm))
+        elif hasattr(d80, "value"):
+            d80_cm = float(d80.value)
+        else:
+            d80_cm = float(d80)
+
+        return d80_cm * 10.0
+
     def _read_results(self):
         """Read existing results file and store it in _results."""
         self._results = astropy.io.ascii.read(self._file_results, format="ecsv")
