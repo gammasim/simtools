@@ -26,13 +26,13 @@ class SimtelRunner:
     ----------
     label: str
         Instance label. Important for output file naming.
-    corsika_config: CorsikaConfig
-        CORSIKA configuration.
+    config: CorsikaConfig or dict
+        Configuration parameters.
     is_calibration_run: bool
         Flag to indicate if this is a calibration run.
     """
 
-    def __init__(self, label=None, corsika_config=None, is_calibration_run=False):
+    def __init__(self, label=None, config=None, is_calibration_run=False):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class SimtelRunner:
 
         self.runs_per_set = 1
 
-        self.runner_service = RunnerServices(corsika_config, "sim_telarray", label)
+        self.runner_service = RunnerServices(config, run_type="sim_telarray", label=label)
         self.file_list = None
 
     def run(self, test=False, input_file=None, run_number=None):

@@ -47,7 +47,7 @@ class CorsikaSimtelRunner:
         self.sequential = "--sequential" if sequential else ""
 
         self.runner_service = runner_services.RunnerServices(
-            self.base_corsika_config, "multi_pipe", label
+            self.base_corsika_config, run_type="multi_pipe", label=label
         )
         self.file_list = None
 
