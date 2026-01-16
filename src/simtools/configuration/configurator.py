@@ -389,7 +389,7 @@ class Configurator:
             return _list_args
 
         try:
-            return [str(value) for value in input_var if value != "None"]
+            return [str(value) for value in list(input_var) if value != "None"]
         except TypeError:
             return []
 

@@ -32,7 +32,7 @@ threshold (float, optional)
     Default: 0.05.
 learning_rate (float, optional)
     Learning rate for gradient descent. Default: 0.001.
-test (ptional)
+test (optional)
     Only optimize a small number of mirrors.
 n_workers (int, optional)
     Number of parallel worker processes to use. Default: 0 (auto chooses maximum).

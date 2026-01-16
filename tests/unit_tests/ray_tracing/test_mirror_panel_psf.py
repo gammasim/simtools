@@ -54,16 +54,16 @@ def _default_rnda_settings(**overrides):
     params = {
         "threshold": 0.05,
         "learning_rate": 1e-4,
-        "grad_clip": 1e4,
-        "max_log_step": 0.25,
+        "grad_clip": mpp.MirrorPanelPSF.DEFAULT_RNDA_GRAD_CLIP,
+        "max_log_step": mpp.MirrorPanelPSF.DEFAULT_RNDA_MAX_LOG_STEP,
         "sigma1_min": 1e-4,
         "sigma1_max": 0.1,
         "sigma2_min": 1e-4,
         "sigma2_max": 0.1,
         "frac2_min": 0.0,
         "frac2_max": 1.0,
-        "max_frac_step": 0.1,
-        "max_iterations": 10,
+        "max_frac_step": mpp.MirrorPanelPSF.DEFAULT_RNDA_MAX_FRAC_STEP,
+        "max_iterations": mpp.MirrorPanelPSF.DEFAULT_RNDA_MAX_ITERATIONS,
     }
     params.update(overrides)
     return mpp.RndaGradientDescentSettings(**params)

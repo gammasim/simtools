@@ -85,6 +85,12 @@ class MirrorPanelPSF:
         Dictionary with input arguments.
     """
 
+    # Internal guard-rail defaults for the RNDA optimizer.
+    DEFAULT_RNDA_GRAD_CLIP: float = 1e4
+    DEFAULT_RNDA_MAX_LOG_STEP: float = 0.25
+    DEFAULT_RNDA_MAX_FRAC_STEP: float = 0.1
+    DEFAULT_RNDA_MAX_ITERATIONS: int = 100
+
     def __init__(self, label, args_dict):
         """Initialize the MirrorPanelPSF class."""
         self._logger = logging.getLogger(__name__)
@@ -458,8 +464,9 @@ class MirrorPanelPSF:
         # pylint: disable=too-many-locals
         threshold = float(self.args_dict.get("threshold", 0.05))  # 5% default
         learning_rate = float(self.args_dict.get("learning_rate", 0.001))
-        grad_clip = 1e4
-        max_log_step = 0.25
+
+        grad_clip = float(self.DEFAULT_RNDA_GRAD_CLIP)
+        max_log_step = float(self.DEFAULT_RNDA_MAX_LOG_STEP)
         # Bounds are schema-defined. Defaults are only a fallback if schema metadata is missing.
         param_name = "mirror_reflection_random_angle"
 
@@ -487,8 +494,8 @@ class MirrorPanelPSF:
         # Sigma parameters are used in log-space updates; ensure strictly positive lower bounds.
         sigma1_min = max(sigma1_min, 1e-12)
         sigma2_min = max(sigma2_min, 1e-12)
-        max_frac_step = 0.1
-        max_iterations = 100
+        max_frac_step = float(self.DEFAULT_RNDA_MAX_FRAC_STEP)
+        max_iterations = int(self.DEFAULT_RNDA_MAX_ITERATIONS)
 
         current_rnda = list(self.rnda_start)
 
