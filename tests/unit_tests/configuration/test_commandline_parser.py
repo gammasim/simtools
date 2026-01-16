@@ -341,7 +341,7 @@ def test_simulation_configuration():
             assert any(action.dest == "view_cone" for action in group._group_actions)
         if str(group.title) == "sim_telarray configuration":
             assert any(
-                action.dest == "sim_telarray_instrument_seeds" for action in group._group_actions
+                action.dest == "sim_telarray_instrument_seed" for action in group._group_actions
             )
 
     _parser_10 = parser.CommandLineParser()
@@ -456,3 +456,35 @@ def test_build_info_action(mocker):
     assert mock_print.called
     assert mock_exit.called
     assert mock_print.call_args_list[0][0][0] == "Test build info"
+
+
+def test_bounded_int():
+    bounded_int_checker = parser.CommandLineParser.bounded_int(1, 10)
+
+    assert bounded_int_checker(1) == 1
+    assert bounded_int_checker(5) == 5
+    assert bounded_int_checker(10) == 10
+
+    assert bounded_int_checker("1") == 1
+    assert bounded_int_checker("5") == 5
+    assert bounded_int_checker("10") == 10
+
+    with pytest.raises(ValueError, match=r"0 not in \[1,10\]"):
+        bounded_int_checker(0)
+
+    with pytest.raises(ValueError, match=r"11 not in \[1,10\]"):
+        bounded_int_checker(11)
+
+    with pytest.raises(ValueError, match=r"-5 not in \[1,10\]"):
+        bounded_int_checker(-5)
+
+    bounded_int_checker_large = parser.CommandLineParser.bounded_int(100, 1000)
+    assert bounded_int_checker_large(100) == 100
+    assert bounded_int_checker_large(500) == 500
+    assert bounded_int_checker_large(1000) == 1000
+
+    with pytest.raises(ValueError, match=r"99 not in \[100,1000\]"):
+        bounded_int_checker_large(99)
+
+    with pytest.raises(ValueError, match=r"1001 not in \[100,1000\]"):
+        bounded_int_checker_large(1001)

@@ -8,6 +8,7 @@ from pathlib import Path
 import astropy.units as u
 
 import simtools.version
+from simtools import constants
 from simtools.utils import names
 
 
@@ -450,20 +451,34 @@ class CommandLineParser(argparse.ArgumentParser):
     def _get_dictionary_with_sim_telarray_configuration():
         """Return dictionary with sim_telarray configuration parameters."""
         return {
-            "sim_telarray_instrument_seeds": {
-                "help": (
-                    "Random seed used for sim_telarray instrument setup. "
-                    "If '--sim_telarray_random_instrument_instances' is not set: "
-                    "use as sim_telarray seed ('random_seed' parameter). Otherwise: "
-                    "use as base seed to generate the random instrument instance seeds."
-                ),
-                "type": str,
+            "sim_telarray_instrument_seed": {
+                "help": "Random seed used for sim_telarray instrument setup.",
+                "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
                 "required": False,
             },
             "sim_telarray_random_instrument_instances": {
                 "help": "Number of random instrument instances initialized in sim_telarray.",
-                "type": int,
+                "type": CommandLineParser.bounded_int(1, 1024),
                 "required": False,
+                "default": 1,
+            },
+            "sim_telarray_seed": {
+                "help": (
+                    "Random seed used for sim_telarray shower simulation "
+                    "Single value: seed for shower simulations. "
+                    "Two values: [instrument_seed, simulation_seed] (use for testing only)."
+                ),
+                "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
+                "nargs": "+",
+                "required": False,
+            },
+            # hidden argument to specify the sim_telarray seeds file name
+            # (defined it here for convenience)
+            "sim_telarray_seed_file": {
+                "help": argparse.SUPPRESS,
+                "type": str,
+                "required": False,
+                "default": "sim_telarray_instrument_seeds.txt",
             },
         }
 
@@ -837,6 +852,18 @@ class CommandLineParser(argparse.ArgumentParser):
             raise ValueError("Input string does not contain an integer and a astropy quantity.")
 
         return (int(match.group(1)), u.Quantity(float(match.group(2)), match.group(3)))
+
+    @staticmethod
+    def bounded_int(min_value, max_value):
+        """Argument parser type to check that an integer is within a given interval."""
+
+        def checker(value):
+            int_value = int(value)
+            if int_value < min_value or int_value > max_value:
+                raise ValueError(f"{int_value} not in [{min_value},{max_value}]")
+            return int_value
+
+        return checker
 
 
 class BuildInfoAction(argparse.Action):

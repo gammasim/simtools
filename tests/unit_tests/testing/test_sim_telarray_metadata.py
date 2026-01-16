@@ -81,7 +81,8 @@ def test_assert_sim_telarray_seed(caplog):
     """Test _assert_sim_telarray_seed."""
 
     metadata = {"instrument_seed": "12345", "instrument_instances": 100}
-    sim_telarray_seeds = {"seed": "12345", "instrument_instances": 100}
+    sim_telarray_seeds = MagicMock()
+    sim_telarray_seeds.instrument_seed = "12345"
 
     # Test with matching seeds
     with caplog.at_level(logging.INFO):
@@ -90,7 +91,8 @@ def test_assert_sim_telarray_seed(caplog):
 
     # Test with mismatched seeds
     metadata = {"instrument_seed": "12345", "instrument_instances": 100}
-    sim_telarray_seeds = {"seed": "54321", "instrument_instances": 100}
+    sim_telarray_seeds = MagicMock()
+    sim_telarray_seeds.instrument_seed = "54321"
     assert (
         _assert_sim_telarray_seed(metadata, sim_telarray_seeds)
         == "Parameter instrument_seed mismatch between sim_telarray file: 12345, and model: 54321"
@@ -107,7 +109,8 @@ def test_assert_sim_telarray_seed_with_rng_select_seed(caplog):
         "instrument_instances": 100,
         "rng_select_seed": "12394",
     }
-    sim_telarray_seeds = {"seed": "12345", "instrument_instances": 100}
+    sim_telarray_seeds = MagicMock()
+    sim_telarray_seeds.instrument_seed = "12345"
 
     with patch(
         "simtools.testing.sim_telarray_metadata.get_corsika_run_number", return_value=10
