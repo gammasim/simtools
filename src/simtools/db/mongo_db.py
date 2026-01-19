@@ -4,7 +4,7 @@ import io
 import logging
 import re
 from pathlib import Path
-from threading import Lock
+from threading import Lock as _Lock
 
 import gridfs
 import jsonschema
@@ -126,7 +126,7 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
     """
 
     db_client: MongoClient = None
-    _lock = Lock()
+    _lock = _Lock()
     _logger = logging.getLogger(__name__)
 
     def __init__(self, db_config=None):
