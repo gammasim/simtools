@@ -21,24 +21,8 @@ env:
   AVX_FLAG: "generic"
 
 jobs:
-
-  download-qgsjet-tables:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download QGSJet
-        run: |
-          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download -O qgsdat-III.bz2
-      - name: Upload QGSJet files
-        uses: actions/upload-artifact@v5
-        with:
-          name: upload-qgsjet-tables
-          path: |
-            qgsdat-III.bz2
-          retention-days: 1
-
   build-simtools-dev:
     runs-on: ubuntu-latest
-    needs: [download-qgsjet-tables]
     permissions:
       contents: read
       packages: write
@@ -48,12 +32,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-
-      - name: Download QGSJet tables
-        uses: actions/download-artifact@v7
-        with:
-          name: upload-qgsjet-tables
-          path: .
 
       - name: Set build branch
         run: |
