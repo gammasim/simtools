@@ -380,38 +380,6 @@ def test_pack_for_register_with_multiple_versions(
         )
 
 
-def test_get_seed_for_random_instrument_instances(shower_simulator):
-    # Test with a seed provided in the configuration
-    shower_simulator.sim_telarray_seeds["seed"] = "12345, 67890"
-    seed = shower_simulator._get_seed_for_random_instrument_instances(
-        shower_simulator.sim_telarray_seeds["seed"],
-        model_version="6.0.1",
-        zenith_angle=20.0,
-        azimuth_angle=180.0,
-    )
-    assert seed == 12345
-
-    shower_simulator.sim_telarray_seeds["seed"] = None
-    shower_simulator.model_version = "6.0.1"
-    shower_simulator.site = "North"
-    seed = shower_simulator._get_seed_for_random_instrument_instances(
-        shower_simulator.sim_telarray_seeds["seed"],
-        model_version="6.0.1",
-        zenith_angle=20.0,
-        azimuth_angle=180.0,
-    )
-    assert seed == 600010000000 + 1000000 + 20 * 1000 + 180
-
-    shower_simulator.site = "South"
-    seed = shower_simulator._get_seed_for_random_instrument_instances(
-        shower_simulator.sim_telarray_seeds["seed"],
-        model_version="6.0.1",
-        zenith_angle=20.0,
-        azimuth_angle=180.0,
-    )
-    assert seed == 600010000000 + 2000000 + 20 * 1000 + 180
-
-
 def test_initialize_simulation_runner_with_corsika(shower_simulator):
     simulation_runner = shower_simulator._initialize_simulation_runner()
     assert simulation_runner is not None
@@ -918,18 +886,6 @@ def test_verify_simulations_corsika(shower_simulator, mocker):
     shower_simulator.verify_simulations()
 
     mock_verify_corsika.assert_called_once_with(500)
-
-
-def test_get_seed_for_random_instrument_instances_with_unknown_site(shower_simulator):
-    shower_simulator.sim_telarray_seeds["seed"] = None
-    shower_simulator.site = "UnknownSite"
-    seed = shower_simulator._get_seed_for_random_instrument_instances(
-        shower_simulator.sim_telarray_seeds["seed"],
-        model_version="6.0.1",
-        zenith_angle=20.0,
-        azimuth_angle=180.0,
-    )
-    assert seed == 600010000000 + 1000000 + 20 * 1000 + 180
 
 
 def test_get_first_corsika_config_error(shower_simulator):

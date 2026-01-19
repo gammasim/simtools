@@ -26,21 +26,17 @@ def test_init_simulator_array(corsika_config_mock_array_model):
     )
     assert simulator.corsika_config == corsika_config_mock_array_model
     assert simulator.label == "test-label"
-    assert simulator.sim_telarray_seeds is None
     assert simulator.is_calibration_run is False
     assert simulator._log_file is None
 
 
 def test_init_simulator_array_with_seeds(corsika_config_mock_array_model):
     """Test SimulatorArray initialization with sim_telarray_seeds."""
-    seeds = {"seed": 12345, "random_instrument_instances": True}
     simulator = SimulatorArray(
         corsika_config=corsika_config_mock_array_model,
         label="test-label",
-        sim_telarray_seeds=seeds,
         is_calibration_run=True,
     )
-    assert simulator.sim_telarray_seeds == seeds
     assert simulator.is_calibration_run is True
 
 
@@ -276,61 +272,6 @@ def test_determine_pointing_option(simtel_runner):
     assert copy_simtel_runner._determine_pointing_option() is False
     copy_simtel_runner.label = None
     assert copy_simtel_runner._determine_pointing_option() is False
-
-
-def test_common_run_command_with_seeds_by_run(simtel_runner, mocker):
-    """Test _common_run_command with random_instrument_instances seed configuration."""
-    mocker.patch("simtools.settings.config", mocker.Mock(sim_telarray_exe="/path/to/sim_telarray"))
-
-    simtel_runner.corsika_config.array_model.get_config_directory.return_value = "/config/dir"
-    simtel_runner.corsika_config.array_model.config_file_path = "/config/file.cfg"
-    simtel_runner.corsika_config.array_model.export_all_simtel_config_files = mocker.Mock()
-    simtel_runner.corsika_config.zenith_angle = 20.0
-    simtel_runner.corsika_config.azimuth_angle = 0.0
-
-    simtel_runner.sim_telarray_seeds = {
-        "random_instrument_instances": True,
-        "seed_file_name": "seeds.txt",
-    }
-
-    simtel_runner.runner_service = mocker.Mock()
-    simtel_runner.runner_service.get_file_name.side_effect = lambda file_type, run_number: {
-        "sim_telarray_log": f"log_{run_number}.log",
-        "sim_telarray_histogram": f"hist_{run_number}.hist",
-        "sim_telarray_output": f"output_{run_number}.simtel.gz",
-    }[file_type]
-
-    result = simtel_runner._common_run_command(run_number=42)
-
-    assert isinstance(result, list)
-    assert "/path/to/sim_telarray" in result
-    assert any("file-by-run:" in str(item) for item in result)
-    assert any("seeds.txt" in str(item) for item in result)
-
-
-def test_common_run_command_with_fixed_seed(simtel_runner, mocker):
-    """Test _common_run_command with fixed seed configuration."""
-    mocker.patch("simtools.settings.config", mocker.Mock(sim_telarray_exe="/path/to/sim_telarray"))
-
-    simtel_runner.corsika_config.array_model.get_config_directory.return_value = "/config/dir"
-    simtel_runner.corsika_config.array_model.config_file_path = "/config/file.cfg"
-    simtel_runner.corsika_config.array_model.export_all_simtel_config_files = mocker.Mock()
-    simtel_runner.corsika_config.zenith_angle = 20.0
-    simtel_runner.corsika_config.azimuth_angle = 0.0
-
-    simtel_runner.sim_telarray_seeds = {"seed": 54321}
-
-    simtel_runner.runner_service = mocker.Mock()
-    simtel_runner.runner_service.get_file_name.side_effect = lambda file_type, run_number: {
-        "sim_telarray_log": f"log_{run_number}.log",
-        "sim_telarray_histogram": f"hist_{run_number}.hist",
-        "sim_telarray_output": f"output_{run_number}.simtel.gz",
-    }[file_type]
-
-    result = simtel_runner._common_run_command(run_number=1)
-
-    assert isinstance(result, list)
-    assert any("random_seed=54321" in str(item) for item in result)
 
 
 def test_common_run_command_weak_pointing_divergent(simtel_runner, mocker):

@@ -23,3 +23,8 @@ MODEL_PARAMETER_SCHEMA_URL = (
 )
 # Path to resource files
 RESOURCE_PATH = files("simtools") / "resources"
+
+# Maximum value allowed for random seeds in sim_telarray
+SIMTEL_MAX_SEED = 2147483647
+# Maximum value allowed for random seeds in CORSIKA
+CORSIKA_MAX_SEED = 900000000
