@@ -22,8 +22,6 @@ on:
         type: string
         default: '["7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]'
     secrets:
-      CLOUD_QGSJET3:
-        required: false
       DB_SERVER:
         required: false
       DB_API_USER:
@@ -41,9 +39,6 @@ on:
     - cron: "0 0 * * *"
   release:
     types: [published]
-
-env:
-  CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
 jobs:
 
@@ -67,11 +62,10 @@ jobs:
     name: Prepare CORSIKA interaction tables
     runs-on: ubuntu-latest
     env:
-      CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
       IT_NAME: "corsika7-interaction-tables"
 
     steps:
-      - name: Clone CORSIKA interaction tables (exclude qgsjet tables)
+      - name: Clone CORSIKA interaction tables (exclude QGSJet tables)
         run: |
           REPO_URL=https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}
           export GIT_LFS_SKIP_SMUDGE=1  # disable automatic downloading of all LFS files
@@ -154,12 +148,11 @@ jobs:
             echo "SIMTOOLS_SIM_TELARRAY_PATH=$SIMTOOLS_SIM_TELARRAY_PATH"
             echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
             echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
-            echo "SIMTOOLS_CORSIKA_HE_INTERACTION=epos"
+            echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$SIMTOOLS_CORSIKA_HE_INTERACTION"
             echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$SIMTOOLS_CORSIKA_LE_INTERACTION"
           } | tee .env >> "$GITHUB_ENV"
 
       - name: Download CORSIKA interaction tables artifact
-        if: contains(env.CONTAINER_IMAGE, 'simtools-prod')
         uses: actions/download-artifact@v4
         with:
           name: corsika-interaction-tables
