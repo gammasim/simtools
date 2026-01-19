@@ -464,8 +464,8 @@ class CommandLineParser(argparse.ArgumentParser):
             },
             "sim_telarray_seed": {
                 "help": (
-                    "Random seed used for sim_telarray shower simulation "
-                    "Single value: seed for shower simulations. "
+                    "Random seed used for sim_telarray simulation. "
+                    "Single value: seed for event simulation. "
                     "Two values: [instrument_seed, simulation_seed] (use for testing only)."
                 ),
                 "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
@@ -857,13 +857,17 @@ class CommandLineParser(argparse.ArgumentParser):
     def bounded_int(min_value, max_value):
         """Argument parser type to check that an integer is within a given interval."""
 
-        def checker(value):
-            int_value = int(value)
-            if int_value < min_value or int_value > max_value:
-                raise ValueError(f"{int_value} not in [{min_value},{max_value}]")
-            return int_value
+        def bounded_int_type(value):
+            try:
+                int_value = int(value)
+            except ValueError as exc:
+                raise ValueError(f"expected an integer in [{min_value},{max_value}]") from exc
 
-        return checker
+            if min_value <= int_value <= max_value:
+                return int_value
+            raise ValueError(f"{int_value} not in [{min_value},{max_value}]")
+
+        return bounded_int_type
 
 
 class BuildInfoAction(argparse.Action):

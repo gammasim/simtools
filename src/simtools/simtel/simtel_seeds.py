@@ -111,6 +111,7 @@ class SimtelSeeds:
             file.write(
                 "# Random seeds for instrument configuration generated with seed "
                 f"{self.instrument_seed} (model version {model_version}, site {site})\n"
+                f"# Zenith angle: {zenith_angle}, Azimuth angle: {azimuth_angle}\n"
             )
             for number in random_integers:
                 file.write(f"{number}\n")
@@ -148,19 +149,21 @@ class SimtelSeeds:
         if self.instrument_seed:
             return self.instrument_seed
 
-        # Generate a seed based on model_version, zenith_angle, and azimuth_angle
+        # Generate a seed based on site, model_version, zenith_angle, and azimuth_angle
         if model_version and zenith_angle is not None and azimuth_angle is not None:
-
-            def key_index(key):
-                try:
-                    return list(names.site_names()).index(key) + 1
-                except ValueError:
-                    return 1
+            try:
+                key_index = next(
+                    i + 1
+                    for i, (_, values) in enumerate(names.site_names().items())
+                    if site in values
+                )
+            except StopIteration as exc:
+                raise ValueError(f"Unknown site: {site!r}") from exc
 
             seed = semver_to_int(model_version) * 10000000
-            seed = seed + key_index(site) * 1000000
-            seed = seed + (int)(zenith_angle) * 1000
-            return seed + (int)(azimuth_angle)
+            seed = seed + key_index * 1000000
+            seed = seed + int(zenith_angle) * 1000
+            return seed + int(azimuth_angle)
 
         # Generate a random instrument seed
         return random.seeds(max_seed=SIMTEL_MAX_SEED)
