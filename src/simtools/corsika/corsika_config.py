@@ -447,8 +447,10 @@ class CorsikaConfig:
         epos_par["EPOPAR fname pathnx"] = [f"{epos_path}/"]
         for epos_file in ["inics", "iniev", "inirj", "initl"]:
             epos_par[f"EPOPAR fname {epos_file}"] = [str(epos_path / f"epos.{epos_file}")]
+        epos_par["EPOPAR fname hpf"] = [str(epos_path / "urqmd34/tables.dat")]
         for dummy_output in ["check", "histo", "data", "copy"]:
             epos_par[f"EPOPAR fname {dummy_output}"] = ["none"]
+
         return epos_par
 
     def _input_config_first_interaction_height(self, entry):
