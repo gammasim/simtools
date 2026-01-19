@@ -44,7 +44,6 @@ on:
 
 env:
   CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
-  IT_NAME: "corsika7-interaction-tables"
 
 jobs:
 
@@ -69,10 +68,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
+      IT_NAME: "corsika7-interaction-tables"
 
     steps:
-      - uses: actions/checkout@v6
-
       - name: Clone CORSIKA interaction tables
         run: |
           REPO_URL=https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}
@@ -85,7 +83,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: corsika-interaction-tables
-          path: ${IT_NAME}.tar.gz
+          path: corsika7-interaction-tables.tar.gz
           if-no-files-found: error
           retention-days: 1
 
