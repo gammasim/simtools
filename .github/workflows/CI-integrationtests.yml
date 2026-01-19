@@ -59,7 +59,7 @@ jobs:
           python -m build
 
   prepare_interaction_tables:
-    name: Prepare CORSIKA interaction tables
+    name: download CORSIKA interaction tables
     runs-on: ubuntu-latest
     env:
       IT_NAME: "corsika7-interaction-tables"
@@ -79,7 +79,7 @@ jobs:
           name: corsika-interaction-tables
           path: ${{ env.IT_NAME }}
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 30
 
   integration_tests:
     needs: prepare_interaction_tables
@@ -157,14 +157,6 @@ jobs:
         with:
           name: corsika-interaction-tables
           path: /workdir/external/simpipe/simulation_software/corsika7-interaction-tables
-
-      - name: Verify CORSIKA interaction tables
-        run: |
-          echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH: $SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
-          echo "Contents of interaction tables directory:"
-          ls -lah /workdir/external/simpipe/simulation_software
-          ls -lah /workdir/external/simpipe/simulation_software/$IT_NAME
-          ls -lah "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH" || echo "Directory not found!"
 
       - name: Extend PATH (sim_telarray)
         run: |
