@@ -74,8 +74,9 @@ jobs:
       - name: Clone CORSIKA interaction tables (exclude qgsjet tables)
         run: |
           REPO_URL=https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}
-          git lfs install
+          export GIT_LFS_SKIP_SMUDGE=1  # disable automatic downloading of all LFS files
           git clone --depth 1 --branch "initial-setup" "$REPO_URL" "$IT_NAME"
+          git lfs install
           (cd "$IT_NAME" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III")
 
       - name: Upload CORSIKA interaction tables
