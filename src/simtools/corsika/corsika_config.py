@@ -445,6 +445,7 @@ class CorsikaConfig:
         epos_par["EPOPAR fname pathnx"] = [f"{epos_path}/"]
         for epos_file in ["inics", "iniev", "inirj", "initl", "check"]:
             epos_par[f"EPOPAR fname {epos_file}"] = [str(epos_path / f"epos.{epos_file}")]
+        epos_par["EPOPAR fname hpf"] = [str(epos_path / "urqmd34/tables.dat")]
 
         return epos_par
 
