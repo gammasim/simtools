@@ -120,9 +120,9 @@ RUN ls ../config_*.h && for config_file in ../config_*.h; do \
         CORSIKA_RUN_DIR="/workdir/corsika-run" && \
         mkdir -p ${CORSIKA_RUN_DIR} && \
         corsika_name=$(basename "$config_file" .h | sed 's/^config_/corsika_/'); \
-        mv -v -f "./run/corsika${CORSIKA_VERSION}Linux_"* "${CORSIKA_RUN_DIR}/${corsika_name}"; && \
+        mv -v -f "./run/corsika${CORSIKA_VERSION}Linux_"* "${CORSIKA_RUN_DIR}/${corsika_name}" && \
         # NUCNUCS table required to be in same directory as executables
-        mv -v -f "./run/NUCNUCCS "${CORSIKA_RUN_DIR}/"; \
+        mv -v -f "./run/NUCNUCCS" "${CORSIKA_RUN_DIR}/"; \
     done
 
 # Generate build_opts.yml with build information
