@@ -44,6 +44,7 @@ on:
 
 env:
   CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
+  IT_NAME: "corsika7-interaction-tables"
 
 jobs:
 
@@ -74,16 +75,17 @@ jobs:
 
       - name: Clone CORSIKA interaction tables
         run: |
-          git clone --depth 1 \
-            https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-interaction-tables \
-            corsika7-interaction-tables
-          tar -czf corsika7-interaction-tables.tar.gz -C corsika7-interaction-tables .
+          REPO_URL=https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}
+          git lfs install
+          git clone --depth 1 "$REPO_URL" "$IT_NAME"
+          (cd "$IT_NAME" && git lfs pull)
+          tar -czf "${IT_NAME}.tar.gz" -C "$IT_NAME" .
 
       - name: Upload CORSIKA interaction tables
         uses: actions/upload-artifact@v4
         with:
           name: corsika-interaction-tables
-          path: corsika7-interaction-tables.tar.gz
+          path: ${IT_NAME}.tar.gz
           if-no-files-found: error
           retention-days: 1
 
@@ -97,6 +99,7 @@ jobs:
       options: --user 0
     env:
       CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
+      IT_NAME: "corsika7-interaction-tables"
 
     services:
       mongodb:
@@ -166,7 +169,7 @@ jobs:
         run: |
           tables_root=$(dirname "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
           mkdir -p "$tables_root"
-          tar -xzf /tmp/corsika-interaction-tables/corsika7-interaction-tables.tar.gz \
+          tar -xzf /tmp/corsika-interaction-tables/"${IT_NAME}".tar.gz \
             -C "$tables_root"
 
       - name: Extend PATH (sim_telarray)
