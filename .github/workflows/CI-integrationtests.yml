@@ -158,6 +158,12 @@ jobs:
           name: corsika-interaction-tables
           path: /workdir/external/simpipe/simulation_software/corsika7-interaction-tables
 
+      - name: Verify CORSIKA interaction tables
+        run: |
+          echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH: $SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
+          echo "Contents of interaction tables directory:"
+          ls -lah "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH" || echo "Directory not found!"
+
       - name: Extend PATH (sim_telarray)
         run: |
           [ -n "$SIMTOOLS_SIM_TELARRAY_PATH" ] && echo "$SIMTOOLS_SIM_TELARRAY_PATH" >> "$GITHUB_PATH"
