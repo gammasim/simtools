@@ -253,7 +253,8 @@ def test_corsika_configuration_interaction_flags(
     assert isinstance(parameters, dict)
     assert "ECUTS" in parameters
     assert parameters["MAXPRT"] == ["10"]
-    assert len(parameters) == 9
+    # number of parameters depend on HE interaction model (qgs3 or epos)
+    assert len(parameters) == 9 or len(parameters) == 19
 
 
 def test_input_config_first_interaction_height(corsika_config_mock_array_model):
