@@ -63,13 +63,42 @@ jobs:
           python -m pip install --upgrade pip build
           python -m build
 
+  prepare_interaction_tables:
+    name: Prepare CORSIKA interaction tables
+    runs-on: ubuntu-latest
+    env:
+      CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Clone CORSIKA interaction tables
+        if: contains(env.CONTAINER_IMAGE, 'simtools-prod')
+        run: |
+          git clone --depth 1 \
+            https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-interaction-tables \
+            corsika7-interaction-tables
+          tar -czf corsika7-interaction-tables.tar.gz -C corsika7-interaction-tables .
+
+      - name: Upload CORSIKA interaction tables
+        if: contains(env.CONTAINER_IMAGE, 'simtools-prod')
+        uses: actions/upload-artifact@v4
+        with:
+          name: corsika-interaction-tables
+          path: corsika7-interaction-tables.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
   integration_tests:
+    needs: prepare_interaction_tables
     runs-on: ubuntu-latest
     permissions:
       contents: read
     container:
       image: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
       options: --user 0
+    env:
+      CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
 
     services:
       mongodb:
@@ -124,9 +153,25 @@ jobs:
             echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
             echo "SIMTOOLS_SIM_TELARRAY_PATH=$SIMTOOLS_SIM_TELARRAY_PATH"
             echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
+            echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
             echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$SIMTOOLS_CORSIKA_HE_INTERACTION"
             echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$SIMTOOLS_CORSIKA_LE_INTERACTION"
           } | tee .env >> "$GITHUB_ENV"
+
+      - name: Download CORSIKA interaction tables artifact
+        if: contains(env.CONTAINER_IMAGE, 'simtools-prod')
+        uses: actions/download-artifact@v4
+        with:
+          name: corsika-interaction-tables
+          path: /tmp/corsika-interaction-tables
+
+      - name: Extract CORSIKA interaction tables
+        if: contains(env.CONTAINER_IMAGE, 'simtools-prod')
+        run: |
+          tables_root=$(dirname "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
+          mkdir -p "$tables_root"
+          tar -xzf /tmp/corsika-interaction-tables/corsika7-interaction-tables.tar.gz \
+            -C "$tables_root"
 
       - name: Extend PATH (sim_telarray)
         run: |
@@ -172,12 +217,6 @@ jobs:
             --db_simulation_model ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} \
             --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }} \
             --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH"
-
-      - name: Download QGSJet (prod images without tables)
-        if: contains(inputs.container_image, 'simtools-prod')
-        run: |
-          wget -nv -O - "${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download" | \
-            bunzip2 > "${SIMTOOLS_CORSIKA_PATH}/qgsdat-III"
 
       - name: Integration tests
         shell: bash -l {0}
