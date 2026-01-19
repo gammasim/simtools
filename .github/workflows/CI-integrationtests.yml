@@ -71,12 +71,12 @@ jobs:
       IT_NAME: "corsika7-interaction-tables"
 
     steps:
-      - name: Clone CORSIKA interaction tables
+      - name: Clone CORSIKA interaction tables (exclude qgsjet tables)
         run: |
           REPO_URL=https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}
           git lfs install
           git clone --depth 1 --branch "initial-setup" "$REPO_URL" "$IT_NAME"
-          (cd "$IT_NAME" && git lfs pull)
+          (cd "$IT_NAME" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III")
           tar -czf "${IT_NAME}.tar.gz" -C "$IT_NAME" .
 
       - name: Upload CORSIKA interaction tables
@@ -142,6 +142,7 @@ jobs:
             DB_API_PORT="${{ secrets.DB_API_PORT }}"
           fi
 
+          # for efficiency reason, integration tests run using EPOS
           SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
           {
             echo "SIMTOOLS_DB_SERVER=$DB_SERVER"
@@ -153,7 +154,7 @@ jobs:
             echo "SIMTOOLS_SIM_TELARRAY_PATH=$SIMTOOLS_SIM_TELARRAY_PATH"
             echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
             echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
-            echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$SIMTOOLS_CORSIKA_HE_INTERACTION"
+            echo "SIMTOOLS_CORSIKA_HE_INTERACTION=epos"
             echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$SIMTOOLS_CORSIKA_LE_INTERACTION"
           } | tee .env >> "$GITHUB_ENV"
 
