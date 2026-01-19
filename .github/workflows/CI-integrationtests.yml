@@ -77,13 +77,12 @@ jobs:
           git lfs install
           git clone --depth 1 --branch "initial-setup" "$REPO_URL" "$IT_NAME"
           (cd "$IT_NAME" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III")
-          tar -czf "${IT_NAME}.tar.gz" -C "$IT_NAME" .
 
       - name: Upload CORSIKA interaction tables
         uses: actions/upload-artifact@v4
         with:
           name: corsika-interaction-tables
-          path: corsika7-interaction-tables.tar.gz
+          path: ${{ env.IT_NAME }}
           if-no-files-found: error
           retention-days: 1
 
@@ -159,17 +158,11 @@ jobs:
           } | tee .env >> "$GITHUB_ENV"
 
       - name: Download CORSIKA interaction tables artifact
+        if: contains(env.CONTAINER_IMAGE, 'simtools-prod')
         uses: actions/download-artifact@v4
         with:
           name: corsika-interaction-tables
-          path: /tmp/corsika-interaction-tables
-
-      - name: Extract CORSIKA interaction tables
-        run: |
-          tables_root=$(dirname "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
-          mkdir -p "$tables_root"
-          tar -xzf /tmp/corsika-interaction-tables/"${IT_NAME}".tar.gz \
-            -C "$tables_root"
+          path: ${{ env.SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH }}
 
       - name: Extend PATH (sim_telarray)
         run: |
