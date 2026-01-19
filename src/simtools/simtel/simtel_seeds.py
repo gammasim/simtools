@@ -155,7 +155,7 @@ class SimtelSeeds:
                 key_index = next(
                     i + 1
                     for i, (_, values) in enumerate(names.site_names().items())
-                    if site in values
+                    if site.lower() in values
                 )
             except StopIteration as exc:
                 raise ValueError(f"Unknown site: {site!r}") from exc
