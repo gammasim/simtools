@@ -122,7 +122,6 @@ RUN ls ../config_*.h && for config_file in ../config_*.h; do \
         corsika_name=$(basename "$config_file" .h | sed 's/^config_/corsika_/'); \
         mv -v -f "./run/corsika${CORSIKA_VERSION}Linux_"* "${CORSIKA_RUN_DIR}/${corsika_name}" && \
         # NUCNUCS table required to be in same directory as executables
-        ls -ls run/ && \
         cp -v -f ./run/NUCNUCCS ${CORSIKA_RUN_DIR}/; \
     done
 
