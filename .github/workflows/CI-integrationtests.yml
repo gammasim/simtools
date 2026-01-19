@@ -75,7 +75,7 @@ jobs:
         run: |
           REPO_URL=https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}
           git lfs install
-          git clone --depth 1 "$REPO_URL" "$IT_NAME"
+          git clone --depth 1 --branch "initial-setup" "$REPO_URL" "$IT_NAME"
           (cd "$IT_NAME" && git lfs pull)
           tar -czf "${IT_NAME}.tar.gz" -C "$IT_NAME" .
 
