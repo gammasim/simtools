@@ -131,42 +131,51 @@ def test_get_instrument_seed_configured(mock_config, seeds_instance):
 
 def test_get_instrument_seed_deterministic(mocker, mock_config):
     """Test _get_instrument_seed generates different seeds for different parameters."""
-    mocker.patch("simtools.simtel.simtel_seeds.names.site_names", return_value=["north", "south"])
+    mocker.patch(
+        "simtools.simtel.simtel_seeds.names.site_names",
+        return_value={"North": ["north"], "South": ["south"]},
+    )
 
     seeds = SimtelSeeds()
     seeds.instrument_seed = None
 
     result_base = seeds._get_instrument_seed("north", "1.0.0", 20.0, 180.0)
+    assert result_base == 100001020180
     result_site = seeds._get_instrument_seed("south", "1.0.0", 20.0, 180.0)
+    assert result_site == 100002020180
     result_zenith = seeds._get_instrument_seed("north", "1.0.0", 30.0, 180.0)
+    assert result_zenith == 100001030180
     result_azimuth = seeds._get_instrument_seed("north", "1.0.0", 20.0, 270.0)
+    assert result_azimuth == 100001020270
 
     assert len({result_base, result_site, result_zenith, result_azimuth}) == 4
 
+    with pytest.raises(ValueError, match="Unknown site"):
+        seeds._get_instrument_seed("unknown_site", "1.0.0", 20.0, 180.0)
+
 
 @pytest.mark.parametrize(
-    ("site", "model_version", "zenith", "azimuth", "expected_random"),
+    ("site", "model_version", "zenith", "azimuth", "expected_value"),
     [
-        ("north", "1.0.0", 20.0, 180.0, False),
-        ("north", None, 20.0, 180.0, True),
-        ("unknown", "1.0.0", 0.0, 180.0, False),
+        ("north", "1.0.0", 20.0, 180.0, 100001020180),
+        ("north", None, 20.0, 180.0, 777),
     ],
 )
 def test_get_instrument_seed_various_params(
-    mocker, mock_config, seeds_instance, site, model_version, zenith, azimuth, expected_random
+    mocker, mock_config, seeds_instance, site, model_version, zenith, azimuth, expected_value
 ):
     """Test _get_instrument_seed handles various parameter combinations."""
-    mocker.patch("simtools.simtel.simtel_seeds.names.site_names", return_value=["north", "south"])
+    mocker.patch(
+        "simtools.simtel.simtel_seeds.names.site_names",
+        return_value={"North": ["north"], "South": ["south"]},
+    )
     mocker.patch("simtools.simtel.simtel_seeds.random.seeds", return_value=777)
 
     seeds_instance.instrument_seed = None
     result = seeds_instance._get_instrument_seed(site, model_version, zenith, azimuth)
 
     assert isinstance(result, int)
-    if expected_random:
-        assert result == 777
-    else:
-        assert result > 0
+    assert result == expected_value
 
 
 @pytest.mark.parametrize(
