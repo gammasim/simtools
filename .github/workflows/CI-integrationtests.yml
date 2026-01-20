@@ -157,7 +157,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: corsika-interaction-tables
-          path: ${{ env.SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH }}
+          path: /workdir/external/simpipe/simulation_software/corsika7-interaction-tables/interaction-tables/
 
       - name: Extend PATH (sim_telarray)
         run: |
