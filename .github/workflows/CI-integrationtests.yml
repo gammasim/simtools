@@ -65,13 +65,14 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IT_NAME: "corsika7-interaction-tables"
+      CORSIKA_TABLES: "v0.1.0"
 
     steps:
       - name: Clone CORSIKA interaction tables (exclude QGSJet tables)
         run: |
           REPO_URL=https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}
           export GIT_LFS_SKIP_SMUDGE=1  # disable automatic downloading of all LFS files
-          git clone --depth 1 --branch "initial-setup" "$REPO_URL" "$IT_NAME"
+          git clone --depth 1 --branch "$CORSIKA_TABLES" "$REPO_URL" "$IT_NAME"
           git lfs install
           (cd "$IT_NAME" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III")
 
@@ -157,7 +158,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: corsika-interaction-tables
-          path: /workdir/external/simpipe/simulation_software/corsika7-interaction-tables
+          path: ${{ env.SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH }}/..
 
       - name: Extend PATH (sim_telarray)
         run: |
