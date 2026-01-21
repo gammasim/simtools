@@ -8,6 +8,7 @@ from pathlib import Path
 import astropy.units as u
 
 import simtools.version
+from simtools import constants
 from simtools.utils import names
 
 
@@ -106,7 +107,7 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
         )
         _job_group.add_argument(
-            "--simtel_path",
+            "--sim_telarray_path",
             help="path pointing to sim_telarray installation",
             type=Path,
             required=False,
@@ -159,6 +160,18 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         _job_group.add_argument(
             "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
+        )
+        _job_group.add_argument(
+            "--build_info",
+            action=BuildInfoAction,
+            build_info=f"%(prog)s {simtools.version.__version__}",
+            help="show build information and exit",
+        )
+        _job_group.add_argument(
+            "--export_build_info",
+            help="export build information to file",
+            required=False,
+            type=str,
         )
 
     def initialize_user_arguments(self):
@@ -269,7 +282,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 type=self.telescope,
             )
         if "layout" in model_options or "layout_file" in model_options:
-            _job_group = self._add_model_option_layout(
+            self._add_model_option_layout(
                 job_group=_job_group,
                 model_options=model_options,
                 # layout info is always required for layout related tasks with the exception
@@ -438,20 +451,34 @@ class CommandLineParser(argparse.ArgumentParser):
     def _get_dictionary_with_sim_telarray_configuration():
         """Return dictionary with sim_telarray configuration parameters."""
         return {
-            "sim_telarray_instrument_seeds": {
-                "help": (
-                    "Random seed used for sim_telarray instrument setup. "
-                    "If '--sim_telarray_random_instrument_instances' is not set: "
-                    "use as sim_telarray seed ('random_seed' parameter). Otherwise: "
-                    "use as base seed to generate the random instrument instance seeds."
-                ),
-                "type": str,
+            "sim_telarray_instrument_seed": {
+                "help": "Random seed used for sim_telarray instrument setup.",
+                "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
                 "required": False,
             },
             "sim_telarray_random_instrument_instances": {
                 "help": "Number of random instrument instances initialized in sim_telarray.",
-                "type": int,
+                "type": CommandLineParser.bounded_int(1, 1024),
                 "required": False,
+                "default": 1,
+            },
+            "sim_telarray_seed": {
+                "help": (
+                    "Random seed used for sim_telarray simulation. "
+                    "Single value: seed for event simulation. "
+                    "Two values: [instrument_seed, simulation_seed] (use for testing only)."
+                ),
+                "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
+                "nargs": "+",
+                "required": False,
+            },
+            # hidden argument to specify the sim_telarray seeds file name
+            # (defined it here for convenience)
+            "sim_telarray_seed_file": {
+                "help": argparse.SUPPRESS,
+                "type": str,
+                "required": False,
+                "default": "sim_telarray_instrument_seeds.txt",
             },
         }
 
@@ -825,3 +852,40 @@ class CommandLineParser(argparse.ArgumentParser):
             raise ValueError("Input string does not contain an integer and a astropy quantity.")
 
         return (int(match.group(1)), u.Quantity(float(match.group(2)), match.group(3)))
+
+    @staticmethod
+    def bounded_int(min_value, max_value):
+        """Argument parser type to check that an integer is within a given interval."""
+
+        def bounded_int_type(value):
+            try:
+                int_value = int(value)
+            except ValueError as exc:
+                raise ValueError(f"expected an integer in [{min_value},{max_value}]") from exc
+
+            if min_value <= int_value <= max_value:
+                return int_value
+            raise ValueError(f"{int_value} not in [{min_value},{max_value}]")
+
+        return bounded_int_type
+
+
+class BuildInfoAction(argparse.Action):
+    """Custom argparse action to display build information."""
+
+    def __init__(self, option_strings, dest=argparse.SUPPRESS, default=argparse.SUPPRESS, **kwargs):
+        """Initialize BuildInfoAction."""
+        self.build_info = kwargs.pop("build_info", "Build information")
+        kwargs.pop("nargs", None)
+        super().__init__(option_strings, dest=dest, default=default, nargs=0, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """Display build information and exit."""
+        # for efficiency reason, allow import here
+        from simtools import dependencies  # pylint: disable=C0415
+
+        build_options = dependencies.get_build_options()
+        print(f"{self.build_info}")
+        for key, value in build_options.items():
+            print(f"{key}: {value}")
+        parser.exit()

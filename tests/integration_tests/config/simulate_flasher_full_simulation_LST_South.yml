@@ -12,8 +12,8 @@ applications:
     test: true
     log_level: DEBUG
   integration_tests:
-  - output_file: logfile.log
-  - output_file: ff-1m.simtel.zst
+  - output_file: sub/full_simulation_run000010_South_7.0.0_simulate_flasher.out
+  - output_file: sim_telarray/full_simulation_run000010_South_7.0.0_simulate_flasher.simtel.zst
   model_version_use_current: true
   test_name: full-simulation_lsfs_design
 schema_name: application_workflow.metaschema

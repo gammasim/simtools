@@ -18,8 +18,23 @@ applications:
     test: true
     log_level: DEBUG
   integration_tests:
-  - output_file: logfile.log
-  - output_file: xyzls.simtel.zst
+  - test_output_files:
+    - file: sub/illuminator_North_7.0.0_simulate_illuminator.out
+      path_descriptor: output_path
+    - file: sim_telarray/illuminator_North_7.0.0_simulate_illuminator.simtel.zst
+      path_descriptor: output_path
+    - expected_log_output:
+      pattern:
+      - "Initialize for run"
+      - "Total number of photons produced in this run"
+      - "Sim_telarray finished at"
+      - "CORSIKA IACT finished at"
+      - "Tel. triggered:"
+      - "Finished."
+      forbidden_pattern:
+      - "Error"
+      file: sub/illuminator_North_7.0.0_simulate_illuminator.out
+      path_descriptor: output_path
   model_version_use_current: true
   test_name: run-configurable-position
 schema_name: application_workflow.metaschema

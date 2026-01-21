@@ -8,11 +8,11 @@ applications:
     log_level: DEBUG
     model_version: 6.0.2
     output_path: simtools-output
-    sim_telarray_instrument_seeds: 1745,290
+    sim_telarray_seed: [1745, 290]
     simulation_software: sim_telarray
     site: South
   integration_tests:
-  - output_file: sim_telarray/data/run000007/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.simtel.zst
+  - output_file: sim_telarray/run000007/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.simtel.zst
   test_name: gamma_40_deg_south_sim_telarray_only
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

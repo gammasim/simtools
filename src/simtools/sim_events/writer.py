@@ -187,9 +187,10 @@ class EventDataWriter:
             e_min = event_header["energy_min"]
             e_max = event_header["energy_max"]
             zenith = np.degrees(event_header["zenith"])
-            # relative to geomagnetic north - requires update in pycorsikaio to
-            # read rotation angle
-            azimuth = np.degrees(event_header["azimuth"])
+            # Rotate to geographic north
+            azimuth = np.degrees(
+                event_header["azimuth"] - event_header["angle_array_x_magnetic_north"]
+            )
             view_cone_min = event_header["viewcone_inner_angle"]
             view_cone_max = event_header["viewcone_outer_angle"]
             core_min = 0.0

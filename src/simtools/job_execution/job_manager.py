@@ -1,6 +1,8 @@
 """Interface to workload managers to run jobs on a compute node."""
 
 import logging
+import os
+import stat
 import subprocess
 import time
 from pathlib import Path
@@ -55,91 +57,164 @@ def retry_command(command, max_attempts=3, delay=10):
     return False
 
 
-class JobManager:
+def submit(
+    command,
+    stdin=None,
+    out_file=None,
+    err_file=None,
+    configuration=None,
+    application_log=None,
+    runtime_environment=None,
+    env=None,
+    test=False,
+):
     """
-    Job manager for submitting jobs to a compute node.
+    Submit a job described by a command or a shell script.
 
-    Expects that jobs can be described by shell scripts.
+    Allow to specify a runtime environment (e.g., Docker).
 
     Parameters
     ----------
-    test : bool
+    command: str
+        Command or shell script to execute.
+    stdin: str or Path
+        Input stream.
+    out_file: str or Path
+        Output stream (stdout if out_file and err_file are None).
+    err_file: str or Path
+        Error stream (stderr if out_file and err_file are None).
+    configuration: dict
+        Configuration for the 'command' execution.
+    runtime_environment: list
+        Command to run the application in the specified runtime environment.
+    env: dict
+        Environment variables to set for the job execution.
+    application_log: str or Path
+        The log file of the actual application.
+        Provided in order to print the log excerpt in case of run time error.
+    test: bool
         Testing mode without sub submission.
     """
+    command = _build_command(command, configuration, runtime_environment)
 
-    def __init__(self, test=False):
-        """Initialize JobManager."""
-        self._logger = logging.getLogger(__name__)
-        self.test = test
-        self.run_script = None
-        self.run_out_file = None
+    logger.info(f"Submitting command {command}")
+    logger.info(f"Job output/error streams {out_file} / {err_file}")
 
-    def submit(self, run_script=None, run_out_file=None, log_file=None):
-        """
-        Submit a job described by a shell script.
+    if test:
+        logger.info("Testing mode enabled")
+        return None
 
-        Parameters
-        ----------
-        run_script: str
-            Shell script describing the job to be submitted.
-        run_out_file: str or Path
-            Redirect output/error/job stream to this file (out,err,job suffix).
-        log_file: str or Path
-            The log file of the actual simulator (CORSIKA or sim_telarray).
-            Provided in order to print the log excerpt in case of run time error.
-        """
-        self.run_script = str(run_script)
-        run_out_file = Path(run_out_file)
-        self.run_out_file = str(run_out_file.parent.joinpath(run_out_file.stem))
+    sub_process_env = os.environ.copy()
+    if env:
+        for key, value in env.items():
+            sub_process_env[key] = value
+    logger.debug(f"Setting environment variables for job execution: {sub_process_env}")
 
-        self._logger.info(f"Submitting script {self.run_script}")
-        self._logger.info(f"Job output stream {self.run_out_file + '.out'}")
-        self._logger.info(f"Job error stream {self.run_out_file + '.err'}")
-        self._logger.info(f"Job log stream {self.run_out_file + '.job'}")
+    # disable pylint warning about not closing files here (explicitly closed in finally block)
+    stdout = open(out_file, "w", encoding="utf-8") if out_file else subprocess.PIPE  # pylint: disable=consider-using-with
+    stderr = open(err_file, "w", encoding="utf-8") if err_file else subprocess.PIPE  # pylint: disable=consider-using-with
 
-        submit_result = self.submit_local(log_file)
-        if submit_result != 0:
-            raise JobExecutionError(f"Job submission failed with return code {submit_result}")
+    try:
+        result = subprocess.run(
+            command,
+            shell=isinstance(command, str),
+            check=True,
+            text=True,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
+            env=sub_process_env,
+        )
 
-    def submit_local(self, log_file):
-        """
-        Run a job script on the command line.
+    except subprocess.CalledProcessError as exc:
+        _raise_job_execution_error(exc, out_file, err_file, application_log)
+    finally:
+        if stdout != subprocess.PIPE:
+            stdout.close()
+        if stderr != subprocess.PIPE:
+            stderr.close()
 
-        Parameters
-        ----------
-        log_file: str or Path
-            The log file of the actual simulator (CORSIKA or sim_telarray).
-            Provided in order to print the log excerpt in case of run time error.
+    return result
 
-        Returns
-        -------
-        int
-            Return code of the executed script
-        """
-        self._logger.info("Running script locally")
 
-        if self.test:
-            self._logger.info("Testing (local)")
-            return 0
+def _build_command(command, configuration=None, runtime_environment=None):
+    """Build command to run in the specified runtime environment."""
+    if isinstance(command, (str, Path)) and Path(command).is_file():
+        command = Path(command)
+        command.chmod(command.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
+        command = str(command)
 
-        result = None
-        try:
-            with (
-                open(f"{self.run_out_file}.out", "w", encoding="utf-8") as stdout,
-                open(f"{self.run_out_file}.err", "w", encoding="utf-8") as stderr,
-            ):
-                result = subprocess.run(
-                    f"{self.run_script}",
-                    shell=True,
-                    check=True,
-                    text=True,
-                    stdout=stdout,
-                    stderr=stderr,
-                )
-        except subprocess.CalledProcessError as exc:
-            self._logger.error(gen.get_log_excerpt(f"{self.run_out_file}.err"))
-            if log_file.exists() and gen.get_file_age(log_file) < 5:
-                self._logger.error(gen.get_log_excerpt(log_file))
-            raise JobExecutionError("See excerpt from log file above\n") from exc
+    if runtime_environment:
+        if isinstance(runtime_environment, list):
+            command = [*runtime_environment, command]
+        else:
+            command = [runtime_environment, command]
 
-        return result.returncode if result else 0
+    if configuration:
+        if isinstance(command, list):
+            command = command + _convert_dict_to_args(configuration)
+        else:
+            command = [command, *_convert_dict_to_args(configuration)]
+
+    return command
+
+
+def _convert_dict_to_args(parameters):
+    """
+    Convert a dictionary of parameters to a list of command line arguments.
+
+    Parameters
+    ----------
+    parameters : dict
+        Dictionary containing parameters to convert.
+
+    Returns
+    -------
+    list
+        List of command line arguments.
+    """
+    args = []
+    for key, value in parameters.items():
+        if isinstance(value, bool):
+            if value:
+                args.append(f"--{key}")
+        elif isinstance(value, list):
+            args.extend([f"--{key}", *(str(item) for item in value)])
+        else:
+            args.extend([f"--{key}", str(value)])
+    return args
+
+
+def _raise_job_execution_error(exc, out_file, err_file, application_log):
+    """
+    Raise job execution error with log excerpt.
+
+    Parameters
+    ----------
+    exc: subprocess.CalledProcessError
+        The caught exception.
+    out_file: str or Path
+        Output stream file path.
+    err_file: str or Path
+        Error stream file path.
+    application_log: str or Path
+        The log file of the actual application.
+    """
+    logger.error(f"Job execution failed with return code {exc.returncode}")
+    logger.error(f"stderr: {exc.stderr}")
+
+    if out_file:
+        logger.error(f"Output log excerpt from {out_file}:\n{gen.get_log_excerpt(out_file)}")
+
+    if err_file:
+        logger.error(f"Error log excerpt from {err_file}:\n{gen.get_log_excerpt(err_file)}")
+
+    if application_log:
+        log = Path(application_log)
+        if log.exists() and gen.get_file_age(log) < 5:
+            logger.error(
+                f"Application log excerpt from {application_log}:\n"
+                f"{gen.get_log_excerpt(application_log)}"
+            )
+
+    raise JobExecutionError("See excerpt from log file above") from exc

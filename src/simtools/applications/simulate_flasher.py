@@ -45,8 +45,6 @@ light_source (str, required)
     Calibration light source, e.g., MSFx-FlashCam
 number_of_events (int, optional):
     Number of events to simulate (default: 1).
-output_prefix (str, optional):
-    Prefix for output files (default: empty).
 model_version (str, optional)
     Version of the simulation model.
 array_layout_name (str, optional)
@@ -89,13 +87,6 @@ def _parse():
         default=1,
         required=False,
     )
-    config.parser.add_argument(
-        "--output_prefix",
-        help="Prefix for output files",
-        type=str,
-        default=None,
-        required=False,
-    )
     return config.initialize(
         db_config=True,
         simulation_model=["site", "layout", "telescope", "model_version"],
@@ -123,14 +114,13 @@ def main():
             label=app_context.args.get("label"),
         )
     elif app_context.args["run_mode"] == "direct_injection":
-        light_source = Simulator(
-            args_dict=app_context.args,
-            label=app_context.args.get("label"),
-        )
+        light_source = Simulator(label=app_context.args.get("label"))
     else:
         raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
 
     light_source.simulate()
+    light_source.verify_simulations()
+
     app_context.logger.info("Flasher simulation completed.")
 
 

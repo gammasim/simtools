@@ -2,7 +2,6 @@
 
 import logging
 import re
-import subprocess
 import tempfile
 from io import BytesIO
 from pathlib import Path
@@ -17,6 +16,7 @@ from simtools.constants import MODEL_PARAMETER_SCHEMA_URL, SCHEMA_PATH
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import io_handler
+from simtools.job_execution import job_manager
 
 
 class SinglePhotonElectronSpectrum:
@@ -126,7 +126,7 @@ class SinglePhotonElectronSpectrum:
 
         Raises
         ------
-        subprocess.CalledProcessError
+        job_manager.JobExecutionError
             If the command execution fails.
         """
         tmp_input_file = self._get_input_data(
@@ -153,10 +153,9 @@ class SinglePhotonElectronSpectrum:
 
         self._logger.info(f"Running norm_spe command: {' '.join(command)}")
         try:
-            result = subprocess.run(command, capture_output=True, text=True, check=True)
-        except subprocess.CalledProcessError as exc:
+            result = job_manager.submit(command)
+        except job_manager.JobExecutionError as exc:
             self._logger.error(f"Error running norm_spe: {exc}")
-            self._logger.error(f"stderr: {exc.stderr}")
             raise exc
         finally:
             for tmp_file in [tmp_input_file, tmp_ap_file]:
