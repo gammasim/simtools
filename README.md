@@ -40,6 +40,10 @@ Please cite this software if it is used for a publication, see the [Zenodo recor
 [![Coverage](https://sonar-ctao.zeuthen.desy.de/api/project_badges/measure?project=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14&metric=coverage&token=sqb_5d1fde56fa060247eee7d5e53fa5ac0a4aabe483)](https://sonar-ctao.zeuthen.desy.de/dashboard?id=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14)
 [![Quality Gate Status](https://sonar-ctao.zeuthen.desy.de/api/project_badges/measure?project=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14&metric=alert_status&token=sqb_5d1fde56fa060247eee7d5e53fa5ac0a4aabe483)](https://sonar-ctao.zeuthen.desy.de/dashboard?id=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14)
 
+## Generative AI disclosure
+
+Generative AI tools (including Claude, ChatGPT, and Gemini) were used to assist with code development, debugging, and documentation drafting. All AI-assisted outputs were reviewed, validated, and, where necessary, modified by the authors to ensure accuracy and reliability.
+
 ## Acknowledgements
 
 This project is supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) - project number 460248186 (*PUNCH4NFDI [https://www.punch4nfdi.de/](https://www.punch4nfdi.de/)*).
