@@ -16,6 +16,7 @@ applications:
       parameter_file: nsb_pixel_rate/nsb_pixel_rate-0.0.99.json
       reference_parameter_name: nsb_pixel_rate
       tolerance: 1.e-1
-  test_name: LSTN
+      scaling: 10.0  # camera efficiency changed by factor 0.1
+  test_name: LSTN_overwrite
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
