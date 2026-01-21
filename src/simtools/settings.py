@@ -1,6 +1,7 @@
 """Centralized settings object with command line and environment variables."""
 
 import os
+import socket
 from pathlib import Path
 from types import MappingProxyType
 
@@ -15,7 +16,10 @@ class _Config:
         self._sim_telarray_path = None
         self._sim_telarray_exe = None
         self._corsika_path = None
+        self._corsika_interaction_table_path = None
         self._corsika_exe = None
+        self.user = os.getenv("USER", "unknown")
+        self.hostname = socket.gethostname()
 
     def load(self, args=None, db_config=None):
         """
@@ -34,21 +38,27 @@ class _Config:
         self._args = MappingProxyType(args) if args is not None else {}
         self._db_config = MappingProxyType(db_config) if db_config is not None else {}
         self._sim_telarray_path = (
-            args.get("simtel_path")
-            if args is not None and "simtel_path" in args
-            else os.getenv("SIMTOOLS_SIMTEL_PATH")
+            args.get("sim_telarray_path")
+            if args is not None and "sim_telarray_path" in args
+            else os.getenv("SIMTOOLS_SIM_TELARRAY_PATH")
         )
 
         self._sim_telarray_exe = (
-            args.get("simtel_executable")
-            if args is not None and "simtel_executable" in args
-            else os.getenv("SIMTOOLS_SIMTEL_EXECUTABLE", "sim_telarray")
+            args.get("sim_telarray_executable")
+            if args is not None and "sim_telarray_executable" in args
+            else os.getenv("SIMTOOLS_SIM_TELARRAY_EXECUTABLE", "sim_telarray")
         )
 
         self._corsika_path = (
             args.get("corsika_path")
             if args is not None and "corsika_path" in args
             else os.getenv("SIMTOOLS_CORSIKA_PATH")
+        )
+
+        self._corsika_interaction_table_path = (
+            args.get("corsika_interaction_table_path")
+            if args is not None and "corsika_interaction_table_path" in args
+            else os.getenv("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
         )
 
         self._corsika_exe = self._get_corsika_exec() if self._corsika_path is not None else None
@@ -117,6 +127,15 @@ class _Config:
     def corsika_path(self):
         """Path to the CORSIKA installation directory."""
         return Path(self._corsika_path) if self._corsika_path is not None else None
+
+    @property
+    def corsika_interaction_table_path(self):
+        """Path to the CORSIKA interaction table directory."""
+        return (
+            Path(self._corsika_interaction_table_path)
+            if self._corsika_interaction_table_path is not None
+            else self.corsika_path
+        )
 
     @property
     def corsika_exe(self):

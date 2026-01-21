@@ -48,11 +48,8 @@ def get_python_version_from_pyproject():
 # -- Project information -----------------------------------------------------
 
 project = "simtools"
-copyright = "2024-2025, gammasim-tools, simtools developers"  # noqa A001
+copyright = "2024-2026, gammasim-tools, simtools developers"  # noqa A001
 author = get_authors_from_citation_file()
-rst_epilog = f"""
-.. |author| replace:: {author}
-"""
 
 python_min_requires, python_requires = get_python_version_from_pyproject()
 rst_epilog = f"""
@@ -83,6 +80,13 @@ extensions = [
     "numpydoc",
     "sphinx_design",
 ]
+
+nitpicky = True
+
+nitpick_ignore = {
+    ("py:class", "numpy.float64"),
+    ("py:class", "numpy.uint32"),
+}
 
 # Display todos by setting to True
 todo_include_todos = True

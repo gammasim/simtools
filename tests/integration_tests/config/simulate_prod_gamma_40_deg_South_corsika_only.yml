@@ -5,7 +5,7 @@ applications:
     array_layout_name: beta
     azimuth_angle: South
     core_scatter: 1 840 m
-    corsika_test_seeds: true
+    corsika_seeds: [534, 220, 1104, 382]
     energy_range: 10 GeV 11 GeV
     label: test
     log_level: DEBUG
@@ -14,12 +14,12 @@ applications:
     output_path: simtools-output
     primary: gamma
     run_number: 7
-    sim_telarray_instrument_seeds: 1745,290
+    sim_telarray_seed: [1745, 290]
     simulation_software: corsika
     site: South
     zenith_angle: 40
   integration_tests:
-  - output_file: corsika/data/run000007/gamma_run000007_za40deg_azm180deg_South_beta_6.0.2_test.corsika.zst
+  - output_file: corsika/run000007/gamma_run000007_za40deg_azm180deg_South_beta_6.0.2_test.corsika.zst
   test_name: gamma_40_deg_south_corsika_only
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

@@ -17,27 +17,6 @@ from simtools.utils import names
 logger = logging.getLogger(__name__)
 
 
-def sim_telarray_random_seeds(seed, number):
-    """
-    Generate random seeds to be used in sim_telarray.
-
-    Parameters
-    ----------
-    seed: int
-        Seed for the random number generator.
-    number: int
-        Number of random seeds to generate.
-
-    Returns
-    -------
-    list
-        List of random seeds.
-    """
-    rng = np.random.default_rng(seed)
-    max_int32 = np.iinfo(np.int32).max  # sim_telarray requires 32 bit integers
-    return list(rng.integers(low=1, high=max_int32, size=number, dtype=np.int32))
-
-
 class SimtelConfigWriter:
     """
     SimtelConfigWriter writes sim_telarray configuration files.
@@ -491,39 +470,6 @@ class SimtelConfigWriter:
                 file.write(f"#elif TELESCOPE == {count + 1}\n\n")
                 file.write(f"# include <{tel_config_file}>\n\n")
             file.write("#endif \n\n")  # configuration files need to end with \n\n
-
-        if additional_metadata and additional_metadata.get("random_instrument_instances"):
-            self._write_random_seeds_file(additional_metadata, config_file_directory)
-
-    def _write_random_seeds_file(self, sim_telarray_seeds, config_file_directory):
-        """
-        Write list of random number used to generate random instances of instrument.
-
-        Parameters
-        ----------
-        random_instrument_instances: int
-            Number of random instances of the instrument.
-        """
-        self._logger.info(
-            "Writing random seed file "
-            f"{config_file_directory}/{sim_telarray_seeds['seed_file_name']}"
-            f" (global seed {sim_telarray_seeds['seed']})"
-        )
-        if sim_telarray_seeds["random_instrument_instances"] > 1024:
-            raise ValueError("Number of random instances of instrument must be less than 1024")
-        random_integers = sim_telarray_random_seeds(
-            sim_telarray_seeds["seed"], sim_telarray_seeds["random_instrument_instances"]
-        )
-        with open(
-            config_file_directory / sim_telarray_seeds["seed_file_name"], "w", encoding="utf-8"
-        ) as file:
-            file.write(
-                "# Random seeds for instrument configuration generated with seed "
-                f"{sim_telarray_seeds['seed']}"
-                f" (model version {self._model_version}, site {self._site})\n"
-            )
-            for number in random_integers:
-                file.write(f"{number}\n")
 
     def write_single_mirror_list_file(
         self, mirror_number, mirrors, single_mirror_list_file, set_focal_length_to_zero=False

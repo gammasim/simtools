@@ -513,32 +513,6 @@ def test_convert_keys_in_dict_to_lowercase():
     assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
 
 
-def test_clear_default_sim_telarray_cfg_directories():
-    """
-    Test the clear_default_sim_telarray_cfg_directories function.
-    """
-
-    # Test with a simple command.
-    command = "run_simulation"
-    expected_output = "SIM_TELARRAY_CONFIG_PATH='' run_simulation"
-    assert gen.clear_default_sim_telarray_cfg_directories(command) == expected_output
-
-    # Test with a command containing spaces.
-    command = "run_simulation --config config_file"
-    expected_output = "SIM_TELARRAY_CONFIG_PATH='' run_simulation --config config_file"
-    assert gen.clear_default_sim_telarray_cfg_directories(command) == expected_output
-
-    # Test with an empty command.
-    command = ""
-    expected_output = "SIM_TELARRAY_CONFIG_PATH='' "
-    assert gen.clear_default_sim_telarray_cfg_directories(command) == expected_output
-
-    # Test with a command containing special characters.
-    command = "run_simulation && echo 'done'"
-    expected_output = "SIM_TELARRAY_CONFIG_PATH='' run_simulation && echo 'done'"
-    assert gen.clear_default_sim_telarray_cfg_directories(command) == expected_output
-
-
 def test_get_list_of_files_from_command_line(tmp_test_directory) -> None:
     # Test with a list of file names with valid suffixes.
     file_1 = tmp_test_directory / "file1.txt"
@@ -883,3 +857,41 @@ def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
 
     with pytest.raises(ValueError, match="Unsafe file path"):
         gen.pack_tar_file(tar_file_name, ["unsafe_file"])
+
+
+def test_load_environment_variables(tmp_test_directory, monkeypatch):
+    """Test load_environment_variables function."""
+    env_file = tmp_test_directory / ".env"
+
+    # Create a test .env file
+    with open(env_file, "w", encoding="utf-8") as f:
+        f.write('SIMTOOLS_VAR1="value1"\n')
+        f.write("SIMTOOLS_VAR2=value2\n")
+        f.write("SIMTOOLS_VAR3=value3 # comment\n")
+        f.write("SIMTOOLS_VAR4='value4'\n")
+
+    # Test loading all variables
+    result = gen.load_environment_variables(str(env_file))
+    assert result == {
+        "var1": "value1",
+        "var2": "value2",
+        "var3": "value3",
+        "var4": "value4",
+    }
+
+    # Test loading specific variables
+    result = gen.load_environment_variables(str(env_file), ["var1", "var3", "var5"])
+    assert "var1" in result
+    assert "var3" in result
+    assert result["var1"] == "value1"
+    assert result["var3"] == "value3"
+    assert "var5" not in result
+
+    # Test with non-existent env file
+    result = gen.load_environment_variables(str(tmp_test_directory / "non_existent.env"))
+    assert result == {}
+
+    # Test with environment variable set but not in file
+    monkeypatch.setenv("SIMTOOLS_EXTERNAL_VAR", "external_value")
+    result = gen.load_environment_variables(str(env_file), ["external_var"])
+    assert result.get("external_var") == "external_value"

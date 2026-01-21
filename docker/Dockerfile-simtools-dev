@@ -1,36 +1,29 @@
 # Dockerfile for simtools development.
 #
-# Uses CORSIKA (no vector optimization) and sim_telarray images.
+# Uses CORSIKA (no vector optimization) and sim_telarray pre-built images.
 #
-# Minimal CORSIKA version is 7.8x (otherwise QGSJet-II tables need to be added)
-#
-# All dependencies for simtools are installed, but not simtools itself.
+# CORSIKA and sim_telarray are installed, but not simtools itself.
 # It is expected that simtools is installed in an external directory
 # mounted in the container.
+# CORSIKA interaction tables are expected to be cloned into an external directory
+# and mounted to the container (set SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH accordingly).
 #
 # hadolint global ignore=DL3013,DL3041
 # - DL3013, DL3041: ignore warnings about using latest
 
-ARG CORSIKA_VERSION="78010"
-ARG CORSIKA_IMAGE_VERSION="latest"
-ARG SIMTEL_VERSION="251124"
-ARG SIMTEL_BUILD_OPT="prod6-baseline"
+ARG CORSIKA_IMAGE_VERSION="v78010"
 ARG SIMTEL_IMAGE_VERSION="latest"
-ARG AVX_INSTRUCTION="no_opt"
+ARG AVX_FLAG="generic"
 ARG PYTHON_VERSION="3.12"
-ARG SIMTOOLS_REQUIREMENT="https://github.com/gammasim/simtools.git"
 
-FROM ghcr.io/gammasim/corsika7-${CORSIKA_VERSION}-${AVX_INSTRUCTION}:${CORSIKA_IMAGE_VERSION} AS corsika_img
-FROM ghcr.io/gammasim/simtel-${SIMTEL_VERSION}-${SIMTEL_BUILD_OPT}:${SIMTEL_IMAGE_VERSION} AS simtel_img
+FROM ghcr.io/gammasim/corsika7:${CORSIKA_IMAGE_VERSION}-${AVX_FLAG} AS corsika_img
+FROM ghcr.io/gammasim/sim_telarray:${SIMTEL_IMAGE_VERSION} AS simtel_img
 
 FROM almalinux:9.5-minimal
 ARG PYTHON_VERSION
-ARG SIMTOOLS_REQUIREMENT
+ARG SIMTOOLS_REPO="https://github.com/gammasim/simtools.git"
 
-# Copy CORSIKA from corsika image
 COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulation_software/corsika7
-
-# Copy sim_telarray components from simtel image
 COPY --from=simtel_img /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
 COPY --from=simtel_img /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
 COPY --from=simtel_img /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
@@ -40,13 +33,6 @@ RUN microdnf update -y && microdnf install -y \
     python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
     microdnf clean all && \
     ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
-
-# Add QGSJet tables downloaded externally (large files!)
-WORKDIR /workdir/simulation_software/corsika7
-COPY qgsdat-III.bz2 .
-RUN if [ -f qgsdat-III.bz2 ]; then \
-        bzip2 -dq qgsdat-III.bz2; \
-    fi
 
 # Install simtools (main branch)
 WORKDIR /workdir

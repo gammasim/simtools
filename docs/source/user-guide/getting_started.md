@@ -1,7 +1,7 @@
 # Getting Started
 
 Using simtools requires installing and accessing its [main components](../components/index.md):
-the [simtools package](#installation), the simulation software  [CORSIKA and sim_telarray](#installation-of-corsika-and-sim_telarray), and the [simulation model database](model-database-access).
+the [simtools package](#installation), the simulation software [CORSIKA and sim_telarray](#installation-of-corsika-and-sim_telarray), and the [simulation model database](model-database-access).
 
 For development-related information, see [Getting Started as a Developer](../developer-guide/getting_started_as_developer.md).
 
@@ -10,22 +10,25 @@ For development-related information, see [Getting Started as a Developer](../dev
 simtools can be installed using one of the following methods:
 
 - Using a [container image](container-images) with all software pre-installed (**recommended**)
-- Via [pip](pip-installation) or [conda](conda-installation). Requires manual compilation and installation of **CORSIKA** and **sim_telarray**. See the [section below](#installation-of-corsika-and-sim_telarray) for details.
+- Via [pip](pip-installation) or [conda](conda-installation). Requires manual compilation and installation of **CORSIKA** and **sim_telarray**. See the [section below](#installation-of-corsika-and-sim_telarray) for details. Note that the conda package might not always contain the latest simtools version.
 
 ## Container Images
 
 OCI-compatible container images are available for simtools users and support both application and development use cases.  Any runtime such as [Docker](https://www.docker.com/products/docker-desktop), [Podman](https://podman.io/), or [Apptainer](https://apptainer.org/) can be used.
 These images eliminate all manual installation steps and allow direct execution of simtools applications.
 
+The most important types of images are:
+
 ### Pre-built Images
 
-- **Production images** (`simtools`): Include CORSIKA, sim_telarray, and simtools applications. Variants are available with:
+- **Simtools Production images** ([simtools-prod](https://github.com/gammasim/simtools/pkgs/container/simtools-sim-telarray-250903-corsika-78010-bernlohr-1.70-prod6-baseline-qgs3-no_opt)): Include CORSIKA, sim_telarray, and simtools applications. Variants are available with:
   - Different CORSIKA/sim_telarray versions
   - Compile options (e.g., `prod5`, `prod6`)
-  - CPU optimizations (e.g., `avx2`, `avx512`, `no_opt`)
-- **Development images** (`simtools-dev`): Include all dependencies for simtools development, as well as CORSIKA and sim_telarray, but do not contain simtools itself.
+  - CPU optimizations (e.g., `avx2`, `avx512`, `generic`)
+- **Simtools Development images** ([simtools-dev](https://github.com/gammasim/simtools/pkgs/container/simtools-dev)): Include all dependencies for simtools development, as well as CORSIKA and sim_telarray, but do not contain simtools itself.
 
 Pre-built images are hosted on the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools). Authentication may be required; follow [GitHub's guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) to configure access (`docker login`).
+
 
 ### Running a simtools Production Image
 
@@ -58,9 +61,9 @@ podman run --rm -it \
 
 ### Pip Installation
 
-simtools is available as a Python package from [PypPi](https://pypi.org/project/gammasimtools/).
+simtools is available as a Python package from [PyPI](https://pypi.org/project/gammasimtools/).
 
-To install, prepare a python environment, e.g.:
+To install, prepare a Python environment, e.g.:
 
 ```console
 mamba create --name simtools-prod python=3.12
@@ -86,14 +89,14 @@ conda activate gammasimtools
 ## Installation of CORSIKA and sim_telarray
 
 CORSIKA and sim_telarray are external tools to simtools and are required dependencies for many applications.
-The installation requires some preparation, this is why it is recommended to use the Docker environment
+The installation requires some preparation; therefore, it is recommended to use the Docker environment.
 
-For a non-Docker setup, follow the instruction provided by the CORSIKA/sim_telarray authors for installation.
+For a non-Docker setup, follow the instructions provided by the CORSIKA/sim_telarray authors for installation.
 CTAO users can download both packages from the [sim_telarray web page](https://www.mpi-hd.mpg.de/hfm/CTA/MC/Software/Testing/)
 (CTAO password applies) and install the package with:
 
 ```console
-tar -czf corsika7.7_simtelarray.tar.gz
+tar -xzf corsika7.7_simtelarray.tar.gz
 ./build_all prod6-sc qgs2 gsl
 ```
 
@@ -102,7 +105,7 @@ The environmental variable `$SIMTOOLS_SIMTEL_PATH` should point towards the CORS
 
 ## Model Database Access
 
-Simulation model parameters are stored in database.
+Simulation model parameters are stored in the database.
 Many simtools applications depend on access to this database.
 
 :::{note}
@@ -139,5 +142,5 @@ SIMTOOLS_USER_ORCID='0000-1234-5678-0000'
 ```
 
 ```{note}
-Any simtools application command line argument can be set as an environment variable, see the [application configuration](applications.md#configuration) section.
+Any simtools application command-line argument can be set as an environment variable, see the [application configuration](applications.md#configuration) section.
 ```

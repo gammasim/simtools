@@ -1,130 +1,168 @@
 """Base service methods for simulation runners."""
 
 import logging
-from pathlib import Path
 
+from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler
 
 _logger = logging.getLogger(__name__)
 
 
-class RunnerServices:
+FILES_AND_PATHS = {
+    # CORSIKA
+    "corsika_input": {
+        "suffix": ".corsika.input",
+        "sub_dir_type": "run_number",
+    },
+    "corsika_output": {
+        "suffix": ".corsika.zst",
+        "sub_dir_type": "run_number",
+    },
+    "corsika_log": {
+        "suffix": ".corsika.log.gz",
+        "sub_dir_type": "run_number",
+    },
+    # Generic iact output
+    "iact_output": {
+        "suffix": ".iact.gz",
+        "sub_dir_type": "run_number",
+    },
+    # sim_telarray
+    "sim_telarray_output": {
+        "suffix": ".simtel.zst",
+        "sub_dir_type": "run_number",
+    },
+    "sim_telarray_histogram": {
+        "suffix": ".hdata.zst",
+        "sub_dir_type": "run_number",
+    },
+    "sim_telarray_log": {
+        "suffix": ".simtel.log.gz",
+        "sub_dir_type": "run_number",
+    },
+    "sim_telarray_event_data": {
+        "suffix": ".reduced_event_data.hdf5",
+        "sub_dir_type": "run_number",
+    },
+    # multipipe
+    "multi_pipe_config": {
+        "suffix": ".multi_pipe.cfg",
+        "sub_dir_type": "run_number",
+    },
+    "multi_pipe_script": {
+        "suffix": ".multi_pipe.sh",
+        "sub_dir_type": "run_number",
+    },
+    # job submission
+    "sub_out": {
+        "suffix": ".out",
+        "sub_dir_type": "sub",
+    },
+    "sub_err": {
+        "suffix": ".err",
+        "sub_dir_type": "sub",
+    },
+    "sub_log": {
+        "suffix": ".log",
+        "sub_dir_type": "sub",
+    },
+    "sub_script": {
+        "suffix": ".sh",
+        "sub_dir_type": "sub",
+    },
+}
+
+
+def validate_corsika_run_number(run_number):
     """
-    Base services for simulation runners.
+    Validate run number and return it.
 
     Parameters
     ----------
-    corsika_config : CorsikaConfig
-        Configuration parameters for CORSIKA.
+    run_number: int
+        Run number.
+
+    Returns
+    -------
+    int
+        Run number.
+
+    Raises
+    ------
+    ValueError
+        If run_number is not a valid value (< 1 or > 999999).
+    """
+    if not float(run_number).is_integer() or run_number < 1 or run_number > 999999:
+        raise ValueError(
+            f"Invalid type of run number ({run_number}) - it must be an uint < 1000000."
+        )
+    return run_number
+
+
+class RunnerServices:
+    """
+    Base service methods for simulation runners.
+
+    Includes file naming and directory management.
+
+    Parameters
+    ----------
+    config: CorsikaConfig, dict
+        Configuration parameters.
+    run_type : str
+        Type of simulation runner.
     label : str
         Label.
     """
 
-    def __init__(self, corsika_config, label=None):
+    def __init__(self, config, run_type, label=None):
         """Initialize RunnerServices."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init RunnerServices")
         self.label = label
-        self.corsika_config = corsika_config
-        self.directory = {}
+        self.config = config
+        self.run_type = run_type
+        self.directory = self.load_data_directory()
 
-    def _get_info_for_file_name(self, run_number, calibration_run_mode=None):
+    def load_data_directory(self):
         """
-        Return dictionary for building names for simulation output files.
-
-        Parameters
-        ----------
-        run_number : int
-            Run number.
-        calibration_run_mode: str
-            Calibration run mode.
+        Create and return directory for the given run type.
 
         Returns
         -------
-        dict
-            Dictionary with the keys or building the file names for simulation output files.
-        """
-        _vc_high = self.corsika_config.get_config_parameter("VIEWCONE")[1]
-        if calibration_run_mode is not None and calibration_run_mode != "":
-            primary_name = calibration_run_mode
-        else:
-            primary_name = self.corsika_config.primary
-            if primary_name == "gamma" and _vc_high > 0:
-                primary_name = "gamma_diffuse"
-        return {
-            "run_number": self.corsika_config.validate_run_number(run_number),
-            "primary": primary_name,
-            "array_name": self.corsika_config.array_model.layout_name,
-            "site": self.corsika_config.array_model.site,
-            "label": self.label,
-            "model_version": self.corsika_config.array_model.model_version,
-            "zenith": self.corsika_config.zenith_angle,
-            "azimuth": self.corsika_config.azimuth_angle,
-        }
-
-    @staticmethod
-    def _get_simulation_software_list(simulation_software):
-        """
-        Return a list of simulation software based on the input string.
-
-        Args:
-            simulation_software: String representing the desired software.
-
-        Returns
-        -------
-            List of simulation software names.
-        """
-        software_map = {
-            "corsika": ["corsika"],
-            "sim_telarray": ["sim_telarray"],
-            "corsika_sim_telarray": ["corsika", "sim_telarray"],
-        }
-        return software_map.get(simulation_software.lower(), [])
-
-    def load_data_directories(self, simulation_software):
-        """
-        Create and return directories for output, data, log and input.
-
-        Parameters
-        ----------
-        simulation_software : str
-            Simulation software to be used.
-
-        Returns
-        -------
-        dict
-            Dictionary containing paths requires for simulation configuration.
+        Path
+            Path to the created directory.
         """
         ioh = io_handler.IOHandler()
-        self.directory["output"] = ioh.get_output_directory()
-        _logger.debug(f"Creating output dir {self.directory['output']}")
-        for dir_name in ["sub_scripts", "sub_logs"]:
-            self.directory[dir_name] = ioh.get_output_directory(dir_name)
-        for _simulation_software in self._get_simulation_software_list(simulation_software):
-            for dir_name in ["data", "inputs", "logs"]:
-                self.directory[dir_name] = ioh.get_output_directory(
-                    [_simulation_software, dir_name]
-                )
-        self._logger.debug(f"Data directories for {simulation_software}: {self.directory}")
-        return self.directory
+        directory = ioh.get_output_directory(self.run_type)
+        self._logger.debug(f"Data directories for {self.run_type}: {directory}")
 
-    def has_file(self, file_type, run_number=None, mode="out"):
+        return directory
+
+    def load_files(self, run_number=None):
         """
-        Check that the file of file_type for the specified run number exists.
+        Load files required for the simulation run.
 
         Parameters
         ----------
-        file_type: str
-            File type to check.
         run_number: int
             Run number.
 
+        Returns
+        -------
+        dict
+            Dictionary containing paths to files required for the simulation run.
         """
-        run_sub_file = self.get_file_name(file_type, run_number=run_number, mode=mode)
-        _logger.debug(f"Checking if {run_sub_file} exists")
-        return Path(run_sub_file).is_file()
+        run_files = {}
+        for key in FILES_AND_PATHS:
+            if key.startswith(self.run_type.lower()):
+                run_files[key] = self.get_file_name(file_type=key, run_number=run_number)
 
-    def _get_file_basename(self, run_number, calibration_run_mode):
+        for key, file_path in run_files.items():
+            self._logger.debug(f"{key}: {file_path}")
+
+        return run_files
+
+    def _get_file_basename(self, run_number, is_multi_pipe=False):
         """
         Get the base name for the simulation files.
 
@@ -132,118 +170,87 @@ class RunnerServices:
         ----------
         run_number: int
             Run number.
-        calibration_run_mode: str
-            Calibration run mode.
+        file_type: str
+            File type.
 
         Returns
         -------
         str
             Base name for the simulation files.
         """
-        info_for_file_name = self._get_info_for_file_name(run_number, calibration_run_mode)
-        file_label = f"_{info_for_file_name['label']}" if info_for_file_name.get("label") else ""
-        zenith = self.corsika_config.get_config_parameter("THETAP")[0]
-        azimuth = self.corsika_config.azimuth_angle
-        run_number_string = self._get_run_number_string(info_for_file_name["run_number"])
-        prefix = (
-            f"{info_for_file_name['primary']}_{run_number_string}_"
-            if info_for_file_name["primary"]
-            else f"{run_number_string}_"
-        )
+        if isinstance(self.config, CorsikaConfig):
+            return self._get_file_base_name_from_corsika_config(run_number, is_multi_pipe)
+        if isinstance(self.config, dict):
+            return self._get_file_base_name_from_core_config()
+        raise ValueError(f"Invalid configuration type: {type(self.config)}")
+
+    def _get_file_base_name_from_core_config(self):
+        """Get file base name from core configuration."""
+        cfg = self.config
+        zenith_angle = cfg.get("zenith_angle")
+        azimuth_angle = cfg.get("azimuth_angle")
+
+        parts = [
+            f"{cfg['run_mode']}_" if cfg.get("run_mode") else "",
+            f"{self._get_run_number_string(cfg.get('run_number'))}_" if "run_number" in cfg else "",
+            f"za{round(zenith_angle):02}deg_" if isinstance(zenith_angle, (int, float)) else "",
+            f"azm{round(azimuth_angle):03}deg_" if isinstance(azimuth_angle, (int, float)) else "",
+            f"{cfg['site']}_" if cfg.get("site") else "",
+            f"{cfg['layout']}_" if cfg.get("layout") else "",
+            cfg.get("model_version", ""),
+            f"_{self.label}" if self.label else "",
+        ]
+        return "".join(parts)
+
+    def _get_file_base_name_from_corsika_config(self, run_number, is_multi_pipe=False):
+        """Get file base name from CORSIKA configuration."""
+        zenith = self.config.get_config_parameter("THETAP")[0]
+        vc_high = self.config.get_config_parameter("VIEWCONE")[1]
+
+        if self.config.run_mode is not None and self.config.run_mode != "":
+            primary_name = self.config.run_mode
+        else:
+            primary_name = self.config.primary_particle.name
+            if primary_name == "gamma" and vc_high > 0:
+                primary_name = "gamma_diffuse"
+
+        file_label = f"_{self.label}" if self.label else ""
+        run_number_string = self._get_run_number_string(run_number)
+
+        prefix = f"{primary_name}_{run_number_string}_" if primary_name else f"{run_number_string}_"
         return (
             prefix
-            + f"za{round(zenith):02}deg_azm{azimuth:03}deg_"
-            + f"{info_for_file_name['site']}_{info_for_file_name['array_name']}_"
-            + f"{info_for_file_name['model_version']}{file_label}"
+            + f"za{round(zenith):02}deg_"
+            + f"azm{self.config.azimuth_angle:03}deg_"
+            + f"{self.config.array_model.site}_"
+            + f"{self.config.array_model.layout_name}_"
+            + (self.config.array_model.model_version if not is_multi_pipe else "")
+            + file_label
         )
 
-    def _get_log_file_path(self, file_type, file_name):
+    def _get_sub_directory(self, run_number, dir_path):
         """
-        Return path for log files.
+        Return sub directory with / without run number.
 
         Parameters
         ----------
-        file_type : str
-            File type.
-        file_name : str
-            File name.
-
-        Returns
-        -------
-        Path
-            Path for log files.
-        """
-        log_suffixes = {
-            "log": ".log.gz",
-            "histogram": ".hdata.zst",
-            "corsika_log": ".corsika.log.gz",
-        }
-        return self.directory["logs"].joinpath(f"{file_name}{log_suffixes[file_type]}")
-
-    def _get_data_file_path(self, file_type, file_name, run_number):
-        """
-        Return path for data files.
-
-        Parameters
-        ----------
-        file_type : str
-            File type.
-        file_name : str
-            File name.
-        run_number : int
+        run_number: int
             Run number.
+        dir_path: Path
+            Parent directory path.
 
         Returns
         -------
         Path
-            Path for data files.
+            Child directory path.
         """
-        data_suffixes = {
-            "output": ".zst",
-            "corsika_output": ".corsika.zst",
-            "simtel_output": ".simtel.zst",
-            "event_data": ".reduced_event_data.hdf5",
-        }
-        run_dir = self._get_run_number_string(run_number)
-        data_run_dir = self.directory["data"].joinpath(run_dir)
-        data_run_dir.mkdir(parents=True, exist_ok=True)
-        return data_run_dir.joinpath(f"{file_name}{data_suffixes[file_type]}")
+        sub_dir = dir_path / self._get_run_number_string(run_number)
+        sub_dir.mkdir(parents=True, exist_ok=True)
+        return sub_dir
 
-    def _get_sub_file_path(self, file_type, file_name, mode):
+    def get_file_name(self, file_type, run_number=None):
         """
-        Return path for submission files.
-
-        Parameters
-        ----------
-        file_type : str
-            File type.
-        file_name : str
-            File name.
-        mode : str
-            Mode (out or err).
-
-        Returns
-        -------
-        Path
-            Path for submission files.
-        """
-        suffix = ".log" if file_type == "sub_log" else ".sh"
-        if mode and mode != "":
-            suffix = f".{mode}"
-        sub_log_file_dir = self.directory["output"].joinpath(f"{file_type}s")
-        sub_log_file_dir.mkdir(parents=True, exist_ok=True)
-        return sub_log_file_dir.joinpath(f"sub_{file_name}{suffix}")
-
-    def get_file_name(
-        self,
-        file_type,
-        run_number=None,
-        mode=None,
-        calibration_run_mode=None,
-        _model_version_index=0,
-    ):  # pylint: disable=unused-argument
-        """
-        Get a CORSIKA/sim_telarray style file name for various log and data file types.
+        Get a file name depending on file type and run number.
 
         Parameters
         ----------
@@ -251,15 +258,6 @@ class RunnerServices:
             The type of file (determines the file suffix).
         run_number : int
             Run number.
-        mode: str
-            out or err (optional, relevant only for sub_log).
-        calibration_run_mode: str
-            Calibration run mode.
-        model_version_index: int
-            Index of the model version.
-            This is not used here, but in other implementations of this function is
-            used to select the correct simulator_array instance in case
-            multiple array models are simulated.
 
         Returns
         -------
@@ -271,23 +269,23 @@ class RunnerServices:
         ValueError
             If file_type is unknown.
         """
-        file_name = self._get_file_basename(run_number, calibration_run_mode)
+        file_name = self._get_file_basename(run_number, file_type.startswith("multi_pipe"))
 
-        if file_type in ["log", "histogram", "corsika_log"]:
-            return self._get_log_file_path(file_type, file_name)
+        try:
+            desc = FILES_AND_PATHS[file_type]
+        except KeyError as exc:
+            raise ValueError(f"Unknown file type: {file_type}") from exc
 
-        if file_type in ["output", "corsika_output", "simtel_output", "event_data"]:
-            return self._get_data_file_path(file_type, file_name, run_number)
-
-        if file_type in ("sub_log", "sub_script"):
-            return self._get_sub_file_path(file_type, file_name, mode)
-
-        raise ValueError(f"The requested file type ({file_type}) is unknown")
+        if desc["sub_dir_type"] == "run_number":
+            dir_path = self._get_sub_directory(run_number, self.directory)
+        else:
+            dir_path = self.directory
+        return dir_path / f"{file_name}{desc['suffix']}"
 
     @staticmethod
     def _get_run_number_string(run_number):
         """
-        Get run number string as used for the simulation file names(ex. run000014).
+        Get run number string as used for the simulation file names (ex. run000014).
 
         Parameters
         ----------
@@ -299,37 +297,40 @@ class RunnerServices:
         str
             Run number string.
         """
-        nn = str(run_number)
-        if len(nn) > 6:
-            raise ValueError("Run number cannot have more than 6 digits")
-        return "run" + nn.zfill(6)
+        if run_number is None:
+            return ""
+        return f"run{validate_corsika_run_number(run_number):06d}"
 
-    def get_resources(self, run_number=None):
+    def get_resources(self, sub_out_file):
         """
         Read run time of job from last line of submission log file.
 
         Parameters
         ----------
-        run_number: int
-            Run number.
+        sub_out_file: str or Path
+            Path to the submission output file.
 
         Returns
         -------
         dict
             run time and number of simulated events
         """
-        sub_log_file = self.get_file_name(file_type="sub_log", run_number=run_number, mode="out")
-        _logger.debug(f"Reading resources from {sub_log_file}")
+        _logger.debug(f"Reading resources from {sub_out_file}")
 
-        _resources = {}
-        _resources["runtime"] = None
-        with open(sub_log_file, encoding="utf-8") as file:
-            for line in reversed(list(file)):
+        runtime = None
+        with open(sub_out_file, encoding="utf-8") as f:
+            for line in reversed(f.readlines()):
                 if "RUNTIME" in line:
-                    _resources["runtime"] = int(line.split()[1])
+                    runtime = int(line.split()[1])
                     break
 
-        if _resources["runtime"] is None:
+        if runtime is None:
             _logger.debug("RUNTIME was not found in run log file")
-        _resources["n_events"] = int(self.corsika_config.get_config_parameter("NSHOW"))
-        return _resources
+
+        if isinstance(self.config, CorsikaConfig):
+            return {
+                "runtime": runtime,
+                "n_events": int(self.config.get_config_parameter("NSHOW")),
+            }
+        self._logger.warning("Number of events cannot be determined from non-CORSIKA config.")
+        return {"runtime": runtime, "n_events": None}
