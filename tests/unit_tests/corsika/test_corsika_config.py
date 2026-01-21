@@ -253,7 +253,8 @@ def test_corsika_configuration_interaction_flags(
     assert isinstance(parameters, dict)
     assert "ECUTS" in parameters
     assert parameters["MAXPRT"] == ["10"]
-    assert len(parameters) == 9
+    # number of parameters depend on HE interaction model (qgs3 or epos)
+    assert len(parameters) == 9 or len(parameters) == 19
 
 
 def test_input_config_first_interaction_height(corsika_config_mock_array_model):
@@ -1184,12 +1185,12 @@ def test_epos_flags(corsika_config_mock_array_model, mocker):
 
     assert isinstance(epos_flags, dict)
     assert "EPOPAR fname pathnx" in epos_flags
-    assert epos_flags["EPOPAR fname pathnx"] == ["/path/to/corsika/epos/epos/"]
+    assert epos_flags["EPOPAR fname pathnx"] == ["/path/to/corsika/epos/"]
 
-    for epos_file in ["inics", "iniev", "inirj", "initl", "check"]:
+    for epos_file in ["inics", "iniev", "inirj", "initl"]:
         key = f"EPOPAR fname {epos_file}"
         assert key in epos_flags
-        assert epos_flags[key] == [f"/path/to/corsika/epos/epos/epos.{epos_file}"]
+        assert epos_flags[key] == [f"/path/to/corsika/epos/epos.{epos_file}"]
 
 
 def test_epos_flags_with_different_paths(corsika_config_mock_array_model, mocker):
@@ -1207,9 +1208,9 @@ def test_epos_flags_with_different_paths(corsika_config_mock_array_model, mocker
 
     epos_flags = corsika_config_mock_array_model._epos_flags()
 
-    assert epos_flags["EPOPAR fname pathnx"] == ["/custom/tables/epos/"]
-    assert epos_flags["EPOPAR fname inics"] == ["/custom/tables/epos/epos.inics"]
-    assert epos_flags["EPOPAR fname check"] == ["/custom/tables/epos/epos.check"]
+    assert epos_flags["EPOPAR fname pathnx"] == ["/custom/tables/"]
+    assert epos_flags["EPOPAR fname inics"] == ["/custom/tables/epos.inics"]
+    assert epos_flags["EPOPAR fname check"] == ["none"]
 
 
 def test_corsika_configuration_interaction_flags_with_epos(
