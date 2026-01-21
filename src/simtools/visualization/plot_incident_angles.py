@@ -392,7 +392,28 @@ def plot_incident_angles(
     logger=None,
     model_version=None,
 ):
-    """Plot overlaid histograms of focal, primary, secondary angles, and primary hit radius."""
+    """Plot overlaid histograms of focal, primary, secondary angles, and primary hit radius.
+
+    Parameters
+    ----------
+    results_by_offset : dict
+        Mapping from off-axis angle to result tables containing angle and radius columns.
+    output_dir : path-like
+        Base output directory where the ``plots`` subdirectory will be created.
+    label : str
+        Label used to distinguish this set of plots in the output filenames.
+    bin_width_deg : float, optional
+        Bin width in degrees for the angle-of-incidence histograms.
+    radius_bin_width_m : float, optional
+        Bin width in meters for the primary mirror hit-radius histograms.
+    debug_plots : bool, optional
+        If True, generate additional diagnostic plots.
+    logger : logging.Logger or None, optional
+        Logger instance to use for messages. If None, a module-level logger is used.
+    model_version : str or None, optional
+        Semantic model version identifier to annotate the generated plots. If None,
+        no model version text is added to the figures.
+    """
     log = logger or logging.getLogger(__name__)
     if not results_by_offset:
         log.warning("No results provided for multi-offset plot")
