@@ -92,6 +92,7 @@ def test_define_telescope_model(
             site=args_dict["site"],
             telescope_name=args_dict["telescope"],
             model_version=args_dict["model_version"],
+            overwrite_model_parameters=None,
         )
         mock_find_file.assert_not_called()
         tel.overwrite_model_parameter.assert_not_called()
@@ -117,6 +118,7 @@ def test_define_telescope_model(
             site=args_dict["site"],
             telescope_name=args_dict["telescope"],
             model_version=args_dict["model_version"],
+            overwrite_model_parameters=None,
         )
         mock_find_file.assert_called_once()
         assert tel.overwrite_model_parameter.call_count == 2

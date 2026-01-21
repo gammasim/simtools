@@ -47,9 +47,12 @@ def test_initialize_simulation_models(mocker, site, telescope_name):
         telescope_name=telescope_name,
         model_version=model_version,
         label=label,
+        overwrite_model_parameters=None,
     )
 
-    mock_site_model.assert_called_once_with(site=site, model_version=model_version, label=label)
+    mock_site_model.assert_called_once_with(
+        site=site, model_version=model_version, label=label, overwrite_model_parameters=None
+    )
 
     mock_tel_model.return_value.export_model_files.assert_called_once()
     mock_site_model.return_value.export_model_files.assert_called_once()
@@ -80,6 +83,7 @@ def test_initialize_simulation_models_with_calibration_device(mocker):
         calibration_device_model_name=calibration_device_name,
         model_version=model_version,
         label=label,
+        overwrite_model_parameters=None,
     )
     assert calibration_model == mock_cal_model.return_value
 
