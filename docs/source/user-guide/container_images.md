@@ -41,6 +41,10 @@ Images are compatible with ARM and x86_64 CPUs.
 
 The `generic` image is compatible with ARM and x86_64 CPUs, all other images are for x86_64 CPUs only.
 
+```{important}
+Container images do not include the interaction tables required by CORSIKA. Follow the instructions in the [CORSIKA documentation](../components/corsika.md#corsika-interaction-tables) to download and install the interaction tables.
+```
+
 ### sim_telarray Images
 
 - registry page: [sim_telarray](https://github.com/gammasim/simtools/pkgs/container/sim_telarray)
