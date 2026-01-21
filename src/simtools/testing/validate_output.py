@@ -302,6 +302,7 @@ def _compare_value_from_parameter_dict(data1, data2, tolerance=1.0e-5, factor1=1
         True if the two values are considered equal within the given
         tolerance, False otherwise.
     """
+
     def _as_list(value):
         if isinstance(value, str):
             return gen.convert_string_to_list(value)
