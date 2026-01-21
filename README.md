@@ -42,7 +42,7 @@ Please cite this software if it is used for a publication, see the [Zenodo recor
 
 ## Generative AI disclosure
 
-Generative AI tools (including Claude, ChatGPT, and Gemini) were used to assist with code development, debugging, and documentation drafting. All AI-assisted outputs were reviewed, validated, and, where necessary, modified by the authors to ensure accuracy and reliability.
+Generative AI tools (including, but not limited to, Claude, ChatGPT, and Gemini) were used to assist with code development, debugging, and documentation drafting. All AI-assisted outputs were reviewed, validated, and, where necessary, modified by the authors to ensure accuracy and reliability.
 
 ## Acknowledgements
 
