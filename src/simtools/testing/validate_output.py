@@ -189,6 +189,7 @@ def _validate_model_parameter_json_file(config, model_parameter_validation):
         model_parameter["value"],
         reference_model_parameter[reference_parameter_name]["value"],
         model_parameter_validation["tolerance"],
+        model_parameter_validation.get("scaling", 1.0),
     )
 
 
@@ -275,8 +276,32 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
     return _comparison
 
 
-def _compare_value_from_parameter_dict(data1, data2, tolerance=1.0e-5):
-    """Compare value fields given in different formats."""
+def _compare_value_from_parameter_dict(data1, data2, tolerance=1.0e-5, factor1=1.0):
+    """
+    Compare value fields given in different formats.
+
+    Parameters
+    ----------
+    data1 : float, int, str, list, numpy.ndarray
+        First value or collection of values to compare. May be a scalar,
+        a sequence, a numpy array, or a string representation of a list.
+    data2 : float, int, str, list, numpy.ndarray
+        Second value or collection of values to compare, with the same
+        allowed formats as ``data1``.
+    tolerance : float, optional
+        Relative tolerance used when comparing numerical values via
+        ``numpy.allclose``.
+    factor1 : float, optional
+        Multiplicative factor applied to ``data1`` before comparison. This
+        can be used to account for unit conversions or normalisation
+        differences between ``data1`` and ``data2``.
+
+    Returns
+    -------
+    bool
+        True if the two values are considered equal within the given
+        tolerance, False otherwise.
+    """
 
     def _as_list(value):
         if isinstance(value, str):
@@ -291,6 +316,7 @@ def _compare_value_from_parameter_dict(data1, data2, tolerance=1.0e-5):
     _as_list_2 = _as_list(data2)
     if isinstance(_as_list_1, str):
         return _as_list_1 == _as_list_2
+    _as_list_1 = np.array(_as_list_1) * factor1
     return np.allclose(_as_list_1, _as_list_2, rtol=tolerance)
 
 
