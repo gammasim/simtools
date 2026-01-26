@@ -36,6 +36,7 @@ class CorsikaHistograms:
         self.events = None
         self.hist = self._set_2d_distributions()
         self.hist.update(self._set_1d_distributions())
+        self._density_samples = []
 
     def fill(self):
         """
@@ -57,7 +58,7 @@ class CorsikaHistograms:
             for event_counter, event in enumerate(f):
                 if hasattr(event, "photon_bunches"):
                     photons = list(event.photon_bunches.values())
-                    self._fill_histograms(photons, event_counter, telescope_positions, True)
+                    self._fill_histograms(photons, event_counter, telescope_positions, False)
 
         self._update_distributions()
 
@@ -153,7 +154,10 @@ class CorsikaHistograms:
             incoming direction of the primary particle.
         """
         hist_str = "histogram"
-        for photon, telescope in zip(photons, telescope_positions):
+        photons_per_telescope = np.zeros(len(telescope_positions))
+        zenith_rad = np.deg2rad(self.events["zenith_deg"][event_counter])
+
+        for tel_idx, (photon, telescope) in enumerate(zip(photons, telescope_positions)):
             if rotate_photons:
                 px, py = rotate(
                     photon["x"],
@@ -164,16 +168,16 @@ class CorsikaHistograms:
             else:
                 px, py = photon["x"], photon["y"]
 
-            px -= telescope["x"]
-            py -= telescope["y"]
+            px = px - telescope["x"]
+            py = py - telescope["y"]
             w = photon["photons"]
 
             pxm = px * u.cm.to(u.m)
             pym = py * u.cm.to(u.m)
             zem = (photon["zem"] * u.cm).to(u.km)
+            photons_per_telescope[tel_idx] += np.sum(w)
 
             self.hist["counts_xy"][hist_str].fill(pxm, pym, weight=w)
-            self.hist["density_xy"][hist_str].fill(pxm, pym, weight=w)
             self.hist["direction_xy"][hist_str].fill(photon["cx"], photon["cy"], weight=w)
             self.hist["time_altitude"][hist_str].fill(photon["time"] * u.ns, zem, weight=w)
             self.hist["wavelength_altitude"][hist_str].fill(
@@ -182,9 +186,20 @@ class CorsikaHistograms:
 
             r = np.hypot(px, py) * u.cm.to(u.m)
             self.hist["counts_r"][hist_str].fill(r, weight=w)
-            self.hist["density_r"][hist_str].fill(r, weight=w)
 
             self.events["num_photons"][event_counter] += np.sum(w)
+
+        for tel_idx, telescope in enumerate(telescope_positions):
+            area = np.pi * (telescope["r"] ** 2) / np.cos(zenith_rad) / 1.0e4  # in m^2
+            density = photons_per_telescope[tel_idx] / area if area > 0 else 0.0
+            self._density_samples.append(
+                {
+                    "x": telescope["x"] * u.cm.to(u.m),
+                    "y": telescope["y"] * u.cm.to(u.m),
+                    "r": np.hypot(telescope["x"], telescope["y"]) * u.cm.to(u.m),
+                    "density": density,
+                }
+            )
 
     def get_hist_2d_projection(self, hist):
         """
@@ -496,24 +511,24 @@ class CorsikaHistograms:
 
     def _update_distributions(self):
         """Update the distributions dictionary with the histogram values and bin edges."""
-        self._normalize_density_histograms()
+        self._populate_density_from_probes()
 
         for key, value in self.hist.items():
             value["input_file_name"] = str(self.input_file)
-            if value["is_1d"]:
-                if "density_" in key and value.get("projection"):
-                    self._fill_projected_density_values(value)
+            if "hist_values" not in value:
+                if value["is_1d"]:
+                    (
+                        value["hist_values"],
+                        value["x_bin_edges"],
+                        value["uncertainties"],
+                    ) = self.get_hist_1d_projection(key, value)
                 else:
-                    value["hist_values"], value["x_bin_edges"], value["uncertainties"] = (
-                        self.get_hist_1d_projection(key, value)
-                    )
-            else:
-                (
-                    value["hist_values"],
-                    value["x_bin_edges"],
-                    value["y_bin_edges"],
-                    value["uncertainties"],
-                ) = self.get_hist_2d_projection(value["histogram"])
+                    (
+                        value["hist_values"],
+                        value["x_bin_edges"],
+                        value["y_bin_edges"],
+                        value["uncertainties"],
+                    ) = self.get_hist_2d_projection(value["histogram"])
 
     def _fill_projected_density_values(self, value):
         """Extract 1D density by using projection Counts and normalizing by area."""
@@ -542,27 +557,54 @@ class CorsikaHistograms:
         value["x_bin_edges"] = np.asarray([h_1d.axes.edges[0]])
         value["uncertainties"] = np.asarray([uncs.T])
 
-    def _normalize_density_histograms(self):
-        """Normalize the primary density histograms by area."""
-        # 2D XY Density: Area = dx * dy
-        h_xy = self.hist["density_xy"]["histogram"]
-        areas_xy = np.outer(h_xy.axes[0].widths, h_xy.axes[1].widths)
-        self._apply_normalization(h_xy, areas_xy)
+    def _populate_density_from_probes(self):
+        """Build density distributions from per-telescope sampling."""
+        if not self._density_samples:
+            return
 
-        # 1D Radial Density: Area = pi * (r_out^2 - r_in^2)
-        h_r = self.hist["density_r"]["histogram"]
-        edges_r = h_r.axes.edges[0]
-        areas_r = np.pi * (edges_r[1:] ** 2 - edges_r[:-1] ** 2)
-        self._apply_normalization(h_r, areas_r)
+        samples = self._density_samples
+        xs = np.array([s["x"] for s in samples])
+        ys = np.array([s["y"] for s in samples])
+        rs = np.array([s["r"] for s in samples])
+        densities = np.array([s["density"] for s in samples])
 
-    def _apply_normalization(self, hist, areas):
-        """Divide values and variances by area."""
-        view = hist.view()
-        if self._check_for_all_attributes(view):
-            view["value"] /= areas
-            view["variance"] /= areas**2
-        else:
-            view /= areas
+        x_edges = self.hist["counts_xy"]["histogram"].axes[0].edges
+        y_edges = self.hist["counts_xy"]["histogram"].axes[1].edges
+        r_edges = self.hist["density_r"]["histogram"].axes[0].edges
+
+        # 2D density: average per (x, y) cell derived from probe positions
+        num_xy, _, _ = np.histogram2d(xs, ys, bins=(x_edges, y_edges), weights=densities)
+        den_xy, _, _ = np.histogram2d(xs, ys, bins=(x_edges, y_edges))
+        with np.errstate(divide="ignore", invalid="ignore"):
+            avg_xy = np.divide(num_xy, den_xy, out=np.zeros_like(num_xy), where=den_xy > 0)
+
+        self.hist["density_xy"]["hist_values"] = np.asarray([avg_xy.T])
+        self.hist["density_xy"]["x_bin_edges"] = np.asarray([x_edges])
+        self.hist["density_xy"]["y_bin_edges"] = np.asarray([y_edges])
+        self.hist["density_xy"]["uncertainties"] = None
+
+        def _average_profile(points, values, edges):
+            num, _ = np.histogram(points, bins=edges, weights=values)
+            den, _ = np.histogram(points, bins=edges)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                return np.divide(num, den, out=np.zeros_like(num), where=den > 0)
+
+        # 1D averaged profiles
+        avg_x = _average_profile(xs, densities, x_edges)
+        avg_y = _average_profile(ys, densities, y_edges)
+        avg_r = _average_profile(rs, densities, r_edges)
+
+        self.hist["density_x"]["hist_values"] = np.asarray([avg_x])
+        self.hist["density_x"]["x_bin_edges"] = np.asarray([x_edges])
+        self.hist["density_x"]["uncertainties"] = None
+
+        self.hist["density_y"]["hist_values"] = np.asarray([avg_y])
+        self.hist["density_y"]["x_bin_edges"] = np.asarray([y_edges])
+        self.hist["density_y"]["uncertainties"] = None
+
+        self.hist["density_r"]["hist_values"] = np.asarray([avg_r])
+        self.hist["density_r"]["x_bin_edges"] = np.asarray([r_edges])
+        self.hist["density_r"]["uncertainties"] = None
 
     def _check_for_all_attributes(self, view):
         """Check if view has dtype fields ('value', 'variance')."""
