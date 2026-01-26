@@ -81,6 +81,7 @@ class IncidentAnglesCalculator:
             site=config_data["site"],
             telescope_name=config_data["telescope"],
             model_version=config_data["model_version"],
+            overwrite_model_parameters=config_data.get("overwrite_model_parameters"),
         )
 
     def _label_suffix(self):
