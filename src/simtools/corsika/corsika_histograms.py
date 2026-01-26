@@ -422,7 +422,6 @@ class CorsikaHistograms:
         x_axis_title, x_axis_unit = "x_axis_title", "x_axis_unit"
         y_axis_title, y_axis_unit = "y_axis_title", "y_axis_unit"
         z_axis_title, z_axis_unit = "z_axis_title", "z_axis_unit"
-        z_axis_min = "z_axis_min"
 
         hist_2d = {
             "counts_xy": {
@@ -446,7 +445,6 @@ class CorsikaHistograms:
                 y_axis_unit: xy_maximum.unit,
                 z_axis_title: "Photon density",
                 z_axis_unit: u.m**-2,
-                z_axis_min: "1",
             },
             "direction_xy": {
                 file_name: "hist_2d_photon_direction_distr",
