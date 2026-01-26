@@ -347,6 +347,8 @@ def test_validate_data_type():
         ("boolean", 0, None, True, True),
         ("int", None, np.uint8, True, True),  # Subtype of 'int'
         ("float", None, int, True, True),  # 'int' can be converted to 'float'
+        ("list", [1, 2, 3], None, True, True),
+        ("dict", {"a": 1}, None, True, True),
     ]
 
     for reference_dtype, value, dtype, allow_subtypes, expected_result in test_cases:
