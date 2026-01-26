@@ -6,16 +6,6 @@ name: build-simtools-legacy
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ["build-corsika-simtel"]
-    types: [completed]
-  pull_request:
-    paths:
-      - docker/Dockerfile-simtools-legacy
-  release:
-    types: [published]
-  schedule:
-    - cron: '0 1 * * 0'  # Every Sunday at 01:00 UTC (1 hour after base images)
 
 env:
   REGISTRY: ghcr.io
