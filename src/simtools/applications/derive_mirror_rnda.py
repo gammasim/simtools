@@ -51,41 +51,10 @@ Example
         --site North \
         --telescope LSTN-01 \
         --model_version 7.0.0 \
-        --data tests/resources/198mir_190925.ecsv \
-        --test --d80_hist
+        --data tests/resources/MLTdata-preproduction.ecsv \
+        --parameter_version 1.0.0 \
+        --test --d80_hist --cleanup
 
-Example log output
-------------------
-
-.. code-block:: text
-
-    ======================================================================
-    Single-Mirror d80 Optimization Results (Percentage Difference Metric)
-    ======================================================================
-
-    Number of mirrors optimized: 10
-    Mean percentage difference: 1.73%
-
-    Per-mirror results:
-    ------------------------------------------------------------------------------------------
-    Mirror   Meas d80    Sim d80   Pct Diff Optimized RNDA [sigma1, frac2, sigma2]
-                (mm)       (mm)        (%) (deg, -, deg)
-    ------------------------------------------------------------------------------------------
-        1     14.285     14.635       2.45 [0.0038, 0.0266, 0.0172]
-        2     15.275     15.180       0.62 [0.0042, 0.0000, 0.0133]
-        3     15.195     15.053       0.94 [0.0042, 0.0000, 0.0132]
-        4     14.270     14.237       0.23 [0.0036, 0.0687, 0.0104]
-        5     13.695     13.882       1.37 [0.0037, 0.0278, 0.0283]
-        6     14.950     14.313       4.26 [0.0038, 0.0077, 0.0166]
-        7     13.770     14.237       3.39 [0.0037, 0.0597, 0.0104]
-        8     13.375     12.881       3.70 [0.0035, 0.0000, 0.0104]
-        9     15.200     15.142       0.38 [0.0041, 0.0000, 0.0134]
-       10     15.145     15.145       0.00 [0.0042, 0.0000, 0.0222]
-    ------------------------------------------------------------------------------------------
-
-    mirror_reflection_random_angle [sigma1, fraction2, sigma2]
-    Previous values = ['0.0075', '0.2200', '0.0220']
-    Optimized values (averaged) = ['0.0039', '0.0191', '0.0155']
 """
 
 from pathlib import Path

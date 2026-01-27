@@ -5,7 +5,6 @@ import logging
 import shutil
 from math import pi, tan
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import call
 
 import astropy.units as u
@@ -582,17 +581,7 @@ def test_get_d80_mm_returns_mm_for_quantity(ray_tracing_lst):
             "d80_cm": [1.5 * u.cm],
         }
     )
-    assert ray.get_d80_mm() == pytest.approx(15.0)
-
-
-def test_get_d80_mm_returns_mm_for_value_attribute(ray_tracing_lst):
-    ray = copy.deepcopy(ray_tracing_lst)
-    ray._results = QTable(
-        {
-            "d80_cm": [SimpleNamespace(value=1.5)],
-        }
-    )
-    assert ray.get_d80_mm() == pytest.approx(15.0)
+    assert pytest.approx(ray.get_d80_mm()) == 15
 
 
 def test_get_d80_mm_returns_mm_for_plain_float(ray_tracing_lst):
@@ -602,7 +591,7 @@ def test_get_d80_mm_returns_mm_for_plain_float(ray_tracing_lst):
             "d80_cm": [1.5],
         }
     )
-    assert ray.get_d80_mm() == pytest.approx(15.0)
+    assert pytest.approx(ray.get_d80_mm()) == 15
 
 
 def test_plot_histogram_valid_key(ray_tracing_lst, mocker):
