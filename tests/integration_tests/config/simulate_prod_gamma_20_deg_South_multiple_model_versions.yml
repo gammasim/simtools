@@ -19,7 +19,7 @@ applications:
     primary_id_type: corsika7_id
     run_number: 1
     save_reduced_event_lists: true
-    sim_telarray_instrument_seeds: 1745,290
+    sim_telarray_seed: [1745, 290]
     simulation_software: corsika_sim_telarray
     site: South
     zenith_angle: 20

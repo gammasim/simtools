@@ -1,8 +1,6 @@
 """Extract Cherenkov photons from a CORSIKA IACT file and fill histograms."""
 
-import functools
 import logging
-import operator
 from pathlib import Path
 
 import boost_histogram as bh
@@ -318,6 +316,7 @@ class CorsikaHistograms:
         x_axis_title = "x_axis_title"
         y_axis_unit = "y_axis_unit"
         y_axis_title = "y_axis_title"
+        photon_density = "Photon density"
         hist_1d = {
             "wavelength": {
                 file_name: "hist_1d_photon_wavelength_distr",
@@ -337,18 +336,22 @@ class CorsikaHistograms:
                 x_bins: [bins, 0 * u.m, r_max, "linear"],
                 x_axis_title: "Distance to center",
                 x_axis_unit: u.m,
-                y_axis_title: "Photon density",
+                y_axis_title: photon_density,
                 y_axis_unit: u.m**-2,
             },
             "density_x": {
                 file_name: "hist_1d_photon_density_x_distr",
                 title: "Photon lateral density x distribution (ground level)",
-                projection: ["density_xy", "x"],
+                projection: ["counts_xy", "x"],  # projection requires counts_xy histogram
+                y_axis_title: photon_density,
+                y_axis_unit: u.m**-2,
             },
             "density_y": {
                 file_name: "hist_1d_photon_density_y_distr",
                 title: "Photon lateral density y distribution (ground level)",
-                projection: ["density_xy", "y"],
+                projection: ["counts_xy", "y"],  # projection requires counts_xy histogram
+                y_axis_title: photon_density,
+                y_axis_unit: u.m**-2,
             },
             "time": {
                 file_name: "hist_1d_photon_time_distr",
@@ -433,7 +436,7 @@ class CorsikaHistograms:
             },
             "density_xy": {
                 file_name: "hist_2d_photon_density_distr",
-                title: "Photon lateral density distribution (ground level)",
+                title: "Photon density distribution (ground level)",
                 x_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
                 y_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
                 x_axis_title: "x position on the ground",
@@ -498,9 +501,12 @@ class CorsikaHistograms:
         for key, value in self.hist.items():
             value["input_file_name"] = str(self.input_file)
             if value["is_1d"]:
-                value["hist_values"], value["x_bin_edges"], value["uncertainties"] = (
-                    self.get_hist_1d_projection(key, value)
-                )
+                if "density_" in key and value.get("projection"):
+                    self._fill_projected_density_values(value)
+                else:
+                    value["hist_values"], value["x_bin_edges"], value["uncertainties"] = (
+                        self.get_hist_1d_projection(key, value)
+                    )
             else:
                 (
                     value["hist_values"],
@@ -509,34 +515,54 @@ class CorsikaHistograms:
                     value["uncertainties"],
                 ) = self.get_hist_2d_projection(value["histogram"])
 
+    def _fill_projected_density_values(self, value):
+        """Extract 1D density by using projection Counts and normalizing by area."""
+        histo_2d = value["projection"][0]
+        source_h = self.hist[histo_2d]["histogram"]
+        project_axis = value["projection"][1]
+
+        if project_axis == "x":
+            h_1d = source_h[:, sum]
+            total_ortho_width = source_h.axes[1].edges[-1] - source_h.axes[1].edges[0]
+        else:
+            h_1d = source_h[sum, :]
+            total_ortho_width = source_h.axes[0].edges[-1] - source_h.axes[0].edges[0]
+
+        areas_1d = h_1d.axes[0].widths * total_ortho_width
+
+        view = h_1d.view()
+        if self._check_for_all_attributes(view):
+            vals = view["value"] / areas_1d
+            uncs = np.sqrt(view["variance"]) / areas_1d
+        else:
+            vals = view / areas_1d
+            uncs = np.sqrt(vals)  # Fallback if no weights
+
+        value["hist_values"] = np.asarray([vals.T])
+        value["x_bin_edges"] = np.asarray([h_1d.axes.edges[0]])
+        value["uncertainties"] = np.asarray([uncs.T])
+
     def _normalize_density_histograms(self):
-        """Normalize the density histograms by the area of each bin."""
+        """Normalize the primary density histograms by area."""
+        # 2D XY Density: Area = dx * dy
+        h_xy = self.hist["density_xy"]["histogram"]
+        areas_xy = np.outer(h_xy.axes[0].widths, h_xy.axes[1].widths)
+        self._apply_normalization(h_xy, areas_xy)
 
-        def normalize_histogram(hist, bin_areas):
-            view = hist.view()
-            if self._check_for_all_attributes(view):
-                view["value"] /= bin_areas
-                view["variance"] /= bin_areas**2
-            else:
-                hist /= bin_areas
+        # 1D Radial Density: Area = pi * (r_out^2 - r_in^2)
+        h_r = self.hist["density_r"]["histogram"]
+        edges_r = h_r.axes.edges[0]
+        areas_r = np.pi * (edges_r[1:] ** 2 - edges_r[:-1] ** 2)
+        self._apply_normalization(h_r, areas_r)
 
-        def normalize_histogram_1d(hist, bin_areas):
-            view = hist.view()
-            if self._check_for_all_attributes(view):
-                view["value"] /= bin_areas
-                view["variance"] /= bin_areas**2
-            else:
-                view /= bin_areas
-
-        density_xy_hist = self.hist["density_xy"]["histogram"]
-        density_r_hist = self.hist["density_r"]["histogram"]
-
-        bin_areas_xy = functools.reduce(operator.mul, density_xy_hist.axes.widths)
-        normalize_histogram(density_xy_hist, bin_areas_xy)
-
-        bin_edges_r = density_r_hist.axes.edges[0]
-        bin_areas_r = np.pi * (bin_edges_r[1:] ** 2 - bin_edges_r[:-1] ** 2)
-        normalize_histogram_1d(density_r_hist, bin_areas_r)
+    def _apply_normalization(self, hist, areas):
+        """Divide values and variances by area."""
+        view = hist.view()
+        if self._check_for_all_attributes(view):
+            view["value"] /= areas
+            view["variance"] /= areas**2
+        else:
+            view /= areas
 
     def _check_for_all_attributes(self, view):
         """Check if view has dtype fields ('value', 'variance')."""
