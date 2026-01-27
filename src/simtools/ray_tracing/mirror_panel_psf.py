@@ -73,7 +73,6 @@ class MirrorPanelPSF:
             site=self.args_dict["site"],
             telescope_name=self.args_dict["telescope"],
             model_version=self.args_dict["model_version"],
-            overwrite_model_parameters=self.args_dict.get("overwrite_model_parameters"),
         )
         if self.args_dict["mirror_list"] is not None:
             mirror_list_file = gen.find_file(

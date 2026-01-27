@@ -9,6 +9,7 @@ from astropy.table import QTable
 from simtools.data_model import data_reader, schema
 from simtools.io import io_handler
 from simtools.model.calibration_model import CalibrationModel
+from simtools.model.model_utils import read_overwrite_model_parameter_dict
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel import simtel_config_writer, simtel_seeds
@@ -62,7 +63,9 @@ class ArrayModel:
         self._config_file_directory = None
         self.io_handler = io_handler.IOHandler()
 
-        self.overwrite_model_parameters = overwrite_model_parameters
+        self.overwrite_model_parameter_dict = read_overwrite_model_parameter_dict(
+            overwrite_model_parameters
+        )
 
         self.array_elements, self.site_model, self.telescope_models, self.calibration_models = (
             self._initialize(site, array_elements, calibration_device_types)
@@ -99,7 +102,7 @@ class ArrayModel:
             site=names.validate_site_name(site),
             model_version=self.model_version,
             label=self.label,
-            overwrite_model_parameters=self.overwrite_model_parameters,
+            overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
         )
 
         # Case 1: array_elements is a file name
@@ -207,7 +210,7 @@ class ArrayModel:
                 telescope_name=element_name,
                 model_version=self.model_version,
                 label=self.label,
-                overwrite_model_parameters=self.overwrite_model_parameters,
+                overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
             )
             calibration_models[element_name] = self._build_calibration_models(
                 telescope_models[element_name],
@@ -239,7 +242,7 @@ class ArrayModel:
                 calibration_device_model_name=device_name,
                 model_version=self.model_version,
                 label=self.label,
-                overwrite_model_parameters=self.overwrite_model_parameters,
+                overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
             )
         return calibration_models
 
