@@ -17,6 +17,7 @@ from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.settings import config as settings_config
 from simtools.utils import names
+from simtools.visualization import plot_psf
 
 _WORKER_INSTANCE = None
 
@@ -65,9 +66,8 @@ def _worker_optimize_mirror(mirror_idx):
     """Optimize a single mirror index using the per-process instance."""
     if _WORKER_INSTANCE is None:
         raise RuntimeError("Worker not initialized")
-    measured_d80_mm = float(_WORKER_INSTANCE.measured_data["d80"][mirror_idx])
-    focal_length_m = float(_WORKER_INSTANCE.measured_data["focal_length"][mirror_idx])
-    return _WORKER_INSTANCE.optimize_single_mirror(mirror_idx, measured_d80_mm, focal_length_m)
+    measured_d80_mm = float(_WORKER_INSTANCE.measured_data[mirror_idx])
+    return _WORKER_INSTANCE.optimize_single_mirror(mirror_idx, measured_d80_mm)
 
 
 class MirrorPanelPSF:
@@ -100,7 +100,7 @@ class MirrorPanelPSF:
         self.args_dict = args_dict
         self.telescope_model, self.site_model = self._define_telescope_model(label)
 
-        # Load measured d80 and focal_length data
+        # Load measured d80
         self.measured_data = self._load_measured_data()
 
         # Limit mirrors in test mode
@@ -114,22 +114,22 @@ class MirrorPanelPSF:
 
     def _load_measured_data(self):
         """
-        Load measured d80 and focal_length data from ECSV file.
+        Load measured d80 from ECSV file.
 
         Returns
         -------
         Table
-            Astropy table with d80 (mm) and focal_length (m) columns.
+            Astropy table with d80 (mm) columns.
         """
         data_file = gen.find_file(self.args_dict["data"], self.args_dict.get("model_path", "."))
-        table = Table.read(data_file, format="ascii.ecsv")
+        table = Table.read(data_file)
+        if "psf_opt" in table.colnames:
+            return table["psf_opt"]
 
-        # Ensure required columns exist
-        if "d80" not in table.colnames or "focal_length" not in table.colnames:
-            raise ValueError("Data file must contain 'd80' and 'focal_length' columns")
+        if "d80" in table.colnames:
+            return table["d80"]
 
-        self._logger.info("Loaded %d mirrors from %s", len(table), str(data_file))
-        return table
+        raise ValueError("Data file must contain either 'psf_opt' or 'd80' column")
 
     def _define_telescope_model(self, label):
         """
@@ -153,7 +153,7 @@ class MirrorPanelPSF:
         )
         return tel_model, site_model
 
-    def _simulate_single_mirror_d80(self, mirror_idx, _focal_length_m, rnda_values):
+    def _simulate_single_mirror_d80(self, mirror_idx, rnda_values):
         """
         Simulate a single mirror and return its d80.
 
@@ -161,9 +161,6 @@ class MirrorPanelPSF:
         ----------
         mirror_idx : int
             Mirror index (0-based).
-        focal_length_m : float
-            Mirror focal length in meters (currently unused; mirror-panel focal length is
-            derived from the telescope model in single-mirror mode).
         rnda_values : list
             Random reflection angle values [sigma1, fraction2, sigma2].
 
@@ -202,7 +199,6 @@ class MirrorPanelPSF:
                 site_model=self.site_model,
                 single_mirror_mode=True,
                 mirror_numbers=[mirror_sim_index],
-                use_random_focal_length=False,
             )
 
             # Simulate and analyze
@@ -228,13 +224,10 @@ class MirrorPanelPSF:
         *,
         mirror_idx: int,
         measured_d80_mm: float,
-        focal_length_m: float,
         rnda_values,
     ) -> GradientStepResult:
         """Evaluate a candidate RNDA by simulating and computing objective."""
-        simulated_d80_mm = float(
-            self._simulate_single_mirror_d80(mirror_idx, focal_length_m, rnda_values)
-        )
+        simulated_d80_mm = float(self._simulate_single_mirror_d80(mirror_idx, rnda_values))
         signed_pct = float(self._calculate_percentage_difference(measured_d80_mm, simulated_d80_mm))
         obj = float(signed_pct * signed_pct)
         return GradientStepResult(
@@ -249,7 +242,6 @@ class MirrorPanelPSF:
         *,
         mirror_idx: int,
         measured_d80_mm: float,
-        focal_length_m: float,
         current_rnda,
         param_index: int,
         plus_value: float,
@@ -266,13 +258,11 @@ class MirrorPanelPSF:
         plus_eval = self._evaluate_rnda_candidate(
             mirror_idx=mirror_idx,
             measured_d80_mm=measured_d80_mm,
-            focal_length_m=focal_length_m,
             rnda_values=rnda_plus,
         )
         minus_eval = self._evaluate_rnda_candidate(
             mirror_idx=mirror_idx,
             measured_d80_mm=measured_d80_mm,
-            focal_length_m=focal_length_m,
             rnda_values=rnda_minus,
         )
         return float((plus_eval.objective - minus_eval.objective) / denom)
@@ -281,7 +271,6 @@ class MirrorPanelPSF:
         self,
         mirror_idx: int,
         measured_d80_mm: float,
-        focal_length_m: float,
         current_rnda,
         settings: RndaGradientDescentSettings,
     ):
@@ -293,7 +282,6 @@ class MirrorPanelPSF:
         current_eval = self._evaluate_rnda_candidate(
             mirror_idx=mirror_idx,
             measured_d80_mm=measured_d80_mm,
-            focal_length_m=focal_length_m,
             rnda_values=current_rnda,
         )
 
@@ -352,7 +340,6 @@ class MirrorPanelPSF:
                 grad = self._finite_difference_objective_gradient(
                     mirror_idx=mirror_idx,
                     measured_d80_mm=measured_d80_mm,
-                    focal_length_m=focal_length_m,
                     current_rnda=current_rnda,
                     param_index=int(spec["idx"]),
                     plus_value=float(v_plus),
@@ -393,7 +380,6 @@ class MirrorPanelPSF:
             new_eval = self._evaluate_rnda_candidate(
                 mirror_idx=mirror_idx,
                 measured_d80_mm=measured_d80_mm,
-                focal_length_m=focal_length_m,
                 rnda_values=new_rnda,
             )
 
@@ -443,7 +429,7 @@ class MirrorPanelPSF:
         )
         return best_rnda, best_sim_d80, best_pct_diff
 
-    def optimize_single_mirror(self, mirror_idx, measured_d80_mm, focal_length_m):
+    def optimize_single_mirror(self, mirror_idx, measured_d80_mm):
         """
         Optimize RNDA for a single mirror using gradient descent.
 
@@ -453,7 +439,6 @@ class MirrorPanelPSF:
             Mirror index (0-based).
         measured_d80_mm : float
             Measured d80 in mm.
-        focal_length_m : float
             Focal length in meters.
 
         Returns
@@ -499,10 +484,7 @@ class MirrorPanelPSF:
 
         current_rnda = list(self.rnda_start)
 
-        self._logger.info(
-            f"Mirror {mirror_idx + 1}: measured d80 = {measured_d80_mm:.3f} mm, "
-            f"focal_length = {focal_length_m:.3f} m"
-        )
+        self._logger.info(f"Mirror {mirror_idx + 1}: measured d80 = {measured_d80_mm:.3f} mm")
 
         settings = RndaGradientDescentSettings(
             threshold=threshold,
@@ -521,31 +503,23 @@ class MirrorPanelPSF:
         best_rnda, best_sim_d80, best_pct_diff = self._run_rnda_gradient_descent(
             mirror_idx=mirror_idx,
             measured_d80_mm=measured_d80_mm,
-            focal_length_m=focal_length_m,
             current_rnda=current_rnda,
             settings=settings,
         )
-
         return {
             "mirror": mirror_idx + 1,
             "measured_d80_mm": measured_d80_mm,
-            "focal_length_m": focal_length_m,
             "optimized_rnda": best_rnda,
             "simulated_d80_mm": best_sim_d80,
             "percentage_diff": best_pct_diff,
         }
 
     def _optimize_mirrors_parallel(self, n_mirrors, n_workers):
-        # Ensure worker processes don't recursively attempt to parallelize.
+        # Always use 'fork' to avoid DB re-initialization
         worker_args = dict(self.args_dict)
         worker_args["parallel"] = False
-
-        # Snapshot DB configuration from the parent process and pass to workers.
         worker_db_config = dict(settings_config.db_config) if settings_config.db_config else {}
-
-        mp_start_method = "fork" if os.name == "posix" else "spawn"
-        ctx = get_context(mp_start_method)
-
+        ctx = get_context("fork")
         results = [None] * n_mirrors
         with ProcessPoolExecutor(
             max_workers=n_workers,
@@ -707,7 +681,6 @@ class MirrorPanelPSF:
             out = dict(r)
             for key in (
                 "measured_d80_mm",
-                "focal_length_m",
                 "simulated_d80_mm",
                 "percentage_diff",
                 "simulated_d80_mm_plot",
@@ -754,88 +727,7 @@ class MirrorPanelPSF:
                 )
 
     def write_d80_histogram(self):
-        """Write histogram comparing measured vs simulated d80 distributions.
-
-        Returns
-        -------
-        str | None
-            Path to the written file, or None if nothing was written.
-        """
-        out_name = self.args_dict.get("d80_hist")
-        if not out_name:
-            return None
-
-        import matplotlib as mpl  # pylint: disable=import-outside-toplevel
-
-        mpl.use("Agg", force=True)
-        import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
-
-        output_dir = Path(self.args_dict.get("output_path", "."))
-        out_path = Path(out_name)
-        if not out_path.is_absolute():
-            out_path = output_dir / out_path
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-
-        measured = np.asarray(
-            [r.get("measured_d80_mm") for r in (self.per_mirror_results or [])], dtype=float
-        )
-        simulated = np.asarray(
-            [r.get("simulated_d80_mm") for r in (self.per_mirror_results or [])], dtype=float
-        )
-
-        measured = measured[np.isfinite(measured)]
-        simulated = simulated[np.isfinite(simulated)]
-
-        if measured.size == 0 or simulated.size == 0:
-            self._logger.warning("No valid d80 values available to plot histogram")
-            return None
-
-        bins = 25
-
-        all_vals = np.concatenate([measured, simulated])
-        x_min = float(np.nanmin(all_vals))
-        x_max = float(np.nanmax(all_vals))
-        if not np.isfinite(x_min) or not np.isfinite(x_max) or x_max <= x_min:
-            self._logger.warning("Invalid d80 range for histogram")
-            return None
-
-        bin_edges = np.linspace(x_min, x_max, bins + 1)
-
-        meas_mean = float(np.mean(measured))
-        meas_rms = float(np.std(measured, ddof=0))
-        sim_mean = float(np.mean(simulated))
-        sim_rms = float(np.std(simulated, ddof=0))
-
-        fig, ax = plt.subplots(figsize=(7.5, 4.5), constrained_layout=True)
-        ax.hist(
-            measured,
-            bins=bin_edges,
-            alpha=0.55,
-            color="tab:red",
-            edgecolor="white",
-            label=f"Measured (mean={meas_mean:.2f} mm, rms={meas_rms:.2f} mm)",
-        )
-        ax.hist(
-            simulated,
-            bins=bin_edges,
-            alpha=0.55,
-            color="tab:blue",
-            edgecolor="white",
-            label=f"Simulated (mean={sim_mean:.2f} mm, rms={sim_rms:.2f} mm)",
-        )
-
-        ax.axvline(meas_mean, color="tab:red", linestyle="--", linewidth=1)
-        ax.axvline(sim_mean, color="tab:blue", linestyle="--", linewidth=1)
-
-        ax.set_xlabel("d80 (mm)")
-        ax.set_ylabel("Count")
-        tel = self.args_dict.get("telescope", "")
-        model_version = self.args_dict.get("model_version", "")
-        ax.set_title(f"d80 distributions ({tel} {model_version})")
-        ax.legend(loc="best", fontsize=9, frameon=True)
-
-        fig.savefig(out_path)
-        plt.close(fig)
-
-        self._logger.info("d80 histogram written to %s", str(out_path))
-        return str(out_path)
+        """Write histogram comparing measured vs simulated d80 distributions using plot_psf."""
+        measured = [r.get("measured_d80_mm") for r in (self.per_mirror_results or [])]
+        simulated = [r.get("simulated_d80_mm") for r in (self.per_mirror_results or [])]
+        return plot_psf.plot_d80_histogram(measured, simulated, self.args_dict)

@@ -486,11 +486,8 @@ class RayTracing:
 
         d80 = self._results["d80_cm"][row_index]
 
-        # d80 is typically an astropy Quantity. Fall back gracefully if not.
-        if hasattr(d80, "to_value"):
-            d80_cm = float(d80.to_value(u.cm))
-        elif hasattr(d80, "value"):
-            d80_cm = float(d80.value)
+        if isinstance(d80, u.Quantity):
+            d80_cm = d80.to_value(u.cm)
         else:
             d80_cm = float(d80)
 
