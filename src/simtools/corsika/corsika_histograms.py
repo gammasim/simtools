@@ -341,6 +341,7 @@ class CorsikaHistograms:
         x_axis_title = "x_axis_title"
         y_axis_unit = "y_axis_unit"
         y_axis_title = "y_axis_title"
+        log_y = "log_y"
         photon_density = "Photon density"
         distance_to_center = "Distance to center"
         hist_1d = {
@@ -417,12 +418,13 @@ class CorsikaHistograms:
                 x_bins: [100, 0, None, "log"],
                 x_axis_title: "Cherenkov photons per event",
                 x_axis_unit: u.dimensionless_unscaled,
+                log_y: False,
             },
         }
 
         for value in hist_1d.values():
             value["is_1d"] = True
-            value["log_y"] = True
+            value["log_y"] = value.get("log_y", True)
             value[y_axis_title] = (
                 "Counts" if value.get(y_axis_title) is None else value[y_axis_title]
             )
@@ -459,6 +461,9 @@ class CorsikaHistograms:
         x_axis_title, x_axis_unit = "x_axis_title", "x_axis_unit"
         y_axis_title, y_axis_unit = "y_axis_title", "y_axis_unit"
         z_axis_title, z_axis_unit = "z_axis_title", "z_axis_unit"
+        photon_density = "Photon density"
+        x_pos = "x position on the ground"
+        y_pos = "y position on the ground"
 
         hist_2d = {
             "counts_xy": {
@@ -466,9 +471,9 @@ class CorsikaHistograms:
                 title: "Photon count distribution (ground level)",
                 x_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
                 y_bins: [xy_bin, -xy_maximum, xy_maximum],
-                x_axis_title: "x position on the ground",
+                x_axis_title: x_pos,
                 x_axis_unit: xy_maximum.unit,
-                y_axis_title: "y position on the ground",
+                y_axis_title: y_pos,
                 y_axis_unit: xy_maximum.unit,
             },
             "density_xy": {
@@ -476,11 +481,11 @@ class CorsikaHistograms:
                 title: "Photon density distribution (ground level)",
                 x_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
                 y_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
-                x_axis_title: "x position on the ground",
+                x_axis_title: x_pos,
                 x_axis_unit: xy_maximum.unit,
-                y_axis_title: "y position on the ground",
+                y_axis_title: y_pos,
                 y_axis_unit: xy_maximum.unit,
-                z_axis_title: "Photon density",
+                z_axis_title: photon_density,
                 z_axis_unit: u.m**-2,
             },
             "density_xy_from_counts": {
@@ -488,11 +493,11 @@ class CorsikaHistograms:
                 title: "Photon density from counts distribution (ground level)",
                 x_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
                 y_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
-                x_axis_title: "x position on the ground",
+                x_axis_title: x_pos,
                 x_axis_unit: xy_maximum.unit,
-                y_axis_title: "y position on the ground",
+                y_axis_title: y_pos,
                 y_axis_unit: xy_maximum.unit,
-                z_axis_title: "Photon density",
+                z_axis_title: photon_density,
                 z_axis_unit: u.m**-2,
             },
             "direction_xy": {
