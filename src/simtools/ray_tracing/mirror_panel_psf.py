@@ -199,6 +199,8 @@ class MirrorPanelPSF:
     def _calculate_percentage_difference(self, measured_d80, simulated_d80):
         """Calculate signed percentage difference."""
         measured = float(measured_d80)
+        if measured <= 0:
+            raise ValueError("Measured d80 must be positive")
         return 100.0 * (float(simulated_d80) - measured) / measured
 
     def _evaluate_rnda_candidate(
@@ -247,123 +249,195 @@ class MirrorPanelPSF:
         )
         return float((plus_eval.objective - minus_eval.objective) / denom)
 
+    def _get_allowed_range_from_schema(self, param_name: str, index: int):
+        """Return (min, max) allowed range for a model parameter entry.
+
+        Returns (None, None) if the schema does not define the range.
+        """
+        schema = names.model_parameters().get(param_name) or {}
+        data = schema.get("data")
+        if not isinstance(data, list) or index < 0 or index >= len(data):
+            return None, None
+        allowed_range = (data[index] or {}).get("allowed_range")
+        if not isinstance(allowed_range, dict):
+            return None, None
+        return allowed_range.get("min"), allowed_range.get("max")
+
+    def _get_rnda_parameter_bounds(self, param_name: str):
+        """Get Bounds objects for RNDA parameters (sigma1, frac2, sigma2)."""
+        sigma1_min, sigma1_max = self._get_allowed_range_from_schema(param_name, 0)
+        frac2_min, frac2_max = self._get_allowed_range_from_schema(param_name, 1)
+        sigma2_min, sigma2_max = self._get_allowed_range_from_schema(param_name, 2)
+
+        sigma1_min = max(sigma1_min, 1e-12)
+        sigma2_min = max(sigma2_min, 1e-12)
+
+        return (
+            Bounds(min=sigma1_min, max=sigma1_max),
+            Bounds(min=frac2_min, max=frac2_max),
+            Bounds(min=sigma2_min, max=sigma2_max),
+        )
+
+    def _build_rnda_gradient_descent_settings(
+        self,
+        threshold,
+        learning_rate,
+    ) -> RndaGradientDescentSettings:
+        """Build gradient descent settings from defaults + schema-defined bounds."""
+        grad_clip = float(self.DEFAULT_RNDA_GRAD_CLIP)
+        max_log_step = float(self.DEFAULT_RNDA_MAX_LOG_STEP)
+        max_frac_step = float(self.DEFAULT_RNDA_MAX_FRAC_STEP)
+        max_iterations = int(self.DEFAULT_RNDA_MAX_ITERATIONS)
+
+        sigma1_bounds, frac2_bounds, sigma2_bounds = self._get_rnda_parameter_bounds(
+            "mirror_reflection_random_angle"
+        )
+
+        return RndaGradientDescentSettings(
+            threshold=float(threshold),
+            learning_rate=float(learning_rate),
+            grad_clip=grad_clip,
+            sigma1=sigma1_bounds,
+            sigma2=sigma2_bounds,
+            frac2=frac2_bounds,
+            max_log_step=max_log_step,
+            max_frac_step=max_frac_step,
+            max_iterations=max_iterations,
+        )
+
+    def _propose_next_rnda(
+        self,
+        mirror_idx,
+        measured_d80_mm,
+        current_rnda,
+        settings,
+        learning_rate,
+    ):
+        """Propose a next RNDA point using one gradient step."""
+        sigma1, frac2, sigma2 = map(float, current_rnda)
+        specs = (
+            {
+                "idx": 0,
+                "kind": "log",
+                "value": sigma1,
+                "min": float(settings.sigma1.min),
+                "max": float(settings.sigma1.max),
+                "eps": max(1e-6, 0.05 * sigma1),
+            },
+            {
+                "idx": 1,
+                "kind": "linear",
+                "value": frac2,
+                "min": float(settings.frac2.min),
+                "max": float(settings.frac2.max),
+                "eps": max(1e-6, 0.02),
+            },
+            {
+                "idx": 2,
+                "kind": "log",
+                "value": sigma2,
+                "min": float(settings.sigma2.min),
+                "max": float(settings.sigma2.max),
+                "eps": max(1e-6, 0.05 * sigma2),
+            },
+        )
+
+        new_values = [sigma1, frac2, sigma2]
+        for spec in specs:
+            v = float(spec["value"])
+            v_plus = min(float(spec["max"]), v + float(spec["eps"]))
+            v_minus = max(float(spec["min"]), v - float(spec["eps"]))
+
+            grad = self._finite_difference_objective_gradient(
+                mirror_idx=mirror_idx,
+                measured_d80_mm=measured_d80_mm,
+                current_rnda=current_rnda,
+                param_index=int(spec["idx"]),
+                plus_value=float(v_plus),
+                minus_value=float(v_minus),
+            )
+
+            if spec["kind"] == "log":
+                grad_log = float(np.clip(grad * v, -settings.grad_clip, settings.grad_clip))
+                log_step = float(
+                    np.clip(
+                        -float(learning_rate) * grad_log,
+                        -settings.max_log_step,
+                        settings.max_log_step,
+                    )
+                )
+                new_v = float(
+                    np.clip(
+                        v * float(np.exp(log_step)),
+                        float(spec["min"]),
+                        float(spec["max"]),
+                    )
+                )
+            else:
+                grad = float(np.clip(grad, -settings.grad_clip, settings.grad_clip))
+                step = float(
+                    np.clip(
+                        -float(learning_rate) * grad,
+                        -settings.max_frac_step,
+                        settings.max_frac_step,
+                    )
+                )
+                new_v = float(np.clip(v + step, float(spec["min"]), float(spec["max"])))
+
+            new_values[int(spec["idx"])] = new_v
+
+        return list(map(float, new_values))
+
     def _run_rnda_gradient_descent(
         self,
-        mirror_idx: int,
-        measured_d80_mm: float,
+        mirror_idx,
+        measured_d80_mm,
         current_rnda,
-        settings: RndaGradientDescentSettings,
+        settings,
     ):
         """Run a 3-parameter RNDA gradient descent (sigma1, fraction2, sigma2).
 
         Returns best_rnda, best_sim_d80, best_pct_diff.
         """
-        # pylint: disable=too-many-locals
         current_eval = self._evaluate_rnda_candidate(
             mirror_idx=mirror_idx,
             measured_d80_mm=measured_d80_mm,
             rnda_values=current_rnda,
         )
 
-        best_rnda = list(current_eval.rnda)
-        best_sim_d80 = float(current_eval.simulated_d80_mm)
-        best_obj = float(current_eval.objective)
-        best_pct_diff = abs(float(current_eval.signed_pct_diff))
+        best = {
+            "rnda": list(current_eval.rnda),
+            "sim_d80": float(current_eval.simulated_d80_mm),
+            "obj": float(current_eval.objective),
+            "pct": abs(float(current_eval.signed_pct_diff)),
+        }
 
         self._logger.info(
             "  Initial: simulated d80 = %.3f mm, signed pct diff = %.2f%%",
-            best_sim_d80,
+            best["sim_d80"],
             current_eval.signed_pct_diff,
         )
 
-        if best_pct_diff <= settings.threshold * 100:
+        if best["pct"] <= settings.threshold * 100:
             self._logger.info("  Already converged!")
-            return best_rnda, best_sim_d80, best_pct_diff
+            return best["rnda"], best["sim_d80"], best["pct"]
 
         learning_rate = float(settings.learning_rate)
         for iteration in range(settings.max_iterations):
-            sigma1, frac2, sigma2 = map(float, current_rnda)
-
-            specs = [
-                {
-                    "idx": 0,
-                    "kind": "log",
-                    "value": sigma1,
-                    "min": float(settings.sigma1.min),
-                    "max": float(settings.sigma1.max),
-                    "eps": max(1e-6, 0.05 * sigma1),
-                },
-                {
-                    "idx": 1,
-                    "kind": "linear",
-                    "value": frac2,
-                    "min": float(settings.frac2.min),
-                    "max": float(settings.frac2.max),
-                    "eps": max(1e-6, 0.02),
-                },
-                {
-                    "idx": 2,
-                    "kind": "log",
-                    "value": sigma2,
-                    "min": float(settings.sigma2.min),
-                    "max": float(settings.sigma2.max),
-                    "eps": max(1e-6, 0.05 * sigma2),
-                },
-            ]
-
-            new_values = [sigma1, frac2, sigma2]
-            for spec in specs:
-                v = float(spec["value"])
-                v_plus = min(float(spec["max"]), v + float(spec["eps"]))
-                v_minus = max(float(spec["min"]), v - float(spec["eps"]))
-
-                grad = self._finite_difference_objective_gradient(
-                    mirror_idx=mirror_idx,
-                    measured_d80_mm=measured_d80_mm,
-                    current_rnda=current_rnda,
-                    param_index=int(spec["idx"]),
-                    plus_value=float(v_plus),
-                    minus_value=float(v_minus),
-                )
-
-                if spec["kind"] == "log":
-                    grad_log = float(np.clip(grad * v, -settings.grad_clip, settings.grad_clip))
-                    log_step = float(
-                        np.clip(
-                            -learning_rate * grad_log,
-                            -settings.max_log_step,
-                            settings.max_log_step,
-                        )
-                    )
-                    new_v = float(
-                        np.clip(
-                            v * float(np.exp(log_step)),
-                            float(spec["min"]),
-                            float(spec["max"]),
-                        )
-                    )
-                else:
-                    grad = float(np.clip(grad, -settings.grad_clip, settings.grad_clip))
-                    step = float(
-                        np.clip(
-                            -learning_rate * grad,
-                            -settings.max_frac_step,
-                            settings.max_frac_step,
-                        )
-                    )
-                    new_v = float(np.clip(v + step, float(spec["min"]), float(spec["max"])))
-
-                new_values[int(spec["idx"])] = new_v
-
-            new_sigma1, new_frac2, new_sigma2 = map(float, new_values)
-            new_rnda = [new_sigma1, new_frac2, new_sigma2]
+            old_rnda = list(map(float, current_rnda))
+            new_rnda = self._propose_next_rnda(
+                mirror_idx=mirror_idx,
+                measured_d80_mm=measured_d80_mm,
+                current_rnda=current_rnda,
+                settings=settings,
+                learning_rate=learning_rate,
+            )
             new_eval = self._evaluate_rnda_candidate(
                 mirror_idx=mirror_idx,
                 measured_d80_mm=measured_d80_mm,
                 rnda_values=new_rnda,
             )
 
-            new_sim_d80 = float(new_eval.simulated_d80_mm)
             new_obj = float(new_eval.objective)
             new_pct_diff = abs(float(new_eval.signed_pct_diff))
 
@@ -373,28 +447,28 @@ class MirrorPanelPSF:
                     "|pct|=%.2f%%->%.2f%%, lr=%.3g"
                 ),
                 iteration + 1,
-                sigma1,
-                new_sigma1,
-                frac2,
-                new_frac2,
-                sigma2,
-                new_sigma2,
-                best_pct_diff,
+                old_rnda[0],
+                new_rnda[0],
+                old_rnda[1],
+                new_rnda[1],
+                old_rnda[2],
+                new_rnda[2],
+                best["pct"],
                 new_pct_diff,
                 learning_rate,
             )
 
-            if new_obj < best_obj:
-                best_obj = new_obj
-                best_pct_diff = new_pct_diff
-                best_rnda = list(new_rnda)
-                best_sim_d80 = new_sim_d80
+            if new_obj < best["obj"]:
+                best["obj"] = new_obj
+                best["pct"] = new_pct_diff
+                best["rnda"] = list(new_rnda)
+                best["sim_d80"] = float(new_eval.simulated_d80_mm)
                 current_rnda = list(new_rnda)
                 learning_rate *= 1.1
             else:
                 learning_rate *= 0.5
 
-            if best_pct_diff <= settings.threshold * 100:
+            if best["pct"] <= settings.threshold * 100:
                 self._logger.info("  Converged at iteration %d!", iteration + 1)
                 break
 
@@ -404,10 +478,10 @@ class MirrorPanelPSF:
 
         self._logger.info(
             "  Final: simulated d80 = %.3f mm, pct diff = %.2f%%",
-            best_sim_d80,
-            best_pct_diff,
+            best["sim_d80"],
+            best["pct"],
         )
-        return best_rnda, best_sim_d80, best_pct_diff
+        return best["rnda"], best["sim_d80"], best["pct"]
 
     def optimize_single_mirror(self, mirror_idx, measured_d80_mm):
         """
@@ -426,50 +500,17 @@ class MirrorPanelPSF:
         dict
             Optimization result with rnda, simulated_d80, percentage_diff.
         """
-        # pylint: disable=too-many-locals
         threshold = float(self.args_dict.get("threshold", 0.05))  # 5% default
         learning_rate = float(self.args_dict.get("learning_rate", 0.001))
 
-        grad_clip = float(self.DEFAULT_RNDA_GRAD_CLIP)
-        max_log_step = float(self.DEFAULT_RNDA_MAX_LOG_STEP)
-        # Bounds are schema-defined. Defaults are only a fallback if schema metadata is missing.
-        param_name = "mirror_reflection_random_angle"
-
-        def _get_allowed_range_from_schema(p_name: str, idx: int):
-            schema = names.model_parameters().get(p_name) or {}
-            data = schema.get("data")
-            if not isinstance(data, list) or idx < 0 or idx >= len(data):
-                return None, None
-            allowed_range = (data[idx] or {}).get("allowed_range")
-            if not isinstance(allowed_range, dict):
-                return None, None
-            return allowed_range.get("min"), allowed_range.get("max")
-
-        sigma1_min, sigma1_max = _get_allowed_range_from_schema(param_name, 0)
-        frac2_min, frac2_max = _get_allowed_range_from_schema(param_name, 1)
-        sigma2_min, sigma2_max = _get_allowed_range_from_schema(param_name, 2)
-
-        # Sigma parameters are used in log-space updates; ensure strictly positive lower bounds.
-        sigma1_min = max(sigma1_min, 1e-12)
-        sigma2_min = max(sigma2_min, 1e-12)
-        max_frac_step = float(self.DEFAULT_RNDA_MAX_FRAC_STEP)
-        max_iterations = int(self.DEFAULT_RNDA_MAX_ITERATIONS)
-
+        settings = self._build_rnda_gradient_descent_settings(
+            threshold=threshold,
+            learning_rate=learning_rate,
+        )
         current_rnda = list(self.rnda_start)
 
         self._logger.info(f"Mirror {mirror_idx + 1}: measured d80 = {measured_d80_mm:.3f} mm")
 
-        settings = RndaGradientDescentSettings(
-            threshold=threshold,
-            learning_rate=learning_rate,
-            grad_clip=grad_clip,
-            max_log_step=max_log_step,
-            sigma1=Bounds(min=float(sigma1_min), max=float(sigma1_max)),
-            sigma2=Bounds(min=float(sigma2_min), max=float(sigma2_max)),
-            frac2=Bounds(min=float(frac2_min), max=float(frac2_max)),
-            max_frac_step=max_frac_step,
-            max_iterations=max_iterations,
-        )
         best_rnda, best_sim_d80, best_pct_diff = self._run_rnda_gradient_descent(
             mirror_idx=mirror_idx,
             measured_d80_mm=measured_d80_mm,
