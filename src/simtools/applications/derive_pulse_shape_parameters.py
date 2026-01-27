@@ -138,6 +138,7 @@ def main():
         model_version=app_context.args["model_version"],
         site=site,
         telescope_name=app_context.args["telescope"],
+        overwrite_model_parameters=app_context.args.get("overwrite_model_parameters"),
     )
     fadc_sum_bins = telescope_model.get_parameter_value("fadc_sum_bins")
 
