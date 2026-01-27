@@ -191,13 +191,16 @@ class CorsikaHistograms:
 
         for tel_idx, telescope in enumerate(telescope_positions):
             area = np.pi * (telescope["r"] ** 2) / np.cos(zenith_rad) / 1.0e4  # in m^2
-            density = photons_per_telescope[tel_idx] / area if area > 0 else 0.0
+            n_photons = photons_per_telescope[tel_idx]
+            density = n_photons / area if area > 0 else 0.0
+            density_error = np.sqrt(n_photons) / area if area > 0 else 0.0
             self._density_samples.append(
                 {
                     "x": telescope["x"] * u.cm.to(u.m),
                     "y": telescope["y"] * u.cm.to(u.m),
                     "r": np.hypot(telescope["x"], telescope["y"]) * u.cm.to(u.m),
                     "density": density,
+                    "density_error": density_error,
                 }
             )
 
@@ -567,44 +570,56 @@ class CorsikaHistograms:
         ys = np.array([s["y"] for s in samples])
         rs = np.array([s["r"] for s in samples])
         densities = np.array([s["density"] for s in samples])
+        density_errors = np.array([s["density_error"] for s in samples])
 
         x_edges = self.hist["counts_xy"]["histogram"].axes[0].edges
         y_edges = self.hist["counts_xy"]["histogram"].axes[1].edges
         r_edges = self.hist["density_r"]["histogram"].axes[0].edges
 
-        # 2D density: average per (x, y) cell derived from probe positions
+        # 2D density: average per (x, y) cell with uncertainty propagation
         num_xy, _, _ = np.histogram2d(xs, ys, bins=(x_edges, y_edges), weights=densities)
         den_xy, _, _ = np.histogram2d(xs, ys, bins=(x_edges, y_edges))
+        var_xy, _, _ = np.histogram2d(xs, ys, bins=(x_edges, y_edges), weights=density_errors**2)
+
         with np.errstate(divide="ignore", invalid="ignore"):
             avg_xy = np.divide(num_xy, den_xy, out=np.zeros_like(num_xy), where=den_xy > 0)
+            # Uncertainty of the mean: sqrt(sum of variances) / N
+            unc_xy = np.sqrt(
+                np.divide(var_xy, den_xy**2, out=np.zeros_like(var_xy), where=den_xy > 0)
+            )
 
         self.hist["density_xy"]["hist_values"] = np.asarray([avg_xy.T])
         self.hist["density_xy"]["x_bin_edges"] = np.asarray([x_edges])
         self.hist["density_xy"]["y_bin_edges"] = np.asarray([y_edges])
-        self.hist["density_xy"]["uncertainties"] = None
+        self.hist["density_xy"]["uncertainties"] = np.asarray([unc_xy.T])
 
-        def _average_profile(points, values, edges):
+        def _average_profile_with_error(points, values, errors, edges):
+            """Calculate weighted average and its uncertainty per bin."""
             num, _ = np.histogram(points, bins=edges, weights=values)
             den, _ = np.histogram(points, bins=edges)
+            var, _ = np.histogram(points, bins=edges, weights=errors**2)
             with np.errstate(divide="ignore", invalid="ignore"):
-                return np.divide(num, den, out=np.zeros_like(num), where=den > 0)
+                avg = np.divide(num, den, out=np.zeros_like(num), where=den > 0)
+                # Uncertainty of the mean: sqrt(sum of variances) / N
+                unc = np.sqrt(np.divide(var, den**2, out=np.zeros_like(var), where=den > 0))
+            return avg, unc
 
-        # 1D averaged profiles
-        avg_x = _average_profile(xs, densities, x_edges)
-        avg_y = _average_profile(ys, densities, y_edges)
-        avg_r = _average_profile(rs, densities, r_edges)
+        # 1D averaged profiles with uncertainties
+        avg_x, unc_x = _average_profile_with_error(xs, densities, density_errors, x_edges)
+        avg_y, unc_y = _average_profile_with_error(ys, densities, density_errors, y_edges)
+        avg_r, unc_r = _average_profile_with_error(rs, densities, density_errors, r_edges)
 
         self.hist["density_x"]["hist_values"] = np.asarray([avg_x])
         self.hist["density_x"]["x_bin_edges"] = np.asarray([x_edges])
-        self.hist["density_x"]["uncertainties"] = None
+        self.hist["density_x"]["uncertainties"] = np.asarray([unc_x])
 
         self.hist["density_y"]["hist_values"] = np.asarray([avg_y])
         self.hist["density_y"]["x_bin_edges"] = np.asarray([y_edges])
-        self.hist["density_y"]["uncertainties"] = None
+        self.hist["density_y"]["uncertainties"] = np.asarray([unc_y])
 
         self.hist["density_r"]["hist_values"] = np.asarray([avg_r])
         self.hist["density_r"]["x_bin_edges"] = np.asarray([r_edges])
-        self.hist["density_r"]["uncertainties"] = None
+        self.hist["density_r"]["uncertainties"] = np.asarray([unc_r])
 
     def _check_for_all_attributes(self, view):
         """Check if view has dtype fields ('value', 'variance')."""
