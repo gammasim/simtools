@@ -852,3 +852,61 @@ def create_final_psf_comparison_plot(
 
     logger.info(f"Final PSF comparison plot saved to {output_file}")
     return output_file
+
+
+def plot_d80_histogram(measured, simulated, args_dict):
+    """Write histogram comparing measured vs simulated d80 distributions."""
+    output_dir = Path(args_dict.get("output_path", "."))
+    out_name = args_dict.get("d80_hist")
+    if not out_name:
+        return None
+    out_path = Path(out_name)
+    if not out_path.is_absolute():
+        out_path = output_dir / out_path
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    measured = np.asarray(measured, dtype=float)
+    simulated = np.asarray(simulated, dtype=float)
+    measured = measured[np.isfinite(measured)]
+    simulated = simulated[np.isfinite(simulated)]
+    if measured.size == 0 or simulated.size == 0:
+        return None
+    bins = 25
+    all_vals = np.concatenate([measured, simulated])
+    x_min = float(np.nanmin(all_vals))
+    x_max = float(np.nanmax(all_vals))
+    if not np.isfinite(x_min) or not np.isfinite(x_max) or x_max <= x_min:
+        return None
+    bin_edges = np.linspace(x_min, x_max, bins + 1)
+    meas_mean = float(np.mean(measured))
+    meas_rms = float(np.std(measured, ddof=0))
+    sim_mean = float(np.mean(simulated))
+    sim_rms = float(np.std(simulated, ddof=0))
+    fig, ax = plt.subplots(figsize=(7.5, 4.5), constrained_layout=True)
+    ax.hist(
+        measured,
+        bins=bin_edges,
+        alpha=0.55,
+        color="tab:red",
+        edgecolor="white",
+        label=f"Measured (mean={meas_mean:.2f} mm, rms={meas_rms:.2f} mm)",
+    )
+    ax.hist(
+        simulated,
+        bins=bin_edges,
+        alpha=0.55,
+        color="tab:blue",
+        edgecolor="white",
+        label=f"Simulated (mean={sim_mean:.2f} mm, rms={sim_rms:.2f} mm)",
+    )
+    ax.axvline(meas_mean, color="tab:red", linestyle="--", linewidth=1)
+    ax.axvline(sim_mean, color="tab:blue", linestyle="--", linewidth=1)
+    ax.set_xlabel("d80 (mm)")
+    ax.set_ylabel("Count")
+    tel = args_dict.get("telescope", "")
+    model_version = args_dict.get("model_version", "")
+    ax.set_title(f"d80 distributions ({tel} {model_version})")
+    ax.legend(loc="best", fontsize=9, frameon=True)
+    fig.savefig(out_path)
+    plt.close(fig)
+    logging.getLogger(__name__).info("d80 histogram written to %s", str(out_path))
+    return str(out_path)
