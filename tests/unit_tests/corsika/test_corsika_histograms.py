@@ -495,3 +495,144 @@ def test__check_for_all_attributes_no_dtype():
 
     view = DummyView()
     assert ch._check_for_all_attributes(view) is False
+
+
+@pytest.mark.parametrize("project_axis", ["x", "y"])
+def test_fill_projected_density_values_numerical(project_axis):
+    """
+    Test that _fill_projected_density_values correctly computes 1D densities from 2D counts.
+
+    This test validates the numerical computation by creating a simple 2D counts_xy histogram
+    with known bin widths and counts, then verifying that the projected 1D density values
+    match the expected counts-per-area calculation.
+    """
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+
+    x_bins, x_min, x_max = 3, -3.0, 3.0
+    y_bins, y_min, y_max = 2, -2.0, 2.0
+
+    h_2d = bh.Histogram(
+        bh.axis.Regular(x_bins, x_min, x_max),
+        bh.axis.Regular(y_bins, y_min, y_max),
+        storage=bh.storage.Weight(),
+    )
+
+    x_bin_width = (x_max - x_min) / x_bins
+    y_bin_width = (y_max - y_min) / y_bins
+
+    view_2d = h_2d.view()
+    view_2d["value"][0, 0] = 10.0
+    view_2d["value"][1, 0] = 20.0
+    view_2d["value"][2, 0] = 30.0
+    view_2d["value"][0, 1] = 15.0
+    view_2d["value"][1, 1] = 25.0
+    view_2d["value"][2, 1] = 35.0
+    view_2d["variance"][0, 0] = 10.0
+    view_2d["variance"][1, 0] = 20.0
+    view_2d["variance"][2, 0] = 30.0
+    view_2d["variance"][0, 1] = 15.0
+    view_2d["variance"][1, 1] = 25.0
+    view_2d["variance"][2, 1] = 35.0
+
+    ch.hist = {
+        "counts_xy": {
+            "histogram": h_2d,
+            "is_1d": False,
+        }
+    }
+
+    density_key = f"density_{project_axis}"
+    ch.hist[density_key] = {
+        "projection": ["counts_xy", project_axis],
+        "is_1d": True,
+    }
+
+    ch._fill_projected_density_values(ch.hist[density_key])
+
+    hist_values = ch.hist[density_key]["hist_values"]
+    bin_edges = ch.hist[density_key]["x_bin_edges"]
+    uncertainties = ch.hist[density_key]["uncertainties"]
+
+    assert hist_values is not None
+    assert bin_edges is not None
+    assert uncertainties is not None
+
+    if project_axis == "x":
+        expected_counts = np.array([10.0 + 15.0, 20.0 + 25.0, 30.0 + 35.0])
+        expected_variances = np.array([10.0 + 15.0, 20.0 + 25.0, 30.0 + 35.0])
+        total_ortho_width = y_max - y_min
+        bin_width = x_bin_width
+        expected_edges = h_2d.axes[0].edges
+        num_bins = x_bins
+    else:
+        expected_counts = np.array([10.0 + 20.0 + 30.0, 15.0 + 25.0 + 35.0])
+        expected_variances = np.array([10.0 + 20.0 + 30.0, 15.0 + 25.0 + 35.0])
+        total_ortho_width = x_max - x_min
+        bin_width = y_bin_width
+        expected_edges = h_2d.axes[1].edges
+        num_bins = y_bins
+
+    expected_areas = bin_width * total_ortho_width
+    expected_density = expected_counts / expected_areas
+    expected_uncertainty = np.sqrt(expected_variances) / expected_areas
+
+    assert hist_values.shape == (1, num_bins)
+    assert bin_edges.shape == (1, num_bins + 1)
+    assert uncertainties.shape == (1, num_bins)
+
+    np.testing.assert_allclose(hist_values[0], expected_density, rtol=1e-10)
+    np.testing.assert_allclose(bin_edges[0], expected_edges, rtol=1e-10)
+    np.testing.assert_allclose(uncertainties[0], expected_uncertainty, rtol=1e-10)
+
+
+def test_fill_projected_density_values_without_weight_storage():
+    """
+    Test _fill_projected_density_values with non-Weight storage (fallback path).
+
+    Validates that the fallback uncertainty calculation (sqrt(density)) works correctly
+    when the 2D histogram does not use Weight storage.
+    """
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+
+    x_bins, x_min, x_max = 2, -2.0, 2.0
+    y_bins, y_min, y_max = 2, -2.0, 2.0
+
+    h_2d = bh.Histogram(
+        bh.axis.Regular(x_bins, x_min, x_max),
+        bh.axis.Regular(y_bins, y_min, y_max),
+        storage=bh.storage.Double(),
+    )
+
+    x_bin_width = (x_max - x_min) / x_bins
+
+    view_2d = h_2d.view()
+    view_2d[0, 0] = 100.0
+    view_2d[1, 0] = 200.0
+    view_2d[0, 1] = 150.0
+    view_2d[1, 1] = 250.0
+
+    ch.hist = {
+        "counts_xy": {
+            "histogram": h_2d,
+            "is_1d": False,
+        }
+    }
+
+    ch.hist["density_x"] = {
+        "projection": ["counts_xy", "x"],
+        "is_1d": True,
+    }
+
+    ch._fill_projected_density_values(ch.hist["density_x"])
+
+    hist_values = ch.hist["density_x"]["hist_values"]
+    uncertainties = ch.hist["density_x"]["uncertainties"]
+
+    expected_counts = np.array([100.0 + 150.0, 200.0 + 250.0])
+    total_y_width = y_max - y_min
+    expected_areas = x_bin_width * total_y_width
+    expected_density = expected_counts / expected_areas
+    expected_uncertainty = np.sqrt(expected_density)
+
+    np.testing.assert_allclose(hist_values[0], expected_density, rtol=1e-10)
+    np.testing.assert_allclose(uncertainties[0], expected_uncertainty, rtol=1e-10)
