@@ -1330,7 +1330,6 @@ def test___init__(tmp_test_directory):
             telescope_name="LSTN-01",
             calibration_device_name="calibration_device",
             model_version="6.0.0",
-            overwrite_model_parameters=None,
         )
 
         # Verify telescope model config file was written
