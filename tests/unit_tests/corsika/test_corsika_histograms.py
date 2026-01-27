@@ -572,3 +572,165 @@ def test_fill_projected_density_values_without_weight_storage():
 
     np.testing.assert_allclose(hist_values[0], expected_density, rtol=1e-10)
     np.testing.assert_allclose(uncertainties[0], expected_uncertainty, rtol=1e-10)
+
+
+def test_filter_density_histograms_per_telescope():
+    """Test _filter_density_histograms removes per-bin keys with per-telescope method."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+    ch.normalization_method = "per-telescope"
+    ch.hist = {
+        "density_xy": {"is_1d": False},
+        "density_x": {"is_1d": True},
+        "density_y": {"is_1d": True},
+        "density_r": {"is_1d": True},
+        "density_xy_from_counts": {"is_1d": False},
+        "density_r_from_counts": {"is_1d": True},
+        "counts_xy": {"is_1d": False},
+    }
+    ch._filter_density_histograms()
+    assert "density_xy_from_counts" not in ch.hist
+    assert "density_r_from_counts" not in ch.hist
+    assert "density_xy" in ch.hist
+    assert "density_x" in ch.hist
+    assert "density_y" in ch.hist
+    assert "density_r" in ch.hist
+    assert "counts_xy" in ch.hist
+
+
+def test_filter_density_histograms_per_bin():
+    """Test _filter_density_histograms removes per-telescope keys with per-bin method."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+    ch.normalization_method = "per-bin"
+    ch.hist = {
+        "density_xy": {"is_1d": False},
+        "density_x": {"is_1d": True},
+        "density_y": {"is_1d": True},
+        "density_r": {"is_1d": True},
+        "density_xy_from_counts": {"is_1d": False},
+        "density_r_from_counts": {"is_1d": True},
+        "counts_xy": {"is_1d": False},
+    }
+    ch._filter_density_histograms()
+    assert "density_xy" not in ch.hist
+    assert "density_x" not in ch.hist
+    assert "density_y" not in ch.hist
+    assert "density_r" not in ch.hist
+    assert "density_xy_from_counts" in ch.hist
+    assert "density_r_from_counts" in ch.hist
+    assert "counts_xy" in ch.hist
+
+
+def test_filter_density_histograms_invalid_method():
+    """Test _filter_density_histograms raises ValueError for invalid normalization method."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+    ch.normalization_method = "invalid-method"
+    ch.hist = {"density_xy": {"is_1d": False}}
+    with pytest.raises(ValueError, match="Unknown normalization_method"):
+        ch._filter_density_histograms()
+
+
+def test_filter_density_histograms_missing_keys():
+    """Test _filter_density_histograms handles missing keys gracefully."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+    ch.normalization_method = "per-telescope"
+    ch.hist = {
+        "counts_xy": {"is_1d": False},
+        "density_xy": {"is_1d": False},
+    }
+    ch._filter_density_histograms()
+    assert "density_xy" in ch.hist
+    assert "counts_xy" in ch.hist
+
+
+def test_density_and_unc_with_weight_storage():
+    """Test _density_and_unc with Weight storage (has value and variance)."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+
+    hist = bh.Histogram(bh.axis.Regular(3, 0, 3), storage=bh.storage.Weight())
+    hist.fill([0.5, 1.5, 2.5], weight=[10, 20, 30])
+
+    view = hist.view()
+    areas = np.array([1.0, 1.0, 1.0])
+
+    density, unc = ch._density_and_unc(view, areas)
+
+    expected_density = np.array([10.0, 20.0, 30.0])
+    expected_unc = np.sqrt(np.array([100.0, 400.0, 900.0])) / areas
+
+    np.testing.assert_allclose(density, expected_density)
+    np.testing.assert_allclose(unc, expected_unc)
+
+
+def test_density_and_unc_with_double_storage():
+    """Test _density_and_unc with Double storage (fallback path)."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+
+    hist = bh.Histogram(bh.axis.Regular(3, 0, 3), storage=bh.storage.Double())
+    hist.fill([0.5, 1.5, 2.5], weight=[5, 10, 15])
+
+    view = hist.view()
+    areas = np.array([2.0, 2.0, 2.0])
+
+    density, unc = ch._density_and_unc(view, areas)
+
+    expected_density = view / areas
+    expected_unc = np.sqrt(view) / areas
+
+    np.testing.assert_allclose(density, expected_density)
+    np.testing.assert_allclose(unc, expected_unc)
+
+
+def test_density_and_unc_with_varying_areas():
+    """Test _density_and_unc with non-uniform bin areas."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+
+    hist = bh.Histogram(bh.axis.Regular(4, 0, 10), storage=bh.storage.Weight())
+    hist.fill([0.5, 2.5, 5.0, 7.5], weight=[100, 200, 300, 400])
+
+    view = hist.view()
+    areas = np.array([2.5, 2.5, 2.5, 2.5])
+
+    density, unc = ch._density_and_unc(view, areas)
+
+    expected_density = np.array([40.0, 80.0, 120.0, 160.0])
+    expected_unc = np.sqrt(np.array([10000.0, 40000.0, 90000.0, 160000.0])) / areas
+
+    np.testing.assert_allclose(density, expected_density)
+    np.testing.assert_allclose(unc, expected_unc)
+
+
+def test_density_and_unc_zero_areas():
+    """Test _density_and_unc handles division by zero areas gracefully."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+
+    hist = bh.Histogram(bh.axis.Regular(2, 0, 2), storage=bh.storage.Weight())
+    hist.fill([0.5, 1.5], weight=[10, 20])
+
+    view = hist.view()
+    areas = np.array([0.0, 1.0])
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        density, unc = ch._density_and_unc(view, areas)
+
+    assert np.isinf(density[0])
+    assert density[1] == 20.0
+    assert np.isinf(unc[0])
+    assert np.isclose(unc[1], np.sqrt(400.0))
+
+
+def test_density_and_unc_empty_histogram():
+    """Test _density_and_unc with empty histogram."""
+    ch = CorsikaHistograms.__new__(CorsikaHistograms)
+
+    hist = bh.Histogram(bh.axis.Regular(3, 0, 3), storage=bh.storage.Weight())
+
+    view = hist.view()
+    areas = np.array([1.0, 1.0, 1.0])
+
+    density, unc = ch._density_and_unc(view, areas)
+
+    expected_density = np.array([0.0, 0.0, 0.0])
+    expected_unc = np.array([0.0, 0.0, 0.0])
+
+    np.testing.assert_allclose(density, expected_density)
+    np.testing.assert_allclose(unc, expected_unc)
