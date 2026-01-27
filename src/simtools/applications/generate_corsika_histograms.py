@@ -52,6 +52,8 @@ r"""
 
 """
 
+from astropy import units as u
+
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
 from simtools.corsika.corsika_histograms import CorsikaHistograms
@@ -79,6 +81,22 @@ def _parse():
         required=None,
     )
     config.parser.add_argument(
+        "--normalization",
+        help="Normalization method for histograms. Options: 'per-telescope', 'per-bin'",
+        type=str,
+        choices=["per-telescope", "per-bin"],
+        default="per-telescope",
+    )
+    config.parser.add_argument(
+        "--axis_distance",
+        help=(
+            "Distance from x/y axes Distance from the axis to consider"
+            " when calculating the lateral density profiles (in meters).",
+        ),
+        type=float,
+        default=1000.0,
+    )
+    config.parser.add_argument(
         "--pdf_file_name",
         help="Save histograms into a pdf file.",
         type=str,
@@ -93,7 +111,11 @@ def main():
 
     all_histograms = []
     for input_file in app_context.args["input_files"]:
-        corsika_histograms = CorsikaHistograms(input_file)
+        corsika_histograms = CorsikaHistograms(
+            input_file,
+            normalization_method=app_context.args["normalization"],
+            axis_distance=app_context.args["axis_distance"] * u.m,
+        )
         corsika_histograms.fill()
         all_histograms.append(corsika_histograms)
 
