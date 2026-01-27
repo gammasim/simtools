@@ -364,7 +364,7 @@ def test_create_optimization_plots(tmp_path, sample_psf_data, sample_parameters)
     assert result is None
 
 
-def test_create_final_psf_comparison_plot(tmp_path, sample_psf_data, sample_parameters):
+def test_create_summary_psf_comparison_plot(tmp_path, sample_psf_data, sample_parameters):
     """Test final PSF comparison plot creation."""
     mock_telescope_model = MagicMock()
     mock_telescope_model.name = "LSTN-01"
@@ -380,7 +380,7 @@ def test_create_final_psf_comparison_plot(tmp_path, sample_psf_data, sample_para
         mock_base.return_value = (mock_fig, mock_ax)
 
         # Test with all parameters present
-        output_file = plot_psf.create_final_psf_comparison_plot(
+        output_file = plot_psf.create_summary_psf_comparison_plot(
             mock_telescope_model,
             sample_parameters,
             data_to_plot,

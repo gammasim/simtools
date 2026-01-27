@@ -11,9 +11,37 @@ The helpers provided here focus on:
 - Configurable worker count.
 - Optional per-process initializer/initargs.
 - Configurable multiprocessing start method (e.g. ``"fork"``, ``"spawn"``).
-"""
 
-from __future__ import annotations
+Example usage
+-----
+1. **Parallelize a function with multiple arguments using tuples**:
+    ```python
+    from simtools.job_execution.process_pool import process_pool_map_ordered
+
+    def power(args):
+        base, exp = args
+        return base ** exp
+
+    inputs = [(2, 3), (3, 2), (4, 0)]
+    results = process_pool_map_ordered(power, inputs, max_workers=3)
+    # results == [8, 9, 1]
+    ```
+2. **Parallelize methods that require an object instance**:
+
+    ```python
+    from simtools.ray_tracing import MirrorPanelPSF
+
+    def worker_function(args):
+        mirror_idx, instance = args
+        measured_d80_mm = float(instance.measured_data[mirror_idx])
+        return instance.optimize_single_mirror(mirror_idx, measured_d80_mm)
+
+    instance = MirrorPanelPSF(label="test", args_dict=args)
+    worker_inputs = [(i, instance) for i in range(n_mirrors)]
+    results = process_pool_map_ordered(worker_function, worker_inputs)
+    # results contains per-mirror optimization outputs
+    ```
+"""
 
 import logging
 import os
@@ -82,7 +110,7 @@ def process_pool_map_ordered(
     if mp_start_method:
         ctx = get_context(str(mp_start_method))
 
-    logger.debug(
+    logger.info(
         "Starting ProcessPoolExecutor: n_items=%d, max_workers=%s, start_method=%s",
         n_items,
         str(max_workers),
