@@ -652,7 +652,7 @@ def test_validate_model_parameter_json_file(mocker, output_path):
     mock_collect_data_from_file.assert_called_once_with(
         Path(output_path) / "test_telescope" / TEST_PARAM_JSON
     )
-    mock_compare_value.assert_called_once_with([1.0, 2.0, 3.0], [1.0, 2.0, 3.0], 1.0e-5)
+    mock_compare_value.assert_called_once_with([1.0, 2.0, 3.0], [1.0, 2.0, 3.0], 1.0e-5, 1.0)
 
 
 def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
@@ -695,7 +695,7 @@ def test_validate_model_parameter_json_file_mismatch(mocker, output_path):
     mock_collect_data_from_file.assert_called_once_with(
         Path(output_path) / "test_telescope" / TEST_PARAM_JSON
     )
-    mock_compare_value.assert_called_once_with([1.1, 2.1, 3.1], [1.0, 2.0, 3.0], 1.0e-5)
+    mock_compare_value.assert_called_once_with([1.1, 2.1, 3.1], [1.0, 2.0, 3.0], 1.0e-5, 1.0)
 
 
 def test_versions_match_semantics():
