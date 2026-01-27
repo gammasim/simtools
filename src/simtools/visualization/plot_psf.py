@@ -780,14 +780,14 @@ def create_optimization_plots(args_dict, gd_results, tel_model, data_to_plot, ou
     pdf_pages.close()
 
 
-def create_final_psf_comparison_plot(
+def create_summary_psf_comparison_plot(
     tel_model, optimized_params, data_to_plot, output_dir, final_rmsd, simulated_data
 ):
     """
-    Create a standalone plot comparing measured vs simulated PSF with optimized parameters.
+    Create a standalone plot comparing measured vs simulated PSF with final optimized parameters.
 
-    This creates a single plot showing the final cumulative PSF comparison,
-    making it easy to visually assess the quality of the fit (RMSD).
+    This creates a single plot showing the cumulative PSF comparison
+    before and after the optimization.
 
     Parameters
     ----------
@@ -800,9 +800,9 @@ def create_final_psf_comparison_plot(
     output_dir : Path
         Directory for output files
     final_rmsd : float
-        Final RMSD value from optimization
+        Final RMSD value at the end of optimization
     simulated_data : dict
-        Final simulated PSF data
+        Final simulated PSF data with optimized parameters
 
     Returns
     -------
