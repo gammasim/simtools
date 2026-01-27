@@ -8,11 +8,13 @@ import numpy as np
 from astropy import units as u
 
 from simtools import settings
+from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.io import io_handler
 from simtools.model.model_parameter import ModelParameter
 from simtools.sim_events import file_info
 from simtools.utils import general as gen
+from simtools.utils.random import seeds
 
 
 class CorsikaConfig:
@@ -51,7 +53,7 @@ class CorsikaConfig:
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
         self.corsika_exec = settings.config.corsika_exe
-        self.interaction_table_path = settings.config.corsika_path
+        self.interaction_table_path = settings.config.corsika_interaction_table_path
         self.config = self._fill_corsika_configuration(settings.config.args)
         self._initialize_from_config(settings.config.args)
 
@@ -441,10 +443,13 @@ class CorsikaConfig:
     def _epos_flags(self):
         """EPOS interaction model flags."""
         epos_par = {}
-        epos_path = Path(self.interaction_table_path) / "epos"
+        epos_path = Path(self.interaction_table_path)
         epos_par["EPOPAR fname pathnx"] = [f"{epos_path}/"]
-        for epos_file in ["inics", "iniev", "inirj", "initl", "check"]:
+        for epos_file in ["inics", "iniev", "inirj", "initl"]:
             epos_par[f"EPOPAR fname {epos_file}"] = [str(epos_path / f"epos.{epos_file}")]
+        epos_par["EPOPAR fname hpf"] = [str(epos_path / "urqmd34/tables.dat")]
+        for dummy_output in ["check", "histo", "data", "copy"]:
+            epos_par[f"EPOPAR fname {dummy_output}"] = ["none"]
 
         return epos_par
 
@@ -660,7 +665,7 @@ class CorsikaConfig:
             text += line
         return text
 
-    def generate_corsika_input_file(self, use_multipipe, corsika_seeds, input_file, output_file):
+    def generate_corsika_input_file(self, use_multipipe, input_file, output_file):
         """
         Generate a CORSIKA input file.
 
@@ -669,8 +674,6 @@ class CorsikaConfig:
         use_multipipe: bool
             Whether to set the CORSIKA Inputs file to pipe
             the output directly to sim_telarray.
-        corsika_seeds: list
-            List of fixed seeds used for CORSIKA random number generators.
         input_file: Path
             Path to the input file to be generated.
         output_file: Path
@@ -697,7 +700,7 @@ class CorsikaConfig:
             file.write(f"IACT setenv AZM {self.azimuth_angle}\n")
 
             file.write("\n* [ SEEDS ]\n")
-            self._write_seeds(file, corsika_seeds)
+            self._write_seeds(file)
 
             file.write("\n* [ TELESCOPES ]\n")
             telescope_list_text = self.get_corsika_telescope_list()
@@ -739,19 +742,20 @@ class CorsikaConfig:
             model_directory=self.array_model.get_config_directory()
         )
 
-    def _write_seeds(self, file, corsika_seeds=None):
+    def _write_seeds(self, file):
         """
         Generate and write seeds in the CORSIKA input file.
+
+        CORSIKA seeds consist of 4 integers.
 
         Parameters
         ----------
         file: stream
             File where the telescope positions will be written.
         """
+        corsika_seeds = settings.config.args.get("corsika_seeds", False)
         if not corsika_seeds:
-            random_seed = self.get_config_parameter("PRMPAR") + self.run_number
-            rng = np.random.default_rng(random_seed)
-            corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
+            corsika_seeds = seeds(n_seeds=4, max_seed=CORSIKA_MAX_SEED)
         if len(corsika_seeds) != 4:
             raise ValueError("Exactly 4 CORSIKA seeds must be provided.")
         for s in corsika_seeds:

@@ -49,8 +49,6 @@ light_source_position (float, float, float, optional)
     m. If not set, the position from the simulation model is used.
 light_source_pointing (float, float, float, optional)
     Light source pointing direction. If not set, the pointing from the simulation model is used.
-output_prefix (str, optional)
-    Prefix for output files (default: empty).
 """
 
 from simtools.application_control import get_application_label, startup_application
@@ -100,13 +98,6 @@ def _parse():
         default=1,
         required=False,
     )
-    config.parser.add_argument(
-        "--output_prefix",
-        help="Prefix for output files (default: empty)",
-        type=str,
-        default=None,
-        required=False,
-    )
     return config.initialize(
         db_config=True,
         simulation_model=["telescope", "model_version"],
@@ -119,10 +110,11 @@ def main():
     app_context = startup_application(_parse)
 
     light_source = SimulatorLightEmission(
-        light_emission_config=app_context.args,
+        light_emission_config={**app_context.args, "run_mode": "illuminator"},
         label=app_context.args.get("label"),
     )
     light_source.simulate()
+    light_source.verify_simulations()
 
 
 if __name__ == "__main__":

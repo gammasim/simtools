@@ -107,6 +107,7 @@ class MirrorPanelPSF:
             site=self.args_dict["site"],
             telescope_name=self.args_dict["telescope"],
             model_version=self.args_dict["model_version"],
+            overwrite_model_parameters=self.args_dict.get("overwrite_model_parameters"),
         )
 
         self.measured_data = self._load_measured_data()
