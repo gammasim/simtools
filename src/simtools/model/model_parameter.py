@@ -492,6 +492,8 @@ class ModelParameter:
         changes: dict
             Parameters to be changed.
         """
+        if not changes:
+            return
         key_for_changes = self._get_key_for_parameter_changes(self.site, self.name, changes)
         changes = changes.get(key_for_changes, {}) if key_for_changes else changes
         if not changes:
