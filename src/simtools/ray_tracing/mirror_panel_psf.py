@@ -54,8 +54,7 @@ class RndaGradientDescentSettings:
 
 
 def _worker_optimize_mirror_forked(args):
-    """
-    Optimize a single mirror index using an inherited MirrorPanelPSF instance.
+    """Optimize a single mirror in a forked worker process.
 
     Parameters
     ----------
@@ -76,9 +75,9 @@ class MirrorPanelPSF:
 
     Parameters
     ----------
-    label: str
+    label : str
         Application label.
-    args_dict: dict
+    args_dict : dict
         Dictionary with input arguments.
     """
 
@@ -89,7 +88,15 @@ class MirrorPanelPSF:
     DEFAULT_RNDA_MAX_ITERATIONS: int = 100
 
     def __init__(self, label, args_dict):
-        """Initialize the MirrorPanelPSF class."""
+        """Initialize the mirror-panel PSF optimizer.
+
+        Parameters
+        ----------
+        label : str
+            Application label.
+        args_dict : dict
+            Dictionary with input arguments.
+        """
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initializing MirrorPanelPSF")
 
@@ -226,7 +233,28 @@ class MirrorPanelPSF:
         plus_value,
         minus_value,
     ):
-        """Compute the derivative d(objective)/d(param) via symmetric finite differences."""
+        """Compute the derivative ``d(objective)/d(param)`` via symmetric finite differences.
+
+        Parameters
+        ----------
+        mirror_idx : int
+            Mirror index (0-based).
+        measured_d80_mm : float
+            Measured d80 in mm.
+        current_rnda : list
+            Current RNDA values.
+        param_index : int
+            Index of the parameter to perturb.
+        plus_value : float
+            Perturbed value for the plus step.
+        minus_value : float
+            Perturbed value for the minus step.
+
+        Returns
+        -------
+        float
+            Estimated gradient component.
+        """
         denom = float(plus_value - minus_value)
         if denom <= 0:
             return 0.0
@@ -247,9 +275,20 @@ class MirrorPanelPSF:
         return float((plus_eval.objective - minus_eval.objective) / denom)
 
     def _get_allowed_range_from_schema(self, param_name: str, index: int):
-        """Return (min, max) allowed range for a model parameter entry.
+        """Return allowed range for one entry of a model parameter.
 
-        Returns (None, None) if the schema does not define the range.
+        Parameters
+        ----------
+        param_name : str
+            Model parameter name.
+        index : int
+            Index into the parameter's schema ``data`` list.
+
+        Returns
+        -------
+        tuple
+            Tuple ``(min_value, max_value)``. Returns ``(None, None)`` if the
+            schema does not define a range.
         """
         schema = names.model_parameters().get(param_name) or {}
         data = schema.get("data")
@@ -261,7 +300,20 @@ class MirrorPanelPSF:
         return allowed_range.get("min"), allowed_range.get("max")
 
     def _get_rnda_parameter_bounds(self, param_name: str):
-        """Get Bounds objects for RNDA parameters (sigma1, frac2, sigma2)."""
+        """Get bounds for RNDA parameters.
+
+        Parameters
+        ----------
+        param_name : str
+            Model parameter name for RNDA (typically
+            ``"mirror_reflection_random_angle"``).
+
+        Returns
+        -------
+        tuple
+            Tuple ``(sigma1_bounds, frac2_bounds, sigma2_bounds)`` of
+            :class:`~simtools.ray_tracing.mirror_panel_psf.Bounds`.
+        """
         sigma1_min, sigma1_max = self._get_allowed_range_from_schema(param_name, 0)
         frac2_min, frac2_max = self._get_allowed_range_from_schema(param_name, 1)
         sigma2_min, sigma2_max = self._get_allowed_range_from_schema(param_name, 2)
@@ -280,7 +332,7 @@ class MirrorPanelPSF:
         threshold,
         learning_rate,
     ) -> RndaGradientDescentSettings:
-        """Build gradient descent settings from defaults + schema-defined bounds."""
+        """Build gradient descent settings from defaults and schema-defined bounds."""
         grad_clip = float(self.DEFAULT_RNDA_GRAD_CLIP)
         max_log_step = float(self.DEFAULT_RNDA_MAX_LOG_STEP)
         max_frac_step = float(self.DEFAULT_RNDA_MAX_FRAC_STEP)
@@ -310,7 +362,26 @@ class MirrorPanelPSF:
         settings,
         learning_rate,
     ):
-        """Propose a next RNDA point using one gradient step."""
+        """Propose a next RNDA point using one gradient step.
+
+        Parameters
+        ----------
+        mirror_idx : int
+            Mirror index (0-based).
+        measured_d80_mm : float
+            Measured d80 in mm.
+        current_rnda : list
+            Current RNDA values.
+        settings : RndaGradientDescentSettings
+            Optimizer settings (includes bounds).
+        learning_rate : float
+            Current learning rate.
+
+        Returns
+        -------
+        list
+            Proposed RNDA values ``[sigma1, fraction2, sigma2]``.
+        """
         sigma1, frac2, sigma2 = map(float, current_rnda)
         specs = (
             {
@@ -394,7 +465,21 @@ class MirrorPanelPSF:
     ):
         """Run a 3-parameter RNDA gradient descent (sigma1, fraction2, sigma2).
 
-        Returns best_rnda, best_sim_d80, best_pct_diff.
+        Parameters
+        ----------
+        mirror_idx : int
+            Mirror index (0-based).
+        measured_d80_mm : float
+            Measured d80 in mm.
+        current_rnda : list
+            Starting RNDA values.
+        settings : RndaGradientDescentSettings
+            Optimizer settings.
+
+        Returns
+        -------
+        tuple
+            Tuple ``(best_rnda, best_sim_d80, best_pct_diff)``.
         """
         current_eval = self._evaluate_rnda_candidate(
             mirror_idx=mirror_idx,
@@ -490,7 +575,6 @@ class MirrorPanelPSF:
             Mirror index (0-based).
         measured_d80_mm : float
             Measured d80 in mm.
-            Focal length in meters.
 
         Returns
         -------
@@ -523,7 +607,24 @@ class MirrorPanelPSF:
         }
 
     def _optimize_mirrors_parallel(self, n_mirrors, n_workers):
-        """Optimize mirrors in parallel using one parent instance, no functools."""
+        """Optimize mirrors in parallel.
+
+        Parameters
+        ----------
+        n_mirrors : int
+            Number of mirrors to optimize.
+        n_workers : int
+            Number of worker processes.
+
+        Returns
+        -------
+        list
+            List of per-mirror results, ordered by mirror index.
+
+        Notes
+        -----
+        Uses the ``fork`` start method so workers inherit the parent state.
+        """
         # Parent instance created once
         parent_instance = MirrorPanelPSF(
             label=self.label, args_dict=dict(self.args_dict, parallel=False)
@@ -639,7 +740,13 @@ class MirrorPanelPSF:
                 )
 
     def write_d80_histogram(self):
-        """Write histogram comparing measured vs simulated d80 distributions using plot_psf."""
+        """Write histogram comparing measured vs simulated d80 distributions.
+
+        Returns
+        -------
+        Path or None
+            Path to the created histogram plot, if created.
+        """
         measured = [r.get("measured_d80_mm") for r in (self.per_mirror_results or [])]
         simulated = [r.get("simulated_d80_mm") for r in (self.per_mirror_results or [])]
         return plot_psf.plot_d80_histogram(measured, simulated, self.args_dict)

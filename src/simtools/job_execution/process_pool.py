@@ -1,13 +1,16 @@
 """Generic process pool helpers.
 
-This module centralizes ProcessPoolExecutor usage to ensure a consistent
+This module centralizes ``ProcessPoolExecutor`` usage to ensure a consistent
 approach across simtools applications.
 
-Features
-- Ordered results (input order preserved)
-- Configurable worker count
-- Optional per-process initializer/initargs
-- Configurable multiprocessing start method (e.g. 'fork', 'spawn')
+Notes
+-----
+The helpers provided here focus on:
+
+- Ordered results (input order preserved).
+- Configurable worker count.
+- Optional per-process initializer/initargs.
+- Configurable multiprocessing start method (e.g. ``"fork"``, ``"spawn"``).
 """
 
 from __future__ import annotations
@@ -32,30 +35,39 @@ def process_pool_map_ordered(
     initializer=None,
     initargs=(),
 ):
-    """Apply *func* to each item in *items* in a process pool.
+    """Apply ``func`` to each item in ``items`` using a process pool.
 
     Parameters
     ----------
-    func:
+    func : callable
         Function to apply to each item.
-    items:
-        Iterable of items.
-    max_workers:
-        Number of worker processes. If None or <= 0, uses os.cpu_count().
-    mp_start_method:
-        Multiprocessing start method (e.g. 'fork', 'spawn'). If None, uses the
-        default context.
-    initializer, initargs:
-        Optional per-process initializer and its arguments.
+    items : iterable
+        Items to process.
+    max_workers : int or None
+        Number of worker processes. If ``None`` or ``<= 0``, uses ``os.cpu_count()``.
+    mp_start_method : str or None
+        Multiprocessing start method (e.g. ``"fork"``, ``"spawn"``). If ``None``,
+        uses the default context.
+    initializer : callable or None
+        Optional per-process initializer.
+    initargs : tuple
+        Arguments passed to ``initializer``.
 
     Returns
     -------
     list
         Results ordered to match the input item order.
 
+    Raises
+    ------
+    Exception
+        Any exception raised by a worker process is re-raised when collecting
+        the corresponding future result.
+
     Notes
     -----
-    Exceptions raised in worker processes are re-raised when collecting results.
+    This helper submits all items at once and collects results as futures
+    complete.
     """
     item_list = list(items)
     n_items = len(item_list)
