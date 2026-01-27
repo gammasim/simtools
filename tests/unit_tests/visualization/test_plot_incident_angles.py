@@ -620,3 +620,146 @@ def test_plot_radius_histograms_covers_continue_lines(tmp_test_directory):
     # Plot should still be produced thanks to the valid table
     assert out_path.exists()
     assert out_path.stat().st_size > 0
+
+
+def test_plot_incident_angles_with_model_version(tmp_test_directory):
+    out_dir = Path(tmp_test_directory) / "plots"
+    t = QTable()
+    t["angle_incidence_focal"] = np.array([0.1, 0.2, 0.3]) * u.deg
+    t["angle_incidence_primary"] = np.array([1.0, 1.1, 1.2]) * u.deg
+    t["angle_incidence_secondary"] = np.array([2.0, 2.1, 2.2]) * u.deg
+    results = {0.0: t}
+    pia.plot_incident_angles(
+        results,
+        tmp_test_directory,
+        "version_test",
+        model_version="1.0.0",
+    )
+    assert (out_dir / "incident_angles_multi_version_test.png").exists()
+    assert (out_dir / "incident_angles_primary_multi_version_test.png").exists()
+    assert (out_dir / "incident_angles_secondary_multi_version_test.png").exists()
+
+
+def test_plot_incident_angles_none_logger_uses_module_logger(tmp_test_directory, caplog):
+    caplog.set_level(logging.WARNING)
+    results = {}
+    pia.plot_incident_angles(results, tmp_test_directory, "no_logger", logger=None)
+    msgs = [r.message for r in caplog.records]
+    assert any("No results provided for multi-offset plot" in m for m in msgs)
+
+
+def test_plot_incident_angles_custom_bin_widths(tmp_test_directory):
+    out_dir = Path(tmp_test_directory) / "plots"
+    t = QTable()
+    t["angle_incidence_focal"] = np.array([0.05, 0.15, 0.25, 0.35]) * u.deg
+    t["angle_incidence_primary"] = np.array([0.5, 1.5, 2.5, 3.5]) * u.deg
+    t["angle_incidence_secondary"] = np.array([1.0, 2.0, 3.0, 4.0]) * u.deg
+    results = {0.0: t}
+    pia.plot_incident_angles(
+        results,
+        tmp_test_directory,
+        "custom_bins",
+        bin_width_deg=0.2,
+        radius_bin_width_m=0.02,
+    )
+    assert (out_dir / "incident_angles_multi_custom_bins.png").exists()
+    assert (out_dir / "incident_angles_primary_multi_custom_bins.png").exists()
+    assert (out_dir / "incident_angles_secondary_multi_custom_bins.png").exists()
+
+
+def test_plot_incident_angles_debug_plots_true(tmp_test_directory):
+    out_dir = Path(tmp_test_directory) / "plots"
+    t0 = QTable()
+    t0["angle_incidence_focal"] = np.array([0.1, 0.2]) * u.deg
+    t0["angle_incidence_primary"] = np.array([1.0, 1.1]) * u.deg
+    t0["angle_incidence_secondary"] = np.array([2.0, 2.1]) * u.deg
+    t0["primary_hit_radius"] = np.array([0.1, 0.12]) * u.m
+    t0["secondary_hit_radius"] = np.array([0.05, 0.07]) * u.m
+    t0["primary_hit_x"] = np.array([0.0, 0.1]) * u.m
+    t0["primary_hit_y"] = np.array([0.0, -0.1]) * u.m
+    t0["secondary_hit_x"] = np.array([0.02, -0.02]) * u.m
+    t0["secondary_hit_y"] = np.array([0.03, 0.01]) * u.m
+    results = {0.0: t0}
+    pia.plot_incident_angles(
+        results,
+        tmp_test_directory,
+        "dbg_enabled",
+        debug_plots=True,
+    )
+    assert (out_dir / "incident_angles_multi_dbg_enabled.png").exists()
+    assert (out_dir / "incident_angles_primary_multi_dbg_enabled.png").exists()
+    assert (out_dir / "incident_angles_secondary_multi_dbg_enabled.png").exists()
+    assert (out_dir / "incident_radius_primary_multi_dbg_enabled.png").exists()
+    assert (out_dir / "incident_radius_secondary_multi_dbg_enabled.png").exists()
+    assert (out_dir / "incident_primary_radius_vs_angle_multi_dbg_enabled.png").exists()
+    assert (out_dir / "incident_secondary_radius_vs_angle_multi_dbg_enabled.png").exists()
+    assert (out_dir / "incident_primary_xy_heatmap_off0_dbg_enabled.png").exists()
+    assert (out_dir / "incident_secondary_xy_heatmap_off0_dbg_enabled.png").exists()
+
+
+def test_plot_incident_angles_debug_plots_false(tmp_test_directory):
+    out_dir = Path(tmp_test_directory) / "plots"
+    t = QTable()
+    t["angle_incidence_focal"] = np.array([0.1, 0.2]) * u.deg
+    t["angle_incidence_primary"] = np.array([1.0, 1.1]) * u.deg
+    t["angle_incidence_secondary"] = np.array([2.0, 2.1]) * u.deg
+    t["primary_hit_radius"] = np.array([0.1, 0.12]) * u.m
+    results = {0.0: t}
+    pia.plot_incident_angles(
+        results,
+        tmp_test_directory,
+        "dbg_disabled",
+        debug_plots=False,
+    )
+    assert (out_dir / "incident_angles_multi_dbg_disabled.png").exists()
+    assert not any(out_dir.glob("incident_radius_primary_multi_*.png"))
+
+
+def test_plot_incident_angles_multiple_offsets(tmp_test_directory):
+    out_dir = Path(tmp_test_directory) / "plots"
+    t0 = QTable()
+    t0["angle_incidence_focal"] = np.array([0.1, 0.2]) * u.deg
+    t0["angle_incidence_primary"] = np.array([1.0, 1.1]) * u.deg
+    t0["angle_incidence_secondary"] = np.array([2.0, 2.1]) * u.deg
+    t1 = QTable()
+    t1["angle_incidence_focal"] = np.array([0.3, 0.4]) * u.deg
+    t1["angle_incidence_primary"] = np.array([1.5, 1.6]) * u.deg
+    t1["angle_incidence_secondary"] = np.array([2.5, 2.6]) * u.deg
+    results = {0.0: t0, 1.0: t1}
+    pia.plot_incident_angles(results, tmp_test_directory, "multi_offset")
+    assert (out_dir / "incident_angles_multi_multi_offset.png").exists()
+
+
+def test_plot_incident_angles_no_focal_angles(tmp_test_directory, caplog):
+    caplog.set_level(logging.WARNING)
+    out_dir = Path(tmp_test_directory) / "plots"
+    t = QTable()
+    t["angle_incidence_primary"] = np.array([1.0, 1.1]) * u.deg
+    t["angle_incidence_secondary"] = np.array([2.0, 2.1]) * u.deg
+    results = {0.0: t}
+    pia.plot_incident_angles(results, tmp_test_directory, "no_focal")
+    assert not (out_dir / "incident_angles_multi_no_focal.png").exists()
+    assert (out_dir / "incident_angles_primary_multi_no_focal.png").exists()
+    assert (out_dir / "incident_angles_secondary_multi_no_focal.png").exists()
+
+
+def test_plot_incident_angles_only_focal_angles(tmp_test_directory):
+    out_dir = Path(tmp_test_directory) / "plots"
+    t = QTable()
+    t["angle_incidence_focal"] = np.array([0.1, 0.2, 0.3]) * u.deg
+    results = {0.0: t}
+    pia.plot_incident_angles(results, tmp_test_directory, "focal_only")
+    assert (out_dir / "incident_angles_multi_focal_only.png").exists()
+    assert not (out_dir / "incident_angles_primary_multi_focal_only.png").exists()
+    assert not (out_dir / "incident_angles_secondary_multi_focal_only.png").exists()
+
+
+def test_plot_incident_angles_creates_output_directory(tmp_test_directory):
+    out_dir = Path(tmp_test_directory) / "plots"
+    assert not out_dir.exists()
+    t = QTable()
+    t["angle_incidence_focal"] = np.array([0.1]) * u.deg
+    results = {0.0: t}
+    pia.plot_incident_angles(results, tmp_test_directory, "creates_dir")
+    assert out_dir.exists()
+    assert out_dir.is_dir()
