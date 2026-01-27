@@ -19,20 +19,28 @@ class CorsikaHistograms:
     ----------
     input_file: str or Path
         CORSIKA IACT file.
+    axis_distance: astropy.units.Quantity or float
+        Distance from the axis to consider when calculating the lateral density profiles
+        along x and y axes. If a float is given, it is assumed to be in meters.
 
     Raises
     ------
     FileNotFoundError:
         if the input file given does not exist.
+
+    TODO - axis distance as parameter; default to very large value.
     """
 
-    def __init__(self, input_file):
+    def __init__(self, input_file, axis_distance=50 * u.m):
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaHistograms")
         self.input_file = Path(input_file)
         if not self.input_file.exists():
             raise FileNotFoundError(f"File {self.input_file} does not exist.")
 
+        self.axis_distance = (
+            axis_distance.to(u.m).value if isinstance(axis_distance, u.Quantity) else axis_distance
+        )
         self.events = None
         self.hist = self._set_2d_distributions()
         self.hist.update(self._set_1d_distributions())
@@ -605,8 +613,30 @@ class CorsikaHistograms:
             return avg, unc
 
         # 1D averaged profiles with uncertainties
-        avg_x, unc_x = _average_profile_with_error(xs, densities, density_errors, x_edges)
-        avg_y, unc_y = _average_profile_with_error(ys, densities, density_errors, y_edges)
+        # For density_x: use only samples within ±axis_distance of the x-axis (|y| < axis_distance)
+        # For density_y: use only samples within ±axis_distance of the y-axis (|x| < axis_distance)
+
+        # density_x: slice around x-axis
+        mask_x = np.abs(ys) < self.axis_distance
+        if np.any(mask_x):
+            avg_x, unc_x = _average_profile_with_error(
+                xs[mask_x], densities[mask_x], density_errors[mask_x], x_edges
+            )
+        else:
+            avg_x = np.zeros(len(x_edges) - 1)
+            unc_x = np.zeros(len(x_edges) - 1)
+
+        # density_y: slice around y-axis
+        mask_y = np.abs(xs) < self.axis_distance
+        if np.any(mask_y):
+            avg_y, unc_y = _average_profile_with_error(
+                ys[mask_y], densities[mask_y], density_errors[mask_y], y_edges
+            )
+        else:
+            avg_y = np.zeros(len(y_edges) - 1)
+            unc_y = np.zeros(len(y_edges) - 1)
+
+        # density_r: use all samples
         avg_r, unc_r = _average_profile_with_error(rs, densities, density_errors, r_edges)
 
         self.hist["density_x"]["hist_values"] = np.asarray([avg_x])
