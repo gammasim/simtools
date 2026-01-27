@@ -160,7 +160,6 @@ def main():
     panel_psf = MirrorPanelPSF(app_context.args.get("label"), app_context.args)
     panel_psf.optimize_with_gradient_descent()
     panel_psf.write_optimization_data()
-    panel_psf.write_results_log()
     if app_context.args.get("d80_hist"):
         hist_path = panel_psf.write_d80_histogram()
         if hist_path:

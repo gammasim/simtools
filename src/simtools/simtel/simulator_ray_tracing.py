@@ -66,8 +66,6 @@ class SimulatorRayTracing(SimtelRunner):
         self._rep_number = 0
         self.runs_per_set = 1 if self.config.single_mirror_mode else 20
         self.photons_per_run = 100000 if not test else 5000
-
-        # Initialized here for pylint; values are set in single-mirror mode.
         self._single_pixel_camera_file = None
         self._funnel_file = None
 

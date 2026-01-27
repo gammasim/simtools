@@ -15,7 +15,6 @@ import simtools.utils.general as gen
 from simtools.data_model import model_data_writer
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
-from simtools.settings import config as settings_config
 from simtools.utils import names
 from simtools.visualization import plot_psf
 
@@ -33,32 +32,33 @@ class GradientStepResult:
 
 
 @dataclass(frozen=True)
+class Bounds:
+    """Parameter bounds."""
+
+    min: float
+    max: float
+
+
+@dataclass(frozen=True)
 class RndaGradientDescentSettings:
     """Settings for RNDA gradient descent optimization."""
 
     threshold: float
     learning_rate: float
     grad_clip: float
+
+    sigma1: Bounds
+    sigma2: Bounds
+    frac2: Bounds
+
     max_log_step: float
-    sigma1_min: float
-    sigma1_max: float
-    sigma2_min: float
-    sigma2_max: float
-    frac2_min: float
-    frac2_max: float
     max_frac_step: float
     max_iterations: int
 
 
-def _worker_init(label, args_dict, db_config):
-    """Initialize per-process MirrorPanelPSF instance.
-
-    Important: DB configuration is stored in ``simtools.settings.config`` at runtime.
-    With the multiprocessing "spawn" start method, workers do not inherit that state,
-    so we must call ``config.load`` again in each worker.
-    """
+def _worker_init(label, args_dict):
+    """Initialize per-process MirrorPanelPSF instance."""
     global _WORKER_INSTANCE  # pylint: disable=global-statement
-    settings_config.load(args=args_dict, db_config=db_config)
     _WORKER_INSTANCE = MirrorPanelPSF(label=label, args_dict=args_dict)
 
 
@@ -98,9 +98,13 @@ class MirrorPanelPSF:
 
         self.label = label
         self.args_dict = args_dict
-        self.telescope_model, self.site_model = self._define_telescope_model(label)
+        self.telescope_model, self.site_model, _ = initialize_simulation_models(
+            label=label,
+            site=self.args_dict["site"],
+            telescope_name=self.args_dict["telescope"],
+            model_version=self.args_dict["model_version"],
+        )
 
-        # Load measured d80
         self.measured_data = self._load_measured_data()
 
         # Limit mirrors in test mode
@@ -130,28 +134,6 @@ class MirrorPanelPSF:
             return table["d80"]
 
         raise ValueError("Data file must contain either 'psf_opt' or 'd80' column")
-
-    def _define_telescope_model(self, label):
-        """
-        Define telescope model.
-
-        This includes updating the configuration with mirror list and/or random focal length given
-        as input.
-
-        Returns
-        -------
-        tel : TelescopeModel
-            The telescope model.
-        site_model : SiteModel
-            The site model.
-        """
-        tel_model, site_model, _ = initialize_simulation_models(
-            label=label,
-            site=self.args_dict["site"],
-            telescope_name=self.args_dict["telescope"],
-            model_version=self.args_dict["model_version"],
-        )
-        return tel_model, site_model
 
     def _simulate_single_mirror_d80(self, mirror_idx, rnda_values):
         """
@@ -221,9 +203,8 @@ class MirrorPanelPSF:
 
     def _evaluate_rnda_candidate(
         self,
-        *,
-        mirror_idx: int,
-        measured_d80_mm: float,
+        mirror_idx,
+        measured_d80_mm,
         rnda_values,
     ) -> GradientStepResult:
         """Evaluate a candidate RNDA by simulating and computing objective."""
@@ -239,14 +220,13 @@ class MirrorPanelPSF:
 
     def _finite_difference_objective_gradient(
         self,
-        *,
-        mirror_idx: int,
-        measured_d80_mm: float,
+        mirror_idx,
+        measured_d80_mm,
         current_rnda,
-        param_index: int,
-        plus_value: float,
-        minus_value: float,
-    ) -> float:
+        param_index,
+        plus_value,
+        minus_value,
+    ):
         """Compute the derivative d(objective)/d(param) via symmetric finite differences."""
         denom = float(plus_value - minus_value)
         if denom <= 0:
@@ -309,24 +289,24 @@ class MirrorPanelPSF:
                     "idx": 0,
                     "kind": "log",
                     "value": sigma1,
-                    "min": settings.sigma1_min,
-                    "max": settings.sigma1_max,
+                    "min": float(settings.sigma1.min),
+                    "max": float(settings.sigma1.max),
                     "eps": max(1e-6, 0.05 * sigma1),
                 },
                 {
                     "idx": 1,
                     "kind": "linear",
                     "value": frac2,
-                    "min": settings.frac2_min,
-                    "max": settings.frac2_max,
+                    "min": float(settings.frac2.min),
+                    "max": float(settings.frac2.max),
                     "eps": max(1e-6, 0.02),
                 },
                 {
                     "idx": 2,
                     "kind": "log",
                     "value": sigma2,
-                    "min": settings.sigma2_min,
-                    "max": settings.sigma2_max,
+                    "min": float(settings.sigma2.min),
+                    "max": float(settings.sigma2.max),
                     "eps": max(1e-6, 0.05 * sigma2),
                 },
             ]
@@ -469,13 +449,6 @@ class MirrorPanelPSF:
         frac2_min, frac2_max = _get_allowed_range_from_schema(param_name, 1)
         sigma2_min, sigma2_max = _get_allowed_range_from_schema(param_name, 2)
 
-        sigma1_min = 1e-4 if sigma1_min is None else float(sigma1_min)
-        sigma1_max = 0.1 if sigma1_max is None else float(sigma1_max)
-        frac2_min = 0.0 if frac2_min is None else float(frac2_min)
-        frac2_max = 1.0 if frac2_max is None else float(frac2_max)
-        sigma2_min = 1e-4 if sigma2_min is None else float(sigma2_min)
-        sigma2_max = 0.1 if sigma2_max is None else float(sigma2_max)
-
         # Sigma parameters are used in log-space updates; ensure strictly positive lower bounds.
         sigma1_min = max(sigma1_min, 1e-12)
         sigma2_min = max(sigma2_min, 1e-12)
@@ -491,12 +464,9 @@ class MirrorPanelPSF:
             learning_rate=learning_rate,
             grad_clip=grad_clip,
             max_log_step=max_log_step,
-            sigma1_min=sigma1_min,
-            sigma1_max=sigma1_max,
-            sigma2_min=sigma2_min,
-            sigma2_max=sigma2_max,
-            frac2_min=frac2_min,
-            frac2_max=frac2_max,
+            sigma1=Bounds(min=float(sigma1_min), max=float(sigma1_max)),
+            sigma2=Bounds(min=float(sigma2_min), max=float(sigma2_max)),
+            frac2=Bounds(min=float(frac2_min), max=float(frac2_max)),
             max_frac_step=max_frac_step,
             max_iterations=max_iterations,
         )
@@ -518,14 +488,13 @@ class MirrorPanelPSF:
         # Always use 'fork' to avoid DB re-initialization
         worker_args = dict(self.args_dict)
         worker_args["parallel"] = False
-        worker_db_config = dict(settings_config.db_config) if settings_config.db_config else {}
         ctx = get_context("fork")
         results = [None] * n_mirrors
         with ProcessPoolExecutor(
             max_workers=n_workers,
             mp_context=ctx,
             initializer=_worker_init,
-            initargs=(self.label, worker_args, worker_db_config),
+            initargs=(self.label, worker_args),
         ) as executor:
             futures = {executor.submit(_worker_optimize_mirror, i): i for i in range(n_mirrors)}
             for fut in as_completed(futures):
@@ -570,95 +539,6 @@ class MirrorPanelPSF:
         self._logger.info(
             f"Optimization complete. Mean percentage difference: {self.final_percentage_diff:.2f}%"
         )
-
-    def _format_results_lines(self):
-        lines = []
-
-        lines.append("")
-        lines.append("=" * 70)
-        lines.append("Single-Mirror d80 Optimization Results (Percentage Difference Metric)")
-        lines.append("=" * 70)
-
-        lines.append("")
-        lines.append(f"Number of mirrors optimized: {len(self.per_mirror_results)}")
-        lines.append(f"Mean percentage difference: {self.final_percentage_diff:.2f}%")
-
-        have_plot_d80 = any(
-            (isinstance(r, dict) and ("simulated_d80_mm_plot" in r or "percentage_diff_plot" in r))
-            for r in self.per_mirror_results
-        )
-
-        lines.append("")
-        lines.append("Per-mirror results:")
-        lines.append("-" * 120 if have_plot_d80 else "-" * 90)
-        if have_plot_d80:
-            lines.append(
-                f"{'Mirror':>6} {'Meas d80':>10} {'Sim d80':>10} {'Pct Diff':>10} "
-                f"{'Plot Sim':>10} {'Plot %':>10} {'Optimized RNDA [sigma1, frac2, sigma2]':<40}"
-            )
-            lines.append(
-                f"{'':>6} {'(mm)':>10} {'(mm)':>10} {'(%)':>10} "
-                f"{'(mm)':>10} {'(%)':>10} {'(deg, -, deg)':<40}"
-            )
-        else:
-            lines.append(
-                f"{'Mirror':>6} {'Meas d80':>10} {'Sim d80':>10} {'Pct Diff':>10} "
-                f"{'Optimized RNDA [sigma1, frac2, sigma2]':<40}"
-            )
-            lines.append(f"{'':>6} {'(mm)':>10} {'(mm)':>10} {'(%)':>10} {'(deg, -, deg)':<40}")
-        lines.append("-" * 120 if have_plot_d80 else "-" * 90)
-
-        for r in self.per_mirror_results:
-            rnda_str = (
-                f"[{r['optimized_rnda'][0]:.4f}, {r['optimized_rnda'][1]:.4f}, "
-                f"{r['optimized_rnda'][2]:.4f}]"
-            )
-            if have_plot_d80:
-                plot_sim = r.get("simulated_d80_mm_plot", float("nan"))
-                plot_pct = r.get("percentage_diff_plot", float("nan"))
-                lines.append(
-                    f"{r['mirror']:>6} {r['measured_d80_mm']:>10.3f} "
-                    f"{r['simulated_d80_mm']:>10.3f} {r['percentage_diff']:>10.2f} "
-                    f"{plot_sim:>10.3f} {plot_pct:>10.2f} {rnda_str:<40}"
-                )
-            else:
-                lines.append(
-                    f"{r['mirror']:>6} {r['measured_d80_mm']:>10.3f} "
-                    f"{r['simulated_d80_mm']:>10.3f} {r['percentage_diff']:>10.2f} "
-                    f"{rnda_str:<40}"
-                )
-
-        lines.append("-" * 120 if have_plot_d80 else "-" * 90)
-        lines.append("")
-        lines.append("mirror_reflection_random_angle [sigma1, fraction2, sigma2]")
-        lines.append(f"Previous values = {[f'{x:.4f}' for x in self.rnda_start]}")
-        lines.append(f"Optimized values (averaged) = {[f'{x:.4f}' for x in self.rnda_opt]}")
-        lines.append("")
-
-        return lines
-
-    def write_results_log(self):
-        """Write the results table to a ``.log`` file."""
-        output_dir = Path(self.args_dict.get("output_path", "."))
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        tel = str(self.args_dict.get("telescope", "")).strip()
-        model_version = str(self.args_dict.get("model_version", "")).strip()
-        suffix = ""
-        if tel or model_version:
-            suffix = f"_{tel}_{model_version}"
-        filename = f"mirror_rnda_results{suffix}.log"
-
-        out_path = Path(filename)
-        if not out_path.is_absolute():
-            out_path = output_dir / out_path
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-
-        text = "\n".join(self._format_results_lines()) + "\n"
-        out_path.write_text(text, encoding="utf-8")
-
-        self._logger.info("Results written to %s", str(out_path))
-        return str(out_path)
 
     def write_optimization_data(self):
         """Write optimization results.
@@ -721,7 +601,7 @@ class MirrorPanelPSF:
                     str(parameter_version),
                     str(parameter_output_path),
                 )
-            except Exception as e:  # pylint: disable=broad-exception-caught
+            except (OSError, ValueError, TypeError) as e:
                 self._logger.warning(
                     "Failed to export model parameter %s: %s", parameter_name, str(e)
                 )
