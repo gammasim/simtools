@@ -3,9 +3,7 @@
 import json
 import logging
 import os
-from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
-from multiprocessing import get_context
 from pathlib import Path
 
 import numpy as np
@@ -13,12 +11,11 @@ from astropy.table import Table
 
 import simtools.utils.general as gen
 from simtools.data_model import model_data_writer
+from simtools.job_execution.process_pool import process_pool_map_ordered
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import names
 from simtools.visualization import plot_psf
-
-_WORKER_INSTANCE = None
 
 
 @dataclass
@@ -56,18 +53,18 @@ class RndaGradientDescentSettings:
     max_iterations: int
 
 
-def _worker_init(label, args_dict):
-    """Initialize per-process MirrorPanelPSF instance."""
-    global _WORKER_INSTANCE  # pylint: disable=global-statement
-    _WORKER_INSTANCE = MirrorPanelPSF(label=label, args_dict=args_dict)
+def _worker_optimize_mirror_forked(args):
+    """
+    Optimize a single mirror index using an inherited MirrorPanelPSF instance.
 
-
-def _worker_optimize_mirror(mirror_idx):
-    """Optimize a single mirror index using the per-process instance."""
-    if _WORKER_INSTANCE is None:
-        raise RuntimeError("Worker not initialized")
-    measured_d80_mm = float(_WORKER_INSTANCE.measured_data[mirror_idx])
-    return _WORKER_INSTANCE.optimize_single_mirror(mirror_idx, measured_d80_mm)
+    Parameters
+    ----------
+    args : tuple
+        (mirror_idx, instance)
+    """
+    mirror_idx, instance = args
+    measured_d80_mm = float(instance.measured_data[mirror_idx])
+    return instance.optimize_single_mirror(mirror_idx, measured_d80_mm)
 
 
 class MirrorPanelPSF:
@@ -526,22 +523,18 @@ class MirrorPanelPSF:
         }
 
     def _optimize_mirrors_parallel(self, n_mirrors, n_workers):
-        # Always use 'fork' to avoid DB re-initialization
-        worker_args = dict(self.args_dict)
-        worker_args["parallel"] = False
-        ctx = get_context("fork")
-        results = [None] * n_mirrors
-        with ProcessPoolExecutor(
+        """Optimize mirrors in parallel using one parent instance, no functools."""
+        # Parent instance created once
+        parent_instance = MirrorPanelPSF(
+            label=self.label, args_dict=dict(self.args_dict, parallel=False)
+        )
+        worker_inputs = [(i, parent_instance) for i in range(n_mirrors)]
+        return process_pool_map_ordered(
+            _worker_optimize_mirror_forked,
+            worker_inputs,
             max_workers=n_workers,
-            mp_context=ctx,
-            initializer=_worker_init,
-            initargs=(self.label, worker_args),
-        ) as executor:
-            futures = {executor.submit(_worker_optimize_mirror, i): i for i in range(n_mirrors)}
-            for fut in as_completed(futures):
-                mirror_idx = futures[fut]
-                results[mirror_idx] = fut.result()
-        return results
+            mp_start_method="fork",
+        )
 
     def optimize_with_gradient_descent(self):
         """
@@ -552,8 +545,6 @@ class MirrorPanelPSF:
         n_mirrors = len(self.measured_data)
         if self.args_dict.get("test", False):
             n_mirrors = min(n_mirrors, self.args_dict.get("number_of_mirrors_to_test", 10))
-
-        self._logger.info("Optimizing RNDA for %d mirrors...", n_mirrors)
 
         n_workers = int(self.args_dict.get("n_workers", 0) or 0)
         if n_workers <= 0:
