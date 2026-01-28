@@ -12,10 +12,12 @@ The helpers provided here focus on:
 - Optional per-process initializer/initargs.
 - Configurable multiprocessing start method (e.g. ``"fork"``, ``"spawn"``).
 
-Example usage
---------------
-1. **Parallelize a function with multiple arguments using tuples**:
-    ```python
+Examples
+--------
+Parallelize a function with multiple arguments using tuples:
+
+.. code-block:: python
+
     from simtools.job_execution.process_pool import process_pool_map_ordered
 
     def power(args):
@@ -25,11 +27,13 @@ Example usage
     inputs = [(2, 3), (3, 2), (4, 0)]
     results = process_pool_map_ordered(power, inputs, max_workers=3)
     # results == [8, 9, 1]
-    ```
-2. **Parallelize methods that require an object instance**:
 
-    ```python
+Parallelize methods that require an object instance:
+
+.. code-block:: python
+
     from simtools.ray_tracing import MirrorPanelPSF
+    from simtools.job_execution.process_pool import process_pool_map_ordered
 
     def worker_function(args):
         mirror_idx, instance = args
@@ -40,7 +44,6 @@ Example usage
     worker_inputs = [(i, instance) for i in range(n_mirrors)]
     results = process_pool_map_ordered(worker_function, worker_inputs)
     # results contains per-mirror optimization outputs
-    ```
 """
 
 import logging
