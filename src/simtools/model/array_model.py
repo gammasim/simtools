@@ -11,7 +11,7 @@ from simtools.io import io_handler
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
-from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.simtel import simtel_config_writer, simtel_seeds
 from simtools.utils import general, names
 
 
@@ -70,7 +70,7 @@ class ArrayModel:
 
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
-        self._sim_telarray_seeds = None
+        self.sim_telarray_seed = None
 
     def _initialize(self, site, array_elements_config, calibration_device_types):
         """
@@ -126,41 +126,6 @@ class ArrayModel:
         )
 
         return array_elements, site_model, telescope_models, calibration_models
-
-    @property
-    def sim_telarray_seeds(self):
-        """
-        Return sim_telarray seeds.
-
-        Returns
-        -------
-        dict
-            Dictionary with sim_telarray seeds.
-        """
-        return self._sim_telarray_seeds
-
-    @sim_telarray_seeds.setter
-    def sim_telarray_seeds(self, value):
-        """
-        Set sim_telarray seeds.
-
-        Parameters
-        ----------
-        value: dict
-            Dictionary with sim_telarray seeds.
-        """
-        if isinstance(value, dict):
-            required_keys = {
-                "seed",
-                "random_instrument_instances",
-                "seed_file_name",
-            }
-            if not required_keys.issubset(value):
-                raise ValueError(
-                    "sim_telarray_seeds dictionary must contain the following keys: "
-                    f"{required_keys}"
-                )
-        self._sim_telarray_seeds = value
 
     @property
     def config_file_path(self):
@@ -306,7 +271,7 @@ class ArrayModel:
         self.site_model.export_model_files()
 
         self._logger.info(f"Writing array configuration file into {self.config_file_path}")
-        simtel_writer = SimtelConfigWriter(
+        simtel_writer = simtel_config_writer.SimtelConfigWriter(
             site=self.site_model.site,
             layout_name=self.layout_name,
             model_version=self.model_version,
@@ -531,10 +496,16 @@ class ArrayModel:
         dict
             Dictionary with additional metadata.
         """
-        metadata = {}
-        if self.sim_telarray_seeds is not None:
-            metadata.update(self.sim_telarray_seeds)
+        return {
+            "nsb_integrated_flux": self.site_model.get_nsb_integrated_flux(),
+        }
 
-        metadata["nsb_integrated_flux"] = self.site_model.get_nsb_integrated_flux()
-
-        return metadata
+    def initialize_seeds(self, zenith_angle=None, azimuth_angle=None):
+        """Initialize sim_telarray seeds for instrument and shower simulations."""
+        self.sim_telarray_seed = simtel_seeds.SimtelSeeds(
+            output_path=self.get_config_directory(),
+            site=self.site_model.site,
+            model_version=self.model_version,
+            zenith_angle=zenith_angle,
+            azimuth_angle=azimuth_angle,
+        )
