@@ -399,18 +399,29 @@ class ModelParameter:
         else:
             value = gen.convert_string_to_list(value) if isinstance(value, str) else value
             par_type = self.get_parameter_type(par_name)
-            # ensure validation of list-type elements
-            for value_element in gen.ensure_iterable(value):
+
+            if par_type in ("list", "dict"):
                 if not gen.validate_data_type(
                     reference_dtype=par_type,
-                    value=value_element,
+                    value=value,
                     dtype=None,
                     allow_subtypes=True,
                 ):
                     raise ValueError(
-                        f"Could not cast {value_element} of type "
-                        f"{type(value_element)} to {par_type}."
+                        f"Could not cast {value} of type {type(value)} to {par_type}."
                     )
+            else:
+                for value_element in gen.ensure_iterable(value):
+                    if not gen.validate_data_type(
+                        reference_dtype=par_type,
+                        value=value_element,
+                        dtype=None,
+                        allow_subtypes=True,
+                    ):
+                        raise ValueError(
+                            f"Could not cast {value_element} of type "
+                            f"{type(value_element)} to {par_type}."
+                        )
 
             self._logger.debug(
                 f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} "
