@@ -197,8 +197,7 @@ class CorsikaHistograms:
             self.events["num_photons"][event_counter] += np.sum(w)
 
         for tel_idx, telescope in enumerate(telescope_positions):
-            tel_r = np.hypot(telescope["x"], telescope["y"]) * u.cm.to(u.m)
-            area = np.pi * (tel_r**2) / np.cos(zenith_rad) / 1.0e4  # in m^2
+            area = np.pi * (telescope["r"] ** 2) / np.cos(zenith_rad) / 1.0e4  # in m^2
             n_photons = photons_per_telescope[tel_idx]
             density = n_photons / area if area > 0 else 0.0
             density_error = np.sqrt(n_photons) / area if area > 0 else 0.0
@@ -206,7 +205,6 @@ class CorsikaHistograms:
                 {
                     "x": telescope["x"] * u.cm.to(u.m),
                     "y": telescope["y"] * u.cm.to(u.m),
-                    "r": tel_r,
                     "density": density,
                     "density_error": density_error,
                 }
@@ -621,7 +619,7 @@ class CorsikaHistograms:
             return
 
         s = self._density_samples
-        xs, ys, rs = (np.array([p[k] for p in s]) for k in ("x", "y", "r"))
+        xs, ys = (np.array([p[k] for p in s]) for k in ("x", "y"))
         dens = np.array([p["density"] for p in s])
         errs = np.array([p["density_error"] for p in s])
 
@@ -668,6 +666,8 @@ class CorsikaHistograms:
             else (np.zeros(len(y_edges) - 1),) * 2
         )
 
+        # Radial density
+        rs = np.hypot(xs, ys)
         avg_r, unc_r = avg_unc_1d(rs, r_edges, dens, errs)
 
         for k, avg, unc, edges in (
