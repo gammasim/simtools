@@ -13,7 +13,7 @@ The helpers provided here focus on:
 - Configurable multiprocessing start method (e.g. ``"fork"``, ``"spawn"``).
 
 Example usage
------
+--------------
 1. **Parallelize a function with multiple arguments using tuples**:
     ```python
     from simtools.job_execution.process_pool import process_pool_map_ordered
