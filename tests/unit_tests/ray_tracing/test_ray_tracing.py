@@ -90,6 +90,7 @@ def test_ray_tracing_init(telescope_model_lst_mock, site_model_north, caplog):
         ray = RayTracing(
             telescope_model=telescope_model_lst_mock,
             site_model=site_model_north,
+            label=telescope_model_lst_mock.label,
             zenith_angle=30 * u.deg,
             source_distance=10 * u.km,
             off_axis_angle=[0, 2] * u.deg,
@@ -108,6 +109,7 @@ def test_ray_tracing_single_mirror_mode(telescope_model_lst_mock, site_model_nor
         ray = RayTracing(
             telescope_model=telescope_model_lst_mock,
             site_model=site_model_north,
+            label=telescope_model_lst_mock.label,
             zenith_angle=30 * u.deg,
             source_distance=10 * u.km,
             off_axis_angle=[0, 2] * u.deg,
@@ -129,6 +131,7 @@ def test_ray_tracing_single_mirror_mode_mirror_numbers(
     ray = RayTracing(
         telescope_model=telescope_model_lst_mock,
         site_model=site_model_north,
+        label=telescope_model_lst_mock.label,
         source_distance=10 * u.km,
         zenith_angle=30 * u.deg,
         off_axis_angle=[0, 2] * u.deg,
@@ -426,6 +429,7 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
     mock_simulator.assert_called_once_with(
         telescope_model=ray_tracing_lst.telescope_model,
         site_model=site_model_north,
+        label=ray_tracing_lst.label,
         test=True,
         config_data={
             "zenith_angle": ray_tracing_lst.zenith_angle,

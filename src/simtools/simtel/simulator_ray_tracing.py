@@ -107,12 +107,13 @@ class SimulatorRayTracing(SimtelRunner):
             self.__dict__["_" + base_name + "_file"] = file
 
         if not file.exists() or force_simulate:
+            config_file_path = self.telescope_model.get_config_file_path(label=self.label)
             # Adding header to photon list file.
             with self._photons_file.open("w", encoding="utf-8") as file:
                 file.write(f"#{50 * '='}\n")
                 file.write("# List of photons for RayTracing simulations\n")
                 file.write(f"#{50 * '='}\n")
-                file.write(f"# config_file = {self.telescope_model.config_file_path}\n")
+                file.write(f"# config_file = {config_file_path}\n")
                 file.write(f"# zenith_angle [deg] = {self.config.zenith_angle}\n")
                 file.write(f"# off_axis_angle [deg] = {self.config.off_axis_angle}\n")
                 file.write(f"# source_distance [km] = {self.config.source_distance}\n")
@@ -139,7 +140,12 @@ class SimulatorRayTracing(SimtelRunner):
 
         The run_number and input_file parameters are not relevant for the ray tracing simulation.
         """
-        self.telescope_model.write_sim_telarray_config_file(additional_models=self.site_model)
+        self.telescope_model.write_sim_telarray_config_file(
+            additional_models=self.site_model,
+            label=self.label,
+        )
+
+        config_file_path = self.telescope_model.get_config_file_path(label=self.label)
 
         if self.config.single_mirror_mode:
             # Note: no mirror length defined for dual-mirror telescopes
@@ -189,7 +195,7 @@ class SimulatorRayTracing(SimtelRunner):
         cmd = [
             str(settings.config.sim_telarray_exe),
             "-c",
-            str(self.telescope_model.config_file_path),
+            str(config_file_path),
             f"-I{self.telescope_model.config_file_directory}",
         ]
         for key, value in options.items():
