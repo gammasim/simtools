@@ -48,22 +48,6 @@ def _make_minimal_instance(
     return inst
 
 
-def _default_rnda_settings(**overrides):
-    params = {
-        "threshold": 0.05,
-        "learning_rate": 1e-4,
-        "grad_clip": mpp.MirrorPanelPSF.DEFAULT_RNDA_GRAD_CLIP,
-        "max_log_step": mpp.MirrorPanelPSF.DEFAULT_RNDA_MAX_LOG_STEP,
-        "sigma1": mpp.Bounds(min=1e-4, max=0.1),
-        "sigma2": mpp.Bounds(min=1e-4, max=0.1),
-        "frac2": mpp.Bounds(min=0.0, max=1.0),
-        "max_frac_step": mpp.MirrorPanelPSF.DEFAULT_RNDA_MAX_FRAC_STEP,
-        "max_iterations": mpp.MirrorPanelPSF.DEFAULT_RNDA_MAX_ITERATIONS,
-    }
-    params.update(overrides)
-    return mpp.RndaGradientDescentSettings(**params)
-
-
 def test_load_measured_data_reads_ecsv_and_validates_columns(mocker):
     inst = _make_minimal_instance(args_dict={"data": "data.ecsv", "model_path": "."})
     mocker.patch.object(mpp.gen, "find_file", return_value="/abs/data.ecsv")
@@ -100,37 +84,74 @@ def test_load_measured_data_raises_when_columns_missing(mocker):
         inst._load_measured_data()
 
 
-def test_calculate_percentage_difference_raises_on_nonpositive_measured_d80():
-    inst = _make_minimal_instance()
+def test_signed_pct_diff_raises_on_nonpositive_measured_d80():
     with pytest.raises(ValueError, match="Measured d80 must be positive"):
-        inst._calculate_percentage_difference(0.0, 1.0)
+        mpp.MirrorPanelPSF._signed_pct_diff(0.0, 1.0)
     with pytest.raises(ValueError, match="Measured d80 must be positive"):
-        inst._calculate_percentage_difference(-1.0, 1.0)
+        mpp.MirrorPanelPSF._signed_pct_diff(-1.0, 1.0)
+
+
+def test_rnda_bounds_clamps_sigma_min_to_positive(monkeypatch):
+    def _fake_model_parameters():
+        return {
+            "mirror_reflection_random_angle": {
+                "data": [
+                    {"allowed_range": {"min": 0.0, "max": 0.1}},
+                    {"allowed_range": {"min": 0.0, "max": 1.0}},
+                    {"allowed_range": {"min": 0.0, "max": 0.2}},
+                ]
+            }
+        }
+
+    monkeypatch.setattr(mpp.names, "model_parameters", _fake_model_parameters)
+    bounds = mpp.MirrorPanelPSF._rnda_bounds()
+    assert bounds[0][0] == pytest.approx(1e-12)
+    assert bounds[1][0] == pytest.approx(0.0)
+    assert bounds[2][0] == pytest.approx(1e-12)
 
 
 def test_optimize_with_gradient_descent_limits_mirrors_in_test_mode(mocker):
-    inst = _make_minimal_instance(args_dict={"test": True, "number_of_mirrors_to_test": 2})
+    inst = _make_minimal_instance(
+        args_dict={"test": True, "number_of_mirrors_to_test": 2, "n_workers": 4}
+    )
     inst.measured_data = [10.0, 11.0, 12.0]
-    mocker.patch("os.cpu_count", return_value=4)
 
-    def _fake_parallel(n_mirrors, n_workers):
-        assert n_mirrors == 2
-        assert n_workers == 4
+    parent_stub = SimpleNamespace(measured_data=list(inst.measured_data))
+    mocker.patch.object(mpp, "MirrorPanelPSF", return_value=parent_stub)
+
+    def _fake_ppm(func, items, **kwargs):
+        assert func is mpp._optimize_single_mirror_worker
+        assert len(items) == 2
+        assert kwargs["max_workers"] == 4
+        assert kwargs["mp_start_method"] == "fork"
         return [
-            {"optimized_rnda": [0.01, 0.2, 0.03], "percentage_diff": 10.0},
-            {"optimized_rnda": [0.03, 0.2, 0.01], "percentage_diff": 30.0},
+            mpp.MirrorOptimizationResult(
+                mirror=1,
+                measured_d80_mm=10.0,
+                optimized_rnda=[1.0, 0.2, 0.03],
+                simulated_d80_mm=11.0,
+                percentage_diff=10.0,
+            ),
+            mpp.MirrorOptimizationResult(
+                mirror=2,
+                measured_d80_mm=11.0,
+                optimized_rnda=[3.0, 0.2, 0.01],
+                simulated_d80_mm=12.0,
+                percentage_diff=30.0,
+            ),
         ]
 
-    mocker.patch.object(inst, "_optimize_mirrors_parallel", side_effect=_fake_parallel)
+    mocker.patch.object(mpp, "process_pool_map_ordered", side_effect=_fake_ppm)
+
     inst.optimize_with_gradient_descent()
 
+    assert inst.rnda_opt == pytest.approx([2.0, 0.2, 0.02])
+    assert inst.final_percentage_diff == pytest.approx(20.0)
 
-def test_worker_optimize_mirror_forked_uses_measured_data_and_calls_optimizer():
-    dummy = SimpleNamespace(
-        measured_data=[11.5, 12.25],
-        optimize_single_mirror=MagicMock(return_value={"ok": True}),
-    )
-    result = mpp._worker_optimize_mirror_forked((1, dummy))
+
+def test_optimize_single_mirror_worker_calls_optimizer_with_measured_value():
+    dummy = SimpleNamespace(optimize_single_mirror=MagicMock(return_value={"ok": True}))
+    result = mpp._optimize_single_mirror_worker((dummy, 1, 12.25))
     dummy.optimize_single_mirror.assert_called_once_with(1, 12.25)
     assert result == {"ok": True}
 
@@ -145,7 +166,7 @@ def test_simulate_single_mirror_d80_success_and_restores_label(mocker, tmp_path)
             # Ensure MirrorPanelPSF resets cached config path/directory when relabeling.
             assert kwargs["telescope_model"]._config_file_path is None
             assert kwargs["telescope_model"]._config_file_directory is None
-            self._d80_cm = 1.5
+            self._d80_mm = 15.0
 
         def simulate(self, **kwargs):
             return None
@@ -154,7 +175,7 @@ def test_simulate_single_mirror_d80_success_and_restores_label(mocker, tmp_path)
             return None
 
         def get_d80_mm(self):
-            return self._d80_cm * 10.0
+            return self._d80_mm
 
     mocker.patch("simtools.ray_tracing.mirror_panel_psf.RayTracing", OkRay)
     d80_mm = inst._simulate_single_mirror_d80(0, [0.01, 0.22, 0.022])
@@ -164,164 +185,49 @@ def test_simulate_single_mirror_d80_success_and_restores_label(mocker, tmp_path)
     assert tel._config_file_directory == str(tmp_path)
 
 
-def test_run_rnda_gradient_descent_converges_immediately(mocker):
-    inst = _make_minimal_instance()
-    mocker.patch.object(inst, "_simulate_single_mirror_d80", return_value=12.0)
-    settings = _default_rnda_settings(max_iterations=10)
-    best_rnda, best_sim_d80, best_pct_diff = inst._run_rnda_gradient_descent(
-        mirror_idx=0,
-        measured_d80_mm=12.0,
-        current_rnda=[0.01, 0.22, 0.022],
-        settings=settings,
-    )
-    assert best_rnda == [0.01, 0.22, 0.022]
-    assert best_sim_d80 == pytest.approx(12.0)
-    assert best_pct_diff == pytest.approx(0.0)
-
-
-def test_run_rnda_gradient_descent_stops_when_learning_rate_too_small(mocker):
-    inst = _make_minimal_instance()
-    # One iteration evaluates 8 simulations:
-    # initial + 2 (sigma1) + 2 (frac2) + 2 (sigma2) + new.
-    mock_sim = mocker.patch.object(
-        inst,
-        "_simulate_single_mirror_d80",
-        side_effect=[20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0],
-    )
-    settings = _default_rnda_settings(learning_rate=1e-13, threshold=0.0, max_iterations=200)
-    best_rnda, best_sim_d80, best_pct_diff = inst._run_rnda_gradient_descent(
-        mirror_idx=0,
-        measured_d80_mm=10.0,
-        current_rnda=[0.01, 0.22, 0.022],
-        settings=settings,
-    )
-    assert best_rnda == [0.01, 0.22, 0.022]
-    assert best_sim_d80 == pytest.approx(20.0)
-    assert best_pct_diff == pytest.approx(100.0)
-    assert mock_sim.call_count == 8
-
-
-def test_finite_difference_objective_gradient_returns_zero_when_denom_nonpositive(mocker):
-    inst = _make_minimal_instance()
-    eval_mock = mocker.patch.object(inst, "_evaluate_rnda_candidate")
-    grad = inst._finite_difference_objective_gradient(
-        mirror_idx=0,
-        measured_d80_mm=10.0,
-        current_rnda=[0.01, 0.22, 0.022],
-        param_index=0,
-        plus_value=0.1,
-        minus_value=0.1,
-    )
-    assert grad == pytest.approx(0.0)
-    eval_mock.assert_not_called()
-
-
-def test_init_sets_test_mirror_limit_in_test_mode(mocker):
-    dummy_tel = _make_dummy_tel(label="tel")
-    dummy_tel.get_parameter_value = MagicMock(return_value=[0.0075, 0.22, 0.022])
-    mocker.patch.object(
-        mpp, "initialize_simulation_models", return_value=(dummy_tel, object(), None)
-    )
-    mocker.patch.object(
-        mpp.MirrorPanelPSF,
-        "_load_measured_data",
-        return_value=[10.0],
-    )
-
-    args = {
-        "test": True,
-        "data": "data.ecsv",
-        "site": "North",
-        "telescope": "LSTN-01",
-        "model_version": "1.0",
-    }
-    inst = mpp.MirrorPanelPSF("lbl", args)
-    assert inst.args_dict["number_of_mirrors_to_test"] == 10
-
-
-def test_optimize_single_mirror_uses_rnda_optimizer(mocker):
+def test_optimize_single_mirror_converges_when_simulated_matches_measured(mocker):
     inst = _make_minimal_instance(args_dict={"threshold": 0.05, "learning_rate": 1e-4})
-    mock_run = mocker.patch.object(
-        inst,
-        "_run_rnda_gradient_descent",
-        return_value=([0.003, 0.25, 0.010], 12.0, 2.0),
-    )
+    mocker.patch.object(inst, "_simulate_single_mirror_d80", return_value=12.0)
 
     result = inst.optimize_single_mirror(0, 12.0)
-    assert result["optimized_rnda"] == [0.003, 0.25, 0.010]
-    assert result["percentage_diff"] == pytest.approx(2.0)
-    assert mock_run.call_count == 1
+
+    assert isinstance(result, mpp.MirrorOptimizationResult)
+    assert result.mirror == 1
+    assert result.measured_d80_mm == pytest.approx(12.0)
+    assert result.simulated_d80_mm == pytest.approx(12.0)
+    assert result.percentage_diff == pytest.approx(0.0)
 
 
-def test_get_allowed_range_from_schema_returns_none_for_invalid_schema(monkeypatch):
-    inst = _make_minimal_instance(args_dict={})
+def test_optimize_single_mirror_increases_learning_rate_on_improvement(mocker):
+    inst = _make_minimal_instance(args_dict={"threshold": 0.0, "learning_rate": 1e-3})
+    inst.MAX_ITER = 2
 
-    def _fake_model_parameters():
-        return {
-            "mirror_reflection_random_angle": {
-                "data": [
-                    {"allowed_range": None},
-                    {"allowed_range": "not-a-dict"},
-                ]
-            }
-        }
-
-    monkeypatch.setattr(mpp.names, "model_parameters", _fake_model_parameters)
-    assert inst._get_allowed_range_from_schema("mirror_reflection_random_angle", 0) == (None, None)
-    assert inst._get_allowed_range_from_schema("mirror_reflection_random_angle", 1) == (None, None)
-    assert inst._get_allowed_range_from_schema("mirror_reflection_random_angle", 2) == (None, None)
-
-
-def test_run_rnda_gradient_descent_accepts_improvement_and_converges(mocker):
-    inst = _make_minimal_instance()
-    # The first iteration evaluates:
-    # initial + (sigma1 +/-) + (frac2 +/-) + (sigma2 +/-) + new = 8 simulations.
     mocker.patch.object(
         inst,
-        "_simulate_single_mirror_d80",
-        side_effect=[20.0, 19.0, 21.0, 18.0, 22.0, 17.0, 23.0, 10.2],
+        "_rnda_bounds",
+        return_value=[(1e-12, 1.0), (0.0, 1.0), (1e-12, 1.0)],
     )
 
-    settings = _default_rnda_settings()
+    evaluate_calls = [
+        (10.0, 10.0, 100.0),  # initial best
+        (9.0, 9.0, 81.0),  # improvement => learning_rate *= 1.1
+        (9.5, 9.5, 90.25),  # worse
+    ]
+    mocker.patch.object(inst, "_evaluate", side_effect=evaluate_calls)
 
-    best_rnda, best_sim_d80, best_pct_diff = inst._run_rnda_gradient_descent(
-        mirror_idx=0,
-        measured_d80_mm=10.0,
-        current_rnda=[0.01, 0.22, 0.022],
-        settings=settings,
-    )
+    learning_rates = []
 
-    assert best_sim_d80 == pytest.approx(10.2)
-    assert best_pct_diff == pytest.approx(2.0)
-    assert best_rnda != [0.01, 0.22, 0.022]
+    def _record_lr(**kwargs):
+        learning_rates.append(kwargs["learning_rate"])
+        return kwargs["param_value"]
 
+    mocker.patch.object(inst, "_update_single_rnda_parameter", side_effect=_record_lr)
 
-def test_optimize_mirrors_parallel_collects_results_and_returns_list(monkeypatch):
-    inst = _make_minimal_instance(args_dict={"parallel": True})
-    parent_stub = object()
-    monkeypatch.setattr(mpp, "MirrorPanelPSF", MagicMock(return_value=parent_stub))
-    ppm = MagicMock(
-        return_value=[
-            {"mirror": 1, "optimized_rnda": [0.0, 0.0, 0.0], "percentage_diff": 0.0},
-            {"mirror": 2, "optimized_rnda": [1.0, 0.0, 0.0], "percentage_diff": 0.0},
-            {"mirror": 3, "optimized_rnda": [2.0, 0.0, 0.0], "percentage_diff": 0.0},
-        ]
-    )
-    monkeypatch.setattr(mpp, "process_pool_map_ordered", ppm)
+    inst.optimize_single_mirror(0, 10.0)
 
-    results = inst._optimize_mirrors_parallel(n_mirrors=3, n_workers=2)
-    assert [r["mirror"] for r in results] == [1, 2, 3]
-
-    mpp.MirrorPanelPSF.assert_called_once()
-    kwargs = mpp.MirrorPanelPSF.call_args.kwargs
-    assert kwargs["label"] == inst.label
-    assert kwargs["args_dict"]["parallel"] is False
-
-    ppm.assert_called_once()
-    ppm_kwargs = ppm.call_args.kwargs
-    assert ppm.call_args.args[0] is mpp._worker_optimize_mirror_forked
-    assert ppm_kwargs["max_workers"] == 2
-    assert ppm_kwargs["mp_start_method"] == "fork"
+    assert len(learning_rates) == 6
+    assert learning_rates[:3] == pytest.approx([1e-3, 1e-3, 1e-3])
+    assert learning_rates[3:] == pytest.approx([1.1e-3, 1.1e-3, 1.1e-3])
 
 
 def test_write_optimization_data_writes_json(tmp_path):
@@ -331,13 +237,13 @@ def test_write_optimization_data_writes_json(tmp_path):
     inst.rnda_opt = [0.002, 0.22, 0.022]
     inst.final_percentage_diff = 12.34
     inst.per_mirror_results = [
-        {
-            "mirror": 1,
-            "measured_d80_mm": 10.0,
-            "optimized_rnda": [0.002, 0.22, 0.022],
-            "simulated_d80_mm": 11.0,
-            "percentage_diff": 10.0,
-        }
+        mpp.MirrorOptimizationResult(
+            mirror=1,
+            measured_d80_mm=10.0,
+            optimized_rnda=[0.002, 0.22, 0.022],
+            simulated_d80_mm=11.0,
+            percentage_diff=10.0,
+        )
     ]
     inst.write_optimization_data()
     out_file = tmp_path / "LSTN-01" / "per_mirror_rnda.json"
@@ -403,13 +309,13 @@ def test_write_optimization_data_also_exports_model_parameter_json(tmp_path, moc
     inst.rnda_opt = [0.002, 0.22, 0.022]
     inst.final_percentage_diff = 12.34
     inst.per_mirror_results = [
-        {
-            "mirror": 1,
-            "measured_d80_mm": 10.0,
-            "optimized_rnda": [0.002, 0.22, 0.022],
-            "simulated_d80_mm": 11.0,
-            "percentage_diff": 10.0,
-        }
+        mpp.MirrorOptimizationResult(
+            mirror=1,
+            measured_d80_mm=10.0,
+            optimized_rnda=[0.002, 0.22, 0.022],
+            simulated_d80_mm=11.0,
+            percentage_diff=10.0,
+        )
     ]
 
     dump = mocker.patch(
@@ -427,19 +333,35 @@ def test_write_optimization_data_also_exports_model_parameter_json(tmp_path, moc
     assert kwargs["output_file"] == "mirror_reflection_random_angle-v1.json"
 
 
-def test_write_d80_histogram_all_branches(tmp_path):
-    inst = _make_minimal_instance(args_dict={"output_path": str(tmp_path)})
-
-    assert inst.write_d80_histogram() is None
-
-    inst.args_dict["d80_hist"] = "hist.png"
-    inst.per_mirror_results = []
-    assert inst.write_d80_histogram() is None
-
+def test_write_d80_histogram_calls_plotter(monkeypatch):
+    inst = _make_minimal_instance(args_dict={"output_path": "."})
     inst.per_mirror_results = [
-        {"measured_d80_mm": 10.0, "simulated_d80_mm": 12.0},
-        {"measured_d80_mm": 11.0, "simulated_d80_mm": 13.0},
+        mpp.MirrorOptimizationResult(
+            mirror=1,
+            measured_d80_mm=10.0,
+            optimized_rnda=[0.0, 0.0, 0.0],
+            simulated_d80_mm=12.0,
+            percentage_diff=20.0,
+        ),
+        mpp.MirrorOptimizationResult(
+            mirror=2,
+            measured_d80_mm=11.0,
+            optimized_rnda=[0.0, 0.0, 0.0],
+            simulated_d80_mm=13.0,
+            percentage_diff=18.1818,
+        ),
     ]
-    out_path = inst.write_d80_histogram()
-    assert out_path is not None
-    assert (tmp_path / "hist.png").exists()
+
+    called = {}
+
+    def _fake_plot(measured, simulated, args_dict):
+        called["measured"] = measured
+        called["simulated"] = simulated
+        called["args_dict"] = args_dict
+        return "hist.png"
+
+    monkeypatch.setattr(mpp.plot_psf, "plot_d80_histogram", _fake_plot)
+    out = inst.write_d80_histogram()
+    assert out == "hist.png"
+    assert called["measured"] == pytest.approx([10.0, 11.0])
+    assert called["simulated"] == pytest.approx([12.0, 13.0])
