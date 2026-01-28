@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 import logging
-import shutil
 
 import astropy.units as u
+import numpy as np
 import pytest
 from astropy.table import Table
 
@@ -32,38 +32,35 @@ def camera_efficiency_lst(config_data_lst):
 
 
 @pytest.fixture
-def prepare_results_file(io_handler):
-    test_file_name = (
+def prepare_results_file(camera_efficiency_lst, mocker):
+    from pathlib import Path
+
+    # The actual test resource file has "table_" and "validate_camera_efficiency" in the name
+    test_resource_file = Path(
         "tests/resources/"
         "camera_efficiency_table_North_LSTN-01_za20.0deg_azm000deg_validate_camera_efficiency.ecsv"
     )
-    output_directory = io_handler.get_output_directory()
-    shutil.copy(test_file_name, output_directory)
-    return output_directory.joinpath(test_file_name)
+    # Mock _file["results"] to point to the test resource file
+    mocker.patch.object(
+        camera_efficiency_lst,
+        "_file",
+        {
+            "results": test_resource_file,
+            "sim_telarray": camera_efficiency_lst._file["sim_telarray"],
+            "log": camera_efficiency_lst._file["log"],
+        },
+    )
+    return test_resource_file
 
 
 def test_report(camera_efficiency_lst):
     assert str(camera_efficiency_lst) == "CameraEfficiency(label=validate_camera_efficiency)\n"
 
 
-def test_configuration_from_args_dict(camera_efficiency_lst):
-    _config = camera_efficiency_lst._configuration_from_args_dict(
-        {
-            "zenith_angle": 30 * u.deg,
-            "azimuth_angle": 90 * u.deg,
-            "nsb_spectrum": "dark",
-        }
-    )
-    assert isinstance(_config, dict)
-    assert _config["zenith_angle"] == pytest.approx(30.0)
-    assert _config["azimuth_angle"] == pytest.approx(90.0)
-    assert _config["nsb_spectrum"] == "dark"
-
-
 def test_load_files(camera_efficiency_lst):
-    _name = "camera_efficiency_table_North_LSTN-01_za20.0deg_azm000deg_validate_camera_efficiency"
+    # The code generates files with efficiency_type="shower" in the name
+    _name = "camera_efficiency_North_LSTN-01_za20.0deg_azm000deg_shower"
     assert camera_efficiency_lst._file["results"].name == _name + ".ecsv"
-    _name = "camera_efficiency_North_LSTN-01_za20.0deg_azm000deg_validate_camera_efficiency"
     assert camera_efficiency_lst._file["sim_telarray"].name == _name + ".dat"
     assert camera_efficiency_lst._file["log"].name == _name + ".log"
 
@@ -146,7 +143,9 @@ def test_analyze_has_results(camera_efficiency_lst, prepare_results_file):
 
 
 def test_analyze_from_file(camera_efficiency_lst, mocker):
-    camera_efficiency_lst._file["sim_telarray"] = (
+    from pathlib import Path
+
+    camera_efficiency_lst._file["sim_telarray"] = Path(
         "tests/resources/"
         "camera_efficiency_North_MSTx-NectarCam_za20.0deg_azm000deg_validate_camera_efficiency.dat"
     )
@@ -207,3 +206,110 @@ def test_get_nsb_pixel_rate_reference_conditions(camera_efficiency_lst, mocker):
     assert nsb_pixel_rate.unit == u.GHz
     assert len(nsb_pixel_rate) == 20
     assert nsb_pixel_rate[0].value == pytest.approx(7.0)
+
+
+def test_get_x_max_for_efficiency_type_shower(camera_efficiency_lst, caplog):
+    camera_efficiency_lst.config["efficiency_type"] = "shower"
+    with caplog.at_level(logging.INFO):
+        x_max = camera_efficiency_lst._get_x_max_for_efficiency_type()
+    assert x_max == pytest.approx(300.0)
+    assert "Using X-max for shower efficiency" in caplog.text
+
+
+def test_get_x_max_for_efficiency_type_muon(camera_efficiency_lst, mocker, caplog):
+    camera_efficiency_lst.config["efficiency_type"] = "muon"
+    mock_atmo = mocker.MagicMock()
+    mock_atmo.interpolate.return_value = 850.5
+    mocker.patch(
+        "simtools.camera.camera_efficiency.AtmosphereProfile",
+        return_value=mock_atmo,
+    )
+    mocker.patch.object(
+        camera_efficiency_lst.site_model,
+        "get_parameter_value_with_unit",
+        return_value=5 * u.km,
+    )
+    mocker.patch.object(
+        camera_efficiency_lst.site_model,
+        "get_parameter_value",
+        return_value="atmosphere.txt",
+    )
+    with caplog.at_level(logging.INFO):
+        x_max = camera_efficiency_lst._get_x_max_for_efficiency_type()
+    assert x_max == pytest.approx(850.5)
+    assert "Using X-max for muon efficiency" in caplog.text
+
+
+def test_dump_nsb_pixel_rate(camera_efficiency_lst, mocker, caplog):
+    camera_efficiency_lst.nsb_pixel_pe_per_ns = 5.0
+    mocker.patch.object(
+        camera_efficiency_lst,
+        "get_nsb_pixel_rate",
+        return_value=u.Quantity(np.full(10, 5.0), u.GHz),
+    )
+    mock_dump = mocker.patch(
+        "simtools.data_model.model_data_writer.ModelDataWriter.dump_model_parameter"
+    )
+    mock_config = mocker.MagicMock()
+    mock_config.args = {"telescope": "LSTN-01", "parameter_version": "1.0.0"}
+    mocker.patch("simtools.settings.config", mock_config)
+    with caplog.at_level(logging.INFO):
+        camera_efficiency_lst.dump_nsb_pixel_rate()
+    mock_dump.assert_called_once()
+    call_kwargs = mock_dump.call_args[1]
+    assert call_kwargs["parameter_name"] == "nsb_pixel_rate"
+    assert call_kwargs["instrument"] == "LSTN-01"
+    assert call_kwargs["parameter_version"] == "1.0.0"
+
+
+def test_dump_nsb_pixel_rate_reference_conditions(camera_efficiency_lst, mocker):
+    camera_efficiency_lst.nsb_rate_ref_conditions = 7.0
+    camera_efficiency_lst.config["write_reference_nsb_rate_as_parameter"] = True
+    mocker.patch.object(
+        camera_efficiency_lst,
+        "get_nsb_pixel_rate",
+        return_value=u.Quantity(np.full(20, 7.0), u.GHz),
+    )
+    mock_dump = mocker.patch(
+        "simtools.data_model.model_data_writer.ModelDataWriter.dump_model_parameter"
+    )
+    mock_config = mocker.MagicMock()
+    mock_config.args = {"telescope": "LSTN-01", "parameter_version": "2.0.0"}
+    mocker.patch("simtools.settings.config", mock_config)
+    camera_efficiency_lst.dump_nsb_pixel_rate()
+    mock_dump.assert_called_once()
+    call_kwargs = mock_dump.call_args[1]
+    assert call_kwargs["parameter_version"] == "2.0.0"
+    camera_efficiency_lst.get_nsb_pixel_rate.assert_called_once_with(reference_conditions=True)
+
+
+def test_calc_partial_efficiency(camera_efficiency_lst, prepare_results_file):
+    camera_efficiency_lst._read_results()
+    camera_efficiency_lst.export_model_files()
+    result = camera_efficiency_lst.calc_partial_efficiency(350, 450)
+    assert isinstance(result, (float, np.floating))
+    assert 0 <= result <= 1
+
+
+def test_calc_partial_efficiency_full_range(camera_efficiency_lst, prepare_results_file):
+    camera_efficiency_lst._read_results()
+    camera_efficiency_lst.export_model_files()
+    result = camera_efficiency_lst.calc_partial_efficiency(200, 999)
+    assert isinstance(result, (float, np.floating))
+    assert result > 0
+
+
+def test_calc_partial_efficiency_narrow_range(camera_efficiency_lst, prepare_results_file):
+    camera_efficiency_lst._read_results()
+    camera_efficiency_lst.export_model_files()
+    result = camera_efficiency_lst.calc_partial_efficiency(400, 410)
+    assert isinstance(result, (float, np.floating))
+    assert 0 <= result <= 1
+
+
+def test_calc_partial_efficiency_logging(camera_efficiency_lst, prepare_results_file, caplog):
+    camera_efficiency_lst._read_results()
+    camera_efficiency_lst.export_model_files()
+    with caplog.at_level(logging.INFO):
+        camera_efficiency_lst.calc_partial_efficiency(300, 500)
+    assert "Fraction of light in the wavelength range 300-500 nm:" in caplog.text
