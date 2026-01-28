@@ -19,6 +19,9 @@ class CorsikaHistograms:
     ----------
     input_file: str or Path
         CORSIKA IACT file.
+    axis_distance: astropy.units.Quantity or float
+        Distance from the axis to consider when calculating the lateral density profiles
+        along x and y axes. If a float is given, it is assumed to be in meters.
 
     Raises
     ------
@@ -26,17 +29,21 @@ class CorsikaHistograms:
         if the input file given does not exist.
     """
 
-    def __init__(self, input_file):
+    def __init__(self, input_file, normalization_method="per-telescope", axis_distance=1000 * u.m):
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaHistograms")
         self.input_file = Path(input_file)
         if not self.input_file.exists():
             raise FileNotFoundError(f"File {self.input_file} does not exist.")
 
+        self.axis_distance = (
+            axis_distance.to(u.m).value if isinstance(axis_distance, u.Quantity) else axis_distance
+        )
         self.events = None
         self.hist = self._set_2d_distributions()
         self.hist.update(self._set_1d_distributions())
         self._density_samples = []
+        self.normalization_method = normalization_method
 
     def fill(self):
         """
@@ -190,14 +197,18 @@ class CorsikaHistograms:
             self.events["num_photons"][event_counter] += np.sum(w)
 
         for tel_idx, telescope in enumerate(telescope_positions):
-            area = np.pi * (telescope["r"] ** 2) / np.cos(zenith_rad) / 1.0e4  # in m^2
-            density = photons_per_telescope[tel_idx] / area if area > 0 else 0.0
+            tel_r = np.hypot(telescope["x"], telescope["y"]) * u.cm.to(u.m)
+            area = np.pi * (tel_r**2) / np.cos(zenith_rad) / 1.0e4  # in m^2
+            n_photons = photons_per_telescope[tel_idx]
+            density = n_photons / area if area > 0 else 0.0
+            density_error = np.sqrt(n_photons) / area if area > 0 else 0.0
             self._density_samples.append(
                 {
                     "x": telescope["x"] * u.cm.to(u.m),
                     "y": telescope["y"] * u.cm.to(u.m),
-                    "r": np.hypot(telescope["x"], telescope["y"]) * u.cm.to(u.m),
+                    "r": tel_r,
                     "density": density,
+                    "density_error": density_error,
                 }
             )
 
@@ -331,7 +342,9 @@ class CorsikaHistograms:
         x_axis_title = "x_axis_title"
         y_axis_unit = "y_axis_unit"
         y_axis_title = "y_axis_title"
+        log_y = "log_y"
         photon_density = "Photon density"
+        distance_to_center = "Distance to center"
         hist_1d = {
             "wavelength": {
                 file_name: "hist_1d_photon_wavelength_distr",
@@ -342,14 +355,23 @@ class CorsikaHistograms:
                 file_name: "hist_1d_photon_radial_distr",
                 title: "Photon lateral distribution (ground level)",
                 x_bins: [bins, 0 * u.m, r_max, "linear"],
-                x_axis_title: "Distance to center",
+                x_axis_title: distance_to_center,
                 x_axis_unit: u.m,
             },
             "density_r": {
                 file_name: "hist_1d_photon_density_distr",
                 title: "Photon lateral density distribution (ground level)",
                 x_bins: [bins, 0 * u.m, r_max, "linear"],
-                x_axis_title: "Distance to center",
+                x_axis_title: distance_to_center,
+                x_axis_unit: u.m,
+                y_axis_title: photon_density,
+                y_axis_unit: u.m**-2,
+            },
+            "density_r_from_counts": {
+                file_name: "hist_1d_photon_density_from_counts_distr",
+                title: "Photon lateral density from counts distribution (ground level)",
+                x_bins: [bins, 0 * u.m, r_max, "linear"],
+                x_axis_title: distance_to_center,
                 x_axis_unit: u.m,
                 y_axis_title: photon_density,
                 y_axis_unit: u.m**-2,
@@ -358,6 +380,8 @@ class CorsikaHistograms:
                 file_name: "hist_1d_photon_density_x_distr",
                 title: "Photon lateral density x distribution (ground level)",
                 projection: ["counts_xy", "x"],  # projection requires counts_xy histogram
+                x_axis_title: distance_to_center,
+                x_axis_unit: u.m,
                 y_axis_title: photon_density,
                 y_axis_unit: u.m**-2,
             },
@@ -395,12 +419,13 @@ class CorsikaHistograms:
                 x_bins: [100, 0, None, "log"],
                 x_axis_title: "Cherenkov photons per event",
                 x_axis_unit: u.dimensionless_unscaled,
+                log_y: False,
             },
         }
 
         for value in hist_1d.values():
             value["is_1d"] = True
-            value["log_y"] = True
+            value["log_y"] = value.get("log_y", True)
             value[y_axis_title] = (
                 "Counts" if value.get(y_axis_title) is None else value[y_axis_title]
             )
@@ -437,6 +462,9 @@ class CorsikaHistograms:
         x_axis_title, x_axis_unit = "x_axis_title", "x_axis_unit"
         y_axis_title, y_axis_unit = "y_axis_title", "y_axis_unit"
         z_axis_title, z_axis_unit = "z_axis_title", "z_axis_unit"
+        photon_density = "Photon density"
+        x_pos = "x position on the ground"
+        y_pos = "y position on the ground"
 
         hist_2d = {
             "counts_xy": {
@@ -444,9 +472,9 @@ class CorsikaHistograms:
                 title: "Photon count distribution (ground level)",
                 x_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
                 y_bins: [xy_bin, -xy_maximum, xy_maximum],
-                x_axis_title: "x position on the ground",
+                x_axis_title: x_pos,
                 x_axis_unit: xy_maximum.unit,
-                y_axis_title: "y position on the ground",
+                y_axis_title: y_pos,
                 y_axis_unit: xy_maximum.unit,
             },
             "density_xy": {
@@ -454,11 +482,23 @@ class CorsikaHistograms:
                 title: "Photon density distribution (ground level)",
                 x_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
                 y_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
-                x_axis_title: "x position on the ground",
+                x_axis_title: x_pos,
                 x_axis_unit: xy_maximum.unit,
-                y_axis_title: "y position on the ground",
+                y_axis_title: y_pos,
                 y_axis_unit: xy_maximum.unit,
-                z_axis_title: "Photon density",
+                z_axis_title: photon_density,
+                z_axis_unit: u.m**-2,
+            },
+            "density_xy_from_counts": {
+                file_name: "hist_2d_photon_density_from_counts_distr",
+                title: "Photon density from counts distribution (ground level)",
+                x_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
+                y_bins: [xy_bin, -xy_maximum, xy_maximum, "linear"],
+                x_axis_title: x_pos,
+                x_axis_unit: xy_maximum.unit,
+                y_axis_title: y_pos,
+                y_axis_unit: xy_maximum.unit,
+                z_axis_title: photon_density,
                 z_axis_unit: u.m**-2,
             },
             "direction_xy": {
@@ -512,6 +552,8 @@ class CorsikaHistograms:
     def _update_distributions(self):
         """Update the distributions dictionary with the histogram values and bin edges."""
         self._populate_density_from_probes()
+        self._populate_density_from_counts()
+        self._filter_density_histograms()
 
         for key, value in self.hist.items():
             value["input_file_name"] = str(self.input_file)
@@ -529,6 +571,22 @@ class CorsikaHistograms:
                         value["y_bin_edges"],
                         value["uncertainties"],
                     ) = self.get_hist_2d_projection(value["histogram"])
+
+    def _filter_density_histograms(self):
+        """Filter density histograms based on the normalization method."""
+        if self.normalization_method == "per-telescope":
+            keys_to_remove = ["density_xy_from_counts", "density_r_from_counts"]
+        elif self.normalization_method == "per-bin":
+            keys_to_remove = ["density_xy", "density_x", "density_y", "density_r"]
+        else:
+            raise ValueError(
+                f"Unknown normalization_method: {self.normalization_method}. "
+                "Must be 'per-telescope' or 'per-bin'."
+            )
+
+        for key in keys_to_remove:
+            if key in self.hist:
+                del self.hist[key]
 
     def _fill_projected_density_values(self, value):
         """Extract 1D density by using projection Counts and normalizing by area."""
@@ -562,49 +620,112 @@ class CorsikaHistograms:
         if not self._density_samples:
             return
 
-        samples = self._density_samples
-        xs = np.array([s["x"] for s in samples])
-        ys = np.array([s["y"] for s in samples])
-        rs = np.array([s["r"] for s in samples])
-        densities = np.array([s["density"] for s in samples])
+        s = self._density_samples
+        xs, ys, rs = (np.array([p[k] for p in s]) for k in ("x", "y", "r"))
+        dens = np.array([p["density"] for p in s])
+        errs = np.array([p["density_error"] for p in s])
 
-        x_edges = self.hist["counts_xy"]["histogram"].axes[0].edges
-        y_edges = self.hist["counts_xy"]["histogram"].axes[1].edges
+        hxy = self.hist["counts_xy"]["histogram"]
+        x_edges, y_edges = hxy.axes[0].edges, hxy.axes[1].edges
         r_edges = self.hist["density_r"]["histogram"].axes[0].edges
 
-        # 2D density: average per (x, y) cell derived from probe positions
-        num_xy, _, _ = np.histogram2d(xs, ys, bins=(x_edges, y_edges), weights=densities)
-        den_xy, _, _ = np.histogram2d(xs, ys, bins=(x_edges, y_edges))
-        with np.errstate(divide="ignore", invalid="ignore"):
-            avg_xy = np.divide(num_xy, den_xy, out=np.zeros_like(num_xy), where=den_xy > 0)
-
-        self.hist["density_xy"]["hist_values"] = np.asarray([avg_xy.T])
-        self.hist["density_xy"]["x_bin_edges"] = np.asarray([x_edges])
-        self.hist["density_xy"]["y_bin_edges"] = np.asarray([y_edges])
-        self.hist["density_xy"]["uncertainties"] = None
-
-        def _average_profile(points, values, edges):
-            num, _ = np.histogram(points, bins=edges, weights=values)
-            den, _ = np.histogram(points, bins=edges)
+        def avg_unc_nd(coords, edges, values, errors):
+            num = np.histogramdd(coords, bins=edges, weights=values)[0]
+            den = np.histogramdd(coords, bins=edges)[0]
+            var = np.histogramdd(coords, bins=edges, weights=errors**2)[0]
             with np.errstate(divide="ignore", invalid="ignore"):
-                return np.divide(num, den, out=np.zeros_like(num), where=den > 0)
+                avg = np.divide(num, den, out=np.zeros_like(num), where=den > 0)
+                unc = np.sqrt(np.divide(var, den**2, out=np.zeros_like(var), where=den > 0))
+            return avg, unc
 
-        # 1D averaged profiles
-        avg_x = _average_profile(xs, densities, x_edges)
-        avg_y = _average_profile(ys, densities, y_edges)
-        avg_r = _average_profile(rs, densities, r_edges)
+        # 2D
+        avg_xy, unc_xy = avg_unc_nd(np.column_stack((xs, ys)), (x_edges, y_edges), dens, errs)
 
-        self.hist["density_x"]["hist_values"] = np.asarray([avg_x])
-        self.hist["density_x"]["x_bin_edges"] = np.asarray([x_edges])
-        self.hist["density_x"]["uncertainties"] = None
+        self.hist["density_xy"].update(
+            {
+                "hist_values": np.asarray([avg_xy.T]),
+                "x_bin_edges": np.asarray([x_edges]),
+                "y_bin_edges": np.asarray([y_edges]),
+                "uncertainties": np.asarray([unc_xy.T]),
+            }
+        )
 
-        self.hist["density_y"]["hist_values"] = np.asarray([avg_y])
-        self.hist["density_y"]["x_bin_edges"] = np.asarray([y_edges])
-        self.hist["density_y"]["uncertainties"] = None
+        # 1D helpers
+        def avg_unc_1d(x, e, v, err):
+            return avg_unc_nd(x[:, None], (e,), v, err)
 
-        self.hist["density_r"]["hist_values"] = np.asarray([avg_r])
-        self.hist["density_r"]["x_bin_edges"] = np.asarray([r_edges])
-        self.hist["density_r"]["uncertainties"] = None
+        ax = self.axis_distance
+
+        avg_x, unc_x = (
+            avg_unc_1d(xs[np.abs(ys) < ax], x_edges, dens[np.abs(ys) < ax], errs[np.abs(ys) < ax])
+            if np.any(np.abs(ys) < ax)
+            else (np.zeros(len(x_edges) - 1),) * 2
+        )
+
+        avg_y, unc_y = (
+            avg_unc_1d(ys[np.abs(xs) < ax], y_edges, dens[np.abs(xs) < ax], errs[np.abs(xs) < ax])
+            if np.any(np.abs(xs) < ax)
+            else (np.zeros(len(y_edges) - 1),) * 2
+        )
+
+        avg_r, unc_r = avg_unc_1d(rs, r_edges, dens, errs)
+
+        for k, avg, unc, edges in (
+            ("density_x", avg_x, unc_x, x_edges),
+            ("density_y", avg_y, unc_y, y_edges),
+            ("density_r", avg_r, unc_r, r_edges),
+        ):
+            self.hist[k].update(
+                {
+                    "hist_values": np.asarray([avg]),
+                    "x_bin_edges": np.asarray([edges]),
+                    "uncertainties": np.asarray([unc]),
+                }
+            )
+
+    def _populate_density_from_counts(self):
+        """Build density distributions by dividing counts histograms by bin area."""
+        # --- 2D ---
+        hxy = self.hist["counts_xy"]["histogram"]
+        xw = np.diff(hxy.axes[0].edges)
+        yw = np.diff(hxy.axes[1].edges)
+        areas2d = np.outer(xw, yw)
+
+        dens_xy, unc_xy = self._density_and_unc(hxy.view(), areas2d)
+
+        self.hist["density_xy_from_counts"].update(
+            {
+                "hist_values": np.asarray([dens_xy.T]),
+                "x_bin_edges": np.asarray([hxy.axes[0].edges]),
+                "y_bin_edges": np.asarray([hxy.axes[1].edges]),
+                "uncertainties": np.asarray([unc_xy.T]),
+            }
+        )
+
+        # --- 1D ---
+        hr = self.hist["counts_r"]["histogram"]
+        r = hr.axes[0].edges
+        areas1d = np.pi * (r[1:] ** 2 - r[:-1] ** 2)
+
+        dens_r, unc_r = self._density_and_unc(hr.view(), areas1d)
+
+        self.hist["density_r_from_counts"].update(
+            {
+                "hist_values": np.asarray([dens_r]),
+                "x_bin_edges": np.asarray([r]),
+                "uncertainties": np.asarray([unc_r]),
+            }
+        )
+
+    def _density_and_unc(self, view, areas):
+        """Calculate density and uncertainty by dividing histogram values by areas."""
+        if self._check_for_all_attributes(view):
+            values = view["value"]
+            unc = np.sqrt(view["variance"])
+        else:
+            values = view
+            unc = np.sqrt(view)
+        return values / areas, unc / areas
 
     def _check_for_all_attributes(self, view):
         """Check if view has dtype fields ('value', 'variance')."""

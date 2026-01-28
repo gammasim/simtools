@@ -3,6 +3,9 @@
 
 import math
 
+from simtools import settings
+from simtools.data_model import schema
+from simtools.io import ascii_handler
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
@@ -15,7 +18,6 @@ def initialize_simulation_models(
     site,
     telescope_name,
     calibration_device_name=None,
-    overwrite_model_parameters=None,
 ):
     """
     Initialize simulation models for a single telescope, site, and calibration device model.
@@ -38,18 +40,20 @@ def initialize_simulation_models(
     Tuple
         Tuple containing the telescope site, (optional) calibration device model.
     """
+    overwrite_model_parameter_dict = read_overwrite_model_parameter_dict()
+
     tel_model = TelescopeModel(
         site=site,
         telescope_name=telescope_name,
         model_version=model_version,
         label=label,
-        overwrite_model_parameters=overwrite_model_parameters,
+        overwrite_model_parameter_dict=overwrite_model_parameter_dict,
     )
     site_model = SiteModel(
         site=site,
         model_version=model_version,
         label=label,
-        overwrite_model_parameters=overwrite_model_parameters,
+        overwrite_model_parameter_dict=overwrite_model_parameter_dict,
     )
     if calibration_device_name is not None:
         calibration_model = CalibrationModel(
@@ -57,13 +61,40 @@ def initialize_simulation_models(
             calibration_device_model_name=calibration_device_name,
             model_version=model_version,
             label=label,
-            overwrite_model_parameters=overwrite_model_parameters,
+            overwrite_model_parameter_dict=overwrite_model_parameter_dict,
         )
     else:
         calibration_model = None
     for model in tel_model, site_model:
         model.export_model_files()
     return tel_model, site_model, calibration_model
+
+
+def read_overwrite_model_parameter_dict(overwrite_model_parameters=None):
+    """
+    Read overwrite model parameters dictionary from file.
+
+    Parameters
+    ----------
+    overwrite_model_parameters: str, optional
+        File name with overwrite model parameters.
+
+    Returns
+    -------
+    dict
+        Dictionary with model parameters to overwrite.
+    """
+    overwrite_model_parameter_dict = {}
+    overwrite_model_parameters = overwrite_model_parameters or settings.config.args.get(
+        "overwrite_model_parameters"
+    )
+    if overwrite_model_parameters is not None:
+        overwrite_model_parameter_dict = schema.validate_dict_using_schema(
+            data=ascii_handler.collect_data_from_file(file_name=overwrite_model_parameters),
+            schema_file="simulation_models_info.schema.yml",
+        ).get("changes", {})
+
+    return overwrite_model_parameter_dict
 
 
 def compute_telescope_transmission(pars: list[float], off_axis: float) -> float:
