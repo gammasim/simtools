@@ -149,6 +149,8 @@ def _plot_1d(hist_list, labels=None):
     ax.set_xlabel(_get_axis_label(hist["x_axis_title"], hist["x_axis_unit"]))
     ax.set_ylabel(_get_axis_label(hist["y_axis_title"], hist["y_axis_unit"]))
     _configure_plot_scales(ax, hist)
+    if "y_axis_min" in hist and hist["y_axis_min"] is not None:
+        ax.set_ylim(bottom=float(hist["y_axis_min"]))
     ax.set_title(f"{hist['title']}")
     ax.legend()
     ax.grid(True, alpha=0.3)

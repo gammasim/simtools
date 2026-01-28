@@ -142,6 +142,10 @@ definitions:
             description: |
               "Allowed tolerance for floating point comparison."
             type: number
+          scaling:
+            description: |
+              "Scaling factor to apply to the model parameter value before comparison."
+            type: number
       test_simtel_cfg_files:
         description: |
           "Reference file used for comparison of sim_telarray configuration files."

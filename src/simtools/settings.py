@@ -16,6 +16,7 @@ class _Config:
         self._sim_telarray_path = None
         self._sim_telarray_exe = None
         self._corsika_path = None
+        self._corsika_interaction_table_path = None
         self._corsika_exe = None
         self.user = os.getenv("USER", "unknown")
         self.hostname = socket.gethostname()
@@ -52,6 +53,12 @@ class _Config:
             args.get("corsika_path")
             if args is not None and "corsika_path" in args
             else os.getenv("SIMTOOLS_CORSIKA_PATH")
+        )
+
+        self._corsika_interaction_table_path = (
+            args.get("corsika_interaction_table_path")
+            if args is not None and "corsika_interaction_table_path" in args
+            else os.getenv("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
         )
 
         self._corsika_exe = self._get_corsika_exec() if self._corsika_path is not None else None
@@ -120,6 +127,15 @@ class _Config:
     def corsika_path(self):
         """Path to the CORSIKA installation directory."""
         return Path(self._corsika_path) if self._corsika_path is not None else None
+
+    @property
+    def corsika_interaction_table_path(self):
+        """Path to the CORSIKA interaction table directory."""
+        return (
+            Path(self._corsika_interaction_table_path)
+            if self._corsika_interaction_table_path is not None
+            else self.corsika_path
+        )
 
     @property
     def corsika_exe(self):

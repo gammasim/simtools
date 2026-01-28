@@ -1,6 +1,8 @@
 ---
 name: CI-integrationtests
 
+permissions: {}
+
 on:
   workflow_dispatch:
     inputs:
@@ -22,8 +24,6 @@ on:
         type: string
         default: '["7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]'
     secrets:
-      CLOUD_QGSJET3:
-        required: false
       DB_SERVER:
         required: false
       DB_API_USER:
@@ -41,9 +41,6 @@ on:
     - cron: "0 0 * * *"
   release:
     types: [published]
-
-env:
-  CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
 jobs:
 
@@ -63,13 +60,41 @@ jobs:
           python -m pip install --upgrade pip build
           python -m build
 
+  prepare_interaction_tables:
+    name: download CORSIKA interaction tables
+    runs-on: ubuntu-latest
+    env:
+      IT_NAME: "corsika7-interaction-tables"
+      CORSIKA_TABLES: "v0.1.0"
+
+    steps:
+      - name: Clone CORSIKA interaction tables (exclude QGSJet tables)
+        run: |
+          REPO_URL=https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}
+          export GIT_LFS_SKIP_SMUDGE=1  # disable automatic downloading of all LFS files
+          git clone --depth 1 --branch "$CORSIKA_TABLES" "$REPO_URL" "$IT_NAME"
+          git lfs install
+          (cd "$IT_NAME" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III")
+
+      - name: Upload CORSIKA interaction tables
+        uses: actions/upload-artifact@v4
+        with:
+          name: corsika-interaction-tables
+          path: ${{ env.IT_NAME }}
+          if-no-files-found: error
+          retention-days: 30
+
   integration_tests:
+    needs: prepare_interaction_tables
     runs-on: ubuntu-latest
     permissions:
       contents: read
     container:
       image: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
       options: --user 0
+    env:
+      CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
+      IT_NAME: "corsika7-interaction-tables"
 
     services:
       mongodb:
@@ -124,9 +149,16 @@ jobs:
             echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
             echo "SIMTOOLS_SIM_TELARRAY_PATH=$SIMTOOLS_SIM_TELARRAY_PATH"
             echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
+            echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
             echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$SIMTOOLS_CORSIKA_HE_INTERACTION"
             echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$SIMTOOLS_CORSIKA_LE_INTERACTION"
           } | tee .env >> "$GITHUB_ENV"
+
+      - name: Download CORSIKA interaction tables
+        uses: actions/download-artifact@v4
+        with:
+          name: corsika-interaction-tables
+          path: ${{ env.SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH }}/..
 
       - name: Extend PATH (sim_telarray)
         run: |
@@ -173,16 +205,9 @@ jobs:
             --db_simulation_model_version ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }} \
             --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH"
 
-      - name: Download QGSJet (prod images without tables)
-        if: contains(inputs.container_image, 'simtools-prod')
-        run: |
-          wget -nv -O - "${{ env.CLOUD_URL }}/${{ secrets.CLOUD_QGSJET3 }}/download" | \
-            bunzip2 > "${SIMTOOLS_CORSIKA_PATH}/qgsdat-III"
-
       - name: Integration tests
         shell: bash -l {0}
         run: |
           cat .env
-          simtools-print-version
           pytest --model_version=${{ matrix.model_version }} --color=yes --durations=20 \
             -n 4 --dist loadscope --retries 2 --retry-delay 5 --no-cov tests/integration_tests/

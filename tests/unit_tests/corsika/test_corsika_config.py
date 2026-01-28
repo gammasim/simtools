@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, Mock, PropertyMock, patch
 import pytest
 from astropy import units as u
 
+from simtools import settings
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.settings import _Config
 
@@ -252,7 +253,8 @@ def test_corsika_configuration_interaction_flags(
     assert isinstance(parameters, dict)
     assert "ECUTS" in parameters
     assert parameters["MAXPRT"] == ["10"]
-    assert len(parameters) == 9
+    # number of parameters depend on HE interaction model (qgs3 or epos)
+    assert len(parameters) == 9 or len(parameters) == 19
 
 
 def test_input_config_first_interaction_height(corsika_config_mock_array_model):
@@ -486,7 +488,6 @@ def test_generate_corsika_input_file(corsika_config_mock_array_model, tmp_path):
     output_file = tmp_path / "test_corsika.corsika.zst"
     corsika_config_mock_array_model.generate_corsika_input_file(
         use_multipipe=False,
-        corsika_seeds=[534, 220, 1104, 382],
         input_file=input_file,
         output_file=output_file,
     )
@@ -501,31 +502,12 @@ def test_generate_corsika_input_file_multipipe(corsika_config_mock_array_model, 
     output_file = tmp_path / "test_corsika.corsika.zst"
     corsika_config_mock_array_model.generate_corsika_input_file(
         use_multipipe=True,
-        corsika_seeds=[534, 220, 1104, 382],
         input_file=input_file,
         output_file=output_file,
     )
     assert input_file.exists()
     with open(input_file) as f:
         assert "TELFIL |" in f.read()
-
-
-def test_generate_corsika_input_file_with_test_seeds(corsika_config_mock_array_model, tmp_path):
-    logger.info("test_generate_corsika_input_file_with_test_seeds")
-    input_file = tmp_path / "test_corsika.input"
-    output_file = tmp_path / "test_corsika.corsika.zst"
-    expected_seeds = [534, 220, 1104, 382]
-    corsika_config_mock_array_model.generate_corsika_input_file(
-        use_multipipe=False,
-        corsika_seeds=expected_seeds,
-        input_file=input_file,
-        output_file=output_file,
-    )
-    assert input_file.exists()
-    with open(input_file) as f:
-        file_content = f.read()
-        for seed in expected_seeds:
-            assert f"SEED {seed} 0 0" in file_content
 
 
 def test_write_seeds(corsika_config_mock_array_model):
@@ -547,13 +529,14 @@ def test_write_seeds_use_test_seeds(corsika_config_mock_array_model):
     corsika_config_mock_array_model.run_number = 10
     corsika_config_mock_array_model.config = {"USER_INPUT": {"PRMPAR": [14]}}
     expected_seeds = [534, 220, 1104, 382]
-    with patch("io.open", return_value=mock_file):
-        corsika_config_mock_array_model._write_seeds(mock_file, corsika_seeds=expected_seeds)
-    assert mock_file.write.call_count == 4
+    with patch.dict(settings.config.args, {"corsika_seeds": expected_seeds}):
+        with patch("io.open", return_value=mock_file):
+            corsika_config_mock_array_model._write_seeds(mock_file)
+        assert mock_file.write.call_count == 4
 
-    expected_calls = [_call.args[0] for _call in mock_file.write.call_args_list]
-    for _call, seed in zip(expected_calls, expected_seeds):
-        assert _call == f"SEED {seed} 0 0\n"
+        expected_calls = [_call.args[0] for _call in mock_file.write.call_args_list]
+        for _call, seed in zip(expected_calls, expected_seeds):
+            assert _call == f"SEED {seed} 0 0\n"
 
 
 def test_get_corsika_telescope_list(corsika_config_mock_array_model):
@@ -1150,26 +1133,21 @@ def test_get_starting_grammage_value_list_multiple_matches_returns_min(
     assert result == pytest.approx(10.0)
 
 
-def test_write_seeds_invalid_seed_count_too_few(corsika_config_mock_array_model):
-    """Test that _write_seeds raises ValueError with fewer than 4 seeds."""
+def test_write_seeds_invalid_seed_count_wrong(corsika_config_mock_array_model):
+    """Test that _write_seeds raises ValueError with fewer or more than 4 seeds."""
     mock_file = Mock()
     corsika_config_mock_array_model.run_number = 10
     corsika_config_mock_array_model.config = {"USER_INPUT": {"PRMPAR": [14]}}
 
     with patch("io.open", return_value=mock_file):
-        with pytest.raises(ValueError, match="Exactly 4 CORSIKA seeds must be provided"):
-            corsika_config_mock_array_model._write_seeds(mock_file, corsika_seeds=[1, 2, 3])
-
-
-def test_write_seeds_invalid_seed_count_too_many(corsika_config_mock_array_model):
-    """Test that _write_seeds raises ValueError with more than 4 seeds."""
-    mock_file = Mock()
-    corsika_config_mock_array_model.run_number = 10
-    corsika_config_mock_array_model.config = {"USER_INPUT": {"PRMPAR": [14]}}
+        with patch.dict(settings.config.args, {"corsika_seeds": [1, 2, 3]}):
+            with pytest.raises(ValueError, match="Exactly 4 CORSIKA seeds must be provided"):
+                corsika_config_mock_array_model._write_seeds(mock_file)
 
     with patch("io.open", return_value=mock_file):
-        with pytest.raises(ValueError, match="Exactly 4 CORSIKA seeds must be provided"):
-            corsika_config_mock_array_model._write_seeds(mock_file, corsika_seeds=[1, 2, 3, 4, 5])
+        with patch.dict(settings.config.args, {"corsika_seeds": [1, 2, 3, 4, 5]}):
+            with pytest.raises(ValueError, match="Exactly 4 CORSIKA seeds must be provided"):
+                corsika_config_mock_array_model._write_seeds(mock_file)
 
 
 def test_write_seeds_random_generation(corsika_config_mock_array_model):
@@ -1187,7 +1165,7 @@ def test_write_seeds_random_generation(corsika_config_mock_array_model):
         assert _call.startswith("SEED ")
         assert _call.endswith(" 0 0\n")
         seed_value = int(_call.split()[1])
-        assert 0 <= seed_value < 1e7
+        assert 0 < seed_value < 900_000_000
 
 
 def test_epos_flags(corsika_config_mock_array_model, mocker):
@@ -1207,12 +1185,12 @@ def test_epos_flags(corsika_config_mock_array_model, mocker):
 
     assert isinstance(epos_flags, dict)
     assert "EPOPAR fname pathnx" in epos_flags
-    assert epos_flags["EPOPAR fname pathnx"] == ["/path/to/corsika/epos/epos/"]
+    assert epos_flags["EPOPAR fname pathnx"] == ["/path/to/corsika/epos/"]
 
-    for epos_file in ["inics", "iniev", "inirj", "initl", "check"]:
+    for epos_file in ["inics", "iniev", "inirj", "initl"]:
         key = f"EPOPAR fname {epos_file}"
         assert key in epos_flags
-        assert epos_flags[key] == [f"/path/to/corsika/epos/epos/epos.{epos_file}"]
+        assert epos_flags[key] == [f"/path/to/corsika/epos/epos.{epos_file}"]
 
 
 def test_epos_flags_with_different_paths(corsika_config_mock_array_model, mocker):
@@ -1230,9 +1208,9 @@ def test_epos_flags_with_different_paths(corsika_config_mock_array_model, mocker
 
     epos_flags = corsika_config_mock_array_model._epos_flags()
 
-    assert epos_flags["EPOPAR fname pathnx"] == ["/custom/tables/epos/"]
-    assert epos_flags["EPOPAR fname inics"] == ["/custom/tables/epos/epos.inics"]
-    assert epos_flags["EPOPAR fname check"] == ["/custom/tables/epos/epos.check"]
+    assert epos_flags["EPOPAR fname pathnx"] == ["/custom/tables/"]
+    assert epos_flags["EPOPAR fname inics"] == ["/custom/tables/epos.inics"]
+    assert epos_flags["EPOPAR fname check"] == ["none"]
 
 
 def test_corsika_configuration_interaction_flags_with_epos(

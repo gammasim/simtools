@@ -6,11 +6,11 @@ import numpy as np
 
 from simtools.sim_events.file_info import get_corsika_run_number
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
-from simtools.simtel.simtel_config_writer import sim_telarray_random_seeds
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id,
     read_sim_telarray_metadata,
 )
+from simtools.utils import random
 
 _logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def assert_sim_telarray_metadata(file, array_model):
     _logger.info(f"Found metadata in sim_telarray file for {len(telescope_meta)} telescopes")
     site_parameter_mismatch = _assert_model_parameters(global_meta, array_model.site_model)
     sim_telarray_seed_mismatch = _assert_sim_telarray_seed(
-        global_meta, array_model.sim_telarray_seeds, file
+        global_meta, array_model.sim_telarray_seed, file
     )
     if sim_telarray_seed_mismatch:
         site_parameter_mismatch.append(sim_telarray_seed_mismatch)
@@ -101,7 +101,7 @@ def _assert_model_parameters(metadata, model):
     return invalid_parameter_list
 
 
-def _assert_sim_telarray_seed(metadata, sim_telarray_seeds, file=None):
+def _assert_sim_telarray_seed(metadata, sim_telarray_seed, file=None):
     """
     Assert that sim_telarray seed matches the values in the sim_telarray metadata.
 
@@ -111,8 +111,8 @@ def _assert_sim_telarray_seed(metadata, sim_telarray_seeds, file=None):
     ----------
     metadata: dict
         Metadata dictionary.
-    sim_telarray_seeds: dict
-        Dictionary of sim_telarray seeds.
+    sim_telarray_seed: SimtelSeeds
+        sim_telarray seed.
     file : Path
         Path to the sim_telarray file.
 
@@ -122,23 +122,25 @@ def _assert_sim_telarray_seed(metadata, sim_telarray_seeds, file=None):
         Error message if sim_telarray seeds do not match.
 
     """
-    if not sim_telarray_seeds or not metadata:
+    if sim_telarray_seed is None:
         return None
 
     if "instrument_seed" in metadata.keys() and "instrument_instances" in metadata.keys():
-        if str(metadata.get("instrument_seed")) != str(sim_telarray_seeds.get("seed")):
+        if str(metadata.get("instrument_seed")) != str(sim_telarray_seed.instrument_seed):
             return (
                 "Parameter instrument_seed mismatch between sim_telarray file: "
-                f"{metadata['instrument_seed']}, and model: {sim_telarray_seeds.get('seed')}"
+                f"{metadata['instrument_seed']}, and model: {sim_telarray_seed.instrument_seed}"
             )
         _logger.info(
             f"sim_telarray_seed in sim_telarray file: {metadata['instrument_seed']}, "
-            f"and model: {sim_telarray_seeds.get('seed')}"
+            f"and model: {sim_telarray_seed.instrument_seed}"
         )
         if file:
             run_number_modified = get_corsika_run_number(file) - 1
-            test_seeds = sim_telarray_random_seeds(
-                int(metadata["instrument_seed"]), int(metadata["instrument_instances"])
+            test_seeds = random.seeds(
+                n_seeds=int(metadata["instrument_instances"]),
+                max_seed=np.iinfo(np.int32).max,
+                fixed_seed=int(metadata["instrument_seed"]),
             )
             # no +1 as in sim_telarray (as we count from 0)
             seed_used = run_number_modified % int(metadata["instrument_instances"])

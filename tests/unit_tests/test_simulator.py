@@ -10,6 +10,7 @@ from unittest import mock
 
 import pytest
 
+from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.sim_events import file_info
 from simtools.simulator import Simulator
 
@@ -315,12 +316,14 @@ def test_pack_for_register_with_multiple_versions(
 
     mocker.patch("simtools.simulator.ArrayModel", side_effect=mock_array_models)
 
-    mock_corsika_config = mocker.MagicMock()
+    mock_corsika_config = mocker.MagicMock(CorsikaConfig, instance=True)
+    mock_corsika_config.array_model = mocker.MagicMock()
     mock_corsika_config.get_config_parameter.side_effect = lambda param: {
         "VIEWCONE": [0, 10],
         "THETAP": [20, 20],
     }.get(param, [0, 0])
     mock_corsika_config.azimuth_angle = 0  # from args
+    mock_corsika_config.zenith_angle = 20  # from args
     mock_corsika_config.array_model.site = "North"  # from args
     mock_corsika_config.array_model.layout_name = "test_layout"  # from args
     mock_corsika_config.array_model.model_version = model_versions[0]
@@ -375,38 +378,6 @@ def test_pack_for_register_with_multiple_versions(
             output_file,
             directory_for_grid_upload / Path(output_file),
         )
-
-
-def test_get_seed_for_random_instrument_instances(shower_simulator):
-    # Test with a seed provided in the configuration
-    shower_simulator.sim_telarray_seeds["seed"] = "12345, 67890"
-    seed = shower_simulator._get_seed_for_random_instrument_instances(
-        shower_simulator.sim_telarray_seeds["seed"],
-        model_version="6.0.1",
-        zenith_angle=20.0,
-        azimuth_angle=180.0,
-    )
-    assert seed == 12345
-
-    shower_simulator.sim_telarray_seeds["seed"] = None
-    shower_simulator.model_version = "6.0.1"
-    shower_simulator.site = "North"
-    seed = shower_simulator._get_seed_for_random_instrument_instances(
-        shower_simulator.sim_telarray_seeds["seed"],
-        model_version="6.0.1",
-        zenith_angle=20.0,
-        azimuth_angle=180.0,
-    )
-    assert seed == 600010000000 + 1000000 + 20 * 1000 + 180
-
-    shower_simulator.site = "South"
-    seed = shower_simulator._get_seed_for_random_instrument_instances(
-        shower_simulator.sim_telarray_seeds["seed"],
-        model_version="6.0.1",
-        zenith_angle=20.0,
-        azimuth_angle=180.0,
-    )
-    assert seed == 600010000000 + 2000000 + 20 * 1000 + 180
 
 
 def test_initialize_simulation_runner_with_corsika(shower_simulator):
@@ -915,18 +886,6 @@ def test_verify_simulations_corsika(shower_simulator, mocker):
     shower_simulator.verify_simulations()
 
     mock_verify_corsika.assert_called_once_with(500)
-
-
-def test_get_seed_for_random_instrument_instances_with_unknown_site(shower_simulator):
-    shower_simulator.sim_telarray_seeds["seed"] = None
-    shower_simulator.site = "UnknownSite"
-    seed = shower_simulator._get_seed_for_random_instrument_instances(
-        shower_simulator.sim_telarray_seeds["seed"],
-        model_version="6.0.1",
-        zenith_angle=20.0,
-        azimuth_angle=180.0,
-    )
-    assert seed == 600010000000 + 1000000 + 20 * 1000 + 180
 
 
 def test_get_first_corsika_config_error(shower_simulator):
