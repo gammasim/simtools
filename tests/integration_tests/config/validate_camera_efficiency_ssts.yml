@@ -13,10 +13,10 @@ applications:
   integration_tests:
   - output_file: validate_camera_efficiency_SSTS-design_nsb.pdf
   - output_file: validate_camera_efficiency_SSTS-design_nsb.png
-  - output_file: validate_camera_efficiency_SSTS-design_cherenkov.png
-  - output_file: validate_camera_efficiency_SSTS-design_cherenkov.pdf
-  - output_file: camera_efficiency_summary_South_SSTS-design_za0.0deg_azm000deg_validate_camera_efficiency.txt
-  - output_file: camera_efficiency_table_South_SSTS-design_za0.0deg_azm000deg_validate_camera_efficiency.ecsv
+  - output_file: validate_camera_efficiency_SSTS-design_shower.png
+  - output_file: validate_camera_efficiency_SSTS-design_shower.pdf
+  - output_file: camera_efficiency_South_SSTS-design_za0.0deg_azm000deg_Shower.txt
+  - output_file: camera_efficiency_South_SSTS-design_za0.0deg_azm000deg_Shower.ecsv
   - model_parameter_validation:
       parameter_file: nsb_pixel_rate/nsb_pixel_rate-0.0.99.json
       reference_parameter_name: nsb_pixel_rate
