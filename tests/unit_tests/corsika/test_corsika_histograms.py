@@ -713,7 +713,7 @@ def test_density_and_unc_zero_areas():
         density, unc = ch._density_and_unc(view, areas)
 
     assert np.isinf(density[0])
-    assert density[1] == 20.0
+    assert np.isclose(density[1], 20.0)
     assert np.isinf(unc[0])
     assert np.isclose(unc[1], np.sqrt(400.0))
 
