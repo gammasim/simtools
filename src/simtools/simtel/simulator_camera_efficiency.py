@@ -24,6 +24,8 @@ class SimulatorCameraEfficiency(SimtelRunner):
         Location of the sim_telarray testeff tool output file.
     zenith_angle: float
         Zenith angle given in the config to CameraEfficiency.
+    x_max: float
+        Maximum depth of shower development in g/cm2.
     nsb_spectrum: str or Path
         Path to the nsb spectrum file.
     skip_correction_to_nsb_spectrum: bool
@@ -38,10 +40,11 @@ class SimulatorCameraEfficiency(SimtelRunner):
         file_simtel=None,
         file_log=None,
         zenith_angle=None,
+        x_max=None,
         nsb_spectrum=None,
         skip_correction_to_nsb_spectrum=False,
     ):
-        """Initialize SimtelRunner."""
+        """Camera efficiency simulator initialization."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SimulatorCameraEfficiency")
 
@@ -54,6 +57,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         self._file_simtel = file_simtel
         self._file_log = file_log
         self.zenith_angle = zenith_angle
+        self.x_max = x_max
         self.nsb_spectrum = nsb_spectrum
         self.skip_correction_to_nsb_spectrum = skip_correction_to_nsb_spectrum
 
@@ -163,9 +167,9 @@ class SimulatorCameraEfficiency(SimtelRunner):
                 self._telescope_model.camera.get_lightguide_efficiency_wavelength_file_name(),
                 "-fqe",
                 str(self._telescope_model.get_parameter_value("quantum_efficiency")),
-                "200",
-                "1000",
-                "300",  # lmin, lmax, Xmax
+                "200",  # lmin
+                "1000",  # lmax
+                f"{self.x_max:.1f}" if self.x_max is not None else "300",
                 str(self._site_model.get_parameter_value("atmospheric_profile")),
                 str(self.zenith_angle),
             ]

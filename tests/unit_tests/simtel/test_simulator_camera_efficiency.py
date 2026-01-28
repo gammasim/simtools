@@ -122,6 +122,7 @@ def test_get_one_dim_distribution(model_version_prod5, site_model_south):
             "azimuth_angle": 0 * u.deg,
         },
         label="validate_camera_efficiency",
+        efficiency_type="shower",
     )
 
     # 2D transmission window not defined in prod6; required prod5 runner
