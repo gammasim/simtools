@@ -90,8 +90,8 @@ def _parse():
     config.parser.add_argument(
         "--axis_distance",
         help=(
-            "Distance from x/y axes Distance from the axis to consider"
-            " when calculating the lateral density profiles (in meters).",
+            "Distance from x/y axes to consider when calculating "
+            "the lateral density profiles (in meters)."
         ),
         type=float,
         default=1000.0,
