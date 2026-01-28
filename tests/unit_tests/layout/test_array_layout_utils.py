@@ -809,10 +809,10 @@ def test_read_layouts_with_array_element_list(minimal_args_dict):
         assert background is None
 
 
-def test_create_regular_array_simplest():
-    telescope_distance = 100 * u.m
+def test_create_regular_array_simple():
+    """Test creating a regular array with a single telescope."""
     table = array_layout_utils.create_regular_array(
-        "1MST", "North", n_telescopes=1, telescope_type="MST", telescope_distance=telescope_distance
+        "1MST", "North", n_telescopes=1, telescope_type="MST", telescope_distance=100 * u.m
     )
     assert len(table) == 1
     assert table.meta["array_name"] == "1MST"
@@ -822,33 +822,74 @@ def test_create_regular_array_simplest():
     assert table["position_z"][0].value == 0
 
 
-def test_create_regular_array_four_telescopes(mocker):
-    telescope_distance = 120 * u.m
+def test_create_regular_array_four_telescopes_square(mocker):
+    """Test creating a square regular array with four telescopes."""
     mocker.patch(
         "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
         side_effect=lambda tel_type, site, idx: f"{tel_type}_{site}_{idx}",
     )
     table = array_layout_utils.create_regular_array(
-        "4MST", "South", n_telescopes=4, telescope_type="MST", telescope_distance=telescope_distance
+        "4MST", "South", n_telescopes=4, telescope_type="MST", telescope_distance=120 * u.m
     )
     assert len(table) == 4
     assert table.meta["array_name"] == "4MST"
     assert table.meta["site"] == "South"
-    expected_names = {f"MST_South_0{i}" for i in range(1, 5)}
-    assert set(table["telescope_name"]) == expected_names
+    assert set(table["telescope_name"]) == {f"MST_South_0{i}" for i in range(1, 5)}
     for x, y, z in zip(table["position_x"], table["position_y"], table["position_z"]):
         assert abs(abs(x.value) - 120) < 1e-6 or abs(x.value) < 1e-6
         assert abs(abs(y.value) - 120) < 1e-6 or abs(y.value) < 1e-6
         assert z.value == 0
 
+
+def test_create_regular_array_star_shape(mocker):
+    """Test creating a star-shaped regular array with four telescopes."""
+    mocker.patch(
+        "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
+        side_effect=lambda tel_type, site, idx: f"{tel_type}_{site}_{idx}",
+    )
+    table = array_layout_utils.create_regular_array(
+        "4LST",
+        "North",
+        n_telescopes=4,
+        telescope_type="LST",
+        telescope_distance=150 * u.m,
+        shape="star",
+    )
+    assert len(table) == 4
+    assert table.meta["array_name"] == "4LST"
+    assert set(table["telescope_name"]) == {f"LST_North_0{i}" for i in range(1, 5)}
+    assert all(z.value == 0 for z in table["position_z"])
+
+
+def test_create_regular_array_errors():
+    """Test that create_regular_array raises appropriate errors."""
+    distance = 100 * u.m
+
     with pytest.raises(ValueError, match="Unsupported number of telescopes"):
         array_layout_utils.create_regular_array(
-            "5MST",
-            "South",
-            n_telescopes=5,
-            telescope_type="MST",
-            telescope_distance=telescope_distance,
+            "5MST", "South", n_telescopes=5, telescope_type="MST", telescope_distance=distance
         )
+
+    with pytest.raises(ValueError, match="Unsupported array shape: circle"):
+        array_layout_utils.create_regular_array(
+            "1MST",
+            "North",
+            n_telescopes=1,
+            telescope_type="MST",
+            telescope_distance=distance,
+            shape="circle",
+        )
+
+
+def test_create_regular_array_metadata():
+    """Test that create_regular_array preserves units and sorts telescope names."""
+    table = array_layout_utils.create_regular_array(
+        "4MST", "South", n_telescopes=4, telescope_type="MST", telescope_distance=120 * u.m
+    )
+    assert table["position_x"].unit == u.m
+    assert table["position_y"].unit == u.m
+    assert table["position_z"].unit == u.m
+    assert list(table["telescope_name"]) == sorted(table["telescope_name"])
 
 
 def test_get_array_name_valid():
@@ -913,275 +954,79 @@ def test_write_array_elements_from_file_to_repository_error(tmp_test_directory):
         )
 
 
-def test_create_star_array_single_telescope(mocker):
-    """Test _create_star_array with a single telescope."""
-    tel_name, pos_x, pos_y, pos_z = [], [], [], []
-    distance = 100 * u.m
-
-    mocker.patch(
-        "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
-        return_value="MST_North_01",
-    )
-
-    array_layout_utils._create_star_array(
-        tel_name, pos_x, pos_y, pos_z, 1, "MST", "North", distance
-    )
-
-    assert len(tel_name) == 1
-    assert tel_name[0] == "MST_North_01"
-    assert pos_x[0] == distance
-    assert pos_y[0] == 0 * u.m
-    assert pos_z[0] == 0 * u.m
-
-
-def test_create_star_array_four_telescopes(mocker):
-    """Test _create_star_array with four telescopes."""
-    tel_name, pos_x, pos_y, pos_z = [], [], [], []
-    distance = 120 * u.m
-
-    mocker.patch(
+@pytest.fixture
+def mock_telescope_names(mocker):
+    """Fixture for mocking telescope name generation."""
+    return mocker.patch(
         "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
         side_effect=lambda tel_type, site, idx: f"{tel_type}_{site}_{idx}",
     )
 
-    array_layout_utils._create_star_array(
-        tel_name, pos_x, pos_y, pos_z, 4, "MST", "South", distance
-    )
 
-    assert len(tel_name) == 4
-    assert tel_name == ["MST_South_01", "MST_South_02", "MST_South_03", "MST_South_04"]
-
-    assert pos_x[0] == distance
-    assert pos_y[0] == 0 * u.m
-
-    assert pos_x[1] == 0 * u.m
-    assert pos_y[1] == distance
-
-    assert pos_x[2] == -distance
-    assert pos_y[2] == 0 * u.m
-
-    assert pos_x[3] == 0 * u.m
-    assert pos_y[3] == -distance
-
-    for z in pos_z:
-        assert z == 0 * u.m
-
-
-def test_create_star_array_eight_telescopes(mocker):
-    """Test _create_star_array with eight telescopes."""
-    tel_name, pos_x, pos_y, pos_z = [], [], [], []
-    distance = 150 * u.m
-
-    mocker.patch(
-        "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
-        side_effect=lambda tel_type, site, idx: f"{tel_type}_{site}_{idx}",
-    )
-
-    array_layout_utils._create_star_array(
-        tel_name, pos_x, pos_y, pos_z, 8, "LST", "North", distance
-    )
-
-    assert len(tel_name) == 8
-    assert len(pos_x) == 8
-    assert len(pos_y) == 8
-    assert len(pos_z) == 8
-
-    expected_positions = [
-        (distance, 0 * u.m),
-        (0 * u.m, distance),
-        (-distance, 0 * u.m),
-        (0 * u.m, -distance),
-        (2 * distance, 0 * u.m),
-        (0 * u.m, 2 * distance),
-        (-2 * distance, 0 * u.m),
-        (0 * u.m, -2 * distance),
+def test_create_star_array_positions(mock_telescope_names):
+    """Test _create_star_array creates correct positions for multiple telescope counts."""
+    test_cases = [
+        (1, [(100, 0)]),
+        (4, [(120, 0), (0, 120), (-120, 0), (0, -120)]),
+        (8, [(150, 0), (0, 150), (-150, 0), (0, -150), (300, 0), (0, 300), (-300, 0), (0, -300)]),
     ]
 
-    for i, (expected_x, expected_y) in enumerate(expected_positions):
-        assert pos_x[i] == expected_x
-        assert pos_y[i] == expected_y
-        assert pos_z[i] == 0 * u.m
+    for n_tel, expected_positions in test_cases:
+        tel_name, pos_x, pos_y, pos_z = [], [], [], []
+        distance = expected_positions[0][0] * u.m if expected_positions[0][0] != 0 else 100 * u.m
+
+        array_layout_utils._create_star_array(
+            tel_name, pos_x, pos_y, pos_z, n_tel, "MST", "North", distance
+        )
+
+        assert len(tel_name) == n_tel
+        for i, (exp_x, exp_y) in enumerate(expected_positions):
+            assert pos_x[i] == exp_x * u.m
+            assert pos_y[i] == exp_y * u.m
+            assert pos_z[i] == 0 * u.m
 
 
-def test_create_square_array_single_telescope(mocker):
-    """Test _create_square_array with a single telescope."""
-    tel_name, pos_x, pos_y, pos_z = [], [], [], []
-    distance = 100 * u.m
+def test_create_square_array_positions(mock_telescope_names):
+    """Test _create_square_array creates correct positions."""
+    test_cases = [
+        (1, [(0, 0)]),
+        (4, [(120, -120), (-120, 120), (-120, -120), (120, 120)]),
+    ]
 
-    mocker.patch(
-        "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
-        return_value="MST_North_01",
-    )
+    for n_tel, expected_positions in test_cases:
+        tel_name, pos_x, pos_y, pos_z = [], [], [], []
+        distance = 120 * u.m
 
-    array_layout_utils._create_square_array(
-        tel_name, pos_x, pos_y, pos_z, 1, "MST", "North", distance
-    )
+        array_layout_utils._create_square_array(
+            tel_name, pos_x, pos_y, pos_z, n_tel, "MST", "South", distance
+        )
 
-    assert len(tel_name) == 1
-    assert tel_name[0] == "MST_North_01"
-    assert pos_x[0] == 0 * u.m
-    assert pos_y[0] == 0 * u.m
-    assert pos_z[0] == 0 * u.m
-
-
-def test_create_square_array_four_telescopes(mocker):
-    """Test _create_square_array with four telescopes."""
-    tel_name, pos_x, pos_y, pos_z = [], [], [], []
-    distance = 120 * u.m
-
-    mocker.patch(
-        "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
-        side_effect=lambda tel_type, site, idx: f"{tel_type}_{site}_{idx}",
-    )
-
-    array_layout_utils._create_square_array(
-        tel_name, pos_x, pos_y, pos_z, 4, "MST", "South", distance
-    )
-
-    assert len(tel_name) == 4
-    assert tel_name[0] == "MST_South_01"
-    assert tel_name[1] == "MST_South_02"
-    assert tel_name[2] == "MST_South_03"
-    assert tel_name[3] == "MST_South_04"
-    assert pos_x[0] == distance
-    assert pos_x[1] == -distance
-    assert pos_x[2] == -distance
-    assert pos_x[3] == distance
-    assert pos_y[0] == -distance
-    assert pos_y[1] == distance
-    assert pos_y[2] == -distance
-    assert pos_y[3] == distance
-    for z in pos_z:
-        assert z == 0 * u.m
+        assert len(tel_name) == n_tel
+        for i, (exp_x, exp_y) in enumerate(expected_positions):
+            assert pos_x[i] == exp_x * u.m
+            assert pos_y[i] == exp_y * u.m
+            assert pos_z[i] == 0 * u.m
 
 
-def test_create_square_array_unsupported_number(mocker):
+def test_create_square_array_errors(mocker):
     """Test _create_square_array with unsupported number of telescopes."""
+    mocker.patch(
+        "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id"
+    )
     tel_name, pos_x, pos_y, pos_z = [], [], [], []
     distance = 100 * u.m
 
-    mocker.patch(
-        "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
-    )
-
-    with pytest.raises(ValueError, match="Unsupported number of telescopes for square array: 2"):
-        array_layout_utils._create_square_array(
-            tel_name, pos_x, pos_y, pos_z, 2, "LST", "North", distance
-        )
-
-    with pytest.raises(ValueError, match="Unsupported number of telescopes for square array: 5"):
-        array_layout_utils._create_square_array(
-            tel_name, pos_x, pos_y, pos_z, 5, "SST", "South", distance
-        )
+    for n_tel in [2, 5]:
+        with pytest.raises(
+            ValueError, match=f"Unsupported number of telescopes for square array: {n_tel}"
+        ):
+            array_layout_utils._create_square_array(
+                tel_name, pos_x, pos_y, pos_z, n_tel, "MST", "North", distance
+            )
 
 
-def test_create_regular_array_simple():
-    """Test creating a regular array with a single telescope."""
-    telescope_distance = 100 * u.m
-    table = array_layout_utils.create_regular_array(
-        "1MST", "North", n_telescopes=1, telescope_type="MST", telescope_distance=telescope_distance
-    )
-    assert len(table) == 1
-    assert table.meta["array_name"] == "1MST"
-    assert table.meta["site"] == "North"
-    assert table["position_x"][0].value == 0
-    assert table["position_y"][0].value == 0
-    assert table["position_z"][0].value == 0
-
-
-def test_create_regular_array_four_telescopes_square(mocker):
-    """Test creating a square regular array with four telescopes."""
-    telescope_distance = 120 * u.m
-    mocker.patch(
-        "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
-        side_effect=lambda tel_type, site, idx: f"{tel_type}_{site}_{idx}",
-    )
-    table = array_layout_utils.create_regular_array(
-        "4MST", "South", n_telescopes=4, telescope_type="MST", telescope_distance=telescope_distance
-    )
-    assert len(table) == 4
-    assert table.meta["array_name"] == "4MST"
-    assert table.meta["site"] == "South"
-    expected_names = {f"MST_South_0{i}" for i in range(1, 5)}
-    assert set(table["telescope_name"]) == expected_names
-    for x, y, z in zip(table["position_x"], table["position_y"], table["position_z"]):
-        assert abs(abs(x.value) - 120) < 1e-6 or abs(x.value) < 1e-6
-        assert abs(abs(y.value) - 120) < 1e-6 or abs(y.value) < 1e-6
-        assert z.value == 0
-
-
-def test_create_regular_array_four_telescopes_star(mocker):
-    """Test creating a star-shaped regular array with four telescopes."""
-    telescope_distance = 150 * u.m
-    mocker.patch(
-        "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
-        side_effect=lambda tel_type, site, idx: f"{tel_type}_{site}_{idx}",
-    )
-    table = array_layout_utils.create_regular_array(
-        "4LST",
-        "North",
-        n_telescopes=4,
-        telescope_type="LST",
-        telescope_distance=telescope_distance,
-        shape="star",
-    )
-    assert len(table) == 4
-    assert table.meta["array_name"] == "4LST"
-    assert table.meta["site"] == "North"
-    expected_names = {f"LST_North_0{i}" for i in range(1, 5)}
-    assert set(table["telescope_name"]) == expected_names
-    for z in table["position_z"]:
-        assert z.value == 0
-
-
-def test_create_regular_array_unsupported_n_telescopes():
-    """Test that unsupported number of telescopes raises ValueError."""
-    telescope_distance = 100 * u.m
-    with pytest.raises(ValueError, match="Unsupported number of telescopes"):
-        array_layout_utils.create_regular_array(
-            "5MST",
-            "South",
-            n_telescopes=5,
-            telescope_type="MST",
-            telescope_distance=telescope_distance,
-        )
-
-
-def test_create_regular_array_unsupported_shape():
-    """Test that unsupported array shape raises ValueError."""
-    telescope_distance = 100 * u.m
-    with pytest.raises(ValueError, match="Unsupported array shape: circle"):
-        array_layout_utils.create_regular_array(
-            "1MST",
-            "North",
-            n_telescopes=1,
-            telescope_type="MST",
-            telescope_distance=telescope_distance,
-            shape="circle",
-        )
-
-
-def test_create_regular_array_preserves_units():
-    """Test that create_regular_array preserves units correctly."""
-    telescope_distance = 200 * u.m
-    table = array_layout_utils.create_regular_array(
-        "1MST", "North", n_telescopes=1, telescope_type="MST", telescope_distance=telescope_distance
-    )
-    assert table["position_x"].unit == u.m
-    assert table["position_y"].unit == u.m
-    assert table["position_z"].unit == u.m
-
-    """Test that telescope names are sorted in the resulting table."""
-    telescope_distance = 120 * u.m
-    table = array_layout_utils.create_regular_array(
-        "4MST", "South", n_telescopes=4, telescope_type="MST", telescope_distance=telescope_distance
-    )
-    names_list = list(table["telescope_name"])
-    assert names_list == sorted(names_list)
-
-
-def test_write_array_elements_info_yaml(tmp_path):
-    """Test writing array elements info YAML file."""
+def test_write_array_elements_info_yaml_basic(tmp_path):
+    """Test writing array elements info YAML file with basic functionality."""
     array_table = QTable(
         {
             "telescope_name": ["MST_North_01", "MST_North_02"],
@@ -1191,151 +1036,76 @@ def test_write_array_elements_info_yaml(tmp_path):
         },
         meta={"array_name": "2MST", "site": "North"},
     )
-
     output_file = tmp_path / "test_layout.yaml"
-    site = "North"
-    model_version = "6.0.0"
-    parameter_version = "2.0.0"
 
     array_layout_utils.write_array_elements_info_yaml(
-        array_table, site, model_version, output_file, parameter_version
+        array_table, "North", "6.0.0", output_file, "2.0.0"
     )
 
     assert output_file.exists()
-
     data = ascii_handler.collect_data_from_file(output_file)
-    assert data["model_version"] == model_version
+
+    assert data["model_version"] == "6.0.0"
     assert data["model_update"] == "patch_update"
-    assert model_version in data["model_version_history"]
+    assert "6.0.0" in data["model_version_history"]
     assert "2MST" in data["description"]
-    assert "OBS-North" in data["changes"]
 
     array_layouts = data["changes"]["OBS-North"]["array_layouts"]
-    assert array_layouts["version"] == parameter_version
-    assert len(array_layouts["value"]) == 1
+    assert array_layouts["version"] == "2.0.0"
     assert array_layouts["value"][0]["name"] == "2MST"
     assert set(array_layouts["value"][0]["elements"]) == {"MST_North_01", "MST_North_02"}
 
-    assert "MST_North_01" in data["changes"]
-    assert "MST_North_02" in data["changes"]
-
-    tel_01_data = data["changes"]["MST_North_01"]["array_element_position_ground"]
-    assert tel_01_data["version"] == parameter_version
-    assert tel_01_data["value"] == [100.0, 100.0, 0.0]
-    assert tel_01_data["unit"] == "m"
-
-    tel_02_data = data["changes"]["MST_North_02"]["array_element_position_ground"]
-    assert tel_02_data["value"] == [-100.0, -100.0, 0.0]
+    tel_01 = data["changes"]["MST_North_01"]["array_element_position_ground"]
+    assert tel_01["version"] == "2.0.0"
+    assert tel_01["value"] == [100.0, 100.0, 0.0]
+    assert tel_01["unit"] == "m"
 
 
-def test_write_array_elements_info_yaml_single_telescope(tmp_path):
-    """Test writing array elements info YAML with single telescope."""
-    array_table = QTable(
+def test_write_array_elements_info_yaml_custom_values(tmp_path):
+    """Test YAML writing with various custom values."""
+    test_cases = [
         {
-            "telescope_name": ["LST_South_01"],
-            "position_x": [0] * u.m,
-            "position_y": [0] * u.m,
-            "position_z": [0] * u.m,
+            "name": "single_telescope",
+            "telescopes": ["LST_South_01"],
+            "positions": ([0], [0], [0]),
+            "site": "South",
+            "model_version": "7.0.0",
+            "parameter_version": "3.0.0",
         },
-        meta={"array_name": "1LST", "site": "South"},
-    )
-
-    output_file = tmp_path / "single_tel.yaml"
-
-    array_layout_utils.write_array_elements_info_yaml(
-        array_table, "South", "7.0.0", output_file, "3.0.0"
-    )
-
-    assert output_file.exists()
-
-    data = ascii_handler.collect_data_from_file(output_file)
-    assert data["model_version"] == "7.0.0"
-    assert data["changes"]["OBS-South"]["array_layouts"]["value"][0]["name"] == "1LST"
-    assert data["changes"]["OBS-South"]["array_layouts"]["value"][0]["elements"] == ["LST_South_01"]
-    assert data["changes"]["LST_South_01"]["array_element_position_ground"]["value"] == [
-        0.0,
-        0.0,
-        0.0,
+        {
+            "name": "fractional_positions",
+            "telescopes": ["MST_North_01", "MST_North_02"],
+            "positions": ([123.456, -234.567], [789.012, -456.789], [1.234, 2.345]),
+            "site": "North",
+            "model_version": "6.0.0",
+            "parameter_version": "2.0.0",
+        },
     ]
 
+    for case in test_cases:
+        array_table = QTable(
+            {
+                "telescope_name": case["telescopes"],
+                "position_x": case["positions"][0] * u.m,
+                "position_y": case["positions"][1] * u.m,
+                "position_z": case["positions"][2] * u.m,
+            },
+            meta={"array_name": f"{len(case['telescopes'])}TEL", "site": case["site"]},
+        )
 
-def test_write_array_elements_info_yaml_custom_parameter_version(tmp_path):
-    """Test writing array elements info YAML with custom parameter version."""
-    array_table = QTable(
-        {
-            "telescope_name": ["MST_North_01"],
-            "position_x": [50] * u.m,
-            "position_y": [75] * u.m,
-            "position_z": [10] * u.m,
-        },
-        meta={"array_name": "1MST", "site": "North"},
-    )
+        output_file = tmp_path / f"{case['name']}.yaml"
+        array_layout_utils.write_array_elements_info_yaml(
+            array_table, case["site"], case["model_version"], output_file, case["parameter_version"]
+        )
 
-    output_file = tmp_path / "custom_version.yaml"
-    custom_version = "5.5.5"
+        data = ascii_handler.collect_data_from_file(output_file)
+        assert data["model_version"] == case["model_version"]
+        obs_key = f"OBS-{case['site']}"
+        assert data["changes"][obs_key]["array_layouts"]["version"] == case["parameter_version"]
 
-    array_layout_utils.write_array_elements_info_yaml(
-        array_table, "North", "6.5.0", output_file, custom_version
-    )
-
-    data = ascii_handler.collect_data_from_file(output_file)
-    assert data["changes"]["OBS-North"]["array_layouts"]["version"] == custom_version
-    assert (
-        data["changes"]["MST_North_01"]["array_element_position_ground"]["version"]
-        == custom_version
-    )
-
-
-def test_write_array_elements_info_yaml_with_fractional_positions(tmp_path):
-    """Test writing array elements info YAML with fractional position values."""
-    array_table = QTable(
-        {
-            "telescope_name": ["MST_North_01", "MST_North_02"],
-            "position_x": [123.456, -234.567] * u.m,
-            "position_y": [789.012, -456.789] * u.m,
-            "position_z": [1.234, 2.345] * u.m,
-        },
-        meta={"array_name": "2MST", "site": "North"},
-    )
-
-    output_file = tmp_path / "fractional.yaml"
-
-    array_layout_utils.write_array_elements_info_yaml(array_table, "North", "6.0.0", output_file)
-
-    data = ascii_handler.collect_data_from_file(output_file)
-
-    tel_01_pos = data["changes"]["MST_North_01"]["array_element_position_ground"]["value"]
-    assert tel_01_pos[0] == pytest.approx(123.456)
-    assert tel_01_pos[1] == pytest.approx(789.012)
-    assert tel_01_pos[2] == pytest.approx(1.234)
-
-    tel_02_pos = data["changes"]["MST_North_02"]["array_element_position_ground"]["value"]
-    assert tel_02_pos[0] == pytest.approx(-234.567)
-    assert tel_02_pos[1] == pytest.approx(-456.789)
-    assert tel_02_pos[2] == pytest.approx(2.345)
-
-
-def test_write_array_elements_info_yaml_array_metadata(tmp_path):
-    """Test that array metadata is correctly written to YAML."""
-    array_table = QTable(
-        {
-            "telescope_name": ["SST_South_01"],
-            "position_x": [200] * u.m,
-            "position_y": [-150] * u.m,
-            "position_z": [5] * u.m,
-        },
-        meta={"array_name": "1SST", "site": "South"},
-    )
-
-    output_file = tmp_path / "array_meta.yaml"
-
-    array_layout_utils.write_array_elements_info_yaml(
-        array_table, "South", "7.1.0", output_file, "2.5.0"
-    )
-
-    data = ascii_handler.collect_data_from_file(output_file)
-    assert "Regular array layout: 1SST" in data["description"]
-    assert data["changes"]["OBS-South"]["array_layouts"]["unit"] is None
+        for tel_name in case["telescopes"]:
+            tel_data = data["changes"][tel_name]["array_element_position_ground"]
+            assert tel_data["version"] == case["parameter_version"]
 
 
 def test_get_array_elements_from_db_for_layouts_specific_layouts(mocker):
