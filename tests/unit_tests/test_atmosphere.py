@@ -26,9 +26,9 @@ def test_read_valid_file(tmp_path):
         "p": 5,
         "pw_over_p": 6,
     }
-    assert profile.data[0, 0] == 0.0
-    assert profile.data[1, 1] == 1.112
-    assert profile.data[2, 2] == 900.0
+    assert profile.data[0, 0] == pytest.approx(0.0)
+    assert profile.data[1, 1] == pytest.approx(1.112)
+    assert profile.data[2, 2] == pytest.approx(900.0)
 
 
 def test_read_with_comments_and_empty_lines(tmp_path):
@@ -45,8 +45,8 @@ def test_read_with_comments_and_empty_lines(tmp_path):
     profile = AtmosphereProfile(str(atmosphere_file))
 
     assert profile.data.shape == (2, 7)
-    assert profile.data[0, 0] == 0.0
-    assert profile.data[1, 0] == 1.0
+    assert profile.data[0, 0] == pytest.approx(0.0)
+    assert profile.data[1, 0] == pytest.approx(1.0)
 
 
 def test_read_converts_strings_to_floats(tmp_path):
@@ -57,7 +57,7 @@ def test_read_converts_strings_to_floats(tmp_path):
     profile = AtmosphereProfile(str(atmosphere_file))
 
     assert profile.data.dtype == np.float64
-    assert profile.data[0, 0] == 0.0
+    assert profile.data[0, 0] == pytest.approx(0.0)
 
 
 def test_interpolate_valid_altitude(tmp_path):
@@ -89,7 +89,7 @@ def test_interpolate_at_exact_altitude(tmp_path):
 
     result = profile.interpolate(1.0 * u.km, column="thick")
 
-    assert result == 950.0
+    assert result == pytest.approx(950.0)
 
 
 def test_interpolate_different_columns(tmp_path):
@@ -101,8 +101,8 @@ def test_interpolate_different_columns(tmp_path):
 
     profile = AtmosphereProfile(str(atmosphere_file))
 
-    assert profile.interpolate(0.5 * u.km, column="rho") == 1.1685
-    assert profile.interpolate(0.5 * u.km, column="T") == 284.5
+    assert profile.interpolate(0.5 * u.km, column="rho") == pytest.approx(1.1685)
+    assert profile.interpolate(0.5 * u.km, column="T") == pytest.approx(284.5)
 
 
 def test_interpolate_altitude_below_minimum(tmp_path):
@@ -156,4 +156,4 @@ def test_interpolate_with_different_units(tmp_path):
     result_km = profile.interpolate(500 * u.m, column="thick")
     result_m = profile.interpolate(0.5 * u.km, column="thick")
 
-    assert result_km == result_m
+    assert result_km == pytest.approx(result_m)
