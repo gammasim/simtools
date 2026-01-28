@@ -397,41 +397,44 @@ class ModelParameter:
         if value is None and parameter_version:
             self._overwrite_model_parameter_from_db(par_name, parameter_version)
         else:
-            value = gen.convert_string_to_list(value) if isinstance(value, str) else value
-            par_type = self.get_parameter_type(par_name)
-
-            if par_type in ("list", "dict"):
-                if not gen.validate_data_type(
-                    reference_dtype=par_type,
-                    value=value,
-                    dtype=None,
-                    allow_subtypes=True,
-                ):
-                    raise ValueError(f"Could not cast {value} of type {type(value)} to {par_type}.")
-            else:
-                for value_element in gen.ensure_iterable(value):
-                    if not gen.validate_data_type(
-                        reference_dtype=par_type,
-                        value=value_element,
-                        dtype=None,
-                        allow_subtypes=True,
-                    ):
-                        raise ValueError(
-                            f"Could not cast {value_element} of type "
-                            f"{type(value_element)} to {par_type}."
-                        )
-
-            self._logger.debug(
-                f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} "
-                f"to {value}"
-            )
-            self.parameters[par_name]["value"] = value
-            if parameter_version:
-                self.parameters[par_name]["parameter_version"] = parameter_version
+            self._overwrite_model_parameter_from_value(par_name, value, parameter_version)
 
         # In case parameter is a file, the model files will be outdated
         if self.get_parameter_file_flag(par_name):
             self._is_exported_model_files_up_to_date = False
+
+    def _overwrite_model_parameter_from_value(self, par_name, value, parameter_version=None):
+        """Overwrite model parameter from provided value only."""
+        value = gen.convert_string_to_list(value) if isinstance(value, str) else value
+        par_type = self.get_parameter_type(par_name)
+
+        if par_type in ("list", "dict"):
+            if not gen.validate_data_type(
+                reference_dtype=par_type,
+                value=value,
+                dtype=None,
+                allow_subtypes=True,
+            ):
+                raise ValueError(f"Could not cast {value} of type {type(value)} to {par_type}.")
+        else:
+            for value_element in gen.ensure_iterable(value):
+                if not gen.validate_data_type(
+                    reference_dtype=par_type,
+                    value=value_element,
+                    dtype=None,
+                    allow_subtypes=True,
+                ):
+                    raise ValueError(
+                        f"Could not cast {value_element} of type "
+                        f"{type(value_element)} to {par_type}."
+                    )
+
+        self._logger.debug(
+            f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} to {value}"
+        )
+        self.parameters[par_name]["value"] = value
+        if parameter_version:
+            self.parameters[par_name]["parameter_version"] = parameter_version
 
     def _overwrite_model_parameter_from_db(self, par_name, parameter_version):
         """Overwrite model parameter from DB for a specific version."""
