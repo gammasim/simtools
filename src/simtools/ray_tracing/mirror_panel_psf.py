@@ -206,13 +206,8 @@ class MirrorPanelPSF:
 
         Returns
         -------
-        dict
-            Optimization results containing:
-            - 'mirror' : one-based mirror index
-            - 'measured_d80_mm'
-            - 'optimized_rnda'
-            - 'simulated_d80_mm'
-            - 'percentage_diff'
+        MirrorOptimizationResult
+            Optimization results for the mirror.
         """
         threshold_pct = 100 * float(self.args_dict.get("threshold", 0.05))
         learning_rate = float(self.args_dict.get("learning_rate", 1e-3))
@@ -240,11 +235,14 @@ class MirrorPanelPSF:
             sim, pct, obj = self._evaluate(mirror_idx, measured_d80, rnda)
             pct = abs(pct)
 
+            old_rnda_str = "[" + ", ".join(f"{v:.4g}" for v in old_rnda) + "]"
+            rnda_str = "[" + ", ".join(f"{v:.4g}" for v in rnda) + "]"
+
             self._logger.info(
-                "Iter %d | rnda %.2f -> %.2f | pct %.2f -> %.2f | lr %.2g",
+                "Iter %d | rnda %s -> %s | pct %.2f -> %.2f | lr %.2g",
                 iteration + 1,
-                old_rnda,
-                rnda,
+                old_rnda_str,
+                rnda_str,
                 best["pct"],
                 pct,
                 learning_rate,
@@ -332,7 +330,7 @@ class MirrorPanelPSF:
         """
         n_mirrors = len(self.measured_data)
         if self.args_dict.get("test"):
-            n_mirrors = min(n_mirrors, self.args_dict.get("number_of_mirrors_to_test", 10))
+            n_mirrors = min(n_mirrors, self.args_dict.get("number_of_mirrors_to_test", 1))
 
         n_workers = int(self.args_dict.get("n_workers") or os.cpu_count())
         parent = MirrorPanelPSF(self.label, dict(self.args_dict, parallel=False))

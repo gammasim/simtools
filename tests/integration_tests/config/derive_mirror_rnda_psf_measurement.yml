@@ -6,10 +6,10 @@ applications:
     model_version: 7.0.0
     parameter_version: 1.0.0
     output_path: simtools-output
-    data: tests/resources/198mir_190925.ecsv
+    data: tests/resources/MLTdata-preproduction.ecsv
     site: North
     telescope: LSTN-01
-    n_workers: 2
+    n_workers: 1
     test: true
   integration_tests:
   - test_output_files:

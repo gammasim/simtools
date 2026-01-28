@@ -91,6 +91,23 @@ def test_signed_pct_diff_raises_on_nonpositive_measured_d80():
         mpp.MirrorPanelPSF._signed_pct_diff(-1.0, 1.0)
 
 
+def test_signed_pct_diff_returns_signed_value():
+    assert mpp.MirrorPanelPSF._signed_pct_diff(10.0, 12.0) == pytest.approx(20.0)
+    assert mpp.MirrorPanelPSF._signed_pct_diff(10.0, 8.0) == pytest.approx(-20.0)
+
+
+def test_evaluate_returns_sim_pct_and_squared_pct(mocker):
+    inst = _make_minimal_instance()
+    simulate = mocker.patch.object(inst, "_simulate_single_mirror_d80", return_value=12.0)
+
+    sim, pct, obj = inst._evaluate(0, 10.0, [0.01, 0.2, 0.02])
+
+    simulate.assert_called_once()
+    assert sim == pytest.approx(12.0)
+    assert pct == pytest.approx(20.0)
+    assert obj == pytest.approx(400.0)
+
+
 def test_rnda_bounds_clamps_sigma_min_to_positive(monkeypatch):
     def _fake_model_parameters():
         return {
@@ -187,7 +204,18 @@ def test_simulate_single_mirror_d80_success_and_restores_label(mocker, tmp_path)
 
 def test_optimize_single_mirror_converges_when_simulated_matches_measured(mocker):
     inst = _make_minimal_instance(args_dict={"threshold": 0.05, "learning_rate": 1e-4})
-    mocker.patch.object(inst, "_simulate_single_mirror_d80", return_value=12.0)
+    mocker.patch.object(
+        inst,
+        "_rnda_bounds",
+        return_value=[(1e-12, 1.0), (0.0, 1.0), (1e-12, 1.0)],
+    )
+
+    mocker.patch.object(inst, "_evaluate", return_value=(12.0, 0.0, 0.0))
+
+    def _return_param_value(**kwargs):
+        return kwargs["param_value"]
+
+    mocker.patch.object(inst, "_update_single_rnda_parameter", side_effect=_return_param_value)
 
     result = inst.optimize_single_mirror(0, 12.0)
 
@@ -228,6 +256,57 @@ def test_optimize_single_mirror_increases_learning_rate_on_improvement(mocker):
     assert len(learning_rates) == 6
     assert learning_rates[:3] == pytest.approx([1e-3, 1e-3, 1e-3])
     assert learning_rates[3:] == pytest.approx([1.1e-3, 1.1e-3, 1.1e-3])
+
+
+def test_update_single_rnda_parameter_log_param_branch(mocker):
+    inst = _make_minimal_instance(args_dict={"learning_rate": 1e-3})
+    rnda = [0.01, 0.2, 0.02]
+
+    def _fake_evaluate(_mirror_idx, _measured_d80, rnda_in):
+        # Objective depends only on the parameter being updated.
+        return 0.0, 0.0, float(rnda_in[0] ** 2)
+
+    mocker.patch.object(inst, "_evaluate", side_effect=_fake_evaluate)
+
+    updated = inst._update_single_rnda_parameter(
+        mirror_idx=0,
+        measured_d80=10.0,
+        rnda=rnda,
+        param_idx=0,
+        param_value=rnda[0],
+        param_bounds=(1e-12, 1.0),
+        learning_rate=1e-3,
+    )
+
+    assert 1e-12 <= float(updated) <= 1.0
+    assert float(updated) < 0.01
+    # Function should leave the input vector unchanged; caller assigns the return value.
+    assert rnda[0] == pytest.approx(0.01)
+
+
+def test_update_single_rnda_parameter_fraction_param_branch(mocker):
+    inst = _make_minimal_instance(args_dict={"learning_rate": 1e-3})
+    rnda = [0.01, 0.2, 0.02]
+
+    def _fake_evaluate(_mirror_idx, _measured_d80, rnda_in):
+        # Objective minimized at fraction2=0.5.
+        return 0.0, 0.0, float((rnda_in[1] - 0.5) ** 2)
+
+    mocker.patch.object(inst, "_evaluate", side_effect=_fake_evaluate)
+
+    updated = inst._update_single_rnda_parameter(
+        mirror_idx=0,
+        measured_d80=10.0,
+        rnda=rnda,
+        param_idx=1,
+        param_value=rnda[1],
+        param_bounds=(0.0, 1.0),
+        learning_rate=0.05,
+    )
+
+    assert 0.0 <= float(updated) <= 1.0
+    assert float(updated) > 0.2
+    assert rnda[1] == pytest.approx(0.2)
 
 
 def test_write_optimization_data_writes_json(tmp_path):
