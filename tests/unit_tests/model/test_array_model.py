@@ -266,7 +266,7 @@ def test_build_calibration_models():
         # Set up array model attributes for CalibrationModel initialization
         array_model_north.model_version = "6.0.0"
         array_model_north.label = "test_label"
-        array_model_north.overwrite_model_parameters = None
+        array_model_north.overwrite_model_parameter_dict = None
 
         result = array_model_north._build_calibration_models(
             array_model_north,

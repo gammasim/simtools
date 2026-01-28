@@ -582,6 +582,12 @@ def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=T
     if reference_dtype in ("boolean", "bool"):
         return _is_valid_boolean_type(dtype, value)
 
+    if reference_dtype == "dict":
+        return isinstance(value, dict)
+
+    if reference_dtype == "list":
+        return isinstance(value, list)
+
     return _is_valid_numeric_type(dtype, reference_dtype)
 
 

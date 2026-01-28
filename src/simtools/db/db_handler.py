@@ -873,6 +873,10 @@ class DatabaseHandler:
                 array_element_name,
             ]
         except KeyError as exc:
+            # simplified model definitions when e.g. adding new telescopes without design model
+            if settings.config.args.get("ignore_missing_design_model", False):
+                element_type = names.get_array_element_type_from_name(array_element_name)
+                return [array_element_name, f"{element_type}-01", f"{element_type}-design"]
             raise KeyError(
                 f"Failed generated array element list for db query for {array_element_name}"
             ) from exc

@@ -479,29 +479,22 @@ def test_overwrite_model_parameter_updates_exported_files_flag(telescope_model_l
         assert tel_model._is_exported_model_files_up_to_date is False
 
 
-def test_overwrite_parameters_from_file_no_changes(telescope_model_lst, tmp_path):
+def test_overwrite_parameters_no_changes(telescope_model_lst):
     """Test overwrite_parameters_from_file when no changes for this model."""
     tel_model = copy.deepcopy(telescope_model_lst)
 
-    # Create a valid file with changes for a different model using proper telescope name pattern
-    changes_file = tmp_path / "changes.yml"
-    changes_file.write_text(
-        "model_version: 6.0.0\n"
-        "model_update: patch_update\n"
-        "model_version_history: [5.0.0]\n"
-        "description: Test changes\n"
-        "schema_version: 0.1.0\n"
-        "changes:\n"
-        "  MSTN-01:\n"  # Valid telescope name, but different from tel_model.name
-        "    num_gains:\n"
-        "      version: 1.0.0\n"
-        "      value: 123\n",
-        encoding="utf-8",
-    )
+    changes = {
+        "MSTN-01": {
+            "num_gains": {
+                "version": "1.0.0",
+                "value": 123,
+            }
+        }
+    }
 
     # Should not raise error, just not apply any changes since MSTN-01 != tel_model.name
     original_params = copy.deepcopy(tel_model.parameters)
-    tel_model.overwrite_parameters_from_file(str(changes_file))
+    tel_model.overwrite_parameters(changes)
 
     # Parameters should be unchanged (unless tel_model.name happens to be MSTN-01)
     if tel_model.name != "MSTN-01":
@@ -532,53 +525,36 @@ def test_overwrite_parameters_with_simple_value(telescope_model_lst):
     assert tel_model.parameters["num_gains"]["value"] == 5
 
 
-def test_overwrite_parameters_from_file_with_changes(telescope_model_lst, tmp_path):
-    """Test overwrite_parameters_from_file when changes exist."""
+def test_overwrite_parameters_with_changes(telescope_model_lst):
+    """Test overwrite_parameters when changes exist."""
     tel_model = copy.deepcopy(telescope_model_lst)
 
-    # Create a valid file with changes for this model
-    changes_file = tmp_path / "changes.yml"
-    changes_file.write_text(
-        f"model_version: 6.0.0\n"
-        f"model_update: patch_update\n"
-        f"model_version_history: [5.0.0]\n"
-        f"description: Test changes\n"
-        f"schema_version: 0.1.0\n"
-        f"changes:\n"
-        f"  {tel_model.name}:\n"
-        f"    num_gains:\n"
-        f"      version: 1.0.0\n"
-        f"      value: 999\n",
-        encoding="utf-8",
-    )
+    changes = {
+        tel_model.name: {
+            "num_gains": {
+                "version": "1.0.0",
+                "value": 999,
+            }
+        }
+    }
 
-    tel_model.overwrite_parameters_from_file(str(changes_file))
+    tel_model.overwrite_parameters(changes)
 
     # Parameter should be changed
     assert tel_model.parameters["num_gains"]["value"] == 999
 
 
-def test_check_model_parameter_with_overwrite_file(io_handler, model_version, tmp_path, mocker):
+def test_check_model_parameter_with_overwrite(model_version):
     """Test _check_model_parameter_versions with overwrite_model_parameters."""
 
-    # Create a temporary overwrite file
-    overwrite_file = tmp_path / "overwrite.yml"
-    overwrite_file.write_text(
-        "model_version: 6.0.0\n"
-        "model_update: patch_update\n"
-        "model_version_history: [5.0.0]\n"
-        "description: Test\n"
-        "schema_version: 0.1.0\n"
-        "changes:\n"
-        "  LSTN-01:\n"
-        "    num_gains:\n"
-        "      version: 1.0.0\n"
-        "      value: 10\n",
-        encoding="utf-8",
-    )
-
-    # Mock names.model_parameters to avoid actual schema loading
-    mocker.patch("simtools.model.model_parameter.names.model_parameters", return_value={})
+    changes = {
+        "LSTN-01": {
+            "num_gains": {
+                "version": "1.0.0",
+                "value": 10,
+            }
+        }
+    }
 
     # Create telescope model with overwrite_model_parameters
     tel_model = TelescopeModel(
@@ -586,10 +562,10 @@ def test_check_model_parameter_with_overwrite_file(io_handler, model_version, tm
         telescope_name="LSTN-01",
         model_version=model_version,
         label="test-telescope-model",
-        overwrite_model_parameters=str(overwrite_file),
+        overwrite_model_parameter_dict=changes,
     )
 
-    # The overwrite file should have been applied during initialization
+    # The overwrite should have been applied during initialization
     assert tel_model.parameters["num_gains"]["value"] == 10
 
 

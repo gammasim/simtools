@@ -1368,3 +1368,43 @@ def test_print_connection_info_without_mongo_handler(mocker):
         mock_logger = mocker.patch.object(db_no_config._logger, "info")
         db_no_config.print_connection_info()
         mock_logger.assert_called_once_with("No database defined.")
+
+
+def test_get_array_element_list_missing_design_model_ignore(db, mocker):
+    """Test _get_array_element_list when design model is missing and ignore flag is set."""
+    array_element_name = "LSTN-01"
+    site = "North"
+    production_table = {"model_version": "6.0.0"}
+    collection = "telescopes"
+
+    mocker.patch.object(
+        db,
+        "read_production_table_from_db",
+        return_value={"design_model": {}, "model_version": "6.0.0"},
+    )
+    # Mock settings.config._args to include ignore_missing_design_model
+    from simtools import settings
+
+    mocker.patch.object(
+        settings.config,
+        "_args",
+        {"ignore_missing_design_model": True},
+    )
+
+    result = db._get_array_element_list(array_element_name, site, production_table, collection)
+
+    assert result == ["LSTN-01", "LSTN-01", "LSTN-design"]
+
+
+def test_get_array_element_list_missing_design_model_raises(db, mocker):
+    """Test _get_array_element_list raises KeyError when design model is missing."""
+    array_element_name = "LSTN-01"
+    site = "North"
+    production_table = {"design_model": {}, "model_version": "6.0.0"}
+    collection = "telescopes"
+
+    with pytest.raises(
+        KeyError,
+        match=r"Failed generated array element list for db query for LSTN-01",
+    ):
+        db._get_array_element_list(array_element_name, site, production_table, collection)

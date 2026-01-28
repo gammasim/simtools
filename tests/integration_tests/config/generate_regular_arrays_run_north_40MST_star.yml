@@ -1,0 +1,18 @@
+---
+applications:
+- application: simtools-generate-regular-arrays
+  configuration:
+    model_version: 6.0.2
+    telescope_type: MST
+    n_telescopes: 40
+    telescope_distance: 50.
+    array_shape: star
+    output_file: generate_regular_arrays_North_40MST.ecsv
+    output_path: simtools-output
+    site: North
+  integration_tests:
+  - output_file: generate_regular_arrays_North_40MST-North-40MST-star.ecsv
+  - output_file: generate_regular_arrays_North_40MST-North-40MST-star.info.yml
+  test_name: run-north-40MST-star
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
