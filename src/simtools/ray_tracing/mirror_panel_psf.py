@@ -312,7 +312,7 @@ class MirrorPanelPSF:
         """
         n_mirrors = len(self.measured_data)
         if self.args_dict.get("test"):
-            n_mirrors = min(n_mirrors, self.args_dict.get("number_of_mirrors_to_test", 10))
+            n_mirrors = min(n_mirrors, self.args_dict.get("number_of_mirrors_to_test", 1))
 
         n_workers = int(self.args_dict.get("n_workers") or os.cpu_count())
         parent = MirrorPanelPSF(self.label, dict(self.args_dict, parallel=False))
