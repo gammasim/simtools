@@ -407,9 +407,7 @@ class ModelParameter:
                     dtype=None,
                     allow_subtypes=True,
                 ):
-                    raise ValueError(
-                        f"Could not cast {value} of type {type(value)} to {par_type}."
-                    )
+                    raise ValueError(f"Could not cast {value} of type {type(value)} to {par_type}.")
             else:
                 for value_element in gen.ensure_iterable(value):
                     if not gen.validate_data_type(
