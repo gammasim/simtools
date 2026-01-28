@@ -96,9 +96,9 @@ def test_initializer_runs_in_workers_real_pool():
 
 def test_uses_cpu_count_when_max_workers_nonpositive(monkeypatch):
     """If max_workers is None or <=0, os.cpu_count() should be used."""
-    monkeypatch.setattr(pp.os, "cpu_count", lambda: 7)
+    monkeypatch.setattr(pp.os, "cpu_count", (7).__int__)
     monkeypatch.setattr(pp, "ProcessPoolExecutor", _FakeExecutor)
-    monkeypatch.setattr(pp, "as_completed", lambda futures: list(futures))
+    monkeypatch.setattr(pp, "as_completed", list)
 
     results = pp.process_pool_map_ordered(_identity, [1, 2, 3], max_workers=0)
     assert results == [1, 2, 3]
@@ -108,7 +108,7 @@ def test_uses_cpu_count_when_max_workers_nonpositive(monkeypatch):
 def test_does_not_set_mp_context_when_start_method_none(monkeypatch):
     """When mp_start_method is None, mp_context should not be passed to the executor."""
     monkeypatch.setattr(pp, "ProcessPoolExecutor", _FakeExecutor)
-    monkeypatch.setattr(pp, "as_completed", lambda futures: list(futures))
+    monkeypatch.setattr(pp, "as_completed", list)
     pp.process_pool_map_ordered(_identity, [1], max_workers=1, mp_start_method=None)
     assert "mp_context" not in _FakeExecutor.last_kwargs
 
@@ -116,7 +116,7 @@ def test_does_not_set_mp_context_when_start_method_none(monkeypatch):
 def test_single_worker(monkeypatch):
     """Should work with n_workers=1 (serial execution)."""
     monkeypatch.setattr(pp, "ProcessPoolExecutor", _FakeExecutor)
-    monkeypatch.setattr(pp, "as_completed", lambda futures: list(futures))
+    monkeypatch.setattr(pp, "as_completed", list)
     results = pp.process_pool_map_ordered(_identity, [5, 6, 7], max_workers=1)
     assert results == [5, 6, 7]
 
@@ -124,6 +124,6 @@ def test_single_worker(monkeypatch):
 def test_empty_input(monkeypatch):
     """Should handle empty input gracefully."""
     monkeypatch.setattr(pp, "ProcessPoolExecutor", _FakeExecutor)
-    monkeypatch.setattr(pp, "as_completed", lambda futures: list(futures))
+    monkeypatch.setattr(pp, "as_completed", list)
     results = pp.process_pool_map_ordered(_identity, [], max_workers=2)
     assert results == []
