@@ -7,11 +7,11 @@ applications:
     n_telescopes: 40
     telescope_distance: 50.
     array_shape: star
-    output_file: generate_regular_arrays_South_40MST.ecsv
+    output_file: generate_regular_arrays_North_40MST.ecsv
     output_path: simtools-output
-    site: South
+    site: North
   integration_tests:
-  - output_file: generate_regular_arrays_South_40MST.ecsv
-  test_name: run-south-40MST-star
+  - output_file: generate_regular_arrays_North_40MST.ecsv
+  test_name: run-north-40MST-star
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
