@@ -395,18 +395,7 @@ class ModelParameter:
             raise InvalidModelParameterError(f"Parameter {par_name} not in the model")
 
         if value is None and parameter_version:
-            _para_dict = self.db.get_model_parameter(
-                parameter=par_name,
-                site=self.site,
-                array_element_name=self.name,
-                parameter_version=parameter_version,
-            )
-            if _para_dict:
-                self.parameters[par_name] = _para_dict.get(par_name)
-            self._logger.debug(
-                f"Changing parameter {par_name} to version {parameter_version} with value "
-                f"{self.parameters[par_name]['value']}"
-            )
+            self._overwrite_model_parameter_from_db(par_name, parameter_version)
         else:
             value = gen.convert_string_to_list(value) if isinstance(value, str) else value
             par_type = self.get_parameter_type(par_name)
@@ -434,6 +423,21 @@ class ModelParameter:
         # In case parameter is a file, the model files will be outdated
         if self.get_parameter_file_flag(par_name):
             self._is_exported_model_files_up_to_date = False
+
+    def _overwrite_model_parameter_from_db(self, par_name, parameter_version):
+        """Overwrite model parameter from DB for a specific version."""
+        _para_dict = self.db.get_model_parameter(
+            parameter=par_name,
+            site=self.site,
+            array_element_name=self.name,
+            parameter_version=parameter_version,
+        )
+        if _para_dict:
+            self.parameters[par_name] = _para_dict.get(par_name)
+        self._logger.debug(
+            f"Changing parameter {par_name} to version {parameter_version} with value "
+            f"{self.parameters[par_name]['value']}"
+        )
 
     def _get_key_for_parameter_changes(self, site, array_element_name, changes_data):
         """
