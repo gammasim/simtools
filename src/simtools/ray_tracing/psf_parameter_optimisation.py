@@ -1381,7 +1381,7 @@ def cleanup_intermediate_files(output_dir):
     output_dir : Path
         Directory containing output files to clean up.
     """
-    patterns = ["*.log", "*.lis*"]
+    patterns = ["*.log", "*.lis*", "*.dat"]
     files_removed = 0
 
     for pattern in patterns:
