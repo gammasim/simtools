@@ -12,6 +12,7 @@ from astropy.table import Table
 
 import simtools.data_model.model_data_writer as writer
 from simtools import settings
+from simtools.atmosphere import AtmosphereProfile
 from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
@@ -565,8 +566,20 @@ class CameraEfficiency:
         float
              max value in g/cm2
         """
-        if self.config["efficiency_type"].lower() == "muon":
-            return 800.0  # typical Xmax for muons
-
         # typical value for shower X-max around 10 km (not relevant for NSB type)
-        return 300.0
+        x_max = 300.0
+        obs_level = self.site_model.get_parameter_value_with_unit("corsika_observation_level")
+        if self.config["efficiency_type"].lower() == "muon":
+            atmo = AtmosphereProfile(
+                self.site_model.config_file_directory
+                / self.site_model.get_parameter_value("atmospheric_profile")
+            )
+            alt = obs_level.to(u.km) + 0.1 * u.km
+            x_max = atmo.interpolate(altitude=alt, column="thick")
+
+        self._logger.info(
+            f"Using X-max for {self.config['efficiency_type']} efficiency: {x_max:.2f} g/cm2"
+            f" (at observation level: {obs_level:.2f})"
+        )
+
+        return x_max
