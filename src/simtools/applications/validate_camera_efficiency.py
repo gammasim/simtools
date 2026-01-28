@@ -44,9 +44,6 @@ r"""
     The output is saved in simtools-output/validate_camera_efficiency.
 """
 
-from pathlib import Path
-
-import simtools.data_model.model_data_writer as writer
 from simtools.application_control import get_application_label, startup_application
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.configuration import configurator
@@ -106,31 +103,20 @@ def main():
     """Calculate the camera efficiency and NSB pixel rates."""
     app_context = startup_application(_parse)
 
-    ce = CameraEfficiency(
-        label=app_context.args.get("label"),
-        config_data=app_context.args,
-    )
-    ce.simulate()
-    ce.analyze(force=True)
-    ce.plot_efficiency(efficiency_type="Cherenkov", save_fig=True)
-    ce.plot_efficiency(efficiency_type="NSB", save_fig=True)
+    for efficiency_type in ["Shower", "NSB", "Muon"]:
+        ce = CameraEfficiency(
+            label=app_context.args.get("label"),
+            config_data=app_context.args,
+            efficiency_type=efficiency_type,
+        )
+        ce.simulate()
+        ce.analyze(force=True)
+        ce.plot_efficiency(efficiency_type=efficiency_type, save_fig=True)
 
-    writer.ModelDataWriter.dump_model_parameter(
-        parameter_name="nsb_pixel_rate",
-        value=ce.get_nsb_pixel_rate(
-            reference_conditions=app_context.args.get(
-                "write_reference_nsb_rate_as_parameter", False
-            )
-        ),
-        instrument=app_context.args["telescope"],
-        parameter_version=app_context.args.get("parameter_version", "0.0.0"),
-        output_file=Path(
-            f"nsb_pixel_rate-{app_context.args.get('parameter_version', '0.0.0')}.json"
-        ),
-        output_path=app_context.io_handler.get_output_directory()
-        / app_context.args["telescope"]
-        / "nsb_pixel_rate",
-    )
+        if efficiency_type.lower() == "nsb":
+            ce.dump_nsb_pixel_rate()
+        if efficiency_type.lower() == "muon":
+            ce.calc_partial_efficiency(lambda_min=0.0, lambda_max=290.0)
 
 
 if __name__ == "__main__":
