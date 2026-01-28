@@ -87,7 +87,7 @@ def main():
     tel_dist = app_context.args["telescope_distance"] * u.m
     shape = app_context.args["array_shape"]
 
-    array_name = f"{n_tel}_{tel_type}_{shape}"
+    array_name = f"{n_tel}{tel_type}-{shape}"
     app_context.logger.info(f"Processing array {array_name}")
 
     array_table = create_regular_array(

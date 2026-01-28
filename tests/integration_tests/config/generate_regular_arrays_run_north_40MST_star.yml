@@ -11,7 +11,8 @@ applications:
     output_path: simtools-output
     site: North
   integration_tests:
-  - output_file: generate_regular_arrays_North_40MST.ecsv
+  - output_file: generate_regular_arrays_North_40MST-North-40MST-star.ecsv
+  - output_file: generate_regular_arrays_North_40MST-North-40MST-star.info.yml
   test_name: run-north-40MST-star
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
