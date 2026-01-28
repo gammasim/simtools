@@ -50,6 +50,20 @@ r"""
             --file_lablels label1 label2 \\
             --pdf_file_name test.pdf
 
+    Notes
+    -----
+    The typical use case of this application is to generate lateral photon density distribution
+    to compare different CORSIKA simulation settings or different CORSIKA versions. The following
+    steps are recommended:
+
+        - generate a 'star'-like array of telescopes with the 'simtools-generate-regular-arrays'
+          application. There should be a sufficient number of telescopes (e.g. 50 or more) in the
+          layout with non-overlapping telescope definitions
+
+        - run CORSIKA simulations with the desired settings using this telescope layout (use the
+          'overwrite_model_parameters' option to point to the generated layout file)
+
+        - run this application to generate the histograms for the produced CORSIKA IACT output
 """
 
 from astropy import units as u
