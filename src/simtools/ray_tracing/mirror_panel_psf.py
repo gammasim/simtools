@@ -241,7 +241,7 @@ class MirrorPanelPSF:
             pct = abs(pct)
 
             self._logger.info(
-                "Iter %d | rnda %s → %s | pct %.2f → %.2f | lr %.2g",
+                "Iter %d | rnda %.2f -> %.2f | pct %.2f -> %.2f | lr %.2g",
                 iteration + 1,
                 old_rnda,
                 rnda,
