@@ -10,7 +10,8 @@ applications:
     output_path: simtools-output
     site: South
   integration_tests:
-  - output_file: generate_regular_arrays-South-4LST.ecsv
+  - output_file: generate_regular_arrays-South-4LST-square.ecsv
+  - output_file: generate_regular_arrays-South-4LST-square.info.yml
   test_name: run-south-4LST-square
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

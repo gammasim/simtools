@@ -10,7 +10,7 @@ applications:
     output_path: simtools-output
     site: South
   integration_tests:
-  - output_file: generate_regular_arrays-South-1SST.ecsv
+  - output_file: generate_regular_arrays-South-1SST-square.ecsv
   test_name: run-south-1SST
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
