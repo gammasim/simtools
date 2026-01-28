@@ -225,7 +225,9 @@ def test__fill_histograms(monkeypatch, photon_dtype, rotate):
     ch.hist.update(ch._set_1d_distributions(r_max=2 * u.m, bins=2))
 
     photons = [np.array([(10.0, 20.0, 0.1, 0.2, 5.0, 100.0, 1.0, 400.0)], dtype=photon_dtype)]
-    telescope_positions = np.array([(0.0, 0.0)], dtype=[("x", "f8"), ("y", "f8")])
+    telescope_positions = np.array(
+        [(0.0, 0.0, 1000.0)], dtype=[("x", "f8"), ("y", "f8"), ("r", "f8")]
+    )
 
     monkeypatch.setattr("simtools.corsika.corsika_histograms.rotate", lambda x, y, az, ze: (x, y))
 
@@ -310,7 +312,7 @@ def test_fill_runs_and_updates_hist(monkeypatch, tmp_path, photon_dtype):
     event = create_dummy_event(
         1, 10.0, np.deg2rad(30), np.deg2rad(45), photon_bunches={0: dummy_photon}
     )
-    telescope_pos = np.array([(0.0, 0.0)], dtype=[("x", "f8"), ("y", "f8")])
+    telescope_pos = np.array([(0.0, 0.0, 1000.0)], dtype=[("x", "f8"), ("y", "f8"), ("r", "f8")])
     dummy_iact_file = create_dummy_iact_file([event], telescope_pos)
 
     monkeypatch.setattr("simtools.corsika.corsika_histograms.IACTFile", dummy_iact_file)
