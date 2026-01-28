@@ -6,11 +6,11 @@ applications:
     telescope_type: SST
     n_telescopes: 1
     telescope_distance: 50.
-    output_file: generate_regular_arrays_South_1SST.ecsv
+    output_file: generate_regular_arrays.ecsv
     output_path: simtools-output
     site: South
   integration_tests:
-  - output_file: generate_regular_arrays_South_1SST.ecsv
+  - output_file: generate_regular_arrays-South-1SST.ecsv
   test_name: run-south-1SST
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
