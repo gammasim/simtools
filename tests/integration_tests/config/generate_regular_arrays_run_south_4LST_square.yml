@@ -1,0 +1,16 @@
+---
+applications:
+- application: simtools-generate-regular-arrays
+  configuration:
+    model_version: 6.0.2
+    telescope_type: LST
+    n_telescopes: 4
+    telescope_distance: 50.
+    output_file: generate_regular_arrays_South_4LST.ecsv
+    output_path: simtools-output
+    site: South
+  integration_tests:
+  - output_file: generate_regular_arrays_South_4LST.ecsv
+  test_name: run-south-4LST-square
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
