@@ -283,6 +283,7 @@ def test_create_monte_carlo_uncertainty_plot(tmp_path):
 def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
     """Test psf vs off-axis angle plot creation."""
     mock_telescope_model = MagicMock()
+    mock_telescope_model.name = "LSTN-01"
     mock_site_model = MagicMock()
     args_dict = {
         "fraction": 0.8,
@@ -293,13 +294,11 @@ def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
     # Mock RayTracing and its methods
     with (
         patch("simtools.visualization.plot_psf.RayTracing") as mock_ray_class,
-        patch("matplotlib.pyplot.savefig") as mock_save,
-        patch("numpy.linspace") as mock_linspace,
+        patch("simtools.visualization.plot_psf.visualize.save_figure") as mock_save_figure,
+        patch("simtools.visualization.plot_psf.np.linspace") as mock_linspace,
     ):
         mock_ray = MagicMock()
         mock_ray_class.return_value = mock_ray
-        mock_ray.images.return_value = [MagicMock()]
-        mock_ray.images.return_value[0].get_psf.return_value = 3.5
         mock_linspace.return_value = np.array([0, 1, 2])
 
         plot_psf.create_psf_vs_offaxis_plot(
@@ -309,7 +308,51 @@ def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
 
         # Verify telescope parameters were applied and simulation was run
         mock_telescope_model.overwrite_parameters.assert_called_once_with(sample_parameters)
-        assert mock_save.call_count >= 1  # At least one save call
+        assert mock_ray.simulate.call_count == 1
+        assert mock_ray.analyze.call_count == 1
+        assert mock_ray.plot.call_count == 2
+        assert mock_save_figure.call_count == 2
+
+
+def test_plot_d80_histogram_returns_none_when_not_configured(tmp_path):
+    args_dict = {"output_path": str(tmp_path)}
+    assert plot_psf.plot_d80_histogram([10.0], [11.0], args_dict) is None
+
+
+def test_plot_d80_histogram_returns_none_when_empty_after_filtering(tmp_path):
+    args_dict = {"output_path": str(tmp_path), "d80_hist": "hist.png"}
+    assert plot_psf.plot_d80_histogram([np.nan], [11.0], args_dict) is None
+    assert plot_psf.plot_d80_histogram([10.0], [np.nan], args_dict) is None
+
+
+def test_plot_d80_histogram_returns_none_when_range_invalid(tmp_path):
+    args_dict = {"output_path": str(tmp_path), "d80_hist": "hist.png"}
+    # with invalid range of x_max <= x_min
+    assert plot_psf.plot_d80_histogram([1.0, 1.0], [1.0, 1.0], args_dict) is None
+
+
+def test_plot_d80_histogram_saves_to_output_path_when_relative(tmp_path):
+    args_dict = {
+        "output_path": str(tmp_path),
+        "d80_hist": "hist.png",
+        "telescope": "LSTN-01",
+        "model_version": "6.0.0",
+    }
+
+    with (
+        patch("matplotlib.pyplot.subplots") as mock_subplots,
+        patch("matplotlib.pyplot.close"),
+    ):
+        mock_fig = MagicMock()
+        mock_ax = MagicMock()
+        mock_subplots.return_value = (mock_fig, mock_ax)
+
+        out = plot_psf.plot_d80_histogram([10.0, 11.0], [12.0, 13.0], args_dict)
+        expected = str(tmp_path / "hist.png")
+        assert out == expected
+        mock_fig.savefig.assert_called_once()
+        saved_path = str(mock_fig.savefig.call_args.args[0])
+        assert saved_path == expected
 
 
 @pytest.mark.parametrize(
