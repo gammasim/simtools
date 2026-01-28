@@ -1364,13 +1364,15 @@ def test_get_array_elements_from_db_for_layouts_all_layouts(mocker):
     mock_site_model = mocker.patch(PATCH_SITEMODEL)
     instance = mock_site_model.return_value
     instance.get_list_of_array_layouts.return_value = ["LST", "MST", "SST"]
-    instance.get_array_elements_for_layout.side_effect = lambda name: (
-        ["tel1", "tel2"]
-        if name == "LST"
-        else ["tel3", "tel4"]
-        if name == "MST"
-        else ["tel5", "tel6"]
-    )
+
+    def mock_side_effect(name):
+        if name == "LST":
+            return ["tel1", "tel2"]
+        if name == "MST":
+            return ["tel3", "tel4"]
+        return ["tel5", "tel6"]
+
+    instance.get_array_elements_for_layout.side_effect = mock_side_effect
 
     layouts = ["all"]
     site = "South"
