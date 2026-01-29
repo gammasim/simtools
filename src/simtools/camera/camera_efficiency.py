@@ -559,7 +559,7 @@ class CameraEfficiency:
 
     def _get_x_max_for_efficiency_type(self):
         """
-        Get X max value in g/cm2 for the efficiency type.
+        Get X max value in g/cm2 depending on the efficiency type.
 
         Returns
         -------
