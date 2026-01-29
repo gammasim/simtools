@@ -10,6 +10,7 @@ applications:
     site: North
     telescope: LSTN-01
     n_workers: 1
+    number_of_mirrors_to_test: 1
     test: true
   integration_tests:
   - test_output_files:
