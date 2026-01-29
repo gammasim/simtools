@@ -546,7 +546,9 @@ class CameraEfficiency:
         writer.ModelDataWriter.dump_model_parameter(
             parameter_name="nsb_pixel_rate",
             value=self.get_nsb_pixel_rate(
-                reference_conditions=self.config.get("write_reference_nsb_rate_as_parameter", False)
+                reference_conditions=settings.config.args.get(
+                    "write_reference_nsb_rate_as_parameter", False
+                )
             ),
             instrument=cfg.get("telescope"),
             parameter_version=cfg.get("parameter_version", "0.0.0"),
