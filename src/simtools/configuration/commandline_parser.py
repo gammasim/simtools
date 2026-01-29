@@ -290,6 +290,13 @@ class CommandLineParser(argparse.ArgumentParser):
                 required="--list_available_layouts" not in self._option_string_actions,
             )
 
+        _job_group.add_argument(
+            "--ignore_missing_design_model",
+            help="Ignore missing design model definition of DB",
+            action="store_true",
+            required=False,
+        )
+
     def initialize_simulation_configuration_arguments(self, simulation_configuration):
         """
         Initialize default arguments for simulation configuration and simulation software.

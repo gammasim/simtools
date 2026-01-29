@@ -30,8 +30,8 @@ class SiteModel(ModelParameter):
         Model version or list of model versions (in which case only the first one is used).
     label: str, optional
         Instance label.
-    overwrite_model_parameters: str, optional
-        File name to overwrite model parameters from DB with provided values.
+    overwrite_model_parameter_dict: dict, optional
+        Dictionary to overwrite model parameters from DB with provided values.
     ignore_software_version: bool, optional
         If True, ignore software version checks for deprecated parameters.
     """
@@ -41,7 +41,7 @@ class SiteModel(ModelParameter):
         site,
         model_version,
         label=None,
-        overwrite_model_parameters=None,
+        overwrite_model_parameter_dict=None,
         ignore_software_version=False,
     ):
         """Initialize SiteModel."""
@@ -52,7 +52,7 @@ class SiteModel(ModelParameter):
             model_version=model_version,
             label=label,
             collection="sites",
-            overwrite_model_parameters=overwrite_model_parameters,
+            overwrite_model_parameter_dict=overwrite_model_parameter_dict,
             ignore_software_version=ignore_software_version,
         )
 
