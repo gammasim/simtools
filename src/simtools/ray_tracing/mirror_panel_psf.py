@@ -117,33 +117,15 @@ class MirrorPanelPSF:
 
         mirror_number = mirror_idx + 1
         rt_label = f"{self.label}_m{mirror_number}"
-        old_label = getattr(self.telescope_model, "label", None)
-        # Store cached config path/name (if present) and restore after simulation.
-        model_dict = getattr(self.telescope_model, "__dict__", None)
-        old_path = model_dict.get("_config_file_path") if model_dict is not None else None
-        old_dir = model_dict.get("_config_file_directory") if model_dict is not None else None
-
-        # Force regeneration of config file path/name based on the new label.
-        # These attributes are cached inside ModelParameter.
-        try:
-            self.telescope_model.label = rt_label
-            if model_dict is not None:
-                model_dict["_config_file_path"] = None
-                model_dict["_config_file_directory"] = None
-
-            ray = RayTracing(
-                telescope_model=self.telescope_model,
-                site_model=self.site_model,
-                single_mirror_mode=True,
-                mirror_numbers=[mirror_idx],
-            )
-            ray.simulate(test=self.args_dict.get("test", False), force=True)
-            ray.analyze(force=True)
-        finally:
-            self.telescope_model.label = old_label
-            if model_dict is not None:
-                model_dict["_config_file_path"] = old_path
-                model_dict["_config_file_directory"] = old_dir
+        ray = RayTracing(
+            telescope_model=self.telescope_model,
+            site_model=self.site_model,
+            label=rt_label,
+            single_mirror_mode=True,
+            mirror_numbers=[mirror_idx],
+        )
+        ray.simulate(test=self.args_dict.get("test", False), force=True)
+        ray.analyze(force=True)
 
         return float(ray.get_d80_mm())
 
