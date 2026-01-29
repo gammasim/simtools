@@ -3,8 +3,9 @@
 """
 Make a regular array of telescopes and save it to file.
 
-Arrays can consist of single (central) telescopes, square grids or star-like patterns.
-All telescopes in the array are of the same type and are placed at regular distances.
+Arrays can consist of single (central) telescopes, square grids or star-like (with
+telescopes arranged on main axes) patterns.  All telescopes in the array are of
+the same type and are placed at regular distances.
 
 Output files are saved as astropy tables in ASCII ECSV format and in the simtools format
 required to be used for the overwrite model parameter configuration.
