@@ -209,6 +209,7 @@ class RayTracing:
                 simtel = SimulatorRayTracing(
                     telescope_model=self.telescope_model,
                     site_model=self.site_model,
+                    label=self.label,
                     test=test,
                     config_data={
                         "zenith_angle": self.zenith_angle,

@@ -179,10 +179,8 @@ def test_simulate_single_mirror_d80_success_and_restores_label(mocker, tmp_path)
 
     class OkRay:
         def __init__(self, **kwargs):
-            assert kwargs["telescope_model"].label == "base_m1"
-            # Ensure MirrorPanelPSF resets cached config path/directory when relabeling.
-            assert kwargs["telescope_model"]._config_file_path is None
-            assert kwargs["telescope_model"]._config_file_directory is None
+            assert kwargs["label"] == "base_m1"
+            assert kwargs["telescope_model"].label == "orig"
             self._d80_mm = 15.0
 
         def simulate(self, **kwargs):
