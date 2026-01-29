@@ -274,7 +274,11 @@ def test_dump_nsb_pixel_rate_reference_conditions(camera_efficiency_lst, mocker)
         "simtools.data_model.model_data_writer.ModelDataWriter.dump_model_parameter"
     )
     mock_config = mocker.MagicMock()
-    mock_config.args = {"telescope": "LSTN-01", "parameter_version": "2.0.0"}
+    mock_config.args = {
+        "telescope": "LSTN-01",
+        "parameter_version": "2.0.0",
+        "write_reference_nsb_rate_as_parameter": True,
+    }
     mocker.patch("simtools.settings.config", mock_config)
     camera_efficiency_lst.dump_nsb_pixel_rate()
     mock_dump.assert_called_once()
