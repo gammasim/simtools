@@ -45,7 +45,7 @@ class ModelDataWriter:
             )
         except TypeError:
             self.output_file = None
-        self.output_file_format = self._astropy_data_format(output_file_format)
+        self.output_file_format = self._astropy_data_format(output_file_format, self.output_file)
 
     @staticmethod
     def dump(
@@ -502,9 +502,12 @@ class ModelDataWriter:
         return data_dict
 
     @staticmethod
-    def _astropy_data_format(product_data_format):
+    def _astropy_data_format(product_data_format, output_file=None):
         """
         Ensure conformance with astropy data format naming.
+
+        If product_data_format is None and output_file is given, derive format
+        from output_file suffix.
 
         Parameters
         ----------
@@ -512,6 +515,6 @@ class ModelDataWriter:
             format identifier
 
         """
-        if product_data_format == "ecsv":
-            product_data_format = "ascii.ecsv"
-        return product_data_format
+        if product_data_format is None and output_file is not None:
+            product_data_format = Path(output_file).suffix.lstrip(".")
+        return "ascii.ecsv" if product_data_format == "ecsv" else product_data_format
