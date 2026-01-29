@@ -31,10 +31,10 @@ class CameraEfficiency:
     config_data: dict.
         Dict containing the configurable parameters.
     efficiency_type: str
-        The type of efficiency to simulate (e.g., 'Cherenkov' or 'NSB').
+        The type of efficiency to simulate (e.g., 'Shower', 'Muon', or 'NSB').
     """
 
-    def __init__(self, config_data, label, efficiency_type):
+    def __init__(self, label, config_data, efficiency_type):
         """Initialize the CameraEfficiency class."""
         self._logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ class CameraEfficiency:
                 telescope_model_name=self.telescope_model.name,
                 zenith_angle=self.config["zenith_angle"],
                 azimuth_angle=self.config["azimuth_angle"],
-                label=self.config["efficiency_type"],
+                label=self.config["efficiency_type"].lower(),
             )
 
             _file[label] = self.io_handler.get_output_directory().joinpath(file_name)
@@ -389,21 +389,21 @@ class CameraEfficiency:
             Fraction of light in the given wavelength range compared to total efficiency.
 
         """
-        # Sum(N1) from lamba_min to lambda_maxnm:
-        n1_reduced_wl = self._results["C4"][
+        # Sum(C4) from lamba_min to lambda_max nm:
+        c4_reduced_wl = self._results["C4"][
             [lambda_min < wl_now < lambda_max for wl_now in self._results["wl"]]
         ]
-        n1_sum = np.sum(n1_reduced_wl)
+        c4_sum = np.sum(c4_reduced_wl)
         # Sum(C4) from 200 - 999 nm:
-        n4_sum = np.sum(self._results["C4"])
+        c4_sum_total = np.sum(self._results["C4"])
         # (no need to apply masts or fill factors as in calc_tel_efficiency, they cancel out)
 
         self._logger.info(
             f"Fraction of light in the wavelength range {lambda_min}-{lambda_max} nm: "
-            f"{n1_sum / n4_sum:.4f}"
+            f"{c4_sum / c4_sum_total:.4f}"
         )
 
-        return n1_sum / n4_sum
+        return c4_sum / c4_sum_total
 
     def calc_reflectivity(self):
         """

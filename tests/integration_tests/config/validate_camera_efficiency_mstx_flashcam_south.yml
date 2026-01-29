@@ -16,8 +16,8 @@ applications:
   - output_file: validate_camera_efficiency_MSTx-FlashCam_nsb.png
   - output_file: validate_camera_efficiency_MSTx-FlashCam_shower.png
   - output_file: validate_camera_efficiency_MSTx-FlashCam_shower.pdf
-  - output_file: camera_efficiency_South_MSTx-FlashCam_za0.0deg_azm000deg_Shower.txt
-  - output_file: camera_efficiency_South_MSTx-FlashCam_za0.0deg_azm000deg_Shower.ecsv
+  - output_file: camera_efficiency_South_MSTx-FlashCam_za0.0deg_azm000deg_shower.txt
+  - output_file: camera_efficiency_South_MSTx-FlashCam_za0.0deg_azm000deg_shower.ecsv
   - model_parameter_validation:
       parameter_file: nsb_pixel_rate/nsb_pixel_rate-0.0.99.json
       reference_parameter_name: nsb_pixel_rate

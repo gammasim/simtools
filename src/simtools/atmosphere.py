@@ -1,6 +1,7 @@
 """Profiles of atmospheric parameters as a function of altitude."""
 
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -12,7 +13,7 @@ class AtmosphereProfile:
 
     Parameters
     ----------
-    filename: str
+    filename: str or Path
         Path to the atmosphere profile file (CORSIKA table format)
     """
 
@@ -28,13 +29,14 @@ class AtmosphereProfile:
 
         Parameters
         ----------
-        filename: str
+        filename: str or Path
             Path to the atmosphere profile file (CORSIKA table format)
 
         """
+        filename = Path(filename)
         data = []
         self._logger.debug(f"Reading atmosphere profile from {filename}")
-        with open(filename, encoding="utf-8") as f:
+        with filename.open(encoding="utf-8") as f:
             for line in f:
                 if not line.strip() or line.lstrip().startswith("#"):
                     continue
@@ -53,7 +55,7 @@ class AtmosphereProfile:
 
     def interpolate(self, altitude, column="thick"):
         """
-        Interplate the atmosphere profile at a given altitude.
+        Interpolate the atmosphere profile at a given altitude.
 
         Parameters
         ----------
