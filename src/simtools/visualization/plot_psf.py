@@ -909,5 +909,5 @@ def plot_d80_histogram(measured, simulated, args_dict):
     ax.legend(loc="best", fontsize=9, frameon=True)
     fig.savefig(out_path)
     plt.close(fig)
-    logging.getLogger(__name__).info("d80 histogram written to %s", str(out_path))
+    logger.info("d80 histogram written to %s", str(out_path))
     return str(out_path)

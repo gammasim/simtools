@@ -99,6 +99,13 @@ def _parse():
         default=0,
     )
     config.parser.add_argument(
+        "--number_of_mirrors_to_test",
+        help="Number of mirrors to optimize when --test is used.",
+        type=int,
+        required=False,
+        default=10,
+    )
+    config.parser.add_argument(
         "--d80_hist",
         nargs="?",
         const="d80_distributions.png",
@@ -130,9 +137,7 @@ def main():
     panel_psf.optimize_with_gradient_descent()
     panel_psf.write_optimization_data()
     if app_context.args.get("d80_hist"):
-        hist_path = panel_psf.write_d80_histogram()
-        if hist_path:
-            print(f"d80 histogram written to: {hist_path}")
+        panel_psf.write_d80_histogram()
 
     if app_context.args.get("cleanup"):
         output_dir = Path(app_context.args.get("output_path", "."))
