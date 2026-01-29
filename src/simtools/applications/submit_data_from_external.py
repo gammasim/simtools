@@ -95,7 +95,8 @@ def main():
     )
 
     writer.ModelDataWriter.dump(
-        args_dict=app_context.args,
+        output_file=app_context.args["output_file"],
+        output_file_format=app_context.args.get("output_file_format"),
         metadata=_metadata,
         product_data=data_validator.validate_and_transform(),
     )

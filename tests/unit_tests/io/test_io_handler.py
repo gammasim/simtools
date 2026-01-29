@@ -24,7 +24,7 @@ def test_get_output_directory(args_dict, io_handler):
 
     # path ends with '-output' - no additional 'output' is added
     io_handler_copy = copy.deepcopy(io_handler)
-    io_handler_copy.output_path = Path(f"{args_dict['output_path']}/unittest-output")
+    io_handler_copy.output_path["default"] = Path(f"{args_dict['output_path']}/unittest-output")
     assert io_handler_copy.get_output_directory(sub_dir="model") == Path(
         f"{args_dict['output_path']}/unittest-output/model"
     )
