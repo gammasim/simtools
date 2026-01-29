@@ -24,10 +24,10 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self.logger = logging.getLogger(__name__)
         self.logger.debug("Init IOHandler")
 
-        self.output_path = None
+        self.output_path = {}
         self.model_path = None
 
-    def set_paths(self, output_path=None, model_path=None):
+    def set_paths(self, output_path=None, model_path=None, output_path_label="default"):
         """
         Set paths for input and output.
 
@@ -38,10 +38,10 @@ class IOHandler(metaclass=IOHandlerSingleton):
         model_path: str or Path
             Path pointing to the model file directory.
         """
-        self.output_path = output_path
+        self.output_path[output_path_label] = output_path
         self.model_path = model_path
 
-    def get_output_directory(self, sub_dir=None):
+    def get_output_directory(self, sub_dir=None, output_path_label="default"):
         """
         Create and get path of an output directory.
 
@@ -65,7 +65,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
             parts = sub_dir
         else:
             parts = [sub_dir]
-        path = Path(self.output_path, *parts)
+        path = Path(self.output_path[output_path_label], *parts)
 
         try:
             path.mkdir(parents=True, exist_ok=True)
@@ -74,7 +74,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
 
         return path.resolve()
 
-    def get_output_file(self, file_name, sub_dir=None):
+    def get_output_file(self, file_name, sub_dir=None, output_path_label="default"):
         """
         Get path of an output file.
 
@@ -89,7 +89,11 @@ class IOHandler(metaclass=IOHandlerSingleton):
         -------
         Path
         """
-        return self.get_output_directory(sub_dir).joinpath(file_name).absolute()
+        return (
+            self.get_output_directory(sub_dir, output_path_label=output_path_label)
+            .joinpath(file_name)
+            .absolute()
+        )
 
     def get_test_data_file(self, file_name=None):
         """
