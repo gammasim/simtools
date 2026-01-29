@@ -237,7 +237,7 @@ class MirrorPanelPSF:
                 rnda = list(old_rnda)
                 learning_rate *= 0.5
 
-            if pct <= threshold_pct or learning_rate < 1e-12:
+            if best["pct"] <= threshold_pct or learning_rate < 1e-12:
                 break
 
         return MirrorOptimizationResult(
@@ -278,7 +278,7 @@ class MirrorPanelPSF:
         """
         param_min, param_max = param_bounds
         is_log_param = param_idx != 1
-        epsilon = max(1e-6, 0.05 * param_value) if is_log_param else 0.02
+        epsilon = max(1e-6, 0.05 * param_value) if is_log_param else 0.05
 
         rnda[param_idx] = min(param_max, param_value + epsilon)
         _, _, f_plus = self._evaluate(mirror_idx, measured_d80, rnda)
@@ -312,10 +312,10 @@ class MirrorPanelPSF:
         """
         n_mirrors = len(self.measured_data)
         if self.args_dict.get("test"):
-            n_mirrors = min(n_mirrors, self.args_dict.get("number_of_mirrors_to_test", 1))
+            n_mirrors = min(n_mirrors, self.args_dict.get("number_of_mirrors_to_test"))
 
         n_workers = int(self.args_dict.get("n_workers") or os.cpu_count())
-        parent = MirrorPanelPSF(self.label, dict(self.args_dict, parallel=False))
+        parent = MirrorPanelPSF(self.label, dict(self.args_dict))
         worker_args = [(parent, i, parent.measured_data[i]) for i in range(n_mirrors)]
 
         self.per_mirror_results = process_pool_map_ordered(
