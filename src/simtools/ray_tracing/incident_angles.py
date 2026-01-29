@@ -744,11 +744,7 @@ class IncidentAnglesCalculator:
             table["Incidence angle"] = bin_centers * u.deg
             table["Fraction"] = hist
 
-            writer = ModelDataWriter(
-                product_data_file=self.output_dir / f"{param_name}.ecsv",
-                product_data_format="ecsv",
-                args_dict=self.config_data,
-            )
+            writer = ModelDataWriter(output_file=self.output_dir / f"{param_name}.ecsv")
             writer.write(
                 product_data=table,
                 metadata=MetadataCollector(args_dict=self.config_data),
