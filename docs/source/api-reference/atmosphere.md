@@ -8,7 +8,7 @@ Tools to handle atmospheric models and related calculations.
 
 
 ```{eval-rst}
-.. automodule:: atmosphere
+.. automodule:: simtools.atmosphere
    :members:
 
 ```
