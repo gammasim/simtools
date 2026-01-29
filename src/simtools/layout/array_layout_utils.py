@@ -483,7 +483,56 @@ def _get_array_name(array_name):
     return array_name[1:], int(array_name[0])
 
 
-def create_regular_array(array_name, site, telescope_distance):
+def _create_star_array(tel_name, pos_x, pos_y, pos_z, n_telescopes, tel_type, site, distance):
+    """Create star-shaped array positions along x and y axes."""
+    axis_sequence = ["x", "y", "-x", "-y"]
+    step = 1
+    for i in range(n_telescopes):
+        tel_name.append(
+            names.generate_array_element_name_from_type_site_id(tel_type, site, f"{i + 1:02d}")
+        )
+        axis = axis_sequence[i % 4]
+        dist = distance * step
+        if axis == "x":
+            pos_x.append(dist)
+            pos_y.append(0 * u.m)
+        elif axis == "-x":
+            pos_x.append(-dist)
+            pos_y.append(0 * u.m)
+        elif axis == "y":
+            pos_x.append(0 * u.m)
+            pos_y.append(dist)
+        elif axis == "-y":
+            pos_x.append(0 * u.m)
+            pos_y.append(-dist)
+        pos_z.append(0 * u.m)
+
+        if (i + 1) % 4 == 0:
+            step += 1
+
+
+def _create_square_array(tel_name, pos_x, pos_y, pos_z, n_tel, tel_type, site, distance):
+    """Create square array positions."""
+    if n_tel == 1:
+        tel_name.append(names.generate_array_element_name_from_type_site_id(tel_type, site, "01"))
+        pos_x.append(0 * u.m)
+        pos_y.append(0 * u.m)
+        pos_z.append(0 * u.m)
+    elif n_tel == 4:
+        for i in range(1, 5):
+            tel_name.append(
+                names.generate_array_element_name_from_type_site_id(tel_type, site, f"0{i}")
+            )
+            pos_x.append(distance * (-1) ** (i // 2))
+            pos_y.append(distance * (-1) ** (i % 2))
+            pos_z.append(0 * u.m)
+    else:
+        raise ValueError(f"Unsupported number of telescopes for square array: {n_tel}.")
+
+
+def create_regular_array(
+    array_name, site, n_telescopes, telescope_type, telescope_distance, shape="square"
+):
     """
     Create a regular array layout table.
 
@@ -493,8 +542,14 @@ def create_regular_array(array_name, site, telescope_distance):
         Name of the regular array (e.g. "4MST").
     site : str
         Site identifier.
-    telescope_distance : dict
-        Dictionary with telescope distances per telescope type.
+    n_telescopes : int
+        Number of telescopes in the array.
+    telescope_type : str
+        Type of telescope (e.g. "MST").
+    telescope_distance : Quantity
+        Distance between telescopes in the array.
+    shape : str
+        Shape of the array: "square" or "star" (default: "square").
 
     Returns
     -------
@@ -502,26 +557,31 @@ def create_regular_array(array_name, site, telescope_distance):
         Table with the regular array layout.
     """
     tel_name, pos_x, pos_y, pos_z = [], [], [], []
-    tel_size, n_tel = _get_array_name(array_name)
-    tel_size = array_name[1:4]
 
-    # Single telescope at the center
-    if n_tel == 1:
-        tel_name.append(names.generate_array_element_name_from_type_site_id(tel_size, site, "01"))
-        pos_x.append(0 * u.m)
-        pos_y.append(0 * u.m)
-        pos_z.append(0 * u.m)
-    # 4 telescopes in a regular square grid
-    elif n_tel == 4:
-        for i in range(1, 5):
-            tel_name.append(
-                names.generate_array_element_name_from_type_site_id(tel_size, site, f"0{i}")
-            )
-            pos_x.append(telescope_distance[tel_size] * (-1) ** (i // 2))
-            pos_y.append(telescope_distance[tel_size] * (-1) ** (i % 2))
-            pos_z.append(0 * u.m)
+    if shape == "square":
+        _create_square_array(
+            tel_name,
+            pos_x,
+            pos_y,
+            pos_z,
+            n_telescopes,
+            telescope_type,
+            site,
+            telescope_distance,
+        )
+    elif shape == "star":
+        _create_star_array(
+            tel_name,
+            pos_x,
+            pos_y,
+            pos_z,
+            n_telescopes,
+            telescope_type,
+            site,
+            telescope_distance,
+        )
     else:
-        raise ValueError(f"Unsupported number of telescopes: {n_tel}.")
+        raise ValueError(f"Unsupported array shape: {shape}. Allowed: 'square' or 'star'.")
 
     table = QTable(meta={"array_name": array_name, "site": site})
     table["telescope_name"] = tel_name
@@ -591,3 +651,65 @@ def write_array_elements_from_file_to_repository(
             output_path=repository_path / instrument,
             output_file=f"{parameter_name}.json",
         )
+
+
+def write_array_elements_info_yaml(
+    array_table, site, model_version, output_file, parameter_version="2.0.0"
+):
+    """
+    Write YAML file for array layout in a format compatible with overwrite.
+
+    Parameters
+    ----------
+    array_table : astropy.table.Table
+        Table with telescope positions.
+    site : str
+        Site identifier (e.g., 'North' or 'South').
+    model_version : str
+        Model version.
+    output_file : Path
+        Path to the output YAML file.
+    parameter_version : str
+        Parameter version to use in the YAML file.
+    """
+    telescope_names = [str(name) for name in array_table["telescope_name"]]
+
+    data = {
+        "model_version": model_version,
+        "model_update": "patch_update",
+        "model_version_history": [model_version],
+        "description": f"Regular array layout: {array_table.meta['array_name']}",
+        "changes": {
+            f"OBS-{site}": {
+                "array_layouts": {
+                    "version": parameter_version,
+                    "value": [],
+                    "unit": None,
+                }
+            }
+        },
+    }
+
+    data["changes"][f"OBS-{site}"]["array_layouts"]["value"].append(
+        {"name": array_table.meta["array_name"], "elements": telescope_names}
+    )
+
+    for tel_name, pos_x, pos_y, pos_z in zip(
+        telescope_names,
+        array_table["position_x"],
+        array_table["position_y"],
+        array_table["position_z"],
+    ):
+        data["changes"][tel_name] = {
+            "array_element_position_ground": {
+                "version": parameter_version,
+                "value": [
+                    float(pos_x.to(u.m).value),
+                    float(pos_y.to(u.m).value),
+                    float(pos_z.to(u.m).value),
+                ],
+                "unit": "m",
+            }
+        }
+
+    ascii_handler.write_data_to_file(data, output_file)

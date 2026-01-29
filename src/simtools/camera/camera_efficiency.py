@@ -40,7 +40,6 @@ class CameraEfficiency:
             model_version=config_data["model_version"],
             site=config_data["site"],
             telescope_name=config_data["telescope"],
-            overwrite_model_parameters=config_data.get("overwrite_model_parameters"),
         )
         self.output_dir = self.io_handler.get_output_directory()
 

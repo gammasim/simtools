@@ -48,7 +48,6 @@ class SimulatorLightEmission(SimtelRunner):
                 telescope_name=light_emission_config.get("telescope"),
                 calibration_device_name=light_emission_config.get("light_source"),
                 model_version=light_emission_config.get("model_version"),
-                overwrite_model_parameters=light_emission_config.get("overwrite_model_parameters"),
             )
         )
         self.telescope_model.write_sim_telarray_config_file(additional_models=self.site_model)
