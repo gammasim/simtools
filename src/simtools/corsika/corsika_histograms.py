@@ -46,18 +46,7 @@ class CorsikaHistograms:
         self.normalization_method = normalization_method
 
     def fill(self):
-        """
-        Fill Cherenkov photons histograms.
-
-        Returns
-        -------
-        list: list of boost_histogram.Histogram instances.
-
-        Raises
-        ------
-        AttributeError:
-            if event has not photon saved.
-        """
+        """Fill Cherenkov photons histograms."""
         self._read_event_headers()
 
         with IACTFile(self.input_file) as f:

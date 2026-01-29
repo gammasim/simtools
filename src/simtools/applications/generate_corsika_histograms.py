@@ -61,7 +61,8 @@ r"""
           layout with non-overlapping telescope definitions
 
         - run CORSIKA simulations with the desired settings using this telescope layout (use the
-          'overwrite_model_parameters' option to point to the generated layout info.yml file)
+          'overwrite_model_parameters' option to point to the generated layout simulation model
+          change file (in the format given by 'simulation_models_info.schema.yml').
 
         - run this application to generate the histograms for the produced CORSIKA IACT output
 """
