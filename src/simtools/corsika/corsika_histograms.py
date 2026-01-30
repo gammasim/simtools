@@ -31,7 +31,6 @@ class CorsikaHistograms:
 
     def __init__(self, input_file, normalization_method="per-telescope", axis_distance=1000 * u.m):
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init CorsikaHistograms")
         self.input_file = Path(input_file)
         if not self.input_file.exists():
             raise FileNotFoundError(f"File {self.input_file} does not exist.")
