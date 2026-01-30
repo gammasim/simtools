@@ -331,7 +331,6 @@ class ArrayLayout:
         astropy.table.QTable
             Table with the telescope layout information.
         """
-        self._logger.debug("Initializing array (site and telescope parameters)")
         self._initialize_site_parameters_from_db()
         self._initialize_coordinate_systems()
 

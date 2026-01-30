@@ -443,6 +443,7 @@ def camera_efficiency_sst(io_handler, model_version):
             "azimuth_angle": 0 * u.deg,
         },
         label="validate_camera_efficiency",
+        efficiency_type="shower",
     )
 
 

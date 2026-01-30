@@ -260,9 +260,7 @@ class DatabaseHandler:
             collection,
         )
         if cache_dict:
-            self._logger.debug(f"Found {array_element} in cache (key: {cache_key})")
             return cache_dict
-        self._logger.debug(f"Did not find {array_element} in cache (key: {cache_key})")
 
         try:
             parameter_version_table = production_table["parameters"][array_element]
