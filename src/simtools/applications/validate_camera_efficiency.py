@@ -116,7 +116,7 @@ def main():
         if efficiency_type.lower() == "nsb":
             ce.dump_nsb_pixel_rate()
         if efficiency_type.lower() == "muon":
-            ce.calc_partial_efficiency(lambda_min=0.0, lambda_max=290.0)
+            ce.calc_partial_efficiency()
 
 
 if __name__ == "__main__":
