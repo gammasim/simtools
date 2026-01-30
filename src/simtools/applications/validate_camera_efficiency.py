@@ -47,6 +47,8 @@ r"""
 from simtools.application_control import get_application_label, startup_application
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.configuration import configurator
+from simtools.io.ascii_handler import write_data_to_file
+from simtools.utils import names
 
 
 def _parse():
@@ -103,6 +105,7 @@ def main():
     """Calculate the camera efficiency and NSB pixel rates."""
     app_context = startup_application(_parse)
 
+    results = []
     for efficiency_type in ["Shower", "NSB", "Muon"]:
         ce = CameraEfficiency(
             label=app_context.args.get("label"),
@@ -111,12 +114,24 @@ def main():
         )
         ce.simulate()
         ce.analyze(force=True)
-        ce.plot_efficiency(efficiency_type=efficiency_type, save_fig=True)
+        results.append(ce.results_summary())
+        ce.plot_efficiency(save_fig=True)
 
-        if efficiency_type.lower() == "nsb":
+        if ce.efficiency_type == "nsb":
             ce.dump_nsb_pixel_rate()
-        if efficiency_type.lower() == "muon":
+        if ce.efficiency_type == "muon":
             ce.calc_partial_efficiency()
+
+    results_file = app_context.io_handler.get_output_directory() / names.generate_file_name(
+        file_type="camera_efficiency_summary",
+        suffix=".txt",
+        site=app_context.args["site"],
+        telescope_model_name=app_context.args["telescope"],
+        zenith_angle=app_context.args["zenith_angle"].value,
+        azimuth_angle=app_context.args["azimuth_angle"].value,
+    )
+    app_context.logger.info(f"Writing results summary to {results_file}")
+    write_data_to_file(results, results_file, unique_lines=True)
 
 
 if __name__ == "__main__":
