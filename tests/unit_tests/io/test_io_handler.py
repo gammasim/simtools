@@ -34,6 +34,10 @@ def test_get_output_directory(args_dict, io_handler):
         with pytest.raises(FileNotFoundError, match=r"^Error creating directory"):
             io_handler.get_output_directory(sub_dir="model")
 
+    # non existing path
+    with pytest.raises(KeyError, match=r"Output path label 'nonexistent' not found"):
+        io_handler.get_output_directory(output_path_label="nonexistent")
+
 
 def test_get_output_file(args_dict, io_handler):
     assert io_handler.get_output_file(file_name=test_file) == Path(

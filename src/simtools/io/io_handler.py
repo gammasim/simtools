@@ -37,6 +37,8 @@ class IOHandler(metaclass=IOHandlerSingleton):
             Path pointing to the output directory.
         model_path: str or Path
             Path pointing to the model file directory.
+        output_path_label: str
+            Label for the output path.
         """
         self.output_path[output_path_label] = output_path
         self.model_path = model_path
@@ -49,6 +51,8 @@ class IOHandler(metaclass=IOHandlerSingleton):
         ----------
         sub_dir: str or list of str, optional
             Name of the subdirectory (ray_tracing, model etc)
+        output_path_label: str
+            Label for the output path.
 
         Returns
         -------
@@ -65,14 +69,17 @@ class IOHandler(metaclass=IOHandlerSingleton):
             parts = sub_dir
         else:
             parts = [sub_dir]
-        path = Path(self.output_path[output_path_label], *parts)
+        try:
+            output_path = Path(self.output_path[output_path_label], *parts)
+        except KeyError as exc:
+            raise KeyError(f"Output path label '{output_path_label}' not found") from exc
 
         try:
-            path.mkdir(parents=True, exist_ok=True)
+            output_path.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError as exc:
-            raise FileNotFoundError(f"Error creating directory {path!s}") from exc
+            raise FileNotFoundError(f"Error creating directory {output_path!s}") from exc
 
-        return path.resolve()
+        return output_path.resolve()
 
     def get_output_file(self, file_name, sub_dir=None, output_path_label="default"):
         """
@@ -84,6 +91,8 @@ class IOHandler(metaclass=IOHandlerSingleton):
             File name.
         sub_dir: sub_dir: str or list of str, optional
             Name of the subdirectory (ray_tracing, model etc)
+        output_path_label: str
+            Label for the output path.
 
         Returns
         -------

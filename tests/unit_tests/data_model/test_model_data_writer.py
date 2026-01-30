@@ -153,15 +153,13 @@ def test_validate_and_transform(num_gains_schema_file):
         )
 
 
-def test_astropy_data_format():
-    assert writer.ModelDataWriter._astropy_data_format("hdf5") == "hdf5"
-    assert writer.ModelDataWriter._astropy_data_format("ecsv") == ascii_format
-    assert writer.ModelDataWriter._astropy_data_format(ascii_format) == ascii_format
-    assert writer.ModelDataWriter._astropy_data_format(None) is None
-    assert (
-        writer.ModelDataWriter._astropy_data_format(None, output_file="file.ecsv") == ascii_format
-    )
-    assert writer.ModelDataWriter._astropy_data_format(None, output_file="file.hdf5") == "hdf5"
+def test_derive_data_format():
+    assert writer.ModelDataWriter._derive_data_format("hdf5") == "hdf5"
+    assert writer.ModelDataWriter._derive_data_format("ecsv") == ascii_format
+    assert writer.ModelDataWriter._derive_data_format(ascii_format) == ascii_format
+    assert writer.ModelDataWriter._derive_data_format(None) is None
+    assert writer.ModelDataWriter._derive_data_format(None, output_file="file.ecsv") == ascii_format
+    assert writer.ModelDataWriter._derive_data_format(None, output_file="file.hdf5") == "hdf5"
 
 
 def test_dump_model_parameter(tmp_test_directory):

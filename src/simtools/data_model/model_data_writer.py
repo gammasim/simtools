@@ -45,7 +45,7 @@ class ModelDataWriter:
             )
         except TypeError:
             self.output_file = None
-        self.output_file_format = self._astropy_data_format(output_file_format, self.output_file)
+        self.output_file_format = self._derive_data_format(output_file_format, self.output_file)
 
     @staticmethod
     def dump(
@@ -502,9 +502,9 @@ class ModelDataWriter:
         return data_dict
 
     @staticmethod
-    def _astropy_data_format(product_data_format, output_file=None):
+    def _derive_data_format(product_data_format, output_file=None):
         """
-        Ensure conformance with astropy data format naming.
+        Derive data format and ensure conformance with astropy data format naming.
 
         If product_data_format is None and output_file is given, derive format
         from output_file suffix.
