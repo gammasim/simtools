@@ -168,8 +168,9 @@ def test_results_summary(camera_efficiency_lst, prepare_results_file):
 def test_plot_efficiency(camera_efficiency_lst, mocker, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
+    camera_efficiency_lst.efficiency_type = "nsb"
     plot_table_mock = mocker.patch("simtools.visualization.visualize.plot_table")
-    camera_efficiency_lst.plot_efficiency(efficiency_type="NSB")
+    camera_efficiency_lst.plot_efficiency()
     plot_table_mock.assert_called_once()
 
 
@@ -217,7 +218,7 @@ def test_get_x_max_for_efficiency_type_shower(camera_efficiency_lst, caplog):
 
 
 def test_get_x_max_for_efficiency_type_muon(camera_efficiency_lst, mocker, caplog):
-    camera_efficiency_lst.config["efficiency_type"] = "muon"
+    camera_efficiency_lst.efficiency_type = "muon"
     mock_atmo = mocker.MagicMock()
     mock_atmo.interpolate.return_value = 850.5
     mocker.patch(
@@ -317,3 +318,56 @@ def test_calc_partial_efficiency_logging(camera_efficiency_lst, prepare_results_
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst.calc_partial_efficiency(300, 500)
     assert "Fraction of light in the wavelength range 300-500 nm:" in caplog.text
+
+
+def test_results_summary_shower_type(camera_efficiency_lst, prepare_results_file):
+    camera_efficiency_lst._read_results()
+    camera_efficiency_lst.export_model_files()
+    camera_efficiency_lst.efficiency_type = "shower"
+    summary = camera_efficiency_lst.results_summary()
+    assert "Results summary for LSTN-01" in summary
+    assert "zenith=20.0 deg" in summary
+    assert "azimuth=0.0 deg" in summary
+    assert "Spectrum weighted reflectivity:" in summary
+    assert "Camera nominal efficiency with gaps (B-TEL-1170):" in summary
+    assert "Telescope total efficiency" in summary
+    assert "Telescope total Cherenkov light efficiency" in summary
+
+
+def test_results_summary_nsb_type(camera_efficiency_lst, prepare_results_file, mocker):
+    camera_efficiency_lst._read_results()
+    camera_efficiency_lst.export_model_files()
+    camera_efficiency_lst.efficiency_type = "nsb"
+    camera_efficiency_lst.nsb_pixel_pe_per_ns = 0.5
+    camera_efficiency_lst.nsb_rate_ref_conditions = 0.25
+    summary = camera_efficiency_lst.results_summary()
+    assert "Results summary for LSTN-01" in summary
+    assert "Expected NSB pixel rate for the provided NSB spectrum: 0.5000 [p.e./ns]" in summary
+    assert "Expected NSB pixel rate for the reference NSB: 0.2500 [p.e./ns]" in summary
+
+
+def test_results_summary_muon_type(camera_efficiency_lst, prepare_results_file):
+    camera_efficiency_lst._read_results()
+    camera_efficiency_lst.export_model_files()
+    camera_efficiency_lst.efficiency_type = "muon"
+    summary = camera_efficiency_lst.results_summary()
+    assert "Results summary for LSTN-01" in summary
+    assert (
+        "Fraction of light (from muons) in the wavelength range 200-290 nm (B-TEL-0095):" in summary
+    )
+
+
+def test_results_summary_with_custom_nsb_spectrum(camera_efficiency_lst, prepare_results_file):
+    camera_efficiency_lst._read_results()
+    camera_efficiency_lst.export_model_files()
+    camera_efficiency_lst.config["nsb_spectrum"] = "custom_spectrum.fits"
+    summary = camera_efficiency_lst.results_summary()
+    assert "NSB spectrum file: custom_spectrum.fits" in summary
+
+
+def test_results_summary_without_nsb_spectrum(camera_efficiency_lst, prepare_results_file):
+    camera_efficiency_lst._read_results()
+    camera_efficiency_lst.export_model_files()
+    camera_efficiency_lst.config["nsb_spectrum"] = None
+    summary = camera_efficiency_lst.results_summary()
+    assert "default sim_telarray spectrum" in summary
