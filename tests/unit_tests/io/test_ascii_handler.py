@@ -304,7 +304,7 @@ def test_write_data_to_file_yaml(tmp_test_directory):
 def test_write_data_to_file_invalid_extension(tmp_test_directory):
     """Test write_data_to_file with unsupported file extension."""
     test_data = {"key1": "value1"}
-    output_file = tmp_test_directory / "test_output.txt"
+    output_file = tmp_test_directory / "test_output.blabla"
 
     with pytest.raises(ValueError, match="Unsupported file type"):
         ascii_handler.write_data_to_file(test_data, output_file)
