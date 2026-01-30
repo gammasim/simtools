@@ -8,6 +8,8 @@ simtools is composed of the following modules and module groups:
 :glob: true
 :maxdepth: 1
 
+array_layout
+atmosphere
 camera
 configuration_module
 corsika
@@ -16,7 +18,6 @@ dependencies
 db_handler
 io
 job_execution
-array_layout
 mc_model
 production_configuration
 ray_tracing
