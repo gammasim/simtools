@@ -56,7 +56,6 @@ class TelescopeModel(ModelParameter):
         )
 
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init TelescopeModel %s %s", site, telescope_name)
 
         self._single_mirror_list_file_paths = None
         self._mirrors = None

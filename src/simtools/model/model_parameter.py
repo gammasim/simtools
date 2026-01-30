@@ -276,8 +276,6 @@ class ModelParameter:
         )
         self._config_file_path = self.config_file_directory.joinpath(config_file_name)
 
-        self._logger.debug(f"Config file path: {self._config_file_path}")
-
     def get_simulation_software_parameters(self, simulation_software):
         """
         Get simulation software parameters.
