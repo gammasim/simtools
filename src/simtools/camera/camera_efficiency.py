@@ -372,7 +372,7 @@ class CameraEfficiency:
 
         return tel_efficiency / np.sqrt(tel_efficiency_nsb)
 
-    def calc_partial_efficiency(self, lambda_min, lambda_max):
+    def calc_partial_efficiency(self, lambda_min=200.0, lambda_max=290.0):
         """
         Compare efficiency in a given wavelength range with total efficiency.
 
