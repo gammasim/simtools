@@ -51,7 +51,6 @@ class ArrayModel:
     ):
         """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init ArrayModel")
         self.model_version = model_version
         self.label = label
         self.layout_name = (
@@ -257,7 +256,6 @@ class ArrayModel:
         for tel_model in self.telescope_models.values():
             name = tel_model.name
             if name not in exported_models:
-                self._logger.debug(f"Exporting configuration file for telescope {name}")
                 tel_model.write_sim_telarray_config_file(
                     additional_models=self.calibration_models.get(tel_model.name)
                 )
