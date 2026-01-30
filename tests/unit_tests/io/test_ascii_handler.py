@@ -308,3 +308,81 @@ def test_write_data_to_file_invalid_extension(tmp_test_directory):
 
     with pytest.raises(ValueError, match="Unsupported file type"):
         ascii_handler.write_data_to_file(test_data, output_file)
+
+
+def test_write_to_text_file_simple_list(tmp_test_directory):
+    """Test _write_to_text_file with a simple list."""
+    data = ["line1", "line2", "line3"]
+    output_file = tmp_test_directory / "test_simple.txt"
+
+    ascii_handler._write_to_text_file(data, output_file, unique_lines=False)
+    assert output_file.exists()
+
+    with open(output_file, encoding="utf-8") as file:
+        lines = file.readlines()
+    assert lines == ["line1\n", "line2\n", "line3\n"]
+
+
+def test_write_to_text_file_with_multiline_strings(tmp_test_directory):
+    """Test _write_to_text_file with multiline strings."""
+    data = ["line1\nline2", "line3\nline4\nline5"]
+    output_file = tmp_test_directory / "test_multiline.txt"
+
+    ascii_handler._write_to_text_file(data, output_file, unique_lines=False)
+    assert output_file.exists()
+
+    with open(output_file, encoding="utf-8") as file:
+        lines = file.readlines()
+    assert lines == ["line1\n", "line2\n", "line3\n", "line4\n", "line5\n"]
+
+
+def test_write_to_text_file_unique_lines(tmp_test_directory):
+    """Test _write_to_text_file with unique_lines enabled."""
+    data = ["line1", "line2", "line1", "line3", "line2"]
+    output_file = tmp_test_directory / "test_unique.txt"
+
+    ascii_handler._write_to_text_file(data, output_file, unique_lines=True)
+    assert output_file.exists()
+
+    with open(output_file, encoding="utf-8") as file:
+        lines = file.readlines()
+    assert lines == ["line1\n", "line2\n", "line3\n"]
+
+
+def test_write_to_text_file_single_string(tmp_test_directory):
+    """Test _write_to_text_file with a single string."""
+    data = "line1\nline2\nline3"
+    output_file = tmp_test_directory / "test_single_string.txt"
+
+    ascii_handler._write_to_text_file(data, output_file, unique_lines=False)
+    assert output_file.exists()
+
+    with open(output_file, encoding="utf-8") as file:
+        lines = file.readlines()
+    assert lines == ["line1\n", "line2\n", "line3\n"]
+
+
+def test_write_to_text_file_empty_list(tmp_test_directory):
+    """Test _write_to_text_file with an empty list."""
+    data = []
+    output_file = tmp_test_directory / "test_empty.txt"
+
+    ascii_handler._write_to_text_file(data, output_file, unique_lines=False)
+    assert output_file.exists()
+
+    with open(output_file, encoding="utf-8") as file:
+        lines = file.readlines()
+    assert lines == []
+
+
+def test_write_to_text_file_unique_multiline(tmp_test_directory):
+    """Test _write_to_text_file with multiline strings and unique_lines enabled."""
+    data = ["line1\nline2", "line2\nline3", "line1\nline2"]
+    output_file = tmp_test_directory / "test_unique_multiline.txt"
+
+    ascii_handler.write_data_to_file(data, output_file, unique_lines=True)
+    assert output_file.exists()
+
+    with open(output_file, encoding="utf-8") as file:
+        lines = file.readlines()
+    assert lines == ["line1\n", "line2\n", "line3\n"]
