@@ -22,8 +22,6 @@ class IOHandler(metaclass=IOHandlerSingleton):
     def __init__(self):
         """Initialize IOHandler."""
         self.logger = logging.getLogger(__name__)
-        self.logger.debug("Init IOHandler")
-
         self.output_path = None
         self.model_path = None
 
