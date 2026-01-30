@@ -10,7 +10,7 @@ import astropy.units as u
 import numpy as np
 import yaml
 
-from simtools.utils.general import is_url
+from simtools.utils.general import ensure_iterable, is_url
 
 _logger = logging.getLogger(__name__)
 
@@ -189,9 +189,9 @@ def is_utf8_file(file_name):
         return False
 
 
-def write_data_to_file(data, output_file, sort_keys=False, numpy_types=False):
+def write_data_to_file(data, output_file, sort_keys=False, numpy_types=False, unique_lines=False):
     """
-    Write structured data to JSON or YAML file.
+    Write structured data to JSON, YAML, or text file.
 
     The file type is determined by the file extension.
 
@@ -208,15 +208,43 @@ def write_data_to_file(data, output_file, sort_keys=False, numpy_types=False):
     """
     output_file = Path(output_file)
     if output_file.suffix.lower() == ".json":
-        _write_to_json(data, output_file, sort_keys, numpy_types)
-        return
+        return _write_to_json(data, output_file, sort_keys, numpy_types)
     if output_file.suffix.lower() in [".yml", ".yaml"]:
-        _write_to_yaml(data, output_file, sort_keys)
-        return
+        return _write_to_yaml(data, output_file, sort_keys)
+    if output_file.suffix.lower() in [".txt", ".list"]:
+        return _write_to_text_file(data, output_file, unique_lines)
 
     raise ValueError(
         f"Unsupported file type {output_file.suffix}. Only .json, .yml, and .yaml are supported."
     )
+
+
+def _write_to_text_file(data, output_file, unique_lines):
+    """
+    Write data to a text file.
+
+    Parameters
+    ----------
+    data: list
+        Data to be written to the file.
+    output_file: Path
+        Name of the file to be written.
+    unique_lines: bool
+        If True, write only unique lines.
+
+    """
+
+    def iter_lines(data):
+        for entry in ensure_iterable(data):
+            yield from entry.splitlines()
+
+    lines_to_write = (
+        list(dict.fromkeys(iter_lines(data))) if unique_lines else list(iter_lines(data))
+    )
+
+    with open(output_file, "w", encoding="utf-8") as file:
+        for line in lines_to_write:
+            file.write(f"{line}\n")
 
 
 def _write_to_json(data, output_file, sort_keys, numpy_types):
