@@ -640,7 +640,7 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
     logger.info(f"Creating {psf_label_cm} vs off-axis angle plot with best parameters...")
 
     # Apply best parameters to telescope model
-    tel_model.overwrite_parameters(best_pars)
+    tel_model.overwrite_parameters(best_pars, flat_dict=True)
 
     # Create off-axis angle array
     max_offset = args_dict.get("max_offset", MAX_OFFSET_DEFAULT)
