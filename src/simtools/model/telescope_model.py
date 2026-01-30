@@ -30,8 +30,8 @@ class TelescopeModel(ModelParameter):
         Model version.
     label: str, optional
         Instance label.
-    overwrite_model_parameters: str, optional
-        File name to overwrite model parameters from DB with provided values.
+    overwrite_model_parameter_dict: dict, optional
+        Dictionary to overwrite model parameters from DB with provided values.
     ignore_software_version: bool, optional
         If True, ignore software version checks for deprecated parameters.
     """
@@ -42,7 +42,7 @@ class TelescopeModel(ModelParameter):
         telescope_name,
         model_version,
         label=None,
-        overwrite_model_parameters=None,
+        overwrite_model_parameter_dict=None,
         ignore_software_version=False,
     ):
         """Initialize TelescopeModel."""
@@ -51,7 +51,7 @@ class TelescopeModel(ModelParameter):
             array_element_name=telescope_name,
             model_version=model_version,
             label=label,
-            overwrite_model_parameters=overwrite_model_parameters,
+            overwrite_model_parameter_dict=overwrite_model_parameter_dict,
             ignore_software_version=ignore_software_version,
         )
 

@@ -1,6 +1,7 @@
 """Module providing functionality to read and validate dictionaries using schema."""
 
 import logging
+from functools import lru_cache
 from pathlib import Path
 
 import jsonschema
@@ -153,6 +154,7 @@ def _validate_meta_schema_url(data):
         raise FileNotFoundError(f"Meta schema URL does not exist: {data['meta_schema_url']}")
 
 
+@lru_cache
 def _retrieve_yaml_schema_from_uri(uri):
     """Load schema from a file URI."""
     path = SCHEMA_PATH / Path(uri.removeprefix("file:/"))
