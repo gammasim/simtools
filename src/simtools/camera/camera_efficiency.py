@@ -588,7 +588,7 @@ class CameraEfficiency:
                 )
             ),
             instrument=cfg.get("telescope"),
-            parameter_version=cfg.get("parameter_version", "0.0.0"),
+            parameter_version=cfg.get("parameter_version") or "0.0.0",
             output_file=Path(f"nsb_pixel_rate-{cfg.get('parameter_version', '0.0.0')}.json"),
             output_path=self.output_dir / cfg.get("telescope") / "nsb_pixel_rate",
         )
