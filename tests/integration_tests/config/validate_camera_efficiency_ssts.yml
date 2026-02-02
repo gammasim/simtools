@@ -4,7 +4,6 @@ applications:
   configuration:
     log_level: debug
     model_version: 6.0.2
-    model_version_use_current: true
     output_path: simtools-output
     site: South
     telescope: SSTS-design
@@ -34,6 +33,7 @@ applications:
       tests/resources/camera_efficiency/camera_efficiency_South_SSTS-design_za0.0deg_azm000deg_muon_summary.yml
     tolerance: 1.e-3
     test_output_file: camera_efficiency_South_SSTS-design_za0.0deg_azm000deg_muon_summary.yml
+  model_version_use_current: true
   test_name: SSTS
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
