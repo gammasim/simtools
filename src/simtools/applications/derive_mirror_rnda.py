@@ -1,17 +1,17 @@
 #!/usr/bin/python3
 
-r"""Derive mirror random reflection angle based on per-mirror d80 optimization.
+r"""Derive mirror random reflection angle based on per-mirror PSF diameter optimization.
 
 Description
 -----------
 
 This application derives the value of the simulation model parameter
-*mirror_reflection_random_angle* using measurements of the d80 (spot size)
+*mirror_reflection_random_angle* using measurements of a PSF containment diameter
 and focal length of individual mirror panels.
 
 The optimization uses percentage difference as the metric::
 
-    pct_diff = 100 * (simulated_d80 - measured_d80) / measured_d80
+    pct_diff = 100 * (simulated_psf - measured_psf) / measured_psf
 
 Each mirror is optimized individually, and the final RNDA is the average of all
 per-mirror optimized values.
@@ -26,7 +26,11 @@ telescope (str, required)
 model_version (str, optional)
     Model version.
 data (str, required)
-    ECSV file with d80 (mm) and focal_length (m) columns per mirror.
+    ECSV file with PSF diameter (mm) per mirror.
+    Accepted column names: psf_opt, psf, or d80.
+fraction (float, optional)
+    PSF containment fraction for diameter calculation (e.g. 0.8 for D80, 0.95 for D95).
+    Default: 0.8.
 threshold (float, optional)
     Convergence threshold for percentage difference (e.g. 0.05 for 5%).
     Default: 0.05.
@@ -36,8 +40,10 @@ test (optional)
     Only optimize a small number of mirrors.
 n_workers (int, optional)
     Number of parallel worker processes to use. Default: 0 (auto chooses maximum).
-d80_hist (str, optional)
-    If activated, write a histogram comparing measured vs simulated d80 distributions.
+number_of_mirrors_to_test (int, optional)
+    Number of mirrors to optimize when --test is used. Default: 10.
+psf_hist (str, optional)
+    If activated, write a histogram comparing measured vs simulated PSF diameter distributions.
 cleanup (optional)
     Remove intermediate files (patterns: ``*.log``, ``*.lis*``, ``*.dat``)
     from output.
@@ -53,7 +59,7 @@ Example
         --model_version 7.0.0 \
         --data tests/resources/MLTdata-preproduction.ecsv \
         --parameter_version 1.0.0 \
-        --test --d80_hist --cleanup
+        --test --psf_hist --cleanup
 
 """
 
@@ -68,12 +74,12 @@ from simtools.ray_tracing.psf_parameter_optimisation import cleanup_intermediate
 def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
-        description="Derive mirror RNDA using per-mirror d80 optimization (percentage difference).",
+        description="Derive mirror RNDA using per-mirror PSF diameter optimization.",
         label=get_application_label(__file__),
     )
     config.parser.add_argument(
         "--data",
-        help="ECSV file with d80 (mm) and focal_length (m) columns per mirror",
+        help="ECSV file with a PSF diameter column (mm) per mirror",
         type=str,
         required=True,
     )
@@ -92,6 +98,14 @@ def _parse():
         default=0.001,
     )
     config.parser.add_argument(
+        "--fraction",
+        help=(
+            "PSF containment fraction for diameter calculation (e.g., 0.8 for D80, 0.95 for D95)."
+        ),
+        type=float,
+        default=0.8,
+    )
+    config.parser.add_argument(
         "--n_workers",
         help="Number of parallel worker processes to use.",
         type=int,
@@ -106,12 +120,12 @@ def _parse():
         default=10,
     )
     config.parser.add_argument(
-        "--d80_hist",
+        "--psf_hist",
         nargs="?",
-        const="d80_distributions.png",
+        const="psf_distributions.png",
         default=None,
         help=(
-            "Write a histogram comparing measured vs simulated d80 distributions. "
+            "Write a histogram comparing measured vs simulated PSF diameter distributions. "
             "Optionally provide a filename (relative to output dir unless absolute)."
         ),
     )
@@ -131,13 +145,13 @@ def _parse():
 
 
 def main():
-    """Derive mirror random reflection angle using per-mirror d80 optimization."""
+    """Derive mirror random reflection angle using per-mirror PSF diameter optimization."""
     app_context = startup_application(_parse)
     panel_psf = MirrorPanelPSF(app_context.args.get("label"), app_context.args)
     panel_psf.optimize_with_gradient_descent()
     panel_psf.write_optimization_data()
-    if app_context.args.get("d80_hist"):
-        panel_psf.write_d80_histogram()
+    if app_context.args.get("psf_hist"):
+        panel_psf.write_psf_histogram()
 
     if app_context.args.get("cleanup"):
         output_dir = Path(app_context.args.get("output_path", "."))

@@ -314,27 +314,27 @@ def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
         assert mock_save_figure.call_count == 2
 
 
-def test_plot_d80_histogram_returns_none_when_not_configured(tmp_path):
+def test_plot_psf_histogram_returns_none_when_not_configured(tmp_path):
     args_dict = {"output_path": str(tmp_path)}
-    assert plot_psf.plot_d80_histogram([10.0], [11.0], args_dict) is None
+    assert plot_psf.plot_psf_histogram([10.0], [11.0], args_dict) is None
 
 
-def test_plot_d80_histogram_returns_none_when_empty_after_filtering(tmp_path):
-    args_dict = {"output_path": str(tmp_path), "d80_hist": "hist.png"}
-    assert plot_psf.plot_d80_histogram([np.nan], [11.0], args_dict) is None
-    assert plot_psf.plot_d80_histogram([10.0], [np.nan], args_dict) is None
+def test_plot_psf_histogram_returns_none_when_empty_after_filtering(tmp_path):
+    args_dict = {"output_path": str(tmp_path), "psf_hist": "hist.png"}
+    assert plot_psf.plot_psf_histogram([np.nan], [11.0], args_dict) is None
+    assert plot_psf.plot_psf_histogram([10.0], [np.nan], args_dict) is None
 
 
-def test_plot_d80_histogram_returns_none_when_range_invalid(tmp_path):
-    args_dict = {"output_path": str(tmp_path), "d80_hist": "hist.png"}
+def test_plot_psf_histogram_returns_none_when_range_invalid(tmp_path):
+    args_dict = {"output_path": str(tmp_path), "psf_hist": "hist.png"}
     # with invalid range of x_max <= x_min
-    assert plot_psf.plot_d80_histogram([1.0, 1.0], [1.0, 1.0], args_dict) is None
+    assert plot_psf.plot_psf_histogram([1.0, 1.0], [1.0, 1.0], args_dict) is None
 
 
-def test_plot_d80_histogram_saves_to_output_path_when_relative(tmp_path):
+def test_plot_psf_histogram_saves_to_output_path_when_relative(tmp_path):
     args_dict = {
         "output_path": str(tmp_path),
-        "d80_hist": "hist.png",
+        "psf_hist": "hist.png",
         "telescope": "LSTN-01",
         "model_version": "6.0.0",
     }
@@ -347,7 +347,7 @@ def test_plot_d80_histogram_saves_to_output_path_when_relative(tmp_path):
         mock_ax = MagicMock()
         mock_subplots.return_value = (mock_fig, mock_ax)
 
-        out = plot_psf.plot_d80_histogram([10.0, 11.0], [12.0, 13.0], args_dict)
+        out = plot_psf.plot_psf_histogram([10.0, 11.0], [12.0, 13.0], args_dict)
         expected = str(tmp_path / "hist.png")
         assert out == expected
         mock_fig.savefig.assert_called_once()

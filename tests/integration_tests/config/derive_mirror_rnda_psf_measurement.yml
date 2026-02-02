@@ -9,12 +9,15 @@ applications:
     data: tests/resources/MLTdata-preproduction.ecsv
     site: North
     telescope: LSTN-01
+    psf_hist: true
     n_workers: 1
     number_of_mirrors_to_test: 1
     test: true
   integration_tests:
   - test_output_files:
     - file: LSTN-01/mirror_reflection_random_angle-1.0.0.json
+      path_descriptor: output_path
+    - file: psf_distributions.png
       path_descriptor: output_path
   test_name: psf_measurement
 schema_name: application_workflow.metaschema

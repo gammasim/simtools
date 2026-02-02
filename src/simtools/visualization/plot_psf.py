@@ -668,9 +668,9 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
 
     logger.info(f"Running ray tracing for {len(off_axis_angles)} off-axis angles...")
     ray.simulate(test=args_dict.get("test", False), force=True)
-    ray.analyze(force=True)
+    ray.analyze(force=True, containment_fraction=fraction)
 
-    for key in ["d80_cm", "d80_deg"]:
+    for key in ["psf_cm", "psf_deg"]:
         plt.figure(figsize=(10, 6), tight_layout=True)
 
         ray.plot(key, marker="o", linestyle="-", color="blue", linewidth=2, markersize=6)
@@ -855,10 +855,10 @@ def create_summary_psf_comparison_plot(
     return output_file
 
 
-def plot_d80_histogram(measured, simulated, args_dict):
-    """Write histogram comparing measured vs simulated d80 distributions."""
+def plot_psf_histogram(measured, simulated, args_dict):
+    """Write histogram comparing measured vs simulated PSF diameter distributions."""
     output_dir = Path(args_dict.get("output_path", "."))
-    out_name = args_dict.get("d80_hist")
+    out_name = args_dict.get("psf_hist")
     if not out_name:
         return None
     out_path = Path(out_name)
@@ -901,13 +901,16 @@ def plot_d80_histogram(measured, simulated, args_dict):
     )
     ax.axvline(meas_mean, color="tab:red", linestyle="--", linewidth=1)
     ax.axvline(sim_mean, color="tab:blue", linestyle="--", linewidth=1)
-    ax.set_xlabel("d80 (mm)")
-    ax.set_ylabel("Count")
     tel = args_dict.get("telescope", "")
     model_version = args_dict.get("model_version", "")
-    ax.set_title(f"d80 distributions ({tel} {model_version})")
+    fraction = args_dict.get("fraction")
+    label = get_psf_diameter_label(fraction, unit="mm") if fraction is not None else "PSF"
+    suffix = " ".join([s for s in (tel, model_version) if s])
+    ax.set_xlabel(label)
+    ax.set_ylabel("Count")
+    ax.set_title(f"{label} ({suffix})" if suffix else label)
     ax.legend(loc="best", fontsize=9, frameon=True)
     fig.savefig(out_path)
     plt.close(fig)
-    logger.info("d80 histogram written to %s", str(out_path))
+    logger.info("PSF histogram written to %s", str(out_path))
     return str(out_path)
