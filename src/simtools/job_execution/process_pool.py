@@ -1,16 +1,14 @@
-"""Generic process pool helpers.
-
-This module centralizes ``ProcessPoolExecutor`` usage to ensure a consistent
-approach across simtools applications.
+"""Run work in parallel and keep results ordered.
 
 Notes
 -----
-The helpers provided here focus on:
+This module provides small wrappers around ``concurrent.futures.ProcessPoolExecutor``
+that make it easy to:
 
-- Ordered results (input order preserved).
-- Configurable worker count.
-- Optional per-process initializer/initargs.
-- Configurable multiprocessing start method (e.g. ``"fork"``, ``"spawn"``).
+- preserve input order in the returned results;
+- choose how many worker processes to use;
+- optionally run per-process initialization code; and
+- select a multiprocessing start method (e.g. ``"fork"`` or ``"spawn"``).
 
 Examples
 --------
@@ -37,8 +35,8 @@ Parallelize methods that require an object instance:
 
     def worker_function(args):
         mirror_idx, instance = args
-        measured_d80_mm = float(instance.measured_data[mirror_idx])
-        return instance.optimize_single_mirror(mirror_idx, measured_d80_mm)
+        measured_psf_mm = float(instance.measured_data[mirror_idx])
+        return instance.optimize_single_mirror(mirror_idx, measured_psf_mm)
 
     instance = MirrorPanelPSF(label="test", args_dict=args)
     worker_inputs = [(i, instance) for i in range(n_mirrors)]

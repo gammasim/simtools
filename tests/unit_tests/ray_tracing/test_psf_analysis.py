@@ -455,7 +455,7 @@ def test_plot_cumulative(psf_image, mocker):
     assert kwargs["linestyle"] == "--"
 
 
-def test_plot_cumulative_writes_file_and_marks_d80(psf_image, mocker, tmp_path):
+def test_plot_cumulative_writes_file_and_marks_psf_diameter(psf_image, mocker, tmp_path):
     image = psf_image
     mock_subplot = mocker.patch("matplotlib.pyplot.subplots")
     mock_fig = mocker.Mock()
@@ -464,9 +464,9 @@ def test_plot_cumulative_writes_file_and_marks_d80(psf_image, mocker, tmp_path):
     mock_close = mocker.patch("matplotlib.pyplot.close")
 
     out_file = tmp_path / "cum.png"
-    image.plot_cumulative(file_name=str(out_file), d80=4.0, color="k")
+    image.plot_cumulative(file_name=str(out_file), psf_diameter_cm=4.0, color="k")
 
-    # One axvline for default 0.8 PSF, one for d80.
+    # One axvline for default containment fraction PSF, one for provided marker.
     assert mock_ax.axvline.call_count == 2
     mock_fig.savefig.assert_called_once_with(str(out_file))
     mock_close.assert_called_once_with(mock_fig)

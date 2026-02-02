@@ -1,4 +1,4 @@
-"""Mirror panel PSF calculation with per-mirror d80 optimization."""
+"""Mirror panel PSF calculation with per-mirror PSF diameter optimization."""
 
 import json
 import logging
@@ -22,11 +22,12 @@ from simtools.visualization import plot_psf
 class MirrorOptimizationResult:
     """Dataclass to store the result of a single mirror RNDA optimization."""
 
-    mirror: int  # One-based mirror index
-    measured_d80_mm: float  # Measured d80 value in mm
+    mirror: int  # Zero-based mirror index
+    measured_psf_mm: float  # Measured PSF diameter in mm
     optimized_rnda: list[float]  # Optimized RNDA values [sigma1, fraction2, sigma2]
-    simulated_d80_mm: float  # Simulated d80 after optimization
+    simulated_psf_mm: float  # Simulated PSF diameter after optimization
     percentage_diff: float  # Absolute percentage difference
+    containment_fraction: float  # PSF containment fraction used for the diameter
 
 
 def _optimize_single_mirror_worker(args):
@@ -40,7 +41,8 @@ class MirrorPanelPSF:
     Mirror panel PSF and random reflection angle (RNDA) calculation.
 
     This class derives the RNDA for mirror panels by optimizing
-    per-mirror d80 values using a percentage difference metric.
+    per-mirror PSF diameters (at a given containment fraction)
+    using a percentage difference metric.
     Optimization uses a gradient descent with finite-difference gradients.
 
     Parameters
@@ -62,6 +64,8 @@ class MirrorPanelPSF:
         self.label = label
         self.args_dict = args_dict
 
+        self.fraction = args_dict.get("fraction", 0.8)
+
         self.telescope_model, self.site_model, _ = initialize_simulation_models(
             label=label,
             site=args_dict["site"],
@@ -80,24 +84,31 @@ class MirrorPanelPSF:
 
     def _load_measured_data(self):
         """
-        Load measured d80 from ECSV file.
+        Load measured PSF diameter from ECSV file.
 
         Returns
         -------
         astropy.table.Column
-            Column containing d80 values in mm.
+            Column containing PSF diameter values in mm.
         """
         data_file = gen.find_file(self.args_dict["data"], self.args_dict.get("model_path", "."))
         table = Table.read(data_file)
         if "psf_opt" in table.colnames:
             return table["psf_opt"]
         if "d80" in table.colnames:
+            fraction = float(self.args_dict.get("fraction", 0.8))
+            if not np.isclose(fraction, 0.8, rtol=1e-09, atol=1e-09):
+                self._logger.warning(
+                    "Input table provides 'd80' column, but --fraction=%.3f was requested. "
+                    "Make sure the measured column matches the selected containment fraction.",
+                    fraction,
+                )
             return table["d80"]
         raise ValueError("Data file must contain either 'psf_opt' or 'd80' column")
 
-    def _simulate_single_mirror_d80(self, mirror_idx, rnda_values):
+    def _simulate_single_mirror_psf(self, mirror_idx, rnda_values):
         """
-        Simulate a single mirror and return its d80.
+        Simulate a single mirror and return its PSF diameter.
 
         Parameters
         ----------
@@ -109,14 +120,14 @@ class MirrorPanelPSF:
         Returns
         -------
         float
-            Simulated d80 in mm.
+            Simulated PSF diameter in mm.
         """
+        fraction = self.fraction
         self.telescope_model.overwrite_model_parameter(
             "mirror_reflection_random_angle", rnda_values
         )
 
-        mirror_number = mirror_idx + 1
-        rt_label = f"{self.label}_m{mirror_number}"
+        rt_label = f"{self.label}_m{mirror_idx}"
         ray = RayTracing(
             telescope_model=self.telescope_model,
             site_model=self.site_model,
@@ -125,15 +136,15 @@ class MirrorPanelPSF:
             mirror_numbers=[mirror_idx],
         )
         ray.simulate(test=self.args_dict.get("test", False), force=True)
-        ray.analyze(force=True)
+        ray.analyze(force=True, containment_fraction=fraction)
 
-        return float(ray.get_d80_mm())
+        return float(ray.get_psf_mm())
 
     @staticmethod
     def _signed_pct_diff(measured, simulated):
         """Compute signed percentage difference."""
         if measured <= 0:
-            raise ValueError("Measured d80 must be positive")
+            raise ValueError("Measured PSF diameter must be positive")
         return 100.0 * (simulated - measured) / measured
 
     def _evaluate(self, mirror_idx, measured, rnda):
@@ -145,16 +156,16 @@ class MirrorPanelPSF:
         mirror_idx : int
             Mirror index (0-based).
         measured : float
-            Measured d80 value (mm).
+            Measured PSF diameter (mm).
         rnda : list of float
             Current RNDA values.
 
         Returns
         -------
         tuple of (float, float, float)
-            Simulated d80, signed percentage difference, squared percentage difference.
+            Simulated PSF diameter, signed percentage difference, squared percentage difference.
         """
-        sim = self._simulate_single_mirror_d80(mirror_idx, rnda)
+        sim = self._simulate_single_mirror_psf(mirror_idx, rnda)
         pct = self._signed_pct_diff(measured, sim)
         return sim, pct, pct * pct
 
@@ -175,7 +186,7 @@ class MirrorPanelPSF:
             (max(schema[2]["allowed_range"]["min"], 1e-12), schema[2]["allowed_range"]["max"]),
         ]
 
-    def optimize_single_mirror(self, mirror_idx, measured_d80):
+    def optimize_single_mirror(self, mirror_idx, measured_psf):
         """
         Optimize RNDA for a single mirror using gradient descent.
 
@@ -183,8 +194,8 @@ class MirrorPanelPSF:
         ----------
         mirror_idx : int
             Zero-based mirror index.
-        measured_d80 : float
-            Measured d80 value in mm.
+        measured_psf : float
+            Measured PSF diameter in mm.
 
         Returns
         -------
@@ -194,19 +205,26 @@ class MirrorPanelPSF:
         threshold_pct = 100 * float(self.args_dict.get("threshold", 0.05))
         learning_rate = float(self.args_dict.get("learning_rate", 1e-3))
         bounds = self._rnda_bounds()
+        fraction = self.fraction
 
         rnda = list(self.rnda_start)
-        sim, pct, obj = self._evaluate(mirror_idx, measured_d80, rnda)
+        sim, pct, obj = self._evaluate(mirror_idx, measured_psf, rnda)
         best = {"rnda": list(rnda), "sim": sim, "pct": abs(pct), "obj": obj}
 
-        self._logger.info("Mirror %d | initial d80 %.3f mm | pct %.2f%%", mirror_idx + 1, sim, pct)
+        self._logger.info(
+            "Mirror %d | initial PSF %.3f mm (f=%.2f) | pct %.2f%%",
+            mirror_idx,
+            sim,
+            fraction,
+            pct,
+        )
 
         for iteration in range(self.MAX_ITER):
             old_rnda = list(rnda)
             for param_idx, (param_value, param_bounds) in enumerate(zip(old_rnda, bounds)):
                 rnda[param_idx] = self._update_single_rnda_parameter(
                     mirror_idx=mirror_idx,
-                    measured_d80=measured_d80,
+                    measured_psf=measured_psf,
                     rnda=rnda,
                     param_idx=param_idx,
                     param_value=param_value,
@@ -214,7 +232,7 @@ class MirrorPanelPSF:
                     learning_rate=learning_rate,
                 )
 
-            sim, pct, obj = self._evaluate(mirror_idx, measured_d80, rnda)
+            sim, pct, obj = self._evaluate(mirror_idx, measured_psf, rnda)
             pct = abs(pct)
 
             old_rnda_str = "[" + ", ".join(f"{v:.4g}" for v in old_rnda) + "]"
@@ -241,17 +259,18 @@ class MirrorPanelPSF:
                 break
 
         return MirrorOptimizationResult(
-            mirror=mirror_idx + 1,
-            measured_d80_mm=float(measured_d80),
+            mirror=mirror_idx,
+            measured_psf_mm=float(measured_psf),
             optimized_rnda=best["rnda"],
-            simulated_d80_mm=best["sim"],
+            simulated_psf_mm=best["sim"],
             percentage_diff=best["pct"],
+            containment_fraction=fraction,
         )
 
     def _update_single_rnda_parameter(
         self,
         mirror_idx,
-        measured_d80,
+        measured_psf,
         rnda,
         param_idx,
         param_value,
@@ -264,7 +283,7 @@ class MirrorPanelPSF:
         Parameters
         ----------
         mirror_idx : int
-        measured_d80 : float
+        measured_psf : float
         rnda : list of float
         param_idx : int
         param_value : float
@@ -281,10 +300,10 @@ class MirrorPanelPSF:
         epsilon = max(1e-6, 0.05 * param_value) if is_log_param else 0.05
 
         rnda[param_idx] = min(param_max, param_value + epsilon)
-        _, _, f_plus = self._evaluate(mirror_idx, measured_d80, rnda)
+        _, _, f_plus = self._evaluate(mirror_idx, measured_psf, rnda)
 
         rnda[param_idx] = max(param_min, param_value - epsilon)
-        _, _, f_minus = self._evaluate(mirror_idx, measured_d80, rnda)
+        _, _, f_minus = self._evaluate(mirror_idx, measured_psf, rnda)
 
         rnda[param_idx] = param_value
         gradient = (f_plus - f_minus) / (2 * epsilon)
@@ -387,8 +406,8 @@ class MirrorPanelPSF:
             except (OSError, ValueError, TypeError) as e:
                 self._logger.warning("Failed to export model parameter %s: %s", parameter_name, e)
 
-    def write_d80_histogram(self):
-        """Plot histogram of measured vs simulated d80 values."""
-        measured = [r.measured_d80_mm for r in self.per_mirror_results]
-        simulated = [r.simulated_d80_mm for r in self.per_mirror_results]
-        return plot_psf.plot_d80_histogram(measured, simulated, self.args_dict)
+    def write_psf_histogram(self):
+        """Plot histogram of measured vs simulated psf values."""
+        measured = [r.measured_psf_mm for r in self.per_mirror_results]
+        simulated = [r.simulated_psf_mm for r in self.per_mirror_results]
+        return plot_psf.plot_psf_histogram(measured, simulated, self.args_dict)

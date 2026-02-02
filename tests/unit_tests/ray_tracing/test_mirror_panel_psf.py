@@ -38,6 +38,7 @@ def _make_minimal_instance(
     inst._logger = logging.getLogger(__name__)
     inst.label = label
     inst.args_dict = args_dict or {}
+    inst.fraction = float(inst.args_dict.get("fraction", 0.8))
     inst.telescope_model = telescope_model or _make_dummy_tel(label="orig")
     inst.site_model = object()
     inst.measured_data = [10.0]
@@ -80,14 +81,14 @@ def test_load_measured_data_raises_when_columns_missing(mocker):
     mocker.patch.object(mpp.gen, "find_file", return_value="/abs/data.ecsv")
     mocker.patch.object(mpp.Table, "read", return_value=Table({"x": [10.0]}))
 
-    with pytest.raises(ValueError, match="either 'psf_opt' or 'd80'"):
+    with pytest.raises(ValueError, match=r"either 'psf_opt' or 'd80'"):
         inst._load_measured_data()
 
 
-def test_signed_pct_diff_raises_on_nonpositive_measured_d80():
-    with pytest.raises(ValueError, match="Measured d80 must be positive"):
+def test_signed_pct_diff_raises_on_nonpositive_measured_psf():
+    with pytest.raises(ValueError, match="Measured PSF diameter must be positive"):
         mpp.MirrorPanelPSF._signed_pct_diff(0.0, 1.0)
-    with pytest.raises(ValueError, match="Measured d80 must be positive"):
+    with pytest.raises(ValueError, match="Measured PSF diameter must be positive"):
         mpp.MirrorPanelPSF._signed_pct_diff(-1.0, 1.0)
 
 
@@ -98,7 +99,7 @@ def test_signed_pct_diff_returns_signed_value():
 
 def test_evaluate_returns_sim_pct_and_squared_pct(mocker):
     inst = _make_minimal_instance()
-    simulate = mocker.patch.object(inst, "_simulate_single_mirror_d80", return_value=12.0)
+    simulate = mocker.patch.object(inst, "_simulate_single_mirror_psf", return_value=12.0)
 
     sim, pct, obj = inst._evaluate(0, 10.0, [0.01, 0.2, 0.02])
 
@@ -143,18 +144,20 @@ def test_optimize_with_gradient_descent_limits_mirrors_in_test_mode(mocker):
         assert kwargs["mp_start_method"] == "fork"
         return [
             mpp.MirrorOptimizationResult(
-                mirror=1,
-                measured_d80_mm=10.0,
+                mirror=0,
+                measured_psf_mm=10.0,
                 optimized_rnda=[1.0, 0.2, 0.03],
-                simulated_d80_mm=11.0,
+                simulated_psf_mm=11.0,
                 percentage_diff=10.0,
+                containment_fraction=0.8,
             ),
             mpp.MirrorOptimizationResult(
-                mirror=2,
-                measured_d80_mm=11.0,
+                mirror=1,
+                measured_psf_mm=11.0,
                 optimized_rnda=[3.0, 0.2, 0.01],
-                simulated_d80_mm=12.0,
+                simulated_psf_mm=12.0,
                 percentage_diff=30.0,
+                containment_fraction=0.8,
             ),
         ]
 
@@ -171,33 +174,6 @@ def test_optimize_single_mirror_worker_calls_optimizer_with_measured_value():
     result = mpp._optimize_single_mirror_worker((dummy, 1, 12.25))
     dummy.optimize_single_mirror.assert_called_once_with(1, 12.25)
     assert result == {"ok": True}
-
-
-def test_simulate_single_mirror_d80_success_and_restores_label(mocker, tmp_path):
-    tel = _make_dummy_tel(label="orig", config_dir=tmp_path)
-    inst = _make_minimal_instance(label="base", telescope_model=tel)
-
-    class OkRay:
-        def __init__(self, **kwargs):
-            assert kwargs["label"] == "base_m1"
-            assert kwargs["telescope_model"].label == "orig"
-            self._d80_mm = 15.0
-
-        def simulate(self, **kwargs):
-            return None
-
-        def analyze(self, **kwargs):
-            return None
-
-        def get_d80_mm(self):
-            return self._d80_mm
-
-    mocker.patch("simtools.ray_tracing.mirror_panel_psf.RayTracing", OkRay)
-    d80_mm = inst._simulate_single_mirror_d80(0, [0.01, 0.22, 0.022])
-    assert d80_mm == pytest.approx(15.0)
-    assert tel.label == "orig"
-    assert tel._config_file_path == str(tmp_path / "orig.cfg")
-    assert tel._config_file_directory == str(tmp_path)
 
 
 def test_optimize_single_mirror_converges_when_simulated_matches_measured(mocker):
@@ -218,9 +194,9 @@ def test_optimize_single_mirror_converges_when_simulated_matches_measured(mocker
     result = inst.optimize_single_mirror(0, 12.0)
 
     assert isinstance(result, mpp.MirrorOptimizationResult)
-    assert result.mirror == 1
-    assert result.measured_d80_mm == pytest.approx(12.0)
-    assert result.simulated_d80_mm == pytest.approx(12.0)
+    assert result.mirror == 0
+    assert result.measured_psf_mm == pytest.approx(12.0)
+    assert result.simulated_psf_mm == pytest.approx(12.0)
     assert result.percentage_diff == pytest.approx(0.0)
 
 
@@ -260,7 +236,7 @@ def test_update_single_rnda_parameter_log_param_branch(mocker):
     inst = _make_minimal_instance(args_dict={"learning_rate": 1e-3})
     rnda = [0.01, 0.2, 0.02]
 
-    def _fake_evaluate(_mirror_idx, _measured_d80, rnda_in):
+    def _fake_evaluate(_mirror_idx, _measured_psf, rnda_in):
         # Objective depends only on the parameter being updated.
         return 0.0, 0.0, float(rnda_in[0] ** 2)
 
@@ -268,7 +244,7 @@ def test_update_single_rnda_parameter_log_param_branch(mocker):
 
     updated = inst._update_single_rnda_parameter(
         mirror_idx=0,
-        measured_d80=10.0,
+        measured_psf=10.0,
         rnda=rnda,
         param_idx=0,
         param_value=rnda[0],
@@ -286,7 +262,7 @@ def test_update_single_rnda_parameter_fraction_param_branch(mocker):
     inst = _make_minimal_instance(args_dict={"learning_rate": 1e-3})
     rnda = [0.01, 0.2, 0.02]
 
-    def _fake_evaluate(_mirror_idx, _measured_d80, rnda_in):
+    def _fake_evaluate(_mirror_idx, _measured_psf, rnda_in):
         # Objective minimized at fraction2=0.5.
         return 0.0, 0.0, float((rnda_in[1] - 0.5) ** 2)
 
@@ -294,7 +270,7 @@ def test_update_single_rnda_parameter_fraction_param_branch(mocker):
 
     updated = inst._update_single_rnda_parameter(
         mirror_idx=0,
-        measured_d80=10.0,
+        measured_psf=10.0,
         rnda=rnda,
         param_idx=1,
         param_value=rnda[1],
@@ -316,10 +292,11 @@ def test_write_optimization_data_writes_json(tmp_path):
     inst.per_mirror_results = [
         mpp.MirrorOptimizationResult(
             mirror=1,
-            measured_d80_mm=10.0,
+            measured_psf_mm=10.0,
             optimized_rnda=[0.002, 0.22, 0.022],
-            simulated_d80_mm=11.0,
+            simulated_psf_mm=11.0,
             percentage_diff=10.0,
+            containment_fraction=0.8,
         )
     ]
     inst.write_optimization_data()
@@ -388,10 +365,11 @@ def test_write_optimization_data_also_exports_model_parameter_json(tmp_path, moc
     inst.per_mirror_results = [
         mpp.MirrorOptimizationResult(
             mirror=1,
-            measured_d80_mm=10.0,
+            measured_psf_mm=10.0,
             optimized_rnda=[0.002, 0.22, 0.022],
-            simulated_d80_mm=11.0,
+            simulated_psf_mm=11.0,
             percentage_diff=10.0,
+            containment_fraction=0.8,
         )
     ]
 
@@ -410,22 +388,24 @@ def test_write_optimization_data_also_exports_model_parameter_json(tmp_path, moc
     assert kwargs["output_file"] == "mirror_reflection_random_angle-v1.json"
 
 
-def test_write_d80_histogram_calls_plotter(monkeypatch):
+def test_write_psf_histogram_calls_plotter(monkeypatch):
     inst = _make_minimal_instance(args_dict={"output_path": "."})
     inst.per_mirror_results = [
         mpp.MirrorOptimizationResult(
             mirror=1,
-            measured_d80_mm=10.0,
+            measured_psf_mm=10.0,
             optimized_rnda=[0.0, 0.0, 0.0],
-            simulated_d80_mm=12.0,
+            simulated_psf_mm=12.0,
             percentage_diff=20.0,
+            containment_fraction=0.8,
         ),
         mpp.MirrorOptimizationResult(
             mirror=2,
-            measured_d80_mm=11.0,
+            measured_psf_mm=11.0,
             optimized_rnda=[0.0, 0.0, 0.0],
-            simulated_d80_mm=13.0,
+            simulated_psf_mm=13.0,
             percentage_diff=18.1818,
+            containment_fraction=0.8,
         ),
     ]
 
@@ -437,8 +417,8 @@ def test_write_d80_histogram_calls_plotter(monkeypatch):
         called["args_dict"] = args_dict
         return "hist.png"
 
-    monkeypatch.setattr(mpp.plot_psf, "plot_d80_histogram", _fake_plot)
-    out = inst.write_d80_histogram()
+    monkeypatch.setattr(mpp.plot_psf, "plot_psf_histogram", _fake_plot)
+    out = inst.write_psf_histogram()
     assert out == "hist.png"
     assert called["measured"] == pytest.approx([10.0, 11.0])
     assert called["simulated"] == pytest.approx([12.0, 13.0])
