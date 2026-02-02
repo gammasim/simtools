@@ -311,9 +311,9 @@ def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
         mock_telescope_model.overwrite_parameters.assert_called_once_with(
             sample_parameters, flat_dict=True
         )
-        assert mock_save.call_count >= 1  # At least one save call
+        assert mock_save_figure.call_count >= 1  # At least one save call
 
-        
+
 def test_plot_psf_histogram_returns_none_when_not_configured(tmp_path):
     args_dict = {"output_path": str(tmp_path)}
     assert plot_psf.plot_psf_histogram([10.0], [11.0], args_dict) is None
