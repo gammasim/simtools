@@ -148,7 +148,7 @@ def main():
     ray.analyze(force=True)
 
     # Plotting
-    for key in ["d80_deg", "d80_cm", "eff_area", "eff_flen"]:
+    for key in ["psf_deg", "psf_cm", "eff_area", "eff_flen"]:
         plt.figure(figsize=(8, 6), tight_layout=True)
 
         ray.plot(key, marker="o", linestyle=":", color="k")
