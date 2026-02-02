@@ -13,7 +13,7 @@ from astropy.table import Table
 import simtools.data_model.model_data_writer as writer
 from simtools import settings
 from simtools.atmosphere import AtmosphereProfile
-from simtools.io import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 from simtools.utils import names
@@ -250,48 +250,93 @@ class CameraEfficiency:
         if export:
             self.export_results()
 
-    def results_summary(self):
+    def results_summary(self, return_string=True):
         """
         Print a summary of the results.
 
         Include a header for the zenith/azimuth settings and the NSB spectrum file which was used.
         The summary includes the various CTAO requirements and the final expected NSB pixel rate.
         """
-        nsb_spectrum_text = (
-            f"NSB spectrum file: {self.config['nsb_spectrum']}"
-            if self.config["nsb_spectrum"]
-            else "default sim_telarray spectrum."
-        )
-        results = (
-            f"Results summary for {self.telescope_model.name} at "
-            f"zenith={self.config['zenith_angle']:.1f} deg, "
-            f"azimuth={self.config['azimuth_angle']:.1f} deg\n"
-            f"Using the {nsb_spectrum_text}\n"
-            f"\nSpectrum weighted reflectivity: {self.calc_reflectivity():.4f}\n"
-        )
+        meta = {
+            "meta": {
+                "tel": self.telescope_model.name,
+                "zen": self.config["zenith_angle"],
+                "az": self.config["azimuth_angle"],
+                "nsb": (
+                    self.config["nsb_spectrum"]
+                    if self.config["nsb_spectrum"]
+                    else "default sim_telarray spectrum"
+                ),
+            }
+        }
+
+        metrics = {}
         if self.efficiency_type == "shower":
-            results += (
-                "Camera nominal efficiency with gaps (B-TEL-1170): "
-                f"{self.calc_camera_efficiency():.4f}\n"
-                "Telescope total efficiency"
-                f" with gaps (was A-PERF-2020): {self.calc_tel_efficiency():.4f}\n"
-                "Telescope total Cherenkov light efficiency / sqrt(total NSB efficiency) "
-                "(A-PERF-2025/B-TEL-0090): "
-                f"{self.calc_tot_efficiency(self.calc_tel_efficiency()):.4f}\n"
-            )
+            metrics |= {
+                "reflectivity": {
+                    "value": self.calc_reflectivity(),
+                    "description": "Spectrum weighted reflectivity",
+                },
+                "cam_eff": {
+                    "value": self.calc_camera_efficiency(),
+                    "description": "Camera nominal efficiency with gaps (B-TEL-1170)",
+                },
+                "tel_eff": {
+                    "value": self.calc_tel_efficiency(),
+                    "description": "Telescope total efficiency with gaps (was A-PERF-2020)",
+                },
+                "tot_sens": {
+                    "value": self.calc_tot_efficiency(self.calc_tel_efficiency()),
+                    "description": (
+                        "Telescope total Cherenkov light efficiency / sqrt(total NSB efficiency) "
+                        "(A-PERF-2025/B-TEL-0090)"
+                    ),
+                },
+            }
+
         if self.efficiency_type == "nsb":
-            results += (
-                "Expected NSB pixel rate for the provided NSB spectrum: "
-                f"{self.nsb_pixel_pe_per_ns:.4f} [p.e./ns]\n"
-                "Expected NSB pixel rate for the reference NSB: "
-                f"{self.nsb_rate_ref_conditions:.4f} [p.e./ns]\n"
-            )
+            metrics |= {
+                "nsb_rate": {
+                    "value": self.nsb_pixel_pe_per_ns,
+                    "description": "Expected NSB pixel rate for the provided NSB spectrum",
+                },
+                "nsb_ref": {
+                    "value": self.nsb_rate_ref_conditions,
+                    "description": "Expected NSB pixel rate for the reference NSB",
+                },
+            }
+
         if self.efficiency_type == "muon":
-            fraction_200_290 = self.calc_partial_efficiency(lambda_min=200.0, lambda_max=290.0)
-            results += (
-                "Fraction of light (from muons) in the wavelength range 200-290 nm (B-TEL-0095): "
-                f"{fraction_200_290:.4f}\n"
-            )
+            metrics |= {
+                "muon_frac": {
+                    "value": self.calc_partial_efficiency(lambda_min=200.0, lambda_max=290.0),
+                    "description": (
+                        "Fraction of light (from muons) in the wavelength range 200-290 nm "
+                        "(B-TEL-0095)"
+                    ),
+                },
+            }
+
+        summary = meta | metrics
+
+        if return_string:
+            return self._format_results_summary(summary)
+
+        return summary
+
+    def _format_results_summary(self, summary):
+        """Format results summary into a string."""
+        results = (
+            f"Results summary for {summary['meta']['tel']} at "
+            f"zenith={summary['meta']['zen']:.1f} deg, "
+            f"azimuth={summary['meta']['az']:.1f} deg\n"
+            f"Using the {summary['meta']['nsb']}\n"
+        )
+        for key, data in summary.items():
+            if key == "meta":
+                continue
+            results += f"{data['description']}: {data['value']:.4f}\n"
+
         return results
 
     def export_results(self):
@@ -303,12 +348,14 @@ class CameraEfficiency:
             astropy.io.ascii.write(
                 self._results, self._file["results"], format="basic", overwrite=True
             )
-            _results_summary_file = (
-                str(self._file["results"]).replace(".ecsv", ".txt").replace("_table_", "_summary_")
-            )
+            _results_summary_file = str(self._file["results"]).replace(".ecsv", "_summary.txt")
             self._logger.info(f"Exporting summary results to {_results_summary_file}")
             with open(_results_summary_file, "w", encoding="utf-8") as file:
                 file.write(self.results_summary())
+            ascii_handler.write_data_to_file(
+                self.results_summary(return_string=False),
+                Path(_results_summary_file).with_suffix(".yml"),
+            )
 
     def _read_results(self):
         """Read existing results file and store it in _results."""

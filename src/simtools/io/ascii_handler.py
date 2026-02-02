@@ -290,8 +290,25 @@ def _write_to_yaml(data, output_file, sort_keys):
         If True, sort the keys.
 
     """
+    data = _to_builtin(data)
     with open(output_file, "w", encoding="utf-8") as file:
         yaml.dump(data, file, indent=4, sort_keys=sort_keys, explicit_start=True)
+
+
+def _to_builtin(data):
+    """Convert numpy types to native Python types for yaml output."""
+    if isinstance(data, u.Quantity):
+        return {
+            "value": float(data.value),
+            "unit": str(data.unit),
+        }
+    if isinstance(data, np.generic):
+        return data.item()
+    if isinstance(data, dict):
+        return {k: _to_builtin(v) for k, v in data.items()}
+    if isinstance(data, (list, tuple)):
+        return [_to_builtin(v) for v in data]
+    return data
 
 
 class JsonNumpyEncoder(json.JSONEncoder):
