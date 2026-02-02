@@ -341,12 +341,14 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
     mock_load_writer = mocker.patch.object(
         TelescopeModel,
         "_load_simtel_config_writer",
-        side_effect=lambda: setattr(telescope_copy, "simtel_config_writer", mock_writer),
+        side_effect=lambda *args, **kwargs: setattr(
+            telescope_copy, "simtel_config_writer", mock_writer
+        ),
     )
 
     telescope_copy.write_sim_telarray_config_file()
     mock_export.assert_called_once_with(update_if_necessary=True)
-    mock_load_writer.assert_called_once()
+    mock_load_writer.assert_called_once_with(label=None)
     mock_writer.write_telescope_config_file.assert_called_once()
 
     mock_export.reset_mock()
@@ -358,7 +360,7 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
 
     telescope_copy.write_sim_telarray_config_file(additional_models=add_model)
     assert mock_export.call_count == 2  # Called for both models
-    mock_load_writer.assert_called_once()
+    mock_load_writer.assert_called_once_with(label=None)
     assert telescope_copy.parameters.get("test_param") == "test_value"
     mock_writer.write_telescope_config_file.assert_called_once()
 

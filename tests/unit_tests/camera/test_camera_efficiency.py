@@ -328,7 +328,7 @@ def test_results_summary_shower_type(camera_efficiency_lst, prepare_results_file
     assert "Results summary for LSTN-01" in summary
     assert "zenith=20.0 deg" in summary
     assert "azimuth=0.0 deg" in summary
-    assert "Spectrum weighted reflectivity:" in summary
+    assert "Spectrum (shower) weighted reflectivity:" in summary
     assert "Camera nominal efficiency with gaps (B-TEL-1170):" in summary
     assert "Telescope total efficiency" in summary
     assert "Telescope total Cherenkov light efficiency" in summary
@@ -370,4 +370,4 @@ def test_results_summary_without_nsb_spectrum(camera_efficiency_lst, prepare_res
     camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.config["nsb_spectrum"] = None
     summary = camera_efficiency_lst.results_summary()
-    assert "default sim_telarray spectrum" in summary
+    assert "default sim_telarray NSB spectrum" in summary
