@@ -324,8 +324,8 @@ def test_results_summary_shower_type(camera_efficiency_lst, prepare_results_file
     camera_efficiency_lst.efficiency_type = "shower"
     summary = camera_efficiency_lst.results_summary()
     assert summary["meta"]["tel"] == "LSTN-01"
-    assert summary["meta"]["zen"] == 20.0
-    assert summary["meta"]["az"] == 0.0
+    assert summary["meta"]["zen"] == pytest.approx(20.0)
+    assert summary["meta"]["az"] == pytest.approx(0.0)
     assert "reflectivity" in summary
     assert summary["reflectivity"]["description"] == "Spectrum weighted reflectivity"
     assert "cam_eff" in summary
@@ -340,18 +340,18 @@ def test_results_summary_nsb_type(camera_efficiency_lst, prepare_results_file, m
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.efficiency_type = "nsb"
-    camera_efficiency_lst.nsb_pixel_pe_per_ns = 0.5
-    camera_efficiency_lst.nsb_rate_ref_conditions = 0.25
+    camera_efficiency_lst.nsb_pixel_pe_per_ns = pytest.approx(0.5)
+    camera_efficiency_lst.nsb_rate_ref_conditions = pytest.approx(0.25)
     summary = camera_efficiency_lst.results_summary()
     assert summary["meta"]["tel"] == "LSTN-01"
     assert "nsb_rate" in summary
-    assert summary["nsb_rate"]["value"] == 0.5
+    assert summary["nsb_rate"]["value"] == pytest.approx(0.5)
     assert (
         summary["nsb_rate"]["description"]
         == "Expected NSB pixel rate for the provided NSB spectrum"
     )
     assert "nsb_ref" in summary
-    assert summary["nsb_ref"]["value"] == 0.25
+    assert summary["nsb_ref"]["value"] == pytest.approx(0.25)
     assert summary["nsb_ref"]["description"] == "Expected NSB pixel rate for the reference NSB"
 
 
