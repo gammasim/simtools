@@ -3,12 +3,16 @@
 import logging
 import re
 from collections import defaultdict
+from pathlib import Path
 
 import astropy.io.ascii
 import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
+import simtools.data_model.model_data_writer as writer
+from simtools import settings
+from simtools.atmosphere import AtmosphereProfile
 from simtools.io import io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
@@ -26,9 +30,11 @@ class CameraEfficiency:
         Instance label, optional.
     config_data: dict.
         Dict containing the configurable parameters.
+    efficiency_type: str
+        The type of efficiency to simulate (e.g., 'Shower', 'Muon', or 'NSB').
     """
 
-    def __init__(self, config_data, label):
+    def __init__(self, label, config_data, efficiency_type):
         """Initialize the CameraEfficiency class."""
         self._logger = logging.getLogger(__name__)
 
@@ -40,14 +46,14 @@ class CameraEfficiency:
             model_version=config_data["model_version"],
             site=config_data["site"],
             telescope_name=config_data["telescope"],
-            overwrite_model_parameters=config_data.get("overwrite_model_parameters"),
         )
         self.output_dir = self.io_handler.get_output_directory()
 
         self._results = None
         self._has_results = False
+        self.efficiency_type = efficiency_type.lower()
 
-        self.config = self._configuration_from_args_dict(config_data)
+        self.config = self._configuration(config_data)
         self._file = self._load_files()
 
         self.nsb_pixel_pe_per_ns = None
@@ -57,9 +63,9 @@ class CameraEfficiency:
         """Return string representation of the CameraEfficiency instance."""
         return f"CameraEfficiency(label={self.label})\n"
 
-    def _configuration_from_args_dict(self, config_data):
+    def _configuration(self, config_data):
         """
-        Extract configuration data from command line arguments.
+        Extract configuration data from command line and class parameters.
 
         Parameters
         ----------
@@ -75,6 +81,7 @@ class CameraEfficiency:
             "zenith_angle": config_data["zenith_angle"].to("deg").value,
             "azimuth_angle": config_data["azimuth_angle"].to("deg").value,
             "nsb_spectrum": config_data.get("nsb_spectrum", None),
+            "efficiency_type": self.efficiency_type,
         }
 
     def _load_files(self):
@@ -85,15 +92,13 @@ class CameraEfficiency:
             [".ecsv", ".dat", ".log"],
         ):
             file_name = names.generate_file_name(
-                file_type=(
-                    "camera_efficiency_table" if label == "results" else "camera_efficiency"
-                ),
+                file_type="camera_efficiency",
                 suffix=suffix,
                 site=self.telescope_model.site,
                 telescope_model_name=self.telescope_model.name,
                 zenith_angle=self.config["zenith_angle"],
                 azimuth_angle=self.config["azimuth_angle"],
-                label=self.label,
+                label=self.efficiency_type,
             )
 
             _file[label] = self.io_handler.get_output_directory().joinpath(file_name)
@@ -112,6 +117,7 @@ class CameraEfficiency:
             file_simtel=self._file["sim_telarray"],
             file_log=self._file["log"],
             label=self.label,
+            x_max=self._get_x_max_for_efficiency_type(),
             nsb_spectrum=self.config["nsb_spectrum"],
             skip_correction_to_nsb_spectrum=self.config.get(
                 "skip_correction_to_nsb_spectrum", False
@@ -254,26 +260,39 @@ class CameraEfficiency:
         nsb_spectrum_text = (
             f"NSB spectrum file: {self.config['nsb_spectrum']}"
             if self.config["nsb_spectrum"]
-            else "default sim_telarray spectrum."
+            else "default sim_telarray NSB spectrum."
         )
-        return (
+        results = (
             f"Results summary for {self.telescope_model.name} at "
             f"zenith={self.config['zenith_angle']:.1f} deg, "
             f"azimuth={self.config['azimuth_angle']:.1f} deg\n"
             f"Using the {nsb_spectrum_text}\n"
-            f"\nSpectrum weighted reflectivity: {self.calc_reflectivity():.4f}\n"
-            "Camera nominal efficiency with gaps (B-TEL-1170): "
-            f"{self.calc_camera_efficiency():.4f}\n"
-            "Telescope total efficiency"
-            f" with gaps (was A-PERF-2020): {self.calc_tel_efficiency():.4f}\n"
-            "Telescope total Cherenkov light efficiency / sqrt(total NSB efficiency) "
-            "(A-PERF-2025/B-TEL-0090): "
-            f"{self.calc_tot_efficiency(self.calc_tel_efficiency()):.4f}\n"
-            "Expected NSB pixel rate for the provided NSB spectrum: "
-            f"{self.nsb_pixel_pe_per_ns:.4f} [p.e./ns]\n"
-            "Expected NSB pixel rate for the reference NSB: "
-            f"{self.nsb_rate_ref_conditions:.4f} [p.e./ns]\n"
         )
+        if self.efficiency_type == "shower":
+            results += (
+                f"Spectrum (shower) weighted reflectivity: {self.calc_reflectivity():.4f}\n"
+                "Camera nominal efficiency with gaps (B-TEL-1170): "
+                f"{self.calc_camera_efficiency():.4f}\n"
+                "Telescope total efficiency"
+                f" with gaps (was A-PERF-2020): {self.calc_tel_efficiency():.4f}\n"
+                "Telescope total Cherenkov light efficiency / sqrt(total NSB efficiency) "
+                "(A-PERF-2025/B-TEL-0090): "
+                f"{self.calc_tot_efficiency(self.calc_tel_efficiency()):.4f}\n"
+            )
+        if self.efficiency_type == "nsb":
+            results += (
+                "Expected NSB pixel rate for the provided NSB spectrum: "
+                f"{self.nsb_pixel_pe_per_ns:.4f} [p.e./ns]\n"
+                "Expected NSB pixel rate for the reference NSB: "
+                f"{self.nsb_rate_ref_conditions:.4f} [p.e./ns]\n"
+            )
+        if self.efficiency_type == "muon":
+            fraction_200_290 = self.calc_partial_efficiency(lambda_min=200.0, lambda_max=290.0)
+            results += (
+                "Fraction of light (from muons) in the wavelength range 200-290 nm (B-TEL-0095): "
+                f"{fraction_200_290:.4f}\n"
+            )
+        return results
 
     def export_results(self):
         """Export results to a ecsv file."""
@@ -364,6 +383,39 @@ class CameraEfficiency:
 
         return tel_efficiency / np.sqrt(tel_efficiency_nsb)
 
+    def calc_partial_efficiency(self, lambda_min=200.0, lambda_max=290.0):
+        """
+        Compare efficiency in a given wavelength range with total efficiency.
+
+        Parameters
+        ----------
+        lambda_min: float
+            Minimum wavelength in nm.
+        lambda_max: float
+            Maximum wavelength in nm.
+
+        Returns
+        -------
+        Float
+            Fraction of light in the given wavelength range compared to total efficiency.
+
+        """
+        # Sum(C4) from lamba_min to lambda_max nm:
+        c4_reduced_wl = self._results["C4"][
+            [lambda_min < wl_now < lambda_max for wl_now in self._results["wl"]]
+        ]
+        c4_sum = np.sum(c4_reduced_wl)
+        # Sum(C4) from 200 - 999 nm:
+        c4_sum_total = np.sum(self._results["C4"])
+        # (no need to apply masts or fill factors as in calc_tel_efficiency, they cancel out)
+
+        self._logger.info(
+            f"Fraction of light in the wavelength range {lambda_min}-{lambda_max} nm: "
+            f"{c4_sum / c4_sum_total:.4f}"
+        )
+
+        return c4_sum / c4_sum_total
+
     def calc_reflectivity(self):
         """
         Calculate the Cherenkov spectrum weighted reflectivity in the range 300-550 nm.
@@ -429,14 +481,12 @@ class CameraEfficiency:
         )
         return self.nsb_pixel_pe_per_ns * u.GHz, self.nsb_rate_ref_conditions * u.GHz
 
-    def plot_efficiency(self, efficiency_type, save_fig=False):
+    def plot_efficiency(self, save_fig=False):
         """
         Plot efficiency vs wavelength.
 
         Parameters
         ----------
-        efficiency_type: str
-            The type of efficiency to plot (Cherenkov 'C' or NSB 'N')
         save_fig: bool
             If True, the figure will be saved to a file.
 
@@ -445,9 +495,9 @@ class CameraEfficiency:
         fig
             The figure instance of pyplot
         """
-        self._logger.info(f"Plotting {efficiency_type} efficiency vs wavelength")
+        self._logger.info(f"Plotting {self.efficiency_type} efficiency vs wavelength")
 
-        _col_type = "C" if efficiency_type == "Cherenkov" else "N"
+        _col_type = "C" if self.efficiency_type in ("shower", "muon") else "N"
 
         column_titles = {
             "wl": "Wavelength [nm]",
@@ -465,21 +515,21 @@ class CameraEfficiency:
         for column_now, column_title in column_titles.items():
             table_to_plot.rename_column(column_now, column_title)
 
-        y_title = f"{efficiency_type} light efficiency"
-        if efficiency_type == "NSB":
+        y_title = f"{self.efficiency_type} light efficiency"
+        if self.efficiency_type == "nsb":
             y_title = r"Diff. ph. rate [$10^{9} \times $ph/(nm s m$^2$ sr)]"
         plot = visualize.plot_table(
             table_to_plot,
             y_title=y_title,
-            title=f"{self.telescope_model.name} response to {efficiency_type} light",
+            title=f"{self.telescope_model.name} response to {self.efficiency_type} light",
             no_markers=True,
         )
-        if efficiency_type == "NSB":
+        if self.efficiency_type == "nsb":
             plot.gca().set_yscale("log")
             ylim = plot.gca().get_ylim()
             plot.gca().set_ylim(1e-3, ylim[1])
         if save_fig:
-            self._save_plot(plot, efficiency_type.lower())
+            self._save_plot(plot, self.efficiency_type)
         return plot
 
     def _save_plot(self, fig, plot_title):
@@ -497,3 +547,50 @@ class CameraEfficiency:
             self.label + "_" + self.telescope_model.name + "_" + plot_title
         )
         visualize.save_figure(fig, plot_file, log_title=f"{plot_title} efficiency")
+
+    def dump_nsb_pixel_rate(self):
+        """Write NSB pixel rate parameter file."""
+        cfg = settings.config.args
+
+        writer.ModelDataWriter.dump_model_parameter(
+            parameter_name="nsb_pixel_rate",
+            value=self.get_nsb_pixel_rate(
+                reference_conditions=settings.config.args.get(
+                    "write_reference_nsb_rate_as_parameter", False
+                )
+            ),
+            instrument=cfg.get("telescope"),
+            parameter_version=cfg.get("parameter_version", "0.0.0"),
+            output_file=Path(f"nsb_pixel_rate-{cfg.get('parameter_version', '0.0.0')}.json"),
+            output_path=self.output_dir / cfg.get("telescope") / "nsb_pixel_rate",
+        )
+
+        # temporary fix
+        self.io_handler.set_paths(output_path=self.output_dir)
+
+    def _get_x_max_for_efficiency_type(self):
+        """
+        Get X max value in g/cm2 depending on the efficiency type.
+
+        Returns
+        -------
+        float
+             max value in g/cm2
+        """
+        # typical value for shower X-max around 10 km (not relevant for NSB type)
+        x_max = 300.0
+        obs_level = self.site_model.get_parameter_value_with_unit("corsika_observation_level")
+        if self.efficiency_type == "muon":
+            atmo = AtmosphereProfile(
+                self.site_model.config_file_directory
+                / self.site_model.get_parameter_value("atmospheric_profile")
+            )
+            alt = obs_level.to(u.km) + 0.1 * u.km
+            x_max = atmo.interpolate(altitude=alt, column="thick")
+
+        self._logger.info(
+            f"Using X-max for {self.efficiency_type} efficiency: {x_max:.2f} g/cm2"
+            f" (at observation level: {obs_level:.2f})"
+        )
+
+        return x_max
