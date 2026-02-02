@@ -66,6 +66,8 @@ class SimulatorRayTracing(SimtelRunner):
         self._rep_number = 0
         self.runs_per_set = 1 if self.config.single_mirror_mode else 20
         self.photons_per_run = 100000 if not test else 5000
+        self._single_pixel_camera_file = None
+        self._funnel_file = None
 
         self._load_required_files(force_simulate)
 
@@ -105,12 +107,13 @@ class SimulatorRayTracing(SimtelRunner):
             self.__dict__["_" + base_name + "_file"] = file
 
         if not file.exists() or force_simulate:
+            config_file_path = self.telescope_model.get_config_file_path(label=self.label)
             # Adding header to photon list file.
             with self._photons_file.open("w", encoding="utf-8") as file:
                 file.write(f"#{50 * '='}\n")
                 file.write("# List of photons for RayTracing simulations\n")
                 file.write(f"#{50 * '='}\n")
-                file.write(f"# config_file = {self.telescope_model.config_file_path}\n")
+                file.write(f"# config_file = {config_file_path}\n")
                 file.write(f"# zenith_angle [deg] = {self.config.zenith_angle}\n")
                 file.write(f"# off_axis_angle [deg] = {self.config.off_axis_angle}\n")
                 file.write(f"# source_distance [km] = {self.config.source_distance}\n")
@@ -129,7 +132,7 @@ class SimulatorRayTracing(SimtelRunner):
 
         if self.config.single_mirror_mode:
             self._logger.debug("For single mirror mode, need to prepare the single pixel camera.")
-            self._write_out_single_pixel_camera_file()
+            self._write_out_single_pixel_camera_files()
 
     def make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
         """
@@ -137,7 +140,12 @@ class SimulatorRayTracing(SimtelRunner):
 
         The run_number and input_file parameters are not relevant for the ray tracing simulation.
         """
-        self.telescope_model.write_sim_telarray_config_file(additional_models=self.site_model)
+        self.telescope_model.write_sim_telarray_config_file(
+            additional_models=self.site_model,
+            label=self.label,
+        )
+
+        config_file_path = self.telescope_model.get_config_file_path(label=self.label)
 
         if self.config.single_mirror_mode:
             # Note: no mirror length defined for dual-mirror telescopes
@@ -168,7 +176,7 @@ class SimulatorRayTracing(SimtelRunner):
             options.update(
                 {
                     "focus_offset": "all:0.",
-                    "camera_config_file": "single_pixel_camera.dat",
+                    "camera_config_file": str(self._single_pixel_camera_file),
                     "camera_pixels": "1",
                     "trigger_pixels": "1",
                     "camera_body_diameter": "0",
@@ -187,7 +195,7 @@ class SimulatorRayTracing(SimtelRunner):
         cmd = [
             str(settings.config.sim_telarray_exe),
             "-c",
-            str(self.telescope_model.config_file_path),
+            str(config_file_path),
             f"-I{self.telescope_model.config_file_directory}",
         ]
         for key, value in options.items():
@@ -218,20 +226,19 @@ class SimulatorRayTracing(SimtelRunner):
             raise RuntimeError("Photon list is empty.")
         return True
 
-    def _write_out_single_pixel_camera_file(self):
-        """Write out the single pixel camera file."""
-        with self.telescope_model.config_file_directory.joinpath("single_pixel_camera.dat").open(
-            "w"
-        ) as file:
-            file.write("# Single pixel camera\n")
-            file.write('PixType 1   0  0 300   1 300 0.00   "funnel_perfect.dat"\n')
-            file.write("Pixel 0 1 0. 0.  0  0  0 0x00 1\n")
-            file.write("Trigger 1 of 0\n")
+    def _write_out_single_pixel_camera_files(self):
+        """Write out per-label single pixel camera + funnel files.
 
-        # need to also write out the funnel_perfect.dat file
-        with self.telescope_model.config_file_directory.joinpath("funnel_perfect.dat").open(
-            "w"
-        ) as file:
+        These files are referenced by sim_telarray and must not be shared across
+        parallel worker processes (otherwise they can be truncated mid-read).
+        """
+        self._single_pixel_camera_file = (
+            self._base_directory / f"single_pixel_camera_{self.label}.dat"
+        )
+        self._funnel_file = self._base_directory / f"funnel_perfect_{self.label}.dat"
+
+        # Funnel file (referenced by absolute path from the camera file).
+        with self._funnel_file.open("w", encoding="utf-8") as file:
             file.write(
                 "# Perfect light collection where the angular efficiency of funnels is needed\n"
             )
@@ -239,6 +246,13 @@ class SimulatorRayTracing(SimtelRunner):
             file.write("30   1.0\n")
             file.write("60   1.0\n")
             file.write("90   1.0\n")
+
+        # Camera config.
+        with self._single_pixel_camera_file.open("w", encoding="utf-8") as file:
+            file.write("# Single pixel camera\n")
+            file.write(f'PixType 1   0  0 300   1 300 0.00   "{self._funnel_file}"\n')
+            file.write("Pixel 0 1 0. 0.  0  0  0 0x00 1\n")
+            file.write("Trigger 1 of 0\n")
 
     def _config_to_namedtuple(self, data_dict):
         """Convert dict to namedtuple for configuration."""
