@@ -155,7 +155,7 @@ jobs:
           } | tee .env >> "$GITHUB_ENV"
 
       - name: Download CORSIKA interaction tables
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: corsika-interaction-tables
           path: ${{ env.SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH }}/..
