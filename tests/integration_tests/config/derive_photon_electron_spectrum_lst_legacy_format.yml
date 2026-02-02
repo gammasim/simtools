@@ -3,7 +3,8 @@ applications:
 - application: simtools-derive-photon-electron-spectrum
   configuration:
     afterpulse_spectrum: ./tests/resources/LST_afterpulses.dat
-    input_spectrum: ./tests/resources/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
+    input_spectrum: |
+     ./tests/resources/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
     log_level: DEBUG
     output_file: test_single_pe_lst.ecsv
     output_path: simtools-output
@@ -12,9 +13,7 @@ applications:
   integration_tests:
   - output_file: test_single_pe_lst.dat
   - output_file: test_single_pe_lst.ecsv
-  - reference_output_file: 'tests/resources/spe_LST_2022-04-27_AP2.0e-4.ecsv
-
-      '
+  - reference_output_file: tests/resources/spe_LST_2022-04-27_AP2.0e-4.ecsv
     tolerance: 0.0001
   test_name: LST_legacy_format
   test_use_case: UC-150-2.1.2
