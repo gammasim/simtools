@@ -205,6 +205,26 @@ def test_compare_yaml_files_equal_integers(create_yaml_file, file_name):
     assert not validate_output.compare_json_or_yaml_files(file1, file3)
 
 
+def test_compare_json_files_nested_dicts_with_values(create_json_file, file_name):
+    content = {
+        "meta": {"tel": "LSTN-01", "zen": 20.0},
+        "efficiency": {"value": 0.2748, "description": "Camera nominal efficiency with gaps"},
+    }
+    file1 = create_json_file(file_name(1, "json"), content)
+    file2 = create_json_file(file_name(2, "json"), content)
+
+    assert validate_output.compare_json_or_yaml_files(file1, file2)
+
+    content3 = {
+        "meta": {"tel": "LSTN-01", "zen": 20.0},
+        "efficiency": {"value": 0.2850, "description": "Camera nominal efficiency with gaps"},
+    }
+    file3 = create_json_file(file_name(3, "json"), content3)
+    assert not validate_output.compare_json_or_yaml_files(file1, file3)
+
+    assert validate_output.compare_json_or_yaml_files(file1, file3, tolerance=0.05)
+
+
 def test_compare_ecsv_files_equal(create_ecsv_file, file_name):
     content = {"col1": [1.1, 2.2, 3.3], "col2": [4.4, 5.5, 6.6]}
     file1 = create_ecsv_file(file_name(1, "ecsv"), content)
@@ -775,3 +795,102 @@ def test_validate_application_output_gating_calls(tmp_path: Path):
         # CLI filter not matching, should skip validations
         validate_application_output(cfg, from_command_line="7.0.0", from_config_file="6.0.0")
         m_validate.assert_not_called()
+
+
+def test_compare_nested_dicts_with_tolerance_equal_dicts():
+    data1 = {"key": 1, "value": 5.5}
+    data2 = {"key": 1, "value": 5.5}
+    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
+
+
+def test_compare_nested_dicts_with_tolerance_different_keys():
+    data1 = {"key": 1, "value": 5.5}
+    data2 = {"different_key": 1, "value": 5.5}
+    assert not validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
+
+
+def test_compare_nested_dicts_with_tolerance_float_within_tolerance():
+    data1 = {"value": 5.5}
+    data2 = {"value": 5.50001}
+    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-3)
+
+
+def test_compare_nested_dicts_with_tolerance_float_outside_tolerance():
+    data1 = {"value": 5.5}
+    data2 = {"value": 5.75}
+    assert not validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
+
+
+def test_compare_nested_dicts_with_tolerance_list_of_floats():
+    data1 = {"values": [1.1, 2.2, 3.3]}
+    data2 = {"values": [1.1, 2.2, 3.3]}
+    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
+
+
+def test_compare_nested_dicts_with_tolerance_list_different_lengths():
+    data1 = {"values": [1.1, 2.2, 3.3]}
+    data2 = {"values": [1.1, 2.2]}
+    assert not validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
+
+
+def test_compare_nested_dicts_with_tolerance_deeply_nested():
+    data1 = {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}}
+    data2 = {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}}
+    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
+
+
+def test_compare_nested_dicts_with_tolerance_deeply_nested_value_mismatch():
+    data1 = {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}}
+    data2 = {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2850}}
+    assert not validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
+
+
+def test_compare_nested_dicts_with_tolerance_deeply_nested_with_tolerance():
+    data1 = {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}}
+    data2 = {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2850}}
+    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=0.05)
+
+
+def test_compare_nested_dicts_with_tolerance_non_value_field_exact_match():
+    data1 = {"description": "test string", "value": 5.5}
+    data2 = {"description": "test string", "value": 5.50001}
+    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-3)
+
+
+def test_compare_nested_dicts_with_tolerance_non_value_field_exact_mismatch():
+    data1 = {"description": "test string"}
+    data2 = {"description": "different string"}
+    assert not validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
+
+
+def test_compare_nested_dicts_with_tolerance_scalar_value():
+    assert validate_output._compare_nested_dicts_with_tolerance(
+        5.5, 5.50001, tolerance=1.0e-3, is_value_field=True
+    )
+    assert not validate_output._compare_nested_dicts_with_tolerance(
+        5.5, 5.75, tolerance=1.0e-5, is_value_field=True
+    )
+
+
+def test_compare_nested_dicts_with_tolerance_tuple_vs_list():
+    data1 = (1.1, 2.2, 3.3)
+    data2 = [1.1, 2.2, 3.3]
+    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
+
+
+def test_compare_nested_dicts_with_tolerance_mixed_types_in_list():
+    data1 = {"items": [1, "string", 3.3]}
+    data2 = {"items": [1, "string", 3.3]}
+    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
+
+
+def test_compare_nested_dicts_with_tolerance_value_field_with_string():
+    data1 = {"value": "1.23 4.56 7.89"}
+    data2 = {"value": "1.23 4.56 7.89"}
+    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
+
+
+def test_compare_nested_dicts_with_tolerance_value_field_string_mismatch():
+    data1 = {"value": "1.23 4.56 7.89"}
+    data2 = {"value": "1.23 4.56 7.90"}
+    assert not validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
