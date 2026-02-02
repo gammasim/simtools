@@ -2,26 +2,23 @@
 applications:
 - application: simtools-derive-mirror-rnda
   configuration:
-    containment_fraction: 0.8
     log_level: DEBUG
-    model_version: 6.0.2
-    output_file: test_derive_mirror_rnda_psf_measurement.ecsv
+    model_version: 7.0.0
+    parameter_version: 1.0.0
     output_path: simtools-output
-    psf_measurement: ./tests/resources/MLTdata-preproduction.ecsv
-    rnda: 0.0063
-    rtol_psf_containment: 0.1
+    data: tests/resources/MLTdata-preproduction.ecsv
     site: North
-    telescope: MSTx-NectarCam
+    telescope: LSTN-01
+    psf_hist: true
+    n_workers: 1
+    number_of_mirrors_to_test: 1
     test: true
-    use_random_focal_length: true
   integration_tests:
-  - output_file: test_derive_mirror_rnda_psf_measurement.ecsv
-  - reference_output_file: tests/resources/derive_mirror_rnda_psf_measurement.ecsv
-    test_columns:
-    - cut_column_name: best_fit
-      cut_condition: ==True
-      test_column_name: mirror_reflection_random_angle_sigma1
-    tolerance: 0.3
+  - test_output_files:
+    - file: LSTN-01/mirror_reflection_random_angle-1.0.0.json
+      path_descriptor: output_path
+    - file: psf_distributions.png
+      path_descriptor: output_path
   test_name: psf_measurement
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

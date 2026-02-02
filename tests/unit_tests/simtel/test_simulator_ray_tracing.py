@@ -107,20 +107,17 @@ def test_load_required_files(simulator_ray_tracing_sst):
 def assert_single_pixel_and_perfect_funnel_files(
     simulator_ray_tracing_to_test, single_pixel_camera_file_content, funnel_perfect_file_content
 ):
-    single_pixel_camera_file = (
-        simulator_ray_tracing_to_test.telescope_model.config_file_directory.joinpath(
-            "single_pixel_camera.dat"
-        )
-    )
-    funnel_perfect_file = (
-        simulator_ray_tracing_to_test.telescope_model.config_file_directory.joinpath(
-            "funnel_perfect.dat"
-        )
-    )
+    # SimulatorRayTracing writes per-label camera/funnel files into the output directory
+    # to avoid clobbering in parallel runs.
+    single_pixel_camera_file = simulator_ray_tracing_to_test._single_pixel_camera_file
+    funnel_perfect_file = simulator_ray_tracing_to_test._funnel_file
+
+    expected_single_pixel_camera = list(single_pixel_camera_file_content)
+    expected_single_pixel_camera[1] = f'PixType 1   0  0 300   1 300 0.00   "{funnel_perfect_file}"'
 
     for created_file, content in zip(
         [single_pixel_camera_file, funnel_perfect_file],
-        [single_pixel_camera_file_content, funnel_perfect_file_content],
+        [expected_single_pixel_camera, funnel_perfect_file_content],
     ):
         assert created_file.exists()
         with created_file.open("r") as file:
@@ -139,6 +136,14 @@ def test_load_required_files_single_mirror(
     assert simulator_ray_tracing_single_mirror._photons_file.exists()
     assert simulator_ray_tracing_single_mirror._stars_file.exists()
 
+    # Legacy fixed filenames should not be created in the telescope model config directory.
+    assert not simulator_ray_tracing_single_mirror.telescope_model.config_file_directory.joinpath(
+        "single_pixel_camera.dat"
+    ).exists()
+    assert not simulator_ray_tracing_single_mirror.telescope_model.config_file_directory.joinpath(
+        "funnel_perfect.dat"
+    ).exists()
+
     assert_single_pixel_and_perfect_funnel_files(
         simulator_ray_tracing_single_mirror,
         single_pixel_camera_file_content,
@@ -151,8 +156,7 @@ def test_make_run_command(simulator_ray_tracing_sst, model_version):
 
     assert any("bin/sim_telarray" in str(cmd) for cmd in command)
     assert any(
-        f"model/{model_version}/CTA-South-SSTS-design_test-telescope-model-sst.cfg" in str(cmd)
-        for cmd in command
+        f"model/{model_version}/CTA-South-SSTS-design_{LABEL}.cfg" in str(cmd) for cmd in command
     )
     # Check that the relevant options are present as substrings in the command
     assert any("altitude=2147.0" in str(cmd) for cmd in command)
@@ -184,7 +188,7 @@ def test_check_run_result(simulator_ray_tracing_sst):
 def test_write_out_single_pixel_camera_file(
     simulator_ray_tracing_sst, single_pixel_camera_file_content, funnel_perfect_file_content
 ):
-    simulator_ray_tracing_sst._write_out_single_pixel_camera_file()
+    simulator_ray_tracing_sst._write_out_single_pixel_camera_files()
 
     assert_single_pixel_and_perfect_funnel_files(
         simulator_ray_tracing_sst, single_pixel_camera_file_content, funnel_perfect_file_content
