@@ -118,11 +118,10 @@ def _test_simtel_cfg_files(config, integration_test, from_command_line, from_con
 
 def _validate_reference_output_file(config, integration_test):
     """Compare with reference output file."""
+    test_file = integration_test.get("test_output_file") or config["configuration"]["output_file"]
     assert compare_files(
         integration_test["reference_output_file"],
-        Path(config["configuration"]["output_path"]).joinpath(
-            config["configuration"]["output_file"]
-        ),
+        Path(config["configuration"]["output_path"]).joinpath(test_file),
         integration_test.get("tolerance", 1.0e-5),
         integration_test.get("test_columns", None),
     )
