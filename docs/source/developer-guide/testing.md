@@ -154,19 +154,21 @@ Test is successful for certain equivalent file types (e.g. yml vs yaml).
 Compare tool output with a given reference files (in the following example with a tolerance of 1.e-2 for floating point comparison):
 
 ```text
-reference_output_files:
-  - reference_file: ray-tracing/results/ray-tracing-North-LSTN-01-d11.0km-za20.0deg_validate_optics.ecsv
+integration_tests:
+  - reference_output_file: ray-tracing/results/ray-tracing-North-LSTN-01-d11.0km-za20.0deg_validate_optics.ecsv
     tolerance: 1.e-2
+    test_output_file: ray_tracing_results.ecsv
 ```
 
-This is implemented for any astropy table-like file.
+If no `test_output_file` is given, the output file defined in the configuration file is used.
+Tests are implemented for any astropy table-like files.
 
 The tests can be restricted to certain rows.
 The following examples compares only rows with `best_fit==True` and only the column
 `mirror_reflection_random_angle_sigma1` with a tolerance of 0.3:
 
 ```text
-reference_output_files:
+integration_tests:
   - reference_output_file: tests/resources/derive_mirror_rnda_psf_random_flen.ecsv
     test_columns:
     - cut_column_name: best_fit

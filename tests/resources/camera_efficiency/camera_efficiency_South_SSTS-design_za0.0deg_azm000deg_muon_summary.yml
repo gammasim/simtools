@@ -1,0 +1,10 @@
+---
+meta:
+  tel: SSTS-design
+  zen: 0.0
+  az: 0.0
+  nsb: default sim_telarray spectrum
+muon_frac:
+  value: 0.03277130583918594
+  description: Fraction of light (from muons) in the wavelength range 200-290 nm
+    (B-TEL-0095)
