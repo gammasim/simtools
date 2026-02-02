@@ -105,7 +105,7 @@ def main():
     """Calculate the camera efficiency and NSB pixel rates."""
     app_context = startup_application(_parse)
 
-    results = []
+    results = {}
     for efficiency_type in ["Shower", "NSB", "Muon"]:
         ce = CameraEfficiency(
             label=app_context.args.get("label"),
@@ -114,7 +114,7 @@ def main():
         )
         ce.simulate()
         ce.analyze(force=True)
-        results.append(ce.results_summary())
+        results |= ce.results_summary()
         ce.plot_efficiency(save_fig=True)
 
         if ce.efficiency_type == "nsb":
@@ -124,7 +124,7 @@ def main():
 
     results_file = app_context.io_handler.get_output_directory() / names.generate_file_name(
         file_type="camera_efficiency_summary",
-        suffix=".txt",
+        suffix=".yml",
         site=app_context.args["site"],
         telescope_model_name=app_context.args["telescope"],
         zenith_angle=app_context.args["zenith_angle"].value,

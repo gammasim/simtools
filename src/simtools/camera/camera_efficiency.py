@@ -250,16 +250,22 @@ class CameraEfficiency:
         if export:
             self.export_results()
 
-    def results_summary(self, return_string=True):
+    def results_summary(self):
         """
-        Print a summary of the results.
+        Fill a dictionary with summary of the results.
 
         Include a header for the zenith/azimuth settings and the NSB spectrum file which was used.
         The summary includes the various CTAO requirements and the final expected NSB pixel rate.
+
+        Returns
+        -------
+        dict
+            Summary of the results.
         """
         meta = {
             "meta": {
                 "tel": self.telescope_model.name,
+                "model_version": self.telescope_model.model_version,
                 "zen": self.config["zenith_angle"],
                 "az": self.config["azimuth_angle"],
                 "nsb": (
@@ -317,27 +323,7 @@ class CameraEfficiency:
                 },
             }
 
-        summary = meta | metrics
-
-        if return_string:
-            return self._format_results_summary(summary)
-
-        return summary
-
-    def _format_results_summary(self, summary):
-        """Format results summary into a string."""
-        results = (
-            f"Results summary for {summary['meta']['tel']} at "
-            f"zenith={summary['meta']['zen']:.1f} deg, "
-            f"azimuth={summary['meta']['az']:.1f} deg\n"
-            f"Using the {summary['meta']['nsb']}\n"
-        )
-        for key, data in summary.items():
-            if key == "meta":
-                continue
-            results += f"{data['description']}: {data['value']:.4f}\n"
-
-        return results
+        return meta | metrics
 
     def export_results(self):
         """Export results to a ecsv file."""
@@ -348,14 +334,9 @@ class CameraEfficiency:
             astropy.io.ascii.write(
                 self._results, self._file["results"], format="basic", overwrite=True
             )
-            _results_summary_file = str(self._file["results"]).replace(".ecsv", "_summary.txt")
+            _results_summary_file = str(self._file["results"]).replace(".ecsv", "_summary.yml")
             self._logger.info(f"Exporting summary results to {_results_summary_file}")
-            with open(_results_summary_file, "w", encoding="utf-8") as file:
-                file.write(self.results_summary())
-            ascii_handler.write_data_to_file(
-                self.results_summary(return_string=False),
-                Path(_results_summary_file).with_suffix(".yml"),
-            )
+            ascii_handler.write_data_to_file(self.results_summary(), Path(_results_summary_file))
 
     def _read_results(self):
         """Read existing results file and store it in _results."""
