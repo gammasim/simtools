@@ -50,7 +50,24 @@ r"""
             --file_lablels label1 label2 \\
             --pdf_file_name test.pdf
 
+    Notes
+    -----
+    The typical use case of this application is to generate lateral photon density distribution
+    to compare different CORSIKA simulation settings or different CORSIKA versions. The following
+    steps are recommended:
+
+        - generate a 'star'-like array of telescopes with the 'simtools-generate-regular-arrays'
+          application. There should be a sufficient number of telescopes (e.g. 50 or more) in the
+          layout with non-overlapping telescope definitions
+
+        - run CORSIKA simulations with the desired settings using this telescope layout (use the
+          'overwrite_model_parameters' option to point to the generated layout simulation model
+          change file (in the format given by 'simulation_models_info.schema.yml').
+
+        - run this application to generate the histograms for the produced CORSIKA IACT output
 """
+
+from astropy import units as u
 
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
@@ -79,6 +96,22 @@ def _parse():
         required=None,
     )
     config.parser.add_argument(
+        "--normalization",
+        help="Normalization method for histograms. Options: 'per-telescope', 'per-bin'",
+        type=str,
+        choices=["per-telescope", "per-bin"],
+        default="per-telescope",
+    )
+    config.parser.add_argument(
+        "--axis_distance",
+        help=(
+            "Distance from x/y axes to consider when calculating "
+            "the lateral density profiles (in meters)."
+        ),
+        type=float,
+        default=1000.0,
+    )
+    config.parser.add_argument(
         "--pdf_file_name",
         help="Save histograms into a pdf file.",
         type=str,
@@ -93,7 +126,11 @@ def main():
 
     all_histograms = []
     for input_file in app_context.args["input_files"]:
-        corsika_histograms = CorsikaHistograms(input_file)
+        corsika_histograms = CorsikaHistograms(
+            input_file,
+            normalization_method=app_context.args["normalization"],
+            axis_distance=app_context.args["axis_distance"] * u.m,
+        )
         corsika_histograms.fill()
         all_histograms.append(corsika_histograms)
 

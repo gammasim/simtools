@@ -50,7 +50,6 @@ class SimtelConfigWriter:
     ):
         """Initialize SimtelConfigWriter."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init SimtelConfigWriter")
 
         self._site = site
         self._model_version = model_version
