@@ -9,7 +9,7 @@ applications:
     zenith_angle: 0.
     parameter_version: 0.0.99
     write_reference_nsb_rate_as_parameter: true
-    log_level: debug
+    log_level: info
   integration_tests:
   - model_parameter_validation:
       parameter_file: nsb_pixel_rate/nsb_pixel_rate-0.0.99.json

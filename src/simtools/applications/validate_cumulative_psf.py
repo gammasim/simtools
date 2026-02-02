@@ -133,11 +133,7 @@ def main():
         site=app_context.args["site"],
         telescope_name=app_context.args["telescope"],
         model_version=app_context.args["model_version"],
-        overwrite_model_parameters=app_context.args.get("overwrite_model_parameters"),
     )
-
-    if app_context.args.get("overwrite_model_parameters"):
-        tel_model.overwrite_parameters_from_file(app_context.args["overwrite_model_parameters"])
 
     ray = RayTracing(
         telescope_model=tel_model,

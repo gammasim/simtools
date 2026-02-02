@@ -326,24 +326,24 @@ title_format = "## [{version}](https://github.com/gammasim/simtools/releases/tag
 issue_format = "[#{issue}](https://github.com/gammasim/simtools/pull/{issue})"
 start_string = "<!-- towncrier release notes start -->\n"
 
-[tool.towncrier.fragment.feature]
-name = "New Features"
+[tool.towncrier.fragment.api]
+name = "API Changes"
 showcontent = true
 
 [tool.towncrier.fragment.bugfix]
 name = "Bugfixes"
 showcontent = true
 
-[tool.towncrier.fragment.api]
-name = "API Changes"
+[tool.towncrier.fragment.doc]
+name = "Documentation"
+showcontent = true
+
+[tool.towncrier.fragment.feature]
+name = "New Features"
 showcontent = true
 
 [tool.towncrier.fragment.maintenance]
 name = "Maintenance"
-showcontent = true
-
-[tool.towncrier.fragment.doc]
-name = "Documentation"
 showcontent = true
 
 [tool.towncrier.fragment.model]

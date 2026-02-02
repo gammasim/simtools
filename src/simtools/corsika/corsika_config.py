@@ -39,7 +39,6 @@ class CorsikaConfig:
     def __init__(self, array_model, run_number, label=None):
         """Initialize CorsikaConfig."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init CorsikaConfig")
 
         self.label = label
         self.shower_events = self.mc_events = None
