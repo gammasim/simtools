@@ -63,6 +63,24 @@ def test_load_measured_data_reads_ecsv_and_validates_columns(mocker):
     assert list(table) == pytest.approx([10.0, 11.0])
 
 
+def test_load_measured_data_fraction_warning(mocker, caplog):
+    inst = _make_minimal_instance(
+        args_dict={"data": "data.ecsv", "model_path": ".", "fraction": 0.95}
+    )
+    mocker.patch.object(mpp.gen, "find_file", return_value="/abs/data.ecsv")
+    mocker.patch.object(
+        mpp.Table,
+        "read",
+        return_value=Table({"d80": [10.0, 11.0]}),
+    )
+
+    with caplog.at_level(logging.WARNING):
+        col = inst._load_measured_data()
+
+    assert list(col) == pytest.approx([10.0, 11.0])
+    assert "Make sure the measured column matches the selected containment fraction" in caplog.text
+
+
 def test_load_measured_data_prefers_psf_opt(mocker):
     inst = _make_minimal_instance(args_dict={"data": "data.ecsv", "model_path": "."})
     mocker.patch.object(mpp.gen, "find_file", return_value="/abs/data.ecsv")
@@ -174,6 +192,39 @@ def test_optimize_single_mirror_worker_calls_optimizer_with_measured_value():
     result = mpp._optimize_single_mirror_worker((dummy, 1, 12.25))
     dummy.optimize_single_mirror.assert_called_once_with(1, 12.25)
     assert result == {"ok": True}
+
+
+def test_simulate_single_mirror_psf_passes_fraction_to_analyze(mocker):
+    tel = _make_dummy_tel(label="orig")
+    inst = _make_minimal_instance(
+        label="base",
+        telescope_model=tel,
+        args_dict={"fraction": 0.95},
+    )
+
+    class OkRay:
+        def __init__(self, **kwargs):
+            assert kwargs["telescope_model"] is tel
+            assert kwargs["label"] == "base_m0"
+            assert kwargs["single_mirror_mode"] is True
+            assert kwargs["mirror_numbers"] == [0]
+            self._psf_mm = 15.0
+
+        def simulate(self, **kwargs):
+            assert kwargs.get("force") is True
+            # In this unit test, we don't set --test.
+            assert kwargs.get("test") in (False, None)
+
+        def analyze(self, **kwargs):
+            assert kwargs.get("force") is True
+            assert kwargs.get("containment_fraction") == pytest.approx(0.95)
+
+        def get_psf_mm(self):
+            return self._psf_mm
+
+    mocker.patch("simtools.ray_tracing.mirror_panel_psf.RayTracing", OkRay)
+    psf_mm = inst._simulate_single_mirror_psf(0, [0.01, 0.22, 0.022])
+    assert psf_mm == pytest.approx(15.0)
 
 
 def test_optimize_single_mirror_converges_when_simulated_matches_measured(mocker):
