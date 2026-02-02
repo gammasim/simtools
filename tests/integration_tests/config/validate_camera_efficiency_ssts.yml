@@ -4,6 +4,7 @@ applications:
   configuration:
     log_level: debug
     model_version: 6.0.2
+    model_version_use_current: true
     output_path: simtools-output
     site: South
     telescope: SSTS-design
