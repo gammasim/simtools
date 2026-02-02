@@ -260,9 +260,7 @@ class DatabaseHandler:
             collection,
         )
         if cache_dict:
-            self._logger.debug(f"Found {array_element} in cache (key: {cache_key})")
             return cache_dict
-        self._logger.debug(f"Did not find {array_element} in cache (key: {cache_key})")
 
         try:
             parameter_version_table = production_table["parameters"][array_element]
@@ -873,6 +871,10 @@ class DatabaseHandler:
                 array_element_name,
             ]
         except KeyError as exc:
+            # simplified model definitions when e.g. adding new telescopes without design model
+            if settings.config.args.get("ignore_missing_design_model", False):
+                element_type = names.get_array_element_type_from_name(array_element_name)
+                return [array_element_name, f"{element_type}-01", f"{element_type}-design"]
             raise KeyError(
                 f"Failed generated array element list for db query for {array_element_name}"
             ) from exc

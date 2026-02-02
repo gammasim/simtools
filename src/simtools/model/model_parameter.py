@@ -11,7 +11,7 @@ import astropy.units as u
 import simtools.utils.general as gen
 from simtools.data_model import schema
 from simtools.db import db_handler
-from simtools.io import ascii_handler, io_handler
+from simtools.io import io_handler
 from simtools.model import legacy_model_parameter
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names, value_conversion
@@ -41,8 +41,8 @@ class ModelParameter:
         as stored under collection in the DB.
     label: str
         Instance label. Used for output file naming.
-    overwrite_model_parameters: str, optional
-        File name to overwrite model parameters from DB with provided values.
+    overwrite_model_parameter_dict: dict, optional
+        Dictionary to overwrite model parameters from DB with provided values.
         Instance label. Important for output file naming.
     ignore_software_version: bool
         If True, ignore software version checks for deprecated parameters.
@@ -56,7 +56,7 @@ class ModelParameter:
         array_element_name=None,
         collection="telescopes",
         label=None,
-        overwrite_model_parameters=None,
+        overwrite_model_parameter_dict=None,
         ignore_software_version=False,
     ):
         self._logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class ModelParameter:
         )
         self._config_file_directory = None
         self._config_file_path = None
-        self.overwrite_model_parameters = overwrite_model_parameters
+        self.overwrite_model_parameter_dict = overwrite_model_parameter_dict
         self._added_parameter_files = None
         self._is_exported_model_files_up_to_date = False
 
@@ -277,8 +277,6 @@ class ModelParameter:
         )
         self._config_file_path = self.config_file_directory.joinpath(config_file_name)
 
-        self._logger.debug(f"Config file path: {self._config_file_path}")
-
     def get_simulation_software_parameters(self, simulation_software):
         """
         Get simulation software parameters.
@@ -326,8 +324,7 @@ class ModelParameter:
                     self.site, self.name, self.collection, self.model_version
                 )
             )
-            if self.overwrite_model_parameters:
-                self.overwrite_parameters_from_file(self.overwrite_model_parameters)
+            self.overwrite_parameters(self.overwrite_model_parameter_dict)
             self._check_model_parameter_versions(self.parameters)
 
         self._load_simulation_software_parameter()
@@ -397,22 +394,20 @@ class ModelParameter:
             raise InvalidModelParameterError(f"Parameter {par_name} not in the model")
 
         if value is None and parameter_version:
-            _para_dict = self.db.get_model_parameter(
-                parameter=par_name,
-                site=self.site,
-                array_element_name=self.name,
-                parameter_version=parameter_version,
-            )
-            if _para_dict:
-                self.parameters[par_name] = _para_dict.get(par_name)
-            self._logger.debug(
-                f"Changing parameter {par_name} to version {parameter_version} with value "
-                f"{self.parameters[par_name]['value']}"
-            )
+            self._overwrite_model_parameter_from_db(par_name, parameter_version)
         else:
-            value = gen.convert_string_to_list(value) if isinstance(value, str) else value
+            self._overwrite_model_parameter_from_value(par_name, value, parameter_version)
 
-            par_type = self.get_parameter_type(par_name)
+        # In case parameter is a file, the model files will be outdated
+        if self.get_parameter_file_flag(par_name):
+            self._is_exported_model_files_up_to_date = False
+
+    def _overwrite_model_parameter_from_value(self, par_name, value, parameter_version=None):
+        """Overwrite model parameter from provided value only."""
+        value = gen.convert_string_to_list(value) if isinstance(value, str) else value
+        par_type = self.get_parameter_type(par_name)
+
+        if par_type in ("list", "dict"):
             if not gen.validate_data_type(
                 reference_dtype=par_type,
                 value=value,
@@ -420,40 +415,40 @@ class ModelParameter:
                 allow_subtypes=True,
             ):
                 raise ValueError(f"Could not cast {value} of type {type(value)} to {par_type}.")
+        else:
+            for value_element in gen.ensure_iterable(value):
+                if not gen.validate_data_type(
+                    reference_dtype=par_type,
+                    value=value_element,
+                    dtype=None,
+                    allow_subtypes=True,
+                ):
+                    raise ValueError(
+                        f"Could not cast {value_element} of type "
+                        f"{type(value_element)} to {par_type}."
+                    )
 
-            self._logger.debug(
-                f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} "
-                f"to {value}"
-            )
-            self.parameters[par_name]["value"] = value
-            if parameter_version:
-                self.parameters[par_name]["parameter_version"] = parameter_version
+        self._logger.debug(
+            f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} to {value}"
+        )
+        self.parameters[par_name]["value"] = value
+        if parameter_version:
+            self.parameters[par_name]["parameter_version"] = parameter_version
 
-        # In case parameter is a file, the model files will be outdated
-        if self.get_parameter_file_flag(par_name):
-            self._is_exported_model_files_up_to_date = False
-
-    def overwrite_parameters_from_file(self, file_name):
-        """
-        Overwrite parameters from a file.
-
-        File is expected to follow the format described in 'simulation_models_info.schema.yml'.
-
-        This function does not modify the DB, it affects only the current instance.
-        This feature is intended for developers and lacks validation.
-
-        Parameters
-        ----------
-        file_name: str
-            File containing the parameters to be changed.
-        """
-        changes_data = schema.validate_dict_using_schema(
-            data=ascii_handler.collect_data_from_file(file_name=file_name),
-            schema_file="simulation_models_info.schema.yml",
-        ).get("changes", {})
-
-        key_for_changes = self._get_key_for_parameter_changes(self.site, self.name, changes_data)
-        self.overwrite_parameters(changes_data.get(key_for_changes, {}) if key_for_changes else {})
+    def _overwrite_model_parameter_from_db(self, par_name, parameter_version):
+        """Overwrite model parameter from DB for a specific version."""
+        _para_dict = self.db.get_model_parameter(
+            parameter=par_name,
+            site=self.site,
+            array_element_name=self.name,
+            parameter_version=parameter_version,
+        )
+        if _para_dict:
+            self.parameters[par_name] = _para_dict.get(par_name)
+        self._logger.debug(
+            f"Changing parameter {par_name} to version {parameter_version} with value "
+            f"{self.parameters[par_name]['value']}"
+        )
 
     def _get_key_for_parameter_changes(self, site, array_element_name, changes_data):
         """
@@ -512,14 +507,26 @@ class ModelParameter:
         changes: dict
             Parameters to be changed.
         """
+        if not changes:
+            return
+        key_for_changes = self._get_key_for_parameter_changes(self.site, self.name, changes)
+        changes = changes.get(key_for_changes, {}) if key_for_changes else changes
+        if not changes:
+            return
+
         for par_name, par_value in changes.items():
-            if par_name in self.parameters:
-                if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
-                    self.overwrite_model_parameter(
-                        par_name, par_value.get("value"), par_value.get("version")
-                    )
-                else:
-                    self.overwrite_model_parameter(par_name, par_value)
+            if par_name not in self.parameters:
+                self._logger.warning(
+                    f"Parameter {par_name} not found in model {self.name}, cannot overwrite it."
+                )
+                continue
+
+            if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
+                self.overwrite_model_parameter(
+                    par_name, par_value.get("value"), par_value.get("version")
+                )
+            else:
+                self.overwrite_model_parameter(par_name, par_value)
 
     def overwrite_model_file(self, par_name, file_path):
         """
