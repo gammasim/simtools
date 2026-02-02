@@ -77,7 +77,7 @@ jobs:
           (cd "$IT_NAME" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III")
 
       - name: Upload CORSIKA interaction tables
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: corsika-interaction-tables
           path: ${{ env.IT_NAME }}
