@@ -13,9 +13,8 @@ applications:
     - LSTN
     - MSTN
   integration_tests:
-  - reference_output_file: './tests/resources/telescope_positions-North-ground.ecsv
-
-      '
+  - reference_output_file: |
+     ./tests/resources/telescope_positions-North-ground.ecsv
     tolerance: 0.01
   test_name: utm_to_ground_in_yml
 schema_name: application_workflow.metaschema

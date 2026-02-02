@@ -46,7 +46,7 @@ def validate_application_output(config, from_command_line=None, from_config_file
     """
     Validate application output against expected output.
 
-    Expected output is defined in configuration file.
+    Expected output is defined in the test configuration file.
     Some tests run only if the model version from the command line
     equals the model version from the configuration file.
 
@@ -88,6 +88,8 @@ def _validate_output_files(config, integration_test):
     if "reference_output_file" in integration_test:
         _validate_reference_output_file(config, integration_test)
     if "test_output_files" in integration_test:
+        if isinstance(integration_test["test_output_files"], dict):
+            integration_test["test_output_files"] = [integration_test["test_output_files"]]
         _validate_output_path_and_file(config, integration_test["test_output_files"])
     if "output_file" in integration_test:
         _validate_output_path_and_file(
