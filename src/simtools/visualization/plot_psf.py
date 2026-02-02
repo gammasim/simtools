@@ -6,6 +6,7 @@ including parameter comparison plots, convergence plots, and PSF diameter vs off
 """
 
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -141,22 +142,27 @@ def _create_base_plot_figure(data_to_plot, simulated_data=None):
 
 
 def _build_parameter_title(pars, is_best):
-    """Build parameter title string for plots."""
+    """Build parameter title string for plots, handling optional parameter groups."""
     title_prefix = "* " if is_best else ""
-    return (
-        f"{title_prefix}reflection = "
-        f"{pars['mirror_reflection_random_angle'][0]:.5f}, "
-        f"{pars['mirror_reflection_random_angle'][1]:.5f}, "
-        f"{pars['mirror_reflection_random_angle'][2]:.5f}\n"
-        f"align_vertical = {pars['mirror_align_random_vertical'][0]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][1]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][2]:.5f}, "
-        f"{pars['mirror_align_random_vertical'][3]:.5f}\n"
-        f"align_horizontal = {pars['mirror_align_random_horizontal'][0]:.5f}, "
-        f"{pars['mirror_align_random_horizontal'][1]:.5f}, "
-        f"{pars['mirror_align_random_horizontal'][2]:.5f}, "
-        f"{pars['mirror_align_random_horizontal'][3]:.5f}"
-    )
+    title_lines = []
+
+    if "mirror_reflection_random_angle" in pars:
+        refl = pars["mirror_reflection_random_angle"]
+        title_lines.append(f"reflection = {refl[0]:.5f}, {refl[1]:.5f}, {refl[2]:.5f}")
+
+    if "mirror_align_random_vertical" in pars:
+        vert = pars["mirror_align_random_vertical"]
+        title_lines.append(
+            f"align_vertical = {vert[0]:.5f}, {vert[1]:.5f}, {vert[2]:.5f}, {vert[3]:.5f}"
+        )
+
+    if "mirror_align_random_horizontal" in pars:
+        horiz = pars["mirror_align_random_horizontal"]
+        title_lines.append(
+            f"align_horizontal = {horiz[0]:.5f}, {horiz[1]:.5f}, {horiz[2]:.5f}, {horiz[3]:.5f}"
+        )
+
+    return title_prefix + "\n".join(title_lines)
 
 
 def _add_metric_text_box(ax, metrics_text, is_best):
@@ -654,6 +660,7 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
+        label=args_dict.get("label") or getattr(tel_model, "label", None),
         zenith_angle=args_dict["zenith"] * u.deg,
         source_distance=args_dict["src_distance"] * u.km,
         off_axis_angle=off_axis_angles * u.deg,
@@ -661,9 +668,9 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
 
     logger.info(f"Running ray tracing for {len(off_axis_angles)} off-axis angles...")
     ray.simulate(test=args_dict.get("test", False), force=True)
-    ray.analyze(force=True)
+    ray.analyze(force=True, containment_fraction=fraction)
 
-    for key in ["d80_cm", "d80_deg"]:
+    for key in ["psf_cm", "psf_deg"]:
         plt.figure(figsize=(10, 6), tight_layout=True)
 
         ray.plot(key, marker="o", linestyle="-", color="blue", linewidth=2, markersize=6)
@@ -772,3 +779,138 @@ def create_optimization_plots(args_dict, gd_results, tel_model, data_to_plot, ou
                 use_ks_statistic=False,
             )
     pdf_pages.close()
+
+
+def create_summary_psf_comparison_plot(
+    tel_model, optimized_params, data_to_plot, output_dir, final_rmsd, simulated_data
+):
+    """
+    Create a standalone plot comparing measured vs simulated PSF with final optimized parameters.
+
+    This creates a single plot showing the cumulative PSF comparison
+    before and after the optimization.
+
+    Parameters
+    ----------
+    tel_model : TelescopeModel
+        Telescope model with optimized parameters
+    optimized_params : dict
+        Dictionary of optimized parameter values
+    data_to_plot : dict
+        Measured PSF data
+    output_dir : Path
+        Directory for output files
+    final_rmsd : float
+        Final RMSD value at the end of optimization
+    simulated_data : dict
+        Final simulated PSF data with optimized parameters
+
+    Returns
+    -------
+    Path
+        Path to the created plot file
+    """
+    fig, ax = _create_base_plot_figure(data_to_plot, simulated_data)
+
+    title_lines = ["Final Optimized Parameters:"]
+    if "mirror_reflection_random_angle" in optimized_params:
+        refl = optimized_params["mirror_reflection_random_angle"]
+        title_lines.append(
+            f"mirror_reflection_random_angle = [{refl[0]:.6f}, {refl[1]:.6f}, {refl[2]:.6f}]"
+        )
+
+    if "mirror_align_random_vertical" in optimized_params:
+        vert = optimized_params["mirror_align_random_vertical"]
+        title_lines.append(
+            f"mirror_align_random_vertical = "
+            f"[{vert[0]:.6f}, {vert[1]:.6f}, {vert[2]:.6f}, {vert[3]:.6f}]"
+        )
+
+    if "mirror_align_random_horizontal" in optimized_params:
+        horiz = optimized_params["mirror_align_random_horizontal"]
+        title_lines.append(
+            f"mirror_align_random_horizontal = "
+            f"[{horiz[0]:.6f}, {horiz[1]:.6f}, {horiz[2]:.6f}, {horiz[3]:.6f}]"
+        )
+
+    ax.set_title("\n".join(title_lines), fontsize=9, loc="left")
+
+    rmsd_text = f"RMSD = {final_rmsd:.4f} ({final_rmsd * 100:.2f}%)"
+    ax.text(
+        0.98,
+        0.02,
+        rmsd_text,
+        transform=ax.transAxes,
+        fontsize=12,
+        verticalalignment="bottom",
+        horizontalalignment="right",
+        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.8},
+    )
+
+    output_file = Path(output_dir) / f"{tel_model.name}_final_psf_comparison.png"
+    fig.savefig(output_file, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+    logger.info(f"Final PSF comparison plot saved to {output_file}")
+    return output_file
+
+
+def plot_psf_histogram(measured, simulated, args_dict):
+    """Write histogram comparing measured vs simulated PSF diameter distributions."""
+    output_dir = Path(args_dict.get("output_path", "."))
+    out_name = args_dict.get("psf_hist")
+    if not out_name:
+        return None
+    out_path = Path(out_name)
+    if not out_path.is_absolute():
+        out_path = output_dir / out_path
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    measured = np.asarray(measured, dtype=float)
+    simulated = np.asarray(simulated, dtype=float)
+    measured = measured[np.isfinite(measured)]
+    simulated = simulated[np.isfinite(simulated)]
+    if measured.size == 0 or simulated.size == 0:
+        return None
+    bins = 25
+    all_vals = np.concatenate([measured, simulated])
+    x_min = float(np.nanmin(all_vals))
+    x_max = float(np.nanmax(all_vals))
+    if not np.isfinite(x_min) or not np.isfinite(x_max) or x_max <= x_min:
+        return None
+    bin_edges = np.linspace(x_min, x_max, bins + 1)
+    meas_mean = float(np.mean(measured))
+    meas_rms = float(np.std(measured, ddof=0))
+    sim_mean = float(np.mean(simulated))
+    sim_rms = float(np.std(simulated, ddof=0))
+    fig, ax = plt.subplots(figsize=(7.5, 4.5), constrained_layout=True)
+    ax.hist(
+        measured,
+        bins=bin_edges,
+        alpha=0.55,
+        color="tab:red",
+        edgecolor="white",
+        label=f"Measured (mean={meas_mean:.2f} mm, rms={meas_rms:.2f} mm)",
+    )
+    ax.hist(
+        simulated,
+        bins=bin_edges,
+        alpha=0.55,
+        color="tab:blue",
+        edgecolor="white",
+        label=f"Simulated (mean={sim_mean:.2f} mm, rms={sim_rms:.2f} mm)",
+    )
+    ax.axvline(meas_mean, color="tab:red", linestyle="--", linewidth=1)
+    ax.axvline(sim_mean, color="tab:blue", linestyle="--", linewidth=1)
+    tel = args_dict.get("telescope", "")
+    model_version = args_dict.get("model_version", "")
+    fraction = args_dict.get("fraction")
+    label = get_psf_diameter_label(fraction, unit="mm") if fraction is not None else "PSF"
+    suffix = " ".join([s for s in (tel, model_version) if s])
+    ax.set_xlabel(label)
+    ax.set_ylabel("Count")
+    ax.set_title(f"{label} ({suffix})" if suffix else label)
+    ax.legend(loc="best", fontsize=9, frameon=True)
+    fig.savefig(out_path)
+    plt.close(fig)
+    logger.info("PSF histogram written to %s", str(out_path))
+    return str(out_path)

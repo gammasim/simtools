@@ -479,9 +479,10 @@ class PSFImage:
         ax.hist2d(data["X"], data["Y"], **kwargs_for_image)
         ax.set_aspect("equal", "datalim")
 
-        # PSF circle (80%)
+        # PSF circle (containment fraction)
+        fraction = self._containment_fraction if self._containment_fraction is not None else 0.8
         center = (0, 0) if centralized else (self.centroid_x, self.centroid_y)
-        circle = plt.Circle(center, self.get_psf(0.8) / 2, **kwargs_for_psf)
+        circle = plt.Circle(center, self.get_psf(fraction) / 2, **kwargs_for_psf)
         ax.add_artist(circle)
 
         ax.axhline(0, color="k", linestyle="--", zorder=3, linewidth=0.5)
@@ -507,7 +508,8 @@ class PSFImage:
         if radius is not None:
             radius_all = radius.to(u.cm).value if isinstance(radius, u.Quantity) else radius
         else:
-            radius_all = list(np.linspace(0, 1.6 * self.get_psf(0.8), 30))
+            fraction = self._containment_fraction if self._containment_fraction is not None else 0.8
+            radius_all = list(np.linspace(0, 1.6 * self.get_psf(fraction), 30))
         intensity = [
             self._sum_photons_in_radius(rad) / self._number_of_detected_photons
             for rad in radius_all
@@ -522,15 +524,15 @@ class PSFImage:
 
         return result
 
-    def plot_cumulative(self, file_name=None, d80=None, **kwargs):
+    def plot_cumulative(self, file_name=None, psf_diameter_cm=None, **kwargs):
         """Plot cumulative data (intensity vs radius).
 
         Parameters
         ----------
         file_name: str
             Name of the file to save the plot to.
-        d80: float
-            d80 value to be marked in the plot (in cm).
+        psf_diameter_cm: float
+            PSF diameter value to be marked in the plot (in cm).
         **kwargs:
             Customization of line plot (e.g., color, linestyle, linewidth).
         """
@@ -539,9 +541,10 @@ class PSFImage:
         ax.set_xlabel("Radius (cm)")
         ax.set_ylabel("Contained light %")
         ax.plot(data[self.__PSF_RADIUS], data[self.__PSF_CUMULATIVE], **kwargs)
-        ax.axvline(x=self.get_psf(0.8) / 2, color="b", linestyle="--", linewidth=1)
-        if d80 is not None:
-            ax.axvline(x=d80 / 2.0, color="r", linestyle="--", linewidth=1)
+        fraction = self._containment_fraction if self._containment_fraction is not None else 0.8
+        ax.axvline(x=self.get_psf(fraction) / 2, color="b", linestyle="--", linewidth=1)
+        if psf_diameter_cm is not None:
+            ax.axvline(x=psf_diameter_cm / 2.0, color="r", linestyle="--", linewidth=1)
         if file_name is not None:
             fig.savefig(file_name)
             plt.close(fig)

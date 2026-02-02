@@ -260,17 +260,17 @@ class CameraEfficiency:
         nsb_spectrum_text = (
             f"NSB spectrum file: {self.config['nsb_spectrum']}"
             if self.config["nsb_spectrum"]
-            else "default sim_telarray spectrum."
+            else "default sim_telarray NSB spectrum."
         )
         results = (
             f"Results summary for {self.telescope_model.name} at "
             f"zenith={self.config['zenith_angle']:.1f} deg, "
             f"azimuth={self.config['azimuth_angle']:.1f} deg\n"
             f"Using the {nsb_spectrum_text}\n"
-            f"\nSpectrum weighted reflectivity: {self.calc_reflectivity():.4f}\n"
         )
         if self.efficiency_type == "shower":
             results += (
+                f"Spectrum (shower) weighted reflectivity: {self.calc_reflectivity():.4f}\n"
                 "Camera nominal efficiency with gaps (B-TEL-1170): "
                 f"{self.calc_camera_efficiency():.4f}\n"
                 "Telescope total efficiency"

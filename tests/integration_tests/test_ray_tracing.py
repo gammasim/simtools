@@ -32,6 +32,7 @@ def test_ssts(
     ray = RayTracing(
         telescope_model=tel,
         site_model=site_model_south,
+        label=tel.label,
         zenith_angle=20.0 * u.deg,
         source_distance=10.0 * u.km,
         off_axis_angle=[0, 1.0, 2.0, 3.0, 4.0] * u.deg,
@@ -44,6 +45,7 @@ def test_rx(io_handler, telescope_model_lst, site_model_north):
     ray = RayTracing(
         telescope_model=telescope_model_lst,
         site_model=site_model_north,
+        label=telescope_model_lst.label,
         zenith_angle=20 * u.deg,
         source_distance=10 * u.km,
         off_axis_angle=[0, 2.5, 5.0] * u.deg,
@@ -55,14 +57,14 @@ def test_rx(io_handler, telescope_model_lst, site_model_north):
     ray.analyze(force=True)
     ray_rx.analyze(force=True, use_rx=True)
 
-    # Plotting d80
+    # Plotting PSF diameter (80% containment by default)
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
     ax.set_xlabel("off-axis")
-    ax.set_ylabel("d80")
+    ax.set_ylabel("psf")
 
-    ray.plot("d80_deg", marker="o", linestyle=":")
-    ray_rx.plot("d80_deg", marker="s", linestyle="--")
+    ray.plot("psf_deg", marker="o", linestyle=":")
+    ray_rx.plot("psf_deg", marker="s", linestyle="--")
 
     plot_file_psf = io_handler.get_output_file(file_name="d80_test_rx.pdf", sub_dir="plots")
     plt.savefig(plot_file_psf)
@@ -75,7 +77,7 @@ def test_rx(io_handler, telescope_model_lst, site_model_north):
     ax.set_ylabel("eff. area")
 
     ray.plot("eff_area", marker="o", linestyle=":")
-    ray_rx.plot("d80_deg", marker="s", linestyle="--")
+    ray_rx.plot("psf_deg", marker="s", linestyle="--")
 
     plot_file_area = io_handler.get_output_file(file_name="eff_area_test_rx.pdf", sub_dir="plots")
     plt.savefig(plot_file_area)
@@ -86,6 +88,7 @@ def test_plot_image(io_handler, telescope_model_sst, site_model_south):
     ray = RayTracing(
         telescope_model=telescope_model_sst,
         site_model=site_model_south,
+        label=telescope_model_sst.label,
         zenith_angle=20 * u.deg,
         source_distance=10 * u.km,
         off_axis_angle=[0, 2.5, 5.0] * u.deg,
@@ -114,18 +117,19 @@ def test_single_mirror(io_handler, telescope_model_mst, site_model_south):
     ray = RayTracing(
         telescope_model=telescope_model_mst,
         site_model=site_model_south,
+        label=telescope_model_mst.label,
         mirror_numbers=list(range(1, 5)),
         single_mirror_mode=True,
     )
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
 
-    # Plotting d80 histogram
+    # Plotting PSF diameter histogram
     plt.figure(figsize=(8, 6), tight_layout=True)
     ax = plt.gca()
-    ax.set_xlabel("d80")
+    ax.set_xlabel("psf")
 
-    ray.plot_histogram("d80_cm", color="r", bins=10)
+    ray.plot_histogram("psf_cm", color="r", bins=10)
     plot_file = io_handler.get_output_file(file_name="d80_hist_test.pdf", sub_dir="plots")
     plt.savefig(plot_file)
     plt.close()
@@ -135,6 +139,7 @@ def test_integral_curve(io_handler, telescope_model_lst, site_model_north):
     ray = RayTracing(
         telescope_model=telescope_model_lst,
         site_model=site_model_north,
+        label=telescope_model_lst.label,
         zenith_angle=20 * u.deg,
         source_distance=10 * u.km,
         off_axis_angle=[0] * u.deg,
