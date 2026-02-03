@@ -4,6 +4,7 @@
 import logging
 import shutil
 from copy import copy, deepcopy
+from pathlib import Path
 
 import astropy.units as u
 
@@ -489,7 +490,7 @@ class ModelParameter:
 
         return None
 
-    def overwrite_parameters(self, changes):
+    def overwrite_parameters(self, changes, flat_dict=False):
         """
         Change the value of multiple existing parameters in the model.
 
@@ -497,9 +498,9 @@ class ModelParameter:
 
         Allows for two types of 'changes' dictionary:
 
-        - simple: '{parameter_name: new_value, ...}'
-        - model repository style:
-          '{parameter_name: {"value": new_value, "version": new_version}, ...}'
+        - simple (flat_dict=True): '{parameter_name: new_value, ...}'
+        - model repository style (flat_dict=False):
+          '{array_element: {parameter_name: {"value": new_value, "version": new_version}, ...}}'
 
         Parameters
         ----------
@@ -508,10 +509,18 @@ class ModelParameter:
         """
         if not changes:
             return
-        key_for_changes = self._get_key_for_parameter_changes(self.site, self.name, changes)
-        changes = changes.get(key_for_changes, {}) if key_for_changes else changes
+        if not flat_dict:
+            key_for_changes = self._get_key_for_parameter_changes(self.site, self.name, changes)
+            changes = changes.get(key_for_changes, {})
         if not changes:
             return
+
+        if flat_dict:
+            self._logger.debug(f"Overwriting parameters with changes: {changes}")
+        else:
+            self._logger.debug(
+                f"Overwriting parameters for {key_for_changes} with changes: {changes}"
+            )
 
         for par_name, par_value in changes.items():
             if par_name not in self.parameters:
@@ -573,7 +582,29 @@ class ModelParameter:
         )
         self._is_exported_model_files_up_to_date = True
 
-    def write_sim_telarray_config_file(self, additional_models=None):
+    def get_config_file_path(self, label=None):
+        """Return config file path for a given label.
+
+        Parameters
+        ----------
+        label : str or None
+            Label used for output file naming. If None, use this model's label.
+
+        Returns
+        -------
+        pathlib.Path
+            Path to the sim_telarray configuration file.
+        """
+        config_file_name = names.simtel_config_file_name(
+            self.site,
+            telescope_model_name=self.name,
+            label=self.label if label is None else label,
+        )
+        return self.config_file_directory.joinpath(config_file_name)
+
+    def write_sim_telarray_config_file(
+        self, additional_models=None, label=None, config_file_path=None
+    ):
         """
         Write the sim_telarray configuration file.
 
@@ -581,15 +612,26 @@ class ModelParameter:
         ----------
         additional_models: TelescopeModel or SiteModel
             Model object for additional parameter to be written to the config file.
+        label: str or None
+            Optional label override used for output file naming.
+        config_file_path: pathlib.Path or str or None
+            Optional explicit path of the config file. If not given, it is derived from ``label``.
         """
         self.parameters.update(self._simulation_config_parameters.get("sim_telarray", {}))
         self.export_model_files(update_if_necessary=True)
 
         self._add_additional_models(additional_models)
 
-        self._load_simtel_config_writer()
+        config_file_path = (
+            Path(config_file_path)
+            if config_file_path is not None
+            else self.get_config_file_path(label=label)
+        )
+
+        # Ensure the writer label matches the config file naming label.
+        self._load_simtel_config_writer(label=label)
         self.simtel_config_writer.write_telescope_config_file(
-            config_file_path=self.config_file_path,
+            config_file_path=config_file_path,
             parameters=self.parameters,
         )
 
@@ -620,15 +662,16 @@ class ModelParameter:
             self._set_config_file_directory_and_name()
         return self._config_file_path
 
-    def _load_simtel_config_writer(self):
+    def _load_simtel_config_writer(self, label=None):
         """Load the SimtelConfigWriter object."""
-        if self.simtel_config_writer is None:
+        desired_label = self.label if label is None else label
+        if label is not None or self.simtel_config_writer is None:
             self.simtel_config_writer = SimtelConfigWriter(
                 site=self.site,
                 telescope_model_name=self.name,
                 telescope_design_model=self.design_model,
                 model_version=self.model_version,
-                label=self.label,
+                label=desired_label,
             )
 
     def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
