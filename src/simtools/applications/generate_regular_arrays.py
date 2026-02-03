@@ -108,9 +108,8 @@ def main():
         )
 
         data_writer = writer.ModelDataWriter(
-            product_data_file=output_file,
-            product_data_format=app_context.args.get("output_file_format", "ascii.ecsv"),
-            args_dict=app_context.args,
+            output_file=output_file,
+            output_file_format=app_context.args.get("output_file_format", "ascii.ecsv"),
         )
         data_writer.write(metadata=None, product_data=array_table)
 
@@ -118,7 +117,7 @@ def main():
             array_table,
             app_context.args["site"],
             app_context.args["model_version"],
-            Path(data_writer.product_data_file).with_suffix(".info.yml"),
+            Path(data_writer.output_file).with_suffix(".info.yml"),
         )
 
 

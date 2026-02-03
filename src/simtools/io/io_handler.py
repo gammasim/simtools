@@ -22,10 +22,10 @@ class IOHandler(metaclass=IOHandlerSingleton):
     def __init__(self):
         """Initialize IOHandler."""
         self.logger = logging.getLogger(__name__)
-        self.output_path = None
+        self.output_path = {}
         self.model_path = None
 
-    def set_paths(self, output_path=None, model_path=None):
+    def set_paths(self, output_path=None, model_path=None, output_path_label="default"):
         """
         Set paths for input and output.
 
@@ -35,11 +35,13 @@ class IOHandler(metaclass=IOHandlerSingleton):
             Path pointing to the output directory.
         model_path: str or Path
             Path pointing to the model file directory.
+        output_path_label: str
+            Label for the output path.
         """
-        self.output_path = output_path
+        self.output_path[output_path_label] = output_path
         self.model_path = model_path
 
-    def get_output_directory(self, sub_dir=None):
+    def get_output_directory(self, sub_dir=None, output_path_label="default"):
         """
         Create and get path of an output directory.
 
@@ -47,6 +49,8 @@ class IOHandler(metaclass=IOHandlerSingleton):
         ----------
         sub_dir: str or list of str, optional
             Name of the subdirectory (ray_tracing, model etc)
+        output_path_label: str
+            Label for the output path.
 
         Returns
         -------
@@ -63,16 +67,19 @@ class IOHandler(metaclass=IOHandlerSingleton):
             parts = sub_dir
         else:
             parts = [sub_dir]
-        path = Path(self.output_path, *parts)
+        try:
+            output_path = Path(self.output_path[output_path_label], *parts)
+        except KeyError as exc:
+            raise KeyError(f"Output path label '{output_path_label}' not found") from exc
 
         try:
-            path.mkdir(parents=True, exist_ok=True)
+            output_path.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError as exc:
-            raise FileNotFoundError(f"Error creating directory {path!s}") from exc
+            raise FileNotFoundError(f"Error creating directory {output_path!s}") from exc
 
-        return path.resolve()
+        return output_path.resolve()
 
-    def get_output_file(self, file_name, sub_dir=None):
+    def get_output_file(self, file_name, sub_dir=None, output_path_label="default"):
         """
         Get path of an output file.
 
@@ -82,12 +89,18 @@ class IOHandler(metaclass=IOHandlerSingleton):
             File name.
         sub_dir: sub_dir: str or list of str, optional
             Name of the subdirectory (ray_tracing, model etc)
+        output_path_label: str
+            Label for the output path.
 
         Returns
         -------
         Path
         """
-        return self.get_output_directory(sub_dir).joinpath(file_name).absolute()
+        return (
+            self.get_output_directory(sub_dir, output_path_label=output_path_label)
+            .joinpath(file_name)
+            .absolute()
+        )
 
     def get_test_data_file(self, file_name=None):
         """
