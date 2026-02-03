@@ -90,6 +90,7 @@ def test_ray_tracing_init(telescope_model_lst_mock, site_model_north, caplog):
         ray = RayTracing(
             telescope_model=telescope_model_lst_mock,
             site_model=site_model_north,
+            label=telescope_model_lst_mock.label,
             zenith_angle=30 * u.deg,
             source_distance=10 * u.km,
             off_axis_angle=[0, 2] * u.deg,
@@ -108,6 +109,7 @@ def test_ray_tracing_single_mirror_mode(telescope_model_lst_mock, site_model_nor
         ray = RayTracing(
             telescope_model=telescope_model_lst_mock,
             site_model=site_model_north,
+            label=telescope_model_lst_mock.label,
             zenith_angle=30 * u.deg,
             source_distance=10 * u.km,
             off_axis_angle=[0, 2] * u.deg,
@@ -129,6 +131,7 @@ def test_ray_tracing_single_mirror_mode_mirror_numbers(
     ray = RayTracing(
         telescope_model=telescope_model_lst_mock,
         site_model=site_model_north,
+        label=telescope_model_lst_mock.label,
         source_distance=10 * u.km,
         zenith_angle=30 * u.deg,
         off_axis_angle=[0, 2] * u.deg,
@@ -310,8 +313,8 @@ def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode, off_
     assert len(ray_tracing_lst._results) == len(_rows)
     assert ray_tracing_lst._results.colnames == [
         off_axis_string,
-        "d80_cm",
-        "d80_deg",
+        "psf_cm",
+        "psf_deg",
         "eff_area",
         "eff_flen",
     ]
@@ -334,8 +337,8 @@ def test_store_results_single_mirror_mode(ray_tracing_lst_single_mirror_mode, of
         (2.0, 4.356768651160611, 0.2, 110.0, 210.0, 2),
     ]
     ray_tracing_lst_single_mirror_mode.YLABEL = {
-        "d80_cm": "Containment diameter (cm)",
-        "d80_deg": "Containment diameter (deg)",
+        "psf_cm": "Containment diameter (cm)",
+        "psf_deg": "Containment diameter (deg)",
         "eff_area": "Effective area (m^2)",
         "eff_flen": "Effective focal length (cm)",
     }
@@ -345,8 +348,8 @@ def test_store_results_single_mirror_mode(ray_tracing_lst_single_mirror_mode, of
     assert len(ray_tracing_lst_single_mirror_mode._results) == len(_rows)
     assert ray_tracing_lst_single_mirror_mode._results.colnames == [
         off_axis_string,
-        "d80_cm",
-        "d80_deg",
+        "psf_cm",
+        "psf_deg",
         "eff_area",
         "eff_flen",
         "mirror_number",
@@ -426,6 +429,7 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
     mock_simulator.assert_called_once_with(
         telescope_model=ray_tracing_lst.telescope_model,
         site_model=site_model_north,
+        label=ray_tracing_lst.label,
         test=True,
         config_data={
             "zenith_angle": ray_tracing_lst.zenith_angle,
@@ -543,8 +547,8 @@ def test_get_mean_std(ray_tracing_lst):
         (2.0, 4.356768651160611, 0.2, 110.0, 210.0),
     ]
     ray_tracing._store_results(_rows)
-    mean_value = ray_tracing.get_mean(key="d80_cm")
-    std_value = ray_tracing.get_std_dev(key="d80_cm")
+    mean_value = ray_tracing.get_mean(key="psf_cm")
+    std_value = ray_tracing.get_std_dev(key="psf_cm")
     assert mean_value == pytest.approx(4.3, abs=1e-2)
     assert std_value == pytest.approx(0.05, abs=1e-2)
 
@@ -567,6 +571,33 @@ def test_read_results(ray_tracing_lst, mocker):
     assert isinstance(ray_tracing_lst._results, QTable)
 
 
+def test_get_psf_mm_raises_when_no_results(ray_tracing_lst):
+    ray = copy.deepcopy(ray_tracing_lst)
+    ray._results = None
+    with pytest.raises(RuntimeError, match=r"run analyze\(\) first"):
+        ray.get_psf_mm()
+
+
+def test_get_psf_mm_returns_mm_for_quantity(ray_tracing_lst):
+    ray = copy.deepcopy(ray_tracing_lst)
+    ray._results = QTable(
+        {
+            "psf_cm": [1.5 * u.cm],
+        }
+    )
+    assert pytest.approx(ray.get_psf_mm()) == 15
+
+
+def test_get_psf_mm_returns_mm_for_plain_float(ray_tracing_lst):
+    ray = copy.deepcopy(ray_tracing_lst)
+    ray._results = QTable(
+        {
+            "psf_cm": [1.5],
+        }
+    )
+    assert pytest.approx(ray.get_psf_mm()) == 15
+
+
 def test_plot_histogram_valid_key(ray_tracing_lst, mocker):
     """
     Test the plot_histogram method of the RayTracing class with a valid key.
@@ -577,17 +608,17 @@ def test_plot_histogram_valid_key(ray_tracing_lst, mocker):
 
     ray_tracing_lst._results = QTable(
         {
-            "d80_cm": [4.256768651160611, 4.356768651160611],
-            "d80_deg": [0.1, 0.2],
+            "psf_cm": [4.256768651160611, 4.356768651160611],
+            "psf_deg": [0.1, 0.2],
             "eff_area": [100.0, 110.0],
             "eff_flen": [200.0, 210.0],
         }
     )
 
-    ray_tracing_lst.plot_histogram(key="d80_cm", bins=10)
+    ray_tracing_lst.plot_histogram(key="psf_cm", bins=10)
 
     mock_gca.assert_called_once()
-    mock_hist.assert_called_once_with(ray_tracing_lst._results["d80_cm"], bins=10)
+    mock_hist.assert_called_once_with(ray_tracing_lst._results["psf_cm"], bins=10)
 
 
 def test_plot_histogram_invalid_key(ray_tracing_lst):
@@ -596,8 +627,8 @@ def test_plot_histogram_invalid_key(ray_tracing_lst):
     """
     ray_tracing_lst._results = QTable(
         {
-            "d80_cm": [4.256768651160611, 4.356768651160611],
-            "d80_deg": [0.1, 0.2],
+            "psf_cm": [4.256768651160611, 4.356768651160611],
+            "psf_deg": [0.1, 0.2],
             "eff_area": [100.0, 110.0],
             "eff_flen": [200.0, 210.0],
         }
@@ -624,20 +655,20 @@ def test_plot_valid_key(ray_tracing_lst, mocker, off_axis_string):
     ray_tracing_lst._results = QTable(
         {
             off_axis_string: [0.0, 2.0],
-            "d80_cm": [4.256768651160611, 4.356768651160611],
-            "d80_deg": [0.1, 0.2],
+            "psf_cm": [4.256768651160611, 4.356768651160611],
+            "psf_deg": [0.1, 0.2],
             "eff_area": [100.0, 110.0],
             "eff_flen": [200.0, 210.0],
         }
     )
 
-    ray_tracing_lst.plot(key="d80_cm", save=True)
+    ray_tracing_lst.plot(key="psf_cm", save=True)
 
     mock_visualize_plot_table.assert_called_once()
     mock_generate_file_name.assert_called_once_with(
         file_type="ray_tracing",
         suffix=".pdf",
-        extra_label="d80_cm",
+        extra_label="psf_cm",
     )
     mock_mkdir.assert_called_once_with(exist_ok=True)
     mock_savefig.assert_called_once_with(
@@ -652,8 +683,8 @@ def test_plot_invalid_key(ray_tracing_lst, off_axis_string):
     ray_tracing_lst._results = QTable(
         {
             off_axis_string: [0.0, 2.0],
-            "d80_cm": [4.256768651160611, 4.356768651160611],
-            "d80_deg": [0.1, 0.2],
+            "psf_cm": [4.256768651160611, 4.356768651160611],
+            "psf_deg": [0.1, 0.2],
             "eff_area": [100.0, 110.0],
             "eff_flen": [200.0, 210.0],
         }
@@ -661,3 +692,60 @@ def test_plot_invalid_key(ray_tracing_lst, off_axis_string):
 
     with pytest.raises(KeyError, match=INVALID_KEY_TO_PLOT):
         ray_tracing_lst.plot(key="invalid_key", save=True)
+
+
+def test_plot_save_writes_psf_images_and_cumulative(ray_tracing_lst, mocker, off_axis_string):
+    """Cover the save=True branch that exports PSF images and cumulative plots."""
+
+    mock_visualize_plot_table = mocker.patch(
+        "simtools.ray_tracing.ray_tracing.visualize.plot_table"
+    )
+    mock_plot = mock_visualize_plot_table.return_value
+    mocker.patch.object(mock_plot, "savefig")
+
+    # Avoid real filesystem writes; only validate paths passed to methods.
+    mocker.patch("pathlib.Path.mkdir")
+
+    def _fake_name(*, file_type, suffix, off_axis_angle=None, mirror_number=None, extra_label=None):
+        assert file_type == "ray_tracing"
+        assert suffix == ".pdf"
+        if off_axis_angle is None:
+            return f"main_{extra_label}.pdf"
+        return f"{extra_label}_off{float(off_axis_angle):.3f}.pdf"
+
+    mocker.patch.object(ray_tracing_lst, "_generate_file_name", side_effect=_fake_name)
+
+    # Provide two fake PSFImage instances.
+    img0 = mocker.Mock()
+    img1 = mocker.Mock()
+    ray_tracing_lst._psf_images = {0.0: img0, 2.0: img1}
+
+    ray_tracing_lst._results = QTable(
+        {
+            off_axis_string: [0.0, 2.0],
+            "psf_cm": [4.2, 4.3],
+            "psf_deg": [0.1, 0.2],
+            "eff_area": [100.0, 110.0],
+            "eff_flen": [200.0, 210.0],
+        }
+    )
+
+    ray_tracing_lst.plot(key="psf_cm", save=True, psf_diameter_cm=12.3)
+
+    # Per-off-axis image export
+    img0.plot_image.assert_called_once()
+    img1.plot_image.assert_called_once()
+    f0 = img0.plot_image.call_args.kwargs["file_name"]
+    f1 = img1.plot_image.call_args.kwargs["file_name"]
+    assert str(f0).endswith("image_psf_cm_off0.000.pdf")
+    assert str(f1).endswith("image_psf_cm_off2.000.pdf")
+
+    # Per-off-axis cumulative export
+    img0.plot_cumulative.assert_called_once()
+    img1.plot_cumulative.assert_called_once()
+    c0 = img0.plot_cumulative.call_args.kwargs["file_name"]
+    c1 = img1.plot_cumulative.call_args.kwargs["file_name"]
+    assert str(c0).endswith("cumulative_psf_psf_cm_off0.000.pdf")
+    assert str(c1).endswith("cumulative_psf_psf_cm_off2.000.pdf")
+    assert img0.plot_cumulative.call_args.kwargs["psf_diameter_cm"] == pytest.approx(12.3)
+    assert img1.plot_cumulative.call_args.kwargs["psf_diameter_cm"] == pytest.approx(12.3)
