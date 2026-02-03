@@ -11,6 +11,7 @@ from astropy.table import Table
 
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.data_model.model_data_writer as writer
+from simtools import settings
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.io import ascii_handler
@@ -41,42 +42,42 @@ def test_write(tmp_test_directory, args_dict_site):
 
     # metadata not none; no data and metadata file
     _metadata = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    w_1.product_data_file = tmp_test_directory.join("test_file.ecsv")
+    w_1.output_file = tmp_test_directory.join("test_file.ecsv")
     metadata_file = tmp_test_directory.join("test_file.meta.yml")
     w_1.write(metadata=_metadata, product_data=None)
     assert not metadata_file.exists()
-    assert not Path(w_1.product_data_file).exists()
+    assert not Path(w_1.output_file).exists()
 
     # product_data not none - expect data file to be written; no metadata file
     empty_table = Table()
     w_1.write(metadata=None, product_data=empty_table)
-    assert Path(w_1.product_data_file).exists()
+    assert Path(w_1.output_file).exists()
     assert not metadata_file.exists()
 
     # both not none
     data = {"pixel": [25, 30, 28]}
     small_table = Table(data)
-    w_1.product_data_file = tmp_test_directory.join(test_file_2)
+    w_1.output_file = tmp_test_directory.join(test_file_2)
     w_1.write(metadata=_metadata, product_data=small_table)
-    assert Path(w_1.product_data_file).exists()
+    assert Path(w_1.output_file).exists()
     assert (
         (Path(tmp_test_directory) / test_file_2).with_suffix(".integration_test.meta.yml").exists()
     )
 
     # check that table and metadata is good
-    table = Table.read(w_1.product_data_file, format=ascii_format)
+    table = Table.read(w_1.output_file, format=ascii_format)
     assert "pixel" in table.colnames
     assert "cta" in table.meta.keys()
 
-    w_1.product_data_format = "not_an_astropy_format"
+    w_1.output_file_format = "not_an_astropy_format"
     with pytest.raises(IORegistryError):
         w_1.write(metadata=None, product_data=empty_table)
 
     # test json format
     dict_data = {"value": 5.5}
-    w_1.product_data_file = tmp_test_directory.join("test_file.json")
+    w_1.output_file = tmp_test_directory.join("test_file.json")
     w_1.write(metadata=None, product_data=dict_data)
-    assert Path(w_1.product_data_file).is_file()
+    assert Path(w_1.output_file).is_file()
 
 
 def test_write_dict_to_model_parameter_json(tmp_test_directory):
@@ -88,39 +89,30 @@ def test_write_dict_to_model_parameter_json(tmp_test_directory):
 
 
 def test_dump(args_dict):
+    settings.config.load(args=args_dict)
     empty_table = Table()
 
-    args_dict["output_file"] = "test_file.ecsv"
-    args_dict["skip_output_validation"] = True
+    output_file = "test_file.ecsv"
     writer.ModelDataWriter().dump(
-        args_dict=args_dict,
+        output_file=output_file,
         metadata=None,
         product_data=empty_table,
         validate_schema_file=None,
     )
 
-    assert Path(args_dict["output_path"]).joinpath(args_dict["output_file"]).exists()
+    assert Path(args_dict["output_path"]).joinpath(output_file).exists()
 
     # Test only that output validation is queried, as the validation itself is
     # tested in test_validate_and_transform (therefore: expect KeyError)
     args_dict["skip_output_validation"] = False
+    settings.config.load(args=args_dict)
     with pytest.raises(KeyError):
         writer.ModelDataWriter().dump(
-            args_dict=args_dict,
+            output_file=output_file,
             metadata=None,
             product_data=empty_table,
             validate_schema_file=SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml",
         )
-
-    # explicitly set output_file
-    writer.ModelDataWriter().dump(
-        args_dict=args_dict,
-        output_file=test_file_2,
-        metadata=None,
-        product_data=empty_table,
-        validate_schema_file=None,
-    )
-    assert Path(args_dict["output_path"]).joinpath(test_file_2).exists()
 
 
 def test_validate_and_transform(num_gains_schema_file):
@@ -161,10 +153,13 @@ def test_validate_and_transform(num_gains_schema_file):
         )
 
 
-def test_astropy_data_format():
-    assert writer.ModelDataWriter._astropy_data_format("hdf5") == "hdf5"
-    assert writer.ModelDataWriter._astropy_data_format("ecsv") == ascii_format
-    assert writer.ModelDataWriter._astropy_data_format(ascii_format) == ascii_format
+def test_derive_data_format():
+    assert writer.ModelDataWriter._derive_data_format("hdf5") == "hdf5"
+    assert writer.ModelDataWriter._derive_data_format("ecsv") == ascii_format
+    assert writer.ModelDataWriter._derive_data_format(ascii_format) == ascii_format
+    assert writer.ModelDataWriter._derive_data_format(None) is None
+    assert writer.ModelDataWriter._derive_data_format(None, output_file="file.ecsv") == ascii_format
+    assert writer.ModelDataWriter._derive_data_format(None, output_file="file.hdf5") == "hdf5"
 
 
 def test_dump_model_parameter(tmp_test_directory):
