@@ -146,7 +146,7 @@ def test_initialize_io_handler(configurator, tmp_test_directory):
     configurator.config["output_path"] = tmp_test_directory
     configurator._initialize_io_handler()
 
-    assert _io_handler.output_path == tmp_test_directory
+    assert _io_handler.output_path.get("default") == tmp_test_directory
 
 
 def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_directory):

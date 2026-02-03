@@ -593,9 +593,6 @@ class CameraEfficiency:
             output_path=self.output_dir / cfg.get("telescope") / "nsb_pixel_rate",
         )
 
-        # temporary fix
-        self.io_handler.set_paths(output_path=self.output_dir)
-
     def _get_x_max_for_efficiency_type(self):
         """
         Get X max value in g/cm2 depending on the efficiency type.
