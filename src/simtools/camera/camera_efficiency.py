@@ -13,7 +13,7 @@ from astropy.table import Table
 import simtools.data_model.model_data_writer as writer
 from simtools import settings
 from simtools.atmosphere import AtmosphereProfile
-from simtools.io import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 from simtools.utils import names
@@ -252,47 +252,78 @@ class CameraEfficiency:
 
     def results_summary(self):
         """
-        Print a summary of the results.
+        Fill a dictionary with summary of the results.
 
         Include a header for the zenith/azimuth settings and the NSB spectrum file which was used.
         The summary includes the various CTAO requirements and the final expected NSB pixel rate.
+
+        Returns
+        -------
+        dict
+            Summary of the results.
         """
-        nsb_spectrum_text = (
-            f"NSB spectrum file: {self.config['nsb_spectrum']}"
-            if self.config["nsb_spectrum"]
-            else "default sim_telarray NSB spectrum."
-        )
-        results = (
-            f"Results summary for {self.telescope_model.name} at "
-            f"zenith={self.config['zenith_angle']:.1f} deg, "
-            f"azimuth={self.config['azimuth_angle']:.1f} deg\n"
-            f"Using the {nsb_spectrum_text}\n"
-        )
+        meta = {
+            "meta": {
+                "tel": self.telescope_model.name,
+                "model_version": self.telescope_model.model_version,
+                "zen": self.config["zenith_angle"],
+                "az": self.config["azimuth_angle"],
+                "nsb": (
+                    self.config["nsb_spectrum"]
+                    if self.config["nsb_spectrum"]
+                    else "default sim_telarray spectrum"
+                ),
+            }
+        }
+
+        metrics = {}
         if self.efficiency_type == "shower":
-            results += (
-                f"Spectrum (shower) weighted reflectivity: {self.calc_reflectivity():.4f}\n"
-                "Camera nominal efficiency with gaps (B-TEL-1170): "
-                f"{self.calc_camera_efficiency():.4f}\n"
-                "Telescope total efficiency"
-                f" with gaps (was A-PERF-2020): {self.calc_tel_efficiency():.4f}\n"
-                "Telescope total Cherenkov light efficiency / sqrt(total NSB efficiency) "
-                "(A-PERF-2025/B-TEL-0090): "
-                f"{self.calc_tot_efficiency(self.calc_tel_efficiency()):.4f}\n"
-            )
-        if self.efficiency_type == "nsb":
-            results += (
-                "Expected NSB pixel rate for the provided NSB spectrum: "
-                f"{self.nsb_pixel_pe_per_ns:.4f} [p.e./ns]\n"
-                "Expected NSB pixel rate for the reference NSB: "
-                f"{self.nsb_rate_ref_conditions:.4f} [p.e./ns]\n"
-            )
-        if self.efficiency_type == "muon":
-            fraction_200_290 = self.calc_partial_efficiency(lambda_min=200.0, lambda_max=290.0)
-            results += (
-                "Fraction of light (from muons) in the wavelength range 200-290 nm (B-TEL-0095): "
-                f"{fraction_200_290:.4f}\n"
-            )
-        return results
+            metrics |= {
+                "reflectivity": {
+                    "value": self.calc_reflectivity(),
+                    "description": "Spectrum weighted reflectivity",
+                },
+                "cam_eff": {
+                    "value": self.calc_camera_efficiency(),
+                    "description": "Camera nominal efficiency with gaps (B-TEL-1170)",
+                },
+                "tel_eff": {
+                    "value": self.calc_tel_efficiency(),
+                    "description": "Telescope total efficiency with gaps (was A-PERF-2020)",
+                },
+                "tot_sens": {
+                    "value": self.calc_tot_efficiency(self.calc_tel_efficiency()),
+                    "description": (
+                        "Telescope total Cherenkov light efficiency / sqrt(total NSB efficiency) "
+                        "(A-PERF-2025/B-TEL-0090)"
+                    ),
+                },
+            }
+
+        elif self.efficiency_type == "nsb":
+            metrics |= {
+                "nsb_rate": {
+                    "value": self.nsb_pixel_pe_per_ns,
+                    "description": "Expected NSB pixel rate for the provided NSB spectrum",
+                },
+                "nsb_ref": {
+                    "value": self.nsb_rate_ref_conditions,
+                    "description": "Expected NSB pixel rate for the reference NSB",
+                },
+            }
+
+        elif self.efficiency_type == "muon":
+            metrics |= {
+                "muon_frac": {
+                    "value": self.calc_partial_efficiency(lambda_min=200.0, lambda_max=290.0),
+                    "description": (
+                        "Fraction of light (from muons) in the wavelength range 200-290 nm "
+                        "(B-TEL-0095)"
+                    ),
+                },
+            }
+
+        return meta | metrics
 
     def export_results(self):
         """Export results to a ecsv file."""
@@ -303,12 +334,9 @@ class CameraEfficiency:
             astropy.io.ascii.write(
                 self._results, self._file["results"], format="basic", overwrite=True
             )
-            _results_summary_file = (
-                str(self._file["results"]).replace(".ecsv", ".txt").replace("_table_", "_summary_")
-            )
+            _results_summary_file = str(self._file["results"]).replace(".ecsv", "_summary.yml")
             self._logger.info(f"Exporting summary results to {_results_summary_file}")
-            with open(_results_summary_file, "w", encoding="utf-8") as file:
-                file.write(self.results_summary())
+            ascii_handler.write_data_to_file(self.results_summary(), Path(_results_summary_file))
 
     def _read_results(self):
         """Read existing results file and store it in _results."""
@@ -560,7 +588,7 @@ class CameraEfficiency:
                 )
             ),
             instrument=cfg.get("telescope"),
-            parameter_version=cfg.get("parameter_version", "0.0.0"),
+            parameter_version=cfg.get("parameter_version") or "0.0.0",
             output_file=Path(f"nsb_pixel_rate-{cfg.get('parameter_version', '0.0.0')}.json"),
             output_path=self.output_dir / cfg.get("telescope") / "nsb_pixel_rate",
         )

@@ -1,0 +1,34 @@
+---
+meta:
+  tel: LSTN-02
+  model_version: 6.0.2
+  zen: 0.0
+  az: 0.0
+  nsb: default sim_telarray spectrum
+reflectivity:
+  value: 0.9029806823032989
+  description: Spectrum weighted reflectivity
+cam_eff:
+  value: 0.2497512975947151
+  description: Camera nominal efficiency with gaps (B-TEL-1170)
+tel_eff:
+  value: 0.24103783667305248
+  description: Telescope total efficiency with gaps (was A-PERF-2020)
+tot_sens:
+  value: 0.4795972574327183
+  description: Telescope total Cherenkov light efficiency / sqrt(total NSB efficiency)
+    (A-PERF-2025/B-TEL-0090)
+nsb_rate:
+  value:
+    value: 0.2748694282637911
+    unit: GHz
+  description: Expected NSB pixel rate for the provided NSB spectrum
+nsb_ref:
+  value:
+    value: 0.24832838925583636
+    unit: GHz
+  description: Expected NSB pixel rate for the reference NSB
+muon_frac:
+  value: 0.012181580491589194
+  description: Fraction of light (from muons) in the wavelength range 200-290 nm
+      (B-TEL-0095)

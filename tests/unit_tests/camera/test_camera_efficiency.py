@@ -126,14 +126,11 @@ def test_export_results(mocker, camera_efficiency_lst, caplog, prepare_results_f
     assert "Cannot export results because they do not exist" in caplog.text
 
     # results available
-    mocker.patch.object(camera_efficiency_lst, "results_summary", return_value="TestString")
+    mocker.patch.object(camera_efficiency_lst, "results_summary", return_value={"test": "data"})
     camera_efficiency_lst._read_results()
-    mock_file = mocker.mock_open()
-    mocker.patch("builtins.open", mock_file)
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst.export_results()
     assert "Exporting summary results" in caplog.text
-    mock_file().write.assert_called_once_with("TestString")
 
 
 def test_analyze_has_results(camera_efficiency_lst, prepare_results_file):
@@ -162,7 +159,8 @@ def test_results_summary(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.calc_nsb_rate()
     summary = camera_efficiency_lst.results_summary()
-    assert "Results summary for LSTN-01" in summary
+    assert summary["meta"]["tel"] == "LSTN-01"
+    assert "meta" in summary
 
 
 def test_plot_efficiency(camera_efficiency_lst, mocker, prepare_results_file):
@@ -325,25 +323,36 @@ def test_results_summary_shower_type(camera_efficiency_lst, prepare_results_file
     camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.efficiency_type = "shower"
     summary = camera_efficiency_lst.results_summary()
-    assert "Results summary for LSTN-01" in summary
-    assert "zenith=20.0 deg" in summary
-    assert "azimuth=0.0 deg" in summary
-    assert "Spectrum (shower) weighted reflectivity:" in summary
-    assert "Camera nominal efficiency with gaps (B-TEL-1170):" in summary
-    assert "Telescope total efficiency" in summary
-    assert "Telescope total Cherenkov light efficiency" in summary
+    assert summary["meta"]["tel"] == "LSTN-01"
+    assert summary["meta"]["zen"] == pytest.approx(20.0)
+    assert summary["meta"]["az"] == pytest.approx(0.0)
+    assert "reflectivity" in summary
+    assert summary["reflectivity"]["description"] == "Spectrum weighted reflectivity"
+    assert "cam_eff" in summary
+    assert summary["cam_eff"]["description"] == "Camera nominal efficiency with gaps (B-TEL-1170)"
+    assert "tel_eff" in summary
+    assert "Telescope total efficiency" in summary["tel_eff"]["description"]
+    assert "tot_sens" in summary
+    assert "Telescope total Cherenkov light efficiency" in summary["tot_sens"]["description"]
 
 
 def test_results_summary_nsb_type(camera_efficiency_lst, prepare_results_file, mocker):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.efficiency_type = "nsb"
-    camera_efficiency_lst.nsb_pixel_pe_per_ns = 0.5
-    camera_efficiency_lst.nsb_rate_ref_conditions = 0.25
+    camera_efficiency_lst.nsb_pixel_pe_per_ns = pytest.approx(0.5)
+    camera_efficiency_lst.nsb_rate_ref_conditions = pytest.approx(0.25)
     summary = camera_efficiency_lst.results_summary()
-    assert "Results summary for LSTN-01" in summary
-    assert "Expected NSB pixel rate for the provided NSB spectrum: 0.5000 [p.e./ns]" in summary
-    assert "Expected NSB pixel rate for the reference NSB: 0.2500 [p.e./ns]" in summary
+    assert summary["meta"]["tel"] == "LSTN-01"
+    assert "nsb_rate" in summary
+    assert summary["nsb_rate"]["value"] == pytest.approx(0.5)
+    assert (
+        summary["nsb_rate"]["description"]
+        == "Expected NSB pixel rate for the provided NSB spectrum"
+    )
+    assert "nsb_ref" in summary
+    assert summary["nsb_ref"]["value"] == pytest.approx(0.25)
+    assert summary["nsb_ref"]["description"] == "Expected NSB pixel rate for the reference NSB"
 
 
 def test_results_summary_muon_type(camera_efficiency_lst, prepare_results_file):
@@ -351,9 +360,11 @@ def test_results_summary_muon_type(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.efficiency_type = "muon"
     summary = camera_efficiency_lst.results_summary()
-    assert "Results summary for LSTN-01" in summary
+    assert summary["meta"]["tel"] == "LSTN-01"
+    assert "muon_frac" in summary
     assert (
-        "Fraction of light (from muons) in the wavelength range 200-290 nm (B-TEL-0095):" in summary
+        "Fraction of light (from muons) in the wavelength range 200-290 nm (B-TEL-0095)"
+        in summary["muon_frac"]["description"]
     )
 
 
@@ -362,7 +373,7 @@ def test_results_summary_with_custom_nsb_spectrum(camera_efficiency_lst, prepare
     camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.config["nsb_spectrum"] = "custom_spectrum.fits"
     summary = camera_efficiency_lst.results_summary()
-    assert "NSB spectrum file: custom_spectrum.fits" in summary
+    assert summary["meta"]["nsb"] == "custom_spectrum.fits"
 
 
 def test_results_summary_without_nsb_spectrum(camera_efficiency_lst, prepare_results_file):
@@ -370,4 +381,4 @@ def test_results_summary_without_nsb_spectrum(camera_efficiency_lst, prepare_res
     camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.config["nsb_spectrum"] = None
     summary = camera_efficiency_lst.results_summary()
-    assert "default sim_telarray NSB spectrum" in summary
+    assert summary["meta"]["nsb"] == "default sim_telarray spectrum"

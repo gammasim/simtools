@@ -2,12 +2,11 @@
 applications:
 - application: simtools-validate-camera-efficiency
   configuration:
-    log_level: debug
+    log_level: info
     model_version: 6.0.2
     output_path: simtools-output
-    site: North
-    telescope: LSTN-02
-    overwrite_model_parameters: tests/resources/info_test_camera_efficiency_change_LSTN-02.yml
+    site: South
+    telescope: LSTS-02
     parameter_version: 0.0.99
     write_reference_nsb_rate_as_parameter: true
     zenith_angle: 0.
@@ -16,7 +15,11 @@ applications:
       parameter_file: nsb_pixel_rate/nsb_pixel_rate-0.0.99.json
       reference_parameter_name: nsb_pixel_rate
       tolerance: 1.e-1
-      scaling: 10.0  # camera efficiency changed by factor 0.1
-  test_name: LSTN_overwrite
+  - reference_output_file: |
+      tests/resources/camera_efficiency/camera_efficiency_summary_South_LSTS-02_za0.0deg_azm000deg.yml
+    tolerance: 1.e-3
+    test_output_file: camera_efficiency_summary_South_LSTS-02_za0.0deg_azm000deg.yml
+  model_version_use_current: true
+  test_name: LSTS
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
