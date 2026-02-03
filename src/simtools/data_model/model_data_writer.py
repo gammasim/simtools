@@ -7,6 +7,7 @@ import packaging.version
 from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
+from simtools import settings
 from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.db import db_handler
@@ -20,69 +21,62 @@ class ModelDataWriter:
 
     Parameters
     ----------
-    product_data_file: str
+    output_file: str
         Name of output file.
-    product_data_format: str
+    output_file_format: str
         Format of output file.
-    args_dict: Dictionary
-        Dictionary with configuration parameters.
     output_path: str or Path
         Path to output file.
-    args_dict: dict
-        Dictionary with configuration parameters.
-
     """
 
-    def __init__(
-        self,
-        product_data_file=None,
-        product_data_format=None,
-        output_path=None,
-        args_dict=None,
-    ):
+    def __init__(self, output_file=None, output_file_format=None, output_path=None):
         """Initialize model data writer."""
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
         self.schema_dict = {}
-        if args_dict is not None:
-            output_path = args_dict.get("output_path", output_path)
-        if output_path is not None:
-            self.io_handler.set_paths(output_path=output_path)
+        self.output_label = "model_data_writer"
+        self.io_handler.set_paths(
+            output_path=output_path or settings.config.args.get("output_path"),
+            output_path_label=self.output_label,
+        )
         try:
-            self.product_data_file = self.io_handler.get_output_file(file_name=product_data_file)
+            self.output_file = self.io_handler.get_output_file(
+                file_name=output_file, output_path_label=self.output_label
+            )
         except TypeError:
-            self.product_data_file = None
-        self.product_data_format = self._astropy_data_format(product_data_format)
+            self.output_file = None
+        self.output_file_format = self._derive_data_format(output_file_format, self.output_file)
 
     @staticmethod
     def dump(
-        args_dict, output_file=None, metadata=None, product_data=None, validate_schema_file=None
+        output_file=None,
+        metadata=None,
+        product_data=None,
+        output_file_format="ascii.ecsv",
+        validate_schema_file=None,
     ):
         """
         Write model data and metadata (as static method).
 
         Parameters
         ----------
-        args_dict: dict
-            Dictionary with configuration parameters (including output file name and path).
         output_file: string or Path
             Name of output file (args["output_file"] is used if this parameter is not set).
         metadata: MetadataCollector object
             Metadata to be written.
         product_data: astropy Table
             Model data to be written
+        output_file_format: str
+            Format of output file.
         validate_schema_file: str
             Schema file used in validation of output data.
-
         """
         writer = ModelDataWriter(
-            product_data_file=(
-                args_dict.get("output_file", None) if output_file is None else output_file
-            ),
-            product_data_format=args_dict.get("output_file_format", "ascii.ecsv"),
-            args_dict=args_dict,
+            output_file=output_file,
+            output_file_format=output_file_format,
         )
-        if validate_schema_file is not None and not args_dict.get("skip_output_validation", True):
+        skip_output_validation = settings.config.args.get("skip_output_validation", True)
+        if validate_schema_file is not None and not skip_output_validation:
             product_data = writer.validate_and_transform(
                 product_data_table=product_data,
                 validate_schema_file=validate_schema_file,
@@ -137,9 +131,8 @@ class ModelDataWriter:
             Validated parameter dictionary.
         """
         writer = ModelDataWriter(
-            product_data_file=output_file,
-            product_data_format="json",
-            args_dict=None,
+            output_file=output_file,
+            output_file_format="json",
             output_path=output_path,
         )
         if check_db_for_existing_parameter:
@@ -434,19 +427,17 @@ class ModelDataWriter:
                 gen.change_dict_keys_case(metadata.get_top_level_metadata(), True)
             )
 
-        self._logger.info(f"Writing data to {self.product_data_file}")
-        if isinstance(product_data, dict) and Path(self.product_data_file).suffix == ".json":
-            self.write_dict_to_model_parameter_json(self.product_data_file, product_data)
+        self._logger.info(f"Writing data to {self.output_file}")
+        if isinstance(product_data, dict) and Path(self.output_file).suffix == ".json":
+            self.write_dict_to_model_parameter_json(self.output_file, product_data)
             return
         try:
-            product_data.write(
-                self.product_data_file, format=self.product_data_format, overwrite=True
-            )
+            product_data.write(self.output_file, format=self.output_file_format, overwrite=True)
         except IORegistryError:
-            self._logger.error(f"Error writing model data to {self.product_data_file}.")
+            self._logger.error(f"Error writing model data to {self.output_file}.")
             raise
         if metadata is not None:
-            metadata.write(self.product_data_file, add_activity_name=True)
+            metadata.write(self.output_file, add_activity_name=True)
 
     def write_dict_to_model_parameter_json(self, file_name, data_dict):
         """
@@ -465,10 +456,13 @@ class ModelDataWriter:
             if data writing was not successful.
         """
         data_dict = ModelDataWriter.prepare_data_dict_for_writing(data_dict)
-        self._logger.info(f"Writing data to {self.io_handler.get_output_file(file_name)}")
+        output_file = self.io_handler.get_output_file(
+            file_name, output_path_label=self.output_label
+        )
+        self._logger.info(f"Writing data to {output_file}")
         ascii_handler.write_data_to_file(
             data=data_dict,
-            output_file=self.io_handler.get_output_file(file_name),
+            output_file=output_file,
             sort_keys=True,
             numpy_types=True,
         )
@@ -508,9 +502,12 @@ class ModelDataWriter:
         return data_dict
 
     @staticmethod
-    def _astropy_data_format(product_data_format):
+    def _derive_data_format(product_data_format, output_file=None):
         """
-        Ensure conformance with astropy data format naming.
+        Derive data format and ensure conformance with astropy data format naming.
+
+        If product_data_format is None and output_file is given, derive format
+        from output_file suffix.
 
         Parameters
         ----------
@@ -518,6 +515,6 @@ class ModelDataWriter:
             format identifier
 
         """
-        if product_data_format == "ecsv":
-            product_data_format = "ascii.ecsv"
-        return product_data_format
+        if product_data_format is None and output_file is not None:
+            product_data_format = Path(output_file).suffix.lstrip(".")
+        return "ascii.ecsv" if product_data_format == "ecsv" else product_data_format

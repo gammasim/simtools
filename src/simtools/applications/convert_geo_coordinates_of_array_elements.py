@@ -157,7 +157,8 @@ def main():
             else layout.export_telescope_list_table(crs_name=app_context.args["export"])
         )
         writer.ModelDataWriter.dump(
-            args_dict=app_context.args,
+            output_file=app_context.args.get("output_file"),
+            output_file_format=app_context.args.get("output_file_format", "ascii.ecsv"),
             metadata=metadata,
             product_data=product_data,
             validate_schema_file=validate_schema_file,
