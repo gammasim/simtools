@@ -51,8 +51,8 @@ class RayTracing:
     """
 
     YLABEL = {
-        "d80_cm": r"$D_{80}$",
-        "d80_deg": r"$D_{80}$",
+        "psf_cm": "PSF",
+        "psf_deg": "PSF",
         "eff_area": "Eff. mirror area",
         "eff_flen": "Eff. focal length",
     }
@@ -209,6 +209,7 @@ class RayTracing:
                 simtel = SimulatorRayTracing(
                     telescope_model=self.telescope_model,
                     site_model=self.site_model,
+                    label=self.label,
                     test=test,
                     config_data={
                         "zenith_angle": self.zenith_angle,
@@ -468,22 +469,46 @@ class RayTracing:
         else:
             self._logger.error("No results to export")
 
+    def get_psf_mm(self, row_index: int = 0) -> float:
+        """Return PSF diameter from the analysis results in mm.
+
+        Parameters
+        ----------
+        row_index : int
+            Row index into the results table (default: 0).
+
+        Returns
+        -------
+        float
+            PSF diameter in millimeters.
+        """
+        if self._results is None:
+            raise RuntimeError("No results available; run analyze() first")
+        psf = self._results["psf_cm"][row_index]
+
+        if isinstance(psf, u.Quantity):
+            psf_cm = psf.to_value(u.cm)
+        else:
+            psf_cm = float(psf)
+
+        return psf_cm * 10.0
+
     def _read_results(self):
         """Read existing results file and store it in _results."""
         self._results = astropy.io.ascii.read(self._file_results, format="ecsv")
 
-    def plot(self, key, save=False, d80=None, **kwargs):
+    def plot(self, key, save=False, psf_diameter_cm=None, **kwargs):
         """
         Plot key vs off-axis angle and save the figure in pdf.
 
         Parameters
         ----------
         key: str
-            d80_cm, d80_deg, eff_area or eff_flen
+            psf_cm, psf_deg, eff_area or eff_flen
         save: bool
             If True, figure will be saved.
-        d80: float
-            d80 for cumulative PSF plot.
+        psf_diameter_cm: float
+            PSF diameter value to be marked in the cumulative PSF plot (in cm).
         **kwargs:
             kwargs for plt.plot
 
@@ -533,7 +558,9 @@ class RayTracing:
                     image_cumulative_file_name
                 )
                 self._logger.info(f"Saving cumulative PSF to {image_cumulative_file}")
-                image.plot_cumulative(file_name=image_cumulative_file, d80=d80)
+                image.plot_cumulative(
+                    file_name=image_cumulative_file, psf_diameter_cm=psf_diameter_cm
+                )
 
     def plot_histogram(self, key, **kwargs):
         """
@@ -542,7 +569,7 @@ class RayTracing:
         Parameters
         ----------
         key: str
-            d80_cm, d80_deg, eff_area or eff_flen
+            psf_cm, psf_deg, eff_area or eff_flen
         **kwargs:
             kwargs for plt.hist
 
@@ -564,7 +591,7 @@ class RayTracing:
         Parameters
         ----------
         key: str
-            d80_cm, d80_deg, eff_area or eff_flen
+            psf_cm, psf_deg, eff_area or eff_flen
 
         Returns
         -------
@@ -588,7 +615,7 @@ class RayTracing:
         Parameters
         ----------
         key: str
-            d80_cm, d80_deg, eff_area or eff_flen
+            psf_cm, psf_deg, eff_area or eff_flen
 
         Returns
         -------

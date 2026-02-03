@@ -28,7 +28,7 @@ jobs:
         run: |
           wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_AUTOCONF }}/download -O autoconf.tar.gz
       - name: upload-auxiliary-files
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: upload-auxiliary-files
           path: |

@@ -97,6 +97,7 @@ jobs:
     permissions:
       contents: read
     needs: build-simtools-prod
+    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/CI-integrationtests.yml
     secrets: inherit
     with:
