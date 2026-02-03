@@ -857,7 +857,7 @@ def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
     if pars is None:
         raise ValueError("No best parameters found")
 
-    tel_model.overwrite_parameters(pars)
+    tel_model.overwrite_parameters(pars, flat_dict=True)
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,

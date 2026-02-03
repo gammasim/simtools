@@ -490,7 +490,7 @@ class ModelParameter:
 
         return None
 
-    def overwrite_parameters(self, changes):
+    def overwrite_parameters(self, changes, flat_dict=False):
         """
         Change the value of multiple existing parameters in the model.
 
@@ -498,9 +498,9 @@ class ModelParameter:
 
         Allows for two types of 'changes' dictionary:
 
-        - simple: '{parameter_name: new_value, ...}'
-        - model repository style:
-          '{parameter_name: {"value": new_value, "version": new_version}, ...}'
+        - simple (flat_dict=True): '{parameter_name: new_value, ...}'
+        - model repository style (flat_dict=False):
+          '{array_element: {parameter_name: {"value": new_value, "version": new_version}, ...}}'
 
         Parameters
         ----------
@@ -509,10 +509,18 @@ class ModelParameter:
         """
         if not changes:
             return
-        key_for_changes = self._get_key_for_parameter_changes(self.site, self.name, changes)
-        changes = changes.get(key_for_changes, {}) if key_for_changes else changes
+        if not flat_dict:
+            key_for_changes = self._get_key_for_parameter_changes(self.site, self.name, changes)
+            changes = changes.get(key_for_changes, {})
         if not changes:
             return
+
+        if flat_dict:
+            self._logger.debug(f"Overwriting parameters with changes: {changes}")
+        else:
+            self._logger.debug(
+                f"Overwriting parameters for {key_for_changes} with changes: {changes}"
+            )
 
         for par_name, par_value in changes.items():
             if par_name not in self.parameters:

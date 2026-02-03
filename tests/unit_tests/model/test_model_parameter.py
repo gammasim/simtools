@@ -213,7 +213,7 @@ def test_overwrite_parameters(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_change = mocker.patch.object(TelescopeModel, "overwrite_model_parameter")
     telescope_copy.overwrite_parameters(
-        {"camera_pixels": {"value": 9999}, "mirror_focal_length": {"value": 55}}
+        {"camera_pixels": {"value": 9999}, "mirror_focal_length": {"value": 55}}, flat_dict=True
     )
     mock_change.assert_any_call("camera_pixels", 9999, None)
     mock_change.assert_any_call("mirror_focal_length", 55, None)
@@ -509,7 +509,7 @@ def test_overwrite_parameters_with_version_dict(telescope_model_lst):
 
     changes = {"num_gains": {"value": 4, "version": "2.0.0"}}
 
-    tel_model.overwrite_parameters(changes)
+    tel_model.overwrite_parameters(changes, flat_dict=True)
 
     assert tel_model.parameters["num_gains"]["value"] == 4
     assert tel_model.parameters["num_gains"]["parameter_version"] == "2.0.0"
@@ -522,7 +522,7 @@ def test_overwrite_parameters_with_simple_value(telescope_model_lst):
     # Simple value (not a dict with 'value' or 'version' keys)
     changes = {"num_gains": 5}
 
-    tel_model.overwrite_parameters(changes)
+    tel_model.overwrite_parameters(changes, flat_dict=True)
 
     assert tel_model.parameters["num_gains"]["value"] == 5
 
