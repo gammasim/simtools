@@ -300,7 +300,7 @@ class CameraEfficiency:
                 },
             }
 
-        if self.efficiency_type == "nsb":
+        elif self.efficiency_type == "nsb":
             metrics |= {
                 "nsb_rate": {
                     "value": self.nsb_pixel_pe_per_ns,
@@ -312,7 +312,7 @@ class CameraEfficiency:
                 },
             }
 
-        if self.efficiency_type == "muon":
+        elif self.efficiency_type == "muon":
             metrics |= {
                 "muon_frac": {
                     "value": self.calc_partial_efficiency(lambda_min=200.0, lambda_max=290.0),
