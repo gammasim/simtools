@@ -13,9 +13,8 @@ applications:
     - MSTN
     skip_output_validation: true
   integration_tests:
-  - reference_output_file: './tests/resources/telescope_positions-North-mercator.ecsv
-
-      '
+  - reference_output_file: |
+     ./tests/resources/telescope_positions-North-mercator.ecsv
     tolerance: 0.01
   test_name: utm_to_mercator_in_table
 schema_name: application_workflow.metaschema

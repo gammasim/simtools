@@ -10,9 +10,8 @@ applications:
     site: North
     telescope: LSTN-01
   integration_tests:
-  - reference_output_file: './tests/resources/model_parameters/mirror_list-2.0.0.json
-
-      '
+  - reference_output_file: |
+     ./tests/resources/model_parameters/mirror_list-2.0.0.json
   test_name: telescope_parameter_parameter_version
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

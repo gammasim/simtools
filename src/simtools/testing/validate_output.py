@@ -46,7 +46,7 @@ def validate_application_output(config, from_command_line=None, from_config_file
     """
     Validate application output against expected output.
 
-    Expected output is defined in configuration file.
+    Expected output is defined in the test configuration file.
     Some tests run only if the model version from the command line
     equals the model version from the configuration file.
 
@@ -88,6 +88,8 @@ def _validate_output_files(config, integration_test):
     if "reference_output_file" in integration_test:
         _validate_reference_output_file(config, integration_test)
     if "test_output_files" in integration_test:
+        if isinstance(integration_test["test_output_files"], dict):
+            integration_test["test_output_files"] = [integration_test["test_output_files"]]
         _validate_output_path_and_file(config, integration_test["test_output_files"])
     if "output_file" in integration_test:
         _validate_output_path_and_file(
@@ -116,11 +118,10 @@ def _test_simtel_cfg_files(config, integration_test, from_command_line, from_con
 
 def _validate_reference_output_file(config, integration_test):
     """Compare with reference output file."""
+    test_file = integration_test.get("test_output_file") or config["configuration"]["output_file"]
     assert compare_files(
         integration_test["reference_output_file"],
-        Path(config["configuration"]["output_path"]).joinpath(
-            config["configuration"]["output_file"]
-        ),
+        Path(config["configuration"]["output_path"]).joinpath(test_file),
         integration_test.get("tolerance", 1.0e-5),
         integration_test.get("test_columns", None),
     )
@@ -228,12 +229,56 @@ def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     return False
 
 
+def _compare_nested_dicts_with_tolerance(data1, data2, tolerance, is_value_field=False):
+    """
+    Recursively compare nested dictionaries, applying allclose to "value" fields.
+
+    Parameters
+    ----------
+    data1 : dict, list, or scalar
+        First data to compare
+    data2 : dict, list, or scalar
+        Second data to compare
+    tolerance : float
+        Tolerance for comparing numerical values
+    is_value_field : bool
+        Whether this data is from a "value" key (applies tolerance to scalars)
+
+    Returns
+    -------
+    bool
+        True if the data are equal within tolerance
+    """
+    if isinstance(data1, dict) and isinstance(data2, dict):
+        return data1.keys() == data2.keys() and all(
+            _compare_nested_dicts_with_tolerance(
+                data1[k], data2[k], tolerance, is_value_field=(k == "value")
+            )
+            for k in data1
+        )
+
+    if isinstance(data1, (list, tuple)) and isinstance(data2, (list, tuple)):
+        return len(data1) == len(data2) and all(
+            _compare_nested_dicts_with_tolerance(v1, v2, tolerance, is_value_field)
+            for v1, v2 in zip(data1, data2)
+        )
+
+    # Apply tolerance if this is a "value" field, otherwise use exact equality
+    if is_value_field:
+        try:
+            return _compare_value_from_parameter_dict(data1, data2, tolerance)
+        except (TypeError, ValueError):
+            return data1 == data2
+    return data1 == data2
+
+
 def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
     """
     Compare two json or yaml files.
 
     Take into account float comparison for sim_telarray string-embedded floats.
     Allow differences in 'schema_version' field.
+    Works recursively for nested dicts with "value" fields on any level.
 
     Parameters
     ----------
@@ -260,16 +305,13 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
     if data1 == data2:
         return True
 
-    if data1.keys() != data2.keys():
-        _logger.error(f"Keys do not match: {data1.keys()} and {data2.keys()}")
-        return False
-    _comparison = all(
-        (
-            _compare_value_from_parameter_dict(data1[k], data2[k], tolerance)
-            if k == "value"
-            else data1[k] == data2[k]
-        )
-        for k in data1
+    if isinstance(data1, dict) and isinstance(data2, dict):
+        if data1.keys() != data2.keys():
+            _logger.error(f"Keys do not match: {data1.keys()} and {data2.keys()}")
+            return False
+
+    _comparison = _compare_nested_dicts_with_tolerance(
+        data1, data2, tolerance, is_value_field=False
     )
     if not _comparison:
         _logger.error(f"Values do not match: {data1} and {data2} (tolerance: {tolerance})")
