@@ -1,0 +1,1025 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>testing.validate_output &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/testing/validate_output';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">testing.validate_output</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for testing.validate_output</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Compare application output to reference output.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">db_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">assertions</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_versions_match</span><span class="p">(</span><span class="n">from_command_line</span><span class="p">,</span> <span class="n">from_config_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True if validations should run for the given versions.</span>
+
+<span class="sd">    Behavior:</span>
+<span class="sd">    - If no version is provided from the command line, run validations.</span>
+<span class="sd">    - If a filter is provided from the command line, run only when it matches</span>
+<span class="sd">        the version(s) from the config file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">from_command_line</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1"># Normalize to collections for comparison</span>
+    <span class="n">cmd_versions</span> <span class="o">=</span> <span class="n">from_command_line</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">from_command_line</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">from_command_line</span><span class="p">]</span>
+    <span class="n">cfg_versions</span> <span class="o">=</span> <span class="n">from_config_file</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">from_config_file</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">from_config_file</span><span class="p">]</span>
+
+    <span class="c1"># Consider a match if any overlap exists</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">cv</span> <span class="ow">in</span> <span class="n">cmd_versions</span> <span class="k">for</span> <span class="n">cv</span> <span class="ow">in</span> <span class="n">cfg_versions</span><span class="p">)</span>
+
+
+<span class="c1"># Keys to ignore when comparing sim_telarray configuration files</span>
+<span class="c1"># (e.g., version numbers, system dependent parameters, CORSIKA options)</span>
+<span class="n">cfg_ignore_keys</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;config_release&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Label&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simtools_&quot;</span><span class="p">,</span>  <span class="c1"># ignore all simtools_ keys - version/build info dependence</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="validate_application_output">
+<a class="viewcode-back" href="../../api-reference/testing.html#testing.validate_output.validate_application_output">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_application_output</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">from_command_line</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">from_config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate application output against expected output.</span>
+
+<span class="sd">    Expected output is defined in the test configuration file.</span>
+<span class="sd">    Some tests run only if the model version from the command line</span>
+<span class="sd">    equals the model version from the configuration file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config: dict</span>
+<span class="sd">        dictionary with the configuration for the application test.</span>
+<span class="sd">    from_command_line: str</span>
+<span class="sd">        Model version from the command line.</span>
+<span class="sd">    from_config_file: str</span>
+<span class="sd">        Model version from the configuration file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;integration_tests&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="k">for</span> <span class="n">integration_test</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;integration_tests&quot;</span><span class="p">]:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Testing application output: </span><span class="si">{</span><span class="n">integration_test</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Model version from command line: </span><span class="si">{</span><span class="n">from_command_line</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;from config file: </span><span class="si">{</span><span class="n">from_config_file</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_versions_match</span><span class="p">(</span><span class="n">from_command_line</span><span class="p">,</span> <span class="n">from_config_file</span><span class="p">):</span>
+            <span class="n">_validate_output_files</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s2">&quot;file_type&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">assertions</span><span class="o">.</span><span class="n">assert_file_type</span><span class="p">(</span>
+                    <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;file_type&quot;</span><span class="p">],</span>
+                    <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;configuration&quot;</span><span class="p">][</span><span class="s2">&quot;output_path&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+                        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;configuration&quot;</span><span class="p">][</span><span class="s2">&quot;output_file&quot;</span><span class="p">]</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+        <span class="n">_test_simtel_cfg_files</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">,</span> <span class="n">from_command_line</span><span class="p">,</span> <span class="n">from_config_file</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_output_files</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate output files.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;reference_output_file&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
+        <span class="n">_validate_reference_output_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;test_output_files&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;test_output_files&quot;</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;test_output_files&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;test_output_files&quot;</span><span class="p">]]</span>
+        <span class="n">_validate_output_path_and_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;test_output_files&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="s2">&quot;output_file&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
+        <span class="n">_validate_output_path_and_file</span><span class="p">(</span>
+            <span class="n">config</span><span class="p">,</span>
+            <span class="p">[{</span><span class="s2">&quot;path_descriptor&quot;</span><span class="p">:</span> <span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">]}],</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;model_parameter_validation&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
+        <span class="n">_validate_model_parameter_json_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;model_parameter_validation&quot;</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_test_simtel_cfg_files</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">,</span> <span class="n">from_command_line</span><span class="p">,</span> <span class="n">from_config_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test simtel cfg files.&quot;&quot;&quot;</span>
+    <span class="n">cfg_files</span> <span class="o">=</span> <span class="n">integration_test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_simtel_cfg_files&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">from_command_line</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="n">from_command_line</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">from_config_file</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="n">from_config_file</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">from_command_line</span> <span class="ow">or</span> <span class="n">from_config_file</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg_files</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cfg</span><span class="p">:</span>
+            <span class="n">_validate_simtel_cfg_files</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">cfg</span><span class="p">)</span>
+            <span class="k">break</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_reference_output_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare with reference output file.&quot;&quot;&quot;</span>
+    <span class="n">test_file</span> <span class="o">=</span> <span class="n">integration_test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_output_file&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;configuration&quot;</span><span class="p">][</span><span class="s2">&quot;output_file&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">compare_files</span><span class="p">(</span>
+        <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;reference_output_file&quot;</span><span class="p">],</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;configuration&quot;</span><span class="p">][</span><span class="s2">&quot;output_path&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">test_file</span><span class="p">),</span>
+        <span class="n">integration_test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tolerance&quot;</span><span class="p">,</span> <span class="mf">1.0e-5</span><span class="p">),</span>
+        <span class="n">integration_test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_columns&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_output_path_and_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_file_tests</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if output paths and files exist.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">file_test</span> <span class="ow">in</span> <span class="n">integration_file_tests</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">output_path</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;configuration&quot;</span><span class="p">][</span><span class="n">file_test</span><span class="p">[</span><span class="s2">&quot;path_descriptor&quot;</span><span class="p">]]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Path </span><span class="si">{</span><span class="n">file_test</span><span class="p">[</span><span class="s1">&#39;path_descriptor&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> not found in integration test configuration.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+        <span class="n">output_file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">file_test</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking path: </span><span class="si">{</span><span class="n">output_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">output_file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Output file </span><span class="si">{</span><span class="n">output_file_path</span><span class="si">}</span><span class="s2"> does not exist. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Directory contents: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">output_file_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">iterdir</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+        <span class="k">if</span> <span class="n">output_file_path</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.simtel.zst&quot;</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">assertions</span><span class="o">.</span><span class="n">check_output_from_sim_telarray</span><span class="p">(</span><span class="n">output_file_path</span><span class="p">,</span> <span class="n">file_test</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">output_file_path</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.log_hist.tar.gz&quot;</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">assertions</span><span class="o">.</span><span class="n">check_simulation_logs</span><span class="p">(</span><span class="n">output_file_path</span><span class="p">,</span> <span class="n">file_test</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">output_file_path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.log&quot;</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">assertions</span><span class="o">.</span><span class="n">check_plain_log</span><span class="p">(</span><span class="n">output_file_path</span><span class="p">,</span> <span class="n">file_test</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_model_parameter_json_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">model_parameter_validation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate model parameter json file and compare it with a reference parameter from the database.</span>
+
+<span class="sd">    Requires database connection to pull the model parameter for a given telescope or site model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config: dict</span>
+<span class="sd">        Configuration dictionary.</span>
+<span class="sd">    model_parameter_validation: dict</span>
+<span class="sd">        Dictionary with model parameter validation configuration.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking model parameter json file: </span><span class="si">{</span><span class="n">model_parameter_validation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">()</span>
+
+    <span class="n">reference_parameter_name</span> <span class="o">=</span> <span class="n">model_parameter_validation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reference_parameter_name&quot;</span><span class="p">)</span>
+
+    <span class="n">reference_model_parameter</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_model_parameter</span><span class="p">(</span>
+        <span class="n">parameter</span><span class="o">=</span><span class="n">reference_parameter_name</span><span class="p">,</span>
+        <span class="n">site</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;configuration&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">),</span>
+        <span class="n">array_element_name</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;configuration&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;telescope&quot;</span><span class="p">),</span>
+        <span class="n">model_version</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;configuration&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">parameter_file</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;configuration&quot;</span><span class="p">][</span><span class="s2">&quot;output_path&quot;</span><span class="p">])</span>
+        <span class="o">/</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;configuration&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;telescope&quot;</span><span class="p">)</span>
+        <span class="o">/</span> <span class="n">model_parameter_validation</span><span class="p">[</span><span class="s2">&quot;parameter_file&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">model_parameter</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">parameter_file</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">_compare_value_from_parameter_dict</span><span class="p">(</span>
+        <span class="n">model_parameter</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+        <span class="n">reference_model_parameter</span><span class="p">[</span><span class="n">reference_parameter_name</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+        <span class="n">model_parameter_validation</span><span class="p">[</span><span class="s2">&quot;tolerance&quot;</span><span class="p">],</span>
+        <span class="n">model_parameter_validation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scaling&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="compare_files">
+<a class="viewcode-back" href="../../api-reference/testing.html#testing.validate_output.compare_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_files</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1.0e-5</span><span class="p">,</span> <span class="n">test_columns</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare two files of file type ecsv, json or yaml.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file1: str</span>
+<span class="sd">        First file to compare</span>
+<span class="sd">    file2: str</span>
+<span class="sd">        Second file to compare</span>
+<span class="sd">    tolerance: float</span>
+<span class="sd">        Tolerance for comparing numerical values.</span>
+<span class="sd">    test_columns: list</span>
+<span class="sd">        List of columns to compare. If None, all columns are compared.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the files are equal.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_file1_suffix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file1</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span>
+    <span class="n">_file2_suffix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file2</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Comparing files: </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_file1_suffix</span> <span class="o">!=</span> <span class="n">_file2_suffix</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File suffixes do not match: </span><span class="si">{</span><span class="n">file1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">file2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_file1_suffix</span> <span class="o">==</span> <span class="s2">&quot;.ecsv&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">compare_ecsv_files</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">,</span> <span class="n">test_columns</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_file1_suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yml&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">compare_json_or_yaml_files</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">)</span>
+
+    <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown file type for files: </span><span class="si">{</span><span class="n">file1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">file2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compare_nested_dicts_with_tolerance</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="n">data2</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">,</span> <span class="n">is_value_field</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Recursively compare nested dictionaries, applying allclose to &quot;value&quot; fields.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data1 : dict, list, or scalar</span>
+<span class="sd">        First data to compare</span>
+<span class="sd">    data2 : dict, list, or scalar</span>
+<span class="sd">        Second data to compare</span>
+<span class="sd">    tolerance : float</span>
+<span class="sd">        Tolerance for comparing numerical values</span>
+<span class="sd">    is_value_field : bool</span>
+<span class="sd">        Whether this data is from a &quot;value&quot; key (applies tolerance to scalars)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the data are equal within tolerance</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data2</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">data1</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="n">data2</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="n">_compare_nested_dicts_with_tolerance</span><span class="p">(</span>
+                <span class="n">data1</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">data2</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">tolerance</span><span class="p">,</span> <span class="n">is_value_field</span><span class="o">=</span><span class="p">(</span><span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;value&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">data1</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data2</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">data1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">data2</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="n">_compare_nested_dicts_with_tolerance</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">,</span> <span class="n">is_value_field</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">v1</span><span class="p">,</span> <span class="n">v2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="n">data2</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Apply tolerance if this is a &quot;value&quot; field, otherwise use exact equality</span>
+    <span class="k">if</span> <span class="n">is_value_field</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_compare_value_from_parameter_dict</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="n">data2</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">data1</span> <span class="o">==</span> <span class="n">data2</span>
+    <span class="k">return</span> <span class="n">data1</span> <span class="o">==</span> <span class="n">data2</span>
+
+
+<div class="viewcode-block" id="compare_json_or_yaml_files">
+<a class="viewcode-back" href="../../api-reference/testing.html#testing.validate_output.compare_json_or_yaml_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_json_or_yaml_files</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1.0e-2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare two json or yaml files.</span>
+
+<span class="sd">    Take into account float comparison for sim_telarray string-embedded floats.</span>
+<span class="sd">    Allow differences in &#39;schema_version&#39; field.</span>
+<span class="sd">    Works recursively for nested dicts with &quot;value&quot; fields on any level.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file1: str</span>
+<span class="sd">        First file to compare</span>
+<span class="sd">    file2: str</span>
+<span class="sd">        Second file to compare</span>
+<span class="sd">    tolerance: float</span>
+<span class="sd">        Tolerance for comparing numerical values.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the files are equal.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data1</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file1</span><span class="p">)</span>
+    <span class="n">data2</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file2</span><span class="p">)</span>
+    <span class="n">data1</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;schema_version&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">data2</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;schema_version&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Comparing json/yaml files: </span><span class="si">{</span><span class="n">file1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">file2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">data1</span> <span class="o">==</span> <span class="n">data2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data2</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">data1</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">!=</span> <span class="n">data2</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Keys do not match: </span><span class="si">{</span><span class="n">data1</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">data2</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">_comparison</span> <span class="o">=</span> <span class="n">_compare_nested_dicts_with_tolerance</span><span class="p">(</span>
+        <span class="n">data1</span><span class="p">,</span> <span class="n">data2</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">,</span> <span class="n">is_value_field</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_comparison</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Values do not match: </span><span class="si">{</span><span class="n">data1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">data2</span><span class="si">}</span><span class="s2"> (tolerance: </span><span class="si">{</span><span class="n">tolerance</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_comparison</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compare_value_from_parameter_dict</span><span class="p">(</span><span class="n">data_1</span><span class="p">,</span> <span class="n">data_2</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1.0e-5</span><span class="p">,</span> <span class="n">factor_1</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare value fields given in different formats.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_1 : float, int, str, list, numpy.ndarray</span>
+<span class="sd">        First value or collection of values to compare. May be a scalar,</span>
+<span class="sd">        a sequence, a numpy array, or a string representation of a list.</span>
+<span class="sd">    data_2 : float, int, str, list, numpy.ndarray</span>
+<span class="sd">        Second value or collection of values to compare, with the same</span>
+<span class="sd">        allowed formats as ``data_2``.</span>
+<span class="sd">    tolerance : float, optional</span>
+<span class="sd">        Relative tolerance used when comparing numerical values via</span>
+<span class="sd">        ``numpy.allclose``.</span>
+<span class="sd">    factor1 : float, optional</span>
+<span class="sd">        Multiplicative factor applied to ``data_1`` before comparison. This</span>
+<span class="sd">        can be used to account for unit conversions or normalisation</span>
+<span class="sd">        differences between ``data_1`` and ``data_2``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the two values are considered equal within the given</span>
+<span class="sd">        tolerance, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_as_list</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_string_to_list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
+
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Comparing values: </span><span class="si">{</span><span class="n">data_1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">data_2</span><span class="si">}</span><span class="s2"> (tolerance: </span><span class="si">{</span><span class="n">tolerance</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+    <span class="n">_as_list_1</span> <span class="o">=</span> <span class="n">_as_list</span><span class="p">(</span><span class="n">data_1</span><span class="p">)</span>
+    <span class="n">_as_list_2</span> <span class="o">=</span> <span class="n">_as_list</span><span class="p">(</span><span class="n">data_2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_as_list_1</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_as_list_1</span> <span class="o">==</span> <span class="n">_as_list_2</span>
+    <span class="n">_as_list_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">_as_list_1</span><span class="p">)</span> <span class="o">*</span> <span class="n">factor_1</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">_as_list_1</span><span class="p">,</span> <span class="n">_as_list_2</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="compare_ecsv_files">
+<a class="viewcode-back" href="../../api-reference/testing.html#testing.validate_output.compare_ecsv_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_ecsv_files</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1.0e-5</span><span class="p">,</span> <span class="n">test_columns</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare two ecsv files.</span>
+
+<span class="sd">    The comparison is successful if:</span>
+
+<span class="sd">    - same number of rows</span>
+<span class="sd">    - numerical values in columns are close</span>
+
+<span class="sd">    The comparison can be restricted to a subset of columns with some additional</span>
+<span class="sd">    cuts applied. This is configured through the test_columns parameter. This is</span>
+<span class="sd">    a list of dictionaries, where each dictionary contains the following</span>
+<span class="sd">    key-value pairs:</span>
+<span class="sd">    - test_column_name: column name to compare.</span>
+<span class="sd">    - cut_column_name: column for filtering.</span>
+<span class="sd">    - cut_condition: condition for filtering.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file1: str</span>
+<span class="sd">        First file to compare</span>
+<span class="sd">    file2: str</span>
+<span class="sd">        Second file to compare</span>
+<span class="sd">    tolerance: float</span>
+<span class="sd">        Tolerance for comparing numerical values.</span>
+<span class="sd">    test_columns: list</span>
+<span class="sd">        List of columns to compare. If None, all columns are compared.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Comparing files: </span><span class="si">{</span><span class="n">file1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">file2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">table1</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">)</span>
+    <span class="n">table2</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">file2</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">test_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">test_columns</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;test_column_name&quot;</span><span class="p">:</span> <span class="n">col</span><span class="p">}</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table1</span><span class="o">.</span><span class="n">colnames</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_mask</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a boolean mask based on the condition (note the usage of eval).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">eval</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;table[&#39;</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2">&#39;] </span><span class="si">{</span><span class="n">condition</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># pylint: disable=eval-used</span>
+            <span class="k">if</span> <span class="n">condition</span>
+            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">col_dict</span> <span class="ow">in</span> <span class="n">test_columns</span><span class="p">:</span>
+        <span class="n">col_name</span> <span class="o">=</span> <span class="n">col_dict</span><span class="p">[</span><span class="s2">&quot;test_column_name&quot;</span><span class="p">]</span>
+        <span class="n">mask1</span> <span class="o">=</span> <span class="n">generate_mask</span><span class="p">(</span>
+            <span class="n">table1</span><span class="p">,</span> <span class="n">col_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cut_column_name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="n">col_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cut_condition&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">mask2</span> <span class="o">=</span> <span class="n">generate_mask</span><span class="p">(</span>
+            <span class="n">table2</span><span class="p">,</span> <span class="n">col_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cut_column_name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="n">col_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cut_condition&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">table1_masked</span><span class="p">,</span> <span class="n">table2_masked</span> <span class="o">=</span> <span class="n">table1</span><span class="p">[</span><span class="n">mask1</span><span class="p">],</span> <span class="n">table2</span><span class="p">[</span><span class="n">mask2</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">table1_masked</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">table2_masked</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">table1_masked</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">table1_masked</span><span class="p">[</span><span class="n">col_name</span><span class="p">],</span> <span class="n">table2_masked</span><span class="p">[</span><span class="n">col_name</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="n">tolerance</span><span class="p">):</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Column </span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2"> outside of relative tolerance </span><span class="si">{</span><span class="n">tolerance</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_simtel_cfg_files</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">simtel_cfg_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check sim_telarray configuration files and compare with reference file.</span>
+
+<span class="sd">    Note the finetuned naming of configuration files by simtools.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">reference_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">simtel_cfg_file</span><span class="p">)</span>
+    <span class="n">test_file</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;configuration&quot;</span><span class="p">][</span><span class="s2">&quot;output_path&quot;</span><span class="p">])</span>
+        <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;model/</span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;configuration&#39;</span><span class="p">][</span><span class="s1">&#39;model_version&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="o">/</span> <span class="n">reference_file</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_test&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;configuration&#39;</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Comparing simtel cfg files: </span><span class="si">{</span><span class="n">reference_file</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">test_file</span><span class="si">}</span><span class="s2"> &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;for model version </span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;configuration&#39;</span><span class="p">][</span><span class="s1">&#39;model_version&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="k">assert</span> <span class="n">_compare_simtel_cfg_files</span><span class="p">(</span><span class="n">reference_file</span><span class="p">,</span> <span class="n">test_file</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compare_simtel_cfg_files</span><span class="p">(</span><span class="n">reference_file</span><span class="p">,</span> <span class="n">test_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare two sim_telarray configuration files.</span>
+
+<span class="sd">    Line-by-line string comparison. Requires similar sequence of</span>
+<span class="sd">    parameters in the files. Ignore lines listed in cfg_ignore_keys</span>
+<span class="sd">    (e.g., simtools package versions or hadronic interaction model strings).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reference_file: Path</span>
+<span class="sd">        Reference sim_telarray configuration file.</span>
+<span class="sd">    test_file: Path</span>
+<span class="sd">        Test sim_telarray configuration file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the files are equal.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">reference_file</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f1</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">test_file</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f2</span><span class="p">:</span>
+        <span class="n">reference_cfg</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f1</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+        <span class="n">test_cfg</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f2</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">filter_ignored</span><span class="p">(</span><span class="n">cfg_lines</span><span class="p">,</span> <span class="n">file_label</span><span class="p">):</span>
+        <span class="n">filtered</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">cfg_lines</span><span class="p">:</span>
+            <span class="n">ignored_key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">ignore</span> <span class="k">for</span> <span class="n">ignore</span> <span class="ow">in</span> <span class="n">cfg_ignore_keys</span> <span class="k">if</span> <span class="n">ignore</span> <span class="ow">in</span> <span class="n">line</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ignored_key</span><span class="p">:</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ignoring line in </span><span class="si">{</span><span class="n">file_label</span><span class="si">}</span><span class="s2"> due to key &#39;</span><span class="si">{</span><span class="n">ignored_key</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">filtered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">filtered</span>
+
+    <span class="n">reference_cfg_filtered</span> <span class="o">=</span> <span class="n">filter_ignored</span><span class="p">(</span><span class="n">reference_cfg</span><span class="p">,</span> <span class="s2">&quot;reference file&quot;</span><span class="p">)</span>
+    <span class="n">test_cfg_filtered</span> <span class="o">=</span> <span class="n">filter_ignored</span><span class="p">(</span><span class="n">test_cfg</span><span class="p">,</span> <span class="s2">&quot;test file&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reference_cfg_filtered</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_cfg_filtered</span><span class="p">):</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Line counts differ after filtering: </span><span class="si">{</span><span class="n">reference_file</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">reference_cfg_filtered</span><span class="p">)</span><span class="si">}</span><span class="s2"> lines), &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">test_file</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">test_cfg_filtered</span><span class="p">)</span><span class="si">}</span><span class="s2"> lines).&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">for</span> <span class="n">ref_line</span><span class="p">,</span> <span class="n">test_line</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">reference_cfg_filtered</span><span class="p">,</span> <span class="n">test_cfg_filtered</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ref_line</span> <span class="o">!=</span> <span class="n">test_line</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Configuration files </span><span class="si">{</span><span class="n">reference_file</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">test_file</span><span class="si">}</span><span class="s2"> do not match: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">ref_line</span><span class="si">}</span><span class="s2">&#39; and &#39;</span><span class="si">{</span><span class="n">test_line</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

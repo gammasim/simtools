@@ -1,0 +1,1263 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>layout.array_layout_utils &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/layout/array_layout_utils';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">layout.array_layout_utils</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for layout.array_layout_utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Retrieve, merge, and write layout dictionaries.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">QTable</span><span class="p">,</span> <span class="n">Table</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_reader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.model_data_writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelDataWriter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span><span class="p">,</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.array_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.site_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">SiteModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="retrieve_ctao_array_layouts">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout_utils.retrieve_ctao_array_layouts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">retrieve_ctao_array_layouts</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">repository_url</span><span class="p">,</span> <span class="n">branch_name</span><span class="o">=</span><span class="s2">&quot;main&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve array layouts from CTAO common identifiers repository.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    site : str</span>
+<span class="sd">        Site identifier.</span>
+<span class="sd">    repository_url : str</span>
+<span class="sd">        URL or path to CTAO common identifiers</span>
+<span class="sd">    branch_name : str</span>
+<span class="sd">        Repository branch to use for CTAO common identifiers.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Array layouts for all CTAO sites.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Retrieving array layouts from </span><span class="si">{</span><span class="n">repository_url</span><span class="si">}</span><span class="s2"> on branch </span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">gen</span><span class="o">.</span><span class="n">is_url</span><span class="p">(</span><span class="n">repository_url</span><span class="p">):</span>
+        <span class="n">array_element_ids</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_http</span><span class="p">(</span>
+            <span class="n">url</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">repository_url</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2">/array-element-ids.json&quot;</span>
+        <span class="p">)</span>
+        <span class="n">sub_arrays</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_http</span><span class="p">(</span>
+            <span class="n">url</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">repository_url</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2">/subarray-ids.json&quot;</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">array_element_ids</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span>
+            <span class="n">Path</span><span class="p">(</span><span class="n">repository_url</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;array-element-ids.json&quot;</span>
+        <span class="p">)</span>
+        <span class="n">sub_arrays</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span>
+            <span class="n">Path</span><span class="p">(</span><span class="n">repository_url</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;subarray-ids.json&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_get_ctao_layouts_per_site</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">sub_arrays</span><span class="p">,</span> <span class="n">array_element_ids</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_ctao_layouts_per_site</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">sub_arrays</span><span class="p">,</span> <span class="n">array_element_ids</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get array layouts for CTAO sites.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    site : str</span>
+<span class="sd">        Site identifier.</span>
+<span class="sd">    sub_arrays : dict</span>
+<span class="sd">        Sub-array definitions.</span>
+<span class="sd">    array_element_ids : dict</span>
+<span class="sd">        Array element definitions.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Array layouts for CTAO sites.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layouts_per_site</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">array</span> <span class="ow">in</span> <span class="n">sub_arrays</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;subarrays&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ids</span> <span class="ow">in</span> <span class="n">array</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_element_ids&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">element_name</span> <span class="o">=</span> <span class="n">_get_ctao_array_element_name</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">array_element_ids</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">get_site_from_array_element_name</span><span class="p">(</span><span class="n">element_name</span><span class="p">)</span> <span class="o">!=</span> <span class="n">site</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">array_layout</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">array</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="n">elements</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">layouts_per_site</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">array_layout</span><span class="p">)</span>
+
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CTAO array layout definition: </span><span class="si">{</span><span class="n">layouts_per_site</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">layouts_per_site</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_ctao_array_element_name</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">array_element_ids</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return array element name for common identifier.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">array_element_ids</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_elements&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="k">if</span> <span class="n">element</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">ids</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">element</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="merge_array_layouts">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout_utils.merge_array_layouts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_array_layouts</span><span class="p">(</span><span class="n">layouts_1</span><span class="p">,</span> <span class="n">layouts_2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare two array layout dictionaries and merge them.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    layouts_1 : dict</span>
+<span class="sd">        Array layout dictionary 1.</span>
+<span class="sd">    layouts_2 : dict</span>
+<span class="sd">        Array layout dictionary 2.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Merged array layout dictionary based on layout_1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">merged_layout</span> <span class="o">=</span> <span class="n">layouts_1</span>
+    <span class="k">for</span> <span class="n">layout_2</span> <span class="ow">in</span> <span class="n">layouts_2</span><span class="p">:</span>
+        <span class="n">layout_found</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">layout_1</span> <span class="ow">in</span> <span class="n">layouts_1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="p">{}):</span>
+            <span class="k">if</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">layout_1</span><span class="p">[</span><span class="s2">&quot;elements&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">layout_2</span><span class="p">[</span><span class="s2">&quot;elements&quot;</span><span class="p">]):</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Equal telescope list: simtools &#39;</span><span class="si">{</span><span class="n">layout_1</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39; &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;and CTAO &#39;</span><span class="si">{</span><span class="n">layout_2</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                <span class="p">)</span>
+                <span class="n">layout_1</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layout_2</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+                <span class="n">layout_found</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">layout_found</span><span class="p">:</span>
+            <span class="n">merged_layout</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">layout_2</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="n">layout_2</span><span class="p">[</span><span class="s2">&quot;elements&quot;</span><span class="p">],</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding </span><span class="si">{</span><span class="n">layout_2</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="n">layout_2</span><span class="p">[</span><span class="s1">&#39;elements&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">merged_layout</span></div>
+
+
+
+<div class="viewcode-block" id="write_array_layouts">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout_utils.write_array_layouts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_array_layouts</span><span class="p">(</span><span class="n">array_layouts</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write array layouts as model parameter.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Command line arguments.</span>
+<span class="sd">    array_layouts : dict</span>
+<span class="sd">        Array layouts to be written.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">site</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">array_layouts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing updated array layouts to the database for site </span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="n">io_handler_instance</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+    <span class="n">io_handler_instance</span><span class="o">.</span><span class="n">set_paths</span><span class="p">(</span><span class="n">output_path</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_path&quot;</span><span class="p">])</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">io_handler_instance</span><span class="o">.</span><span class="n">get_output_file</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;array-layouts-</span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;updated_parameter_version&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.json&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump_model_parameter</span><span class="p">(</span>
+        <span class="n">parameter_name</span><span class="o">=</span><span class="s2">&quot;array_layouts&quot;</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">array_layouts</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+        <span class="n">instrument</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;OBS-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">parameter_version</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;updated_parameter_version&quot;</span><span class="p">),</span>
+        <span class="n">output_file</span><span class="o">=</span><span class="n">output_file</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">MetadataCollector</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
+        <span class="n">args_dict</span><span class="p">,</span>
+        <span class="n">output_file</span><span class="p">,</span>
+        <span class="n">add_activity_name</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_array_layouts_with_db">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout_utils.validate_array_layouts_with_db">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_array_layouts_with_db</span><span class="p">(</span><span class="n">production_table</span><span class="p">,</span> <span class="n">array_layouts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate array layouts against the production table in the database.</span>
+
+<span class="sd">    Confirm that every telescope defined in the array layouts exist in the</span>
+<span class="sd">    production table.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    production_table : dict</span>
+<span class="sd">        Production table from the database.</span>
+<span class="sd">    array_layouts : dict</span>
+<span class="sd">        Array layouts to be validated.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Validated array layouts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">db_elements</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">production_table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameters&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="n">invalid_array_elements</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">e</span>
+        <span class="k">for</span> <span class="n">layout</span> <span class="ow">in</span> <span class="n">array_layouts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">layout</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;elements&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="n">e</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">db_elements</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">invalid_array_elements</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid array elements found: </span><span class="si">{</span><span class="n">invalid_array_elements</span><span class="si">}</span><span class="s2">. &quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">array_layouts</span></div>
+
+
+
+<div class="viewcode-block" id="get_array_layouts_from_parameter_file">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout_utils.get_array_layouts_from_parameter_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_array_layouts_from_parameter_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">coordinate_system</span><span class="o">=</span><span class="s2">&quot;ground&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve array layouts from parameter file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_path : str or Path</span>
+<span class="sd">        Path to the array layout parameter file.</span>
+<span class="sd">    model_version : str</span>
+<span class="sd">        Model version to retrieve.</span>
+<span class="sd">    coordinate_system : str</span>
+<span class="sd">        Coordinate system to use for the array elements (default is &quot;ground&quot;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of dictionaries containing array layout names and their elements.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">array_layouts</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">array_layouts</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing &#39;value&#39; key in layout file.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="n">site</span> <span class="o">=</span> <span class="n">array_layouts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">_get_array_layout_dict</span><span class="p">(</span>
+            <span class="n">model_version</span><span class="p">,</span>
+            <span class="n">site</span><span class="p">,</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;elements&quot;</span><span class="p">),</span>
+            <span class="n">layout</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+            <span class="n">coordinate_system</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">layout</span> <span class="ow">in</span> <span class="n">value</span>
+    <span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="get_array_layouts_from_db">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout_utils.get_array_layouts_from_db">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_array_layouts_from_db</span><span class="p">(</span><span class="n">layout_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">coordinate_system</span><span class="o">=</span><span class="s2">&quot;ground&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve all array layouts from the database and return as list of astropy tables.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    layout_name : str</span>
+<span class="sd">        Name of the array layout to retrieve (for None, all layouts are retrieved).</span>
+<span class="sd">    site : str</span>
+<span class="sd">        Site identifier.</span>
+<span class="sd">    model_version : str</span>
+<span class="sd">        Model version to retrieve.</span>
+<span class="sd">    coordinate_system : str</span>
+<span class="sd">        Coordinate system to use for the array elements (default is &quot;ground&quot;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of dictionaries containing array layout names and their elements.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layout_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">layout_name</span><span class="p">:</span>
+        <span class="n">layout_names</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">ensure_iterable</span><span class="p">(</span><span class="n">layout_name</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">site_model</span> <span class="o">=</span> <span class="n">SiteModel</span><span class="p">(</span><span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">)</span>
+        <span class="n">layout_names</span> <span class="o">=</span> <span class="n">site_model</span><span class="o">.</span><span class="n">get_list_of_array_layouts</span><span class="p">()</span>
+
+    <span class="n">layouts</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_get_array_layout_dict</span><span class="p">(</span><span class="n">model_version</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">_layout_name</span><span class="p">,</span> <span class="n">coordinate_system</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_layout_name</span> <span class="ow">in</span> <span class="n">layout_names</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">layouts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">layouts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">layouts</span></div>
+
+
+
+<div class="viewcode-block" id="get_array_layouts_using_telescope_lists_from_db">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout_utils.get_array_layouts_using_telescope_lists_from_db">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_array_layouts_using_telescope_lists_from_db</span><span class="p">(</span>
+    <span class="n">telescope_lists</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">coordinate_system</span><span class="o">=</span><span class="s2">&quot;ground&quot;</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve array layouts from the database using telescope lists.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    telescope_lists : list</span>
+<span class="sd">        List of telescope lists to retrieve array layouts for.</span>
+<span class="sd">    site : str</span>
+<span class="sd">        Site identifier.</span>
+<span class="sd">    model_version : str</span>
+<span class="sd">        Model version to retrieve.</span>
+<span class="sd">    coordinate_system : str</span>
+<span class="sd">        Coordinate system to use for the array elements (default is &quot;ground&quot;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of dictionaries containing array layout names and their elements.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layouts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">telescope_list</span> <span class="ow">in</span> <span class="n">telescope_lists</span><span class="p">:</span>
+        <span class="n">_site</span> <span class="o">=</span> <span class="n">site</span>
+        <span class="k">if</span> <span class="n">_site</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sites</span> <span class="o">=</span> <span class="p">{</span><span class="n">names</span><span class="o">.</span><span class="n">get_site_from_array_element_name</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">telescope_list</span><span class="p">}</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sites</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Telescope list contains elements from multiple sites: </span><span class="si">{</span><span class="n">sites</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="s2">&quot;Please specify a site.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">_site</span> <span class="o">=</span> <span class="n">sites</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="n">layouts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">_get_array_layout_dict</span><span class="p">(</span><span class="n">model_version</span><span class="p">,</span> <span class="n">_site</span><span class="p">,</span> <span class="n">telescope_list</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">coordinate_system</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">layouts</span></div>
+
+
+
+<div class="viewcode-block" id="get_array_layouts_from_file">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout_utils.get_array_layouts_from_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_array_layouts_from_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve array layout(s) from astropy table file(s).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_path : str or Path or list of str or list of Path</span>
+<span class="sd">        Path(s) to array layout files(s).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of dictionaries containing array layout names and their elements.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">):</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="p">[</span><span class="n">file_path</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">Path</span><span class="p">(</span><span class="n">_file</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
+            <span class="s2">&quot;array_elements&quot;</span><span class="p">:</span> <span class="n">data_reader</span><span class="o">.</span><span class="n">read_table_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">_file</span><span class="p">),</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">_file</span> <span class="ow">in</span> <span class="n">file_path</span>
+    <span class="p">]</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_array_layout_dict</span><span class="p">(</span><span class="n">model_version</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope_list</span><span class="p">,</span> <span class="n">layout_name</span><span class="p">,</span> <span class="n">coordinate_system</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return array layout dictionary for a given telescope list.&quot;&quot;&quot;</span>
+    <span class="n">array_model</span> <span class="o">=</span> <span class="n">ArrayModel</span><span class="p">(</span>
+        <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
+        <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span>
+        <span class="n">array_elements</span><span class="o">=</span><span class="n">telescope_list</span><span class="p">,</span>
+        <span class="n">layout_name</span><span class="o">=</span><span class="n">layout_name</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">layout_name</span> <span class="k">if</span> <span class="n">layout_name</span> <span class="k">else</span> <span class="s2">&quot;list&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">site</span><span class="p">,</span>
+        <span class="s2">&quot;array_elements&quot;</span><span class="p">:</span> <span class="n">array_model</span><span class="o">.</span><span class="n">export_array_elements_as_table</span><span class="p">(</span>
+            <span class="n">coordinate_system</span><span class="o">=</span><span class="n">coordinate_system</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+
+
+<div class="viewcode-block" id="get_array_elements_from_db_for_layouts">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout_utils.get_array_elements_from_db_for_layouts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_array_elements_from_db_for_layouts</span><span class="p">(</span><span class="n">layouts</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get list of array elements from the database for given list of layout names.</span>
+
+<span class="sd">    Structure of the returned dictionary::</span>
+
+<span class="sd">        {</span>
+<span class="sd">            &quot;layout_name_1&quot;: [telescope_id_1, telescope_id_2, ...],</span>
+<span class="sd">            &quot;layout_name_2&quot;: [telescope_id_3, telescope_id_4, ...],</span>
+<span class="sd">            ...</span>
+<span class="sd">        }</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    layouts : list[str]</span>
+<span class="sd">        List of layout names to read. If &quot;all&quot;, read all available layouts.</span>
+<span class="sd">    site : str</span>
+<span class="sd">        Site name for the array layouts.</span>
+<span class="sd">    model_version : str</span>
+<span class="sd">        Model version for the array layouts.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary mapping layout names to telescope IDs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">site_model</span> <span class="o">=</span> <span class="n">SiteModel</span><span class="p">(</span><span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">)</span>
+    <span class="n">layout_names</span> <span class="o">=</span> <span class="n">site_model</span><span class="o">.</span><span class="n">get_list_of_array_layouts</span><span class="p">()</span> <span class="k">if</span> <span class="n">layouts</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="n">layouts</span>
+    <span class="n">layout_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">layout_name</span> <span class="ow">in</span> <span class="n">layout_names</span><span class="p">:</span>
+        <span class="n">layout_dict</span><span class="p">[</span><span class="n">layout_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">site_model</span><span class="o">.</span><span class="n">get_array_elements_for_layout</span><span class="p">(</span><span class="n">layout_name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">layout_dict</span></div>
+
+
+
+<div class="viewcode-block" id="read_layouts">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout_utils.read_layouts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_layouts</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read array layouts from the database or parameter file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary with command line arguments.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        A tuple containing:</span>
+<span class="sd">            - list: List of array layouts.</span>
+<span class="sd">            - list or None: Background layout or None if not provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">background_layout</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name_background&quot;</span><span class="p">):</span>
+        <span class="n">background_layout</span> <span class="o">=</span> <span class="n">get_array_layouts_from_db</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name_background&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">],</span>
+        <span class="p">)[</span><span class="s2">&quot;array_elements&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;plot_all_layouts&quot;</span><span class="p">]:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Plotting array from DB using layout array name(s).&quot;</span><span class="p">)</span>
+        <span class="n">layouts</span> <span class="o">=</span> <span class="n">get_array_layouts_from_db</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layouts</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">layouts</span><span class="p">,</span> <span class="n">background_layout</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">layouts</span><span class="p">],</span> <span class="n">background_layout</span>
+
+    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_parameter_file&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Plotting array from parameter file(s).&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">get_array_layouts_from_parameter_file</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_parameter_file&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">],</span>
+        <span class="p">),</span> <span class="n">background_layout</span>
+
+    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_file&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Plotting array from telescope table file(s).&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">get_array_layouts_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_file&quot;</span><span class="p">]),</span> <span class="n">background_layout</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_element_list&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Plotting array from list of array elements.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">get_array_layouts_using_telescope_lists_from_db</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_element_list&quot;</span><span class="p">]],</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">],</span>
+        <span class="p">),</span> <span class="n">background_layout</span>
+
+    <span class="k">return</span> <span class="p">[],</span> <span class="n">background_layout</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_array_name</span><span class="p">(</span><span class="n">array_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return telescope size and number of telescopes from regular array name.</span>
+
+<span class="sd">    Finetuned to array names like &quot;4MST&quot;, &quot;1LST&quot;, etc.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array_name : str</span>
+<span class="sd">        Name of the regular array (e.g. &quot;4MST&quot;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tel_size : str</span>
+<span class="sd">        Telescope size (e.g. &quot;MST&quot;).</span>
+<span class="sd">    n_tel : int</span>
+<span class="sd">        Number of telescopes (e.g. 4).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">array_name</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">array_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid array_name: &#39;</span><span class="si">{</span><span class="n">array_name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">array_name</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="nb">int</span><span class="p">(</span><span class="n">array_name</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_star_array</span><span class="p">(</span><span class="n">tel_name</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">pos_z</span><span class="p">,</span> <span class="n">n_telescopes</span><span class="p">,</span> <span class="n">tel_type</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">distance</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create star-shaped array positions along x and y axes.&quot;&quot;&quot;</span>
+    <span class="n">axis_sequence</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;-x&quot;</span><span class="p">,</span> <span class="s2">&quot;-y&quot;</span><span class="p">]</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_telescopes</span><span class="p">):</span>
+        <span class="n">tel_name</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">generate_array_element_name_from_type_site_id</span><span class="p">(</span><span class="n">tel_type</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">axis_sequence</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="mi">4</span><span class="p">]</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">distance</span> <span class="o">*</span> <span class="n">step</span>
+        <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span>
+            <span class="n">pos_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+            <span class="n">pos_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">&quot;-x&quot;</span><span class="p">:</span>
+            <span class="n">pos_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="n">dist</span><span class="p">)</span>
+            <span class="n">pos_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+            <span class="n">pos_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+            <span class="n">pos_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">&quot;-y&quot;</span><span class="p">:</span>
+            <span class="n">pos_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+            <span class="n">pos_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="n">dist</span><span class="p">)</span>
+        <span class="n">pos_z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_square_array</span><span class="p">(</span><span class="n">tel_name</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">pos_z</span><span class="p">,</span> <span class="n">n_tel</span><span class="p">,</span> <span class="n">tel_type</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">distance</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create square array positions.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n_tel</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">tel_name</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">names</span><span class="o">.</span><span class="n">generate_array_element_name_from_type_site_id</span><span class="p">(</span><span class="n">tel_type</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="s2">&quot;01&quot;</span><span class="p">))</span>
+        <span class="n">pos_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        <span class="n">pos_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        <span class="n">pos_z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">n_tel</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+            <span class="n">tel_name</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">names</span><span class="o">.</span><span class="n">generate_array_element_name_from_type_site_id</span><span class="p">(</span><span class="n">tel_type</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;0</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">pos_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">distance</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">//</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="n">pos_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">distance</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="n">pos_z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported number of telescopes for square array: </span><span class="si">{</span><span class="n">n_tel</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="create_regular_array">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout_utils.create_regular_array">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_regular_array</span><span class="p">(</span>
+    <span class="n">array_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">n_telescopes</span><span class="p">,</span> <span class="n">telescope_type</span><span class="p">,</span> <span class="n">telescope_distance</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="s2">&quot;square&quot;</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a regular array layout table.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array_name : str</span>
+<span class="sd">        Name of the regular array (e.g. &quot;4MST&quot;).</span>
+<span class="sd">    site : str</span>
+<span class="sd">        Site identifier.</span>
+<span class="sd">    n_telescopes : int</span>
+<span class="sd">        Number of telescopes in the array.</span>
+<span class="sd">    telescope_type : str</span>
+<span class="sd">        Type of telescope (e.g. &quot;MST&quot;).</span>
+<span class="sd">    telescope_distance : Quantity</span>
+<span class="sd">        Distance between telescopes in the array.</span>
+<span class="sd">    shape : str</span>
+<span class="sd">        Shape of the array: &quot;square&quot; or &quot;star&quot; (default: &quot;square&quot;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.table.Table</span>
+<span class="sd">        Table with the regular array layout.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tel_name</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">pos_z</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="s2">&quot;square&quot;</span><span class="p">:</span>
+        <span class="n">_create_square_array</span><span class="p">(</span>
+            <span class="n">tel_name</span><span class="p">,</span>
+            <span class="n">pos_x</span><span class="p">,</span>
+            <span class="n">pos_y</span><span class="p">,</span>
+            <span class="n">pos_z</span><span class="p">,</span>
+            <span class="n">n_telescopes</span><span class="p">,</span>
+            <span class="n">telescope_type</span><span class="p">,</span>
+            <span class="n">site</span><span class="p">,</span>
+            <span class="n">telescope_distance</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">shape</span> <span class="o">==</span> <span class="s2">&quot;star&quot;</span><span class="p">:</span>
+        <span class="n">_create_star_array</span><span class="p">(</span>
+            <span class="n">tel_name</span><span class="p">,</span>
+            <span class="n">pos_x</span><span class="p">,</span>
+            <span class="n">pos_y</span><span class="p">,</span>
+            <span class="n">pos_z</span><span class="p">,</span>
+            <span class="n">n_telescopes</span><span class="p">,</span>
+            <span class="n">telescope_type</span><span class="p">,</span>
+            <span class="n">site</span><span class="p">,</span>
+            <span class="n">telescope_distance</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported array shape: </span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">. Allowed: &#39;square&#39; or &#39;star&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="n">table</span> <span class="o">=</span> <span class="n">QTable</span><span class="p">(</span><span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;array_name&quot;</span><span class="p">:</span> <span class="n">array_name</span><span class="p">,</span> <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">site</span><span class="p">})</span>
+    <span class="n">table</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tel_name</span>
+    <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_x</span>
+    <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_y</span>
+    <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_z&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos_z</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Regular array layout table:</span><span class="se">\n</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">table</span></div>
+
+
+
+<div class="viewcode-block" id="write_array_elements_from_file_to_repository">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout_utils.write_array_elements_from_file_to_repository">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_array_elements_from_file_to_repository</span><span class="p">(</span>
+    <span class="n">coordinate_system</span><span class="p">,</span> <span class="n">input_file</span><span class="p">,</span> <span class="n">repository_path</span><span class="p">,</span> <span class="n">parameter_version</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read array elements from file and write their positions to model repository.</span>
+
+<span class="sd">    Writes one model parameter file per array elements.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    coordinate_system : str</span>
+<span class="sd">        Coordinate system of array element positions (utm or ground).</span>
+<span class="sd">    input_file : str or Path</span>
+<span class="sd">        Path to input file with array element positions.</span>
+<span class="sd">    repository_path : str or Path</span>
+<span class="sd">        Path to model repository.</span>
+<span class="sd">    parameter_version : str</span>
+<span class="sd">        Parameter version to use when writing to repository.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">repository_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repository_path</span><span class="p">)</span>
+
+    <span class="n">array_elements</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">input_file</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;ground&quot;</span><span class="p">:</span>
+        <span class="n">parameter_name</span> <span class="o">=</span> <span class="s2">&quot;array_element_position_ground&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">array_elements</span><span class="p">[</span><span class="s2">&quot;position_x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">array_elements</span><span class="p">[</span><span class="s2">&quot;position_y&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="n">array_elements</span><span class="p">[</span><span class="s2">&quot;position_z&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+    <span class="k">elif</span> <span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;utm&quot;</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">array_elements</span><span class="p">[</span><span class="s2">&quot;utm_east&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">array_elements</span><span class="p">[</span><span class="s2">&quot;utm_north&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="n">array_elements</span><span class="p">[</span><span class="s2">&quot;altitude&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">parameter_name</span> <span class="o">=</span> <span class="s2">&quot;array_element_position_utm&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unsupported coordinate system: </span><span class="si">{</span><span class="n">coordinate_system</span><span class="si">}</span><span class="s2">. Allowed are &#39;utm&#39; and &#39;ground&#39;.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">array_elements</span><span class="p">):</span>
+        <span class="n">instrument</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;telescope_name&quot;</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="o">.</span><span class="n">colnames</span>
+            <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;asset_code&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;sequence_number&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">output_path</span> <span class="o">=</span> <span class="n">repository_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">instrument</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">output_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing array element positions (</span><span class="si">{</span><span class="n">coordinate_system</span><span class="si">}</span><span class="s2">) to </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump_model_parameter</span><span class="p">(</span>
+            <span class="n">parameter_name</span><span class="o">=</span><span class="n">parameter_name</span><span class="p">,</span>
+            <span class="n">instrument</span><span class="o">=</span><span class="n">instrument</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">alt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;m&quot;</span><span class="p">,</span>
+            <span class="n">parameter_version</span><span class="o">=</span><span class="n">parameter_version</span><span class="p">,</span>
+            <span class="n">output_path</span><span class="o">=</span><span class="n">repository_path</span> <span class="o">/</span> <span class="n">instrument</span><span class="p">,</span>
+            <span class="n">output_file</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="write_array_elements_info_yaml">
+<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout_utils.write_array_elements_info_yaml">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_array_elements_info_yaml</span><span class="p">(</span>
+    <span class="n">array_table</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">parameter_version</span><span class="o">=</span><span class="s2">&quot;2.0.0&quot;</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write YAML file for array layout in a format compatible with overwrite.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array_table : astropy.table.Table</span>
+<span class="sd">        Table with telescope positions.</span>
+<span class="sd">    site : str</span>
+<span class="sd">        Site identifier (e.g., &#39;North&#39; or &#39;South&#39;).</span>
+<span class="sd">    model_version : str</span>
+<span class="sd">        Model version.</span>
+<span class="sd">    output_file : Path</span>
+<span class="sd">        Path to the output YAML file.</span>
+<span class="sd">    parameter_version : str</span>
+<span class="sd">        Parameter version to use in the YAML file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">telescope_names</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">array_table</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]]</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;model_version&quot;</span><span class="p">:</span> <span class="n">model_version</span><span class="p">,</span>
+        <span class="s2">&quot;model_update&quot;</span><span class="p">:</span> <span class="s2">&quot;patch_update&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model_version_history&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">model_version</span><span class="p">],</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Regular array layout: </span><span class="si">{</span><span class="n">array_table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;array_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;changes&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="sa">f</span><span class="s2">&quot;OBS-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;array_layouts&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">parameter_version</span><span class="p">,</span>
+                    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                    <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;changes&quot;</span><span class="p">][</span><span class="sa">f</span><span class="s2">&quot;OBS-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">][</span><span class="s2">&quot;array_layouts&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">array_table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;array_name&quot;</span><span class="p">],</span> <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="n">telescope_names</span><span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">tel_name</span><span class="p">,</span> <span class="n">pos_x</span><span class="p">,</span> <span class="n">pos_y</span><span class="p">,</span> <span class="n">pos_z</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+        <span class="n">telescope_names</span><span class="p">,</span>
+        <span class="n">array_table</span><span class="p">[</span><span class="s2">&quot;position_x&quot;</span><span class="p">],</span>
+        <span class="n">array_table</span><span class="p">[</span><span class="s2">&quot;position_y&quot;</span><span class="p">],</span>
+        <span class="n">array_table</span><span class="p">[</span><span class="s2">&quot;position_z&quot;</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;changes&quot;</span><span class="p">][</span><span class="n">tel_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;array_element_position_ground&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">parameter_version</span><span class="p">,</span>
+                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">pos_x</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">pos_y</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">pos_z</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+                <span class="p">],</span>
+                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+    <span class="n">ascii_handler</span><span class="o">.</span><span class="n">write_data_to_file</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
