@@ -7,6 +7,13 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.27.1](https://github.com/gammasim/simtools/releases/tag/v0.27.1) - 2026-02-04
+
+### Maintenance
+
+- Change yaml indent to 2 to synchronize pre-commit settings and output settings throughout all simulation models repositories. ([#2021](https://github.com/gammasim/simtools/pull/2021))
+
+
 ## [0.27.0](https://github.com/gammasim/simtools/releases/tag/0.27.0) - 2026-02-03
 
 ### API Changes
