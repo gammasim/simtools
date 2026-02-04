@@ -1,0 +1,1404 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simtel.simtel_config_writer &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=9f0f14ba"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_config_writer';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtel.simtel_config_writer</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for simtel.simtel_config_writer</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="sd">&quot;&quot;&quot;Configuration file writer for sim_telarray.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.version</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools</span><span class="w"> </span><span class="kn">import</span> <span class="n">dependencies</span><span class="p">,</span> <span class="n">settings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.pulse_shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_pulse_from_rise_fall_times</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SimtelConfigWriter">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SimtelConfigWriter</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    SimtelConfigWriter writes sim_telarray configuration files.</span>
+
+<span class="sd">    It is designed to be used by model classes (TelescopeModel and ArrayModel) only.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    site: str</span>
+<span class="sd">        South or North.</span>
+<span class="sd">    model_version: str</span>
+<span class="sd">        Model version.</span>
+<span class="sd">    telescope_model_name: str</span>
+<span class="sd">        Telescope model name.</span>
+<span class="sd">    layout_name: str</span>
+<span class="sd">        Layout name.</span>
+<span class="sd">    label: str</span>
+<span class="sd">        Instance label. Important for output file naming.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">TAB</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">3</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">site</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="p">,</span>
+        <span class="n">layout_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">telescope_model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">telescope_design_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelConfigWriter.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_site</span> <span class="o">=</span> <span class="n">site</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span> <span class="o">=</span> <span class="n">model_version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_label</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layout_name</span> <span class="o">=</span> <span class="n">layout_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span> <span class="o">=</span> <span class="n">telescope_model_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_design_model</span> <span class="o">=</span> <span class="n">telescope_design_model</span>
+
+<div class="viewcode-block" id="SimtelConfigWriter.write_telescope_config_file">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_telescope_config_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_telescope_config_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">telescope_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">telescope_design_model</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write the sim_telarray config file for a single telescope.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config_file_path: str or Path</span>
+<span class="sd">            Path of the file to write on.</span>
+<span class="sd">        parameters: dict</span>
+<span class="sd">            Model parameters</span>
+<span class="sd">        telescope_name: str</span>
+<span class="sd">            Name of the telescope (use self._telescope_model_name if None)</span>
+<span class="sd">        telescope_design_model: str</span>
+<span class="sd">            Telescope design model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing telescope config file </span><span class="si">{</span><span class="n">config_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">simtel_par</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameters_for_sim_telarray</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">)</span>
+        <span class="n">telescope_name</span> <span class="o">=</span> <span class="n">telescope_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span>
+        <span class="n">_telescope_design_model</span> <span class="o">=</span> <span class="n">telescope_design_model</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_design_model</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_header</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;TELESCOPE CONFIGURATION FILE&quot;</span><span class="p">)</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#ifdef TELESCOPE</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   echo Configuration for </span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2"> - TELESCOPE $(TELESCOPE)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#endif</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">simtel_name</span><span class="p">,</span> <span class="n">simtel_value</span> <span class="ow">in</span> <span class="n">simtel_par</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">simtel_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_value_string_for_simtel</span><span class="p">(</span><span class="n">simtel_value</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">meta</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sim_telarray_metadata</span><span class="p">(</span>
+                <span class="s2">&quot;telescope&quot;</span><span class="p">,</span>
+                <span class="n">parameters</span><span class="p">,</span>
+                <span class="n">telescope_name</span><span class="p">,</span>
+                <span class="n">telescope_design_model</span><span class="o">=</span><span class="n">_telescope_design_model</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">meta</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_light_pulse_table_gauss_exp_conv</span><span class="p">(</span>
+        <span class="n">file_path</span><span class="p">,</span>
+        <span class="n">width_ns</span><span class="p">,</span>
+        <span class="n">exp_decay_ns</span><span class="p">,</span>
+        <span class="n">fadc_sum_bins</span><span class="p">,</span>
+        <span class="n">dt_ns</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">rise_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">),</span>
+        <span class="n">fall_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+        <span class="n">time_margin_ns</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write a pulse table for a Gaussian convolved with a causal exponential.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_path : str or pathlib.Path</span>
+<span class="sd">            Destination path of the ASCII pulse table to write. Parent directory must exist.</span>
+<span class="sd">        width_ns : float</span>
+<span class="sd">            Target rise time in ns between the fractional levels defined by ``rise_range``.</span>
+<span class="sd">        exp_decay_ns : float</span>
+<span class="sd">            Target fall time in ns between the fractional levels defined by ``fall_range``.</span>
+<span class="sd">        fadc_sum_bins : int</span>
+<span class="sd">            Length of the FADC integration window (treated as ns here) used to derive</span>
+<span class="sd">            the internal time sampling window of the solver as [-(margin), bins + margin].</span>
+<span class="sd">        dt_ns : float, optional</span>
+<span class="sd">            Time sampling step in ns for the generated pulse table.</span>
+<span class="sd">        rise_range : tuple[float, float], optional</span>
+<span class="sd">            Fractional amplitude bounds (low, high) for rise-time definition.</span>
+<span class="sd">        fall_range : tuple[float, float], optional</span>
+<span class="sd">            Fractional amplitude bounds (high, low) for fall-time definition.</span>
+<span class="sd">        time_margin_ns : float, optional</span>
+<span class="sd">            Margin in ns to add to both ends of the FADC window when ``fadc_sum_bins`` is given.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pathlib.Path</span>
+<span class="sd">            The path to the created pulse table file.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The underlying model is a Gaussian convolved with a causal exponential. The model</span>
+<span class="sd">        parameters (sigma, tau) are solved such that the normalized pulse matches the requested</span>
+<span class="sd">        rise and fall times. The pulse is normalized to a peak amplitude of 1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">width_ns</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">exp_decay_ns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;width_ns (rise 10-90) and exp_decay_ns (fall 90-10) are required&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Generating pulse-shape table with &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;rise</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">rise_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">rise_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">width_ns</span><span class="si">}</span><span class="s2"> ns, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;fall</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">fall_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">fall_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">exp_decay_ns</span><span class="si">}</span><span class="s2"> ns, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;dt=</span><span class="si">{</span><span class="n">dt_ns</span><span class="si">}</span><span class="s2"> ns&quot;</span>
+        <span class="p">)</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">fadc_sum_bins</span><span class="p">)</span>
+        <span class="n">t_start_ns</span> <span class="o">=</span> <span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">time_margin_ns</span> <span class="o">+</span> <span class="n">width</span><span class="p">)</span>
+        <span class="n">t_stop_ns</span> <span class="o">=</span> <span class="o">+</span><span class="nb">abs</span><span class="p">(</span><span class="n">time_margin_ns</span> <span class="o">+</span> <span class="n">width</span><span class="p">)</span>
+        <span class="n">t</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">generate_pulse_from_rise_fall_times</span><span class="p">(</span>
+            <span class="n">width_ns</span><span class="p">,</span>
+            <span class="n">exp_decay_ns</span><span class="p">,</span>
+            <span class="n">dt_ns</span><span class="o">=</span><span class="n">dt_ns</span><span class="p">,</span>
+            <span class="n">rise_range</span><span class="o">=</span><span class="n">rise_range</span><span class="p">,</span>
+            <span class="n">fall_range</span><span class="o">=</span><span class="n">fall_range</span><span class="p">,</span>
+            <span class="n">t_start_ns</span><span class="o">=</span><span class="n">t_start_ns</span><span class="p">,</span>
+            <span class="n">t_stop_ns</span><span class="o">=</span><span class="n">t_stop_ns</span><span class="p">,</span>
+            <span class="n">center_on_peak</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">SimtelConfigWriter</span><span class="o">.</span><span class="n">_write_ascii_pulse_table</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SimtelConfigWriter.write_angular_distribution_table_lambertian">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_angular_distribution_table_lambertian">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_angular_distribution_table_lambertian</span><span class="p">(</span>
+        <span class="n">file_path</span><span class="p">,</span>
+        <span class="n">max_angle_deg</span><span class="p">,</span>
+        <span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write a Lambertian angular distribution table (I(t) ~ cos(t)).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_path : str or pathlib.Path</span>
+<span class="sd">            Destination path of the ASCII table to write. Parent directory must exist.</span>
+<span class="sd">        max_angle_deg : float</span>
+<span class="sd">            Maximum angle (deg) for the distribution sampling range [0, max_angle_deg].</span>
+<span class="sd">        n_samples : int, optional</span>
+<span class="sd">            Number of samples (including end point) from 0 to max_angle_deg. Default 100.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pathlib.Path</span>
+<span class="sd">            Path to created angular distribution table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Generating Lambertian angular distribution table up to </span><span class="si">{</span><span class="n">max_angle_deg</span><span class="si">}</span><span class="s2"> deg &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;with </span><span class="si">{</span><span class="n">n_samples</span><span class="si">}</span><span class="s2"> samples&quot;</span>
+        <span class="p">)</span>
+        <span class="n">angles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">max_angle_deg</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_samples</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">intensities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">angles</span><span class="p">))</span>
+        <span class="n">intensities</span><span class="p">[</span><span class="n">intensities</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">intensities</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">intensities</span> <span class="o">/=</span> <span class="n">intensities</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">SimtelConfigWriter</span><span class="o">.</span><span class="n">_write_ascii_angle_distribution_table</span><span class="p">(</span>
+            <span class="n">file_path</span><span class="p">,</span> <span class="n">angles</span><span class="p">,</span> <span class="n">intensities</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_ascii_pulse_table</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write two-column ASCII pulse table.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# time[ns] amplitude</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ti</span><span class="p">,</span> <span class="n">yi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+                <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ti</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">yi</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_ascii_angle_distribution_table</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">angles</span><span class="p">,</span> <span class="n">intensities</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write two-column ASCII angular distribution table.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# angle[deg] relative_intensity</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">angles</span><span class="p">,</span> <span class="n">intensities</span><span class="p">):</span>
+                <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">a</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_parameters_for_sim_telarray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert parameter dictionary to sim_telarray configuration file format.</span>
+
+<span class="sd">        Accounts for differences between the data models for sim_telarray configuration</span>
+<span class="sd">        and the simulation models.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parameters: dict</span>
+<span class="sd">            Model parameters.</span>
+<span class="sd">        config_file_path: str or Path</span>
+<span class="sd">            Path of the file to write on.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Model parameters in sim_telarray format.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">simtel_par</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">simtel_name</span><span class="p">,</span> <span class="n">simtel_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_model_parameters_to_simtel_format</span><span class="p">(</span>
+                <span class="n">names</span><span class="o">.</span><span class="n">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
+                    <span class="n">par</span><span class="p">,</span> <span class="n">software_name</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span>
+                <span class="p">),</span>
+                <span class="n">value</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                <span class="n">config_file_path</span><span class="p">,</span>
+                <span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">simtel_name</span><span class="p">:</span>
+                <span class="n">simtel_par</span><span class="p">[</span><span class="n">simtel_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">simtel_value</span>
+        <span class="k">if</span> <span class="s2">&quot;stars&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>  <span class="c1"># sim_telarray requires &#39;stars&#39; to be set</span>
+            <span class="n">simtel_par</span><span class="p">[</span><span class="s2">&quot;stars&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_flasher_parameters_for_sim_telarray</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">simtel_par</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_flasher_parameters_for_sim_telarray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">simtel_par</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Combine flasher pulse time parameters into a single parameter.</span>
+
+<span class="sd">        Takes into account that sim_telarray expects a single parameter with a specific name.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parameters: dict</span>
+<span class="sd">            Model parameters.</span>
+<span class="sd">        simtel_par: dict</span>
+<span class="sd">            Model parameters in sim_telarray format.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Model parameters in sim_telarray format including flasher parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;flasher_pulse_shape&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">simtel_par</span>
+
+        <span class="n">mapping</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;gauss&quot;</span><span class="p">:</span> <span class="s2">&quot;laser_pulse_sigtime&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tophat&quot;</span><span class="p">:</span> <span class="s2">&quot;laser_pulse_twidth&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;gauss-exponential&quot;</span><span class="p">:</span> <span class="s2">&quot;laser_pulse_sigtime&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">shape_value</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;flasher_pulse_shape&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">shape_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">shape_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">exp_decay</span> <span class="o">=</span> <span class="n">shape_value</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="n">simtel_par</span><span class="p">[</span><span class="s2">&quot;laser_pulse_exptime&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">exp_decay</span> <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;exponential&quot;</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span>
+
+        <span class="n">simtel_par</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">mapping</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">mapping</span><span class="p">:</span>
+            <span class="n">simtel_par</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="n">shape</span><span class="p">]]</span> <span class="o">=</span> <span class="n">width</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Flasher pulse shape &#39;</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">&#39; without width definition&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">simtel_par</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_value_string_for_simtel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a value string for simtel.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value: any</span>
+<span class="sd">            Value to convert to string.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Value string for simtel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>  <span class="c1"># simtel requires &#39;none&#39;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">value</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_list_to_string</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">shorten_list</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_sim_telarray_metadata</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config_type</span><span class="p">,</span>
+        <span class="n">model_parameters</span><span class="p">,</span>
+        <span class="n">telescope_model_name</span><span class="p">,</span>
+        <span class="n">additional_metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">telescope_design_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return sim_telarray metadata.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        type: str</span>
+<span class="sd">            Type of the configuration file (telescope, site)</span>
+<span class="sd">        model_parameters: dict</span>
+<span class="sd">            Model parameters dictionary.</span>
+<span class="sd">        telescope_model_name: str</span>
+<span class="sd">            Name of the telescope model</span>
+<span class="sd">        additional_metadata: dict</span>
+<span class="sd">            Dictionary with additional metadata to include using &#39;set&#39;.</span>
+<span class="sd">        telescope_design_model: str</span>
+<span class="sd">            Name of the telescope design model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List with sim_telarray metadata.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">meta_parameters</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;config_release = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2"> with simtools v</span><span class="si">{</span><span class="n">simtools</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;config_version = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">telescope_design_model</span> <span class="o">=</span> <span class="n">telescope_design_model</span> <span class="ow">or</span> <span class="s2">&quot;design_model_not_set&quot;</span>
+        <span class="k">if</span> <span class="n">config_type</span> <span class="o">==</span> <span class="s2">&quot;telescope&quot;</span><span class="p">:</span>
+            <span class="n">meta_parameters</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="sa">f</span><span class="s2">&quot;camera_config_name = </span><span class="si">{</span><span class="n">telescope_design_model</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;camera_config_variant = </span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;camera_config_version = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;optics_config_name = </span><span class="si">{</span><span class="n">telescope_design_model</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;optics_config_variant = </span><span class="si">{</span><span class="n">telescope_model_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;optics_config_version = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;metaparam telescope&quot;</span>
+        <span class="k">elif</span> <span class="n">config_type</span> <span class="o">==</span> <span class="s2">&quot;site&quot;</span><span class="p">:</span>
+            <span class="n">meta_parameters</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="sa">f</span><span class="s2">&quot;site_config_name = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_site</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;site_config_variant = &quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;site_config_version = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;array_config_name = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;array_config_variant = &quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;array_config_version = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;metaparam global&quot;</span>
+            <span class="n">meta_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;metaparam global add random_seed&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown metadata type </span><span class="si">{</span><span class="n">config_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_model_parameters_to_metadata</span><span class="p">(</span><span class="n">model_parameters</span><span class="p">,</span> <span class="n">meta_parameters</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">additional_metadata</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">additional_metadata</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+                    <span class="n">meta_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2"> set </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">meta_parameters</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_model_parameters_to_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_parameters</span><span class="p">,</span> <span class="n">meta_parameters</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add model parameters to metadata.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">model_parameters</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">model_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">simtel_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
+                <span class="n">key</span><span class="p">,</span> <span class="n">software_name</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span> <span class="n">set_meta_parameter</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">simtel_name</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;meta_parameter&quot;</span><span class="p">):</span>
+                <span class="n">meta_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2"> add </span><span class="si">{</span><span class="n">simtel_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">simtel_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
+                <span class="n">key</span><span class="p">,</span> <span class="n">software_name</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span> <span class="n">set_meta_parameter</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">simtel_name</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;meta_parameter&quot;</span><span class="p">):</span>
+                <span class="n">meta_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2"> set </span><span class="si">{</span><span class="n">simtel_name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SimtelConfigWriter.write_array_config_file">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_array_config_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_array_config_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">additional_metadata</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write the sim_telarray config file for an array of telescopes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config_file_path: str or Path</span>
+<span class="sd">            Path of the file to write on.</span>
+<span class="sd">        telescope_model: dict of TelescopeModel</span>
+<span class="sd">            Dictionary of TelescopeModel&#39;s instances as used by the ArrayModel instance.</span>
+<span class="sd">        site_model: Site model</span>
+<span class="sd">            Site model.</span>
+<span class="sd">        additional_metadata: dict</span>
+<span class="sd">            Dictionary with additional metadata to include.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config_file_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_header</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;ARRAY CONFIGURATION FILE&quot;</span><span class="p">)</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#ifndef TELESCOPE</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# define TELESCOPE 0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#endif</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># TELESCOPE 0 - global parameters</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#if TELESCOPE == 0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="s2">&quot;echo *****************************</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;echo Site: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_site</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;echo LayoutName: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;echo ModelVersion: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="s2">&quot;echo *****************************</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_simtools_parameters</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_site_parameters</span><span class="p">(</span>
+                <span class="n">file</span><span class="p">,</span>
+                <span class="n">site_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+                <span class="n">config_file_directory</span><span class="p">,</span>
+                <span class="n">telescope_model</span><span class="p">,</span>
+                <span class="n">additional_metadata</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;maximum_telescopes = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">telescope_model</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Default telescope in sim_telarray - 0th tel in telescope list</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">first_telescope</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+            <span class="n">invalid_telescope_name</span> <span class="o">=</span> <span class="s2">&quot;InvalidTelescope&quot;</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# include &lt;</span><span class="si">{</span><span class="n">invalid_telescope_name</span><span class="si">}</span><span class="s2">.cfg&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write_dummy_telescope_configuration_file</span><span class="p">(</span>
+                <span class="n">deepcopy</span><span class="p">(</span><span class="n">first_telescope</span><span class="o">.</span><span class="n">parameters</span><span class="p">),</span>
+                <span class="n">config_file_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">invalid_telescope_name</span><span class="si">}</span><span class="s2">.cfg&quot;</span><span class="p">,</span>
+                <span class="n">invalid_telescope_name</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="p">(</span><span class="n">tel_name</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                <span class="n">tel_config_file</span> <span class="o">=</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">config_file_path</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;% </span><span class="si">{</span><span class="n">tel_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#elif TELESCOPE == </span><span class="si">{</span><span class="n">count</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# include &lt;</span><span class="si">{</span><span class="n">tel_config_file</span><span class="si">}</span><span class="s2">&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#endif </span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># configuration files need to end with \n\n</span></div>
+
+
+<div class="viewcode-block" id="SimtelConfigWriter.write_single_mirror_list_file">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_single_mirror_list_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_single_mirror_list_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">mirror_number</span><span class="p">,</span> <span class="n">mirrors</span><span class="p">,</span> <span class="n">single_mirror_list_file</span><span class="p">,</span> <span class="n">set_focal_length_to_zero</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write the sim_telarray mirror list file for a single mirror.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mirror_number: int</span>
+<span class="sd">            Mirror number.</span>
+<span class="sd">        mirrors: Mirrors</span>
+<span class="sd">            Instance of Mirrors.</span>
+<span class="sd">        single_mirror_list_file: str or Path</span>
+<span class="sd">            Path of the file to write on.</span>
+<span class="sd">        set_focal_length_to_zero: bool</span>
+<span class="sd">            Flag to set the focal length to zero.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span>
+            <span class="n">__</span><span class="p">,</span>
+            <span class="n">__</span><span class="p">,</span>
+            <span class="n">mirror_panel_diameter</span><span class="p">,</span>
+            <span class="n">focal_length</span><span class="p">,</span>
+            <span class="n">shape_type</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">mirrors</span><span class="o">.</span><span class="n">get_single_mirror_parameters</span><span class="p">(</span><span class="n">mirror_number</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">single_mirror_list_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_header</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;MIRROR LIST FILE&quot;</span><span class="p">,</span> <span class="s2">&quot;#&quot;</span><span class="p">)</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# Column 1: X pos. [cm] (North/Down)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# Column 2: Y pos. [cm] (West/Right from camera)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# Column 3: flat-to-flat diameter [cm]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="s2">&quot;# Column 4: focal length [cm], typically zero = adapting in sim_telarray.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="s2">&quot;# Column 5: shape type: 0=circular, 1=hex. with flat side parallel to y, &quot;</span>
+                <span class="s2">&quot;2=square, 3=other hex. (default: 0)</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="s2">&quot;# Column 6: Z pos (height above dish backplane) [cm], typ. omitted (or zero)&quot;</span>
+                <span class="s2">&quot; to adapt to dish shape settings.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;0. 0. </span><span class="si">{</span><span class="n">mirror_panel_diameter</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;cm&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">focal_length</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;cm&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">set_focal_length_to_zero</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">shape_type</span><span class="si">}</span><span class="s2"> 0.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">comment_char</span><span class="o">=</span><span class="s2">&quot;%&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write a generic header.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file: file</span>
+<span class="sd">            File to write.</span>
+<span class="sd">        title: str</span>
+<span class="sd">            Title of the header.</span>
+<span class="sd">        comment_char: str</span>
+<span class="sd">            Character to be used for comments, which differs among types of config files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}{</span><span class="mi">50</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="s1">&#39;=&#39;</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">header</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">header</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}</span><span class="s2"> Site: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_site</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">header</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}</span><span class="s2"> ModelVersion: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">header</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}</span><span class="s2"> TelescopeModelName: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="p">)</span>
+        <span class="n">header</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}</span><span class="s2"> LayoutName: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layout_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="p">)</span>
+        <span class="n">header</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}</span><span class="s2"> Label: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_label</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">header</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}{</span><span class="mi">50</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="s1">&#39;=&#39;</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">header</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_simtools_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write simtools-specific parameters.&quot;&quot;&quot;</span>
+        <span class="n">meta_items</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;simtools_version&quot;</span><span class="p">:</span> <span class="n">simtools</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span>
+            <span class="s2">&quot;simtools_model_production_version&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">build_opts</span> <span class="o">=</span> <span class="n">dependencies</span><span class="o">.</span><span class="n">get_build_options</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">build_opts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">meta_items</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;simtools_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">pass</span>  <span class="c1"># don&#39;t expect build_opts.yml to be present on all systems</span>
+
+        <span class="c1"># CORSIKA executable without _flat/_curved suffix (do not know here if curved or flat)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">meta_items</span><span class="p">[</span><span class="s2">&quot;simtools_corsika_exec&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">corsika_exe</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">removesuffix</span><span class="p">(</span>
+                <span class="s2">&quot;_flat&quot;</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;CORSIKA executable path is not set in settings.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}</span><span class="s2">% Simtools parameters</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">meta_items</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}</span><span class="s2">metaparam global set </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_site_parameters</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">site_parameters</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">additional_metadata</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write site parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file: file</span>
+<span class="sd">            File to write on.</span>
+<span class="sd">        site_parameters: site parameters</span>
+<span class="sd">            Site parameters.</span>
+<span class="sd">        model_path: Path</span>
+<span class="sd">            Path to the model for writing of additional files.</span>
+<span class="sd">        telescope_model: dict of TelescopeModel</span>
+<span class="sd">            Telescope models.</span>
+<span class="sd">        additional_metadata: dict</span>
+<span class="sd">            Dictionary with additional metadata to include.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="s2">&quot;% Site parameters</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">site_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">simtel_name</span><span class="p">,</span> <span class="n">simtel_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_model_parameters_to_simtel_format</span><span class="p">(</span>
+                <span class="n">names</span><span class="o">.</span><span class="n">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
+                    <span class="n">par</span><span class="p">,</span> <span class="n">software_name</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span>
+                <span class="p">),</span>
+                <span class="n">value</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                <span class="n">model_path</span><span class="p">,</span>
+                <span class="n">telescope_model</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">simtel_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}{</span><span class="n">simtel_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">simtel_value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">meta</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sim_telarray_metadata</span><span class="p">(</span>
+            <span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="n">site_parameters</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">additional_metadata</span>
+        <span class="p">):</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}{</span><span class="n">meta</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_model_parameters_to_simtel_format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">simtel_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert model parameter value to simtel format.</span>
+
+<span class="sd">        This might involve format or unit conversion and writing to a parameter file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simtel_name: str</span>
+<span class="sd">            Parameter name.</span>
+<span class="sd">        value: any</span>
+<span class="sd">            Value to convert.</span>
+<span class="sd">        model_path: Path</span>
+<span class="sd">            Path to the model for writing of additional files.</span>
+<span class="sd">        telescope_model: dict of TelescopeModel</span>
+<span class="sd">            Telescope models.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str, any</span>
+<span class="sd">            Converted parameter name and value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">conversion_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;array_triggers&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_array_triggers_file</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">conversion_dict</span><span class="p">[</span><span class="n">simtel_name</span><span class="p">](</span><span class="n">value</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>  <span class="c1"># covers cases where telescope_model is None</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">simtel_name</span><span class="p">,</span> <span class="n">value</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_array_triggers_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_triggers</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write array trigger definition file in simtel format.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array_triggers: dict</span>
+<span class="sd">            Array trigger definitions.</span>
+<span class="sd">        model_path: Path</span>
+<span class="sd">            Path to the model for writing of additional files.</span>
+<span class="sd">        telescope_model: dict of TelescopeModel</span>
+<span class="sd">            Telescope models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">trigger_per_telescope_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group_telescopes_by_type</span><span class="p">(</span><span class="n">telescope_model</span><span class="p">)</span>
+        <span class="n">hardstereo_lines</span><span class="p">,</span> <span class="n">non_hardstereo_groups</span><span class="p">,</span> <span class="n">all_non_hardstereo_tels</span><span class="p">,</span> <span class="n">multiplicity</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process_telescope_triggers</span><span class="p">(</span><span class="n">array_triggers</span><span class="p">,</span> <span class="n">trigger_per_telescope_type</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">array_triggers_file</span> <span class="o">=</span> <span class="s2">&quot;array_triggers.dat&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">model_path</span> <span class="o">/</span> <span class="n">array_triggers_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# Array trigger definition</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_trigger_lines</span><span class="p">(</span>
+                <span class="n">file</span><span class="p">,</span> <span class="n">hardstereo_lines</span><span class="p">,</span> <span class="n">non_hardstereo_groups</span><span class="p">,</span> <span class="n">all_non_hardstereo_tels</span><span class="p">,</span> <span class="n">multiplicity</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">array_triggers_file</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_group_telescopes_by_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Group telescopes by their type.&quot;&quot;&quot;</span>
+        <span class="n">trigger_per_telescope_type</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="n">tel_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">telescope_type</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">tel_name</span><span class="p">)</span>
+            <span class="n">trigger_per_telescope_type</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">telescope_type</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">trigger_per_telescope_type</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_telescope_triggers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_triggers</span><span class="p">,</span> <span class="n">trigger_per_telescope_type</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process telescope triggers and group them by hardstereo and parameters.&quot;&quot;&quot;</span>
+        <span class="n">hardstereo_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">non_hardstereo_groups</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">all_non_hardstereo_tels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">multiplicity</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">tel_type</span><span class="p">,</span> <span class="n">tel_list</span> <span class="ow">in</span> <span class="n">trigger_per_telescope_type</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">trigger_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_triggers_for_telescope_type</span><span class="p">(</span>
+                <span class="n">array_triggers</span><span class="p">,</span> <span class="n">tel_type</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tel_list</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">width</span><span class="p">,</span> <span class="n">minsep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_trigger_parameters</span><span class="p">(</span><span class="n">trigger_dict</span><span class="p">)</span>
+            <span class="n">multiplicity</span> <span class="o">=</span> <span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;multiplicity&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>  <span class="c1"># Store for later use</span>
+
+            <span class="k">if</span> <span class="n">trigger_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hard_stereo&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">):</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_trigger_line</span><span class="p">(</span>
+                    <span class="n">trigger_dict</span><span class="p">,</span> <span class="n">tel_list</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">minsep</span><span class="p">,</span> <span class="n">hardstereo</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="n">hardstereo_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">minsep</span><span class="p">)</span>
+                <span class="n">non_hardstereo_groups</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tel_list</span><span class="p">)</span>
+                <span class="n">all_non_hardstereo_tels</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tel_list</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">hardstereo_lines</span><span class="p">,</span> <span class="n">non_hardstereo_groups</span><span class="p">,</span> <span class="n">all_non_hardstereo_tels</span><span class="p">,</span> <span class="n">multiplicity</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extract_trigger_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trigger_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract width and min_separation parameters from trigger dictionary.&quot;&quot;&quot;</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">][</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;ns&quot;</span><span class="p">)</span>
+        <span class="n">minsep</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;min_separation&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">]):</span>
+            <span class="n">minsep</span> <span class="o">=</span> <span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;min_separation&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span>
+                <span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;min_separation&quot;</span><span class="p">][</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">width</span><span class="p">,</span> <span class="n">minsep</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_trigger_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trigger_dict</span><span class="p">,</span> <span class="n">tel_list</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">minsep</span><span class="p">,</span> <span class="n">hardstereo</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a trigger line string.&quot;&quot;&quot;</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Trigger </span><span class="si">{</span><span class="n">trigger_dict</span><span class="p">[</span><span class="s1">&#39;multiplicity&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> of &quot;</span>
+        <span class="n">line</span> <span class="o">+=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">tel_list</span><span class="p">))</span>
+        <span class="n">line</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; width </span><span class="si">{</span><span class="n">width</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">hardstereo</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">+=</span> <span class="s2">&quot; hardstereo&quot;</span>
+        <span class="k">if</span> <span class="n">minsep</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; minsep </span><span class="si">{</span><span class="n">minsep</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">line</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_trigger_lines</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">hardstereo_lines</span><span class="p">,</span> <span class="n">non_hardstereo_groups</span><span class="p">,</span> <span class="n">all_non_hardstereo_tels</span><span class="p">,</span> <span class="n">multiplicity</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write all trigger lines to file.&quot;&quot;&quot;</span>
+        <span class="c1"># Write hardstereo lines first</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">hardstereo_lines</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Write individual non-hardstereo groups if they have different parameters</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">non_hardstereo_groups</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">minsep</span><span class="p">),</span> <span class="n">tel_list</span> <span class="ow">in</span> <span class="n">non_hardstereo_groups</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Trigger </span><span class="si">{</span><span class="n">multiplicity</span><span class="si">}</span><span class="s2"> of &quot;</span>
+                <span class="n">line</span> <span class="o">+=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">tel_list</span><span class="p">))</span>
+                <span class="n">line</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; width </span><span class="si">{</span><span class="n">width</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="n">minsep</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; minsep </span><span class="si">{</span><span class="n">minsep</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Write combined line with all non-hardstereo telescopes using shortest values</span>
+        <span class="k">if</span> <span class="n">all_non_hardstereo_tels</span><span class="p">:</span>
+            <span class="n">min_width</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">width</span> <span class="k">for</span> <span class="n">width</span><span class="p">,</span> <span class="n">minsep</span> <span class="ow">in</span> <span class="n">non_hardstereo_groups</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">min_minsep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_minimum_minsep</span><span class="p">(</span><span class="n">non_hardstereo_groups</span><span class="p">)</span>
+
+            <span class="n">combined_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Trigger </span><span class="si">{</span><span class="n">multiplicity</span><span class="si">}</span><span class="s2"> of &quot;</span>
+            <span class="n">combined_line</span> <span class="o">+=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">all_non_hardstereo_tels</span><span class="p">)))</span>
+            <span class="n">combined_line</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; width </span><span class="si">{</span><span class="n">min_width</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">min_minsep</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">combined_line</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; minsep </span><span class="si">{</span><span class="n">min_minsep</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">combined_line</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_minimum_minsep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">non_hardstereo_groups</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get minimum min_separation value from groups.&quot;&quot;&quot;</span>
+        <span class="n">minsep_values</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">minsep</span> <span class="k">for</span> <span class="n">width</span><span class="p">,</span> <span class="n">minsep</span> <span class="ow">in</span> <span class="n">non_hardstereo_groups</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">minsep</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">minsep_values</span><span class="p">)</span> <span class="k">if</span> <span class="n">minsep_values</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_array_triggers_for_telescope_type</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">array_triggers</span><span class="p">,</span> <span class="n">telescope_type</span><span class="p">,</span> <span class="n">num_telescopes_of_type</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get array trigger for a specific telescope type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array_triggers: dict</span>
+<span class="sd">            Array trigger definitions.</span>
+<span class="sd">        telescope_type: str</span>
+<span class="sd">            Telescope type.</span>
+<span class="sd">        num_telescopes_of_type: int</span>
+<span class="sd">            Number of telescopes of the specified type.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Array trigger for the telescope type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;_array&quot;</span>
+        <span class="k">if</span> <span class="n">num_telescopes_of_type</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;_single_telescope&quot;</span>
+        <span class="k">for</span> <span class="n">trigger_dict</span> <span class="ow">in</span> <span class="n">array_triggers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">telescope_type</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">trigger_dict</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="SimtelConfigWriter.write_dummy_telescope_configuration_file">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_dummy_telescope_configuration_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_dummy_telescope_configuration_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">,</span> <span class="n">telescope_name</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write &#39;dummy&#39; telescope configuration file used as zeroth telescope in sim_telarray.</span>
+
+<span class="sd">        Replaces key telescope configuration values with dummy values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parameters: dict</span>
+<span class="sd">            Telescope parameters used as template.</span>
+<span class="sd">        config_file_path: str or Path</span>
+<span class="sd">            Path of the dummy configuration file to write on.</span>
+<span class="sd">        telescope_name: str</span>
+<span class="sd">            Name of the telescope.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing </span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2"> telescope config file </span><span class="si">{</span><span class="n">config_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">dummy_defaults</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;camera_config_file&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">_single_pixel_camera.dat&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;discriminator_pulse_shape&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">_pulse.dat&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fadc_pulse_shape&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">_pulse.dat&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mirror_list&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">_single_12m_mirror.dat&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mirror_reflectivity&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">_reflectivity.dat&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;camera_pixels&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;trigger_pixels&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;num_gains&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;fadc_bins&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+            <span class="s2">&quot;disc_bins&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+            <span class="s2">&quot;fadc_sum_bins&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+            <span class="s2">&quot;fadc_sum_offset&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;asum_threshold&quot;</span><span class="p">:</span> <span class="mi">9999</span><span class="p">,</span>
+            <span class="s2">&quot;dsum_threshold&quot;</span><span class="p">:</span> <span class="mi">9999</span><span class="p">,</span>
+            <span class="s2">&quot;discriminator_threshold&quot;</span><span class="p">:</span> <span class="mi">9999</span><span class="p">,</span>
+            <span class="s2">&quot;fadc_amplitude&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="s2">&quot;discriminator_amplitude&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">dummy_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+                <span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_telescope_config_file</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">)</span>
+
+        <span class="n">config_file_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_dummy_mirror_list_files</span><span class="p">(</span><span class="n">config_file_directory</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_dummy_camera_files</span><span class="p">(</span><span class="n">config_file_directory</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_dummy_mirror_list_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_directory</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write dummy mirror list with single mirror and reflectivity file.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span>
+            <span class="n">config_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">_single_12m_mirror.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;0 0 1200 0.0 0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span>
+            <span class="n">config_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">_reflectivity.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s2"> 0.8</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">801</span><span class="p">,</span> <span class="mi">50</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_dummy_camera_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_directory</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write dummy camera, pulse shape, and funnels file with a single pixel.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span>
+            <span class="n">config_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">_single_pixel_camera.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;PixType 1   0  0 300   1 300 0.00   &quot;</span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s1">_funnels.dat&quot;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Pixel 0 1 0. 0.  0  0  0 0x00 1</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Trigger 1 of 0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">_funnel.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2"> 0.78 1.5</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">36</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">_pulse.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;0 0 0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;1 1 1</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;2 2 2</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;3 3 3</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;4 0 0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

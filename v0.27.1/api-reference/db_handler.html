@@ -1,0 +1,1730 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Database support &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=9f0f14ba"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/db_handler';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="I/O" href="io.html" />
+    <link rel="prev" title="Application, dependency and version management." href="dependencies.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="array_layout.html">Layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="atmosphere.html">Atmosphere Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="camera.html">Camera</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Application, dependency and version management.</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Database support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mc_model.html">MC Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="production_configuration.html">Production Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runners.html">Runners for simulation software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_events.html">Simulation Event I/O and Processing Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">API</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Database support</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="database-support">
+<span id="dbhandler"></span><h1>Database support<a class="headerlink" href="#database-support" title="Link to this heading">#</a></h1>
+<p>Modules for database access. See the databases sections for details.</p>
+<section id="db-handler">
+<h2>db_handler<a class="headerlink" href="#db-handler" title="Link to this heading">#</a></h2>
+<p id="module-db.db_handler"><span id="db-handler-class"></span>Module to handle interaction with DB.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">db.db_handler.</span></span><span class="sig-name descname"><span class="pre">DatabaseHandler</span></span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler" title="Link to this definition">#</a></dt>
+<dd><p>DatabaseHandler provides the interface to the DB.</p>
+<p>Note the two types of version variables used in this class:</p>
+<ul class="simple">
+<li><p>db_simulation_model_version (from db_config): version of the simulation model database</p></li>
+<li><p>model_version (from production_tables): version of the model contained in the database</p></li>
+</ul>
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.add_new_parameter">
+<span class="sig-name descname"><span class="pre">add_new_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.add_new_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.add_new_parameter" title="Link to this definition">#</a></dt>
+<dd><p>Add a new parameter dictionary to the DB.</p>
+<p>A new document will be added to the DB, with all fields taken from the input parameters.
+Parameter dictionaries are validated before submission using the corresponding schema.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>par_dict: dict</strong></dt><dd><p>dictionary with parameter data</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>the name of the DB</p>
+</dd>
+<dt><strong>collection_name: str</strong></dt><dd><p>The name of the collection to add a parameter to.</p>
+</dd>
+<dt><strong>file_prefix: str or Path</strong></dt><dd><p>where to find files to upload to the DB</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.add_production_table">
+<span class="sig-name descname"><span class="pre">add_production_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">production_table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.add_production_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.add_production_table" title="Link to this definition">#</a></dt>
+<dd><p>Add a production table to the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>production_table: dict</strong></dt><dd><p>The production table to add to the DB.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>the name of the DB.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.export_model_file">
+<span class="sig-name descname"><span class="pre">export_model_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_file_as_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.export_model_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.export_model_file" title="Link to this definition">#</a></dt>
+<dd><p>Export single model file from the DB identified by the parameter name.</p>
+<p>The parameter can be identified by model or parameter version.
+Files can be exported as astropy tables (ecsv format).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>parameter: str</strong></dt><dd><p>Name of the parameter.</p>
+</dd>
+<dt><strong>site: str</strong></dt><dd><p>Site name.</p>
+</dd>
+<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. MSTN, SSTS).</p>
+</dd>
+<dt><strong>parameter_version: str</strong></dt><dd><p>Version of the parameter.</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+</dd>
+<dt><strong>export_file_as_table: bool</strong></dt><dd><p>If True, export the file as an astropy table (ecsv format).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.table.Table or None</dt><dd><p>If export_file_as_table is True</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.export_model_files">
+<span class="sig-name descname"><span class="pre">export_model_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.export_model_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.export_model_files" title="Link to this definition">#</a></dt>
+<dd><p>Export models files from the DB to given directory.</p>
+<p>The files to be exported can be specified by file_name or retrieved from the database
+using the parameters dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>parameters: dict</strong></dt><dd><p>Dict of model parameters</p>
+</dd>
+<dt><strong>file_names: list, str</strong></dt><dd><p>List (or string) of file names to export</p>
+</dd>
+<dt><strong>dest: str or Path</strong></dt><dd><p>Location where to write the files to.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>file_id: dict of GridOut._id</dt><dd><p>Dict of database IDs of files.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.generate_compound_indexes_for_databases">
+<span class="sig-name descname"><span class="pre">generate_compound_indexes_for_databases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.generate_compound_indexes_for_databases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.generate_compound_indexes_for_databases" title="Link to this definition">#</a></dt>
+<dd><p>Generate compound indexes for several databases.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>Name of the database.</p>
+</dd>
+<dt><strong>db_simulation_model: str</strong></dt><dd><p>Name of the simulation model.</p>
+</dd>
+<dt><strong>db_simulation_model_version: str</strong></dt><dd><p>Version of the simulation model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_array_elements">
+<span class="sig-name descname"><span class="pre">get_array_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_array_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_array_elements" title="Link to this definition">#</a></dt>
+<dd><p>Get list array elements for a given model version and collection from the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+</dd>
+<dt><strong>collection: str</strong></dt><dd><p>Which collection to get the array elements from:
+i.e. telescopes, calibration_devices.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>Sorted list of all array elements found in collection</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_array_elements_of_type">
+<span class="sig-name descname"><span class="pre">get_array_elements_of_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_element_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_array_elements_of_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_array_elements_of_type" title="Link to this definition">#</a></dt>
+<dd><p>Get array elements of a certain type (e.g. ‘LSTN’) for a DB collection.</p>
+<p>Does not return ‘design’ models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>array_element_type: str</strong></dt><dd><p>Type of the array element (e.g. LSTN, MSTS).</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+</dd>
+<dt><strong>collection: str</strong></dt><dd><p>Which collection to get the array elements from:
+i.e. telescopes, calibration_devices.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>Sorted list of all array element names found in collection</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_collection">
+<span class="sig-name descname"><span class="pre">get_collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_collection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_collection" title="Link to this definition">#</a></dt>
+<dd><p>Get a collection from the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>collection_name: str</strong></dt><dd><p>Name of the collection.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>Name of the DB.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>pymongo.collection.Collection</dt><dd><p>The collection from the DB.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_collections">
+<span class="sig-name descname"><span class="pre">get_collections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_collections_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_collections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_collections" title="Link to this definition">#</a></dt>
+<dd><p>List of collections in the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>Database name.</p>
+</dd>
+<dt><strong>model_collections_only: bool</strong></dt><dd><p>If True, only return model collections (i.e. exclude fs.files, fs.chunks)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of collection names</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_db_name">
+<span class="sig-name descname"><span class="pre">get_db_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_db_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_db_name" title="Link to this definition">#</a></dt>
+<dd><p>Build DB name from configuration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_design_model">
+<span class="sig-name descname"><span class="pre">get_design_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_design_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_design_model" title="Link to this definition">#</a></dt>
+<dd><p>Get the design model used for a given array element and a given model version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+</dd>
+<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. MSTN, SSTS).</p>
+</dd>
+<dt><strong>collection: str</strong></dt><dd><p>Which collection to get the array elements from:
+i.e. telescopes, calibration_devices.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Design model for a given array element.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_ecsv_file_as_astropy_table">
+<span class="sig-name descname"><span class="pre">get_ecsv_file_as_astropy_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_ecsv_file_as_astropy_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_ecsv_file_as_astropy_table" title="Link to this definition">#</a></dt>
+<dd><p>Read contents of an ECSV file from the database and return it as an Astropy Table.</p>
+<p>Files are not written to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str</strong></dt><dd><p>The name of the ECSV file.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>The name of the database.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.table.Table</dt><dd><p>The contents of the ECSV file as an Astropy Table.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_model_parameter">
+<span class="sig-name descname"><span class="pre">get_model_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_model_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_parameter" title="Link to this definition">#</a></dt>
+<dd><p>Get a single model parameter using model or parameter version.</p>
+<p>Note that this function should not be called in a loop for many parameters,
+as it each call queries the database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>parameter: str</strong></dt><dd><p>Name of the parameter.</p>
+</dd>
+<dt><strong>site: str</strong></dt><dd><p>Site name.</p>
+</dd>
+<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model.</p>
+</dd>
+<dt><strong>parameter_version: str</strong></dt><dd><p>Version of the parameter.</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict containing the parameter</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_model_parameters">
+<span class="sig-name descname"><span class="pre">get_model_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_model_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Get model parameters using the model version.</p>
+<p>Queries parameters for design and for the specified array element (if necessary).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>site: str</strong></dt><dd><p>Site name.</p>
+</dd>
+<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. LSTN-01, MSTx-FlashCam, ILLN-01).</p>
+</dd>
+<dt><strong>model_version: str, list</strong></dt><dd><p>Version(s) of the model.</p>
+</dd>
+<dt><strong>collection: str</strong></dt><dd><p>Collection of array element (e.g. telescopes, calibration_devices).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict containing the parameters</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_model_parameters_for_all_model_versions">
+<span class="sig-name descname"><span class="pre">get_model_parameters_for_all_model_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_model_parameters_for_all_model_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_parameters_for_all_model_versions" title="Link to this definition">#</a></dt>
+<dd><p>Get model parameters for all model versions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>site: str</strong></dt><dd><p>Site name.</p>
+</dd>
+<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. LSTN-01, MSTx-FlashCam, ILLN-01).</p>
+</dd>
+<dt><strong>collection: str</strong></dt><dd><p>Collection of array element (e.g. telescopes, calibration_devices).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict containing the parameters with model version as first key</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_model_versions">
+<span class="sig-name descname"><span class="pre">get_model_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_model_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_versions" title="Link to this definition">#</a></dt>
+<dd><p>Get list of model versions from the DB with caching.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>collection_name: str</strong></dt><dd><p>Name of the collection.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of model versions</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_simulation_configuration_parameters">
+<span class="sig-name descname"><span class="pre">get_simulation_configuration_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_software</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_simulation_configuration_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_simulation_configuration_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Get simulation configuration parameters from the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>simulation_software: str</strong></dt><dd><p>Name of the simulation software.</p>
+</dd>
+<dt><strong>site: str</strong></dt><dd><p>Site name.</p>
+</dd>
+<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. MSTN, SSTS).</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict containing the parameters</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>if simulation_software is not valid.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.insert_file_to_db">
+<span class="sig-name descname"><span class="pre">insert_file_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.insert_file_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.insert_file_to_db" title="Link to this definition">#</a></dt>
+<dd><p>Insert a file to the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str or Path</strong></dt><dd><p>The name of the file to insert (full path).</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>the name of the DB</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>file_id: GridOut._id</dt><dd><p>If the file exists, return its GridOut._id, otherwise insert the file and return
+its newly created DB GridOut._id.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.is_configured">
+<span class="sig-name descname"><span class="pre">is_configured</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.is_configured"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.is_configured" title="Link to this definition">#</a></dt>
+<dd><p>Check if the DatabaseHandler is configured.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>bool</dt><dd><p>True if the DatabaseHandler is configured, False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.is_remote_database">
+<span class="sig-name descname"><span class="pre">is_remote_database</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.is_remote_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.is_remote_database" title="Link to this definition">#</a></dt>
+<dd><p>Check if the database is remote.</p>
+<p>Check for domain pattern like “cta-simpipe-protodb.zeuthen.desy.de”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>bool</dt><dd><p>True if the database is remote, False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.print_connection_info">
+<span class="sig-name descname"><span class="pre">print_connection_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.print_connection_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.print_connection_info" title="Link to this definition">#</a></dt>
+<dd><p>Print the connection information.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.read_production_table_from_db">
+<span class="sig-name descname"><span class="pre">read_production_table_from_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.read_production_table_from_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.read_production_table_from_db" title="Link to this definition">#</a></dt>
+<dd><p>Read production table for the given collection from MongoDB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>collection_name: str</strong></dt><dd><p>Name of the collection.</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>if query returned no results.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="mongo-db">
+<h2>mongo_db<a class="headerlink" href="#mongo-db" title="Link to this heading">#</a></h2>
+<p id="module-db.mongo_db"><span id="mongo-db-class"></span>MongoDB database handler for direct database operations.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">db.mongo_db.</span></span><span class="sig-name descname"><span class="pre">IdleConnectionMonitor</span></span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor" title="Link to this definition">#</a></dt>
+<dd><p>A listener to track MongoDB connection pool activity.</p>
+<p>Used to monitor idle connections and log connection events.
+Switched on in debug mode.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_check_out_failed">
+<span class="sig-name descname"><span class="pre">connection_check_out_failed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_check_out_failed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_check_out_failed" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection check out failure event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_check_out_started">
+<span class="sig-name descname"><span class="pre">connection_check_out_started</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_check_out_started"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_check_out_started" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection check out started event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_checked_in">
+<span class="sig-name descname"><span class="pre">connection_checked_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_checked_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_checked_in" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection checked in event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_checked_out">
+<span class="sig-name descname"><span class="pre">connection_checked_out</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_checked_out"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_checked_out" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection checked out event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_closed">
+<span class="sig-name descname"><span class="pre">connection_closed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_closed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_closed" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection closure event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_created">
+<span class="sig-name descname"><span class="pre">connection_created</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_created"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_created" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection creation event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.connection_ready">
+<span class="sig-name descname"><span class="pre">connection_ready</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.connection_ready"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.connection_ready" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection ready event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.pool_cleared">
+<span class="sig-name descname"><span class="pre">pool_cleared</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.pool_cleared"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.pool_cleared" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection pool cleared event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.pool_closed">
+<span class="sig-name descname"><span class="pre">pool_closed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.pool_closed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.pool_closed" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection pool closure event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.pool_created">
+<span class="sig-name descname"><span class="pre">pool_created</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.pool_created"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.pool_created" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection pool creation event.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.IdleConnectionMonitor.pool_ready">
+<span class="sig-name descname"><span class="pre">pool_ready</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#IdleConnectionMonitor.pool_ready"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.IdleConnectionMonitor.pool_ready" title="Link to this definition">#</a></dt>
+<dd><p>Handle connection pool ready event.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">db.mongo_db.</span></span><span class="sig-name descname"><span class="pre">MongoDBHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler" title="Link to this definition">#</a></dt>
+<dd><p>MongoDBHandler provides low-level interface to MongoDB operations.</p>
+<p>This class handles direct MongoDB operations including connection management,
+database queries, file operations via GridFS, and index generation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_config: dict</strong></dt><dd><p>Dictionary with the MongoDB configuration (see jsonschema_db_dict for details).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.find_one">
+<span class="sig-name descname"><span class="pre">find_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.find_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.find_one" title="Link to this definition">#</a></dt>
+<dd><p>Query MongoDB and return first result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>query: dict</strong></dt><dd><p>Query to execute.</p>
+</dd>
+<dt><strong>collection_name: str</strong></dt><dd><p>Collection name.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>Database name.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict or None</dt><dd><p>First document matching the query or None.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.generate_compound_indexes">
+<span class="sig-name descname"><span class="pre">generate_compound_indexes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.generate_compound_indexes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.generate_compound_indexes" title="Link to this definition">#</a></dt>
+<dd><p>Generate compound indexes for the MongoDB collections.</p>
+<p>Indexes based on the typical query patterns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>Name of the database.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.generate_compound_indexes_for_databases">
+<span class="sig-name descname"><span class="pre">generate_compound_indexes_for_databases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.generate_compound_indexes_for_databases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.generate_compound_indexes_for_databases" title="Link to this definition">#</a></dt>
+<dd><p>Generate compound indexes for several databases.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>Name of the database.</p>
+</dd>
+<dt><strong>db_simulation_model: str</strong></dt><dd><p>Name of the simulation model.</p>
+</dd>
+<dt><strong>db_simulation_model_version: str</strong></dt><dd><p>Version of the simulation model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the requested database is not found.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.get_collection">
+<span class="sig-name descname"><span class="pre">get_collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.get_collection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.get_collection" title="Link to this definition">#</a></dt>
+<dd><p>Get a collection from the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>collection_name: str</strong></dt><dd><p>Name of the collection.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>Name of the DB.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>pymongo.collection.Collection</dt><dd><p>The collection from the DB.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.get_collections">
+<span class="sig-name descname"><span class="pre">get_collections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_collections_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.get_collections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.get_collections" title="Link to this definition">#</a></dt>
+<dd><p>List of collections in the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>Database name.</p>
+</dd>
+<dt><strong>model_collections_only: bool</strong></dt><dd><p>If True, only return model collections (i.e. exclude fs.files, fs.chunks)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of collection names</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.get_db_name">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_db_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.get_db_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.get_db_name" title="Link to this definition">#</a></dt>
+<dd><p>Build DB name from configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>Direct database name (if provided, returns this).</p>
+</dd>
+<dt><strong>db_simulation_model_version: str</strong></dt><dd><p>Version of the simulation model.</p>
+</dd>
+<dt><strong>model_name: str</strong></dt><dd><p>Name of the simulation model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str or None</dt><dd><p>Database name.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.get_ecsv_file_as_astropy_table">
+<span class="sig-name descname"><span class="pre">get_ecsv_file_as_astropy_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.get_ecsv_file_as_astropy_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.get_ecsv_file_as_astropy_table" title="Link to this definition">#</a></dt>
+<dd><p>Read contents of an ECSV file from the database and return it as an Astropy Table.</p>
+<p>Files are not written to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str</strong></dt><dd><p>The name of the ECSV file.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>The name of the database.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.table.Table</dt><dd><p>The contents of the ECSV file as an Astropy Table.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.get_entry_date_from_document">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_entry_date_from_document</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">document</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.get_entry_date_from_document"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.get_entry_date_from_document" title="Link to this definition">#</a></dt>
+<dd><p>Extract entry date from a MongoDB document’s ObjectId.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>document: dict</strong></dt><dd><p>MongoDB document with ‘_id’ field.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>datetime.datetime</dt><dd><p>The generation time of the document’s ObjectId.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.get_file_from_db">
+<span class="sig-name descname"><span class="pre">get_file_from_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.get_file_from_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.get_file_from_db" title="Link to this definition">#</a></dt>
+<dd><p>Extract a file from MongoDB and return GridFS file instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>The name of the DB with files of tabulated data</p>
+</dd>
+<dt><strong>file_name: str</strong></dt><dd><p>The name of the file requested</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>GridOut</dt><dd><p>A file instance returned by GridFS find_one</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>FileNotFoundError</dt><dd><p>If the desired file is not found.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.insert_file_to_db">
+<span class="sig-name descname"><span class="pre">insert_file_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.insert_file_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.insert_file_to_db" title="Link to this definition">#</a></dt>
+<dd><p>Insert a file to the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str or Path</strong></dt><dd><p>The name of the file to insert (full path).</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>The name of the DB</p>
+</dd>
+<dt><strong>**kwargs (optional): keyword arguments for file creation.</strong></dt><dd><p>The full list of arguments can be found in
+<a class="reference external" href="https://www.mongodb.com/docs/manual/core/gridfs/">https://www.mongodb.com/docs/manual/core/gridfs/</a></p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>file_id: GridOut._id</dt><dd><p>If the file exists, return its GridOut._id, otherwise insert the file and return
+its newly created DB GridOut._id.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.insert_one">
+<span class="sig-name descname"><span class="pre">insert_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">document</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.insert_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.insert_one" title="Link to this definition">#</a></dt>
+<dd><p>Insert a document into a collection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>document: dict</strong></dt><dd><p>Document to insert.</p>
+</dd>
+<dt><strong>collection_name: str</strong></dt><dd><p>Collection name.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>Database name.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>InsertOneResult</dt><dd><p>Result of the insert operation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.is_remote_database">
+<span class="sig-name descname"><span class="pre">is_remote_database</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.is_remote_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.is_remote_database" title="Link to this definition">#</a></dt>
+<dd><p>Check if the database is remote.</p>
+<p>Check for domain pattern like “cta-simpipe-protodb.zeuthen.desy.de”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>bool</dt><dd><p>True if the database is remote, False otherwise.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.list_database_names">
+<span class="sig-name descname"><span class="pre">list_database_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.list_database_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.list_database_names" title="Link to this definition">#</a></dt>
+<dd><p>Get list of database names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list</dt><dd><p>List of database names.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.print_connection_info">
+<span class="sig-name descname"><span class="pre">print_connection_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.print_connection_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.print_connection_info" title="Link to this definition">#</a></dt>
+<dd><p>Print the connection information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>Name of the database.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.query_db">
+<span class="sig-name descname"><span class="pre">query_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.query_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.query_db" title="Link to this definition">#</a></dt>
+<dd><p>Query MongoDB and return results as list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>query: dict</strong></dt><dd><p>Query to execute.</p>
+</dd>
+<dt><strong>collection_name: str</strong></dt><dd><p>Collection name.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>Database name.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of documents matching the query.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>if query returned no results.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.validate_db_config">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">validate_db_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.validate_db_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.validate_db_config" title="Link to this definition">#</a></dt>
+<dd><p>Validate the MongoDB configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_config: dict</strong></dt><dd><p>Dictionary with the MongoDB configuration.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict or None</dt><dd><p>Validated MongoDB configuration or None if no valid config provided.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the MongoDB configuration is invalid.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="db.mongo_db.MongoDBHandler.write_file_from_db_to_disk">
+<span class="sig-name descname"><span class="pre">write_file_from_db_to_disk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/mongo_db.html#MongoDBHandler.write_file_from_db_to_disk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.mongo_db.MongoDBHandler.write_file_from_db_to_disk" title="Link to this definition">#</a></dt>
+<dd><p>Extract a file from MongoDB and write it to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_name: str</strong></dt><dd><p>The name of the DB with files of tabulated data</p>
+</dd>
+<dt><strong>path: str or Path</strong></dt><dd><p>The path to write the file to</p>
+</dd>
+<dt><strong>file: GridOut</strong></dt><dd><p>A file instance returned by GridFS find_one</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="db-model-upload">
+<h2>db_model_upload<a class="headerlink" href="#db-model-upload" title="Link to this heading">#</a></h2>
+<p id="module-db.db_model_upload"><span id="db-module-upload"></span>Upload a simulation model (parameters and production tables) to the database.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="db.db_model_upload.add_complete_model">
+<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_complete_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmp_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository_branch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_complete_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_complete_model" title="Link to this definition">#</a></dt>
+<dd><p>Upload a complete model including model parameters and production tables to the database.</p>
+<p>Generate compound indexes for the new database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tmp_dir</strong><span class="classifier">Path or str</span></dt><dd><p>Temporary directory to use for cloning the repository.</p>
+</dd>
+<dt><strong>db</strong><span class="classifier">DatabaseHandler</span></dt><dd><p>Database handler object.</p>
+</dd>
+<dt><strong>db_simulation_model</strong><span class="classifier">str</span></dt><dd><p>Name of the simulation model in the database.</p>
+</dd>
+<dt><strong>db_simulation_model_version</strong><span class="classifier">str</span></dt><dd><p>Version of the simulation model in the database.</p>
+</dd>
+<dt><strong>repository_url</strong><span class="classifier">str</span></dt><dd><p>URL of the simulation model repository to clone.</p>
+</dd>
+<dt><strong>repository_branch</strong><span class="classifier">str, optional</span></dt><dd><p>Branch of the repository to use. If None, the default branch is used.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd><p>This function does not return a value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="db.db_model_upload.add_model_parameters_to_db">
+<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_model_parameters_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_model_parameters_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_model_parameters_to_db" title="Link to this definition">#</a></dt>
+<dd><p>Read model parameters from a directory and upload them to the database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_path</strong><span class="classifier">Path, str</span></dt><dd><p>Path to the directory containing the model parameters.</p>
+</dd>
+<dt><strong>db</strong><span class="classifier">DatabaseHandler</span></dt><dd><p>Database handler object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="db.db_model_upload.add_production_tables_to_db">
+<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_production_tables_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_production_tables_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_production_tables_to_db" title="Link to this definition">#</a></dt>
+<dd><p>Read production tables from a directory and upload them to the database.</p>
+<p>One dictionary per collection is prepared for each model version, containing
+tables of all array elements, sites, and configuration parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_path</strong><span class="classifier">Path, str</span></dt><dd><p>Path to the directory containing the production tables.</p>
+</dd>
+<dt><strong>db</strong><span class="classifier">DatabaseHandler</span></dt><dd><p>Database handler object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="db.db_model_upload.add_values_from_json_to_db">
+<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_values_from_json_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_values_from_json_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_values_from_json_to_db" title="Link to this definition">#</a></dt>
+<dd><p>Upload new model parameter from json files to db.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file</strong><span class="classifier">list</span></dt><dd><p>JSON file to be uploaded to the DB.</p>
+</dd>
+<dt><strong>collection</strong><span class="classifier">str</span></dt><dd><p>The DB collection to which to add the file.</p>
+</dd>
+<dt><strong>db</strong><span class="classifier">DatabaseHandler</span></dt><dd><p>Database handler object.</p>
+</dd>
+<dt><strong>file_prefix</strong><span class="classifier">str</span></dt><dd><p>Path to location of all additional files to be uploaded.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="db.db_model_upload.clone_simulation_model_repository">
+<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">clone_simulation_model_repository</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository_branch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#clone_simulation_model_repository"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.clone_simulation_model_repository" title="Link to this definition">#</a></dt>
+<dd><p>Clone a git repository containing simulation model parameters and production tables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>target_dir</strong><span class="classifier">Path or str</span></dt><dd><p>Target directory to clone the repository into.</p>
+</dd>
+<dt><strong>repository_url</strong><span class="classifier">str</span></dt><dd><p>URL of the git repository to clone.</p>
+</dd>
+<dt><strong>db_simulation_model_version</strong><span class="classifier">str</span></dt><dd><p>Version tag of the simulation model to checkout.</p>
+</dd>
+<dt><strong>repository_branch</strong><span class="classifier">str, optional</span></dt><dd><p>Branch of the repository to use. If None, the version tag is used.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path</dt><dd><p>Path to the cloned repository.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="dependencies.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Application, dependency and version management.</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="io.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">I/O</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-handler">db_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_new_parameter"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_new_parameter()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_production_table"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_production_table()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_file"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_files"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.generate_compound_indexes_for_databases"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.generate_compound_indexes_for_databases()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_elements"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_elements()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_elements_of_type()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_collection"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_collection()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_collections"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_collections()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_db_name"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_db_name()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_design_model"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_design_model()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_ecsv_file_as_astropy_table"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_ecsv_file_as_astropy_table()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_parameter"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_parameter()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_parameters_for_all_model_versions"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_parameters_for_all_model_versions()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_versions"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_versions()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_simulation_configuration_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_simulation_configuration_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.insert_file_to_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.insert_file_to_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.is_configured"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.is_configured()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.is_remote_database"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.is_remote_database()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.print_connection_info"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.print_connection_info()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.read_production_table_from_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.read_production_table_from_db()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mongo-db">mongo_db</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_check_out_failed"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_check_out_failed()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_check_out_started"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_check_out_started()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_checked_in"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_checked_in()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_checked_out"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_checked_out()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_closed"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_closed()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_created"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_created()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.connection_ready"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.connection_ready()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.pool_cleared"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.pool_cleared()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.pool_closed"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.pool_closed()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.pool_created"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.pool_created()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.IdleConnectionMonitor.pool_ready"><code class="docutils literal notranslate"><span class="pre">IdleConnectionMonitor.pool_ready()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.find_one"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.find_one()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.generate_compound_indexes"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.generate_compound_indexes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.generate_compound_indexes_for_databases"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.generate_compound_indexes_for_databases()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.get_collection"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.get_collection()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.get_collections"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.get_collections()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.get_db_name"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.get_db_name()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.get_ecsv_file_as_astropy_table"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.get_ecsv_file_as_astropy_table()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.get_entry_date_from_document"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.get_entry_date_from_document()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.get_file_from_db"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.get_file_from_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.insert_file_to_db"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.insert_file_to_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.insert_one"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.insert_one()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.is_remote_database"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.is_remote_database()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.list_database_names"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.list_database_names()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.print_connection_info"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.print_connection_info()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.query_db"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.query_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.validate_db_config"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.validate_db_config()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.mongo_db.MongoDBHandler.write_file_from_db_to_disk"><code class="docutils literal notranslate"><span class="pre">MongoDBHandler.write_file_from_db_to_disk()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-model-upload">db_model_upload</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_complete_model"><code class="docutils literal notranslate"><span class="pre">add_complete_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_model_parameters_to_db"><code class="docutils literal notranslate"><span class="pre">add_model_parameters_to_db()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_production_tables_to_db"><code class="docutils literal notranslate"><span class="pre">add_production_tables_to_db()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_values_from_json_to_db"><code class="docutils literal notranslate"><span class="pre">add_values_from_json_to_db()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.clone_simulation_model_repository"><code class="docutils literal notranslate"><span class="pre">clone_simulation_model_repository()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api-reference/db_handler.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

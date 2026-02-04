@@ -1,0 +1,1732 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Ray Tracing &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=9f0f14ba"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/ray_tracing';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Reporting" href="reporting.html" />
+    <link rel="prev" title="Production Configuration" href="production_configuration.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="array_layout.html">Layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="atmosphere.html">Atmosphere Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="camera.html">Camera</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Application, dependency and version management.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="db_handler.html">Database support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mc_model.html">MC Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="production_configuration.html">Production Configuration</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Ray Tracing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runners.html">Runners for simulation software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_events.html">Simulation Event I/O and Processing Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulators.html">Simulator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trigger.html">Trigger simulations.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">API</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Ray Tracing</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="ray-tracing">
+<span id="raytracing"></span><h1>Ray Tracing<a class="headerlink" href="#ray-tracing" title="Link to this heading">#</a></h1>
+<p>The ray-tracing modules handle ray tracing simulations, incident angle calculations, PSF analysis and I/O.</p>
+<section id="module-ray_tracing.incident_angles">
+<span id="incident-angles"></span><span id="incidentanglesmodule"></span><h2>incident_angles<a class="headerlink" href="#module-ray_tracing.incident_angles" title="Link to this heading">#</a></h2>
+<p>Calculate photon incident angles on focal plane and primary/secondary mirrors.</p>
+<p>Parses the imaging list (<code class="docutils literal notranslate"><span class="pre">.lis</span></code>) produced by sim_telarray_debug_trace and uses
+Angle of incidence at focal surface, with respect to the optical axis [deg],
+Angle of incidence on to primary mirror [deg], and
+Angle of incidence on to secondary mirror [deg] (if available).</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ray_tracing.incident_angles.IncidentAnglesCalculator">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ray_tracing.incident_angles.</span></span><span class="sig-name descname"><span class="pre">IncidentAnglesCalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/incident_angles.html#IncidentAnglesCalculator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.incident_angles.IncidentAnglesCalculator" title="Link to this definition">#</a></dt>
+<dd><p>Run a PSF-style sim_telarray job and compute incident angles at mirrors or focal surfaces.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config_data</strong><span class="classifier">dict</span></dt><dd><p>Simulation configuration (e.g. <code class="docutils literal notranslate"><span class="pre">site</span></code>, <code class="docutils literal notranslate"><span class="pre">telescope</span></code>, <code class="docutils literal notranslate"><span class="pre">model_version</span></code>,
+<code class="docutils literal notranslate"><span class="pre">off_axis_angle</span></code>, <code class="docutils literal notranslate"><span class="pre">source_distance</span></code>, <code class="docutils literal notranslate"><span class="pre">number_of_photons</span></code>).</p>
+</dd>
+<dt><strong>output_dir</strong><span class="classifier">str or pathlib.Path</span></dt><dd><p>Output directory where logs, scripts, photons files and results are written.</p>
+</dd>
+<dt><strong>label</strong><span class="classifier">str, optional</span></dt><dd><p>Label used to name outputs; defaults to <code class="docutils literal notranslate"><span class="pre">incident_angles_&lt;telescope&gt;</span></code> when omitted.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Additional options are read from <code class="docutils literal notranslate"><span class="pre">config_data</span></code> when present:
+- <code class="docutils literal notranslate"><span class="pre">perfect_mirror</span></code> (bool, default False)
+- <code class="docutils literal notranslate"><span class="pre">calculate_primary_secondary_angles</span></code> (bool, default True)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.incident_angles.IncidentAnglesCalculator.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/incident_angles.html#IncidentAnglesCalculator.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.incident_angles.IncidentAnglesCalculator.run" title="Link to this definition">#</a></dt>
+<dd><p>Run sim_telarray, parse the imaging list, and return an angle table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>astropy.table.QTable</dt><dd><p>Table containing at least the <code class="docutils literal notranslate"><span class="pre">angle_incidence_focal</span></code> column
+and, when configured, primary/secondary angles and hit geometry.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.incident_angles.IncidentAnglesCalculator.run_for_offsets">
+<span class="sig-name descname"><span class="pre">run_for_offsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offsets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/incident_angles.html#IncidentAnglesCalculator.run_for_offsets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.incident_angles.IncidentAnglesCalculator.run_for_offsets" title="Link to this definition">#</a></dt>
+<dd><p>Run the simulation for multiple off-axis angles.</p>
+<p>For each off-axis angle provided, run a full simulation, labeling output files
+accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>offsets</strong><span class="classifier">Iterable[float]</span></dt><dd><p>Off-axis angles in degrees.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict[float, astropy.table.QTable]</dt><dd><p>Mapping from off-axis angle (deg) to the resulting table.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.incident_angles.IncidentAnglesCalculator.save_model_parameters">
+<span class="sig-name descname"><span class="pre">save_model_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results_by_offset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/incident_angles.html#IncidentAnglesCalculator.save_model_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.incident_angles.IncidentAnglesCalculator.save_model_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Write model parameters dictionary (json) + astropy table with incident angles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>results_by_offset</strong><span class="classifier">dict</span></dt><dd><p>Dictionary with results for each offset.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-ray_tracing.ray_tracing">
+<span id="id1"></span><span id="raytracingmodule"></span><h2>ray_tracing<a class="headerlink" href="#module-ray_tracing.ray_tracing" title="Link to this heading">#</a></h2>
+<p>Ray tracing simulations and analysis.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ray_tracing.ray_tracing.</span></span><span class="sig-name descname"><span class="pre">RayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;Quantity</span> <span class="pre">20.</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_axis_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;Quantity</span> <span class="pre">[0.]</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;Quantity</span> <span class="pre">10.</span> <span class="pre">km&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_mirror_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_random_focal_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_focal_length_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_numbers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing" title="Link to this definition">#</a></dt>
+<dd><p>Ray tracing simulations and analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescope_model: TelescopeModel</strong></dt><dd><p>telescope model</p>
+</dd>
+<dt><strong>site_model: SiteModel</strong></dt><dd><p>site model</p>
+</dd>
+<dt><strong>label: str</strong></dt><dd><p>label used for output file naming.</p>
+</dd>
+<dt><strong>zenith_angle: astropy.units.Quantity</strong></dt><dd><p>Zenith angle.</p>
+</dd>
+<dt><strong>off_axis_angle: list of astropy.units.Quantity</strong></dt><dd><p>Off-axis angles.</p>
+</dd>
+<dt><strong>source_distance: astropy.units.Quantity</strong></dt><dd><p>Source distance.</p>
+</dd>
+<dt><strong>single_mirror_mode: bool</strong></dt><dd><p>Single mirror mode flag.</p>
+</dd>
+<dt><strong>use_random_focal_length: bool</strong></dt><dd><p>Use random focal length flag.</p>
+</dd>
+<dt><strong>random_focal_length_seed: int</strong></dt><dd><p>Seed for the random number generator used for focal length variation.</p>
+</dd>
+<dt><strong>mirror_numbers: list, str</strong></dt><dd><p>List of mirror numbers (or ‘all’).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.analyze">
+<span class="sig-name descname"><span class="pre">analyze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_rx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_tel_transmission</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">containment_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.analyze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.analyze" title="Link to this definition">#</a></dt>
+<dd><p>Ray tracing analysis.</p>
+<p>Involves the following: read simtel files, compute PSFs and eff areas, store the
+results in _results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>export: bool</strong></dt><dd><p>If True, results will be exported to a file automatically. Alternatively,
+export_results function can be used.</p>
+</dd>
+<dt><strong>force: bool</strong></dt><dd><p>If True, existing results files will be removed and analysis will be done again.</p>
+</dd>
+<dt><strong>use_rx: bool</strong></dt><dd><p>If True, calculations are done using the rx binary provided by sim_telarray. If False,
+calculations are done internally, by the module psf_analysis.</p>
+</dd>
+<dt><strong>no_tel_transmission: bool</strong></dt><dd><p>If True, the telescope transmission is not applied.</p>
+</dd>
+<dt><strong>containment_fraction: float</strong></dt><dd><p>Containment fraction for PSF containment calculation. Allowed values are in the
+interval [0,1]</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.export_results">
+<span class="sig-name descname"><span class="pre">export_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.export_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.export_results" title="Link to this definition">#</a></dt>
+<dd><p>Export results to a csv file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.get_mean">
+<span class="sig-name descname"><span class="pre">get_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.get_mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.get_mean" title="Link to this definition">#</a></dt>
+<dd><p>Get mean value of key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>key: str</strong></dt><dd><p>psf_cm, psf_deg, eff_area or eff_flen</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Mean value of key.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>KeyError</dt><dd><p>If key is not among the valid options.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.get_psf_mm">
+<span class="sig-name descname"><span class="pre">get_psf_mm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.get_psf_mm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.get_psf_mm" title="Link to this definition">#</a></dt>
+<dd><p>Return PSF diameter from the analysis results in mm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>row_index</strong><span class="classifier">int</span></dt><dd><p>Row index into the results table (default: 0).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>PSF diameter in millimeters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.get_std_dev">
+<span class="sig-name descname"><span class="pre">get_std_dev</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.get_std_dev"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.get_std_dev" title="Link to this definition">#</a></dt>
+<dd><p>Get std dev of key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>key: str</strong></dt><dd><p>psf_cm, psf_deg, eff_area or eff_flen</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Std deviation of key.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>KeyError</dt><dd><p>If key is not among the valid options.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.images">
+<span class="sig-name descname"><span class="pre">images</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.images" title="Link to this definition">#</a></dt>
+<dd><p>Get list of PSFImages.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>List of PSFImages</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf_diameter_cm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.plot" title="Link to this definition">#</a></dt>
+<dd><p>Plot key vs off-axis angle and save the figure in pdf.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>key: str</strong></dt><dd><p>psf_cm, psf_deg, eff_area or eff_flen</p>
+</dd>
+<dt><strong>save: bool</strong></dt><dd><p>If True, figure will be saved.</p>
+</dd>
+<dt><strong>psf_diameter_cm: float</strong></dt><dd><p>PSF diameter value to be marked in the cumulative PSF plot (in cm).</p>
+</dd>
+<dt><strong>**kwargs:</strong></dt><dd><p>kwargs for plt.plot</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>KeyError</dt><dd><p>If key is not among the valid options.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.plot_histogram">
+<span class="sig-name descname"><span class="pre">plot_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.plot_histogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.plot_histogram" title="Link to this definition">#</a></dt>
+<dd><p>Plot histogram of key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>key: str</strong></dt><dd><p>psf_cm, psf_deg, eff_area or eff_flen</p>
+</dd>
+<dt><strong>**kwargs:</strong></dt><dd><p>kwargs for plt.hist</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>KeyError</dt><dd><p>If key is not among the valid options.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing.simulate">
+<span class="sig-name descname"><span class="pre">simulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing.simulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing.simulate" title="Link to this definition">#</a></dt>
+<dd><p>Simulate RayTracing using SimulatorRayTracing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>test: bool</strong></dt><dd><p>Test flag will make it faster by simulating much fewer photons.</p>
+</dd>
+<dt><strong>force: bool</strong></dt><dd><p>Force flag will remove existing files and simulate again.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-ray_tracing.psf_analysis">
+<span id="psf-analysis"></span><span id="psfanalysismodule"></span><h2>psf_analysis<a class="headerlink" href="#module-ray_tracing.psf_analysis" title="Link to this heading">#</a></h2>
+<p>Module to analyse psf images (e.g. results from ray tracing simulations).</p>
+<p>Main functionalities are: computing centroids, psf containers etc.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_analysis.</span></span><span class="sig-name descname"><span class="pre">PSFImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">focal_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_scattered_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">containment_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage" title="Link to this definition">#</a></dt>
+<dd><p>Image composed of list of photon positions (2D).</p>
+<p>Load photon list from sim_telarray file and compute centroids, psf containers, effective area,
+as well as plot the image as a 2D histogram.
+Internal units: photon positions in cm internally.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>focal_length: float</strong></dt><dd><p>Focal length of the system in cm. If not given, PSF can only be computed in cm.</p>
+</dd>
+<dt><strong>total_scattered_area: float</strong></dt><dd><p>Scatter area of all photons in cm^2. If not given, effective area cannot be computed.</p>
+</dd>
+<dt><strong>containment_fraction: float</strong></dt><dd><p>Containment fraction for PSF calculation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.get_cumulative_data">
+<span class="sig-name descname"><span class="pre">get_cumulative_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.get_cumulative_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.get_cumulative_data" title="Link to this definition">#</a></dt>
+<dd><p>Provide cumulative data (intensity vs radius).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius: array</strong></dt><dd><p>Array with radius calculate the cumulative PSF in distance units.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>(radius, intensity)</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.get_effective_area">
+<span class="sig-name descname"><span class="pre">get_effective_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_transmission</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.get_effective_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.get_effective_area" title="Link to this definition">#</a></dt>
+<dd><p>Return effective area pre calculated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescope_transmission</strong><span class="classifier">float</span></dt><dd><p>Telescope transmission parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Pre-calculated effective area. None if it could not be calculated (e.g because the total
+scattering area was not set).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.get_image_data">
+<span class="sig-name descname"><span class="pre">get_image_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centralized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.get_image_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.get_image_data" title="Link to this definition">#</a></dt>
+<dd><p>Provide image data (2D photon positions in cm) as lists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>centralized: bool</strong></dt><dd><p>Centroid of the image is set to (0, 0) if True.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>(x, y), the photons positions in cm.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.get_psf">
+<span class="sig-name descname"><span class="pre">get_psf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cm'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.get_psf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.get_psf" title="Link to this definition">#</a></dt>
+<dd><p>Return PSF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fraction: float</strong></dt><dd><p>Fraction of photons within the containing radius.</p>
+</dd>
+<dt><strong>unit: str</strong></dt><dd><p>‘cm’ or ‘deg’. ‘deg’ will not work if focal length was not set.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float:</dt><dd><p>Containing diameter for a certain intensity fraction (PSF).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.plot_cumulative">
+<span class="sig-name descname"><span class="pre">plot_cumulative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf_diameter_cm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.plot_cumulative"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.plot_cumulative" title="Link to this definition">#</a></dt>
+<dd><p>Plot cumulative data (intensity vs radius).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str</strong></dt><dd><p>Name of the file to save the plot to.</p>
+</dd>
+<dt><strong>psf_diameter_cm: float</strong></dt><dd><p>PSF diameter value to be marked in the plot (in cm).</p>
+</dd>
+<dt><strong>**kwargs:</strong></dt><dd><p>Customization of line plot (e.g., color, linestyle, linewidth).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.plot_image">
+<span class="sig-name descname"><span class="pre">plot_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centralized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.plot_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.plot_image" title="Link to this definition">#</a></dt>
+<dd><p>Plot 2D image as histogram (in cm).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>centralized: bool</strong></dt><dd><p>Centroid of the image is set to (0, 0) if True.</p>
+</dd>
+<dt><strong>**kwargs:</strong></dt><dd><p>image_* for the histogram plot and psf_* for the psf circle.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.process_photon_list">
+<span class="sig-name descname"><span class="pre">process_photon_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_rx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.process_photon_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.process_photon_list" title="Link to this definition">#</a></dt>
+<dd><p>Read and process a photon list file generated by sim_telarray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>photons_file: str</strong></dt><dd><p>Name of sim_telarray file with photon list.</p>
+</dd>
+<dt><strong>use_rx: bool</strong></dt><dd><p>Use the RX method for analysis.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.read_photon_list_from_simtel_file">
+<span class="sig-name descname"><span class="pre">read_photon_list_from_simtel_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photons_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.read_photon_list_from_simtel_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.read_photon_list_from_simtel_file" title="Link to this definition">#</a></dt>
+<dd><p>Read photon list file generated by sim_telarray and store the photon positions (2D).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>photons_file: str</strong></dt><dd><p>Name of sim_telarray file with photon list.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>RuntimeError</dt><dd><p>If photon positions X and Y are not compatible or are empty.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.set_effective_area">
+<span class="sig-name descname"><span class="pre">set_effective_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.set_effective_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.set_effective_area" title="Link to this definition">#</a></dt>
+<dd><p>Set effective area.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>value: float</strong></dt><dd><p>Effective area</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_analysis.PSFImage.set_psf">
+<span class="sig-name descname"><span class="pre">set_psf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cm'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_analysis.html#PSFImage.set_psf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_analysis.PSFImage.set_psf" title="Link to this definition">#</a></dt>
+<dd><p>Set PSF calculated from other methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>value: float</strong></dt><dd><p>PSF value to be set</p>
+</dd>
+<dt><strong>fraction: float</strong></dt><dd><p>Fraction of photons within the containing radius.</p>
+</dd>
+<dt><strong>unit: str</strong></dt><dd><p>‘cm’ or ‘deg’. ‘deg’ will not work if focal length was not set.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-ray_tracing.psf_parameter_optimisation">
+<span id="psf-parameter-optimisation"></span><span id="psfparameteroptimisationmodule"></span><h2>psf_parameter_optimisation<a class="headerlink" href="#module-ray_tracing.psf_parameter_optimisation" title="Link to this heading">#</a></h2>
+<p>PSF parameter optimisation and fitting routines for mirror alignment and reflection parameters.</p>
+<p>This module provides functions for loading PSF data, generating random parameter sets,
+running PSF simulations, calculating RMSD, and finding the best-fit parameters for a given
+telescope model.
+PSF (Point Spread Function) describes how a point source of light is spread out by the
+optical system, and RMSD (Root Mean Squared Deviation) is used as the optimization metric
+to quantify the difference between measured and simulated PSF curves.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.GradientStepResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">GradientStepResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf_diameter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulated_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.12/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_accepted</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#GradientStepResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.GradientStepResult" title="Link to this definition">#</a></dt>
+<dd><p>Result from a gradient descent step attempt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>params</strong><span class="classifier">dict or None</span></dt><dd><p>Updated parameter values, None if step failed.</p>
+</dd>
+<dt><strong>psf_diameter</strong><span class="classifier">float or None</span></dt><dd><p>PSF containment diameter in cm, None if step failed.</p>
+</dd>
+<dt><strong>metric</strong><span class="classifier">float or None</span></dt><dd><p>Optimization metric value (RMSD or KS statistic), None if step failed.</p>
+</dd>
+<dt><strong>p_value</strong><span class="classifier">float or None</span></dt><dd><p>P-value from KS test (None if using RMSD or if step failed).</p>
+</dd>
+<dt><strong>simulated_data</strong><span class="classifier">numpy.ndarray or None</span></dt><dd><p>Simulated PSF data, None if step failed.</p>
+</dd>
+<dt><strong>step_accepted</strong><span class="classifier">bool</span></dt><dd><p>True if the step improved the metric, False otherwise.</p>
+</dd>
+<dt><strong>learning_rate</strong><span class="classifier">float</span></dt><dd><p>Final learning rate after adjustments.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">PSFParameterOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_to_plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer" title="Link to this definition">#</a></dt>
+<dd><p>Gradient descent optimizer for PSF parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tel_model</strong><span class="classifier">TelescopeModel</span></dt><dd><p>Telescope model object containing parameter configurations.</p>
+</dd>
+<dt><strong>site_model</strong><span class="classifier">SiteModel</span></dt><dd><p>Site model object with environmental conditions.</p>
+</dd>
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing simulation configuration arguments.</p>
+</dd>
+<dt><strong>data_to_plot</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing measured PSF data under “measured” key.</p>
+</dd>
+<dt><strong>radius</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>Radius values in cm for PSF evaluation.</p>
+</dd>
+<dt><strong>output_dir</strong><span class="classifier">Path</span></dt><dd><p>Directory for saving optimization results and plots.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>simulation_cache</strong><span class="classifier">dict</span></dt><dd><p>Cache for simulation results to avoid redundant ray tracing simulations.
+Key: frozenset of (param_name, tuple(values)) items
+Value: (psf_diameter, metric, p_value, simulated_data)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.analyze_monte_carlo_error">
+<span class="sig-name descname"><span class="pre">analyze_monte_carlo_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_simulations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.analyze_monte_carlo_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.analyze_monte_carlo_error" title="Link to this definition">#</a></dt>
+<dd><p>Analyze Monte Carlo uncertainty in PSF optimization metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n_simulations</strong><span class="classifier">int, optional</span></dt><dd><p>Number of Monte Carlo simulations to run.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple</dt><dd><p>Monte Carlo analysis results.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.apply_gradient_step">
+<span class="sig-name descname"><span class="pre">apply_gradient_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.apply_gradient_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.apply_gradient_step" title="Link to this definition">#</a></dt>
+<dd><p>Apply gradient descent step to update parameters while preserving constraints.</p>
+<p>This function applies the standard gradient descent update and preserves
+zenith angle components (index 1) for mirror alignment parameters.</p>
+<p>Note: Use _are_all_parameters_within_allowed_range() to validate the result before
+accepting the step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>current_params</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of current parameter values.</p>
+</dd>
+<dt><strong>gradients</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of gradient values for each parameter.</p>
+</dd>
+<dt><strong>learning_rate</strong><span class="classifier">float</span></dt><dd><p>Step size for the gradient descent update.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary of updated parameter values after applying the gradient step.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.calculate_gradient">
+<span class="sig-name descname"><span class="pre">calculate_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0005</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.calculate_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.calculate_gradient" title="Link to this definition">#</a></dt>
+<dd><p>Calculate numerical gradients for all optimization parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>current_params</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of current parameter values.</p>
+</dd>
+<dt><strong>current_metric</strong><span class="classifier">float</span></dt><dd><p>Current RMSD or KS statistic value.</p>
+</dd>
+<dt><strong>epsilon</strong><span class="classifier">float, optional</span></dt><dd><p>Perturbation value for finite difference calculation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict or None</dt><dd><p>Dictionary mapping parameter names to their gradient values.
+Returns None if gradient calculation fails for any parameter.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.get_initial_parameters">
+<span class="sig-name descname"><span class="pre">get_initial_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.get_initial_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.get_initial_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Get current PSF parameter values from the telescope model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary of current parameter values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.perform_gradient_step_with_retries">
+<span class="sig-name descname"><span class="pre">perform_gradient_step_with_retries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.perform_gradient_step_with_retries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.perform_gradient_step_with_retries" title="Link to this definition">#</a></dt>
+<dd><p>Attempt gradient descent step with adaptive learning rate reduction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>current_params</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of current parameter values.</p>
+</dd>
+<dt><strong>current_metric</strong><span class="classifier">float</span></dt><dd><p>Current optimization metric value.</p>
+</dd>
+<dt><strong>learning_rate</strong><span class="classifier">float</span></dt><dd><p>Initial learning rate for the gradient descent step.</p>
+</dd>
+<dt><strong>max_retries</strong><span class="classifier">int, optional</span></dt><dd><p>Maximum number of attempts with learning rate reduction.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>GradientStepResult</dt><dd><p>Result object containing updated parameters and step status.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_gradient_descent">
+<span class="sig-name descname"><span class="pre">run_gradient_descent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rmsd_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.run_gradient_descent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_gradient_descent" title="Link to this definition">#</a></dt>
+<dd><p>Run gradient descent optimization to minimize PSF fitting metric.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>rmsd_threshold</strong><span class="classifier">float</span></dt><dd><p>Convergence threshold for RMSD improvement.</p>
+</dd>
+<dt><strong>learning_rate</strong><span class="classifier">float</span></dt><dd><p>Initial learning rate for gradient descent steps.</p>
+</dd>
+<dt><strong>max_iterations</strong><span class="classifier">int, optional</span></dt><dd><p>Maximum number of optimization iterations.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple</dt><dd><p>(best_params, best_psf_diameter, results)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_simulation">
+<span class="sig-name descname"><span class="pre">run_simulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf_pages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_best</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_ks_statistic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#PSFParameterOptimizer.run_simulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_simulation" title="Link to this definition">#</a></dt>
+<dd><p>Run PSF simulation for given parameters with optional caching.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pars</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of parameter values to test.</p>
+</dd>
+<dt><strong>pdf_pages</strong><span class="classifier">PdfPages, optional</span></dt><dd><p>PDF pages object for saving plots.</p>
+</dd>
+<dt><strong>is_best</strong><span class="classifier">bool, optional</span></dt><dd><p>Flag indicating if this is the best parameter set.</p>
+</dd>
+<dt><strong>use_cache</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, use cached results if available.</p>
+</dd>
+<dt><strong>use_ks_statistic</strong><span class="classifier">bool, optional</span></dt><dd><p>If provided, override self.use_ks_statistic for this simulation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple</dt><dd><p>(psf_diameter, metric, p_value, simulated_data)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.calculate_ks_statistic">
+<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">calculate_ks_statistic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#calculate_ks_statistic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.calculate_ks_statistic" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the KS statistic between measured and simulated cumulative PSF curves.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.calculate_rmsd">
+<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">calculate_rmsd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#calculate_rmsd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.calculate_rmsd" title="Link to this definition">#</a></dt>
+<dd><p>Calculate RMSD between measured and simulated cumulative PSF curves.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.cleanup_intermediate_files">
+<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">cleanup_intermediate_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#cleanup_intermediate_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.cleanup_intermediate_files" title="Link to this definition">#</a></dt>
+<dd><p>Remove intermediate log and list files from the output directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>output_dir</strong><span class="classifier">Path</span></dt><dd><p>Directory containing output files to clean up.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.export_psf_parameters">
+<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">export_psf_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">best_pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#export_psf_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.export_psf_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Export optimized PSF parameters as simulation model parameter files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>best_pars</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing the optimized parameter values.</p>
+</dd>
+<dt><strong>telescope</strong><span class="classifier">str</span></dt><dd><p>Telescope name for the parameter files.</p>
+</dd>
+<dt><strong>parameter_version</strong><span class="classifier">str</span></dt><dd><p>Version string for the parameter files.</p>
+</dd>
+<dt><strong>output_dir</strong><span class="classifier">Path</span></dt><dd><p>Base directory for parameter file output.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError, KeyError, OSError</dt><dd><p>If parameter export fails due to invalid values, missing keys, or file I/O errors.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Creates individual JSON files for each optimized parameter with
+units. Files are saved in the format:
+{output_dir}/{telescope}/{parameter_name}-{parameter_version}.json</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.get_previous_values">
+<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">get_previous_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#get_previous_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.get_previous_values" title="Link to this definition">#</a></dt>
+<dd><p>Retrieve current PSF parameter values from the telescope model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tel_model</strong><span class="classifier">TelescopeModel</span></dt><dd><p>Telescope model object containing parameter configurations.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary containing current values of PSF optimization parameters:
+- ‘mirror_reflection_random_angle’: Random reflection angle parameters
+- ‘mirror_align_random_horizontal’: Horizontal alignment parameters
+- ‘mirror_align_random_vertical’: Vertical alignment parameters</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.load_and_process_data">
+<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">load_and_process_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#load_and_process_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.load_and_process_data" title="Link to this definition">#</a></dt>
+<dd><p>Load and process PSF measurement data from ECSV file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing command-line arguments with ‘data’ and ‘model_path’ keys.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple of (OrderedDict, array)</dt><dd><ul class="simple">
+<li><p>data_dict: OrderedDict with “measured” key containing structured array
+of radius and cumulative PSF data</p></li>
+<li><p>radius: Array of radius values in cm</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>FileNotFoundError</dt><dd><p>If no data file is specified in args_dict.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.run_psf_optimization_workflow">
+<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">run_psf_optimization_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#run_psf_optimization_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.run_psf_optimization_workflow" title="Link to this definition">#</a></dt>
+<dd><p>Run the complete PSF parameter optimization workflow using gradient descent.</p>
+<p>This function creates a PSFParameterOptimizer instance and orchestrates
+the optimization process.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.run_psf_simulation">
+<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">run_psf_simulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_to_plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf_pages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_best</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_ks_statistic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#run_psf_simulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.run_psf_simulation" title="Link to this definition">#</a></dt>
+<dd><p>Run PSF simulation for given parameters and calculate optimization metric.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tel_model</strong><span class="classifier">TelescopeModel</span></dt><dd><p>Telescope model object to be configured with the test parameters.</p>
+</dd>
+<dt><strong>site</strong><span class="classifier">Site</span></dt><dd><p>Site model object with environmental conditions.</p>
+</dd>
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing simulation configuration arguments.</p>
+</dd>
+<dt><strong>pars</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of parameter values to test in the simulation.</p>
+</dd>
+<dt><strong>data_to_plot</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing measured PSF data under “measured” key.</p>
+</dd>
+<dt><strong>radius</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>Radius values in cm for PSF evaluation.</p>
+</dd>
+<dt><strong>pdf_pages</strong><span class="classifier">PdfPages, optional</span></dt><dd><p>PDF pages object for saving plots (default: None).</p>
+</dd>
+<dt><strong>is_best</strong><span class="classifier">bool, optional</span></dt><dd><p>Flag indicating if this is the best parameter set (default: False).</p>
+</dd>
+<dt><strong>use_ks_statistic</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, use KS statistic as metric; if False, use RMSD (default: False).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple of (float, float, float or None, array)</dt><dd><ul class="simple">
+<li><p>psf_diameter: PSF containment diameter of the simulated PSF in cm</p></li>
+<li><p>metric: RMSD or KS statistic value</p></li>
+<li><p>p_value: p-value from KS test (None if using RMSD)</p></li>
+<li><p>simulated_data: Structured array with simulated cumulative PSF data</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.write_gradient_descent_log">
+<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">write_gradient_descent_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gd_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_psf_diameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_ks_statistic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#write_gradient_descent_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.write_gradient_descent_log" title="Link to this definition">#</a></dt>
+<dd><p>Write gradient descent optimization progression to a log file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>gd_results</strong><span class="classifier">list</span></dt><dd><p>List of tuples containing (params, metric, p_value, psf_diameter, simulated_data)
+for each optimization iteration.</p>
+</dd>
+<dt><strong>best_pars</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing the best parameter values found.</p>
+</dd>
+<dt><strong>best_psf_diameter</strong><span class="classifier">float</span></dt><dd><p>PSF containment diameter in cm for the best parameter set.</p>
+</dd>
+<dt><strong>output_dir</strong><span class="classifier">Path</span></dt><dd><p>Directory where the log file will be written.</p>
+</dd>
+<dt><strong>tel_model</strong><span class="classifier">TelescopeModel</span></dt><dd><p>Telescope model object for naming the output file.</p>
+</dd>
+<dt><strong>use_ks_statistic</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, log KS statistic values; if False, log RMSD values (default: False).</p>
+</dd>
+<dt><strong>fraction</strong><span class="classifier">float, optional</span></dt><dd><p>PSF containment fraction for labeling (default: 0.8).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path</dt><dd><p>Path to the created log file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.write_monte_carlo_analysis">
+<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">write_monte_carlo_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mc_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_ks_statistic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#write_monte_carlo_analysis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.write_monte_carlo_analysis" title="Link to this definition">#</a></dt>
+<dd><p>Write Monte Carlo uncertainty analysis results to a log file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mc_results</strong><span class="classifier">tuple</span></dt><dd><p>Tuple of Monte Carlo analysis results from analyze_monte_carlo_error().</p>
+</dd>
+<dt><strong>output_dir</strong><span class="classifier">Path</span></dt><dd><p>Directory where the log file will be written.</p>
+</dd>
+<dt><strong>tel_model</strong><span class="classifier">TelescopeModel</span></dt><dd><p>Telescope model object for naming the output file.</p>
+</dd>
+<dt><strong>use_ks_statistic</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, analyze KS statistic results; if False, analyze RMSD results (default: False).</p>
+</dd>
+<dt><strong>fraction</strong><span class="classifier">float, optional</span></dt><dd><p>PSF containment fraction for labeling (default: 0.8).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path</dt><dd><p>Path to the created log file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ray_tracing.psf_parameter_optimisation.write_tested_parameters_to_file">
+<span class="sig-prename descclassname"><span class="pre">ray_tracing.psf_parameter_optimisation.</span></span><span class="sig-name descname"><span class="pre">write_tested_parameters_to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_psf_diameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tel_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/psf_parameter_optimisation.html#write_tested_parameters_to_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.psf_parameter_optimisation.write_tested_parameters_to_file" title="Link to this definition">#</a></dt>
+<dd><p>Write optimization results and tested parameters to a log file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>results</strong><span class="classifier">list</span></dt><dd><p>List of tuples containing (parameters, ks_statistic, p_value, psf_diameter, simulated_data)
+for each tested parameter set.</p>
+</dd>
+<dt><strong>best_pars</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing the best parameter values found.</p>
+</dd>
+<dt><strong>best_psf_diameter</strong><span class="classifier">float</span></dt><dd><p>PSF containment diameter in cm for the best parameter set.</p>
+</dd>
+<dt><strong>output_dir</strong><span class="classifier">Path</span></dt><dd><p>Directory where the log file will be written.</p>
+</dd>
+<dt><strong>tel_model</strong><span class="classifier">TelescopeModel</span></dt><dd><p>Telescope model object for naming the output file.</p>
+</dd>
+<dt><strong>fraction</strong><span class="classifier">float, optional</span></dt><dd><p>PSF containment fraction for labeling (default: 0.8).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path</dt><dd><p>Path to the created log file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-ray_tracing.mirror_panel_psf">
+<span id="mirror-panel-psf"></span><span id="mirror-panel-psfmodule"></span><h2>mirror_panel_psf<a class="headerlink" href="#module-ray_tracing.mirror_panel_psf" title="Link to this heading">#</a></h2>
+<p>Mirror panel PSF calculation with per-mirror PSF diameter optimization.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ray_tracing.mirror_panel_psf.MirrorOptimizationResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ray_tracing.mirror_panel_psf.</span></span><span class="sig-name descname"><span class="pre">MirrorOptimizationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mirror</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_psf_mm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimized_rnda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulated_psf_mm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentage_diff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">containment_fraction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.12/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/mirror_panel_psf.html#MirrorOptimizationResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.mirror_panel_psf.MirrorOptimizationResult" title="Link to this definition">#</a></dt>
+<dd><p>Dataclass to store the result of a single mirror RNDA optimization.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ray_tracing.mirror_panel_psf.MirrorPanelPSF">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ray_tracing.mirror_panel_psf.</span></span><span class="sig-name descname"><span class="pre">MirrorPanelPSF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/mirror_panel_psf.html#MirrorPanelPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF" title="Link to this definition">#</a></dt>
+<dd><p>Mirror panel PSF and random reflection angle (RNDA) calculation.</p>
+<p>This class derives the RNDA for mirror panels by optimizing
+per-mirror PSF diameters (at a given containment fraction)
+using a percentage difference metric.
+Optimization uses a gradient descent with finite-difference gradients.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>label</strong><span class="classifier">str</span></dt><dd><p>Application label.</p>
+</dd>
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary with input arguments, e.g. site, telescope, data path, model version.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.mirror_panel_psf.MirrorPanelPSF.optimize_single_mirror">
+<span class="sig-name descname"><span class="pre">optimize_single_mirror</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mirror_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/mirror_panel_psf.html#MirrorPanelPSF.optimize_single_mirror"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.optimize_single_mirror" title="Link to this definition">#</a></dt>
+<dd><p>Optimize RNDA for a single mirror using gradient descent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mirror_idx</strong><span class="classifier">int</span></dt><dd><p>Zero-based mirror index.</p>
+</dd>
+<dt><strong>measured_psf</strong><span class="classifier">float</span></dt><dd><p>Measured PSF diameter in mm.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>MirrorOptimizationResult</dt><dd><p>Optimization results for the mirror.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.mirror_panel_psf.MirrorPanelPSF.optimize_with_gradient_descent">
+<span class="sig-name descname"><span class="pre">optimize_with_gradient_descent</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/mirror_panel_psf.html#MirrorPanelPSF.optimize_with_gradient_descent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.optimize_with_gradient_descent" title="Link to this definition">#</a></dt>
+<dd><p>Optimize all mirrors in parallel using process pool.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data">
+<span class="sig-name descname"><span class="pre">write_optimization_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/mirror_panel_psf.html#MirrorPanelPSF.write_optimization_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data" title="Link to this definition">#</a></dt>
+<dd><p>Write optimization results and optionally export as a model parameter.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_psf_histogram">
+<span class="sig-name descname"><span class="pre">write_psf_histogram</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/mirror_panel_psf.html#MirrorPanelPSF.write_psf_histogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_psf_histogram" title="Link to this definition">#</a></dt>
+<dd><p>Plot histogram of measured vs simulated psf values.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="production_configuration.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Production Configuration</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="reporting.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Reporting</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-ray_tracing.incident_angles">incident_angles</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.incident_angles.IncidentAnglesCalculator"><code class="docutils literal notranslate"><span class="pre">IncidentAnglesCalculator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.incident_angles.IncidentAnglesCalculator.run"><code class="docutils literal notranslate"><span class="pre">IncidentAnglesCalculator.run()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.incident_angles.IncidentAnglesCalculator.run_for_offsets"><code class="docutils literal notranslate"><span class="pre">IncidentAnglesCalculator.run_for_offsets()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.incident_angles.IncidentAnglesCalculator.save_model_parameters"><code class="docutils literal notranslate"><span class="pre">IncidentAnglesCalculator.save_model_parameters()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-ray_tracing.ray_tracing">ray_tracing</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing"><code class="docutils literal notranslate"><span class="pre">RayTracing</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.analyze"><code class="docutils literal notranslate"><span class="pre">RayTracing.analyze()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.export_results"><code class="docutils literal notranslate"><span class="pre">RayTracing.export_results()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.get_mean"><code class="docutils literal notranslate"><span class="pre">RayTracing.get_mean()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.get_psf_mm"><code class="docutils literal notranslate"><span class="pre">RayTracing.get_psf_mm()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.get_std_dev"><code class="docutils literal notranslate"><span class="pre">RayTracing.get_std_dev()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.images"><code class="docutils literal notranslate"><span class="pre">RayTracing.images()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.plot"><code class="docutils literal notranslate"><span class="pre">RayTracing.plot()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.plot_histogram"><code class="docutils literal notranslate"><span class="pre">RayTracing.plot_histogram()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.ray_tracing.RayTracing.simulate"><code class="docutils literal notranslate"><span class="pre">RayTracing.simulate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-ray_tracing.psf_analysis">psf_analysis</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage"><code class="docutils literal notranslate"><span class="pre">PSFImage</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.get_cumulative_data"><code class="docutils literal notranslate"><span class="pre">PSFImage.get_cumulative_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.get_effective_area"><code class="docutils literal notranslate"><span class="pre">PSFImage.get_effective_area()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.get_image_data"><code class="docutils literal notranslate"><span class="pre">PSFImage.get_image_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.get_psf"><code class="docutils literal notranslate"><span class="pre">PSFImage.get_psf()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.plot_cumulative"><code class="docutils literal notranslate"><span class="pre">PSFImage.plot_cumulative()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.plot_image"><code class="docutils literal notranslate"><span class="pre">PSFImage.plot_image()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.process_photon_list"><code class="docutils literal notranslate"><span class="pre">PSFImage.process_photon_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.read_photon_list_from_simtel_file"><code class="docutils literal notranslate"><span class="pre">PSFImage.read_photon_list_from_simtel_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.set_effective_area"><code class="docutils literal notranslate"><span class="pre">PSFImage.set_effective_area()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_analysis.PSFImage.set_psf"><code class="docutils literal notranslate"><span class="pre">PSFImage.set_psf()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-ray_tracing.psf_parameter_optimisation">psf_parameter_optimisation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.GradientStepResult"><code class="docutils literal notranslate"><span class="pre">GradientStepResult</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.analyze_monte_carlo_error"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.analyze_monte_carlo_error()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.apply_gradient_step"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.apply_gradient_step()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.calculate_gradient"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.calculate_gradient()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.get_initial_parameters"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.get_initial_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.perform_gradient_step_with_retries"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.perform_gradient_step_with_retries()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_gradient_descent"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.run_gradient_descent()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer.run_simulation"><code class="docutils literal notranslate"><span class="pre">PSFParameterOptimizer.run_simulation()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.calculate_ks_statistic"><code class="docutils literal notranslate"><span class="pre">calculate_ks_statistic()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.calculate_rmsd"><code class="docutils literal notranslate"><span class="pre">calculate_rmsd()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.cleanup_intermediate_files"><code class="docutils literal notranslate"><span class="pre">cleanup_intermediate_files()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.export_psf_parameters"><code class="docutils literal notranslate"><span class="pre">export_psf_parameters()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.get_previous_values"><code class="docutils literal notranslate"><span class="pre">get_previous_values()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.load_and_process_data"><code class="docutils literal notranslate"><span class="pre">load_and_process_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.run_psf_optimization_workflow"><code class="docutils literal notranslate"><span class="pre">run_psf_optimization_workflow()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.run_psf_simulation"><code class="docutils literal notranslate"><span class="pre">run_psf_simulation()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.write_gradient_descent_log"><code class="docutils literal notranslate"><span class="pre">write_gradient_descent_log()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.write_monte_carlo_analysis"><code class="docutils literal notranslate"><span class="pre">write_monte_carlo_analysis()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.psf_parameter_optimisation.write_tested_parameters_to_file"><code class="docutils literal notranslate"><span class="pre">write_tested_parameters_to_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-ray_tracing.mirror_panel_psf">mirror_panel_psf</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorOptimizationResult"><code class="docutils literal notranslate"><span class="pre">MirrorOptimizationResult</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.optimize_single_mirror"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF.optimize_single_mirror()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.optimize_with_gradient_descent"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF.optimize_with_gradient_descent()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF.write_optimization_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_psf_histogram"><code class="docutils literal notranslate"><span class="pre">MirrorPanelPSF.write_psf_histogram()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api-reference/ray_tracing.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

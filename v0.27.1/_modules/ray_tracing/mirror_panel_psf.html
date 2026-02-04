@@ -1,0 +1,940 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ray_tracing.mirror_panel_psf &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=9f0f14ba"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/ray_tracing/mirror_panel_psf';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">ray_tracing.mirror_panel_psf</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for ray_tracing.mirror_panel_psf</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Mirror panel PSF calculation with per-mirror PSF diameter optimization.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">model_data_writer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.job_execution.process_pool</span><span class="w"> </span><span class="kn">import</span> <span class="n">process_pool_map_ordered</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">initialize_simulation_models</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.ray_tracing.ray_tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">RayTracing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_psf</span>
+
+
+<div class="viewcode-block" id="MirrorOptimizationResult">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorOptimizationResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MirrorOptimizationResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dataclass to store the result of a single mirror RNDA optimization.&quot;&quot;&quot;</span>
+
+    <span class="n">mirror</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># Zero-based mirror index</span>
+    <span class="n">measured_psf_mm</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Measured PSF diameter in mm</span>
+    <span class="n">optimized_rnda</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>  <span class="c1"># Optimized RNDA values [sigma1, fraction2, sigma2]</span>
+    <span class="n">simulated_psf_mm</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Simulated PSF diameter after optimization</span>
+    <span class="n">percentage_diff</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Absolute percentage difference</span>
+    <span class="n">containment_fraction</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># PSF containment fraction used for the diameter</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_optimize_single_mirror_worker</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Worker wrapper for optimizing a single mirror in parallel.&quot;&quot;&quot;</span>
+    <span class="n">instance</span><span class="p">,</span> <span class="n">mirror_idx</span><span class="p">,</span> <span class="n">measured</span> <span class="o">=</span> <span class="n">args</span>
+    <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">optimize_single_mirror</span><span class="p">(</span><span class="n">mirror_idx</span><span class="p">,</span> <span class="n">measured</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MirrorPanelPSF">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MirrorPanelPSF</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mirror panel PSF and random reflection angle (RNDA) calculation.</span>
+
+<span class="sd">    This class derives the RNDA for mirror panels by optimizing</span>
+<span class="sd">    per-mirror PSF diameters (at a given containment fraction)</span>
+<span class="sd">    using a percentage difference metric.</span>
+<span class="sd">    Optimization uses a gradient descent with finite-difference gradients.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : str</span>
+<span class="sd">        Application label.</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary with input arguments, e.g. site, telescope, data path, model version.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Hard guardrails</span>
+    <span class="n">GRAD_CLIP</span> <span class="o">=</span> <span class="mf">1e4</span>
+    <span class="n">MAX_LOG_STEP</span> <span class="o">=</span> <span class="mf">0.25</span>
+    <span class="n">MAX_FRAC_STEP</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">MAX_ITER</span> <span class="o">=</span> <span class="mi">100</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="o">=</span> <span class="n">args_dict</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fraction</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">initialize_simulation_models</span><span class="p">(</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+            <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+            <span class="n">telescope_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">],</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">measured_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_measured_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rnda_start</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;mirror_reflection_random_angle&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">per_mirror_results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rnda_opt</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_percentage_diff</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_measured_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load measured PSF diameter from ECSV file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.table.Column</span>
+<span class="sd">            Column containing PSF diameter values in mm.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data_file</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">find_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_path&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">))</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">data_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;psf_opt&quot;</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">table</span><span class="p">[</span><span class="s2">&quot;psf_opt&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;d80&quot;</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+            <span class="n">fraction</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">fraction</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-09</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-09</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Input table provides &#39;d80&#39; column, but --fraction=</span><span class="si">%.3f</span><span class="s2"> was requested. &quot;</span>
+                    <span class="s2">&quot;Make sure the measured column matches the selected containment fraction.&quot;</span><span class="p">,</span>
+                    <span class="n">fraction</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">table</span><span class="p">[</span><span class="s2">&quot;d80&quot;</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Data file must contain either &#39;psf_opt&#39; or &#39;d80&#39; column&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_simulate_single_mirror_psf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mirror_idx</span><span class="p">,</span> <span class="n">rnda_values</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simulate a single mirror and return its PSF diameter.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mirror_idx : int</span>
+<span class="sd">            Zero-based index of the mirror.</span>
+<span class="sd">        rnda_values : list of float</span>
+<span class="sd">            RNDA values [sigma1, fraction2, sigma2].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Simulated PSF diameter in mm.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fraction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fraction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">overwrite_model_parameter</span><span class="p">(</span>
+            <span class="s2">&quot;mirror_reflection_random_angle&quot;</span><span class="p">,</span> <span class="n">rnda_values</span>
+        <span class="p">)</span>
+
+        <span class="n">rt_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">_m</span><span class="si">{</span><span class="n">mirror_idx</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="p">(</span>
+            <span class="n">telescope_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span>
+            <span class="n">site_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">rt_label</span><span class="p">,</span>
+            <span class="n">single_mirror_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">mirror_numbers</span><span class="o">=</span><span class="p">[</span><span class="n">mirror_idx</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">ray</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">ray</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">containment_fraction</span><span class="o">=</span><span class="n">fraction</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">ray</span><span class="o">.</span><span class="n">get_psf_mm</span><span class="p">())</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_signed_pct_diff</span><span class="p">(</span><span class="n">measured</span><span class="p">,</span> <span class="n">simulated</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute signed percentage difference.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">measured</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Measured PSF diameter must be positive&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">simulated</span> <span class="o">-</span> <span class="n">measured</span><span class="p">)</span> <span class="o">/</span> <span class="n">measured</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mirror_idx</span><span class="p">,</span> <span class="n">measured</span><span class="p">,</span> <span class="n">rnda</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the objective function for a mirror.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mirror_idx : int</span>
+<span class="sd">            Mirror index (0-based).</span>
+<span class="sd">        measured : float</span>
+<span class="sd">            Measured PSF diameter (mm).</span>
+<span class="sd">        rnda : list of float</span>
+<span class="sd">            Current RNDA values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of (float, float, float)</span>
+<span class="sd">            Simulated PSF diameter, signed percentage difference, squared percentage difference.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulate_single_mirror_psf</span><span class="p">(</span><span class="n">mirror_idx</span><span class="p">,</span> <span class="n">rnda</span><span class="p">)</span>
+        <span class="n">pct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_signed_pct_diff</span><span class="p">(</span><span class="n">measured</span><span class="p">,</span> <span class="n">sim</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sim</span><span class="p">,</span> <span class="n">pct</span><span class="p">,</span> <span class="n">pct</span> <span class="o">*</span> <span class="n">pct</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rnda_bounds</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get allowed bounds for RNDA parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of tuple of float</span>
+<span class="sd">            [(min1, max1), (min2, max2), (min3, max3)]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">schema</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">()[</span><span class="s2">&quot;mirror_reflection_random_angle&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">schema</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;allowed_range&quot;</span><span class="p">][</span><span class="s2">&quot;min&quot;</span><span class="p">],</span> <span class="mf">1e-12</span><span class="p">),</span> <span class="n">schema</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;allowed_range&quot;</span><span class="p">][</span><span class="s2">&quot;max&quot;</span><span class="p">]),</span>
+            <span class="p">(</span><span class="n">schema</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;allowed_range&quot;</span><span class="p">][</span><span class="s2">&quot;min&quot;</span><span class="p">],</span> <span class="n">schema</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;allowed_range&quot;</span><span class="p">][</span><span class="s2">&quot;max&quot;</span><span class="p">]),</span>
+            <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">schema</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="s2">&quot;allowed_range&quot;</span><span class="p">][</span><span class="s2">&quot;min&quot;</span><span class="p">],</span> <span class="mf">1e-12</span><span class="p">),</span> <span class="n">schema</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="s2">&quot;allowed_range&quot;</span><span class="p">][</span><span class="s2">&quot;max&quot;</span><span class="p">]),</span>
+        <span class="p">]</span>
+
+<div class="viewcode-block" id="MirrorPanelPSF.optimize_single_mirror">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.optimize_single_mirror">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">optimize_single_mirror</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mirror_idx</span><span class="p">,</span> <span class="n">measured_psf</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Optimize RNDA for a single mirror using gradient descent.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mirror_idx : int</span>
+<span class="sd">            Zero-based mirror index.</span>
+<span class="sd">        measured_psf : float</span>
+<span class="sd">            Measured PSF diameter in mm.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        MirrorOptimizationResult</span>
+<span class="sd">            Optimization results for the mirror.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">threshold_pct</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;threshold&quot;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">))</span>
+        <span class="n">learning_rate</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">))</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rnda_bounds</span><span class="p">()</span>
+        <span class="n">fraction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fraction</span>
+
+        <span class="n">rnda</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rnda_start</span><span class="p">)</span>
+        <span class="n">sim</span><span class="p">,</span> <span class="n">pct</span><span class="p">,</span> <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span><span class="n">mirror_idx</span><span class="p">,</span> <span class="n">measured_psf</span><span class="p">,</span> <span class="n">rnda</span><span class="p">)</span>
+        <span class="n">best</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;rnda&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">rnda</span><span class="p">),</span> <span class="s2">&quot;sim&quot;</span><span class="p">:</span> <span class="n">sim</span><span class="p">,</span> <span class="s2">&quot;pct&quot;</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pct</span><span class="p">),</span> <span class="s2">&quot;obj&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Mirror </span><span class="si">%d</span><span class="s2"> | initial PSF </span><span class="si">%.3f</span><span class="s2"> mm (f=</span><span class="si">%.2f</span><span class="s2">) | pct </span><span class="si">%.2f%%</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">mirror_idx</span><span class="p">,</span>
+            <span class="n">sim</span><span class="p">,</span>
+            <span class="n">fraction</span><span class="p">,</span>
+            <span class="n">pct</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">MAX_ITER</span><span class="p">):</span>
+            <span class="n">old_rnda</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rnda</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">param_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">param_value</span><span class="p">,</span> <span class="n">param_bounds</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">old_rnda</span><span class="p">,</span> <span class="n">bounds</span><span class="p">)):</span>
+                <span class="n">rnda</span><span class="p">[</span><span class="n">param_idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_single_rnda_parameter</span><span class="p">(</span>
+                    <span class="n">mirror_idx</span><span class="o">=</span><span class="n">mirror_idx</span><span class="p">,</span>
+                    <span class="n">measured_psf</span><span class="o">=</span><span class="n">measured_psf</span><span class="p">,</span>
+                    <span class="n">rnda</span><span class="o">=</span><span class="n">rnda</span><span class="p">,</span>
+                    <span class="n">param_idx</span><span class="o">=</span><span class="n">param_idx</span><span class="p">,</span>
+                    <span class="n">param_value</span><span class="o">=</span><span class="n">param_value</span><span class="p">,</span>
+                    <span class="n">param_bounds</span><span class="o">=</span><span class="n">param_bounds</span><span class="p">,</span>
+                    <span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="n">sim</span><span class="p">,</span> <span class="n">pct</span><span class="p">,</span> <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span><span class="n">mirror_idx</span><span class="p">,</span> <span class="n">measured_psf</span><span class="p">,</span> <span class="n">rnda</span><span class="p">)</span>
+            <span class="n">pct</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pct</span><span class="p">)</span>
+
+            <span class="n">old_rnda_str</span> <span class="o">=</span> <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">old_rnda</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span>
+            <span class="n">rnda_str</span> <span class="o">=</span> <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">rnda</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Iter </span><span class="si">%d</span><span class="s2"> | rnda </span><span class="si">%s</span><span class="s2"> -&gt; </span><span class="si">%s</span><span class="s2"> | pct </span><span class="si">%.2f</span><span class="s2"> -&gt; </span><span class="si">%.2f</span><span class="s2"> | lr </span><span class="si">%.2g</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">old_rnda_str</span><span class="p">,</span>
+                <span class="n">rnda_str</span><span class="p">,</span>
+                <span class="n">best</span><span class="p">[</span><span class="s2">&quot;pct&quot;</span><span class="p">],</span>
+                <span class="n">pct</span><span class="p">,</span>
+                <span class="n">learning_rate</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">obj</span> <span class="o">&lt;</span> <span class="n">best</span><span class="p">[</span><span class="s2">&quot;obj&quot;</span><span class="p">]:</span>
+                <span class="n">best</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">rnda</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">rnda</span><span class="p">),</span> <span class="n">sim</span><span class="o">=</span><span class="n">sim</span><span class="p">,</span> <span class="n">pct</span><span class="o">=</span><span class="n">pct</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">)</span>
+                <span class="n">learning_rate</span> <span class="o">*=</span> <span class="mf">1.1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rnda</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">old_rnda</span><span class="p">)</span>
+                <span class="n">learning_rate</span> <span class="o">*=</span> <span class="mf">0.5</span>
+
+            <span class="k">if</span> <span class="n">best</span><span class="p">[</span><span class="s2">&quot;pct&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">threshold_pct</span> <span class="ow">or</span> <span class="n">learning_rate</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">MirrorOptimizationResult</span><span class="p">(</span>
+            <span class="n">mirror</span><span class="o">=</span><span class="n">mirror_idx</span><span class="p">,</span>
+            <span class="n">measured_psf_mm</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">measured_psf</span><span class="p">),</span>
+            <span class="n">optimized_rnda</span><span class="o">=</span><span class="n">best</span><span class="p">[</span><span class="s2">&quot;rnda&quot;</span><span class="p">],</span>
+            <span class="n">simulated_psf_mm</span><span class="o">=</span><span class="n">best</span><span class="p">[</span><span class="s2">&quot;sim&quot;</span><span class="p">],</span>
+            <span class="n">percentage_diff</span><span class="o">=</span><span class="n">best</span><span class="p">[</span><span class="s2">&quot;pct&quot;</span><span class="p">],</span>
+            <span class="n">containment_fraction</span><span class="o">=</span><span class="n">fraction</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_single_rnda_parameter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mirror_idx</span><span class="p">,</span>
+        <span class="n">measured_psf</span><span class="p">,</span>
+        <span class="n">rnda</span><span class="p">,</span>
+        <span class="n">param_idx</span><span class="p">,</span>
+        <span class="n">param_value</span><span class="p">,</span>
+        <span class="n">param_bounds</span><span class="p">,</span>
+        <span class="n">learning_rate</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update a single RNDA parameter using finite-difference gradient descent.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mirror_idx : int</span>
+<span class="sd">        measured_psf : float</span>
+<span class="sd">        rnda : list of float</span>
+<span class="sd">        param_idx : int</span>
+<span class="sd">        param_value : float</span>
+<span class="sd">        param_bounds : tuple of float</span>
+<span class="sd">        learning_rate : float</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Updated RNDA parameter value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">param_min</span><span class="p">,</span> <span class="n">param_max</span> <span class="o">=</span> <span class="n">param_bounds</span>
+        <span class="n">is_log_param</span> <span class="o">=</span> <span class="n">param_idx</span> <span class="o">!=</span> <span class="mi">1</span>
+        <span class="n">epsilon</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">,</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">param_value</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_log_param</span> <span class="k">else</span> <span class="mf">0.05</span>
+
+        <span class="n">rnda</span><span class="p">[</span><span class="n">param_idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">param_max</span><span class="p">,</span> <span class="n">param_value</span> <span class="o">+</span> <span class="n">epsilon</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">f_plus</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span><span class="n">mirror_idx</span><span class="p">,</span> <span class="n">measured_psf</span><span class="p">,</span> <span class="n">rnda</span><span class="p">)</span>
+
+        <span class="n">rnda</span><span class="p">[</span><span class="n">param_idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">param_min</span><span class="p">,</span> <span class="n">param_value</span> <span class="o">-</span> <span class="n">epsilon</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">f_minus</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span><span class="n">mirror_idx</span><span class="p">,</span> <span class="n">measured_psf</span><span class="p">,</span> <span class="n">rnda</span><span class="p">)</span>
+
+        <span class="n">rnda</span><span class="p">[</span><span class="n">param_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
+        <span class="n">gradient</span> <span class="o">=</span> <span class="p">(</span><span class="n">f_plus</span> <span class="o">-</span> <span class="n">f_minus</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">epsilon</span><span class="p">)</span>
+
+        <span class="c1"># Clip the gradient to avoid excessively large steps.</span>
+        <span class="k">if</span> <span class="n">is_log_param</span><span class="p">:</span>
+            <span class="n">gradient</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">gradient</span> <span class="o">*</span> <span class="n">param_value</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">GRAD_CLIP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">GRAD_CLIP</span><span class="p">)</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="o">-</span><span class="n">learning_rate</span> <span class="o">*</span> <span class="n">gradient</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">MAX_LOG_STEP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAX_LOG_STEP</span><span class="p">)</span>
+            <span class="c1"># clip the parameters so they are within allowed range</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">param_value</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">step</span><span class="p">),</span> <span class="n">param_min</span><span class="p">,</span> <span class="n">param_max</span><span class="p">)</span>
+
+        <span class="n">gradient</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">gradient</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">GRAD_CLIP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">GRAD_CLIP</span><span class="p">)</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="o">-</span><span class="n">learning_rate</span> <span class="o">*</span> <span class="n">gradient</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">MAX_FRAC_STEP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAX_FRAC_STEP</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">param_value</span> <span class="o">+</span> <span class="n">step</span><span class="p">,</span> <span class="n">param_min</span><span class="p">,</span> <span class="n">param_max</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MirrorPanelPSF.optimize_with_gradient_descent">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.optimize_with_gradient_descent">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">optimize_with_gradient_descent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Optimize all mirrors in parallel using process pool.</span>
+
+<span class="sd">        Sets</span>
+<span class="sd">        ----</span>
+<span class="sd">        self.per_mirror_results : list of dict</span>
+<span class="sd">        self.rnda_opt : list of float</span>
+<span class="sd">        self.final_percentage_diff : float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n_mirrors</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">measured_data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">):</span>
+            <span class="n">n_mirrors</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_mirrors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;number_of_mirrors_to_test&quot;</span><span class="p">))</span>
+
+        <span class="n">n_workers</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_workers&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">())</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="n">MirrorPanelPSF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">))</span>
+        <span class="n">worker_args</span> <span class="o">=</span> <span class="p">[(</span><span class="n">parent</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">parent</span><span class="o">.</span><span class="n">measured_data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_mirrors</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">per_mirror_results</span> <span class="o">=</span> <span class="n">process_pool_map_ordered</span><span class="p">(</span>
+            <span class="n">_optimize_single_mirror_worker</span><span class="p">,</span>
+            <span class="n">worker_args</span><span class="p">,</span>
+            <span class="n">max_workers</span><span class="o">=</span><span class="n">n_workers</span><span class="p">,</span>
+            <span class="n">mp_start_method</span><span class="o">=</span><span class="s2">&quot;fork&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rnda_opt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">optimized_rnda</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">per_mirror_results</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_percentage_diff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">percentage_diff</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">per_mirror_results</span><span class="p">])</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MirrorPanelPSF.write_optimization_data">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_optimization_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write optimization results and optionally export as a model parameter.&quot;&quot;&quot;</span>
+        <span class="n">output_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">))</span>
+        <span class="n">telescope</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;telescope&quot;</span><span class="p">)</span>
+        <span class="n">parameter_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">)</span>
+        <span class="n">parameter_name</span> <span class="o">=</span> <span class="s2">&quot;mirror_reflection_random_angle&quot;</span>
+        <span class="n">parameter_output_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="nb">str</span><span class="p">(</span><span class="n">telescope</span><span class="p">)</span>
+        <span class="n">parameter_output_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">output_file</span> <span class="o">=</span> <span class="n">parameter_output_path</span> <span class="o">/</span> <span class="s2">&quot;per_mirror_rnda.json&quot;</span>
+
+        <span class="n">per_mirror_results_out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">per_mirror_results</span><span class="p">:</span>
+            <span class="n">result_dict</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;optimized_rnda&quot;</span><span class="p">:</span>
+                    <span class="n">result_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                    <span class="n">result_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">per_mirror_results_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result_dict</span><span class="p">)</span>
+
+        <span class="n">output_file</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;telescope&quot;</span><span class="p">:</span> <span class="n">telescope</span><span class="p">,</span>
+                    <span class="s2">&quot;model_version&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">),</span>
+                    <span class="s2">&quot;per_mirror_results&quot;</span><span class="p">:</span> <span class="n">per_mirror_results_out</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Results written to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+
+        <span class="c1"># Export averaged RNDA</span>
+        <span class="k">if</span> <span class="n">telescope</span> <span class="ow">and</span> <span class="n">parameter_version</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rnda_opt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">model_data_writer</span><span class="o">.</span><span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump_model_parameter</span><span class="p">(</span>
+                    <span class="n">parameter_name</span><span class="o">=</span><span class="n">parameter_name</span><span class="p">,</span>
+                    <span class="n">value</span><span class="o">=</span><span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rnda_opt</span><span class="p">],</span>
+                    <span class="n">instrument</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">telescope</span><span class="p">),</span>
+                    <span class="n">parameter_version</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">parameter_version</span><span class="p">),</span>
+                    <span class="n">output_file</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">parameter_version</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">,</span>
+                    <span class="n">output_path</span><span class="o">=</span><span class="n">parameter_output_path</span><span class="p">,</span>
+                    <span class="n">unit</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;deg&quot;</span><span class="p">,</span> <span class="s2">&quot;dimensionless&quot;</span><span class="p">,</span> <span class="s2">&quot;deg&quot;</span><span class="p">],</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;Exported model parameter </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">) to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">parameter_name</span><span class="p">,</span>
+                    <span class="n">parameter_version</span><span class="p">,</span>
+                    <span class="n">parameter_output_path</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to export model parameter </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MirrorPanelPSF.write_psf_histogram">
+<a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_psf_histogram">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_psf_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot histogram of measured vs simulated psf values.&quot;&quot;&quot;</span>
+        <span class="n">measured</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">measured_psf_mm</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">per_mirror_results</span><span class="p">]</span>
+        <span class="n">simulated</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">simulated_psf_mm</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">per_mirror_results</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">plot_psf</span><span class="o">.</span><span class="n">plot_psf_histogram</span><span class="p">(</span><span class="n">measured</span><span class="p">,</span> <span class="n">simulated</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
