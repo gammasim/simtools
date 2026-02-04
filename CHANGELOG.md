@@ -7,6 +7,76 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [0.27.0](https://github.com/gammasim/simtools/releases/tag/0.27.0) - 2026-02-03
+
+### API Changes
+
+- Changes to the setting of seeds for sim_telarray:
+
+  - use `sim_telarray_random_instrument_instances` and `sim_telarray_instrument_seed` to generate a random seed file for the given number of configurations.
+  - use `sim_telarray_seed` together with `sim_telarray_instrument_seed` to set both instrument (configuration) and simulation seeds. These parameters completely fix the seeds and should only be used for testing purposes.
+
+  ([#1982](https://github.com/gammasim/simtools/pull/1982))
+- Update naming of simtools-prod images to `<simtools version>-corsika<corsika version>-<avx option>-simtel<sim_telarray version>`. ([#1984](https://github.com/gammasim/simtools/pull/1984))
+- CORSIKA interactions tables are not part of the CORSIKA7 container anymore and also not added to the simtools-dev container.
+  CORSIKA tables are available from the new [CTAO gitlab repository corsika7-interaction-tables](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-interaction-tables). This includes QGSJet-II, QGSJet-III, EPOS, EGS4, etc tables.
+
+  To install and use the interaction tables for both production and development:
+
+  - clone that repository into a separate directory from simtools (recommend the example such that it is reachable from inside the simtools-dev container by `/workdir/external/simpipe/simulation_software/corsika7-interaction-tables/interaction-tables/`
+  - ensure [Git LFS](https://git-lfs.com/) is installed and, after cloning, run `git lfs install` (once per system) and `git lfs pull` in the cloned repository so that the actual interaction table files (and not only pointer files) are downloaded
+  - Add a new env variable called `SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH` pointing to that path (see example in `.env_table`)
+
+  Integration tests are cloning this repository and making the interaction tables available during testing.
+
+  ([#1987](https://github.com/gammasim/simtools/pull/1987))
+
+### Bugfixes
+
+- Correct calculation of lateral photon densities for histograms generated from CORSIKA. ([#1994](https://github.com/gammasim/simtools/pull/1994))
+
+### Documentation
+
+- Improve documentation on available container images. Add new page to users guide with most important available images. ([#1953](https://github.com/gammasim/simtools/pull/1953))
+- Improve documentation for CORSIKA and related container images. ([#1991](https://github.com/gammasim/simtools/pull/1991))
+- Add disclosure on using AI tools. ([#1992](https://github.com/gammasim/simtools/pull/1992))
+- Improve documentation for integration tests with additional details on the different types of tests. ([#2017](https://github.com/gammasim/simtools/pull/2017))
+
+### New Features
+
+- Implement gradient descent for the derivation of mirror_reflection_random_angle. Implement general tools for multiprocessing. ([#1911](https://github.com/gammasim/simtools/pull/1911))
+- Rename simtools-calculate-incident-angles to simtools-derive-incident-angle, add histogram calculation and writing functionality and output metadata. ([#1938](https://github.com/gammasim/simtools/pull/1938))
+- Add functionality to overwrite simulation model parameters from the command line using `--overwrite_model_parameters`. ([#1960](https://github.com/gammasim/simtools/pull/1960))
+- Use `DATDIR` CORSIKA input file flag to point to directory with interaction table files. ([#1970](https://github.com/gammasim/simtools/pull/1970))
+- Add EPOS as interaction model and include input flags to CORSIKA input file writer. ([#1972](https://github.com/gammasim/simtools/pull/1972))
+- Simplified and consistent simtools, CORSIKA, and sim_telarray package tagging:
+  i.e.,`simtools-prod-<version>`, `simtools-dev-<version>`, `corsika7-<version>-<avx optimization>`, `sim_telarray-<version>`. ([#1975](https://github.com/gammasim/simtools/pull/1975))
+- Add random seed module to generate seeds based on numpy.SeedSequence.
+  Add SimtelSeeds data class to hold and generate seeds for sim_telarray simulations. ([#1982](https://github.com/gammasim/simtools/pull/1982))
+- Add CORSIKA v78050, see [release notes (KIT gitlab; requires access)](https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7/-/releases/v7.8050). ([#1983](https://github.com/gammasim/simtools/pull/1983))
+- Add sim_telarray, hessio, stdtools tagging using the CTAO gitlab release tags. ([#1985](https://github.com/gammasim/simtools/pull/1985))
+- Change of the default interaction model from qgs3 to epos (this allows to avoid to download the Gigabyte large QGSJet tables). ([#1987](https://github.com/gammasim/simtools/pull/1987))
+- Adds support for simulating arbitrary telescope layouts with CORSIKA (including “probe” telescopes for lateral density comparisons), and refactors overwrite-parameter handling to be read/validated once and reused across models. Expand functionality to generated regular arrays of telescopes with different shapes. ([#1995](https://github.com/gammasim/simtools/pull/1995))
+- Add functionality to `simtools-validate-camera-efficiency` to print fraction of light below 290 nm (as required for B-TEL-0095).
+  Introduce simple module describing the atmosphere. ([#1998](https://github.com/gammasim/simtools/pull/1998))
+- Add `git-lfs` to simtools-prod containers. ([#2001](https://github.com/gammasim/simtools/pull/2001))
+
+### Maintenance
+
+- Add search patterns in integration tests and fix bug when using an isotropic angular distribution in the illuminator simulations. ([#1940](https://github.com/gammasim/simtools/pull/1940))
+- Unify execution of run scripts by consistently always use `job_manage.submit()`.
+  Improved `_make_run_command` for better readability. ([#1977](https://github.com/gammasim/simtools/pull/1977))
+- Improve file management for light emission simulations (flasher/illuminators). Change of output file naming and directory tree. ([#1981](https://github.com/gammasim/simtools/pull/1981))
+- Simplified setting of `corsika_seeds` and `sim_telarray_seeds`. ([#1982](https://github.com/gammasim/simtools/pull/1982))
+- Solve sphinx errors after update to sphinx 9.10. ([#1988](https://github.com/gammasim/simtools/pull/1988))
+- Add the ability to pass a label to RayTracing instead of using a cached label from the telescope model. ([#1999](https://github.com/gammasim/simtools/pull/1999))
+- Ensure that model data writer is not changing the general output path for all other modules.
+  Change and simplify model data writer API. ([#2000](https://github.com/gammasim/simtools/pull/2000))
+- Reduce the number of unnecessary debug statements. ([#2002](https://github.com/gammasim/simtools/pull/2002))
+- Improve model parameter overwrite function with an explicit `flat_dict` statement to avoid being flooded by warnings like `WARNING::model_parameter(l519)::overwrite_parameters::Parameter MSTS-05 not found in model MSTS-12, cannot overwrite it.` (note the error in the warning). ([#2003](https://github.com/gammasim/simtools/pull/2003))
+- Add values for camera efficiency application to test against reference values. Add YAML-type output for validate_camera_efficiency. ([#2017](https://github.com/gammasim/simtools/pull/2017))
+
+
 ## [v0.26.0](https://github.com/gammasim/simtools/releases/tag/v0.26.0) - 2026-01-08
 
 ### API Changes
