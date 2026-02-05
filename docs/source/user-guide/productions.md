@@ -85,7 +85,7 @@ The [simtools-simulate-prod-htcondor-generator](simulate_prod_htcondor_generator
 - a condor submission file to specify the apptainer, the number of jobs (equals the number of runs), the priority, and the output files.
 - a condor submission script with the [simtools-simulate-prod](simulate_prod) command to be run in the apptainer.
 
-An example for the configuration [simtools-simulate-prod-htcondor-generator](simulate_prod_htcondor_generator) can be found in [simulate_prod_htcondor_generator_gamma_20_deg_North.yml]([tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml](https://github.com/gammasim/simtools/blob/main/tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml)).
+An example for the configuration of [simtools-simulate-prod-htcondor-generator](simulate_prod_htcondor_generator) can be found in [tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml](tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml).
 
 Step-by-step instructions:
 
@@ -98,7 +98,7 @@ apptainer pull --force \
 ```
 
 2. Configure your job configuration file as the test example: [simulate_prod_htcondor_generator_gamma_20_deg_North.yml](tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml). Adjust the apptainer directory to the path where you pulled the apptainer image and set the output path for the condor submission files.
-3. Copy your environmental settings into a file called `env.txt` into the output path (in the example `htcondor_submit`)
+3. Copy your environmental variables into a file called `env.txt` (similar to the `.env` files) into the output path (in the example `htcondor_submit`)
 4. Run the [simtools-simulate-prod-htcondor-generator](simulate_prod_htcondor_generator) command to generate the condor submission files:
 
 ```bash
@@ -114,7 +114,7 @@ condor_submit simulate_prod_htcondor_generator_gamma_20_deg_North.sub
 ```
 
 6. Monitor the jobs using `condor_q` and check the log files in `htcondor_submit/logs` for any errors.
-7. After the jobs have finished, the output files will be for this example in `htcondor_submit/simtools-output`.
+7. After the jobs have finished, the output files will be in `htcondor_submit/simtools-output` for this example.
 
 #### Running Grid Productions
 
