@@ -292,7 +292,7 @@ def _write_to_yaml(data, output_file, sort_keys):
     """
     data = _to_builtin(data)
     with open(output_file, "w", encoding="utf-8") as file:
-        yaml.dump(data, file, indent=4, sort_keys=sort_keys, explicit_start=True)
+        yaml.dump(data, file, indent=2, sort_keys=sort_keys, explicit_start=True)
 
 
 def _to_builtin(data):
