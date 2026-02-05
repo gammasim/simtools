@@ -287,8 +287,8 @@ def test_read_and_init_event_no_events():
     with mock.patch("simtools.visualization.plot_simtel_events.read_events") as mock_read:
         mock_read.return_value = ([], {}, [])
         with mock.patch("simtools.visualization.plot_simtel_events.Camera"):
-            plotter = plot_simtel_events.PlotSimtelEvent("fake.simtel", "LSTN-01", 0)
-            assert plotter.file_name == Path("fake.simtel")
+            with pytest.raises(ValueError, match="No events read from file"):
+                plot_simtel_events.PlotSimtelEvent("fake.simtel", "LSTN-01", 0)
 
 
 def test_generate_and_save_plots(mock_event_data, mock_camera, io_handler, tmp_path):

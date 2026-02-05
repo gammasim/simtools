@@ -99,7 +99,7 @@ class PlotSimtelEvent:
             self.file_name, self.telescope, self.event_index, max_events=1
         )
         if not _event_index and not _events:
-            return
+            raise ValueError(f"No events read from file {self.file_name}")
 
         self.event_index = _event_index[0]  # read a single event
         event = _events[0]
@@ -458,7 +458,7 @@ class PlotSimtelEvent:
 
         Parameters
         ----------
-        timing_bins : int | None
+        bins : int | None
             Number of histogram bins. If None, use unit-width bins.
 
         Returns

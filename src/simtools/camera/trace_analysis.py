@@ -153,18 +153,19 @@ def get_adc_samples_per_gain(adc_samples, low_gain=False):
     Parameters
     ----------
     adc_samples : array-like
-        ADC samples array, shape (n_pixels, n_samples) or (1, n_pixels, n_samples).
+        ADC samples array, shape (n_gains, n_pixels, n_samples) or (1, n_pixels, n_samples).
+        where n_gains is typically 2 for dual-gain readout.
     low_gain : bool
         If True, return low gain channel samples.
 
     Returns
     -------
     np.ndarray
-        ADC samples for the specified gain channel.
+        ADC samples for the specified gain channel (all pixels).
     """
-    if adc_samples.ndim == 3 and low_gain:
-        adc_samples = np.asarray(adc_samples[1])
-    return np.asarray(adc_samples[0])
+    if adc_samples.ndim == 3:
+        return np.asarray(adc_samples[1 if low_gain else 0])
+    return np.asarray(adc_samples)
 
 
 def trace_maxima(trace, sum_threshold):
