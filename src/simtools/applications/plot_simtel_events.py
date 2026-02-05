@@ -21,9 +21,6 @@ simtel_files (list, required)
 plots (list, optional)
     Which plots to generate. Choose from: event_image, time_traces, waveform_matrix,
     step_traces, integrated_signal_image, integrated_pedestal_image, peak_timing, all.
-    Default: event_image.
-tel_id (int, optional)
-    Telescope ID to visualize. If omitted, the first available telescope will be used.
 n_pixels (int, optional)
     For time_traces: number of pixel traces to draw. Default: 3.
 pixel_step (int, optional)
@@ -45,7 +42,7 @@ examples (int, optional)
 timing_bins (int, optional)
     For peak_timing: number of histogram bins for peak sample. Default: None (contiguous bins).
 distance (float, optional)
-    Optional distance annotation for event_image.
+    Optional distance annotation for signals.
 output_file (str, optional)
     Base name for output. If provided, outputs will be placed under the standard IOHandler
     output directory and named ``<base>_<inputstem>.pdf``. If omitted, defaults are derived
@@ -63,8 +60,8 @@ Examples
 
    simtools-plot-simtel-events \
      --simtel_files tests/resources/ff-1m_flasher.simtel.zst \
-     --plots event_image time_traces \
-     --tel_id 1 \
+     --plots signals time_traces \
+     --telescope MSTN-04 \
      --output_file simulate_illuminator_inspect
 
 2) All plots for multiple files, PNGs and PDFs:
@@ -103,10 +100,9 @@ def _parse():
         "--plots",
         help=f"Plots to generate. Choices: {', '.join(sorted(PLOT_CHOICES))}",
         nargs="+",
-        default=["event_image"],
+        default=["signals"],
         choices=sorted(PLOT_CHOICES),
     )
-    config.parser.add_argument("--tel_id", type=int, default=None, help="Telescope ID")
     config.parser.add_argument(
         "--n_pixels", type=int, default=3, help="For time_traces: number of pixel traces"
     )
@@ -157,22 +153,15 @@ def _parse():
         help="0-based index of the event to plot; default is the first event",
     )
     config.parser.add_argument(
-        "--output_file",
-        type=str,
-        default=None,
-        help=(
-            "Base name for output. If set, PDFs will be named '<base>_<inputstem>.pdf' "
-            "in the standard output directory"
-        ),
-    )
-    config.parser.add_argument(
         "--save_pngs",
         action="store_true",
         help="Also save individual PNG images per plot",
     )
     config.parser.add_argument("--dpi", type=int, default=300, help="PNG dpi")
 
-    return config.initialize(db_config=False, require_command_line=True)
+    return config.initialize(
+        db_config=False, simulation_model=["telescope"], output=True, require_command_line=True
+    )
 
 
 def main():

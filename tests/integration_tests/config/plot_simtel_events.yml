@@ -4,7 +4,7 @@ applications:
   configuration:
     simtel_files: tests/resources/ff-1m_flasher.simtel.zst
     plots: all
-    tel_id: 1
+    telescope: MSTN-04
     output_file: event_plots
     test: true
     output_path: simtools-output
