@@ -253,6 +253,7 @@ def _color_normalization(image, color_map, norm_type="lin", vmin=None, vmax=None
         Array of RGBA colors for each pixel.
         Colormap instance.
         Normalization instance.
+        Returns None for colors if image is None.
     """
     if image is None:
         return None

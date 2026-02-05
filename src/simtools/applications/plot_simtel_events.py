@@ -61,7 +61,7 @@ Examples
    simtools-plot-simtel-events \
      --simtel_files tests/resources/ff-1m_flasher.simtel.zst \
      --plots signals time_traces \
-     --tel_id 1 \
+     --telescope MSTN-04 \
      --output_file simulate_illuminator_inspect
 
 2) All plots for multiple files, PNGs and PDFs:

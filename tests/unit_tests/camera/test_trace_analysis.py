@@ -211,10 +211,10 @@ def test_get_time_axis(sampling_rate_ns, n_samples, expected_max):
 @pytest.mark.parametrize(
     ("adc_shape", "low_gain", "expected_result"),
     [
-        ((2, 3), False, [1, 2, 3]),
-        ((2, 3), True, [1, 2, 3]),
+        ((2, 3), False, [[1, 2, 3], [4, 5, 6]]),
+        ((2, 3), True, [[1, 2, 3], [4, 5, 6]]),
         ((2, 2, 3), False, [[1, 2, 3], [4, 5, 6]]),
-        ((2, 2, 3), True, [10, 20, 30]),
+        ((2, 2, 3), True, [[10, 20, 30], [40, 50, 60]]),
     ],
 )
 def test_get_adc_samples_per_gain(adc_shape, low_gain, expected_result):
@@ -230,7 +230,7 @@ def test_get_adc_samples_per_gain(adc_shape, low_gain, expected_result):
 def test_get_adc_samples_per_gain_high_gain_1d():
     adc_samples = np.array([7, 8, 9])
     result = trace.get_adc_samples_per_gain(adc_samples, low_gain=False)
-    assert np.allclose(result, 7)
+    assert np.allclose(result, [7, 8, 9])
 
 
 # ============================================================================
