@@ -159,6 +159,107 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     return fig
 
 
+def plot_pixel_layout_with_image(
+    camera,
+    image=None,
+    colormap="viridis",
+    norm="lin",
+    ax=None,
+    vmin=None,
+    vmax=None,
+    add_colorbar=True,
+    **kwargs,
+):
+    """
+    Plot pixel layout with optional per-pixel values as colors.
+
+    Used to display DL1 images (e.g., integrated signal, peak timing) on the camera.
+
+    Parameters
+    ----------
+    camera : Camera
+        Camera object with pixel geometry.
+    image : np.ndarray, optional
+        Per-pixel values to display as colors (shape: n_pix,).
+        If None, plot layout without colored values.
+    colormap : str, optional
+        Colormap name (default "viridis").
+    norm : str, optional
+        Normalization type: "lin" (linear), "log", or "symlog" (default "lin").
+    ax : plt.Axes, optional
+        Existing axes to plot on. If None, create new figure.
+    vmin, vmax : float, optional
+        Value range for normalization. If None, use data range.
+    add_colorbar : bool, optional
+        Whether to add a colorbar (default True).
+    **kwargs
+        Additional arguments passed to plt.subplots() if ax is None.
+
+    Returns
+    -------
+    plt.Figure
+        Figure with the pixel layout and optional image overlay.
+    """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (8, 8)))
+    else:
+        fig = ax.figure
+
+    # Create normalization object
+    if image is not None:
+        if norm == "log":
+            norm_obj = mcolors.LogNorm(vmin=vmin, vmax=vmax)
+        elif norm == "symlog":
+            norm_obj = mcolors.SymLogNorm(vmin=vmin, vmax=vmax)
+        else:  # "lin"
+            norm_obj = mcolors.Normalize(vmin=vmin, vmax=vmax)
+
+        # Get colormap
+        cmap = plt.get_cmap(colormap)
+        normalized_image = norm_obj(image)
+        colors = cmap(normalized_image)
+    else:
+        colors = None
+
+    for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
+        shape = _pixel_shape(camera, x, y)
+
+        if colors is not None and image is not None:
+            facecolor = colors[i_pix]
+            edgecolor = "black"
+            linewidth = 0.1
+        elif camera.pixels["pix_on"][i_pix]:
+            facecolor = "none"
+            edgecolor = "black"
+            linewidth = 0.2
+        else:
+            facecolor = "black"
+            edgecolor = "black"
+            linewidth = 0.2
+
+        ax.add_patch(shape)
+        shape.set_facecolor(facecolor)
+        shape.set_edgecolor(edgecolor)
+        shape.set_linewidth(linewidth)
+
+    # Add colorbar if image provided
+    if colors is not None and image is not None and add_colorbar:
+        sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm_obj)
+        sm.set_array([])
+        cbar = fig.colorbar(sm, ax=ax, fraction=0.02, pad=0.05)
+        cbar.set_label("Pixel Value", fontsize=10)
+
+    # Set axis limits and labels
+    ax.set_xlim(min(camera.pixels["x"]) - 1, max(camera.pixels["x"]) + 1)
+    ax.set_ylim(min(camera.pixels["y"]) - 1, max(camera.pixels["y"]) + 1)
+    ax.set_aspect("equal", "datalim")
+    ax.grid(True, alpha=0.3)
+    ax.set_xlabel("x [cm]", fontsize=12)
+    ax.set_ylabel("y [cm]", fontsize=12)
+
+    return fig
+
+
 def _pixel_type_lists(camera):
     """
     Return on, off, and edge pixel lists.
