@@ -36,20 +36,18 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     fig : plt.Figure
         Figure with the pixel layout.
     """
-    logger.info(f"Plotting the {camera.telescope_model_name} camera")
+    logger.info(f"Plotting the {camera.telescope_name} camera")
 
     fig, ax = plt.subplots(figsize=(8, 8))
 
-    if not is_two_mirror_telescope(camera.telescope_model_name) and not camera_in_sky_coor:
+    if not is_two_mirror_telescope(camera.telescope_name) and not camera_in_sky_coor:
         camera.pixels["y"] = [(-1) * y_val for y_val in camera.pixels["y"]]
 
     on_pixels, edge_pixels, off_pixels = _create_pixel_patches_by_type(camera)
     for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
         if camera.pixels["pix_id"][i_pix] < pixels_id_to_print + 1:
             font_size = (
-                4
-                if "SCT" in names.get_array_element_type_from_name(camera.telescope_model_name)
-                else 2
+                4 if "SCT" in names.get_array_element_type_from_name(camera.telescope_name) else 2
             )
             plt.text(
                 x, y, camera.pixels["pix_id"][i_pix], ha="center", va="center", fontsize=font_size
@@ -96,7 +94,7 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     plt.xlabel("Horizontal scale [cm]", fontsize=18, labelpad=0)
     plt.ylabel("Vertical scale [cm]", fontsize=18, labelpad=0)
     ax.set_title(
-        f"Pixels layout in {camera.telescope_model_name:s} camera",
+        f"Pixels layout in {camera.telescope_name} camera",
         fontsize=15,
         y=1.02,
     )
@@ -108,7 +106,7 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
         False: "For an observer facing the camera",
         True: "For an observer behind the camera looking through",
         None: "For an observer looking from secondary to camera",
-    }[camera_in_sky_coor and not is_two_mirror_telescope(camera.telescope_model_name)]
+    }[camera_in_sky_coor and not is_two_mirror_telescope(camera.telescope_name)]
     ax.text(0.02, 0.02, description, transform=ax.transAxes, color="black", fontsize=12)
 
     fov, r_edge_avg = camera.calc_fov()
@@ -408,7 +406,7 @@ def _plot_axes_def(camera, plot, rotate_angle):
     """
     invert_yaxis = False
     x_left = 0.7  # Position of the left most axis
-    if not is_two_mirror_telescope(camera.telescope_model_name):
+    if not is_two_mirror_telescope(camera.telescope_name):
         invert_yaxis = True
         x_left = 0.8
 
