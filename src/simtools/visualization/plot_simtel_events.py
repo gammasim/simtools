@@ -8,13 +8,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 
-from simtools.camera.trace_analysis import (
-    calculate_pedestals,
-    get_adc_samples_per_gain,
-    get_time_axis,
-    trace_integration,
-    trace_maxima,
-)
+from simtools.camera import trace_analysis as trace
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.model.camera import Camera
 from simtools.simtel.simtel_event_reader import read_events
@@ -110,19 +104,19 @@ class PlotSimtelEvent:
         self.event_index = _event_index[0]  # read a single event
         event = _events[0]
 
-        self.adc_samples = get_adc_samples_per_gain(event.get("adc_samples", None))
+        self.adc_samples = trace.get_adc_samples_per_gain(event.get("adc_samples", None))
         self.n_pixels, self.n_samples = self.adc_samples.shape
 
-        self.pedestals = calculate_pedestals(
+        self.pedestals = trace.calculate_pedestals(
             self.adc_samples, start=self.n_samples - 10, end=self.n_samples
         )
-        self.image = trace_integration(
+        self.image = trace.trace_integration(
             self.adc_samples,
             pedestals=self.pedestals,
             window=(4, self.n_samples),
         )
 
-        self.time_axis = get_time_axis(
+        self.time_axis = trace.get_time_axis(
             sampling_rate=tel_desc["pixel_settings"]["time_slice"] * u.ns,
             n_samples=self.n_samples,
         )
@@ -337,7 +331,7 @@ class PlotSimtelEvent:
             ``return_stats`` is True, a tuple ``(fig, stats)`` is returned, where
             ``stats`` has keys ``{"considered", "found", "mean", "std"}``.
         """
-        trace_max_time, pix_ids, found_count = trace_maxima(
+        trace_max_time, pix_ids, found_count = trace.trace_maxima(
             self.adc_samples, sum_threshold=sum_threshold
         )
 
