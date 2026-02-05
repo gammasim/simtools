@@ -138,14 +138,14 @@ def test_initialize_pixel_dict():
     pixels = Camera.initialize_pixel_dict()
     assert pixels["pixel_diameter"] == 9999
     assert pixels["pixel_shape"] == 9999
-    assert pixels["rotate_angle"] == 0
+    assert pixels["rotate_angle"] == pytest.approx(0)
     assert pixels["x"] == []
 
 
 def test_read_pixel_list_from_dict(simple_camera_dict):
     """Test reading pixel list from dictionary."""
     pixels = Camera.read_pixel_list_from_dict(simple_camera_dict)
-    assert pixels["pixel_diameter"] == 0.5
+    assert pixels["pixel_diameter"] == pytest.approx(0.5)
     assert pixels["pixel_shape"] == 1
     assert len(pixels["x"]) == 4
     assert pixels["pix_id"] == [0, 1, 2, 3]
@@ -169,7 +169,7 @@ def test_process_line_pixtype():
     line = 'PixType 0 0 1 1 3 0.5 5 "angle_file.dat" "wavelength_file.dat"'
     Camera.process_line(line, pixels)
     assert pixels["pixel_shape"] == 3
-    assert pixels["pixel_diameter"] == 0.5
+    assert pixels["pixel_diameter"] == pytest.approx(0.5)
     assert pixels["lightguide_efficiency_angle_file"] == "angle_file.dat"
     assert pixels["lightguide_efficiency_wavelength_file"] == "wavelength_file.dat"
 
@@ -211,14 +211,14 @@ def test_camera_from_dict(simple_camera_dict):
         camera_config_dict=simple_camera_dict,
     )
     assert camera.telescope_name == "TestTel"
-    assert camera.focal_length == 5.6
+    assert camera.focal_length == pytest.approx(5.6)
     assert camera.get_number_of_pixels() == 4
 
 
 def test_get_pixel_diameter(simple_camera_dict):
     """Test getting pixel diameter."""
     camera = Camera("TestTel", None, 5.6, camera_config_dict=simple_camera_dict)
-    assert camera.get_pixel_diameter() == 0.5
+    assert camera.get_pixel_diameter() == pytest.approx(0.5)
 
 
 def test_get_pixel_shape_hexagonal(simple_camera_dict):
@@ -285,7 +285,7 @@ def test_rotate_pixels_hexagonal_shape_1():
     camera = Camera("TestTel", "dummy.dat", 5.6, camera_config_dict=camera_dict)
     rotated = camera._rotate_pixels(pixels_dict)
     assert "orientation" in rotated
-    assert rotated["orientation"] != 0
+    assert rotated["orientation"] != pytest.approx(0)
 
 
 def test_rotate_pixels_hexagonal_shape_3():
@@ -438,5 +438,5 @@ Pixel 1 1 1 1.0 0.5 0.5 0 0 1 1
     camera_file.write_text(content)
     camera = Camera("TestTel", str(camera_file), 5.6)
     assert camera.get_number_of_pixels() == 2
-    assert camera.get_pixel_diameter() == 0.5
+    assert camera.get_pixel_diameter() == pytest.approx(0.5)
     assert camera.get_pixel_shape() == 3

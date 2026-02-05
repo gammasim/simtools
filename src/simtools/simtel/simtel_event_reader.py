@@ -27,15 +27,17 @@ def read_events(file_name, telescope, event_id, max_events=1):
 
     Returns
     -------
-    list of eventio.simtel.SimTelEvent
-        List of read events.
+    tuple
+        A 3-tuple containing:
+        - event_ids (list of int): List of event indices that were read.
+        - tel_desc (dict): Telescope description dictionary.
+        - events (list): List of telescope events.
+        Returns (None, None, None) if telescope not found or no events available.
     """
     tel_id = get_sim_telarray_telescope_id(telescope, file_name)
-    # TODO tmp outputdated test file
-    tel_id = 1
     if tel_id is None:
         _logger.warning(f"A Telescope type '{telescope}' not found in file '{file_name}'.")
-        return None, None
+        return None, None, None
 
     event_id = event_id or 0
 
@@ -46,7 +48,7 @@ def read_events(file_name, telescope, event_id, max_events=1):
             tel_desc = f.telescope_descriptions[tel_id]
         except KeyError:
             _logger.warning(f"Telescope ID '{tel_id}' not found in file '{file_name}'.")
-            return None, None
+            return None, None, None
 
         for i, event in enumerate(f):
             if i >= event_id:
