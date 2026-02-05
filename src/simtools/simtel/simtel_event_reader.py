@@ -35,7 +35,7 @@ def read_events(file_name, telescope, event_id, max_events=1):
         Returns (None, None, None) if telescope not found or no events available.
     """
     tel_id = get_sim_telarray_telescope_id(telescope, file_name)
-    tel_id = 1 if tel_id is None else tel_id  # TODO
+    tel_id = 1 if tel_id is None else tel_id  # temporary!!
     if tel_id is None:
         _logger.warning(f"A Telescope type '{telescope}' not found in file '{file_name}'.")
         return None, None, None

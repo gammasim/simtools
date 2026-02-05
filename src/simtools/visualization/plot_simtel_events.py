@@ -45,7 +45,7 @@ def generate_and_save_plots(simtel_files, plots, args, ioh):
     """
     telescope = args.get("telescope", None)
     event_index = gen.ensure_iterable(args.get("event_index", 0))
-    # TODO needs attention
+    # temporary!!
     if not event_index:
         event_index = [0]
 
