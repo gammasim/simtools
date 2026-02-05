@@ -22,8 +22,6 @@ plots (list, optional)
     Which plots to generate. Choose from: event_image, time_traces, waveform_matrix,
     step_traces, integrated_signal_image, integrated_pedestal_image, peak_timing, all.
     Default: event_image.
-tel_id (int, optional)
-    Telescope ID to visualize. If omitted, the first available telescope will be used.
 n_pixels (int, optional)
     For time_traces: number of pixel traces to draw. Default: 3.
 pixel_step (int, optional)
@@ -106,7 +104,6 @@ def _parse():
         default=["event_image"],
         choices=sorted(PLOT_CHOICES),
     )
-    config.parser.add_argument("--tel_id", type=int, default=None, help="Telescope ID")
     config.parser.add_argument(
         "--n_pixels", type=int, default=3, help="For time_traces: number of pixel traces"
     )
@@ -157,22 +154,15 @@ def _parse():
         help="0-based index of the event to plot; default is the first event",
     )
     config.parser.add_argument(
-        "--output_file",
-        type=str,
-        default=None,
-        help=(
-            "Base name for output. If set, PDFs will be named '<base>_<inputstem>.pdf' "
-            "in the standard output directory"
-        ),
-    )
-    config.parser.add_argument(
         "--save_pngs",
         action="store_true",
         help="Also save individual PNG images per plot",
     )
     config.parser.add_argument("--dpi", type=int, default=300, help="PNG dpi")
 
-    return config.initialize(db_config=False, require_command_line=True)
+    return config.initialize(
+        db_config=False, simulation_model=["telescope"], output=True, require_command_line=True
+    )
 
 
 def main():

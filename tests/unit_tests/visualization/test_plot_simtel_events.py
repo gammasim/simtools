@@ -69,14 +69,11 @@ def _fake_source_with_event(ev, tel_id):
     return _Src()
 
 
-def _install_fake_ctapipe(monkeypatch, source_obj):
-    ctapipe_mod = ModuleType("ctapipe")
-    io_mod = ModuleType("io")
-    calib_mod = ModuleType("calib")
-    vis_mod = ModuleType("visualization")
-    image_mod = ModuleType("image")
+def _install_fake_simtel_reader(monkeypatch, source_obj):
+    """Install fake SimtelEventReader for testing."""
+    simtel_reader_mod = ModuleType("simtel_reader")
 
-    class _EventSource:
+    class _SimtelEventReader:
         def __init__(self, *a, **k):
             self._src = source_obj
             self.subarray = getattr(source_obj, "subarray", None)
@@ -84,49 +81,56 @@ def _install_fake_ctapipe(monkeypatch, source_obj):
         def __iter__(self):
             return iter(self._src)
 
-    class _CameraCalibrator:
-        def __init__(self, *a, **k):
-            # Minimal stub for ctapipe.calib.CameraCalibrator.
-            pass
+    simtel_reader_mod.SimtelEventReader = _SimtelEventReader
 
-        def __call__(self, *a, **k):
-            # No-op: simulate a callable calibrator without modifying the event.
-            return None
+    monkeypatch.setitem(
+        sys.modules,
+        "simtools.visualization.simtel_reader",
+        simtel_reader_mod,
+    )
 
-    class _CameraDisplay:
-        def __init__(self, *a, **k):
-            self.cmap = None
+    # Mock _get_camera_for_telescope to return a fake camera with matching pixel count
+    def _mock_get_camera(tel_id, camera_name):
+        # Try to infer n_pix from the source event
+        n_pix = 4  # default
+        if hasattr(source_obj, "_ev") and source_obj._ev:
+            ev = (
+                source_obj._ev[0]
+                if isinstance(source_obj._ev, list)
+                else next(iter(source_obj._ev))
+            )
+            if hasattr(ev, "r1") and tel_id in ev.r1.tel:
+                w = getattr(ev.r1.tel[tel_id], "waveform", None)
+                if w is not None:
+                    n_pix = np.asarray(w).shape[0]
+        return _make_fake_camera(n_pix=n_pix)
 
-        def add_colorbar(self, *a, **k):
-            # Minimal stub: tests don't assert on colorbars
-            pass
-
-        def set_limits_percent(self, *a, **k):
-            # Minimal stub: emulate API without scaling
-            pass
-
-    def _tailcuts_clean(*a, **k):
-        img = a[1]
-        return np.ones_like(img, dtype=bool)
-
-    io_mod.EventSource = _EventSource
-    calib_mod.CameraCalibrator = _CameraCalibrator
-    vis_mod.CameraDisplay = _CameraDisplay
-    image_mod.tailcuts_clean = _tailcuts_clean
-
-    ctapipe_mod.io = io_mod
-    ctapipe_mod.calib = calib_mod
-    ctapipe_mod.visualization = vis_mod
-    ctapipe_mod.image = image_mod
-
-    monkeypatch.setitem(sys.modules, "ctapipe", ctapipe_mod)
-    monkeypatch.setitem(sys.modules, "ctapipe.io", io_mod)
-    monkeypatch.setitem(sys.modules, "ctapipe.calib", calib_mod)
-    monkeypatch.setitem(sys.modules, "ctapipe.visualization", vis_mod)
-    monkeypatch.setitem(sys.modules, "ctapipe.image", image_mod)
-
-    # Ensure the production module re-imports ctapipe symbols from our fakes
+    # Reload and patch the module
     importlib.reload(sep)
+    monkeypatch.setattr(sep, "_get_camera_for_telescope", _mock_get_camera)
+
+
+def _make_fake_camera(n_pix=None):
+    """Create a minimal fake camera for testing."""
+    if n_pix is None:
+        n_pix = 4
+    camera = SimpleNamespace(
+        telescope_model_name="LSTN-01",
+        pixels={
+            "x": np.linspace(-1, 1, n_pix) * 0.5,
+            "y": np.linspace(-1, 1, n_pix) * 0.5,
+            "pix_id": np.arange(n_pix),
+            "pix_on": np.ones(n_pix, dtype=bool),
+            "pixel_shape": 1,
+            "rotate_angle": 0.0,
+            "pixel_diameter": 0.2,
+            "orientation": 0.0,
+        },
+    )
+    camera.calc_fov = lambda: (10.0, 0.5)
+    camera.focal_length = 2800.0
+    camera.get_neighbor_pixels = lambda: [list(range(n_pix - 1)) for _ in range(n_pix)]
+    return camera
 
 
 # Tests migrated from test_visualize to target the new module
@@ -136,7 +140,7 @@ def test_plot_simtel_event_image_returns_figure(monkeypatch):
     ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=_make_waveforms())
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     fig = sep.plot_simtel_event_image(DUMMY_SIMTEL)
     assert isinstance(fig, plt.Figure)
@@ -148,7 +152,7 @@ def test_plot_simtel_event_image_missing_r1(monkeypatch, caplog):
     ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=None)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     caplog.clear()
     with caplog.at_level("WARNING", logger=sep._logger.name):
@@ -161,7 +165,7 @@ def test_plot_simtel_event_image_annotations(monkeypatch):
     ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=_make_waveforms())
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     fig = sep.plot_simtel_event_image(DUMMY_SIMTEL, distance=100 * u.m)
     assert isinstance(fig, plt.Figure)
@@ -172,7 +176,7 @@ def test_plot_simtel_event_image_annotations(monkeypatch):
 def test_plot_simtel_event_image_no_event(monkeypatch, caplog):
     src = _fake_source_with_event(None, None)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     caplog.clear()
     with caplog.at_level("WARNING", logger=sep._logger.name):
@@ -186,7 +190,7 @@ def test_plot_simtel_time_traces_returns_figure(monkeypatch):
     ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=3)
     assert isinstance(fig, plt.Figure)
@@ -198,7 +202,7 @@ def test_plot_simtel_time_traces_pixel_selection(monkeypatch):
     ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=5)
     assert isinstance(fig, plt.Figure)
@@ -210,7 +214,7 @@ def test_plot_simtel_time_traces_with_tel_id(monkeypatch):
     ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, tel_id=tel_id, n_pixels=3)
     assert isinstance(fig, plt.Figure)
@@ -222,7 +226,7 @@ def test_plot_simtel_time_traces_invalid_tel_id(monkeypatch, caplog):
     ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     caplog.clear()
     with caplog.at_level("WARNING", logger=sep._logger.name):
@@ -236,7 +240,7 @@ def test_plot_simtel_waveform_matrix_returns_figure(monkeypatch):
     ev, tel_id = _fake_event(r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     fig = sep.plot_simtel_waveform_matrix(DUMMY_SIMTEL, pixel_step=2)
     assert isinstance(fig, plt.Figure)
@@ -248,7 +252,7 @@ def test_plot_simtel_step_traces_returns_figure(monkeypatch):
     ev, tel_id = _fake_event(r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     fig = sep.plot_simtel_step_traces(DUMMY_SIMTEL, pixel_step=5, max_pixels=3)
     assert isinstance(fig, plt.Figure)
@@ -259,7 +263,7 @@ def test_plot_simtel_time_traces_no_waveforms(monkeypatch, caplog):
     ev, tel_id = _fake_event(dl1_image=np.array([0.0, 1.0, 2.0]), r1_waveforms=None)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     caplog.clear()
     with caplog.at_level("WARNING", logger=sep._logger.name):
@@ -330,7 +334,7 @@ def test_plot_simtel_peak_timing_returns_stats(monkeypatch):
     ev, tel_id = _fake_event(r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     fig, stats = sep.plot_simtel_peak_timing(DUMMY_SIMTEL, return_stats=True)
     assert isinstance(fig, plt.Figure)
@@ -438,7 +442,7 @@ def test_plot_simtel_integrated_signal_image_returns_figure(monkeypatch):
     ev, tel_id = _fake_event(r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     fig = sep.plot_simtel_integrated_signal_image(DUMMY_SIMTEL, half_width=2)
     assert isinstance(fig, plt.Figure)
@@ -451,7 +455,7 @@ def test_plot_simtel_integrated_pedestal_image_returns_figure(monkeypatch):
     ev, tel_id = _fake_event(r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     fig = sep.plot_simtel_integrated_pedestal_image(DUMMY_SIMTEL, half_width=2, offset=5)
     assert isinstance(fig, plt.Figure)
@@ -493,7 +497,7 @@ def test_plot_simtel_waveform_matrix_no_r1(monkeypatch, caplog):
     ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=None)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     caplog.clear()
     with caplog.at_level("WARNING", logger=sep._logger.name):
@@ -506,7 +510,7 @@ def test_plot_simtel_step_traces_no_r1(monkeypatch, caplog):
     ev, tel_id = _fake_event(dl1_image=np.array([0.0, 1.0, 2.0]), r1_waveforms=None)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     caplog.clear()
     with caplog.at_level("WARNING", logger=sep._logger.name):
@@ -520,7 +524,7 @@ def test_plot_simtel_peak_timing_threshold_excludes_all(monkeypatch, caplog):
     ev, tel_id = _fake_event(r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     caplog.clear()
     with caplog.at_level("WARNING", logger=sep._logger.name):
@@ -535,18 +539,15 @@ def test_plot_simtel_time_traces_calibrator_error(monkeypatch):
     ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
-    class _CalibErr:
-        def __init__(self, *a, **k):
-            # Minimal stub for ctapipe.calib.CameraCalibrator.
-            pass
+    # Monkeypatch calibrate_r1_to_dl1 to raise an error
+    def _calib_error(*args, **kwargs):
+        raise ValueError("calib failed")
 
-        def __call__(self, *a, **k):
-            raise ValueError("calib failed")
+    from simtools.visualization import trace_calibration
 
-    # Monkeypatch the symbol used inside sep
-    monkeypatch.setattr(sep, "CameraCalibrator", _CalibErr)
+    monkeypatch.setattr(trace_calibration, "calibrate_r1_to_dl1", _calib_error)
 
     fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=2)
     assert isinstance(fig, plt.Figure)
@@ -557,7 +558,7 @@ def test_plot_simtel_event_image_distance_float(monkeypatch):
     ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=_make_waveforms())
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     fig = sep.plot_simtel_event_image(DUMMY_SIMTEL, distance=123.4)
     assert isinstance(fig, plt.Figure)
@@ -571,7 +572,7 @@ def test_plot_simtel_waveform_matrix_defaults(monkeypatch):
     ev, tel_id = _fake_event(r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     fig = sep.plot_simtel_waveform_matrix(DUMMY_SIMTEL, pixel_step=None)
     assert isinstance(fig, plt.Figure)
@@ -584,7 +585,7 @@ def test_plot_simtel_step_traces_defaults(monkeypatch):
     ev, tel_id = _fake_event(r1_waveforms=w)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     fig = sep.plot_simtel_step_traces(DUMMY_SIMTEL, pixel_step=3, max_pixels=None)
     assert isinstance(fig, plt.Figure)
@@ -847,7 +848,7 @@ def test__get_event_source_and_r1_tel_no_event(monkeypatch, caplog):
     # Source that yields a single None event
     src = _fake_source_with_event(None, None)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     caplog.clear()
     with caplog.at_level("WARNING", logger=sep._logger.name):
@@ -861,7 +862,7 @@ def test__get_event_source_and_r1_tel_no_r1_default_warning(monkeypatch, caplog)
     ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=None)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     caplog.clear()
     with caplog.at_level("WARNING", logger=sep._logger.name):
@@ -875,7 +876,7 @@ def test__get_event_source_and_r1_tel_no_r1_with_context(monkeypatch, caplog):
     ev, tel_id = _fake_event(dl1_image=np.array([0.0, 1.0]), r1_waveforms=None)
     src = _fake_source_with_event(ev, tel_id)
 
-    _install_fake_ctapipe(monkeypatch, src)
+    _install_fake_simtel_reader(monkeypatch, src)
 
     caplog.clear()
     with caplog.at_level("WARNING", logger=sep._logger.name):
@@ -906,7 +907,7 @@ def test__get_event_source_and_r1_tel_returns_sorted_tel_id(monkeypatch):
         def __iter__(self):
             return iter(self._evs)
 
-    _install_fake_ctapipe(monkeypatch, _Src(ev))
+    _install_fake_simtel_reader(monkeypatch, _Src(ev))
 
     res = sep._get_event_source_and_r1_tel(DUMMY_SIMTEL)
     assert isinstance(res, tuple)
@@ -935,7 +936,7 @@ def test__get_event_source_and_r1_tel_respects_event_index(monkeypatch):
         def __iter__(self):
             return iter(self._evs)
 
-    _install_fake_ctapipe(monkeypatch, _Src2([e0, e1]))
+    _install_fake_simtel_reader(monkeypatch, _Src2([e0, e1]))
 
     res = sep._get_event_source_and_r1_tel(DUMMY_SIMTEL, event_index=1)
     assert isinstance(res, tuple)
