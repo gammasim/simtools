@@ -8,18 +8,18 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 
-from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.model.camera import Camera
-from simtools.simtel.simtel_event_reader import read_events
-from simtools.utils import general as gen
-from simtools.visualization.plot_camera import plot_pixel_layout_with_image
-from simtools.visualization.trace_calibration import (
+from simtools.camera.trace_analysis import (
     calculate_pedestals,
     get_adc_samples_per_gain,
     get_time_axis,
     trace_integration,
     trace_maxima,
 )
+from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.model.camera import Camera
+from simtools.simtel.simtel_event_reader import read_events
+from simtools.utils import general as gen
+from simtools.visualization.plot_camera import plot_pixel_layout_with_image
 from simtools.visualization.visualize import save_figure, save_figures_to_single_document
 
 _logger = logging.getLogger(__name__)
@@ -60,14 +60,15 @@ def generate_and_save_plots(simtel_files, plots, args, ioh):
         for event_idx in event_index:
             _logger.info(f"  Event index: {event_idx}")
             plotter = PlotSimtelEvent(file_name, telescope, event_idx)
-            plotter.make_output_paths(ioh, args.get("output_file"))
+            output_file = plotter.make_output_paths(ioh, args.get("output_file"))
             plotter.plot(
                 plots,
                 args,
+                output_file,
                 save_png=bool(args.get("save_pngs", False)),
                 dpi=int(args.get("dpi", 300)),
             )
-            plotter.save(args)
+            plotter.save(args, output_file)
 
 
 class PlotSimtelEvent:
@@ -87,23 +88,10 @@ class PlotSimtelEvent:
     def __init__(self, file_name, telescope, event_index):
         """Initialize plotter for a single event."""
         self.file_name = Path(file_name) if file_name else None
-
         self.telescope = telescope
-        self.camera = None
-
         self.event_index = event_index
-        self.event = None
-        self.tel_desc = None
-        self.adc_samples = None
-        self.n_pixels = None
-        self.n_samples = None
-
-        self.image = None
-        self.pedestals = None
-        self.time_axis = None
-
         self.figures = []
-        self.output_file = None
+        self.camera = None
 
         self._read_and_init_event()
 
@@ -113,19 +101,21 @@ class PlotSimtelEvent:
 
         Calculates pedestals, integrated image, time axis, and defines camera model.
         """
-        _event_index, self.tel_desc, _events = read_events(
+        _event_index, tel_desc, _events = read_events(
             self.file_name, self.telescope, self.event_index, max_events=1
         )
         if not _event_index and not _events:
             return
 
         self.event_index = _event_index[0]  # read a single event
-        self.event = _events[0]
+        event = _events[0]
 
-        self.adc_samples = get_adc_samples_per_gain(self.event.get("adc_samples", None))
+        self.adc_samples = get_adc_samples_per_gain(event.get("adc_samples", None))
         self.n_pixels, self.n_samples = self.adc_samples.shape
 
-        self.pedestals = calculate_pedestals(self.adc_samples)
+        self.pedestals = calculate_pedestals(
+            self.adc_samples, start=self.n_samples - 10, end=self.n_samples
+        )
         self.image = trace_integration(
             self.adc_samples,
             pedestals=self.pedestals,
@@ -133,28 +123,28 @@ class PlotSimtelEvent:
         )
 
         self.time_axis = get_time_axis(
-            sampling_rate=self.tel_desc["pixel_settings"]["time_slice"] * u.ns,
+            sampling_rate=tel_desc["pixel_settings"]["time_slice"] * u.ns,
             n_samples=self.n_samples,
         )
 
         self.camera = Camera(
             telescope_name=self.telescope,
             camera_config_file=None,
-            focal_length=self.tel_desc["camera_settings"]["focal_length"],
-            camera_config_dict=self.tel_desc["camera_settings"],
+            focal_length=tel_desc["camera_settings"]["focal_length"],
+            camera_config_dict=tel_desc["camera_settings"],
         )
 
     def make_output_paths(self, ioh, base):
-        """Return (out_dir, pdf_path) based on base name and input file."""
+        """Return output file path based on base name and input file."""
         out_dir = ioh.get_output_directory()
         pdf_path = ioh.get_output_file(
             f"{base}_{self.file_name.stem}" if base else self.file_name.stem
         )
         pdf_path = Path(f"{pdf_path}.pdf") if Path(pdf_path).suffix != ".pdf" else Path(pdf_path)
 
-        self.output_file = out_dir / pdf_path.name
+        return out_dir / pdf_path.name
 
-    def plot(self, plots, args, save_png=False, dpi=300):
+    def plot(self, plots, args, output_file, save_png=False, dpi=300):
         """
         Generate all requested plots for the event.
 
@@ -164,6 +154,8 @@ class PlotSimtelEvent:
             List of plot names to generate.
         args : dict
             Additional arguments for plot functions.
+        output_file : Path
+            Base output file path for saving plots.
         save_png : bool
             Whether to save individual PNG files per plot.
         dpi : int
@@ -172,55 +164,60 @@ class PlotSimtelEvent:
         plots = self._plots_to_run(plots)
 
         for plot_name in plots:
-            entry = self._plot_definitions().get(plot_name)
+            entry = self._plot_definitions.get(plot_name)
             if entry is None:
                 _logger.warning("Unknown plot selection '%s'", plot_name)
                 continue
             func, defaults = entry
             kwargs = {k: args.get(k, v) for k, v in defaults.items()}
-            fig = func(**kwargs)  # type: ignore[misc]
+            fig = func(**kwargs)
             if fig is not None:
                 self.figures.append(fig)
 
             if save_png:
                 save_figure(
                     fig,
-                    self.output_file.with_name(f"{plot_name}.png"),
+                    output_file.with_name(f"{plot_name}.png"),
                     figure_format=["png"],
                     dpi=int(dpi),
                 )
 
-    def save(self, args):
+    def save(self, args, output_file):
         """Save generated plots to files."""
         if not self.figures:
             _logger.warning("No figures produced for %s", self.file_name)
 
-        save_figures_to_single_document(self.figures, self.output_file)
-        _logger.info("Saved PDF: %s", self.output_file)
-        MetadataCollector.dump(args, self.output_file, add_activity_name=True)
+        save_figures_to_single_document(self.figures, output_file)
+        _logger.info("Saved PDF: %s", output_file)
+        MetadataCollector.dump(args, output_file, add_activity_name=True)
 
     def _plots_to_run(self, plots):
         """Generate list of plots to run based on user input."""
         if "all" in plots:
-            return [p for p in PLOT_CHOICES if p != "all"]
+            return list(self._plot_definitions.keys())
         return gen.ensure_iterable(plots)
 
+    @property
     def _plot_definitions(self):
         """Return mapping of plot names to methods."""
         return {
             "pedestals": (self.plot_pedestals, {}),
+            "signals": (self.plot_signals, {}),
+            "peak_timing": (
+                self.plot_peak_timing,
+                {"sum_threshold": 10.0, "timing_bins": None},
+            ),
             "time_traces": (self.plot_time_traces, {"n_pixels": 3}),
             "waveforms": (self.plot_waveforms, {"vmax": None}),
             "step_traces": (
                 self.plot_step_traces,
                 {"pixel_step": None, "max_pixels": None},
             ),
-            "signals": (self.plot_signals, {}),
-            "peak_timing": (
-                self.plot_peak_timing,
-                {"sum_threshold": 10.0, "timing_bins": None},
-            ),
         }
+
+    def _make_title(self, subject):
+        """Generate consistent plot title."""
+        return f"{self.telescope} {subject} (event {self.event_index})"
 
     def plot_time_traces(self, n_pixels=3):
         """
@@ -241,15 +238,18 @@ class PlotSimtelEvent:
 
         fig, ax = plt.subplots(dpi=300)
         for pid in pix_ids:
-            ax.plot(
+            (line,) = ax.plot(
                 self.time_axis,
                 self.adc_samples[pid],
                 label=f"pix {int(pid)}",
                 drawstyle="steps-mid",
             )
+            plt.axhline(
+                y=self.pedestals[pid], color=line.get_color(), linestyle="--", linewidth=0.5
+            )
         ax.set_xlabel(TIME_NS_LABEL)
         ax.set_ylabel(R1_SAMPLES_LABEL)
-        ax.set_title(f"{self.telescope} waveforms (event {self.event_index})")
+        ax.set_title(self._make_title("waveforms"))
         ax.legend(loc="best", fontsize=7)
         fig.tight_layout()
         return fig
@@ -278,7 +278,7 @@ class PlotSimtelEvent:
         mesh = ax.pcolormesh(self.time_axis, pix_idx, w_sel, shading="auto", vmax=vmax)
         cbar = fig.colorbar(mesh, ax=ax)
         cbar.set_label(R1_SAMPLES_LABEL)
-        ax.set_title(f"{self.telescope} waveform matrix (event {self.event_index})")
+        ax.set_title(self._make_title("waveform matrix"))
         ax.set_xlabel(TIME_NS_LABEL)
         ax.set_ylabel("pixel id")
         fig.tight_layout()
@@ -314,12 +314,12 @@ class PlotSimtelEvent:
             )
         ax.set_xlabel(TIME_NS_LABEL)
         ax.set_ylabel(R1_SAMPLES_LABEL)
-        ax.set_title(f"{self.telescope} step traces (event {self.event_index})")
+        ax.set_title(self._make_title("step traces"))
         ax.legend(loc="best", fontsize=7, ncol=2)
         fig.tight_layout()
         return fig
 
-    def plot_peak_timing(self, sum_threshold=10.0, timing_bins=None, return_stats=False):
+    def plot_peak_timing(self, sum_threshold=10.0, timing_bins=None):
         """
         Peak finding per pixel; report mean/std of peak sample and plot a histogram.
 
@@ -329,8 +329,6 @@ class PlotSimtelEvent:
             Minimum sum over samples for a pixel to be considered. Default is 10.0.
         timing_bins : int | None, optional
             Number of histogram bins. If None, use unit-width bins.
-        return_stats : bool, optional
-            If True, also return a statistics dictionary. Default is False.
 
         Returns
         -------
@@ -354,7 +352,6 @@ class PlotSimtelEvent:
             self._histogram_edges(timing_bins),
             x_label="peak sample",
             y_label=PIXEL_LABEL,
-            return_stats=return_stats,
         )
 
     def plot_signals(self):
@@ -380,7 +377,7 @@ class PlotSimtelEvent:
         )
 
     def _plot_camera_image_and_histogram(
-        self, values, pix_ids, found_count, edges, x_label, y_label, return_stats=False
+        self, values, pix_ids, found_count, edges, x_label, y_label
     ):
         """Plot value image on camera and histogram of values."""
         stats = {
@@ -396,11 +393,8 @@ class PlotSimtelEvent:
         plot_pixel_layout_with_image(self.camera, image=values, ax=ax1, color_bar_label=x_label)
         self._plot_histogram(ax2, values, edges, stats, x_label, y_label)
 
-        fig.suptitle(f"{self.telescope} {x_label} (event {self.event_index})")
+        fig.suptitle(self._make_title(x_label))
         fig.tight_layout()
-
-        if return_stats:
-            return fig, stats
         return fig
 
     def _plot_histogram(self, ax, values, edges, stats, x_label, y_label):
