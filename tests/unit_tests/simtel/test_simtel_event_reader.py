@@ -25,18 +25,17 @@ def _setup_mocks(monkeypatch, tel_id, tel_descriptions=None, events_data=None):
         "simtools.simtel.simtel_event_reader.get_sim_telarray_telescope_id",
         lambda telescope, file_name: tel_id,
     )
-    if tel_descriptions is not None:
-        monkeypatch.setattr(
-            "simtools.simtel.simtel_event_reader.SimTelFile",
-            lambda *args, **kwargs: FakeSimTelFile(tel_id, tel_descriptions, events_data or []),
-        )
+    monkeypatch.setattr(
+        "simtools.simtel.simtel_event_reader.SimTelFile",
+        lambda *args, **kwargs: FakeSimTelFile(tel_id, tel_descriptions or {}, events_data or []),
+    )
 
 
 def test_read_events_telescope_not_found(monkeypatch, caplog):
     _setup_mocks(monkeypatch, None)
     event_ids, tel_desc, events = read_events("file.simtel", "LST", 0, 1)
     assert (event_ids, tel_desc, events) == (None, None, None)
-    assert "Telescope type 'LST' not found in file 'file.simtel'." in caplog.text
+    assert "Telescope ID '1' not found in file 'file.simtel'." in caplog.text
 
 
 def test_read_events_tel_id_missing_in_descriptions(monkeypatch, caplog):
