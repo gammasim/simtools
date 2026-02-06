@@ -41,15 +41,6 @@ def corsika_simtel_runner(corsika_config_mock_array_model):
     )
 
 
-@pytest.fixture
-def corsika_simtel_runner_calibration(corsika_config_mock_array_model):
-    """CorsikaSimtelRunner object."""
-    return CorsikaSimtelRunner(
-        corsika_config=corsika_config_mock_array_model,
-        label="test-corsika-simtel-runner",
-    )
-
-
 def test_corsika_simtel_runner(corsika_simtel_runner):
     assert isinstance(corsika_simtel_runner.corsika_runner, CorsikaRunner)
     assert isinstance(corsika_simtel_runner.simulator_array[0], SimulatorArray)
@@ -84,11 +75,9 @@ def test_prepare_run_with_invalid_run(corsika_simtel_runner, tmp_path):
         corsika_simtel_runner.prepare_run(run_number="test", sub_script=script_path)
 
 
-def test_export_multipipe_script(corsika_simtel_runner_calibration, simtel_command, show_all):
-    corsika_simtel_runner_calibration._export_multipipe_script(run_number=1)
-    script = corsika_simtel_runner_calibration.runner_service.get_file_name(
-        "multi_pipe_config", run_number=1
-    )
+def test_export_multipipe_script(corsika_simtel_runner, simtel_command, show_all):
+    corsika_simtel_runner._export_multipipe_script(run_number=1)
+    script = corsika_simtel_runner.runner_service.get_file_name("multi_pipe_config", run_number=1)
 
     assert script.exists()
     with open(script) as f:
@@ -99,16 +88,14 @@ def test_export_multipipe_script(corsika_simtel_runner_calibration, simtel_comma
         assert show_all in script_content
 
     # Test second call
-    corsika_simtel_runner_calibration._export_multipipe_script(run_number=1)
-    script = corsika_simtel_runner_calibration.runner_service.get_file_name(
-        "multi_pipe_config", run_number=1
-    )
+    corsika_simtel_runner._export_multipipe_script(run_number=1)
+    script = corsika_simtel_runner.runner_service.get_file_name("multi_pipe_config", run_number=1)
 
     assert script.exists()
     with open(script) as f:
         script_content = f.read()
         # For calibration runs, we should see noise settings
-        if corsika_simtel_runner_calibration.base_corsika_config.is_calibration_run():
+        if corsika_simtel_runner.base_corsika_config.is_calibration_run():
             assert "-C fadc_lg_noise=0.0" in script_content
 
 
