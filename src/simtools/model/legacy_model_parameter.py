@@ -91,9 +91,8 @@ def _update_dsum_threshold(parameters, schema_version):
 
 
 @register_update("corsika_starting_grammage")
-def _update_corsika_starting_grammage(parameters, schema_version):
+def _update_corsika_starting_grammage(parameters, schema_version):  # pylint: disable=unused-argument
     """Update legacy corsika_starting_grammage parameter (dummy function until model is updated)."""
-    logger.debug(f"No fix applied to corsika_starting_grammage to schema version {schema_version}")
     return {
         parameters["corsika_starting_grammage"]["parameter"]: None,
     }

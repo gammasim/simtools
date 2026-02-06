@@ -1,6 +1,8 @@
 """Application control utilities for startup and shutdown simtools applications."""
 
 import logging
+import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -9,6 +11,66 @@ from simtools import dependencies, version
 from simtools.db import db_handler
 from simtools.io import io_handler
 from simtools.settings import config
+
+SECRET_ENV_VAR_NAMES = ["SIMTOOLS_DB_API_PW"]
+SECRET_KEY_PATTERNS = [
+    r"(?:password|passwd|pwd|secret|token|api[_-]?key|auth)",
+]
+
+
+class RedactFilter(logging.Filter):
+    """
+    Filter to redact sensitive information from log messages.
+
+    This filter dynamically retrieves secret values from environment variables
+    and uses pattern matching to identify and redact sensitive key-value pairs.
+    """
+
+    def filter(self, record):
+        """Filter log record to redact sensitive information."""
+        msg = record.getMessage()
+
+        for env_var_name in SECRET_ENV_VAR_NAMES:
+            secret_value = os.getenv(env_var_name)
+            if secret_value:
+                # Environment-variable-based redaction is intentionally case-sensitive
+                # and only guarantees removal of the exact secret value.
+                msg = msg.replace(secret_value, "***REDACTED***")
+
+        for pattern in SECRET_KEY_PATTERNS:
+            # Handles: 'key': 'value', "key": "value", 'key': "value", etc.
+            msg = re.sub(
+                rf"(['\"][^'\"]{{0,1000}}{pattern}[^'\"]{{0,1000}}['\"])\s*:\s*"
+                rf"(['\"][^'\"]{{0,1000}}['\"])",
+                lambda m: f"{m.group(1)}: '***REDACTED***'",
+                msg,
+                flags=re.IGNORECASE,
+            )
+            # Match environment variable style: KEY=value (with word boundaries)
+            msg = re.sub(
+                rf"\b([A-Z_]*{pattern}[A-Z_]*)=([^\s,}}]+)",
+                lambda m: f"{m.group(1)}=***REDACTED***",
+                msg,
+                flags=re.IGNORECASE,
+            )
+
+        record.msg = msg
+        record.args = ()
+        return True
+
+
+def _apply_redact_filter_globally():
+    """
+    Apply RedactFilter to the root logging handlers.
+
+    This ensures that sensitive information is redacted from all log output,
+    regardless of which logger (root or child) emits the message.
+    """
+    redact_filter = RedactFilter()
+    root_logger = logging.getLogger()
+
+    for handler in root_logger.handlers:
+        handler.addFilter(redact_filter)
 
 
 @dataclass
@@ -79,6 +141,7 @@ def startup_application(parse_function, setup_io_handler=True, logger_name=None)
     args_dict, db_config = parse_function()
     config.load(args_dict, db_config)
 
+    _apply_redact_filter_globally()
     if logger_name:
         logger = logging.getLogger(logger_name)
     else:
