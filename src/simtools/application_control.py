@@ -38,7 +38,7 @@ class RedactFilter(logging.Filter):
         for pattern in SECRET_KEY_PATTERNS:
             # Handles: 'key': 'value', "key": "value", 'key': "value", etc.
             msg = re.sub(
-                rf"(['\"][^'\"]*?{pattern}[^'\"]*?['\"])\s*:\s*(['\"][^'\"]*?['\"])",
+                rf"(['\"][^'\"]{{0,1000}}{pattern}[^'\"]{{0,1000}}['\"])\s*:\s*(['\"][^'\"]{{0,1000}}['\"])",
                 lambda m: f"{m.group(1)}: '***REDACTED***'",
                 msg,
                 flags=re.IGNORECASE,
