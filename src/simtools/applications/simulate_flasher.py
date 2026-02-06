@@ -101,8 +101,14 @@ def main():
     """Simulate flasher devices."""
     app_context = startup_application(_parse)
 
+    tel_string = (
+        f"telescope {app_context.args['telescope']}"
+        if app_context.args.get("telescope")
+        else f"array layout {app_context.args['array_layout_name']}"
+    )
+
     app_context.logger.info(
-        f"Flasher simulation for telescope {app_context.args['telescope']} "
+        f"Flasher simulation for {tel_string}"
         f" with light source {app_context.args['light_source']} "
         f" ({app_context.args['number_of_events']} events, "
         f"run mode: {app_context.args['run_mode']})"
