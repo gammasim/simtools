@@ -47,7 +47,6 @@ def corsika_simtel_runner_calibration(corsika_config_mock_array_model):
     return CorsikaSimtelRunner(
         corsika_config=corsika_config_mock_array_model,
         label="test-corsika-simtel-runner",
-        is_calibration_run=True,
     )
 
 
