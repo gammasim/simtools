@@ -33,6 +33,8 @@ class RedactFilter(logging.Filter):
         for env_var_name in SECRET_ENV_VAR_NAMES:
             secret_value = os.getenv(env_var_name)
             if secret_value:
+                # Environment-variable-based redaction is intentionally case-sensitive
+                # and only guarantees removal of the exact secret value.
                 msg = msg.replace(secret_value, "***REDACTED***")
 
         for pattern in SECRET_KEY_PATTERNS:
