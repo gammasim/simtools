@@ -40,7 +40,8 @@ class RedactFilter(logging.Filter):
         for pattern in SECRET_KEY_PATTERNS:
             # Handles: 'key': 'value', "key": "value", 'key': "value", etc.
             msg = re.sub(
-                rf"(['\"][^'\"]{{0,1000}}{pattern}[^'\"]{{0,1000}}['\"])\s*:\s*(['\"][^'\"]{{0,1000}}['\"])",
+                rf"(['\"][^'\"]{{0,1000}}{pattern}[^'\"]{{0,1000}}['\"])\s*:\s*"
+                rf"(['\"][^'\"]{{0,1000}}['\"])",
                 lambda m: f"{m.group(1)}: '***REDACTED***'",
                 msg,
                 flags=re.IGNORECASE,
@@ -60,12 +61,10 @@ class RedactFilter(logging.Filter):
 
 def _apply_redact_filter_globally():
     """
-    Apply RedactFilter to all logging handlers.
+    Apply RedactFilter to the root logging handlers.
 
     This ensures that sensitive information is redacted from all log output,
     regardless of which logger (root or child) emits the message.
-    Filters on handlers are applied to all messages passing through that handler,
-    making this a truly global setting.
     """
     redact_filter = RedactFilter()
     root_logger = logging.getLogger()
