@@ -103,14 +103,14 @@ apptainer pull --force \
 
 ```bash
 simtools-simulate-prod-htcondor-generator \
-   --config_file tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml
+   --config tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml
 ```
 
 5. Change into the output directory and submit the jobs to HTCondor:
 
 ```bash
 cd htcondor_submit
-condor_submit simulate_prod_htcondor_generator_gamma_20_deg_North.sub
+condor_submit simulate_prod.submit.condor
 ```
 
 6. Monitor the jobs using `condor_q` and check the log files in `htcondor_submit/logs` for any errors.
