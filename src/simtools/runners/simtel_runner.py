@@ -28,17 +28,14 @@ class SimtelRunner:
         Instance label. Important for output file naming.
     config: CorsikaConfig or dict
         Configuration parameters.
-    is_calibration_run: bool
-        Flag to indicate if this is a calibration run.
     """
 
-    def __init__(self, label=None, config=None, is_calibration_run=False):
+    def __init__(self, label=None, config=None):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
         self.label = label
         self._base_directory = None
-        self.is_calibration_run = is_calibration_run
 
         self.runs_per_set = 1
 
