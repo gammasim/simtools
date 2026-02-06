@@ -14,7 +14,7 @@ applications:
     sim_telarray_random_instrument_instances: 100
     site: South
   integration_tests:
-  - output_file: sim_telarray/run000010/direct_injection_run000010_za20deg_azm000deg_South_1lst_6.0.2_test-flasher-direct-injection-lst-south.simtel.zst
+  - output_file: sim_telarray/run000010/direct_injection_run000010_za20deg_azm000deg_South_1lst_7.0.0_test-flasher-direct-injection-lst-south.simtel.zst
   test_name: direction_injection_lsts
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
