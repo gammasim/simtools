@@ -124,6 +124,9 @@ class SimulatorArray(SimtelRunner):
         for key in ("nsb_scaling_factor", "stars"):
             if key in cfg:
                 options[key] = cfg[key]
+                # stars cannot be 'None' (only 'none')
+                if key == "stars" and options[key] is None:
+                    options[key] = "none"
 
         run_mode = cfg.get("run_mode")
         if run_mode in ("pedestals", "pedestals_nsb_only"):
