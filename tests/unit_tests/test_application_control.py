@@ -1,6 +1,8 @@
 """Unit tests for application_control module."""
 
 import logging
+import os
+from io import StringIO
 from unittest.mock import MagicMock, patch
 
 from simtools.application_control import (
@@ -11,19 +13,209 @@ from simtools.application_control import (
 )
 
 
+def test_redact_filter_env_var_value():
+    """Test that RedactFilter redacts secret values from environment variables."""
+    mock_args_dict = {"log_level": "debug"}
+    mock_db_config = {}
+    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
+
+    handler = logging.StreamHandler(StringIO())
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(message)s")
+    handler.setFormatter(formatter)
+    logging.getLogger().addHandler(handler)
+
+    test_password = "my_secret_password_123"
+
+    try:
+        with patch.dict(os.environ, {"SIMTOOLS_DB_API_PW": test_password}, clear=False):
+            app_context = startup_application(mock_parse_function, setup_io_handler=False)
+
+            stream = handler.stream
+            stream.seek(0)
+            stream.truncate()
+
+            app_context.logger.info(f"Database password is: {test_password}")
+
+            stream.seek(0)
+            output = stream.read()
+
+            assert "***REDACTED***" in output
+            assert test_password not in output
+    finally:
+        logging.getLogger().removeHandler(handler)
+        handler.close()
+
+
+def test_redact_filter_simtools_password():
+    """Test that SIMTOOLS_DB_API_PW password values are redacted from logs."""
+    mock_args_dict = {"log_level": "debug"}
+    mock_db_config = {}
+    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
+
+    handler = logging.StreamHandler(StringIO())
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(message)s")
+    handler.setFormatter(formatter)
+    logging.getLogger().addHandler(handler)
+
+    test_password = "my_secret_db_password"
+
+    try:
+        with patch.dict(os.environ, {"SIMTOOLS_DB_API_PW": test_password}, clear=False):
+            app_context = startup_application(mock_parse_function, setup_io_handler=False)
+
+            stream = handler.stream
+            stream.seek(0)
+            stream.truncate()
+
+            # Simulate the actual log message from job_manager that the user reported
+            env_dict = {
+                "SIMTOOLS_DB_API_PW": test_password,
+                "SIMTOOLS_DB_API_USER": "api",
+                "SIMTOOLS_DB_SERVER": "simtools-mongodb",
+                "USER": "test_user",
+            }
+            app_context.logger.debug(f"Setting environment variables for job execution: {env_dict}")
+
+            stream.seek(0)
+            output = stream.read()
+
+            # The password value should be redacted
+            assert "***REDACTED***" in output
+            assert test_password not in output
+            # Other non-secret values should remain
+            assert "api" in output
+            assert "simtools-mongodb" in output
+    finally:
+        logging.getLogger().removeHandler(handler)
+        handler.close()
+
+
+def test_redact_filter_api_key_pattern():
+    """Test that API keys are redacted based on pattern matching."""
+    mock_args_dict = {"log_level": "debug"}
+    mock_db_config = {}
+    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
+
+    handler = logging.StreamHandler(StringIO())
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(message)s")
+    handler.setFormatter(formatter)
+    logging.getLogger().addHandler(handler)
+
+    try:
+        app_context = startup_application(mock_parse_function, setup_io_handler=False)
+
+        stream = handler.stream
+        stream.seek(0)
+        stream.truncate()
+
+        # Test API key pattern matching in double-quoted dictionary
+        app_context.logger.debug('Config: {"api_key": "abc123xyz", "host": "localhost"}')
+        # Test auth token pattern matching
+        app_context.logger.debug("Auth: {'auth_token': 'xyz789', 'service': 'api'}")
+
+        stream.seek(0)
+        output = stream.read()
+
+        # Secret values should be redacted
+        assert "***REDACTED***" in output
+        assert "abc123xyz" not in output
+        assert "xyz789" not in output
+        # Non-secret values should remain
+        assert "localhost" in output
+        assert "api" in output
+    finally:
+        logging.getLogger().removeHandler(handler)
+        handler.close()
+
+
+def test_redact_filter_env_var_format():
+    """Test that RedactFilter redacts environment variable assignments."""
+    mock_args_dict = {"log_level": "debug"}
+    mock_db_config = {}
+    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
+
+    handler = logging.StreamHandler(StringIO())
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(message)s")
+    handler.setFormatter(formatter)
+    logging.getLogger().addHandler(handler)
+
+    try:
+        app_context = startup_application(mock_parse_function, setup_io_handler=False)
+
+        stream = handler.stream
+        stream.seek(0)
+        stream.truncate()
+
+        app_context.logger.debug("Environment: PASSWORD=secret123 USER=admin")
+        app_context.logger.debug("Variables: api_key=xyz789, host=localhost")
+
+        stream.seek(0)
+        output = stream.read()
+
+        assert "***REDACTED***" in output
+        assert "secret123" not in output
+        assert "xyz789" not in output
+        assert "admin" in output  # non-secret value
+        assert "localhost" in output
+    finally:
+        logging.getLogger().removeHandler(handler)
+        handler.close()
+
+
+def test_redact_filter_child_logger():
+    """Test that RedactFilter works for child loggers."""
+    mock_args_dict = {"log_level": "debug"}
+    mock_db_config = {}
+    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
+
+    handler = logging.StreamHandler(StringIO())
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(message)s")
+    handler.setFormatter(formatter)
+    logging.getLogger().addHandler(handler)
+
+    test_password = "child_logger_secret_789"
+
+    try:
+        with patch.dict(os.environ, {"SIMTOOLS_DB_API_PW": test_password}, clear=False):
+            startup_application(mock_parse_function, setup_io_handler=False)
+
+            child_logger = logging.getLogger("simtools.job_execution.job_manager")
+            child_logger.setLevel(logging.DEBUG)
+
+            stream = handler.stream
+            stream.seek(0)
+            stream.truncate()
+
+            # Test both the actual password and key-value pairs
+            child_logger.debug(
+                f"Environment: {{'SIMTOOLS_DB_API_PW': '{test_password}', 'USER': 'test'}}"
+            )
+
+            stream.seek(0)
+            output = stream.read()
+
+            assert "***REDACTED***" in output
+            assert test_password not in output
+    finally:
+        logging.getLogger().removeHandler(handler)
+        handler.close()
+
+
 def test_get_application_label():
     """Test get_application_label function."""
-    # Test with typical file path
     file_path = "/path/to/my_application.py"
     result = get_application_label(file_path)
     assert result == "my_application"
 
-    # Test with different extension
     file_path = "/another/path/test_script.py"
     result = get_application_label(file_path)
     assert result == "test_script"
 
-    # Test with no directory
     file_path = "simple_app.py"
     result = get_application_label(file_path)
     assert result == "simple_app"
