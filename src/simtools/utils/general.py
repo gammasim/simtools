@@ -220,35 +220,6 @@ def ensure_iterable(value):
     return value if isinstance(value, list | tuple) else [value]
 
 
-def program_is_executable(program):
-    """
-    Check if program exists and is executable.
-
-    Follows https://stackoverflow.com/questions/377017/
-
-    """
-    program = Path(program)
-
-    def is_exe(fpath):
-        return fpath.is_file() and os.access(fpath, os.X_OK)
-
-    fpath, _ = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        try:
-            for path in os.environ["PATH"].split(os.pathsep):
-                exe_file = Path(path) / program
-                if is_exe(exe_file):
-                    return exe_file
-        except KeyError:
-            _logger.warning("PATH environment variable is not set.")
-            return None
-
-    return None
-
-
 def _search_directory(directory, filename, rec=False):
     if not Path(directory).exists():
         _logger.debug(f"Directory {directory} does not exist")
@@ -266,6 +237,26 @@ def _search_directory(directory, filename, rec=False):
                 if _file:
                     return _file
     return None
+
+
+def find_executable_in_path(file_name, file_path):
+    """
+    Find an executable in the given path.
+
+    Parameters
+    ----------
+    file_name: str
+        Name of the executable to find.
+    file_path: str or Path
+        Path to search for the executable.
+    """
+    if file_name is None:
+        raise FileNotFoundError(f"{file_name} is not found")
+
+    exe_path = Path(file_path) / file_name
+    if not exe_path.is_file():
+        raise FileNotFoundError(f"{file_name} not found in {file_path}.")
+    return exe_path
 
 
 def find_file(name, loc):
