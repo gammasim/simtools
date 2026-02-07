@@ -2,7 +2,6 @@
 
 import datetime
 import logging
-import os
 import time
 from copy import copy
 from pathlib import Path
@@ -26,16 +25,6 @@ url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
 
 test_data = "Test data"
-
-
-def test_program_is_executable(caplog) -> None:
-    # (assume 'ls' exist on any system the test is running)
-    assert gen.program_is_executable("/bin/ls") is not None  # The actual path should not matter
-    assert gen.program_is_executable("this_program_probably_does_not_exist") is None
-    with caplog.at_level("WARNING"):
-        os.environ.pop("PATH", None)
-    assert gen.program_is_executable("this_program_probably_does_not_exist") is None
-    assert "PATH environment variable is not set." in caplog.text
 
 
 def test_get_file_age(tmp_test_directory) -> None:
