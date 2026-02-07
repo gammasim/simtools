@@ -17,10 +17,10 @@ def config_instance():
 def test_init(config_instance):
     assert config_instance._args == {}
     assert config_instance._db_config == {}
-    assert config_instance._sim_telarray_path is None
-    assert config_instance._sim_telarray_exe is None
-    assert config_instance._corsika_path is None
-    assert config_instance._corsika_exe is None
+    assert all(
+        getattr(config_instance, attr) is None
+        for attr in ["_sim_telarray_path", "_sim_telarray_exe", "_corsika_path", "_corsika_exe"]
+    )
 
 
 @patch("pathlib.Path.is_dir", return_value=True)
