@@ -17,7 +17,15 @@ applications:
     stars: null
     nsb_scaling_factor: 1.
   integration_tests:
-  - output_file: sim_telarray/run000010/pedestals_nsb_only_run000010_za20deg_azm000deg_North_1lst_6.0.2_test-nsb-only-pedestal-production-North.simtel.zst
+  - test_output_files:
+    - file: pedestals_nsb_only_run000010_za20deg_azm000deg_North_1lst_6.0.2_test-nsb-only-pedestal-production-North.simtel.zst
+      path_descriptor: output_path
+      output_sub_path: sim_telarray/run000010
+    - expected_sim_telarray_output:
+        require_calibration_events: true
+      file: pedestals_nsb_only_run000010_za20deg_azm000deg_North_1lst_6.0.2_test-nsb-only-pedestal-production-North.simtel.zst
+      path_descriptor: output_path
+      output_sub_path: sim_telarray/run000010
   test_name: pedestals_nsb_only_20_deg_north
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
