@@ -21,6 +21,23 @@ def test_yaml_file():
     return MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
 
 
+@pytest.fixture
+def tar_with_log(tmp_test_directory, safe_tar_open):
+    """Helper fixture to create tar.gz with log content."""
+
+    def _create_tar(log_content: bytes, filename: str = "test_logs.tar.gz"):
+        tmp_path = Path(tmp_test_directory)
+        tar_path = tmp_path / filename
+        with safe_tar_open(tar_path, "w:gz") as tar:
+            log_gz = tmp_path / "test.log.gz"
+            with gzip.open(log_gz, "wb") as gz:
+                gz.write(log_content)
+            tar.add(log_gz, arcname="test.log.gz")
+        return tar_path
+
+    return _create_tar
+
+
 def test_assert_file_type_json(test_json_file, test_yaml_file):
     assert assertions.assert_file_type("json", test_json_file)
     assert not assertions.assert_file_type("json", "tests/resources/does_not_exist.json")
@@ -69,36 +86,21 @@ def test_check_simulation_logs_not_tar_file(tmp_test_directory):
         assertions.check_simulation_logs(not_tar, file_test)
 
 
-def test_check_simulation_logs_success(tmp_test_directory, safe_tar_open):
-    tmp_path = Path(tmp_test_directory)
-    tar_path = tmp_path / "test_logs.tar.gz"
-    log_content = b"Log line with pattern_A\nAnother line\nLine with pattern_B\n"
-
-    with safe_tar_open(tar_path, "w:gz") as tar:
-        log_gz = tmp_path / "test.log.gz"
-        with gzip.open(log_gz, "wb") as gz:
-            gz.write(log_content)
-        tar.add(log_gz, arcname="test.log.gz")
-
-    file_test = {"expected_log_output": {"pattern": ["pattern_A", "pattern_B"]}}
-    result = assertions.check_simulation_logs(tar_path, file_test)
-    assert result
-
-
-def test_check_simulation_logs_missing_pattern(tmp_test_directory, safe_tar_open):
-    tmp_path = Path(tmp_test_directory)
-    tar_path = tmp_path / "test_logs.tar.gz"
-    log_content = b"Log line with pattern_A\nAnother line\n"
-
-    with safe_tar_open(tar_path, "w:gz") as tar:
-        log_gz = tmp_path / "test.log.gz"
-        with gzip.open(log_gz, "wb") as gz:
-            gz.write(log_content)
-        tar.add(log_gz, arcname="test.log.gz")
-
-    file_test = {"expected_log_output": {"pattern": ["pattern_A", "missing_pattern"]}}
-    result = assertions.check_simulation_logs(tar_path, file_test)
-    assert not result
+@pytest.mark.parametrize(
+    ("log_content", "patterns", "should_pass"),
+    [
+        (
+            b"Log line with pattern_A\nAnother line\nLine with pattern_B\n",
+            ["pattern_A", "pattern_B"],
+            True,
+        ),
+        (b"Log line with pattern_A\nAnother line\n", ["pattern_A", "missing_pattern"], False),
+    ],
+)
+def test_check_simulation_logs_patterns(tar_with_log, log_content, patterns, should_pass):
+    tar_path = tar_with_log(log_content)
+    file_test = {"expected_log_output": {"pattern": patterns}}
+    assert assertions.check_simulation_logs(tar_path, file_test) is should_pass
 
 
 def test_check_simulation_logs_skip_non_log_files(tmp_test_directory, safe_tar_open):
@@ -111,8 +113,7 @@ def test_check_simulation_logs_skip_non_log_files(tmp_test_directory, safe_tar_o
         tar.add(not_log, arcname="readme.txt")
 
     file_test = {"expected_log_output": {"pattern": ["pattern"]}}
-    result = assertions.check_simulation_logs(tar_path, file_test)
-    assert not result
+    assert assertions.check_simulation_logs(tar_path, file_test) is False
 
 
 def test_read_log(tmp_test_directory, safe_tar_open):
@@ -145,187 +146,105 @@ def test_find_patterns():
     assert len(found) == 2
 
 
-def test_check_simulation_logs_forbidden_patterns_found(tmp_test_directory, safe_tar_open):
-    tmp_path = Path(tmp_test_directory)
-    tar_path = tmp_path / "test_logs.tar.gz"
-    log_content = b"Log line with CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE\nAnother line\n"
-
-    with safe_tar_open(tar_path, "w:gz") as tar:
-        log_gz = tmp_path / "test.log.gz"
-        with gzip.open(log_gz, "wb") as gz:
-            gz.write(log_content)
-        tar.add(log_gz, arcname="test.log.gz")
-
-    file_test = {
-        "expected_log_output": {
-            "forbidden_pattern": ["CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE"]
-        }
-    }
-    result = assertions.check_simulation_logs(tar_path, file_test)
-    assert not result
-
-
-def test_check_simulation_logs_forbidden_patterns_not_found(tmp_test_directory, safe_tar_open):
-    tmp_path = Path(tmp_test_directory)
-    tar_path = tmp_path / "test_logs.tar.gz"
-    log_content = b"Log line with normal content\nAnother line\n"
-
-    with safe_tar_open(tar_path, "w:gz") as tar:
-        log_gz = tmp_path / "test.log.gz"
-        with gzip.open(log_gz, "wb") as gz:
-            gz.write(log_content)
-        tar.add(log_gz, arcname="test.log.gz")
-
-    file_test = {"expected_log_output": {"forbidden_pattern": ["CURVED VERSION", "FATAL ERROR"]}}
-    result = assertions.check_simulation_logs(tar_path, file_test)
-    assert result
-
-
-def test_check_simulation_logs_wanted_and_forbidden_both_ok(tmp_test_directory, safe_tar_open):
-    tmp_path = Path(tmp_test_directory)
-    tar_path = tmp_path / "test_logs.tar.gz"
-    log_content = b"Log line with expected_pattern\nAnother line with good content\n"
-
-    with safe_tar_open(tar_path, "w:gz") as tar:
-        log_gz = tmp_path / "test.log.gz"
-        with gzip.open(log_gz, "wb") as gz:
-            gz.write(log_content)
-        tar.add(log_gz, arcname="test.log.gz")
-
-    file_test = {
-        "expected_log_output": {
-            "pattern": ["expected_pattern"],
-            "forbidden_pattern": ["CURVED VERSION", "ERROR"],
-        }
-    }
-    result = assertions.check_simulation_logs(tar_path, file_test)
-    assert result
+@pytest.mark.parametrize(
+    ("log_content", "expected_log_output", "should_pass"),
+    [
+        (
+            b"Log line with CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE\nAnother line\n",
+            {"forbidden_pattern": ["CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE"]},
+            False,
+        ),
+        (
+            b"Log line with normal content\nAnother line\n",
+            {"forbidden_pattern": ["CURVED VERSION", "FATAL ERROR"]},
+            True,
+        ),
+        (
+            b"Log line with expected_pattern\nAnother line with good content\n",
+            {"pattern": ["expected_pattern"], "forbidden_pattern": ["CURVED VERSION", "ERROR"]},
+            True,
+        ),
+        (
+            b"Log line with expected_pattern\nAnother line with ERROR\n",
+            {"pattern": ["expected_pattern"], "forbidden_pattern": ["ERROR", "FATAL"]},
+            False,
+        ),
+        (
+            b"Log with ERROR\nAnother line with FATAL\nThird line with WARNING\n",
+            {"forbidden_pattern": ["ERROR", "FATAL", "CRITICAL"]},
+            False,
+        ),
+        (
+            b"Log line with any content\n",
+            {"forbidden_pattern": []},
+            True,
+        ),
+    ],
+)
+def test_check_simulation_logs_forbidden_patterns(
+    tar_with_log, log_content, expected_log_output, should_pass
+):
+    tar_path = tar_with_log(log_content)
+    file_test = {"expected_log_output": expected_log_output}
+    assert assertions.check_simulation_logs(tar_path, file_test) is should_pass
 
 
-def test_check_simulation_logs_wanted_ok_but_forbidden_found(tmp_test_directory, safe_tar_open):
-    tmp_path = Path(tmp_test_directory)
-    tar_path = tmp_path / "test_logs.tar.gz"
-    log_content = b"Log line with expected_pattern\nAnother line with ERROR\n"
-
-    with safe_tar_open(tar_path, "w:gz") as tar:
-        log_gz = tmp_path / "test.log.gz"
-        with gzip.open(log_gz, "wb") as gz:
-            gz.write(log_content)
-        tar.add(log_gz, arcname="test.log.gz")
-
-    file_test = {
-        "expected_log_output": {
-            "pattern": ["expected_pattern"],
-            "forbidden_pattern": ["ERROR", "FATAL"],
-        }
-    }
-    result = assertions.check_simulation_logs(tar_path, file_test)
-    assert not result
-
-
-def test_check_simulation_logs_multiple_forbidden_patterns_found(tmp_test_directory, safe_tar_open):
-    tmp_path = Path(tmp_test_directory)
-    tar_path = tmp_path / "test_logs.tar.gz"
-    log_content = b"Log with ERROR\nAnother line with FATAL\nThird line with WARNING\n"
-
-    with safe_tar_open(tar_path, "w:gz") as tar:
-        log_gz = tmp_path / "test.log.gz"
-        with gzip.open(log_gz, "wb") as gz:
-            gz.write(log_content)
-        tar.add(log_gz, arcname="test.log.gz")
-
-    file_test = {"expected_log_output": {"forbidden_pattern": ["ERROR", "FATAL", "CRITICAL"]}}
-    result = assertions.check_simulation_logs(tar_path, file_test)
-    assert not result
-
-
-def test_check_simulation_logs_forbidden_only_empty_list(tmp_test_directory, safe_tar_open):
-    tmp_path = Path(tmp_test_directory)
-    tar_path = tmp_path / "test_logs.tar.gz"
-    log_content = b"Log line with any content\n"
-
-    with safe_tar_open(tar_path, "w:gz") as tar:
-        log_gz = tmp_path / "test.log.gz"
-        with gzip.open(log_gz, "wb") as gz:
-            gz.write(log_content)
-        tar.add(log_gz, arcname="test.log.gz")
-
-    file_test = {"expected_log_output": {"forbidden_pattern": []}}
-    result = assertions.check_simulation_logs(tar_path, file_test)
-    assert result
-
-
-def test_check_plain_log_patterns_found(tmp_path: Path):
+@pytest.mark.parametrize(
+    ("content", "file_test", "should_pass"),
+    [
+        (
+            "start\nAll good\nOK done\n",
+            {"expected_log_output": {"pattern": ["OK"], "forbidden_pattern": []}},
+            True,
+        ),
+        (
+            "ERROR: failure happened\n",
+            {"expected_log_output": {"pattern": [], "forbidden_pattern": ["ERROR"]}},
+            False,
+        ),
+        (
+            "Error: something went wrong\n",
+            {"expected_log_output": {"forbidden_pattern": ["error"]}},
+            False,
+        ),
+        ("Success: all good\n", {"expected_log_output": {"pattern": ["success"]}}, True),
+    ],
+)
+def test_check_plain_log(tmp_path: Path, content, file_test, should_pass):
     log_file = tmp_path / "run.log"
-    log_file.write_text("start\nAll good\nOK done\n", encoding="utf-8")
-
-    file_test = {"expected_log_output": {"pattern": ["OK"], "forbidden_pattern": []}}
-
-    assert check_plain_log(log_file, file_test) is True
-
-
-def test_check_plain_log_forbidden_pattern(tmp_path: Path):
-    log_file = tmp_path / "run.log"
-    log_file.write_text("ERROR: failure happened\n", encoding="utf-8")
-
-    file_test = {"expected_log_output": {"pattern": [], "forbidden_pattern": ["ERROR"]}}
-
-    assert check_plain_log(log_file, file_test) is False
+    log_file.write_text(content, encoding="utf-8")
+    assert check_plain_log(log_file, file_test) is should_pass
 
 
 def test_check_plain_log_missing_file_returns_false(tmp_path: Path):
     log_file = tmp_path / "missing.log"
     file_test = {"expected_log_output": {"pattern": ["hello"], "forbidden_pattern": []}}
-
     assert check_plain_log(log_file, file_test) is False
 
 
 def test_check_plain_log_top_level_keys_fallback(tmp_path: Path):
-    # When expected_log_output is not a dict, fallback to top-level keys
     log_file = tmp_path / "run.log"
     log_file.write_text("pipeline finished successfully\n", encoding="utf-8")
-
     file_test = {"expected_log_output": None, "pattern": ["finished"], "forbidden_pattern": []}
-
     assert check_plain_log(log_file, file_test) is True
 
 
 def test_check_plain_log_no_patterns_returns_true(tmp_path: Path, caplog):
-    # expected_log_output has no patterns; function should return True and log debug
     log_file = tmp_path / "run.log"
     log_file.write_text("some content\n", encoding="utf-8")
-
     file_test = {"expected_log_output": {}}
-
     with caplog.at_level(logging.DEBUG):
         assert check_plain_log(log_file, file_test) is True
         assert "No expected log output provided" in caplog.text
 
 
 def test_check_plain_log_missing_expected_patterns(tmp_path: Path, caplog):
-    # wanted pattern not present in log should log error and return False
     log_file = tmp_path / "run.log"
     log_file.write_text("only info lines here\n", encoding="utf-8")
-
     file_test = {"expected_log_output": {"pattern": ["NEEDED"], "forbidden_pattern": []}}
-
     with caplog.at_level(logging.ERROR):
         assert check_plain_log(log_file, file_test) is False
         assert "Missing expected patterns" in caplog.text
-
-
-def test_check_plain_log_case_insensitive(tmp_path: Path):
-    log_file = tmp_path / "run.log"
-    log_file.write_text("Error: something went wrong\n", encoding="utf-8")
-
-    # "error" (lowercase) should match "Error" (mixed case)
-    file_test = {"expected_log_output": {"forbidden_pattern": ["error"]}}
-    assert check_plain_log(log_file, file_test) is False
-
-    log_file.write_text("Success: all good\n", encoding="utf-8")
-    # "success" (lowercase) should match "Success" (mixed case)
-    file_test = {"expected_log_output": {"pattern": ["success"]}}
-    assert check_plain_log(log_file, file_test) is True
 
 
 def test_check_output_from_sim_telarray_no_expected_output(tmp_path: Path):
@@ -337,76 +256,46 @@ def test_check_output_from_sim_telarray_no_expected_output(tmp_path: Path):
     assert result is True
 
 
-def test_check_output_from_sim_telarray_with_expected_output(tmp_path: Path, mocker):
+@pytest.mark.parametrize(
+    ("file_test_key", "expected_result"),
+    [
+        ("expected_output", True),
+        ("expected_simtel_metadata", True),
+    ],
+)
+def test_check_output_from_sim_telarray_with_expected(
+    tmp_path: Path, mocker, file_test_key, expected_result
+):
+    import simtools.testing.sim_telarray_output as sim_telarray_output
+
     sim_file = tmp_path / "test.simtel.zst"
     sim_file.write_bytes(b"dummy")
-    file_test = {"expected_output": {"key": "value"}}
+    file_test = {file_test_key: {"key": "value"}}
 
     mocker.patch.object(
-        assertions.sim_telarray_output,
-        "assert_expected_sim_telarray_output",
-        return_value=True,
+        sim_telarray_output, "assert_expected_sim_telarray_output", return_value=True
     )
     mocker.patch.object(
-        assertions.sim_telarray_output,
-        "assert_expected_sim_telarray_metadata",
-        return_value=True,
+        sim_telarray_output, "assert_expected_sim_telarray_metadata", return_value=True
     )
-    mocker.patch.object(
-        assertions.sim_telarray_output,
-        "assert_n_showers_and_energy_range",
-        return_value=True,
-    )
+    mocker.patch.object(sim_telarray_output, "assert_n_showers_and_energy_range", return_value=True)
 
-    result = assertions.check_output_from_sim_telarray(sim_file, file_test)
-    assert result is True
-
-
-def test_check_output_from_sim_telarray_with_expected_metadata(tmp_path: Path, mocker):
-    sim_file = tmp_path / "test.simtel.zst"
-    sim_file.write_bytes(b"dummy")
-    file_test = {"expected_simtel_metadata": {"key": "value"}}
-
-    mocker.patch.object(
-        assertions.sim_telarray_output,
-        "assert_expected_sim_telarray_output",
-        return_value=True,
-    )
-    mocker.patch.object(
-        assertions.sim_telarray_output,
-        "assert_expected_sim_telarray_metadata",
-        return_value=True,
-    )
-    mocker.patch.object(
-        assertions.sim_telarray_output,
-        "assert_n_showers_and_energy_range",
-        return_value=True,
-    )
-
-    result = assertions.check_output_from_sim_telarray(sim_file, file_test)
-    assert result is True
+    assert assertions.check_output_from_sim_telarray(sim_file, file_test) is expected_result
 
 
 def test_check_output_from_sim_telarray_assertion_fails(tmp_path: Path, mocker):
+    import simtools.testing.sim_telarray_output as sim_telarray_output
+
     sim_file = tmp_path / "test.simtel.zst"
     sim_file.write_bytes(b"dummy")
     file_test = {"expected_output": {"key": "value"}}
 
     mocker.patch.object(
-        assertions.sim_telarray_output,
-        "assert_expected_sim_telarray_output",
-        return_value=False,
+        sim_telarray_output, "assert_expected_sim_telarray_output", return_value=False
     )
     mocker.patch.object(
-        assertions.sim_telarray_output,
-        "assert_expected_sim_telarray_metadata",
-        return_value=True,
+        sim_telarray_output, "assert_expected_sim_telarray_metadata", return_value=True
     )
-    mocker.patch.object(
-        assertions.sim_telarray_output,
-        "assert_n_showers_and_energy_range",
-        return_value=True,
-    )
+    mocker.patch.object(sim_telarray_output, "assert_n_showers_and_energy_range", return_value=True)
 
-    result = assertions.check_output_from_sim_telarray(sim_file, file_test)
-    assert result is False
+    assert assertions.check_output_from_sim_telarray(sim_file, file_test) is False
