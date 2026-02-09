@@ -201,7 +201,7 @@ class TelescopeModel(ModelParameter):
             camera_config_file_path = gen.find_file(camera_config_file, self.io_handler.model_path)
 
         self._camera = Camera(
-            telescope_model_name=self.name,
+            telescope_name=self.name,
             camera_config_file=camera_config_file_path,
             focal_length=focal_length,
         )
