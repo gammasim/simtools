@@ -914,3 +914,6 @@ def test_find_executable_in_dir_not_executable(tmp_test_directory) -> None:
 
     with pytest.raises(PermissionError, match=r"^Not executable"):
         gen.find_executable_in_dir("test_file", tmp_test_directory)
+
+    with pytest.raises(ValueError, match=r"Both name and directory must be provided."):
+        gen.find_executable_in_dir(None, None)

@@ -144,7 +144,7 @@ SIMTOOLS_SIM_TELARRAY_PATH='/workdir/sim_telarray'
 # Path to the CORSIKA installation
 SIMTOOLS_CORSIKA_PATH='/workdir/corsika'
 # Path to the CORSIKA interaction tables
-SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH='/workdir/corsika-interaction-tables
+SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH='/workdir/corsika-interaction-tables'
 # User name of the user running the application
 SIMTOOLS_USER_NAME='Max Mustermann'
 # ORCID of the user running the application
