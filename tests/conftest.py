@@ -4,7 +4,9 @@ import os
 import re
 import tarfile
 from contextlib import contextmanager
+from pathlib import Path
 from unittest import mock
+from unittest.mock import PropertyMock
 
 import matplotlib.pyplot as plt
 import pytest
@@ -29,12 +31,69 @@ logger = logging.getLogger()
 def simtools_settings(tmp_test_directory, db_config):
     """Load simtools settings for the test session."""
     load_dotenv(".env")
-    # Set defaults only if not already set (e.g. CI environment)
-    os.environ.setdefault("SIMTOOLS_SIM_TELARRAY_PATH", str(tmp_test_directory) + "/sim_telarray")
-    os.environ.setdefault("SIMTOOLS_SIM_TELARRAY_EXECUTABLE", "sim_telarray")
-    os.environ.setdefault("SIMTOOLS_CORSIKA_PATH", str(tmp_test_directory) + "/corsika")
-    os.environ.setdefault("SIMTOOLS_CORSIKA_EXECUTABLE", "corsika_flat")
     settings.config.load(db_config=db_config)
+
+
+@pytest.fixture(autouse=True)
+def mock_simulator_paths(request, tmp_test_directory):
+    """Mock sim_telarray and corsika paths for unit tests.
+
+    This fixture mocks the paths and executables to prevent FileNotFoundError
+    when sim_telarray or corsika are not installed in the test environment.
+
+    This fixture does NOT apply to tests in test_settings.py, which specifically
+    test the path validation behavior.
+    """
+    # Skip mock for test_settings.py as it tests the real path validation behavior
+    if "test_settings.py" in str(request.node.fspath):
+        yield
+        return
+
+    mock_sim_telarray_dir = Path(tmp_test_directory) / "sim_telarray"
+    mock_corsika_dir = Path(tmp_test_directory) / "corsika"
+    mock_corsika_interaction_table_dir = Path(tmp_test_directory) / "corsika_interaction_tables"
+    mock_sim_telarray_dir.mkdir(exist_ok=True)
+    (mock_sim_telarray_dir / "bin").mkdir(exist_ok=True)
+    mock_corsika_dir.mkdir(exist_ok=True)
+    mock_corsika_interaction_table_dir.mkdir(exist_ok=True)
+
+    with (
+        mock.patch.object(
+            type(settings.config), "sim_telarray_path", new_callable=PropertyMock
+        ) as mock_sim_tel_path,
+        mock.patch.object(
+            type(settings.config), "corsika_path", new_callable=PropertyMock
+        ) as mock_corsika,
+        mock.patch.object(
+            type(settings.config), "sim_telarray_exe", new_callable=PropertyMock
+        ) as mock_sim_tel_exe,
+        mock.patch.object(
+            type(settings.config),
+            "sim_telarray_exe_debug_trace",
+            new_callable=PropertyMock,
+        ) as mock_sim_tel_exe_debug,
+        mock.patch.object(
+            type(settings.config), "corsika_exe", new_callable=PropertyMock
+        ) as mock_corsika_exe,
+        mock.patch.object(
+            type(settings.config), "corsika_exe_curved", new_callable=PropertyMock
+        ) as mock_corsika_exe_curved,
+        mock.patch.object(
+            type(settings.config),
+            "corsika_interaction_table_path",
+            new_callable=PropertyMock,
+        ) as mock_corsika_interaction_table,
+    ):
+        mock_sim_tel_path.return_value = mock_sim_telarray_dir
+        mock_corsika.return_value = mock_corsika_dir
+        mock_sim_tel_exe.return_value = mock_sim_telarray_dir / "bin" / "sim_telarray"
+        mock_sim_tel_exe_debug.return_value = (
+            mock_sim_telarray_dir / "bin" / "sim_telarray_debug_trace"
+        )
+        mock_corsika_exe.return_value = mock_corsika_dir / "corsika_flat"
+        mock_corsika_exe_curved.return_value = mock_corsika_dir / "corsika_curved"
+        mock_corsika_interaction_table.return_value = mock_corsika_interaction_table_dir
+        yield
 
 
 @pytest.fixture(scope="session", autouse=True)
