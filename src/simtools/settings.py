@@ -114,7 +114,7 @@ class _Config:
         """Path to the sim_telarray executable."""
         return find_executable_in_dir(
             self._sim_telarray_exe,
-            Path(self._sim_telarray_path) / "bin",
+            self.sim_telarray_path / "bin",
         )
 
     @property
@@ -122,7 +122,7 @@ class _Config:
         """Path to the debug trace version of the sim_telarray executable."""
         return find_executable_in_dir(
             self._sim_telarray_exe + "_debug_trace",
-            Path(self._sim_telarray_path) / "bin",
+            self.sim_telarray_path / "bin",
         )
 
     @property

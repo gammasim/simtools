@@ -10,6 +10,32 @@ from simtools.settings import _Config
 
 
 @pytest.fixture
+def clear_simtools_env():
+    """Fixture to clear simtools environment variables for tests that need isolated _Config."""
+    old_env = {}
+    simtools_vars = [
+        "SIMTOOLS_SIM_TELARRAY_PATH",
+        "SIMTOOLS_SIM_TELARRAY_EXECUTABLE",
+        "SIMTOOLS_CORSIKA_PATH",
+        "SIMTOOLS_CORSIKA_EXECUTABLE",
+        "SIMTOOLS_CORSIKA_HE_INTERACTION",
+        "SIMTOOLS_CORSIKA_LE_INTERACTION",
+    ]
+    for var in simtools_vars:
+        old_env[var] = os.environ.pop(var, None)
+    yield
+    for var, val in old_env.items():
+        if val is not None:
+            os.environ[var] = val
+
+
+@pytest.fixture
+def simtools_settings(clear_simtools_env):
+    """Override autouse fixture for isolated tests."""
+    pass
+
+
+@pytest.fixture
 def config_instance():
     return _Config()
 
@@ -82,9 +108,9 @@ def test_sim_telarray_exe_property(mock_is_file, mock_is_dir, mock_access, confi
     assert config_instance.sim_telarray_exe == Path("/path/to/simtel/bin/sim_telarray")
 
 
-def test_sim_telarray_exe_property_none():
+def test_sim_telarray_exe_property_none(simtools_settings):
     config = _Config()
-    with pytest.raises(TypeError):
+    with pytest.raises(FileNotFoundError):
         _ = config.sim_telarray_exe
 
 

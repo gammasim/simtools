@@ -250,6 +250,8 @@ def find_executable_in_dir(name, directory):
     directory: str or Path
         Directory to search for the executable.
     """
+    if name is None or directory is None:
+        raise ValueError("Both name and directory must be provided.")
     path = Path(directory) / name
     if not path.is_file():
         raise FileNotFoundError(f"Executable not found: {path}")
