@@ -1,0 +1,514 @@
+Initialize for run 1.
+Program command line: /workdir/simulation_software/sim_telarray/LightEmission/ff-1m -I. -I/workdir/simulation_software/sim_telarray/cfg -I/workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/model/7.0.0 --altitude 2156.0 --atmosphere 1 --events 1 --photons 100000.0 --bunchsize 1 --xy 0.0,0.0 --distance 2800.0 --camera-radius 246.0731598529185 --spectrum 355 --lightpulse /workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/light_emission/flasher_pulse_shape_LSTN-04_LSFN-design.dat --angular-distribution filledcone:2.5 -o /workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher.iact.gz
+Adding include path '.'.
+Adding include path '/workdir/simulation_software/sim_telarray/cfg'.
+Adding include path '/workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/model/7.0.0'.
+
+Atmospheric profile 1 with 55 levels read from file atmprof1.dat
+
+Initialize atmosphere ranging from 0.000 to 120.000 km a.s.l.
+
+IACT control parameter line: print_events 999 10 100 1000 0
+
+Using IACT/ATMO package version 1.70 (2025-08-06), IACT_NO_GRID for CORSIKA 6.999
+
+
+Telescope output file: '/workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher.iact.gz'
+
+Number of simulated telescopes: 1
+    Telescope 1 at x=  0.00 m, y=  0.00 m, z=  0.00 m with r=2.46 m
+
+Number of telescope arrays simulated: 1
+Array centers are at random offsets within  0.00 m radius from core.
+ Impact position correction for bending of primary particle track in geomagnetic field is on.
+Up to 100000 bunches are kept in memory before writing to temporary files.
+When more than 5000000 bunches are collected per telescope, thinning sets in.
+All photon data is enclosed in one block per array.
+
+
+CORSIKA was compiled with the VOLUMEDET option and the IACT option
+automatically adapts to that. This means that all random shower core
+offsets are counted in a plane perpendicular to the shower axis.
+For non-vertical showers, the horizontal offsets can therefore be
+larger than specified in your CORSIKA inputs.
+
+CORSIKA was compiled without the SLANT option and all longitudinal
+distributions are in vertical depth units (the classical way).
+
+You are using the IACT option (without CEFFIC) with a bunch size of 1.000000.
+You should be aware that this is inefficient with realistic detectors.
+A bunch size of the order of 5 would usually be an adequate number for
+imaging Cherenkov telescopes instrumented with ordinary photomultiplier tubes.
+
+Cherenkov light vertical distribution is an
+emission profile and will not be differentiated.
+
+Table with 900 rows has been read from file /workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/light_emission/flasher_pulse_shape_LSTN-04_LSFN-design.dat
+
+Total number of photons produced in this run: 100000.000000 in 100000.000000 bunches
+
+
+--------------------------------------- IACT module end-of-run ---------------------------------------
+
+CORSIKA IACT finished at 2026-02-09 12:53:39 UTC after 0.069853 sec CPU time (0 seconds elapsed).
+Total output written by IACT module: 3207520 bytes.
+
+------------------------------------------------------------------------------------------------------
+
+
+Starting /workdir/simulation_software/sim_telarray/bin/sim_telarray with the following arguments:  [-I/workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/model/7.0.0] [-I/workdir/simulation_software/sim_telarray/bin/sim_telarray] [-c] [/workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/model/7.0.0/CTA-North-LSTN-04_simulate_flasher.cfg] [-DNUM_TELESCOPES=1] [-C] [altitude=2156.0] [-C] [atmospheric_transmission=atm_trans_2156_1_3_2_0_0_0.1_0.1.dat] [-C] [TRIGGER_TELESCOPES=1] [-C] [TELTRIG_MIN_SIGSUM=2] [-C] [PULSE_ANALYSIS=-30] [-C] [MAXIMUM_TELESCOPES=1] [-C] [telescope_theta=0.0] [-C] [telescope_phi=0.0] [-C] [Bypass_Optics=1] [-C] [power_law=2.68] [-C] [input_file=/workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher.iact.gz] [-C] [output_file=/workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher.simtel.zst] [-C] [histogram_file=/workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher.hdata.zst]
+Program path, shared with pre-processor etc.: /workdir/simulation_software/sim_telarray/bin
+This is sim_telarray version 2026.016 08:24:51 UTC (root@buildkitsandbox), release 2025.246.0 from 2025-09-03.
+Compiled with gcc version "11.5.0 20240719 (Red Hat 11.5.0-11)".
+
+Sim_telarray was compiled with the following limits:
+   MAX_ARRAY: 100
+   MAX_ARRAY_GROUPS: 100
+   MAX_BUNCHES: 5000000 (*)
+   MAX_PARTICLES: 1000 (*)
+   MAX_FADC_BINS: 160
+   MAX_FADC_SIGNAL: 65535
+   MAX_IGNORE: 99
+   MAX_INPUTS_IN_TRG: 2368
+   MAX_LAMBDA: 1000
+   MAX_LASER_LEVELS: 10
+   MAX_LONGI: 1071
+   MAX_MIRRORS: 1000
+   MAX_NEIGHBOURS: 8
+   MAX_NPAR_MIRR: 20
+   MAX_PER_CHANNEL: 1
+   MAX_PHOTOELECTRONS: 2500000 (*)
+   MAX_PIXEL_PHOTOELECTRONS: 25000 (*)
+   MAX_PIXELS: 2368
+   MAX_PIX_TYPES: 10
+   MAX_SEGMENTS: 128
+   MAX_SHAPE_LENGTH: 500
+   MAX_TEL: 99
+   MAX_TELTRANS: 6
+   MAX_TRG_TYPES: 4
+   MAX_TRIG_BINS: 160
+   and MAXIMUM_SLICES=160 MAXIMUM_TELESCOPES=99
+   Values marked by (*) can be overridden at runtime.
+
+Preprocessor flags defined include:
+   CTA_DEFAULTS CTA_KIND=10 CTA_PROD4 CTA_PROD5 CTA_PROD6 ANALYSE_SHOWER CALIB_EVENT_LOOP_BY_TEL DECONVOLUTION_OFF DISC_BITS_4 DISC_BITS_PER_BIN=4 LARGE_TELESCOPE OVERSAMPLING=40 PHI_ZONES=24 PROFILE_PIXELS=5 PULSE_ANALYSIS RAD_ZONES=30 REVISED_NSB_HANDLING SIXTEEN_BIT_ADC WITH_ANALOGSUM_TRG WITH_BYPASS_OPTICS WITH_DIGITALSUM_TRG WITH_GSL_RNG WITH_LOW_GAIN_CHANNEL WITH_PULSE_ANALYSIS WITH_RPOLATOR
+   CFG_INCLUDE_PATH=".:/workdir/simulation_software/sim_telarray/cfg:/workdir/simulation_software/sim_telarray/cfg/common:/workdir/simulation_software/sim_telarray/cfg/hess:/workdir/simulation_software/sim_telarray/cfg/hess2:/workdir/simulation_software/sim_telarray/cfg/hess3:/workdir/simulation_software/sim_telarray/cfg/hess5000:/workdir/simulation_software/sim_telarray/cfg/CTA:/workdir/simulation_software/sim_telarray/cfg/MAGIC"
+
+Relevant environment variables:
+   SIM_TELARRAY_CONFIG_PATH = ""
+
+Default configuration file is /workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/model/7.0.0/CTA-North-LSTN-04_simulate_flasher.cfg
+Metaparam config handler called with: telescope add asum_clipping
+Metaparam config handler called with: telescope add asum_shaping_file
+Metaparam config handler called with: telescope add asum_threshold
+Metaparam config handler called with: telescope add camera_config_file
+Metaparam config handler called with: telescope add camera_degraded_efficiency
+Metaparam config handler called with: telescope add camera_degraded_map
+Metaparam config handler called with: telescope add default_trigger
+Metaparam config handler called with: telescope add discriminator_pulse_shape
+Metaparam config handler called with: telescope add dish_shape_length
+Metaparam config handler called with: telescope add effective_focal_length
+Metaparam config handler called with: telescope add focal_length
+Metaparam config handler called with: telescope add focus_offset
+Metaparam config handler called with: telescope add mirror_class
+Metaparam config handler called with: telescope add mirror_degraded_reflection
+Metaparam config handler called with: telescope add mirror_focal_length
+Metaparam config handler called with: telescope add mirror_list
+Metaparam config handler called with: telescope add muon_mono_thresh
+Metaparam config handler called with: telescope add nsb_autoscale_airmass
+Metaparam config handler called with: telescope add nightsky_background
+Metaparam config handler called with: telescope add parabolic_dish
+Metaparam config handler called with: telescope add primary_degraded_map
+Metaparam config handler called with: telescope add random_mono_prob
+Metaparam config handler called with: telescope add array_triggers
+Metaparam config handler called with: telescope add atmospheric_transmission
+Metaparam config handler called with: telescope add altitude
+Metaparam config handler called with: telescope add nsb_scaling_factor
+Metaparam config handler called with: telescope add nsb_sky_map
+Metaparam config handler called with: telescope set latitude=28.7621661
+Metaparam config handler called with: telescope set longitude=-17.8920302
+Metaparam config handler called with: telescope add stars
+
+**********************************************************
+*                                                        *
+* Configuration release/version:                         *
+* 7.0.0 with simtools v0.27.2.dev11+g2818f6094.d20260209 *
+* 7.0.0                                                  *
+*                                                        *
+**********************************************************
+
+Using default input file as configured.
+Filled 11 metaparameters for telescope ID -1 (itel=-1).
+Random seed as originally provided: [auto]
+Random seed 1 as provided: [auto]
+Random seed 2 as provided: []
+Random seed 1 as generated: [1906497314]
+Using GSL MT19937 random number generator.
+Initial random number generator seed = 1906497314
+
+#============================
+#
+# MODTRAN options as follows:
+#
+# Atmospheric model: 1 (Tropical atmosphere)
+# Haze: 3 (NAVY MARITIME extinction, VIS is wind and humidity dependent)
+# Season: 2
+# Vulcanic dust: 0
+# Current wind speed: 0.100000 m/s
+# 24 h average wind speed: 0.100000 m/s
+# Zenith angle:  0.00 deg
+# End altitude: 2.156 km
+# Ground altitude: 0.000 km
+#
+#============================
+
+Reading single photoelectron pulse height data from file spe_LST_2022-04-27_AP2.0e-4.dat
+Average pulse height is 0.990676
+Using 252 points for prompt single-p.e. response, 2101 for background.
+Reading FADC pulse shape data from file LST_pulse_shape_7dynode_high_intensity_pix1s.dat for 2 gains
+FADC pulse shape from -10.60 to 29.30 ns with peak at 9.10 ns.
+FADC pulse area = 2.760 (hg) / 3.214 (lg), oversampling = 40
+FADC pulse positive part has area 2.826 (hg) / 3.678 (lg).
+Revised NSB signal handling scheme treats p.e. from NSB the same as signal p.e.
+Reading data for pulse shape at discriminator/comparator/analog sum from file LST_pulse_shape_7dynode_high_intensity_pix1s.dat
+Signal shape at discr./comparator is 92 bins of 0.24 ns wide (t= 3.97 to 26.19 ns).
+Signal area of average single p.e. at discr./comparator: 2.754 .
+Positive part of pulse of width 28 bins has an area of 2.424 .
+Total pulse of width 39.90 ns width has an area of 2.760 (linear) / 2.760 (cspline).
+NSB level is auto-scaled by a factor of 1.000 for all telescopes at zenith angle 0.00 deg.
+
+Start setting up telescope 1.
+Applying 0 weak command-line configuration parameter(s).
+Check additional configuration for telescope 1 from /workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/model/7.0.0/CTA-North-LSTN-04_simulate_flasher.cfg.
+Configuration for LSTN-04 - TELESCOPE 1
+Metaparam config handler called with: telescope add asum_clipping
+Metaparam config handler called with: telescope add asum_shaping_file
+Metaparam config handler called with: telescope add asum_threshold
+Metaparam config handler called with: telescope add camera_config_file
+Metaparam config handler called with: telescope add camera_degraded_efficiency
+Metaparam config handler called with: telescope add camera_degraded_map
+Metaparam config handler called with: telescope add default_trigger
+Metaparam config handler called with: telescope add discriminator_pulse_shape
+Metaparam config handler called with: telescope add dish_shape_length
+Metaparam config handler called with: telescope add effective_focal_length
+Metaparam config handler called with: telescope add focal_length
+Metaparam config handler called with: telescope add focus_offset
+Metaparam config handler called with: telescope add mirror_class
+Metaparam config handler called with: telescope add mirror_degraded_reflection
+Metaparam config handler called with: telescope add mirror_focal_length
+Metaparam config handler called with: telescope add mirror_list
+Metaparam config handler called with: telescope add muon_mono_thresh
+Metaparam config handler called with: telescope add nsb_autoscale_airmass
+Metaparam config handler called with: telescope add nightsky_background
+Metaparam config handler called with: telescope add parabolic_dish
+Metaparam config handler called with: telescope add primary_degraded_map
+Metaparam config handler called with: telescope add random_mono_prob
+Metaparam config handler called with: telescope add array_triggers
+Metaparam config handler called with: telescope add atmospheric_transmission
+Metaparam config handler called with: telescope add altitude
+Metaparam config handler called with: telescope add nsb_scaling_factor
+Metaparam config handler called with: telescope add nsb_sky_map
+Metaparam config handler called with: telescope set latitude=28.7621661
+Metaparam config handler called with: telescope set longitude=-17.8920302
+Metaparam config handler called with: telescope add stars
+170 configuration lines were processed.
+Applying 13 forced command-line configuration parameter(s).
+Filled 39 metaparameters for global configuration.
+Camera 1 by default requires 3 pixels per trigger group.
+Reading setup for telescope 1 camera from file camera_CTA-LST-234_analogsum21_v2020-04-14.dat
+Pixel type 1 has a hexagonal (flat y) funnel onto a circular visible cathode.
+Reading funnel angle efficiencies for telescope 1 from CTA-LST_lightguide_eff_2020-04-12_average.dat
+Telescope 1 has 198 mirrors (from file mirror_CTA-N-LST4_v2020-04-07_rotated.dat).
+Geometric area of 198 mirrors (inclination corrected): 386.97 m^2.
+Diameter is approximately 24.774 m
+Effective focal length given as 2923.7 for nominal 2800.0 cm.
+Random reflections in 78.0% of cases with 0.0075 deg. and in 22.0% of cases with 0.0220 deg.
+Warning: trigger window does not cover full readout window.
+(F)ADC data is simulated for a readout window of up to 73.2 ns,
+trigger conditions in a 73.2 ns window starting 2.9 ns before (F)ADC data.
+Analog sum trigger shaping: 1.000000 with offset 0.
+Telescope 1 has an analog sum trigger
+smax=2.763522, signal_area=2.760494 -> max_int_frac=1.001097 (os=40, fl=41, sb=40)
+Camera filter 1-D transmission table applied for telescope 1.
+Pixel transit times randomized by 0.360 ns.
+Average night sky background of telescope 1: 0.189 p.e./ns (DC current: 1.25 uA)
+
+A total of 1855 electronics channels were allocated (2.6 MiB total).
+
+Allocated:
+   160.0 MB for photon bunches,
+   80.0 MB for photo-electrons,
+   0.3 MB for optics elements of 1 telescopes,
+   0.2 MB for the simulation of their cameras,
+   3.1 MB for the electronics, with up to 1 telescopes to be used.
+Program is made interruptible.
+Press <Ctl><C> once to terminate before all data is processed.
+
+Input file: /workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher.iact.gz
+Telescope simulation matching shower simulations for a site altitude of 2156 m.
+Run 1 (started 2026-02-09): observation level is at 2156.0 m
+Events created between 0.00 and 0.00 TeV following a power law
+of E^ 0.00 are now weighted by E^-2.68
+
+Cannot retrieve number of showers in run 1 from run end.
+Reason: input is read from a pipe. No random access available.
+
+CORSIKA was run with the following input lines:
+   * CORSIKA 6.999 + IACT/ATMO 1.70 (2025-08-06), IACT_NO_GRID inputs:
+   * This file was actually produced by an IactLightEmission
+   * application and not by CORSIKA itself.
+   * It is based on artificial light sources and
+   * interaction model parameters are irrelevant.
+   * IactLightEmission version 2023-01-31 was used.
+   * The application was apparently started as:
+   *    /workdir/simulation_software/sim_telarray/LightEmission/ff-1m -I. -I/workdir/simulation_software/sim_telarray/cfg -I/workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/model/7.0.0 --altitude 2156.0 --atmosphere 1 --events 1 --photons 100000.0 --bunchsize 1 --xy 0.0,0.0 --distance 2800.0 --camera-radius 246.0731598529185 --spectrum 355 --lightpulse /workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/light_emission/flasher_pulse_shape_LSTN-04_LSFN-desig
+   IACT print_events 999 10 100 1000 0
+   * Command line: /workdir/simulation_software/sim_telarray/LightEmission/ff-1m -I. -I/workdir/simulation_software/sim_telarray/cfg -I/workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/model/7.0.0 --altitude 2156.0 --atmosphere 1 --events 1 --photons 100000.0 --bunchsize 1 --xy 0.0,0.0 --distance 2800.0 --camera-radius 246.0731598529185 --spectrum 355 --lightpulse /workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/light_emission/flasher_pulse_shape_LSTN-04
+
+Atmospheric profile 1 (originally from file atmprof1.dat):
+Observation level is at 215600 cm (2.156 km) a.s.l.
+
+ Col. #1          #2           #3            #4
+ Altitude [km]  rho[g/cm^3]  thick[g/cm^2]  n-1
+     0.000    1.21171E-03  1.04473E+03  2.80503E-04
+     1.000    1.10668E-03  9.28757E+02  2.55945E-04
+     2.000    9.94136E-04  8.23744E+02  2.29611E-04
+     3.000    8.95722E-04  7.29383E+02  2.06790E-04
+     4.000    8.08841E-04  6.44231E+02  1.86701E-04
+     5.000    7.30269E-04  5.67337E+02  1.68543E-04
+     6.000    6.58524E-04  4.97953E+02  1.51971E-04
+     7.000    5.93128E-04  4.35418E+02  1.36870E-04
+     8.000    5.32869E-04  3.79158E+02  1.22958E-04
+     9.000    4.77143E-04  3.28692E+02  1.10095E-04
+    10.000    4.25150E-04  2.83604E+02  9.80958E-05
+    11.000    3.75757E-04  2.43576E+02  8.66992E-05
+    12.000    3.28019E-04  2.08398E+02  7.56860E-05
+    13.000    2.82320E-04  1.77911E+02  6.51440E-05
+    14.000    2.41912E-04  1.51754E+02  5.58221E-05
+    15.000    2.08124E-04  1.29303E+02  4.80269E-05
+    16.000    1.79307E-04  1.09964E+02  4.13780E-05
+    17.000    1.53602E-04  9.33403E+01  3.54470E-05
+    18.000    1.30524E-04  7.91567E+01  3.01220E-05
+    19.000    1.10293E-04  6.71401E+01  2.54539E-05
+    20.000    9.29470E-05  5.70017E+01  2.14511E-05
+    21.000    7.83219E-05  4.84597E+01  1.80762E-05
+    22.000    6.60881E-05  4.12576E+01  1.52529E-05
+    23.000    5.58708E-05  3.51749E+01  1.28950E-05
+    24.000    4.73127E-05  3.00282E+01  1.09199E-05
+    25.000    4.01082E-05  2.56674E+01  9.25712E-06
+    26.000    3.40466E-05  2.19684E+01  7.85813E-06
+    27.000    2.89359E-05  1.88265E+01  6.67860E-06
+    28.000    2.46215E-05  1.61547E+01  5.68283E-06
+    29.000    2.09871E-05  1.38795E+01  4.84401E-06
+    30.000    1.79246E-05  1.19382E+01  4.13716E-06
+    32.000    1.31167E-05  8.85979E+00  3.02748E-06
+    34.000    9.62403E-06  6.60454E+00  2.22134E-06
+    36.000    7.10790E-06  4.94503E+00  1.64059E-06
+    38.000    5.28634E-06  3.71535E+00  1.22015E-06
+    40.000    3.95996E-06  2.79750E+00  9.14008E-07
+    42.000    2.98217E-06  2.10841E+00  6.88323E-07
+    44.000    2.26712E-06  1.58687E+00  5.23281E-07
+    46.000    1.74046E-06  1.18966E+00  4.01720E-07
+    48.000    1.33205E-06  8.80868E-01  3.07454E-07
+    50.000    8.52173E-07  6.65009E-01  1.96692E-07
+    55.000    4.66214E-07  3.60264E-01  1.07608E-07
+    60.000    2.52664E-07  1.83335E-01  5.83180E-08
+    65.000    1.32180E-07  9.03297E-02  3.05087E-08
+    70.000    6.56526E-08  4.25314E-02  1.51535E-08
+    75.000    3.09207E-08  1.93839E-02  7.13689E-09
+    80.000    1.40559E-08  8.66629E-03  3.24427E-09
+    85.000    6.30726E-09  3.82984E-03  1.45580E-09
+    90.000    2.82712E-09  1.66107E-03  6.52535E-10
+    95.000    1.24678E-09  6.92732E-04  2.87772E-10
+   100.000    5.16989E-10  2.75865E-04  1.19328E-10
+   105.000    2.03675E-10  1.07349E-04  4.70107E-11
+   110.000    8.14116E-11  4.09604E-05  1.87908E-11
+   115.000    3.45898E-11  1.36099E-05  7.98376E-12
+   120.000    2.09799E-11  0.00000E+00  4.84242E-12
+
+No values included for CORSIKA 5-layer parametrization.
+
+Atmospheric profile provided internally (profile no. 1 with 55 levels read from file atmprof1.dat)
+
+Initialize atmosphere ranging from 0.000 to 120.000 km a.s.l.
+
+Results of the atmosphere fit:
+  Layer 1:   0.00 km < h <   4.00 km: a =     -164.338, b =      1209.07, c =       994186
+  Layer 2:   4.00 km < h <  10.00 km: a =      -133.71, b =      1178.34, c =       963373
+  Layer 3:  10.00 km < h <  25.00 km: a =       -1.287, b =      1372.08, c =       636143
+  Layer 4:  25.00 km < h < 116.00 km: a = -3.24737e-05, b =      992.546, c =       683985
+  Layer 5: 116.00 km < h < 120.00 km: a =  0.000309548, b =            1, c =  3.87661e+10
+  Sum of residuals squared: 0.208195 (compared to 3.18451 with starting layers)
+
+
+Altitude [km]    rho(table)     rho(fit)       thick(table)  thick(fit)
+       0.0      1.21171e-03   1.21614e-03      1.04473e+03   1.04473e+03
+       1.0      1.10668e-03   1.09976e-03      9.28757e+02   9.29032e+02
+       2.0      9.94136e-04   9.94526e-04      8.23744e+02   8.24406e+02
+       3.0      8.95722e-04   8.99358e-04      7.29383e+02   7.29792e+02
+       4.0      8.08841e-04   8.07518e-04      6.44231e+02   6.44231e+02
+       5.0      7.30269e-04   7.27900e-04      5.67337e+02   5.67529e+02
+       6.0      6.58524e-04   6.56132e-04      4.97953e+02   4.98389e+02
+       7.0      5.93128e-04   5.91440e-04      4.35418e+02   4.36067e+02
+       8.0      5.32869e-04   5.33126e-04      3.79158e+02   3.79889e+02
+       9.0      4.77143e-04   4.80562e-04      3.28692e+02   3.29250e+02
+      10.0      4.25150e-04   4.47841e-04      2.83604e+02   2.83604e+02
+      11.0      3.75757e-04   3.82696e-04      2.43576e+02   2.42162e+02
+      12.0      3.28019e-04   3.27027e-04      2.08398e+02   2.06749e+02
+      13.0      2.82320e-04   2.79456e-04      1.77911e+02   1.76487e+02
+      14.0      2.41912e-04   2.38805e-04      1.51754e+02   1.50627e+02
+      15.0      2.08124e-04   2.04068e-04      1.29303e+02   1.28529e+02
+      16.0      1.79307e-04   1.74383e-04      1.09964e+02   1.09646e+02
+      17.0      1.53602e-04   1.49016e-04      9.33403e+01   9.35088e+01
+      18.0      1.30524e-04   1.27340e-04      7.91567e+01   7.97194e+01
+      19.0      1.10293e-04   1.08816e-04      6.71401e+01   6.79358e+01
+      20.0      9.29470e-05   9.29875e-05      5.70017e+01   5.78664e+01
+      21.0      7.83219e-05   7.94611e-05      4.84597e+01   4.92616e+01
+      22.0      6.60881e-05   6.79023e-05      4.12576e+01   4.19086e+01
+      23.0      5.58708e-05   5.80249e-05      3.51749e+01   3.56252e+01
+      24.0      4.73127e-05   4.95844e-05      3.00282e+01   3.02558e+01
+      25.0      4.01082e-05   3.75263e-05      2.56674e+01   2.56674e+01
+      26.0      3.40466e-05   3.24221e-05      2.19684e+01   2.21762e+01
+      27.0      2.89359e-05   2.80121e-05      1.88265e+01   1.91599e+01
+      28.0      2.46215e-05   2.42020e-05      1.61547e+01   1.65538e+01
+      29.0      2.09871e-05   2.09101e-05      1.38795e+01   1.43022e+01
+      30.0      1.79246e-05   1.80660e-05      1.19382e+01   1.23568e+01
+      32.0      1.31167e-05   1.34857e-05      8.85979e+00   9.22397e+00
+      34.0      9.62403e-06   1.00666e-05      6.60454e+00   6.88538e+00
+      36.0      7.10790e-06   7.51439e-06      4.94503e+00   5.13970e+00
+      38.0      5.28634e-06   5.60924e-06      3.71535e+00   3.83661e+00
+      40.0      3.95996e-06   4.18712e-06      2.79750e+00   2.86389e+00
+      42.0      2.98217e-06   3.12554e-06      2.10841e+00   2.13779e+00
+      44.0      2.26712e-06   2.33311e-06      1.58687e+00   1.59578e+00
+      46.0      1.74046e-06   1.74159e-06      1.18966e+00   1.19119e+00
+      48.0      1.33205e-06   1.30004e-06      8.80868e-01   8.89176e-01
+      50.0      8.52173e-07   9.70438e-07      6.65009e-01   6.63733e-01
+      55.0      4.66214e-07   4.67191e-07      3.60264e-01   3.19519e-01
+      60.0      2.52664e-07   2.24916e-07      1.83335e-01   1.53807e-01
+      65.0      1.32180e-07   1.08280e-07      9.03297e-02   7.40292e-02
+      70.0      6.56526e-08   5.21283e-08      4.25314e-02   3.56225e-02
+      75.0      3.09207e-08   2.50957e-08      1.93839e-02   1.71326e-02
+      80.0      1.40559e-08   1.20816e-08      8.66629e-03   8.23119e-03
+      85.0      6.30726e-09   5.81637e-09      3.82984e-03   3.94584e-03
+      90.0      2.82712e-09   2.80013e-09      1.66107e-03   1.88278e-03
+      95.0      1.24678e-09   1.34805e-09      6.92732e-04   8.89571e-04
+     100.0      5.16989e-10   6.48980e-10      2.75865e-04   4.11419e-04
+     105.0      2.03675e-10   3.12434e-10      1.07349e-04   1.81226e-04
+     110.0      8.14116e-11   1.50413e-10      4.09604e-05   7.04063e-05
+     115.0      3.45898e-11   7.24120e-11      1.36099e-05   1.70550e-05
+     120.0      2.09799e-11   2.57957e-11      0.00000e+00   0.00000e+00
+
+ Std. dev. in density ratio: 2.955 percent, in thickness ratio: 1.396 percent,
+ including only layers at thickness above 1 g/cm^2 (altitude below 47.154 km).
+
+
+Simulated telescope array:
+   Telescope 1 at x=  0.00 m, y=  0.00 m, z=  0.00 m above obs. level with r= 2.46 m, separated by 100000000.00 m
+Array viewing direction: azimuth=  0.00 deg, altitude= 90.00 deg
+
+Prior estimated speed of light at observation level was 29.9724135 cm/ns.
+Speed of light at observation level 2156 m a.s.l. in profile 1 (1) is 29.9724789 cm/ns.
+  CORSIKA particle tracking started at injection into atmosphere (TSTART on).
+Event 1: particle type 1 with energy 0.000 TeV (weight 144543988030387992119219297714176.000),
+   zenith angle 0.00 deg, azimuth 360.00 deg, 1st int. in 2.156 km alt.
+
+CORSIKA/IACT interface flags:
+CORSIKA was compiled with VOLUMEDET option.
+CORSIKA/IACT interface supported the VOLUMEDET option.
+CORSIKA was compiled with ATMEXT option.
+CORSIKA ATMEXT option used with refraction.
+
+CORSIKA interaction model flags:
+CORSIKA low-energy interactions with URQMD.
+CORSIKA high-energy interactions with QGSJET.
+
+
+Number of showers in run 1 (from run header): 0
+Number of events in run 1 (from run header): 0
+
+
+The hessio library was compiled with the following limits:
+   H_MAX_TEL: 99
+   H_MAX_PIX: 2368
+   H_MAX_SECTORS: 23310
+   H_MAX_DRAWERS: 2368
+   H_MAX_PIXSECTORS: 19
+   H_MAX_SLICES: 160
+   H_MAX_HOTPIX: 5
+   H_MAX_PROFILE: 10
+   H_MAX_D_TEMP: 8
+   H_MAX_C_TEMP: 10
+   H_MAX_GAINS: 2
+
+
+Memory usage by various components:
+   simtel_analysis_data ana_data: 43151328 (41.2 MiB)
+   AllHessData hsdata:           210527600 (200.8 MiB)
+   struct telescope_array:       55952 (0.05 MiB)
+   struct telescope_optics:   99*263736 (24.9 MiB)
+   struct pm_camera:          99*207224 (19.6 MiB)
+   struct camera_electronics: 99*362304 (34.2 MiB)
+   bunches:                      160000000 (152.6 MiB)
+   photo_electrons:              80000000 (76.3 MiB)
+
+
+Output file '/workdir/external/simtools/tests/resources/flasher_full_simulation_lst_north/sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher.simtel.zst' has been opened.
+Additional memory allocated under hsdata: 1.6 MiB
+
+Telescope 1: time_offset=-393026.49 ns, nominal_delay=  0.00 ns (  0.00, -0.00,  0.00), als=29.972414 cm/ns,
+    trigger (local) time=39.06 ns, central time=-393084.17 ns, p.e. median time=-392991.78 ns,
+    fadc_delay= 34.71 ns (phase delay=-0.42 samples), sum_offset=9, sum_start0=31.00 [0 to 35],
+    telescope_delay=-96.75 ns, photon_delay= 19.00 ns, median_time=-392991.78
+
+Event 100 has triggered!
+Camera offset from nominal source = 0.00 cm, 0.00 cm
+E= 0.000 TeV, r=   0.00 m; Size=20179.0 (1487 pix.); width= 1.1495, length= 1.1663, dist= 0.0098, miss= 0.0005, alpha=  2.849 deg., Xmax=800.000, hmax=2241.71
+#@* Lines starting with '@*' contain the following columns:
+#@*  (1): event
+#@*  (2): telescope
+#@*  (3): energy
+#@*  (4): core distance to telescope
+#@*  (5): image size (amplitude) [p.e.]
+#@*  (6): number of pixels in image
+#@*  (7): width [deg.]
+#@*  (8): length [deg.]
+#@*  (9): distance [deg.]
+#@* (10): miss [deg.]
+#@* (11): alpha [deg.]
+#@* (12): Xmax [g/cm^2]
+#@* (13): Hmax [m]
+#@* (14): tel. has triggered
+#@* (15): no. of triggered pixels
+#@* (16): no. of available pixels
+#@* (17): no. of triggered groups
+#@* (18): no. of available groups
+#@* (19): no. of detected signal p.e.
+#@* (20): ideal signal from detected signal p.e.
+#@* (21): photons incident on fiducial sphere
+#@* (22): incident photons on sphere after accounting for atm. extinction
+#@* (23): incident photons after also accounting for ref*QE but
+#@*       not if hitting mirror(s)/pixels/lightcones and under what angles
+@* 100 1  0.000    0.00 20179.0 1487  1.1495  1.1663  0.0098  0.0005   2.849 800.000 2241.71   1 0 1855 948 474   22244 21927.22   100000.00 99606.03 36837.23
+Telescope 1 triggered (0/1/0/0, mask 2), trace readout from 31 to 70 of 75
+Event end data has been found.
+Shower of 0.0000 TeV energy was seen in 1 of 1 cases.
+Photon statistics:
+  All photons:               100000
+  Used photons:              100000
+  Not absorbed/max. Q.E.:     44078
+  Reflected on mirror:            0
+  Camera hit:                 36155
+  Pixel hit:                  36155
+  Detected:                   22244
+Trigger statistics:
+  Tel. triggered:             1
+  Tel. + array:               1
+  Early readout:              0
+  Late readout:               0
+Finish data conversion ...
+Writing 13 histograms to output file.
+Closed output file.
+Finished.
+Premature or unexpected end of run(s) after 1 events (1 showers) while expecting 0 events (0 / 0 showers).
+
+Sim_telarray finished at 2026-02-09 12:53:39 UTC after 0.102065 sec CPU time (0 sec elapsed): 1/1/1/1 tel., 1/1 events
