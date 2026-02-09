@@ -239,24 +239,23 @@ def _search_directory(directory, filename, rec=False):
     return None
 
 
-def find_executable_in_path(file_name, file_path):
+def find_executable_in_dir(name, directory):
     """
-    Find an executable in the given path.
+    Find an executable in the given directory.
 
     Parameters
     ----------
-    file_name: str
+    name: str
         Name of the executable to find.
-    file_path: str or Path
-        Path to search for the executable.
+    directory: str or Path
+        Directory to search for the executable.
     """
-    if file_name is None:
-        raise FileNotFoundError(f"{file_name} is not found")
-
-    exe_path = Path(file_path) / file_name
-    if not exe_path.is_file():
-        raise FileNotFoundError(f"{file_name} not found in {file_path}.")
-    return exe_path
+    path = Path(directory) / name
+    if not path.is_file():
+        raise FileNotFoundError(f"Executable not found: {path}")
+    if not os.access(path, os.X_OK):
+        raise PermissionError(f"Not executable: {path}")
+    return path
 
 
 def find_file(name, loc):
