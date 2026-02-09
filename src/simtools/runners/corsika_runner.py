@@ -34,7 +34,6 @@ class CorsikaRunner:
     ):
         """Initialize CorsikaRunner."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init CorsikaRunner")
         self.label = label
 
         self.corsika_config = corsika_config
