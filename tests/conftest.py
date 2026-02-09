@@ -3,7 +3,7 @@ import mmap
 import os
 import re
 import tarfile
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from unittest import mock
 from unittest.mock import PropertyMock
@@ -41,58 +41,42 @@ def mock_simulator_paths(request, tmp_test_directory):
     This fixture mocks the paths and executables to prevent FileNotFoundError
     when sim_telarray or corsika are not installed in the test environment.
 
-    This fixture does NOT apply to tests in test_settings.py, which specifically
-    test the path validation behavior.
+    This fixture does NOT apply to:
+
+    - test_settings.py (tests path validation behavior)
+    - integration_tests (need full installations with CORSIKA and sim_telarray to run)
     """
-    # Skip mock for test_settings.py as it tests the real path validation behavior
-    if "test_settings.py" in str(request.node.fspath):
+    test_file_path = str(request.node.fspath)
+    if "test_settings.py" in test_file_path or "integration_tests" in test_file_path:
         yield
         return
 
-    mock_sim_telarray_dir = Path(tmp_test_directory) / "sim_telarray"
-    mock_corsika_dir = Path(tmp_test_directory) / "corsika"
-    mock_corsika_interaction_table_dir = Path(tmp_test_directory) / "corsika_interaction_tables"
-    mock_sim_telarray_dir.mkdir(exist_ok=True)
-    (mock_sim_telarray_dir / "bin").mkdir(exist_ok=True)
-    mock_corsika_dir.mkdir(exist_ok=True)
-    mock_corsika_interaction_table_dir.mkdir(exist_ok=True)
+    # Create mock directories
+    sim_telarray_dir = Path(tmp_test_directory) / "sim_telarray"
+    corsika_dir = Path(tmp_test_directory) / "corsika"
+    interaction_table_dir = Path(tmp_test_directory) / "corsika_interaction_tables"
 
-    with (
-        mock.patch.object(
-            type(settings.config), "sim_telarray_path", new_callable=PropertyMock
-        ) as mock_sim_tel_path,
-        mock.patch.object(
-            type(settings.config), "corsika_path", new_callable=PropertyMock
-        ) as mock_corsika,
-        mock.patch.object(
-            type(settings.config), "sim_telarray_exe", new_callable=PropertyMock
-        ) as mock_sim_tel_exe,
-        mock.patch.object(
-            type(settings.config),
-            "sim_telarray_exe_debug_trace",
-            new_callable=PropertyMock,
-        ) as mock_sim_tel_exe_debug,
-        mock.patch.object(
-            type(settings.config), "corsika_exe", new_callable=PropertyMock
-        ) as mock_corsika_exe,
-        mock.patch.object(
-            type(settings.config), "corsika_exe_curved", new_callable=PropertyMock
-        ) as mock_corsika_exe_curved,
-        mock.patch.object(
-            type(settings.config),
-            "corsika_interaction_table_path",
-            new_callable=PropertyMock,
-        ) as mock_corsika_interaction_table,
-    ):
-        mock_sim_tel_path.return_value = mock_sim_telarray_dir
-        mock_corsika.return_value = mock_corsika_dir
-        mock_sim_tel_exe.return_value = mock_sim_telarray_dir / "bin" / "sim_telarray"
-        mock_sim_tel_exe_debug.return_value = (
-            mock_sim_telarray_dir / "bin" / "sim_telarray_debug_trace"
-        )
-        mock_corsika_exe.return_value = mock_corsika_dir / "corsika_flat"
-        mock_corsika_exe_curved.return_value = mock_corsika_dir / "corsika_curved"
-        mock_corsika_interaction_table.return_value = mock_corsika_interaction_table_dir
+    for directory in [sim_telarray_dir / "bin", corsika_dir, interaction_table_dir]:
+        directory.mkdir(parents=True, exist_ok=True)
+
+    # Define mock property paths
+    mock_paths = {
+        "sim_telarray_path": sim_telarray_dir,
+        "corsika_path": corsika_dir,
+        "sim_telarray_exe": sim_telarray_dir / "bin" / "sim_telarray",
+        "sim_telarray_exe_debug_trace": sim_telarray_dir / "bin" / "sim_telarray_debug_trace",
+        "corsika_exe": corsika_dir / "corsika_flat",
+        "corsika_exe_curved": corsika_dir / "corsika_curved",
+        "corsika_interaction_table_path": interaction_table_dir,
+    }
+
+    # Apply patches for all properties
+    with ExitStack() as stack:
+        for prop_name, return_value in mock_paths.items():
+            mock_obj = stack.enter_context(
+                mock.patch.object(type(settings.config), prop_name, new_callable=PropertyMock)
+            )
+            mock_obj.return_value = return_value
         yield
 
 
