@@ -20,3 +20,12 @@ A {ref}`TelescopeModel <telescope-model>` and few more physical parameters (zeni
 .. automodule:: camera.single_photon_electron_spectrum
    :members:
 ```
+
+## Trace analysis
+
+### trace_analysis
+
+```{eval-rst}
+.. automodule:: camera.trace_analysis
+   :members:
+```
