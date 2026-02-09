@@ -102,8 +102,12 @@ tar -xzf corsika7.7_simtelarray.tar.gz
 ./build_all prod6-sc qgs2 gsl
 ```
 
-The environmental variable `$SIMTOOLS_SIMTEL_PATH` should point towards the CORSIKA/sim_telarray installation
-(recommended to include it in the .env file with all other environment variables).
+The following environment variables must be set for simtools applications to find the CORSIKA/sim_telarray installation:
+
+- `$SIMTOOLS_SIM_TELARRAY_PATH`: Path to the sim_telarray installation (e.g., `/workdir/sim_telarray` in the container environment)
+- `$SIMTOOLS_CORSIKA_PATH`: Path to the CORSIKA installation (e.g., `/workdir/corsika` in the container environment)
+- `$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH`: Path to the CORSIKA interaction tables (e.g., `/workdir/corsika-interaction-tables` in the container environment)
+
 
 ## Model Database Access
 
@@ -136,7 +140,11 @@ SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
 # Name of the simulation model database
 SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model-v0-7-0'
 # Path to the sim_telarray installation
-SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
+SIMTOOLS_SIM_TELARRAY_PATH='/workdir/sim_telarray'
+# Path to the CORSIKA installation
+SIMTOOLS_CORSIKA_PATH='/workdir/corsika'
+# Path to the CORSIKA interaction tables
+SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH='/workdir/corsika-interaction-tables
 # User name of the user running the application
 SIMTOOLS_USER_NAME='Max Mustermann'
 # ORCID of the user running the application

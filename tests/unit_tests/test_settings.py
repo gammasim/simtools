@@ -73,10 +73,11 @@ def test_sim_telarray_path_property_none():
         _ = config.sim_telarray_path
 
 
+@patch("os.access", return_value=True)
 @patch("pathlib.Path.is_dir", return_value=True)
 @patch("pathlib.Path.is_file", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_sim_telarray_exe_property(mock_is_file, mock_is_dir, config_instance):
+def test_sim_telarray_exe_property(mock_is_file, mock_is_dir, mock_access, config_instance):
     config_instance.load(args={"sim_telarray_path": "/path/to/simtel"})
     assert config_instance.sim_telarray_exe == Path("/path/to/simtel/bin/sim_telarray")
 
@@ -87,10 +88,13 @@ def test_sim_telarray_exe_property_none():
         _ = config.sim_telarray_exe
 
 
+@patch("os.access", return_value=True)
 @patch("pathlib.Path.is_dir", return_value=True)
 @patch("pathlib.Path.is_file", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_sim_telarray_exe_debug_trace_property(mock_is_file, mock_is_dir, config_instance):
+def test_sim_telarray_exe_debug_trace_property(
+    mock_is_file, mock_is_dir, mock_access, config_instance
+):
     config_instance.load(args={"sim_telarray_path": "/path/to/simtel"})
     assert config_instance.sim_telarray_exe_debug_trace == Path(
         "/path/to/simtel/bin/sim_telarray_debug_trace"
@@ -104,20 +108,24 @@ def test_corsika_path_property(mock_is_dir, config_instance):
     assert config_instance.corsika_path == Path("/path/to/corsika")
 
 
+@patch("os.access", return_value=True)
 @patch("pathlib.Path.is_dir", return_value=True)
 @patch("pathlib.Path.is_file", return_value=True)
 @patch("pathlib.Path.exists", return_value=False)
 @patch.dict(os.environ, {}, clear=True)
-def test_corsika_exe_property(mock_exists, mock_is_file, mock_is_dir, config_instance):
+def test_corsika_exe_property(mock_exists, mock_is_file, mock_is_dir, mock_access, config_instance):
     config_instance.load(args={"corsika_path": "/path/to/corsika"})
     assert config_instance.corsika_exe == Path("/path/to/corsika/corsika")
 
 
+@patch("os.access", return_value=True)
 @patch("pathlib.Path.exists", return_value=True)
 @patch("pathlib.Path.is_dir", return_value=True)
 @patch("pathlib.Path.is_file", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_corsika_exe_curved_property(mock_is_file, mock_is_dir, mock_exists, config_instance):
+def test_corsika_exe_curved_property(
+    mock_is_file, mock_is_dir, mock_exists, mock_access, config_instance
+):
     config_instance.load(
         args={
             "corsika_path": "/path/to/corsika",
@@ -142,11 +150,14 @@ def test_corsika_exe_curved_none():
         _ = config.corsika_exe_curved
 
 
+@patch("os.access", return_value=True)
 @patch("pathlib.Path.exists", return_value=True)
 @patch("pathlib.Path.is_dir", return_value=True)
 @patch("pathlib.Path.is_file", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_corsika_exe_curved_flat(mock_is_file, mock_is_dir, mock_exists, config_instance):
+def test_corsika_exe_curved_flat(
+    mock_is_file, mock_is_dir, mock_exists, mock_access, config_instance
+):
     config_instance.load(
         args={
             "corsika_path": "/path/to/corsika",
@@ -157,11 +168,14 @@ def test_corsika_exe_curved_flat(mock_is_file, mock_is_dir, mock_exists, config_
     assert config_instance.corsika_exe_curved == Path("/path/to/corsika/corsika_qgs3_urqmd_curved")
 
 
+@patch("os.access", return_value=True)
 @patch("pathlib.Path.exists", return_value=False)
 @patch("pathlib.Path.is_dir", return_value=True)
 @patch("pathlib.Path.is_file", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_corsika_exe_curved_legacy(mock_is_file, mock_is_dir, mock_exists, config_instance):
+def test_corsika_exe_curved_legacy(
+    mock_is_file, mock_is_dir, mock_exists, mock_access, config_instance
+):
     config_instance.load(
         args={
             "corsika_path": "/path/to/corsika",

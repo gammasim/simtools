@@ -38,7 +38,7 @@ The following steps outline how to set up the development environment using cont
     ```
 
     The container includes a CORSIKA and sim_telarray installation;
-    the environmental variable `$SIMTOOLS_SIMTEL_PATH` and those for the database access are automatically set
+    the environmental variable required by the simulation software and those for the database access are automatically set
     (if variables are set correctly in the `.env` file).
 
 ## Installation without Containers

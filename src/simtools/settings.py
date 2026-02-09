@@ -5,7 +5,7 @@ import socket
 from pathlib import Path
 from types import MappingProxyType
 
-from simtools.utils.general import find_executable_in_path
+from simtools.utils.general import find_executable_in_dir
 
 
 class _Config:
@@ -112,7 +112,7 @@ class _Config:
     @property
     def sim_telarray_exe(self):
         """Path to the sim_telarray executable."""
-        return find_executable_in_path(
+        return find_executable_in_dir(
             self._sim_telarray_exe,
             Path(self._sim_telarray_path) / "bin",
         )
@@ -120,7 +120,7 @@ class _Config:
     @property
     def sim_telarray_exe_debug_trace(self):
         """Path to the debug trace version of the sim_telarray executable."""
-        return find_executable_in_path(
+        return find_executable_in_dir(
             self._sim_telarray_exe + "_debug_trace",
             Path(self._sim_telarray_path) / "bin",
         )
@@ -147,7 +147,7 @@ class _Config:
     @property
     def corsika_exe(self):
         """Path to the CORSIKA executable."""
-        return find_executable_in_path(self._corsika_exe, self.corsika_path)
+        return find_executable_in_dir(self._corsika_exe, self.corsika_path)
 
     @property
     def corsika_exe_curved(self):
@@ -157,7 +157,7 @@ class _Config:
             if "_flat" in self._corsika_exe.name
             else self._corsika_exe.name + "-curved"  # legacy naming convention
         )
-        return find_executable_in_path(corsika_curved, self.corsika_path)
+        return find_executable_in_dir(corsika_curved, self.corsika_path)
 
     @property
     def corsika_dummy_file(self):
