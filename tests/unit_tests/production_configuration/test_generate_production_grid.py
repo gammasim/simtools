@@ -1,4 +1,5 @@
 import logging
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -8,6 +9,7 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
+from astropy.utils.iers import IERSWarning
 
 from simtools.production_configuration.generate_production_grid import GridGeneration
 
@@ -208,12 +210,9 @@ def test_serialize_quantity(grid_gen, caplog):
     assert str(type(value)) in caplog.text
 
 
-@pytest.mark.xfail(
-    reason="May fail due to IERS data download timeout",
-    raises=(TimeoutError, ConnectionError),
-    strict=False,
-)
+@pytest.mark.xfail(reason="May fail due to IERS data download timeout", strict=False)
 def test_convert_altaz_to_radec_and_coordinates(grid_gen):
+    warnings.simplefilter("error", IERSWarning)
     # Case 1: Valid AltAz to RA/Dec conversion
     alt, az = 45.0 * u.deg, 30.0 * u.deg
     radec = grid_gen.convert_altaz_to_radec(alt, az)

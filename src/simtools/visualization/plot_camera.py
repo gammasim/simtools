@@ -36,20 +36,18 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     fig : plt.Figure
         Figure with the pixel layout.
     """
-    logger.info(f"Plotting the {camera.telescope_model_name} camera")
+    logger.info(f"Plotting the {camera.telescope_name} camera")
 
     fig, ax = plt.subplots(figsize=(8, 8))
 
-    if not is_two_mirror_telescope(camera.telescope_model_name) and not camera_in_sky_coor:
+    if not is_two_mirror_telescope(camera.telescope_name) and not camera_in_sky_coor:
         camera.pixels["y"] = [(-1) * y_val for y_val in camera.pixels["y"]]
 
-    on_pixels, edge_pixels, off_pixels = _pixel_type_lists(camera)
+    on_pixels, edge_pixels, off_pixels = _create_pixel_patches_by_type(camera)
     for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
         if camera.pixels["pix_id"][i_pix] < pixels_id_to_print + 1:
             font_size = (
-                4
-                if "SCT" in names.get_array_element_type_from_name(camera.telescope_model_name)
-                else 2
+                4 if "SCT" in names.get_array_element_type_from_name(camera.telescope_name) else 2
             )
             plt.text(
                 x, y, camera.pixels["pix_id"][i_pix], ha="center", va="center", fontsize=font_size
@@ -92,21 +90,11 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
         legend_objects.append(leg_h.OffPixelObject())
         legend_labels.append("Disabled pixel")
 
-    plt.axis("equal")
-    plt.grid(True)
-    ax.set_axisbelow(True)
-    plt.axis(
-        [
-            min(camera.pixels["x"]),
-            max(camera.pixels["x"]),
-            min(camera.pixels["y"]) * 1.42,
-            max(camera.pixels["y"]) * 1.42,
-        ]
-    )
+    _setup_camera_axis_properties(ax, camera, grid=True, axis_below=True, y_scale_factor=1.42)
     plt.xlabel("Horizontal scale [cm]", fontsize=18, labelpad=0)
     plt.ylabel("Vertical scale [cm]", fontsize=18, labelpad=0)
     ax.set_title(
-        f"Pixels layout in {camera.telescope_model_name:s} camera",
+        f"Pixels layout in {camera.telescope_name} camera",
         fontsize=15,
         y=1.02,
     )
@@ -118,7 +106,7 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
         False: "For an observer facing the camera",
         True: "For an observer behind the camera looking through",
         None: "For an observer looking from secondary to camera",
-    }[camera_in_sky_coor and not is_two_mirror_telescope(camera.telescope_model_name)]
+    }[camera_in_sky_coor and not is_two_mirror_telescope(camera.telescope_name)]
     ax.text(0.02, 0.02, description, transform=ax.transAxes, color="black", fontsize=12)
 
     fov, r_edge_avg = camera.calc_fov()
@@ -159,9 +147,134 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     return fig
 
 
-def _pixel_type_lists(camera):
+def plot_pixel_layout_with_image(
+    camera,
+    image=None,
+    colormap="viridis",
+    norm="lin",
+    ax=None,
+    vmin=None,
+    vmax=None,
+    add_color_bar=True,
+    color_bar_label="Pixel Value",
+    **kwargs,
+):
     """
-    Return on, off, and edge pixel lists.
+    Plot pixel layout with optional per-pixel values as colors.
+
+    Used to display DL1 images (e.g., integrated signal, peak timing) on the camera.
+
+    Parameters
+    ----------
+    camera : Camera
+        Camera object with pixel geometry.
+    image : np.ndarray, optional
+        Per-pixel values to display as colors (shape: n_pix,).
+        If None, plot layout without colored values.
+    colormap : str, optional
+        Colormap name (default "viridis").
+    norm : str, optional
+        Normalization type: "lin" (linear), "log", or "symlog" (default "lin").
+    ax : plt.Axes, optional
+        Existing axes to plot on. If None, create new figure.
+    vmin, vmax : float, optional
+        Value range for normalization. If None, use data range.
+    add_color_bar : bool, optional
+        Whether to add a color bar (default True).
+    color_bar_label : str, optional
+        Label for the color bar (default "Pixel Value").
+    **kwargs
+        Additional arguments passed to plt.subplots() if ax is None.
+
+    Returns
+    -------
+    plt.Figure
+        Figure with the pixel layout and optional image overlay.
+    """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (8, 8)))
+    else:
+        fig = ax.figure
+
+    colors, cmap, norm_obj = _color_normalization(image, colormap, norm, vmin, vmax)
+
+    for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
+        shape = _pixel_shape(camera, x, y)
+
+        if colors is not None and image is not None:
+            facecolor = colors[i_pix]
+            edgecolor = "black"
+            linewidth = 0.1
+        elif camera.pixels["pix_on"][i_pix]:
+            facecolor = "none"
+            edgecolor = "black"
+            linewidth = 0.2
+        else:
+            facecolor = "black"
+            edgecolor = "black"
+            linewidth = 0.2
+
+        ax.add_patch(shape)
+        shape.set_facecolor(facecolor)
+        shape.set_edgecolor(edgecolor)
+        shape.set_linewidth(linewidth)
+
+    # Add colorbar if image provided
+    if colors is not None and image is not None and add_color_bar:
+        sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm_obj)
+        sm.set_array([])
+        cbar = fig.colorbar(sm, ax=ax, fraction=0.02, pad=0.05)
+        cbar.set_label(color_bar_label, fontsize=10)
+    _setup_camera_axis_properties(ax, camera, grid=True, grid_alpha=0.3, padding=1)
+    ax.set_xlabel("x [cm]", fontsize=12)
+    ax.set_ylabel("y [cm]", fontsize=12)
+
+    return fig
+
+
+def _color_normalization(image, color_map, norm_type="lin", vmin=None, vmax=None):
+    """
+    Color normalize an image array for plotting.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        Array of pixel values.
+    color_map : str
+        Colormap name.
+    norm_type : str, optional
+        Normalization type: "lin", "log", or "symlog" (default "lin").
+    vmin, vmax : float, optional
+        Value range for normalization.
+
+    Returns
+    -------
+    np.ndarray, plt.Colormap, mcolors.Normalize
+        Array of RGBA colors for each pixel.
+        Colormap instance.
+        Normalization instance.
+        Returns None for colors if image is None.
+    """
+    if image is None:
+        return None
+
+    if norm_type == "log":
+        norm = mcolors.LogNorm(vmin=vmin, vmax=vmax)
+    elif norm_type == "symlog":
+        norm = mcolors.SymLogNorm(vmin=vmin, vmax=vmax)
+    else:  # "lin"
+        norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+
+    normalized_image = norm(image)
+    cmap = plt.get_cmap(color_map)
+    colors = cmap(normalized_image)
+
+    return colors, cmap, norm
+
+
+def _create_pixel_patches_by_type(camera):
+    """
+    Create pixel patches categorized by type (on, edge, off).
 
     Parameters
     ----------
@@ -171,11 +284,11 @@ def _pixel_type_lists(camera):
     Returns
     -------
     on_pixels : list
-        List of on pixels.
+        List of on pixel patches.
     edge_pixels : list
-        List of edge pixels.
+        List of edge pixel patches.
     off_pixels : list
-        List of off pixels.
+        List of off pixel patches.
     """
     on_pixels, edge_pixels, off_pixels = [], [], []
 
@@ -193,6 +306,50 @@ def _pixel_type_lists(camera):
             off_pixels.append(shape)
 
     return on_pixels, edge_pixels, off_pixels
+
+
+def _setup_camera_axis_properties(
+    ax, camera, grid=False, axis_below=False, grid_alpha=None, y_scale_factor=1.0, padding=0
+):
+    """
+    Set up common axis properties for camera plots.
+
+    Parameters
+    ----------
+    ax : plt.Axes
+        Axes to configure.
+    camera : Camera
+        Camera object containing pixel data.
+    grid : bool, optional
+        Whether to show grid (default False).
+    axis_below : bool, optional
+        Whether to place grid below plot elements (default False).
+    grid_alpha : float, optional
+        Grid transparency (None uses default).
+    y_scale_factor : float, optional
+        Scale factor for y-axis limits (default 1.0).
+    padding : float, optional
+        Extra padding around pixel layout in cm (default 0).
+    """
+    x_min, x_max = min(camera.pixels["x"]), max(camera.pixels["x"])
+    y_min, y_max = min(camera.pixels["y"]), max(camera.pixels["y"])
+
+    if y_scale_factor > 1.0:
+        ax.axis([x_min, x_max, y_min * y_scale_factor, y_max * y_scale_factor])
+    else:
+        ax.set_xlim(x_min - padding, x_max + padding)
+        ax.set_ylim(y_min - padding, y_max + padding)
+
+    ax.set_aspect("equal", "datalim")
+
+    if grid:
+        if grid_alpha is not None:
+            ax.grid(True, alpha=grid_alpha)
+        else:
+            ax.grid(True)
+
+    if axis_below:
+        ax.set_axisbelow(True)
 
 
 def _pixel_shape(camera, x, y):
@@ -250,7 +407,7 @@ def _plot_axes_def(camera, plot, rotate_angle):
     """
     invert_yaxis = False
     x_left = 0.7  # Position of the left most axis
-    if not is_two_mirror_telescope(camera.telescope_model_name):
+    if not is_two_mirror_telescope(camera.telescope_name):
         invert_yaxis = True
         x_left = 0.8
 
