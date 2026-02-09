@@ -63,15 +63,21 @@ def check_output_from_sim_telarray(file, file_test):
     ValueError
         If the file is not a zstd compressed file.
     """
-    if "expected_output" not in file_test and "expected_simtel_metadata" not in file_test:
+    if (
+        "expected_sim_telarray_output" not in file_test
+        and "expected_sim_telarray_metadata" not in file_test
+    ):
         _logger.debug(f"No expected output or metadata provided, skipping checks {file_test}")
         return True
 
     assert_sim_telarray = []
 
     expected_output_key_map = {
-        "expected_output": ("assert_expected_sim_telarray_output", "expected_sim_telarray_output"),
-        "expected_simtel_metadata": (
+        "expected_sim_telarray_output": (
+            "assert_expected_sim_telarray_output",
+            "expected_sim_telarray_output",
+        ),
+        "expected_sim_telarray_metadata": (
             "assert_expected_sim_telarray_metadata",
             "expected_sim_telarray_metadata",
         ),

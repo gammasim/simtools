@@ -33,6 +33,7 @@ applications:
         trigger_time:
         - 0
         - 50
+      require_telescope_events: true
       file: gamma_run000001_za40deg_azm180deg_North_alpha_6.0.2_test.simtel.zst
       path_descriptor: pack_for_grid_register
     - expected_log_output:

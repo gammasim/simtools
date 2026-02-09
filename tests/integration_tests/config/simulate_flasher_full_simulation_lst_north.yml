@@ -14,6 +14,21 @@ applications:
   integration_tests:
   - output_file: sub/full_simulation_run000010_North_7.0.0_simulate_flasher.out
   - output_file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher.simtel.zst
+  - test_output_files:
+    - expected_sim_telarray_output:
+        pe_sum:
+        - 1000
+        - 50000
+        photons:
+        - 90
+        - 100000
+        # trigger_time:
+        # - 0
+        # - 50
+        require_telescope_events: true
+      file: full_simulation_run000010_North_7.0.0_simulate_flasher.simtel.zst
+      path_descriptor: output_path
+      output_sub_path: sim_telarray
   model_version_use_current: true
   test_name: full-simulation_lsfn_design
 schema_name: application_workflow.metaschema

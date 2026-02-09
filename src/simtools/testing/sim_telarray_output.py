@@ -25,7 +25,40 @@ def assert_expected_sim_telarray_output(file, expected_sim_telarray_output):
     """
     if expected_sim_telarray_output is None:
         return True
+
+    item_to_check = _item_to_check_from_sim_telarray(file, expected_sim_telarray_output)
+    _logger.debug(
+        "Extracted event numbers from sim_telarray file: "
+        f"telescope events: {item_to_check['n_telescope_events']}, "
+        f"calibration events: {item_to_check['n_calibration_events']}"
+    )
+
+    for key, value in expected_sim_telarray_output.items():
+        if key in ("require_telescope_events", "require_calibration_events"):
+            test_events = key.replace("require_", "")
+            if value and item_to_check.get(f"n_{test_events}", 0) == 0:
+                _logger.error(f"Expected {test_events} but found none")
+                return False
+            continue
+
+        if len(item_to_check[key]) == 0:
+            _logger.error(f"No data found for {key}")
+            return False
+
+        if not value[0] < np.mean(item_to_check[key]) < value[1]:
+            _logger.error(
+                f"Mean of {key} is not in the expected range, got {np.mean(item_to_check[key])}"
+            )
+            return False
+
+    return True
+
+
+def _item_to_check_from_sim_telarray(file, expected_sim_telarray_output):
+    """Read the relevant items from the sim_telarray file for checking against expected output."""
     item_to_check = defaultdict(list)
+    for key in ("n_telescope_events", "n_calibration_events"):
+        item_to_check[key] = 0
     with SimTelFile(file) as f:
         for event in f:
             if "pe_sum" in expected_sim_telarray_output:
@@ -40,19 +73,12 @@ def assert_expected_sim_telarray_output(file, expected_sim_telarray_output):
                         event["photoelectron_sums"]["photons"] > 0
                     ]
                 )
+            if "telescope_events" in event and len(event["telescope_events"]) > 0:
+                item_to_check["n_telescope_events"] += 1
+            if "type" in event and event["type"] == "calibration":
+                item_to_check["n_calibration_events"] += 1
 
-    for key, value in expected_sim_telarray_output.items():
-        if len(item_to_check[key]) == 0:
-            _logger.error(f"No data found for {key}")
-            return False
-
-        if not value[0] < np.mean(item_to_check[key]) < value[1]:
-            _logger.error(
-                f"Mean of {key} is not in the expected range, got {np.mean(item_to_check[key])}"
-            )
-            return False
-
-    return True
+    return item_to_check
 
 
 def assert_expected_sim_telarray_metadata(file, expected_sim_telarray_metadata):
@@ -109,9 +135,23 @@ def assert_n_showers_and_energy_range(file):
     consistent_n_showers = np.isclose(
         len(np.unique(simulated_energies)), simulation_config["n_showers"], rtol=1e-2
     )
+    if not consistent_n_showers:
+        _logger.error(
+            f"Number of showers in sim_telarray file {file} does not match the configuration. "
+            f"Simulated showers: {len(np.unique(simulated_energies))}, "
+            f"configuration: {simulation_config['n_showers']}"
+        )
+
     consistent_energy_range = all(
         simulation_config["E_range"][0] <= energy <= simulation_config["E_range"][1]
         for energy in simulated_energies
     )
+
+    if not consistent_energy_range:
+        _logger.error(
+            f"Energy range in sim_telarray file {file} does not match "
+            f"the configuration. Simulated energies: {simulated_energies}, "
+            f"configuration: {simulation_config}"
+        )
 
     return consistent_n_showers and consistent_energy_range

@@ -27,6 +27,20 @@ applications:
       - "had less photons than required and were skipped"
       file: sub/full_simulation_run000010_South_7.0.0_simulate_flasher.out
       path_descriptor: output_path
+    - expected_sim_telarray_output:
+        pe_sum:
+        - 1000
+        - 50000
+        photons:
+        - 90
+        - 100000
+        # trigger_time:
+        # - 0
+        # - 50
+        require_telescope_events: true
+      file: full_simulation_run000010_South_7.0.0_simulate_flasher.simtel.zst
+      path_descriptor: output_path
+      output_sub_path: sim_telarray
   model_version_use_current: true
   test_name: full-simulation-msfx-flashcam-7.0.0
 schema_name: application_workflow.metaschema
