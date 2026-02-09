@@ -13,6 +13,21 @@ applications:
     site: South
   integration_tests:
   - output_file: sim_telarray/run000007/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.simtel.zst
+  - test_output_files:
+    - expected_sim_telarray_output:
+        pe_sum:
+        - 20
+        - 1000
+        photons:
+        - 90
+        - 1000
+        trigger_time:
+        - 0
+        - 50
+        require_telescope_events: true
+      file: gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.simtel.zst
+      path_descriptor: output_path
+      output_sub_path: sim_telarray/run000007
   test_name: gamma_40_deg_south_sim_telarray_only
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

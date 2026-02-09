@@ -15,6 +15,22 @@ applications:
     site: North
   integration_tests:
   - output_file: sim_telarray/run000010/direct_injection_run000010_za20deg_azm000deg_North_1mst_7.0.0_test-flasher-direct-injection-mst-nectarcam.simtel.zst
+  - test_output_files:
+    - expected_sim_telarray_output:
+        pe_sum:
+        - 20
+        - 1000
+        photons:
+        - 90
+        - 1000
+        trigger_time:
+        - 0
+        - 50
+      require_calibration_events: true
+      file: direct_injection_run000010_za20deg_azm000deg_North_1mst_7.0.0_test-flasher-direct-injection-mst-nectarcam.simtel.zst
+      path_descriptor: output_path
+      output_sub_path: sim_telarray/run000010
+
   test_name: direction_injection_msfx_nectarcam_north
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
