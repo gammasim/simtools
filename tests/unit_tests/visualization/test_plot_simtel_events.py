@@ -265,9 +265,16 @@ def test_save_method(mock_plotter, io_handler, tmp_path):
     mock_plotter.figures = [plt.figure(), plt.figure()]
     output_file = tmp_path / "test_output.pdf"
 
-    with mock.patch("simtools.visualization.plot_simtel_events.save_figures_to_single_document"):
-        with mock.patch("simtools.visualization.plot_simtel_events.MetadataCollector.dump"):
+    with mock.patch(
+        "simtools.visualization.plot_simtel_events.save_figures_to_single_document"
+    ) as mock_save:
+        with mock.patch(
+            "simtools.visualization.plot_simtel_events.MetadataCollector.dump"
+        ) as mock_dump:
             mock_plotter.save({}, output_file)
+            mock_save.assert_called_once()
+            mock_dump.assert_called_once()
+            assert mock_save.call_args[0][0] == mock_plotter.figures
 
     for fig in mock_plotter.figures:
         plt.close(fig)
@@ -277,9 +284,15 @@ def test_save_method_no_figures(mock_plotter, tmp_path):
     """Test save method with no figures."""
     output_file = tmp_path / "test_output.pdf"
 
-    with mock.patch("simtools.visualization.plot_simtel_events.save_figures_to_single_document"):
-        with mock.patch("simtools.visualization.plot_simtel_events.MetadataCollector.dump"):
+    with mock.patch(
+        "simtools.visualization.plot_simtel_events.save_figures_to_single_document"
+    ) as mock_save:
+        with mock.patch(
+            "simtools.visualization.plot_simtel_events.MetadataCollector.dump"
+        ) as mock_dump:
             mock_plotter.save({}, output_file)
+            mock_save.assert_not_called()
+            mock_dump.assert_not_called()
 
 
 def test_read_and_init_event_no_events():
@@ -310,11 +323,15 @@ def test_generate_and_save_plots(mock_event_data, mock_camera, io_handler, tmp_p
             mock_cam.return_value = mock_camera
             with mock.patch(
                 "simtools.visualization.plot_simtel_events.save_figures_to_single_document"
-            ):
-                with mock.patch("simtools.visualization.plot_simtel_events.MetadataCollector.dump"):
+            ) as mock_save:
+                with mock.patch(
+                    "simtools.visualization.plot_simtel_events.MetadataCollector.dump"
+                ) as mock_dump:
                     plot_simtel_events.generate_and_save_plots(
                         simtel_files, ["time_traces"], args, io_handler
                     )
+                    mock_save.assert_called_once()
+                    mock_dump.assert_called_once()
 
 
 def test_generate_and_save_plots_multiple_events(
@@ -336,13 +353,15 @@ def test_generate_and_save_plots_multiple_events(
         mock_read.return_value = mock_event_data
         with mock.patch("simtools.visualization.plot_simtel_events.Camera") as mock_cam:
             mock_cam.return_value = mock_camera
-            with mock.patch("simtools.visualization.plot_simtel_events.save_figure"):
+            with mock.patch("simtools.visualization.plot_simtel_events.save_figure") as _:
                 with mock.patch(
                     "simtools.visualization.plot_simtel_events.save_figures_to_single_document"
-                ):
+                ) as mock_save_doc:
                     with mock.patch(
                         "simtools.visualization.plot_simtel_events.MetadataCollector.dump"
-                    ):
+                    ) as mock_dump:
                         plot_simtel_events.generate_and_save_plots(
                             simtel_files, ["waveforms"], args, io_handler
                         )
+                        assert mock_save_doc.call_count == 2
+                        assert mock_dump.call_count == 2
