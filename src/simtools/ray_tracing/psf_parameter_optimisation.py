@@ -567,7 +567,7 @@ class PSFParameterOptimizer:
         current_lr = learning_rate
 
         while iteration < max_iterations:
-            tolerance = 0.0001
+            tolerance = 0.1 * rmsd_threshold
             if current_metric <= (rmsd_threshold + tolerance):
                 logger.info(
                     f"Optimization converged: RMSD {current_metric:.6f} <= "
