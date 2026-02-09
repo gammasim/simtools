@@ -220,7 +220,7 @@ def test_load_camera(telescope_model_lst, monkeypatch, caplog):
     find_file_mock.return_value = camera_config_file
     tel_model._load_camera()
     camera_mock.assert_called_with(
-        telescope_model_name=tel_model.name,
+        telescope_name=tel_model.name,
         camera_config_file=camera_config_file,
         focal_length=focal_length,
     )
@@ -239,7 +239,7 @@ def test_load_camera(telescope_model_lst, monkeypatch, caplog):
     )
     assert find_file_mock.call_count == 2
     camera_mock.assert_called_with(
-        telescope_model_name=tel_model.name,
+        telescope_name=tel_model.name,
         camera_config_file=camera_config_file,
         focal_length=focal_length,
     )
