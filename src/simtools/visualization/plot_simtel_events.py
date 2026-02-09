@@ -180,7 +180,7 @@ class PlotSimtelEvent:
         """Save generated plots to files."""
         if not self.figures:
             _logger.warning("No figures produced for %s", self.file_name)
-
+            return
         save_figures_to_single_document(self.figures, output_file)
         _logger.info("Saved PDF: %s", output_file)
         MetadataCollector.dump(args, output_file, add_activity_name=True)
