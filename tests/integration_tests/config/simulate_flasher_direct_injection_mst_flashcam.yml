@@ -3,7 +3,7 @@ applications:
 - application: simtools-simulate-flasher
   configuration:
     run_mode: direct_injection
-    light_source: MSFx-NectarCam
+    light_source: MSFx-FlashCam
     array_layout_name: subsystem_msts
     label: test-flasher-direct-injection-south
     log_level: DEBUG
@@ -30,7 +30,6 @@ applications:
       file: direct_injection_run000010_za20deg_azm000deg_South_subsystem_msts_7.0.0_test-flasher-direct-injection-south.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray/run000010
-
-  test_name: direction_injection_msfx_nectarcam_south
+  test_name: direction_injection_msfx_flashcam_south
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
