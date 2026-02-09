@@ -14,16 +14,20 @@ class Camera:
     Camera class, defining pixel layout.
 
     This includes rotation, finding neighbor pixels, calculating FoV and plotting the camera.
+    Assume that all pixels have the same shape and size.
 
     Parameters
     ----------
-    telescope_model_name: str
-        As provided by the telescope model method TelescopeModel (e.g., LSTN-01)
+    telescope_name: str
+        Telescope name (e.g., LSTN-01)
     camera_config_file: str or Path
-        The sim_telarray file name.
+        The sim_telarray camera configuration file.
     focal_length: float
         The focal length of the camera in (preferably the effective focal length), assumed to be \
         in the same unit as the pixel positions in the camera_config_file, usually cm.
+    camera_config_dict: dict, optional
+        Dictionary (as provided by eventio) with camera configuration information.
+        Used alternatively to camera_config_file, which is ignored when this is provided.
     """
 
     # Constants for finding neighbor pixels.
@@ -32,28 +36,29 @@ class Camera:
     SIPM_ROW_COLUMN_DIST_FACTOR = 0.2
 
     def __init__(
-        self, telescope_model_name: str, camera_config_file: str | Path, focal_length: float
+        self,
+        telescope_name,
+        camera_config_file,
+        focal_length,
+        camera_config_dict=None,
     ):
-        """
-        Initialize Camera class, defining pixel layout.
-
-        This includes rotation, finding neighbor pixels, calculating FoV and plotting the camera.
-        """
+        """Initialize Camera class, defining pixel layout."""
         self._logger = logging.getLogger(__name__)
 
-        self.telescope_model_name = telescope_model_name
-        self._camera_config_file = camera_config_file
+        self.telescope_name = telescope_name
         self.focal_length = focal_length
         if self.focal_length <= 0:
             raise ValueError("The focal length must be larger than zero")
-        self.pixels = self.read_pixel_list(camera_config_file)
+        if camera_config_dict is not None:
+            self.pixels = self.read_pixel_list_from_dict(camera_config_dict)
+        else:
+            self.pixels = self.read_pixel_list(camera_config_file)
 
         self.pixels = self._rotate_pixels(self.pixels)
 
-        # Initialize an empty list of neighbors, to be calculated only when necessary.
+        # Empty list of neighbors, to be calculated only when necessary.
         self._neighbors = None
-
-        # Initialize an empty list of edge pixels, to be calculated only when necessary.
+        # Empty list of edge pixels, to be calculated only when necessary.
         self._edge_pixel_indices = None
 
     @staticmethod
@@ -85,6 +90,40 @@ class Camera:
                 Camera.process_line(line, pixels)
 
         Camera.validate_pixels(pixels, camera_config_file)
+
+        return pixels
+
+    @staticmethod
+    def read_pixel_list_from_dict(camera_config_dict: dict) -> dict:
+        """
+        Read pixel list from pyeventio camera configuration dictionary.
+
+        Parameters
+        ----------
+        camera_config_dict: dict
+            Dictionary (as provided by eventio) with camera configuration information.
+
+        Returns
+        -------
+        dict: pixels
+            A dictionary with the pixel positions, the camera rotation angle, the pixel shape, \
+            the pixel diameter, the pixel IDs and their "on" status.
+        """
+        pixels = Camera.initialize_pixel_dict()
+
+        # assume all pixels have same size and shape
+        unique_diam = np.unique(camera_config_dict["pixel_size"])
+        if unique_diam.size != 1:
+            raise ValueError(f"Pixel diameter is not unique: {unique_diam}")
+        pixels["pixel_diameter"] = float(unique_diam[0])
+
+        pixels["pixel_shape"] = camera_config_dict["common_pixel_shape"]
+        pixels["x"] = camera_config_dict["pixel_x"]
+        pixels["y"] = camera_config_dict["pixel_y"]
+        pixels["pix_id"] = list(range(len(pixels["x"])))
+        pixels["pix_on"] = np.ones(len(pixels["x"]), dtype=int).tolist()
+
+        Camera.validate_pixels(pixels, "from camera dict")
 
         return pixels
 

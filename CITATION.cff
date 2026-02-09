@@ -7,11 +7,10 @@ title: >-
 message: Please cite this software using these metadata.
 type: software
 authors:
-  - orcid: 'https://orcid.org/0000-0001-9152-2995'
+  - given-names: Gernot
+    family-names: Maier
     affiliation: DESY
-    given-names: Raul
-    name-particle: R.
-    family-names: Prado
+    orcid: 'https://orcid.org/0000-0001-9868-4700'
   - given-names: Orel
     family-names: Gueta
     orcid: 'https://orcid.org/0000-0002-9440-2398'
@@ -25,14 +24,19 @@ authors:
     family-names: Joshi
     orcid: 'https://orcid.org/0000-0001-8557-1141'
     affiliation: DESY
+  - given-names: Maximilian
+    family-names: Linhoff
+    orcid: 'https://orcid.org/0000-0001-7993-8189'
+    affiliation: CTAO
   - given-names: Victor
     family-names: Barbosa Martins
     orcid: 'https://orcid.org/0000-0002-5085-8828'
     affiliation: DESY
-  - given-names: Gernot
-    family-names: Maier
+  - given-names: Raul
+    name-particle: R.
+    family-names: Prado
+    orcid: 'https://orcid.org/0000-0001-9152-2995'
     affiliation: DESY
-    orcid: 'https://orcid.org/0000-0001-9868-4700'
 repository-code: 'https://github.com/gammasim/simtools'
 doi: 10.5281/zenodo.6346696
 license: BSD-3-Clause
