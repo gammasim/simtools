@@ -3,8 +3,10 @@ import mmap
 import os
 import re
 import tarfile
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
+from pathlib import Path
 from unittest import mock
+from unittest.mock import PropertyMock
 
 import matplotlib.pyplot as plt
 import pytest
@@ -29,12 +31,53 @@ logger = logging.getLogger()
 def simtools_settings(tmp_test_directory, db_config):
     """Load simtools settings for the test session."""
     load_dotenv(".env")
-    # Set defaults only if not already set (e.g. CI environment)
-    os.environ.setdefault("SIMTOOLS_SIM_TELARRAY_PATH", str(tmp_test_directory) + "/sim_telarray")
-    os.environ.setdefault("SIMTOOLS_SIM_TELARRAY_EXECUTABLE", "sim_telarray")
-    os.environ.setdefault("SIMTOOLS_CORSIKA_PATH", str(tmp_test_directory) + "/corsika")
-    os.environ.setdefault("SIMTOOLS_CORSIKA_EXECUTABLE", "corsika_flat")
     settings.config.load(db_config=db_config)
+
+
+@pytest.fixture(autouse=True)
+def mock_simulator_paths(request, tmp_test_directory):
+    """Mock sim_telarray and corsika paths for unit tests.
+
+    This fixture mocks the paths and executables to prevent FileNotFoundError
+    when sim_telarray or corsika are not installed in the test environment.
+
+    This fixture does NOT apply to:
+
+    - test_settings.py (tests path validation behavior)
+    - integration_tests (need full installations with CORSIKA and sim_telarray to run)
+    """
+    test_file_path = str(request.node.fspath)
+    if "test_settings.py" in test_file_path or "integration_tests" in test_file_path:
+        yield
+        return
+
+    # Create mock directories
+    sim_telarray_dir = Path(tmp_test_directory) / "sim_telarray"
+    corsika_dir = Path(tmp_test_directory) / "corsika"
+    interaction_table_dir = Path(tmp_test_directory) / "corsika_interaction_tables"
+
+    for directory in [sim_telarray_dir / "bin", corsika_dir, interaction_table_dir]:
+        directory.mkdir(parents=True, exist_ok=True)
+
+    # Define mock property paths
+    mock_paths = {
+        "sim_telarray_path": sim_telarray_dir,
+        "corsika_path": corsika_dir,
+        "sim_telarray_exe": sim_telarray_dir / "bin" / "sim_telarray",
+        "sim_telarray_exe_debug_trace": sim_telarray_dir / "bin" / "sim_telarray_debug_trace",
+        "corsika_exe": corsika_dir / "corsika_flat",
+        "corsika_exe_curved": corsika_dir / "corsika_curved",
+        "corsika_interaction_table_path": interaction_table_dir,
+    }
+
+    # Apply patches for all properties
+    with ExitStack() as stack:
+        for prop_name, return_value in mock_paths.items():
+            mock_obj = stack.enter_context(
+                mock.patch.object(type(settings.config), prop_name, new_callable=PropertyMock)
+            )
+            mock_obj.return_value = return_value
+        yield
 
 
 @pytest.fixture(scope="session", autouse=True)
