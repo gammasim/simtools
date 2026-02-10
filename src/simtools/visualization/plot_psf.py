@@ -677,8 +677,6 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
 
         parameters_text = (
             f"Best Parameters: \n"
-            f"reflection=["
-            f"{', '.join(f'{x:.4f}' for x in best_pars['mirror_reflection_random_angle'])}],\n"
             f"align_horizontal=["
             f"{', '.join(f'{x:.4f}' for x in best_pars['mirror_align_random_horizontal'])}]\n"
             f"align_vertical=["
