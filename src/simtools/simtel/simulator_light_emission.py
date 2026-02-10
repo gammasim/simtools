@@ -13,6 +13,7 @@ from simtools.job_execution import job_manager
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
+from simtools.simtel import simtel_output_validator
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils.geometry import fiducial_radius_from_shape
 
@@ -549,18 +550,10 @@ class SimulatorLightEmission(SimtelRunner):
             return f"{shape_out}:{float(expv)}"
         return shape_out
 
-    def verify_simulations(self):
-        """
-        Verify that the simulations were successful.
-
-        Returns
-        -------
-        bool
-            True if simulations were successful, False otherwise.
-        """
-        out = Path(self.runner_service.get_file_name(file_type="sim_telarray_output"))
-        if not out.exists():
-            self._logger.error(f"Expected sim_telarray output not found: {out}")
-            return False
-        self._logger.info(f"sim_telarray output found: {out}")
-        return True
+    def validate_simulations(self):
+        """Validate that the simulations were successful."""
+        simtel_output_validator.validate_sim_telarray(
+            data_files=Path(self.runner_service.get_file_name(file_type="sim_telarray_output")),
+            log_files=Path(self.runner_service.get_file_name(file_type="sim_telarray_log")),
+            array_models=None,
+        )
