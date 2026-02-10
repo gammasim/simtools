@@ -111,7 +111,7 @@ def assert_expected_sim_telarray_metadata(file, expected_sim_telarray_metadata):
     return True
 
 
-def assert_n_showers_and_energy_range(file):
+def assert_n_showers_and_energy_range(file, calibration_file=False):
     """
     Assert the number of showers and the energy range.
 
@@ -122,13 +122,23 @@ def assert_n_showers_and_energy_range(file):
     ----------
     file: Path
         Path to the sim_telarray file.
-
+    calibration_file: bool
+        Whether the file is a calibration file.
     """
     simulated_energies = []
     simulation_config = {}
     with SimTelFile(file, skip_non_triggered=False) as f:
         simulation_config = f.mc_run_headers[0]
-        simulated_energies.extend(event["mc_shower"]["energy"] for event in f)
+        try:
+            simulated_energies.extend(event["mc_shower"]["energy"] for event in f)
+        except KeyError as exc:
+            if calibration_file:
+                _logger.debug("Skip testing calibration file for showers and energy range")
+                return True
+            raise KeyError(
+                f"Expected 'mc_shower' information in sim_telarray file {file} for checking "
+                "number of showers and energy range, but it was not found."
+            ) from exc
 
     # The relative tolerance is set to 1% because ~0.5% shower simulations do not
     # succeed, without resulting in an error. This tolerance therefore is not an issue.
