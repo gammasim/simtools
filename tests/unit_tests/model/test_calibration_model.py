@@ -24,7 +24,6 @@ def test_calibration_model_init(mock_db_handler, caplog):
 
     assert model.site == "North"
     assert model.name == "ILLN-01"
-    assert "Init CalibrationModel North ILLN-01" in caplog.text
 
 
 @patch("simtools.db.db_handler.DatabaseHandler")

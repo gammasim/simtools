@@ -1,963 +1,379 @@
 #!/usr/bin/python3
 
+"""
+Unit tests for plot_simtel_events module.
+
+Tests cover:
+- PlotSimtelEvent initialization and setup
+- Plot generation methods (time_traces, waveforms, step_traces)
+- Helper methods (_make_title, _histogram_edges, _plot_histogram, _lines_and_ranges)
+- Plot routing and selection (_plots_to_run, _plot_definitions)
+- Output path generation
+- Constants validation (PLOT_CHOICES)
+"""
+
 # pylint: disable=protected-access,redefined-outer-name,unused-argument
 
-import importlib
-import logging
-import sys
 from pathlib import Path
-from types import ModuleType, SimpleNamespace
+from unittest import mock
 
-import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from simtools.io.io_handler import IOHandler
-from simtools.visualization import plot_simtel_events as sep
-
-logger = logging.getLogger(__name__)
-DUMMY_SIMTEL = "DUMMY_SIMTEL"
+from simtools.visualization import plot_simtel_events
 
 
-# Helpers for ctapipe stubs and waveform generation
+@pytest.fixture(autouse=True)
+def close_all_figures():
+    """Automatically close all matplotlib figures after each test."""
+    yield
+    plt.close("all")
 
 
-def _make_waveforms(n_pix=4, n_samp=16):
-    w = np.tile(np.arange(n_samp, dtype=float), (n_pix, 1))
-    w += np.arange(n_pix)[:, None]
-    return w
+@pytest.fixture
+def mock_event_data():
+    """Create minimal mock event data."""
+    rng = np.random.default_rng(42)
+    n_pixels, n_samples = 100, 50
+    adc_samples = rng.uniform(50, 100, (2, n_pixels, n_samples))  # dual gain
+    adc_samples[:, :, -10:] = 60  # pedestals
+    adc_samples[:, 10, 20:30] = 200  # signal in pixel 10
+
+    tel_desc = {
+        "pixel_settings": {"time_slice": 1.0},
+        "camera_settings": {
+            "focal_length": 5.6,
+            "pixel_shape": "hexagonal",
+            "pixel_spacing": 0.05,
+            "pixel_diameter": 0.05,
+        },
+    }
+
+    event = {"adc_samples": adc_samples}
+
+    return [0], tel_desc, [event]
 
 
-def _fake_event(dl1_image=None, r1_waveforms=None):
-    tel_id = 1
-    ev = SimpleNamespace()
-    ev.index = SimpleNamespace(obs_id=1, event_id=42)
-    ev.trigger = SimpleNamespace(event_type=SimpleNamespace(name="flasher"))
-    ev.dl1 = SimpleNamespace(tel={})
-    ev.r1 = SimpleNamespace(tel={})
-    if dl1_image is not None:
-        ev.dl1.tel[tel_id] = SimpleNamespace(image=np.asarray(dl1_image))
-    if r1_waveforms is not None:
-        ev.r1.tel[tel_id] = SimpleNamespace(waveform=np.asarray(r1_waveforms))
-    return ev, tel_id
+@pytest.fixture
+def mock_camera():
+    """Create a mock camera with minimal required attributes."""
+    rng = np.random.default_rng(42)
+    camera = mock.Mock()
+    camera.n_pixels = 100
+    camera.pixel_x_pos = rng.uniform(-1, 1, 100)
+    camera.pixel_y_pos = rng.uniform(-1, 1, 100)
+    camera.camera_name = "TestCamera"
+    return camera
 
 
-def _fake_source_with_event(ev, tel_id):
-    class _Sub:
-        def __init__(self):
-            self.tel = {
-                tel_id: SimpleNamespace(
-                    type=SimpleNamespace(name="LST"),
-                    optics=SimpleNamespace(name="LST-Optics"),
-                    camera_name="LSTCam",
-                    camera=SimpleNamespace(
-                        geometry=SimpleNamespace(name="LSTCam"),
-                        readout=SimpleNamespace(sampling_rate=None),
-                    ),
-                )
-            }
-
-    class _Src:
-        def __init__(self):
-            self.subarray = _Sub()
-            self._ev = [ev]
-
-        def __iter__(self):
-            return iter(self._ev)
-
-    return _Src()
+@pytest.fixture
+def mock_plotter(mock_event_data, mock_camera):
+    """Create PlotSimtelEvent with mocked data."""
+    with mock.patch("simtools.visualization.plot_simtel_events.read_events") as mock_read:
+        mock_read.return_value = mock_event_data
+        with mock.patch("simtools.visualization.plot_simtel_events.Camera") as mock_cam_class:
+            mock_cam_class.return_value = mock_camera
+            plotter = plot_simtel_events.PlotSimtelEvent("fake.simtel", "LSTN-01", 0)
+    return plotter
 
 
-def _install_fake_ctapipe(monkeypatch, source_obj):
-    ctapipe_mod = ModuleType("ctapipe")
-    io_mod = ModuleType("io")
-    calib_mod = ModuleType("calib")
-    vis_mod = ModuleType("visualization")
-    image_mod = ModuleType("image")
-
-    class _EventSource:
-        def __init__(self, *a, **k):
-            self._src = source_obj
-            self.subarray = getattr(source_obj, "subarray", None)
-
-        def __iter__(self):
-            return iter(self._src)
-
-    class _CameraCalibrator:
-        def __init__(self, *a, **k):
-            # Minimal stub for ctapipe.calib.CameraCalibrator.
-            pass
-
-        def __call__(self, *a, **k):
-            # No-op: simulate a callable calibrator without modifying the event.
-            return None
-
-    class _CameraDisplay:
-        def __init__(self, *a, **k):
-            self.cmap = None
-
-        def add_colorbar(self, *a, **k):
-            # Minimal stub: tests don't assert on colorbars
-            pass
-
-        def set_limits_percent(self, *a, **k):
-            # Minimal stub: emulate API without scaling
-            pass
-
-    def _tailcuts_clean(*a, **k):
-        img = a[1]
-        return np.ones_like(img, dtype=bool)
-
-    io_mod.EventSource = _EventSource
-    calib_mod.CameraCalibrator = _CameraCalibrator
-    vis_mod.CameraDisplay = _CameraDisplay
-    image_mod.tailcuts_clean = _tailcuts_clean
-
-    ctapipe_mod.io = io_mod
-    ctapipe_mod.calib = calib_mod
-    ctapipe_mod.visualization = vis_mod
-    ctapipe_mod.image = image_mod
-
-    monkeypatch.setitem(sys.modules, "ctapipe", ctapipe_mod)
-    monkeypatch.setitem(sys.modules, "ctapipe.io", io_mod)
-    monkeypatch.setitem(sys.modules, "ctapipe.calib", calib_mod)
-    monkeypatch.setitem(sys.modules, "ctapipe.visualization", vis_mod)
-    monkeypatch.setitem(sys.modules, "ctapipe.image", image_mod)
-
-    # Ensure the production module re-imports ctapipe symbols from our fakes
-    importlib.reload(sep)
+def test_plot_simtel_event_init(mock_plotter):
+    assert mock_plotter.telescope == "LSTN-01"
+    assert mock_plotter.event_index == 0
+    assert mock_plotter.n_pixels == 100
+    assert mock_plotter.n_samples == 50
+    assert mock_plotter.adc_samples.shape == (100, 50)
+    assert mock_plotter.pedestals.shape == (100,)
+    assert mock_plotter.image.shape == (100,)
 
 
-# Tests migrated from test_visualize to target the new module
+def test_make_title(mock_plotter):
+    title = mock_plotter._make_title("test plot")
+    assert "LSTN-01" in title
+    assert "test plot" in title
+    assert "event 0" in title
 
 
-def test_plot_simtel_event_image_returns_figure(monkeypatch):
-    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=_make_waveforms())
-    src = _fake_source_with_event(ev, tel_id)
+def test_plot_definitions_property(mock_plotter):
+    defs = mock_plotter._plot_definitions
+    assert isinstance(defs, dict)
+    assert "pedestals" in defs
+    assert "signals" in defs
+    assert "peak_timing" in defs
+    assert "time_traces" in defs
+    assert "waveforms" in defs
+    assert "step_traces" in defs
 
-    _install_fake_ctapipe(monkeypatch, src)
 
-    fig = sep.plot_simtel_event_image(DUMMY_SIMTEL)
-    assert isinstance(fig, plt.Figure)
-    plt.close(fig)
+def test_plots_to_run_all(mock_plotter):
+    plots = mock_plotter._plots_to_run(["all"])
+    assert "pedestals" in plots
+    assert "signals" in plots
+    assert len(plots) == 6
+
+
+def test_plots_to_run_specific(mock_plotter):
+    plots = mock_plotter._plots_to_run(["pedestals", "signals"])
+    assert plots == ["pedestals", "signals"]
+
+
+def test_plot_time_traces(mock_plotter):
+    fig = mock_plotter.plot_time_traces(n_pixels=3)
+    assert fig is not None
+    assert len(fig.axes) == 1
     plt.close(fig)
 
 
-def test_plot_simtel_event_image_missing_r1(monkeypatch, caplog):
-    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=None)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        fig = sep.plot_simtel_event_image(DUMMY_SIMTEL)
-    assert fig is None
-    assert any("First event has no R1 telescope data" in r.message for r in caplog.records)
-
-
-def test_plot_simtel_event_image_annotations(monkeypatch):
-    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=_make_waveforms())
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    fig = sep.plot_simtel_event_image(DUMMY_SIMTEL, distance=100 * u.m)
-    assert isinstance(fig, plt.Figure)
-    assert any("distance: 100.0 m" in a.get_text() for a in fig.axes[0].texts)
+def test_plot_waveforms(mock_plotter):
+    fig = mock_plotter.plot_waveforms()
+    assert fig is not None
     plt.close(fig)
 
 
-def test_plot_simtel_event_image_no_event(monkeypatch, caplog):
-    src = _fake_source_with_event(None, None)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        fig = sep.plot_simtel_event_image(DUMMY_SIMTEL)
-    assert fig is None
-    assert any("No event found in the file." in r.message for r in caplog.records)
-
-
-def test_plot_simtel_time_traces_returns_figure(monkeypatch):
-    w = _make_waveforms(5, 20)
-    ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=3)
-    assert isinstance(fig, plt.Figure)
+def test_plot_waveforms_with_vmax(mock_plotter):
+    fig = mock_plotter.plot_waveforms(vmax=150)
+    assert fig is not None
     plt.close(fig)
 
 
-def test_plot_simtel_time_traces_pixel_selection(monkeypatch):
-    w = _make_waveforms(10, 20)
-    ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=5)
-    assert isinstance(fig, plt.Figure)
+def test_plot_waveforms_with_pixel_step(mock_plotter):
+    fig = mock_plotter.plot_waveforms(pixel_step=5)
+    assert fig is not None
     plt.close(fig)
 
 
-def test_plot_simtel_time_traces_with_tel_id(monkeypatch):
-    w = _make_waveforms(5, 20)
-    ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, tel_id=tel_id, n_pixels=3)
-    assert isinstance(fig, plt.Figure)
+def test_plot_step_traces(mock_plotter):
+    fig = mock_plotter.plot_step_traces(pixel_step=50)
+    assert fig is not None
     plt.close(fig)
 
 
-def test_plot_simtel_time_traces_invalid_tel_id(monkeypatch, caplog):
-    w = _make_waveforms(5, 20)
-    ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, tel_id=9999)
-    assert fig is None
-    assert any("No R1 waveforms available" in r.message for r in caplog.records)
-
-
-def test_plot_simtel_waveform_matrix_returns_figure(monkeypatch):
-    w = _make_waveforms(8, 32)
-    ev, tel_id = _fake_event(r1_waveforms=w)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    fig = sep.plot_simtel_waveform_matrix(DUMMY_SIMTEL, pixel_step=2)
-    assert isinstance(fig, plt.Figure)
+def test_plot_step_traces_with_max_pixels(mock_plotter):
+    fig = mock_plotter.plot_step_traces(pixel_step=10, max_pixels=3)
+    assert fig is not None
     plt.close(fig)
 
 
-def test_plot_simtel_step_traces_returns_figure(monkeypatch):
-    w = _make_waveforms(12, 10)
-    ev, tel_id = _fake_event(r1_waveforms=w)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    fig = sep.plot_simtel_step_traces(DUMMY_SIMTEL, pixel_step=5, max_pixels=3)
-    assert isinstance(fig, plt.Figure)
-    plt.close(fig)
+def test_histogram_edges_default(mock_plotter):
+    edges = mock_plotter._histogram_edges(None)
+    assert len(edges) == mock_plotter.n_samples + 1
 
 
-def test_plot_simtel_time_traces_no_waveforms(monkeypatch, caplog):
-    ev, tel_id = _fake_event(dl1_image=np.array([0.0, 1.0, 2.0]), r1_waveforms=None)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL)
-    assert fig is None
-    # With no R1 telescope data at all, the centralized helper logs a contextual message
-    assert any("Event has no R1 data for time traces plot" in r.message for r in caplog.records)
+def test_histogram_edges_with_bins(mock_plotter):
+    edges = mock_plotter._histogram_edges(20)
+    assert len(edges) == 21
 
 
-def test__histogram_edges_default_and_binned():
-    edges_default = sep._histogram_edges(10, timing_bins=None)
-    assert np.allclose(edges_default[:3], [-0.5, 0.5, 1.5])
-    assert edges_default.size == 11
-
-    edges_binned = sep._histogram_edges(10, timing_bins=5)
-    assert np.isclose(edges_binned[0], -0.5)
-    assert np.isclose(edges_binned[-1], 9.5)
-    assert edges_binned.size == 6
-
-
-def test__draw_peak_hist_basic():
+def test_plot_histogram(mock_plotter):
+    rng = np.random.default_rng(42)
     fig, ax = plt.subplots()
-    peak_samples = np.array([1, 2, 2, 3, 4, 4, 4])
-    edges = np.arange(-0.5, 6.5, 1.0)
-    sep._draw_peak_hist(
-        ax,
-        peak_samples,
-        edges,
-        mean_sample=3.0,
-        std_sample=1.0,
-        tel_label="CT1",
-        et_name="flasher",
-        considered=7,
-        found_count=6,
-    )
-    assert len(ax.containers) >= 1
-    x0, x1 = ax.get_xlim()
-    assert np.isclose(x0, edges[0])
-    assert np.isclose(x1, edges[-1])
+    values = rng.uniform(0, 100, 100)
+    edges = np.linspace(0, 100, 20)
+    stats = {"considered": 100, "found": 95, "mean": 50.0, "median": 51.0, "std": 10.0}
+
+    mock_plotter._plot_histogram(ax, values, edges, stats, "x", "y")
+    assert len(ax.patches) > 0
     plt.close(fig)
 
 
-def test_plot_simtel_peak_timing_returns_stats(monkeypatch):
-    scipy_mod = ModuleType("scipy")
-    signal_mod = ModuleType("signal")
+def test_lines_and_ranges(mock_plotter):
+    fig, ax = plt.subplots()
+    stats = {"median": 50.0, "std": 10.0}
 
-    def _find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
-        peak = int(np.argmax(trace))
-        return np.array([peak]), {}
-
-    def _find_peaks_cwt(trace, widths):  # pylint:disable=unused-argument
-        return []
-
-    signal_mod.find_peaks = _find_peaks
-    signal_mod.find_peaks_cwt = _find_peaks_cwt
-    scipy_mod.signal = signal_mod
-
-    monkeypatch.setitem(sys.modules, "scipy", scipy_mod)
-    monkeypatch.setitem(sys.modules, "scipy.signal", signal_mod)
-
-    # Reload after scipy monkeypatch so the production import uses our stub
-    importlib.reload(sep)
-
-    n_pix, n_samp, peak_idx = 6, 20, 7
-    w = np.zeros((n_pix, n_samp), dtype=float)
-    for i in range(n_pix):
-        w[i, peak_idx] = 10 + i
-    ev, tel_id = _fake_event(r1_waveforms=w)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    fig, stats = sep.plot_simtel_peak_timing(DUMMY_SIMTEL, return_stats=True)
-    assert isinstance(fig, plt.Figure)
-    assert isinstance(stats, dict)
-    assert stats["considered"] == n_pix - 1
-    assert stats["found"] == n_pix - 1
-    assert np.isclose(stats["mean"], peak_idx)
-    assert np.isclose(stats["std"], 0.0)
+    mock_plotter._lines_and_ranges(ax, stats)
+    assert len(ax.lines) > 0
     plt.close(fig)
 
 
-def test__detect_peaks_prefers_cwt():
-    class _Sig:
-        @staticmethod
-        def find_peaks_cwt(trace, widths):  # pylint:disable=unused-argument
-            return [3, 7]
-
-        @staticmethod
-        def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
-            return np.array([5]), {}
-
-    trace = np.zeros(10)
-    trace[7] = 1.0
-    peaks = sep._detect_peaks(trace, peak_width=4, signal_mod=_Sig)
-    np.testing.assert_array_equal(peaks, np.array([3, 7]))
-
-
-def test__detect_peaks_fallback_to_find_peaks():
-    class _Sig:
-        @staticmethod
-        def find_peaks_cwt(trace, widths):  # pylint:disable=unused-argument
-            return []
-
-        @staticmethod
-        def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
-            return np.array([2]), {}
-
-    trace = np.array([0, 0.1, 2.0, 0.5, 0.0])
-    peaks = sep._detect_peaks(trace, peak_width=3, signal_mod=_Sig)
-    np.testing.assert_array_equal(peaks, np.array([2]))
-
-
-def test__detect_peaks_handles_errors():
-    class _Sig:
-        @staticmethod
-        def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
-            raise ValueError("bad fp")
-
-    trace = np.ones(5)
-    peaks = sep._detect_peaks(trace, peak_width=2, signal_mod=_Sig)
-    assert peaks.size == 0
-
-
-def test__collect_peak_samples_basic():
-    w = np.array(
-        [
-            [0, 1, 3, 2, 0],
-            [0, 0, 0, 0, 0],
-            [1, 0, 2, 5, 1],
-        ],
-        dtype=float,
-    )
-
-    class _Sig:
-        @staticmethod
-        def find_peaks_cwt(trace, widths):  # pylint:disable=unused-argument
-            return []
-
-        @staticmethod
-        def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
-            return np.array([int(np.argmax(trace))]), {}
-
-    peak_samples, pix_ids, found = sep._collect_peak_samples(
-        w, sum_threshold=5.0, peak_width=3, signal_mod=_Sig
-    )
-    np.testing.assert_array_equal(pix_ids, np.array([0, 2]))
-    np.testing.assert_array_equal(peak_samples, np.array([2, 3]))
-    assert found == 2
-
-
-def test__collect_peak_samples_threshold_excludes_all():
-    w = np.ones((2, 4), dtype=float)
-
-    class _Sig:
-        @staticmethod
-        def find_peaks_cwt(trace, widths):  # pylint:disable=unused-argument
-            return []
-
-        @staticmethod
-        def find_peaks(trace, prominence=None):  # pylint:disable=unused-argument
-            return np.array([0]), {}
-
-    peak_samples, pix_ids, found = sep._collect_peak_samples(
-        w, sum_threshold=10.0, peak_width=3, signal_mod=_Sig
-    )
-    assert peak_samples is None
-    assert pix_ids is None
-    assert found == 0
-
-
-def test_plot_simtel_integrated_signal_image_returns_figure(monkeypatch):
-    w = _make_waveforms(5, 16)
-    w[0, 8] += 10
-    w[1, 9] += 12
-    ev, tel_id = _fake_event(r1_waveforms=w)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    fig = sep.plot_simtel_integrated_signal_image(DUMMY_SIMTEL, half_width=2)
-    assert isinstance(fig, plt.Figure)
-    plt.close(fig)
-
-
-def test_plot_simtel_integrated_pedestal_image_returns_figure(monkeypatch):
-    w = _make_waveforms(4, 20)
-    w[2, 10] += 15
-    ev, tel_id = _fake_event(r1_waveforms=w)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    fig = sep.plot_simtel_integrated_pedestal_image(DUMMY_SIMTEL, half_width=2, offset=5)
-    assert isinstance(fig, plt.Figure)
-    plt.close(fig)
-
-
-def test__time_axis_from_readout_valid_and_errors():
-    class R:
-        def __init__(self, sr):
-            self.sampling_rate = sr
-
-    # Valid sampling rate: 1 GHz -> 1 ns steps
-    t = sep._time_axis_from_readout(R(1 * u.GHz), 4)
-    np.testing.assert_array_equal(t, np.array([0.0, 1.0, 2.0, 3.0]))
-
-    # None sampling rate -> default dt=1.0
-    t = sep._time_axis_from_readout(R(None), 3)
-    np.testing.assert_array_equal(t, np.array([0.0, 1.0, 2.0]))
-
-    # Zero division path -> default dt=1.0
-    with pytest.warns(RuntimeWarning, match="divide by zero encountered in divide"):
-        t = sep._time_axis_from_readout(R(0 * u.Hz), 2)
-    np.testing.assert_array_equal(t, np.array([0.0, 1.0]))
-
-
-def test__select_event_by_type_first_and_index_and_oob(caplog):
-    evs = ["e0", "e1", "e2"]
-    selector = sep._select_event_by_type(evs)
-    assert selector() == "e0"
-    assert selector(event_index=1) == "e1"
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        assert selector(event_index=99) is None
-    assert any("out of range" in r.message for r in caplog.records)
-
-
-def test_plot_simtel_waveform_matrix_no_r1(monkeypatch, caplog):
-    # Event without R1 data
-    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=None)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        fig = sep.plot_simtel_waveform_matrix(DUMMY_SIMTEL)
-    assert fig is None
-    assert any("no R1 data for waveform plot" in r.message for r in caplog.records)
-
-
-def test_plot_simtel_step_traces_no_r1(monkeypatch, caplog):
-    ev, tel_id = _fake_event(dl1_image=np.array([0.0, 1.0, 2.0]), r1_waveforms=None)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        fig = sep.plot_simtel_step_traces(DUMMY_SIMTEL)
-    assert fig is None
-    assert any("no R1 data for traces plot" in r.message for r in caplog.records)
-
-
-def test_plot_simtel_peak_timing_threshold_excludes_all(monkeypatch, caplog):
-    w = np.ones((3, 5), dtype=float)  # sums are 5 each
-    ev, tel_id = _fake_event(r1_waveforms=w)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        fig = sep.plot_simtel_peak_timing(DUMMY_SIMTEL, sum_threshold=10.0)
-    assert fig is None
-    assert any("sum_threshold" in r.message for r in caplog.records)
-
-
-def test_plot_simtel_time_traces_calibrator_error(monkeypatch):
-    # Prepare event with waveforms but force calibrator to raise, so image=None path is used
-    w = _make_waveforms(6, 12)
-    ev, tel_id = _fake_event(dl1_image=np.arange(w.shape[0]), r1_waveforms=w)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    class _CalibErr:
-        def __init__(self, *a, **k):
-            # Minimal stub for ctapipe.calib.CameraCalibrator.
-            pass
-
-        def __call__(self, *a, **k):
-            raise ValueError("calib failed")
-
-    # Monkeypatch the symbol used inside sep
-    monkeypatch.setattr(sep, "CameraCalibrator", _CalibErr)
-
-    fig = sep.plot_simtel_time_traces(DUMMY_SIMTEL, n_pixels=2)
-    assert isinstance(fig, plt.Figure)
-    plt.close(fig)
-
-
-def test_plot_simtel_event_image_distance_float(monkeypatch):
-    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=_make_waveforms())
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    fig = sep.plot_simtel_event_image(DUMMY_SIMTEL, distance=123.4)
-    assert isinstance(fig, plt.Figure)
-    assert any("distance: 123.4" in a.get_text() for a in fig.axes[0].texts)
-    plt.close(fig)
-
-
-def test_plot_simtel_waveform_matrix_defaults(monkeypatch):
-    # Cover pixel_step=None branch
-    w = _make_waveforms(5, 10)
-    ev, tel_id = _fake_event(r1_waveforms=w)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    fig = sep.plot_simtel_waveform_matrix(DUMMY_SIMTEL, pixel_step=None)
-    assert isinstance(fig, plt.Figure)
-    plt.close(fig)
-
-
-def test_plot_simtel_step_traces_defaults(monkeypatch):
-    # Cover max_pixels=None branch
-    w = _make_waveforms(7, 9)
-    ev, tel_id = _fake_event(r1_waveforms=w)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    fig = sep.plot_simtel_step_traces(DUMMY_SIMTEL, pixel_step=3, max_pixels=None)
-    assert isinstance(fig, plt.Figure)
-    plt.close(fig)
-
-
-def test__histogram_edges_zero_bins():
-    edges = sep._histogram_edges(5, timing_bins=0)
-    np.testing.assert_array_equal(edges, np.arange(-0.5, 5.5, 1.0))
-
-
-def test__make_output_paths(tmp_path):
-    ioh = IOHandler()
-    ioh.set_paths(output_path=tmp_path)
-
-    out_dir, pdf_path = sep._make_output_paths(ioh, base="base", input_file=Path("in.simtel"))
-    assert out_dir == tmp_path
-    assert pdf_path.name == "base_in.pdf"
-    assert pdf_path.suffix == ".pdf"
-
-
-def test__call_peak_timing_prefers_return_stats(monkeypatch):
-    calls = {"count": 0}
-
-    def _stub(filename, **kwargs):
-        calls["count"] += 1
-        fig = plt.figure()
-        if kwargs.get("return_stats"):
-            return fig, {"ok": True}
-        return fig
-
-    monkeypatch.setattr(sep, "plot_simtel_peak_timing", _stub)
-    fig = sep._call_peak_timing(Path("f.simtel"))
-    assert isinstance(fig, plt.Figure)
-    assert calls["count"] == 1
-    plt.close(fig)
-
-
-def test__call_peak_timing_typeerror_fallback(monkeypatch):
-    calls = {"count": 0}
-
-    def _stub(filename, **kwargs):
-        calls["count"] += 1
-        if kwargs.get("return_stats"):
-            raise TypeError("old signature")
-        return plt.figure()
-
-    monkeypatch.setattr(sep, "plot_simtel_peak_timing", _stub)
-    fig = sep._call_peak_timing(Path("f.simtel"))
-    assert isinstance(fig, plt.Figure)
-    assert calls["count"] == 2  # called twice: with and without return_stats
-    plt.close(fig)
-
-
-def test__collect_figures_for_file_smoke(tmp_path, monkeypatch):
-    # Stub plotting functions to avoid ctapipe dependency
-    def _fig_returner(*_a, **_k):
-        return plt.figure()
-
-    monkeypatch.setattr(sep, "plot_simtel_event_image", _fig_returner)
-    monkeypatch.setattr(sep, "_call_peak_timing", _fig_returner)
-
-    figs = sep._collect_figures_for_file(
-        filename=Path("in.simtel"),
-        plots=["event_image", "peak_timing"],
-        args={"event_index": None},
-        out_dir=tmp_path,
-        base_stem="s",
-        save_pngs=True,
-        dpi=80,
-    )
-    assert len(figs) == 2
-    assert (tmp_path / "s_event_image.png").exists()
-    assert (tmp_path / "s_peak_timing.png").exists()
-    for f in figs:
-        plt.close(f)
-
-
-def test_generate_and_save_plots_smoke(tmp_path, monkeypatch):
-    ioh = IOHandler()
-    ioh.set_paths(output_path=tmp_path)
-    simtel_files = [tmp_path / "input.simtel.zst"]
-
-    # Stub collector to return one fig
-    def _collector(**_k):
-        return [plt.figure()]
-
-    # Record pdf path and metadata calls
-    saved = {"pdf": None, "dump": 0}
-
-    def _save(figs, pdf):
-        pdf = Path(pdf)
-        pdf.write_bytes(b"%PDF-1.4\n%\n")
-        saved["pdf"] = pdf
-
-    def _dump(args, pdf_path, add_activity_name=True):
-        saved["dump"] += 1
-        assert Path(pdf_path).suffix == ".pdf"
-
-    monkeypatch.setattr(sep, "_collect_figures_for_file", _collector)
-    monkeypatch.setattr(sep, "save_figures_to_single_document", _save)
-    monkeypatch.setattr(sep.MetadataCollector, "dump", staticmethod(_dump))
-
-    sep.generate_and_save_plots(
-        simtel_files=simtel_files,
-        plots=["event_image"],
-        args={"output_file": "base"},
-        ioh=ioh,
-    )
-
-    assert saved["pdf"] is not None
-    assert saved["pdf"].exists()
-
-
-def test__compute_integration_window_branches():
-    # signal mode, centered
-    a, b = sep._compute_integration_window(
-        peak_idx=5, n_samp=20, half_width=2, mode="signal", offset=None
-    )
-    assert (a, b) == (3, 8)
-
-    # signal mode, near start
-    a, b = sep._compute_integration_window(
-        peak_idx=0, n_samp=10, half_width=3, mode="signal", offset=None
-    )
-    assert (a, b) == (0, 4)
-
-    # pedestal mode, default offset fits
-    a, b = sep._compute_integration_window(
-        peak_idx=5, n_samp=50, half_width=2, mode="pedestal", offset=None
-    )
-    assert (a, b) == (21, 26)
-
-    # pedestal mode, fallback before end of array
-    a, b = sep._compute_integration_window(
-        peak_idx=9, n_samp=10, half_width=2, mode="pedestal", offset=16
-    )
-    assert (a, b) == (0, 5)
-
-    # pedestal mode, degenerate n_samp triggers a>=b branch
-    a, b = sep._compute_integration_window(
-        peak_idx=0, n_samp=0, half_width=2, mode="pedestal", offset=100
-    )
-    assert (a, b) == (0, 0)
-
-
-def test__format_integrated_title_variants():
-    t = sep._format_integrated_title("CT1", "flasher", half_width=2, mode="signal", offset=None)
-    assert "integrated signal (win 5)" in t
-    t = sep._format_integrated_title("CT1", "flasher", half_width=3, mode="pedestal", offset=None)
-    assert "integrated pedestal (win 7, offset 16)" in t
-
-
-def test__make_output_paths_base_none_and_pdf_suffix(tmp_path, monkeypatch):
-    ioh = IOHandler()
-    ioh.set_paths(output_path=tmp_path)
-
-    # Force get_output_file to return a path with .pdf already
-    monkeypatch.setattr(ioh, "get_output_file", lambda name: tmp_path / "given.pdf")
-    out_dir, pdf_path = sep._make_output_paths(ioh, base=None, input_file=Path("in.simtel"))
-    assert out_dir == tmp_path
-    assert pdf_path.name == "given.pdf"
-
-
-def test__collect_figures_for_file_unknown_and_all(tmp_path, monkeypatch, caplog):
-    # Unknown plot should warn and return empty list
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        figs = sep._collect_figures_for_file(
-            filename=Path("in.simtel"),
-            plots=["unknown_plot"],
-            args={},
-            out_dir=tmp_path,
-            base_stem="s",
-            save_pngs=False,
-            dpi=80,
+def test_make_output_paths(mock_plotter, io_handler):
+    output_path = mock_plotter.make_output_paths(io_handler, "test_output")
+    assert output_path.suffix == ".pdf"
+    assert "test_output" in output_path.name
+
+
+def test_plot_method_unknown_plot(mock_plotter):
+    mock_plotter.plot(["unknown_plot"], {}, Path("test.pdf"))
+    assert len(mock_plotter.figures) == 0
+
+
+def test_plot_choices_constant():
+    """Verify PLOT_CHOICES matches available plots."""
+    assert "pedestals" in plot_simtel_events.PLOT_CHOICES
+    assert "signals" in plot_simtel_events.PLOT_CHOICES
+    assert "peak_timing" in plot_simtel_events.PLOT_CHOICES
+    assert "all" in plot_simtel_events.PLOT_CHOICES
+    assert len(plot_simtel_events.PLOT_CHOICES) == 7
+
+
+def test_plot_pedestals(mock_plotter):
+    """Test pedestal plot generation."""
+    rng = np.random.default_rng(42)
+    # Ensure pedestals have variation to avoid xlim warning
+    mock_plotter.pedestals = rng.uniform(50, 70, mock_plotter.n_pixels)
+    with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
+        fig = mock_plotter.plot_pedestals()
+        assert fig is not None
+        plt.close(fig)
+
+
+def test_plot_signals(mock_plotter):
+    """Test signal plot generation."""
+    rng = np.random.default_rng(42)
+    # Ensure signals have variation
+    mock_plotter.image = rng.uniform(100, 500, mock_plotter.n_pixels)
+    with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
+        fig = mock_plotter.plot_signals()
+        assert fig is not None
+        plt.close(fig)
+
+
+def test_plot_peak_timing_with_timing_bins(mock_plotter):
+    """Test peak timing with custom timing bins."""
+    with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
+        fig = mock_plotter.plot_peak_timing(sum_threshold=5.0, timing_bins=25)
+        assert fig is not None
+        plt.close(fig)
+
+
+def test_plot_camera_image_and_histogram(mock_plotter):
+    """Test camera image and histogram plotting."""
+    rng = np.random.default_rng(42)
+    with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
+        values = rng.uniform(0, 100, mock_plotter.n_pixels)
+        pix_ids = np.arange(mock_plotter.n_pixels)
+        edges = np.linspace(0, 100, 50)
+
+        fig = mock_plotter._plot_camera_image_and_histogram(
+            values, pix_ids, mock_plotter.n_pixels, edges, "test", "count"
         )
-    assert figs == []
-    assert any("Unknown plot selection" in r.message for r in caplog.records)
-
-    # 'all' should dispatch all known plots
-    def _mkfig(*_a, **_k):
-        return plt.figure()
-
-    monkeypatch.setattr(sep, "plot_simtel_event_image", _mkfig)
-    monkeypatch.setattr(sep, "plot_simtel_time_traces", _mkfig)
-    monkeypatch.setattr(sep, "plot_simtel_waveform_matrix", _mkfig)
-    monkeypatch.setattr(sep, "plot_simtel_step_traces", _mkfig)
-    monkeypatch.setattr(sep, "plot_simtel_integrated_signal_image", _mkfig)
-    monkeypatch.setattr(sep, "plot_simtel_integrated_pedestal_image", _mkfig)
-    monkeypatch.setattr(sep, "_call_peak_timing", _mkfig)
-
-    figs = sep._collect_figures_for_file(
-        filename=Path("in.simtel"),
-        plots=["all"],
-        args={},
-        out_dir=tmp_path,
-        base_stem="s",
-        save_pngs=False,
-        dpi=80,
-    )
-    assert len(figs) == 7
-    for f in figs:
-        plt.close(f)
+        assert fig is not None
+        assert len(fig.axes) == 2
+        plt.close(fig)
 
 
-def test_generate_and_save_plots_empty_and_error_paths(tmp_path, monkeypatch, caplog):
-    ioh = IOHandler()
-    ioh.set_paths(output_path=tmp_path)
-    simtel_files = [tmp_path / "input.simtel.zst"]
-
-    # Case 1: no figures -> warning and skip saving
-    monkeypatch.setattr(sep, "_collect_figures_for_file", lambda **_k: [])
-    called = {"save": 0, "dump": 0}
-
-    def _save(_figs, _pdf):  # pragma: no cover - ensure it's not called
-        called["save"] += 1
-        raise AssertionError("should not be called")
-
-    def _dump(_args, _pdf_path, add_activity_name=True):  # pylint:disable=unused-argument
-        called["dump"] += 1
-
-    monkeypatch.setattr(sep, "save_figures_to_single_document", _save)
-    monkeypatch.setattr(sep.MetadataCollector, "dump", staticmethod(_dump))
-
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        sep.generate_and_save_plots(
-            simtel_files=simtel_files, plots=["event_image"], args={}, ioh=ioh
-        )
-    assert any("No figures produced" in r.message for r in caplog.records)
-    assert called["save"] == 0
-    assert called["dump"] == 0
-
-    # Case 2: errors during save and metadata writing are caught and logged
-    def _collector(**_k):
-        return [plt.figure()]
-
-    def _save_err(_figs, _pdf):
-        raise RuntimeError("save failed")
-
-    def _dump_err(_args, _pdf_path, add_activity_name=True):  # pylint:disable=unused-argument
-        raise RuntimeError("dump failed")
-
-    monkeypatch.setattr(sep, "_collect_figures_for_file", _collector)
-    monkeypatch.setattr(sep, "save_figures_to_single_document", _save_err)
-    monkeypatch.setattr(sep.MetadataCollector, "dump", staticmethod(_dump_err))
-
-    caplog.clear()
-    with caplog.at_level("INFO", logger=sep._logger.name):
-        sep.generate_and_save_plots(
-            simtel_files=simtel_files, plots=["event_image"], args={}, ioh=ioh
-        )
-    # One error and one warning expected
-    assert any("Failed to save PDF" in r.message for r in caplog.records)
-    assert any("Failed to write metadata" in r.message for r in caplog.records)
+def test_plot_method_with_plots(mock_plotter):
+    """Test plot method generates figures."""
+    with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
+        mock_plotter.plot(["signals"], {}, Path("test.pdf"))
+        assert len(mock_plotter.figures) == 1
+        for fig in mock_plotter.figures:
+            plt.close(fig)
 
 
-def test__get_event_source_and_r1_tel_no_event(monkeypatch, caplog):
-    # Source that yields a single None event
-    src = _fake_source_with_event(None, None)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        res = sep._get_event_source_and_r1_tel(DUMMY_SIMTEL)
-    assert res is None
-    assert any("No event found in the file." in r.message for r in caplog.records)
+def test_plot_method_with_save_png(mock_plotter):
+    """Test plot method with PNG saving."""
+    with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
+        with mock.patch("simtools.visualization.plot_simtel_events.save_figure"):
+            mock_plotter.plot(["time_traces"], {}, Path("test.pdf"), save_png=True, dpi=150)
+            assert len(mock_plotter.figures) == 1
+            for fig in mock_plotter.figures:
+                plt.close(fig)
 
 
-def test__get_event_source_and_r1_tel_no_r1_default_warning(monkeypatch, caplog):
-    # Event without any R1 telescope data
-    ev, tel_id = _fake_event(dl1_image=np.array([1.0, 2.0, 3.0]), r1_waveforms=None)
-    src = _fake_source_with_event(ev, tel_id)
+def test_save_method(mock_plotter, io_handler, tmp_path):
+    """Test save method."""
+    fig1, fig2 = plt.figure(), plt.figure()
+    mock_plotter.figures = [fig1, fig2]
+    output_file = tmp_path / "test_output.pdf"
 
-    _install_fake_ctapipe(monkeypatch, src)
+    with mock.patch(
+        "simtools.visualization.plot_simtel_events.save_figures_to_single_document"
+    ) as mock_save:
+        with mock.patch(
+            "simtools.visualization.plot_simtel_events.MetadataCollector.dump"
+        ) as mock_dump:
+            mock_plotter.save({}, output_file)
+            mock_save.assert_called_once()
+            mock_dump.assert_called_once()
+            assert mock_save.call_args[0][0] == mock_plotter.figures
 
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        res = sep._get_event_source_and_r1_tel(DUMMY_SIMTEL)
-    assert res is None
-    assert any("First event has no R1 telescope data" in r.message for r in caplog.records)
-
-
-def test__get_event_source_and_r1_tel_no_r1_with_context(monkeypatch, caplog):
-    # Event without any R1 telescope data, contextual warning is used
-    ev, tel_id = _fake_event(dl1_image=np.array([0.0, 1.0]), r1_waveforms=None)
-    src = _fake_source_with_event(ev, tel_id)
-
-    _install_fake_ctapipe(monkeypatch, src)
-
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        res = sep._get_event_source_and_r1_tel(DUMMY_SIMTEL, warn_context="waveform plot")
-    assert res is None
-    assert any("Event has no R1 data for waveform plot" in r.message for r in caplog.records)
+    plt.close(fig1)
+    plt.close(fig2)
 
 
-def test__get_event_source_and_r1_tel_returns_sorted_tel_id(monkeypatch):
-    # Construct an event with multiple R1 tel entries out of order
-    ev = SimpleNamespace()
-    ev.index = SimpleNamespace(obs_id=1, event_id=2)
-    ev.trigger = SimpleNamespace(event_type=SimpleNamespace(name="flasher"))
-    ev.dl1 = SimpleNamespace(tel={})
-    # r1.tel keys deliberately unsorted
-    ev.r1 = SimpleNamespace(
-        tel={
-            5: SimpleNamespace(waveform=np.ones((2, 4))),
-            2: SimpleNamespace(waveform=np.ones((3, 4))),
-        }
-    )
+def test_save_method_no_figures(mock_plotter, tmp_path):
+    """Test save method with no figures."""
+    output_file = tmp_path / "test_output.pdf"
 
-    class _Src:
-        def __init__(self, ev):
-            self._evs = [ev]
-            self.subarray = SimpleNamespace()  # unused here
-
-        def __iter__(self):
-            return iter(self._evs)
-
-    _install_fake_ctapipe(monkeypatch, _Src(ev))
-
-    res = sep._get_event_source_and_r1_tel(DUMMY_SIMTEL)
-    assert isinstance(res, tuple)
-    assert len(res) == 3
-    _source, _event, tel = res
-    assert _event is ev
-    assert tel == 2  # smallest tel id selected
+    with mock.patch(
+        "simtools.visualization.plot_simtel_events.save_figures_to_single_document"
+    ) as mock_save:
+        with mock.patch(
+            "simtools.visualization.plot_simtel_events.MetadataCollector.dump"
+        ) as mock_dump:
+            mock_plotter.save({}, output_file)
+            mock_save.assert_not_called()
+            mock_dump.assert_not_called()
 
 
-def test__get_event_source_and_r1_tel_respects_event_index(monkeypatch):
-    # Build two events and select the second via event_index
-    e0, _ = _fake_event(dl1_image=np.array([1.0]), r1_waveforms=None)
-    e0.r1 = SimpleNamespace(tel={})  # explicitly no r1
-
-    e1 = SimpleNamespace()
-    e1.index = SimpleNamespace(obs_id=1, event_id=99)
-    e1.trigger = SimpleNamespace(event_type=SimpleNamespace(name="flasher"))
-    e1.dl1 = SimpleNamespace(tel={})
-    e1.r1 = SimpleNamespace(tel={7: SimpleNamespace(waveform=np.ones((1, 3)))})
-
-    class _Src2:
-        def __init__(self, evs):
-            self._evs = evs
-            self.subarray = SimpleNamespace()
-
-        def __iter__(self):
-            return iter(self._evs)
-
-    _install_fake_ctapipe(monkeypatch, _Src2([e0, e1]))
-
-    res = sep._get_event_source_and_r1_tel(DUMMY_SIMTEL, event_index=1)
-    assert isinstance(res, tuple)
-    assert len(res) == 3
-    _source, event, tel = res
-    assert event is e1
-    assert tel == 7
+def test_read_and_init_event_no_events():
+    """Test initialization with no events."""
+    with mock.patch("simtools.visualization.plot_simtel_events.read_events") as mock_read:
+        mock_read.return_value = ([], {}, [])
+        with mock.patch("simtools.visualization.plot_simtel_events.Camera"):
+            with pytest.raises(ValueError, match="No events read from file"):
+                plot_simtel_events.PlotSimtelEvent("fake.simtel", "LSTN-01", 0)
 
 
-def test__collect_figures_for_file_logs_when_plot_returns_none(tmp_path, monkeypatch, caplog):
-    # plot_simtel_event_image returns None -> should log warning and produce no figs
-    monkeypatch.setattr(sep, "plot_simtel_event_image", lambda *a, **k: None)
-    caplog.clear()
-    with caplog.at_level("WARNING", logger=sep._logger.name):
-        figs = sep._collect_figures_for_file(
-            filename=Path("in.simtel"),
-            plots=["event_image"],
-            args={},
-            out_dir=tmp_path,
-            base_stem="s",
-            save_pngs=False,
-            dpi=72,
-        )
-    assert figs == []
-    assert any("returned no figure" in r.message for r in caplog.records)
+def test_generate_and_save_plots(mock_event_data, mock_camera, io_handler, tmp_path):
+    """Test generate_and_save_plots function."""
+    simtel_files = [tmp_path / "test.simtel"]
+    simtel_files[0].touch()
+
+    args = {
+        "telescope": "LSTN-01",
+        "event_index": 0,
+        "output_file": "test_output",
+        "save_pngs": False,
+        "dpi": 300,
+    }
+
+    with mock.patch("simtools.visualization.plot_simtel_events.read_events") as mock_read:
+        mock_read.return_value = mock_event_data
+        with mock.patch("simtools.visualization.plot_simtel_events.Camera") as mock_cam:
+            mock_cam.return_value = mock_camera
+            with mock.patch(
+                "simtools.visualization.plot_simtel_events.save_figures_to_single_document"
+            ) as mock_save:
+                with mock.patch(
+                    "simtools.visualization.plot_simtel_events.MetadataCollector.dump"
+                ) as mock_dump:
+                    plot_simtel_events.generate_and_save_plots(
+                        simtel_files, ["time_traces"], args, io_handler
+                    )
+                    mock_save.assert_called_once()
+                    mock_dump.assert_called_once()
+
+
+def test_generate_and_save_plots_multiple_events(
+    mock_event_data, mock_camera, io_handler, tmp_path
+):
+    """Test generate_and_save_plots with multiple events."""
+    simtel_files = [tmp_path / "test.simtel"]
+    simtel_files[0].touch()
+
+    args = {
+        "telescope": "LSTN-01",
+        "event_index": [0, 1],
+        "output_file": "test_output",
+        "save_pngs": True,
+        "dpi": 150,
+    }
+
+    with mock.patch("simtools.visualization.plot_simtel_events.read_events") as mock_read:
+        mock_read.return_value = mock_event_data
+        with mock.patch("simtools.visualization.plot_simtel_events.Camera") as mock_cam:
+            mock_cam.return_value = mock_camera
+            with mock.patch("simtools.visualization.plot_simtel_events.save_figure") as _:
+                with mock.patch(
+                    "simtools.visualization.plot_simtel_events.save_figures_to_single_document"
+                ) as mock_save_doc:
+                    with mock.patch(
+                        "simtools.visualization.plot_simtel_events.MetadataCollector.dump"
+                    ) as mock_dump:
+                        plot_simtel_events.generate_and_save_plots(
+                            simtel_files, ["waveforms"], args, io_handler
+                        )
+                        assert mock_save_doc.call_count == 2
+                        assert mock_dump.call_count == 2

@@ -44,4 +44,3 @@ class CalibrationModel(ModelParameter):
         )
 
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init CalibrationModel %s %s", site, calibration_device_model_name)
