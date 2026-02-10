@@ -812,7 +812,6 @@ class SimtelConfigWriter:
         telescope_name: str
             Name of the telescope.
         """
-        self._logger.debug(f"Writing {telescope_name} telescope config file {config_file_path}")
         dummy_defaults = {
             "camera_config_file": f"{telescope_name}_single_pixel_camera.dat",
             "discriminator_pulse_shape": f"{telescope_name}_pulse.dat",
