@@ -52,15 +52,6 @@ applications:
           effective_focal_length: '215.191 0 0 0 0'
       file: gamma_run000020_za62deg_azm180deg_South_beta_6.0.2_test.simtel.zst
       path_descriptor: pack_for_grid_register
-    - expected_log_output:
-        pattern:
-        - "END OF SHOWER NO          5"
-        - "========== END OF RUN ========"
-        - "Sim_telarray finished at"
-        - "CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE"
-        - "CORSIKA was compiled with CURVED option."
-      file: gamma_run000020_za62deg_azm180deg_South_beta_6.0.2_test.log_hist.tar.gz
-      path_descriptor: pack_for_grid_register
   test_name: gamma_62_deg_south_check_output
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

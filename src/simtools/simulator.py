@@ -413,6 +413,7 @@ class Simulator:
                 array_models=self.array_models,
                 expected_mc_events=expected_mc_events,
                 expected_shower_events=expected_shower_events,
+                curved_atmo=_corsika_config.use_curved_atmosphere,
             )
         if "corsika" in self.simulation_software:
             corsika_output_validator.validate_corsika_output(
@@ -421,6 +422,7 @@ class Simulator:
                 else None,
                 log_files=self.get_files(file_type="corsika_log"),
                 expected_mc_events=expected_mc_events,
+                curved_atmo=_corsika_config.use_curved_atmosphere,
             )
 
         if settings.config.args.get("save_reduced_event_lists"):

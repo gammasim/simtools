@@ -3,12 +3,13 @@
 import logging
 
 from simtools.sim_events import file_info
+from simtools.testing.log_inspector import check_plain_logs
 from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
 
 
-def validate_corsika_output(data_files, log_files, expected_mc_events=None):
+def validate_corsika_output(data_files, log_files, expected_mc_events=None, curved_atmo=False):
     """
     Validate CORSIKA output files.
 
@@ -20,6 +21,8 @@ def validate_corsika_output(data_files, log_files, expected_mc_events=None):
         List of paths to CORSIKA log files.
     expected_mc_events: int, optional
         Expected number of MC events.
+    curved_atmo: bool, optional
+        Whether the CORSIKA simulation was run with the curved atmosphere option.
 
     Raises
     ------
@@ -32,6 +35,7 @@ def validate_corsika_output(data_files, log_files, expected_mc_events=None):
     log_files = general.ensure_iterable(log_files)
 
     validate_event_numbers(data_files, expected_mc_events)
+    validate_log_files(log_files, expected_mc_events=expected_mc_events, curved_atmo=curved_atmo)
 
 
 def validate_event_numbers(data_files, expected_mc_events, tolerance=1.0e-3):
@@ -84,3 +88,33 @@ def validate_event_numbers(data_files, expected_mc_events, tolerance=1.0e-3):
                 f" - {error}" for error in event_errors
             )
             raise ValueError(error_message)
+
+
+def validate_log_files(log_files, expected_mc_events=None, curved_atmo=False):
+    """Validate CORSIKA log files."""
+    event_string = (
+        f"NUMBER OF GENERATED EVENTS =          {expected_mc_events}" if expected_mc_events else ""
+    )
+    curved_good = ""
+    curved_bad = ""
+    if curved_atmo:
+        curved_good = "CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE"
+    else:
+        curved_bad = "CORSIKA was compiled without CURVED option."
+    if not check_plain_logs(
+        log_files,
+        {
+            "pattern": [
+                "========== END OF RUN =======",
+                event_string,
+                curved_good,
+            ],
+            "forbidden_pattern": [
+                curved_bad,
+            ],
+        },
+    ):
+        raise ValueError(
+            f"Log files {log_files} do not contain expected patterns "
+            "indicating successful completion."
+        )

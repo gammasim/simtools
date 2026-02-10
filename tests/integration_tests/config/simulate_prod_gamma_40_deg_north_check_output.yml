@@ -36,13 +36,6 @@ applications:
       require_telescope_events: true
       file: gamma_run000001_za40deg_azm180deg_North_alpha_6.0.2_test.simtel.zst
       path_descriptor: pack_for_grid_register
-    - expected_log_output:
-        pattern:
-        - "NUMBER OF GENERATED EVENTS =          5"
-        - "========== END OF RUN ========"
-        - "Sim_telarray finished at"
-      file: gamma_run000001_za40deg_azm180deg_North_alpha_6.0.2_test.log_hist.tar.gz
-      path_descriptor: pack_for_grid_register
   - test_simtel_cfg_files:
       "5.0.0": tests/resources/sim_telarray_configurations/5.0.0/CTA-North-LSTN-01_test.cfg
       "6.0.2": tests/resources/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg
