@@ -405,6 +405,10 @@ class Simulator:
         _corsika_config = self._get_first_corsika_config()
         expected_shower_events = _corsika_config.shower_events
         expected_mc_events = _corsika_config.mc_events
+        self.logger.info(
+            "Validating simulations "
+            f"with {expected_mc_events} MC events and {expected_shower_events} shower events."
+        )
 
         if "sim_telarray" in self.simulation_software:
             simtel_output_validator.validate_sim_telarray(
@@ -421,7 +425,7 @@ class Simulator:
                 if self.simulation_software == "corsika"
                 else None,
                 log_files=self.get_files(file_type="corsika_log"),
-                expected_mc_events=expected_mc_events,
+                expected_shower_events=expected_shower_events,
                 curved_atmo=_corsika_config.use_curved_atmosphere,
             )
 
