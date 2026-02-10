@@ -9,6 +9,20 @@ import pytest
 
 import simtools.ray_tracing.psf_parameter_optimisation as psf_opt
 
+_MIRROR_ALIGN_RANDOM = (0.004, 28.0, 0.0, 0.0)
+
+
+def mirror_align_random_values():
+    return list(_MIRROR_ALIGN_RANDOM)
+
+
+def make_mirror_align_random_parameters():
+    return {
+        "mirror_align_random_horizontal": mirror_align_random_values(),
+        "mirror_align_random_vertical": mirror_align_random_values(),
+    }
+
+
 TEST_OUTPUT_DIR = Path("/dummy_test_path")
 
 
@@ -17,12 +31,11 @@ def mock_telescope_model():
     """Create a mock telescope model."""
     mock_tel = MagicMock()
     mock_tel.name = "LSTN-01"
-    mock_tel.get_parameter_value.side_effect = lambda param: {
-        "mirror_reflection_random_angle": [0.005, 0.15, 0.03],
-        "mirror_align_random_horizontal": [0.004, 28.0, 0.0, 0.0],
-        "mirror_align_random_vertical": [0.004, 28.0, 0.0, 0.0],
-        "focal_length": 28.0,
-    }.get(param, None)
+
+    def _get_parameter_value(param):
+        return {**make_mirror_align_random_parameters(), "focal_length": 28.0}.get(param, None)
+
+    mock_tel.get_parameter_value.side_effect = _get_parameter_value
     return mock_tel
 
 
@@ -72,7 +85,7 @@ def temp_dir():
 @pytest.fixture
 def sample_parameters():
     """Create sample PSF parameters for testing."""
-    return {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    return make_mirror_align_random_parameters()
 
 
 @pytest.fixture
@@ -165,10 +178,8 @@ def test_calculate_ks_statistic():
 def test_get_previous_values(mock_telescope_model):
     """Test getting previous parameter values from telescope model."""
     values = psf_opt.get_previous_values(mock_telescope_model)
-    assert "mirror_reflection_random_angle" in values
     assert "mirror_align_random_horizontal" in values
     assert "mirror_align_random_vertical" in values
-    assert len(values["mirror_reflection_random_angle"]) == 3
     assert len(values["mirror_align_random_horizontal"]) == 4
 
 
@@ -219,7 +230,11 @@ def test_load_and_process_data(mock_args_dict, data_file, should_raise_error):
     ("pars", "should_raise_error", "expected_psf_diameter"),
     [
         # Normal case with parameters
-        ({"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}, False, 5.0),
+        (
+            make_mirror_align_random_parameters,
+            False,
+            5.0,
+        ),
         # Error case with None parameters
         (None, True, None),
     ],
@@ -366,13 +381,10 @@ def test_write_tested_parameters_to_file(
 def test__add_units_to_psf_parameters():
     """Test adding astropy units to PSF parameters with multiple scenarios."""
     # Test normal case with known parameters
-    best_pars = {
-        "mirror_reflection_random_angle": [0.005, 0.15, 0.03],
-        "mirror_align_random_horizontal": [0.004, 28.0, 0.0, 0.0],
-        "mirror_align_random_vertical": [0.004, 28.0, 0.0, 0.0],
-    }
+    best_pars = make_mirror_align_random_parameters()
     result = psf_opt._add_units_to_psf_parameters(best_pars)
-    assert "mirror_reflection_random_angle" in result
+    assert "mirror_align_random_horizontal" in result
+    assert "mirror_align_random_vertical" in result
 
     # Test else branch - parameters without known units
     parameters_no_units = {"param1": [1.5, 2.0]}
@@ -423,7 +435,7 @@ def test_export_psf_parameters(mock_telescope_model, temp_dir, sample_parameters
 
 def test__calculate_param_gradient_success(optimizer):
     """Test successful parameter gradient calculation."""
-    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    current_params = {"mirror_align_random_horizontal": mirror_align_random_values()}
     current_metric = 0.1
 
     with patch.object(optimizer, "run_simulation") as mock_sim:
@@ -432,21 +444,21 @@ def test__calculate_param_gradient_success(optimizer):
         gradient = optimizer._calculate_param_gradient(
             current_params,
             current_metric,
-            "mirror_reflection_random_angle",
-            [0.005, 0.15, 0.03],
+            "mirror_align_random_horizontal",
+            mirror_align_random_values(),
             0.0005,
         )
 
         assert gradient is not None
         assert isinstance(gradient, list)
-        assert len(gradient) == 3
+        assert len(gradient) == 4
         assert all(isinstance(g, float) for g in gradient)
 
 
 def test__calculate_param_gradient_simulation_failure(optimizer):
     """Test parameter gradient calculation when simulation fails."""
 
-    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    current_params = {"mirror_align_random_horizontal": mirror_align_random_values()}
 
     with patch.object(optimizer, "run_simulation") as mock_sim:
         # First call succeeds, second fails
@@ -455,8 +467,8 @@ def test__calculate_param_gradient_simulation_failure(optimizer):
         gradient = optimizer._calculate_param_gradient(
             current_params,
             0.1,
-            "mirror_reflection_random_angle",
-            [0.005, 0.15, 0.03],
+            "mirror_align_random_horizontal",
+            mirror_align_random_values(),
             0.0005,
         )
         # Should return None when simulation fails
@@ -467,14 +479,14 @@ def test_calculate_gradient(optimizer, sample_parameters):
     """Test gradient calculation for all parameters using PSFParameterOptimizer."""
 
     with patch.object(optimizer, "_calculate_param_gradient") as mock_grad:
-        mock_grad.return_value = [-0.1, 0.05, -0.02]
+        mock_grad.return_value = [-0.1, 0.05, -0.02, 0.0]
 
         gradients = optimizer.calculate_gradient(
             sample_parameters,
             0.1,
         )
-        assert "mirror_reflection_random_angle" in gradients
-        assert gradients["mirror_reflection_random_angle"] == [-0.1, 0.05, -0.02]
+        assert "mirror_align_random_horizontal" in gradients
+        assert "mirror_align_random_vertical" in gradients
 
 
 def test_calculate_gradient_returns_none_on_failure(
@@ -488,14 +500,11 @@ def test_calculate_gradient_returns_none_on_failure(
         mock_telescope_model, mock_site_model, mock_args_dict, data_to_plot, radius, tmp_path
     )
 
-    current_params = {
-        "mirror_reflection_random_angle": [0.005, 0.15, 0.03],
-        "mirror_align_random_horizontal": [0.004, 28.0, 0.0, 0.0],
-    }
+    current_params = make_mirror_align_random_parameters()
 
     with patch.object(optimizer, "_calculate_param_gradient") as mock_grad:
         # First parameter succeeds, second fails
-        mock_grad.side_effect = [[-0.1, 0.05, -0.02], None]
+        mock_grad.side_effect = [[-0.1, 0.05, -0.02, 0.0], None]
 
         gradients = optimizer.calculate_gradient(current_params, 0.1)
         # Should return None when any gradient calculation fails
@@ -506,14 +515,11 @@ def test_apply_gradient_step(optimizer):
     """Test applying gradient descent step with various parameter types and zenith angle preservation."""
 
     # Test with list parameters
-    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
-    gradients = {"mirror_reflection_random_angle": [-0.001, 0.01, -0.002]}
+    current_params = {"dummy_list_param": [0.005, 0.15, 0.03]}
+    gradients = {"dummy_list_param": [-0.001, 0.01, -0.002]}
     new_params = optimizer.apply_gradient_step(current_params, gradients, 0.1)
-    assert "mirror_reflection_random_angle" in new_params
-    assert (
-        new_params["mirror_reflection_random_angle"][0]
-        != current_params["mirror_reflection_random_angle"][0]
-    )
+    assert "dummy_list_param" in new_params
+    assert new_params["dummy_list_param"][0] != current_params["dummy_list_param"][0]
 
     # Test with single-value parameter
     current_params = {"camera_filter_relative_efficiency": 1.0}
@@ -522,22 +528,22 @@ def test_apply_gradient_step(optimizer):
     assert new_params["camera_filter_relative_efficiency"] == pytest.approx(0.999)
 
     # Test zenith angle preservation for mirror_align parameters
-    current_params = {"mirror_align_random_horizontal": [0.005, 0.15, 0.03]}
-    gradients = {"mirror_align_random_horizontal": [-0.001, -0.02, -0.003]}
+    current_params = {"mirror_align_random_horizontal": mirror_align_random_values()}
+    gradients = {"mirror_align_random_horizontal": [-0.001, -0.02, -0.003, 0.001]}
     new_params = optimizer.apply_gradient_step(current_params, gradients, 0.1)
-    assert new_params["mirror_align_random_horizontal"][1] == pytest.approx(0.15)
+    assert new_params["mirror_align_random_horizontal"][1] == pytest.approx(28.0)
 
     # Test mirror_align_random_vertical
-    current_params = {"mirror_align_random_vertical": [0.005, 0.15, 0.03]}
-    gradients = {"mirror_align_random_vertical": [-0.001, -0.02, -0.003]}
+    current_params = {"mirror_align_random_vertical": mirror_align_random_values()}
+    gradients = {"mirror_align_random_vertical": [-0.001, -0.02, -0.003, 0.001]}
     new_params = optimizer.apply_gradient_step(current_params, gradients, 0.1)
-    assert new_params["mirror_align_random_vertical"][1] == pytest.approx(0.15)
+    assert new_params["mirror_align_random_vertical"][1] == pytest.approx(28.0)
 
 
 def test_perform_gradient_step_with_retries(optimizer):
     """Test gradient step with retries using PSFParameterOptimizer."""
 
-    current_params = {"mirror_reflection_random_angle": [0.005]}
+    current_params = {"dummy_list_param": [0.005]}
     current_metric = 10.0
 
     with (
@@ -548,8 +554,8 @@ def test_perform_gradient_step_with_retries(optimizer):
             "simtools.ray_tracing.psf_parameter_optimisation._are_all_parameters_within_allowed_range"
         ) as mock_validate,
     ):
-        mock_grad.return_value = {"mirror_reflection_random_angle": [0.001]}
-        mock_step.return_value = {"mirror_reflection_random_angle": [0.004]}
+        mock_grad.return_value = {"dummy_list_param": [0.001]}
+        mock_step.return_value = {"dummy_list_param": [0.004]}
         mock_sim.return_value = (8.0, 4.5, 0.9, {"data": "test"})  # Better metric
         mock_validate.return_value = True  # Parameters are valid
 
@@ -561,14 +567,14 @@ def test_perform_gradient_step_with_retries(optimizer):
 
         assert result is not None
         assert isinstance(result, psf_opt.GradientStepResult)
-        assert result.params == {"mirror_reflection_random_angle": [0.004]}
+        assert result.params == {"dummy_list_param": [0.004]}
         assert result.step_accepted is True
 
 
 def test__create_step_plot(sample_data, mock_args_dict, tmp_path):
     """Test creating step plot for optimization iteration."""
     data_to_plot = {"measured": sample_data}
-    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    current_params = make_mirror_align_random_parameters()
     mock_args_dict["plot_all"] = True
     mock_args_dict["fraction"] = 0.8
 
@@ -625,7 +631,7 @@ def test__create_step_plot(sample_data, mock_args_dict, tmp_path):
 
 def test__create_final_plot(optimizer, sample_data):
     """Test creating final optimization result plot."""
-    best_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    best_params = make_mirror_align_random_parameters()
     data_to_plot = optimizer.data_to_plot
 
     with (
@@ -702,25 +708,28 @@ def test_run_gradient_descent_optimization(optimizer, sample_data):
         patch("simtools.visualization.plot_psf.setup_pdf_plotting") as mock_setup,
         patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
     ):
-        mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_prev.return_value = make_mirror_align_random_parameters()
         mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
         mock_setup.return_value = None
-        # Simulate convergence - return values match method signature
-        mock_step.return_value = (
-            {"mirror_reflection_random_angle": [0.004, 0.16, 0.028]},  # new_params
-            3.2,  # new_psf_diameter
-            0.05,  # new_metric
-            0.9,  # new_p_value
-            sample_data,  # new_simulated_data
-            True,  # step_accepted
-            0.1,  # final_learning_rate
+        mock_step.return_value = psf_opt.GradientStepResult(
+            params={
+                "mirror_align_random_horizontal": [0.003, 28.0, 0.0, 0.0],
+                "mirror_align_random_vertical": [0.003, 28.0, 0.0, 0.0],
+            },
+            psf_diameter=3.2,
+            metric=0.05,
+            p_value=0.9,
+            simulated_data=sample_data,
+            step_accepted=True,
+            learning_rate=0.1,
         )
 
         best_pars, best_psf_diameter, gd_results = optimizer.run_gradient_descent(
             rmsd_threshold=0.1,
             learning_rate=0.1,
         )
-        assert "mirror_reflection_random_angle" in best_pars
+        assert "mirror_align_random_horizontal" in best_pars
+        assert "mirror_align_random_vertical" in best_pars
         assert isinstance(best_psf_diameter, float)
         assert len(gd_results) > 0
 
@@ -763,7 +772,7 @@ def test__write_log_interpretation():
 def test__write_iteration_entry():
     """Test writing single iteration entry to log."""
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
-        pars = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        pars = make_mirror_align_random_parameters()
 
         psf_opt._write_iteration_entry(
             f,
@@ -820,7 +829,7 @@ def test_analyze_monte_carlo_error(
         patch.object(optimizer, "get_initial_parameters") as mock_prev,
         patch.object(optimizer, "run_simulation") as mock_sim,
     ):
-        mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_prev.return_value = make_mirror_align_random_parameters()
         mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
 
         result = optimizer.analyze_monte_carlo_error(n_simulations=2)
@@ -840,7 +849,7 @@ def test_analyze_monte_carlo_error(
         patch.object(optimizer, "get_initial_parameters") as mock_prev,
         patch.object(optimizer, "run_simulation") as mock_sim,
     ):
-        mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_prev.return_value = make_mirror_align_random_parameters()
         mock_sim.side_effect = RuntimeError("All simulations failed")
 
         result = optimizer.analyze_monte_carlo_error(n_simulations=2)
@@ -858,7 +867,7 @@ def test_analyze_monte_carlo_error(
         patch.object(optimizer_ks, "get_initial_parameters") as mock_prev,
         patch.object(optimizer_ks, "run_simulation") as mock_sim,
     ):
-        mock_prev.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_prev.return_value = make_mirror_align_random_parameters()
         mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)  # psf_diameter, metric, p_value, data
 
         result = optimizer_ks.analyze_monte_carlo_error(n_simulations=2)
@@ -871,7 +880,7 @@ def test_run_simulation_with_caching_and_ks_override(
     optimizer, mock_telescope_model, mock_site_model, mock_args_dict, sample_data
 ):
     """Test run_simulation caching logic and KS statistic override."""
-    params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    params = make_mirror_align_random_parameters()
     radius = sample_data[psf_opt.RADIUS]
     data_to_plot = {"measured": sample_data}
 
@@ -903,7 +912,7 @@ def test_run_simulation_with_caching_and_ks_override(
 
 def test_perform_gradient_step_comprehensive(optimizer, sample_data):
     """Test perform_gradient_step_with_retries: tuple structure, retries, bounds checking, and LR reset."""
-    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    current_params = {"dummy_list_param": [0.005, 0.15, 0.03]}
 
     # Test 1: Returns dataclass with False when gradient is None
     with patch.object(optimizer, "calculate_gradient") as mock_calc_grad:
@@ -918,8 +927,8 @@ def test_perform_gradient_step_comprehensive(optimizer, sample_data):
         patch.object(optimizer, "apply_gradient_step") as mock_apply,
         patch.object(optimizer, "run_simulation") as mock_sim,
     ):
-        mock_calc_grad.return_value = {"mirror_reflection_random_angle": [-0.001, 0.01, -0.002]}
-        mock_apply.return_value = {"mirror_reflection_random_angle": [0.006, 0.15, 0.031]}
+        mock_calc_grad.return_value = {"dummy_list_param": [-0.001, 0.01, -0.002]}
+        mock_apply.return_value = {"dummy_list_param": [0.006, 0.15, 0.031]}
         mock_sim.side_effect = [
             (3.6, 0.15, 0.75, sample_data),  # Worse than current (0.1)
             (3.4, 0.08, 0.85, sample_data),  # Better
@@ -939,10 +948,8 @@ def test_perform_gradient_step_comprehensive(optimizer, sample_data):
             "simtools.ray_tracing.psf_parameter_optimisation._are_all_parameters_within_allowed_range"
         ) as mock_validate,
     ):
-        mock_calc_grad.return_value = {"mirror_reflection_random_angle": [-0.001, 0.01, -0.002]}
-        mock_apply.return_value = {
-            "mirror_reflection_random_angle": [999, 999, 999]
-        }  # Out of bounds
+        mock_calc_grad.return_value = {"dummy_list_param": [-0.001, 0.01, -0.002]}
+        mock_apply.return_value = {"dummy_list_param": [999, 999, 999]}  # Out of bounds
         mock_validate.return_value = False
 
         result = optimizer.perform_gradient_step_with_retries(
@@ -959,8 +966,8 @@ def test_perform_gradient_step_comprehensive(optimizer, sample_data):
             "simtools.ray_tracing.psf_parameter_optimisation._are_all_parameters_within_allowed_range"
         ) as mock_valid,
     ):
-        mock_calc_grad.return_value = {"mirror_reflection_random_angle": [-0.001, 0.01, -0.002]}
-        mock_apply.return_value = {"mirror_reflection_random_angle": [0.006, 0.15, 0.031]}
+        mock_calc_grad.return_value = {"dummy_list_param": [-0.001, 0.01, -0.002]}
+        mock_apply.return_value = {"dummy_list_param": [0.006, 0.15, 0.031]}
         mock_valid.side_effect = [False, False, True]
 
         result = optimizer.perform_gradient_step_with_retries(
@@ -978,11 +985,14 @@ def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
         patch.object(optimizer, "run_simulation") as mock_sim,
         patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
     ):
-        mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_get_params.return_value = make_mirror_align_random_parameters()
         mock_sim.return_value = (3.5, 0.05, 0.8, sample_data)
         mock_step.side_effect = [
             psf_opt.GradientStepResult(
-                params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+                params={
+                    "mirror_align_random_horizontal": [0.003, 28.0, 0.0, 0.0],
+                    "mirror_align_random_vertical": [0.003, 28.0, 0.0, 0.0],
+                },
                 psf_diameter=3.4,
                 metric=0.008,
                 p_value=0.85,
@@ -1003,10 +1013,13 @@ def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
         patch.object(optimizer, "run_simulation") as mock_sim,
         patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
     ):
-        mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_get_params.return_value = make_mirror_align_random_parameters()
         mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
         mock_step.return_value = psf_opt.GradientStepResult(
-            params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+            params={
+                "mirror_align_random_horizontal": [0.003, 28.0, 0.0, 0.0],
+                "mirror_align_random_vertical": [0.003, 28.0, 0.0, 0.0],
+            },
             psf_diameter=3.4,
             metric=0.095,
             p_value=0.85,
@@ -1026,11 +1039,14 @@ def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
         patch.object(optimizer, "run_simulation") as mock_sim,
         patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
     ):
-        mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_get_params.return_value = make_mirror_align_random_parameters()
         mock_sim.return_value = (3.5, 0.1, 0.8, sample_data)
         mock_step.side_effect = [
             psf_opt.GradientStepResult(
-                params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+                params={
+                    "mirror_align_random_horizontal": [0.003, 28.0, 0.0, 0.0],
+                    "mirror_align_random_vertical": [0.003, 28.0, 0.0, 0.0],
+                },
                 psf_diameter=3.4,
                 metric=0.08,
                 p_value=0.85,
@@ -1039,7 +1055,10 @@ def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
                 learning_rate=0.1,
             ),  # Better
             psf_opt.GradientStepResult(
-                params={"mirror_reflection_random_angle": [0.003, 0.15, 0.025]},
+                params={
+                    "mirror_align_random_horizontal": [0.002, 28.0, 0.0, 0.0],
+                    "mirror_align_random_vertical": [0.002, 28.0, 0.0, 0.0],
+                },
                 psf_diameter=3.3,
                 metric=0.05,
                 p_value=0.85,
@@ -1048,7 +1067,10 @@ def test_gradient_descent_convergence_and_tracking(optimizer, sample_data):
                 learning_rate=0.1,
             ),  # Best
             psf_opt.GradientStepResult(
-                params={"mirror_reflection_random_angle": [0.002, 0.15, 0.020]},
+                params={
+                    "mirror_align_random_horizontal": [0.001, 28.0, 0.0, 0.0],
+                    "mirror_align_random_vertical": [0.001, 28.0, 0.0, 0.0],
+                },
                 psf_diameter=3.2,
                 metric=0.12,
                 p_value=0.85,
@@ -1070,7 +1092,7 @@ def test_perform_gradient_step_with_retries_learning_rate_reduction(
     """Test learning rate reduction logic in gradient step retries."""
     radius = sample_data[psf_opt.RADIUS]
     data_to_plot = {"measured": sample_data}
-    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    current_params = {"dummy_list_param": [0.005, 0.15, 0.03]}
 
     optimizer = psf_opt.PSFParameterOptimizer(
         mock_telescope_model, mock_site_model, mock_args_dict, data_to_plot, radius, TEST_OUTPUT_DIR
@@ -1082,8 +1104,8 @@ def test_perform_gradient_step_with_retries_learning_rate_reduction(
         patch.object(optimizer, "run_simulation") as mock_sim,
     ):
         # Simulate worse results to trigger learning rate reduction
-        mock_calc_grad.return_value = {"mirror_reflection_random_angle": [-0.001, 0.01, -0.002]}
-        mock_apply.return_value = {"mirror_reflection_random_angle": [0.006, 0.15, 0.031]}
+        mock_calc_grad.return_value = {"dummy_list_param": [-0.001, 0.01, -0.002]}
+        mock_apply.return_value = {"dummy_list_param": [0.006, 0.15, 0.031]}
         mock_sim.return_value = (3.5, 0.15, 0.8, sample_data)  # Worse metric
 
         result = optimizer.perform_gradient_step_with_retries(
@@ -1115,7 +1137,7 @@ def test_parameter_validation():
     assert psf_opt._is_parameter_within_allowed_range("unknown_parameter", 0, 0.5) is True
 
     # Test all parameters validation
-    params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    params = {"mirror_align_random_horizontal": mirror_align_random_values()}
     assert psf_opt._are_all_parameters_within_allowed_range(params) is True
 
     # Test with clearly out-of-range value
@@ -1129,7 +1151,7 @@ def test_params_to_cache_key(optimizer):
 
     # Test with mixed list and non-list values
     params = {
-        "mirror_reflection_random_angle": [0.005, 0.15, 0.03],
+        "mirror_align_random_horizontal": mirror_align_random_values(),
         "camera_filter_relative_efficiency": 1.0,
     }
     cache_key = optimizer._params_to_cache_key(params)
@@ -1245,16 +1267,21 @@ def test_workflow_edge_cases(
 def test_perturbed_params_creation():
     """Test _create_perturbed_params with list and non-list parameters."""
     current_params = {
-        "mirror_reflection_random_angle": [0.005, 0.15, 0.03],
+        "mirror_align_random_horizontal": mirror_align_random_values(),
         "camera_filter_relative_efficiency": 1.0,
     }
 
     # Test list parameter perturbation
     perturbed = psf_opt._create_perturbed_params(
-        current_params, "mirror_reflection_random_angle", [0.005, 0.15, 0.03], 0, 0.005, 0.001
+        current_params,
+        "mirror_align_random_horizontal",
+        mirror_align_random_values(),
+        0,
+        0.004,
+        0.001,
     )
-    assert perturbed["mirror_reflection_random_angle"][0] == pytest.approx(0.006)
-    assert perturbed["mirror_reflection_random_angle"][1] == pytest.approx(0.15)
+    assert perturbed["mirror_align_random_horizontal"][0] == pytest.approx(0.005)
+    assert perturbed["mirror_align_random_horizontal"][1] == pytest.approx(28.0)
 
     # Test non-list parameter perturbation
     perturbed2 = psf_opt._create_perturbed_params(
@@ -1347,7 +1374,7 @@ def test_perform_gradient_step_with_metric_rejection_lr_reset(
     """Test learning rate reset when metric gets worse and lr drops below 1e-6."""
     radius = sample_data[psf_opt.RADIUS]
     data_to_plot = {"measured": sample_data}
-    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    current_params = {"dummy_list_param": [0.005, 0.15, 0.03]}
 
     optimizer = psf_opt.PSFParameterOptimizer(
         mock_telescope_model, mock_site_model, mock_args_dict, data_to_plot, radius, TEST_OUTPUT_DIR
@@ -1361,8 +1388,8 @@ def test_perform_gradient_step_with_metric_rejection_lr_reset(
             "simtools.ray_tracing.psf_parameter_optimisation._are_all_parameters_within_allowed_range"
         ) as mock_valid,
     ):
-        mock_calc_grad.return_value = {"mirror_reflection_random_angle": [-0.001, 0.01, -0.002]}
-        mock_apply.return_value = {"mirror_reflection_random_angle": [0.006, 0.15, 0.031]}
+        mock_calc_grad.return_value = {"dummy_list_param": [-0.001, 0.01, -0.002]}
+        mock_apply.return_value = {"dummy_list_param": [0.006, 0.15, 0.031]}
         mock_valid.return_value = True  # Parameters within bounds
 
         # First 2 calls: worse metric (triggers rejection and lr reduction)
@@ -1387,17 +1414,18 @@ def test_get_initial_parameters(optimizer, mock_telescope_model):
     """Test get_initial_parameters method calls get_previous_values."""
 
     with patch("simtools.ray_tracing.psf_parameter_optimisation.get_previous_values") as mock_get:
-        mock_get.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        expected = make_mirror_align_random_parameters()
+        mock_get.return_value = expected
 
         result = optimizer.get_initial_parameters()
 
         mock_get.assert_called_once_with(mock_telescope_model)
-        assert result == {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        assert result == expected
 
 
 def test_calculate_param_gradient_with_exception(optimizer, sample_data):
     """Test _calculate_param_gradient exception handling with actual logging."""
-    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    current_params = {"dummy_list_param": [0.005, 0.15, 0.03]}
 
     with patch.object(optimizer, "run_simulation") as mock_sim:
         # Trigger exception during simulation - let logger actually log
@@ -1405,7 +1433,7 @@ def test_calculate_param_gradient_with_exception(optimizer, sample_data):
 
         # This should return None when exception occurs
         result = optimizer._calculate_param_gradient(
-            current_params, 0.1, "mirror_reflection_random_angle", [0.005, 0.15, 0.03], 0.001
+            current_params, 0.1, "dummy_list_param", [0.005, 0.15, 0.03], 0.001
         )
 
         assert result is None
@@ -1413,13 +1441,13 @@ def test_calculate_param_gradient_with_exception(optimizer, sample_data):
 
 def test_calculate_param_gradient_with_runtime_error(optimizer):
     """Test _calculate_param_gradient with RuntimeError."""
-    current_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+    current_params = {"dummy_list_param": [0.005, 0.15, 0.03]}
 
     with patch.object(optimizer, "run_simulation") as mock_sim:
         mock_sim.side_effect = RuntimeError("Runtime error in simulation")
 
         result = optimizer._calculate_param_gradient(
-            current_params, 0.1, "mirror_reflection_random_angle", [0.005, 0.15, 0.03], 0.001
+            current_params, 0.1, "dummy_list_param", [0.005, 0.15, 0.03], 0.001
         )
 
         assert result is None
@@ -1444,7 +1472,7 @@ def test_run_gradient_descent_no_step_accepted(optimizer, sample_data):
         patch.object(optimizer, "run_simulation") as mock_sim,
         patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
     ):
-        mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_get_params.return_value = make_mirror_align_random_parameters()
         mock_sim.return_value = (3.5, 0.05, 0.8, sample_data)
 
         # First call: step not accepted
@@ -1460,7 +1488,10 @@ def test_run_gradient_descent_no_step_accepted(optimizer, sample_data):
                 learning_rate=0.1,
             ),
             psf_opt.GradientStepResult(
-                params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+                params={
+                    "mirror_align_random_horizontal": [0.003, 28.0, 0.0, 0.0],
+                    "mirror_align_random_vertical": [0.003, 28.0, 0.0, 0.0],
+                },
                 psf_diameter=3.4,
                 metric=0.008,
                 p_value=0.85,
@@ -1485,7 +1516,7 @@ def test_run_gradient_descent_learning_rate_cap(optimizer, sample_data):
         patch.object(optimizer, "run_simulation") as mock_sim,
         patch.object(optimizer, "perform_gradient_step_with_retries") as mock_step,
     ):
-        mock_get_params.return_value = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        mock_get_params.return_value = make_mirror_align_random_parameters()
         mock_sim.return_value = (3.5, 0.05, 0.8, sample_data)
 
         # Multiple steps not accepted to trigger learning rate increases
@@ -1509,7 +1540,10 @@ def test_run_gradient_descent_learning_rate_cap(optimizer, sample_data):
                 learning_rate=1.0,
             ),
             psf_opt.GradientStepResult(
-                params={"mirror_reflection_random_angle": [0.004, 0.15, 0.028]},
+                params={
+                    "mirror_align_random_horizontal": [0.003, 28.0, 0.0, 0.0],
+                    "mirror_align_random_vertical": [0.003, 28.0, 0.0, 0.0],
+                },
                 psf_diameter=3.4,
                 metric=0.008,
                 p_value=0.85,
@@ -1569,7 +1603,7 @@ def test_are_all_parameters_list_and_single_value(sample_data):
     ) as mock_check:
         mock_check.return_value = False
 
-        params = {"mirror_reflection_random_angle": [0.005, 999.0, 0.03]}
+        params = {"dummy_list_param": [0.005, 999.0, 0.03]}
         result = psf_opt._are_all_parameters_within_allowed_range(params)
 
         assert result is False
@@ -1622,7 +1656,7 @@ def test_workflow_with_all_features(
         mock_optimizer = MagicMock()
         mock_opt_cls.return_value = mock_optimizer
 
-        best_params = {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]}
+        best_params = make_mirror_align_random_parameters()
         gd_results = [(best_params, 0.05, 0.8, 3.5, sample_data)]
         mock_optimizer.run_gradient_descent.return_value = (best_params, 3.5, gd_results)
         mock_optimizer.use_ks_statistic = False
@@ -1662,11 +1696,11 @@ def test_cleanup_intermediate_files(
     ):
         mock_load.return_value = ({"measured": sample_data}, sample_data[psf_opt.RADIUS])
         mock_opt.return_value.run_gradient_descent.return_value = (
-            {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]},
+            make_mirror_align_random_parameters(),
             3.5,
             [
                 (
-                    {"mirror_reflection_random_angle": [0.005, 0.15, 0.03]},
+                    make_mirror_align_random_parameters(),
                     0.05,
                     0.8,
                     3.5,

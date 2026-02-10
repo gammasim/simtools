@@ -3,8 +3,7 @@
 r"""
     Derives the mirror alignment parameters using cumulative PSF measurement.
 
-    This includes parameters mirror_reflection_random_angle, \
-    mirror_align_random_horizontal and mirror_align_random_vertical.
+    This includes parameters mirror_align_random_horizontal and mirror_align_random_vertical.
 
     The measured cumulative PSF should be provided by using the command line argument data. \
     A file name is expected, in which the file should contain 3 columns: radial distance in mm, \
@@ -54,8 +53,6 @@ r"""
         Name of the data file with the measured cumulative PSF.
     plot_all (activation mode, optional)
         If activated, plots will be generated for all values tested during tuning.
-    fixed (activation mode, optional)
-        Keep the first entry of mirror_reflection_random_angle fixed.
     test (activation mode, optional)
         If activated, application will be faster by simulating fewer photons.
     write_psf_parameters (activation mode, optional)
@@ -84,7 +81,7 @@ r"""
 
     .. code-block:: console
 
-        simtools-derive-psf-parameters --site North --telescope LSTN-01 --model_version 6.0.0 \\
+        simtools-derive-psf-parameters --site North --telescope LSTN-01 --model_version 7.0.0 \\
             --plot_all --test --rmsd_threshold 0.01 --learning_rate 0.001 \\
             --data tests/resources/PSFcurve_data_v2.ecsv \\
             --write_psf_parameters
@@ -93,7 +90,7 @@ r"""
 
     .. code-block:: console
 
-        simtools-derive-psf-parameters --site North --telescope LSTN-01 --model_version 6.0.0 \\
+        simtools-derive-psf-parameters --site North --telescope LSTN-01 --model_version 7.0.0 \\
             --plot_all --test --monte_carlo_analysis \\
             --data tests/resources/PSFcurve_data_v2.ecsv \\
             --write_psf_parameters
@@ -120,8 +117,8 @@ def _parse():
     config = configurator.Configurator(
         label=get_application_label(__file__),
         description=(
-            "Derive mirror_reflection_random_angle, mirror_align_random_horizontal "
-            "and mirror_align_random_vertical using cumulative PSF measurement."
+            "Derive mirror_align_random_horizontal and mirror_align_random_vertical "
+            "using cumulative PSF measurement."
         ),
     )
     config.parser.add_argument(
@@ -140,11 +137,6 @@ def _parse():
             "On: plot cumulative PSF for all tested combinations, "
             "Off: plot it only for the best set of values"
         ),
-        action="store_true",
-    )
-    config.parser.add_argument(
-        "--fixed",
-        help=("Keep the first entry of mirror_reflection_random_angle fixed."),
         action="store_true",
     )
     config.parser.add_argument(
@@ -169,7 +161,7 @@ def _parse():
             "(not used with --monte_carlo_analysis)."
         ),
         type=float,
-        default=0.01,
+        default=0.0001,
     )
     config.parser.add_argument(
         "--monte_carlo_analysis",
