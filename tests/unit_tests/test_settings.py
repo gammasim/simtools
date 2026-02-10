@@ -10,6 +10,32 @@ from simtools.settings import _Config
 
 
 @pytest.fixture
+def clear_simtools_env():
+    """Fixture to clear simtools environment variables for tests that need isolated _Config."""
+    old_env = {}
+    simtools_vars = [
+        "SIMTOOLS_SIM_TELARRAY_PATH",
+        "SIMTOOLS_SIM_TELARRAY_EXECUTABLE",
+        "SIMTOOLS_CORSIKA_PATH",
+        "SIMTOOLS_CORSIKA_EXECUTABLE",
+        "SIMTOOLS_CORSIKA_HE_INTERACTION",
+        "SIMTOOLS_CORSIKA_LE_INTERACTION",
+    ]
+    for var in simtools_vars:
+        old_env[var] = os.environ.pop(var, None)
+    yield
+    for var, val in old_env.items():
+        if val is not None:
+            os.environ[var] = val
+
+
+@pytest.fixture
+def simtools_settings(clear_simtools_env):
+    """Override autouse fixture for isolated tests."""
+    pass
+
+
+@pytest.fixture
 def config_instance():
     return _Config()
 
@@ -17,14 +43,15 @@ def config_instance():
 def test_init(config_instance):
     assert config_instance._args == {}
     assert config_instance._db_config == {}
-    assert config_instance._sim_telarray_path is None
-    assert config_instance._sim_telarray_exe is None
-    assert config_instance._corsika_path is None
-    assert config_instance._corsika_exe is None
+    assert all(
+        getattr(config_instance, attr) is None
+        for attr in ["_sim_telarray_path", "_sim_telarray_exe", "_corsika_path", "_corsika_exe"]
+    )
 
 
+@patch("pathlib.Path.is_dir", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_load_with_args(config_instance):
+def test_load_with_args(mock_is_dir, config_instance):
     args = {"sim_telarray_path": "/path/to/simtel", "corsika_path": "/path/to/corsika"}
     config_instance.load(args=args)
     assert config_instance._args == args
@@ -59,102 +86,156 @@ def test_db_config_property(config_instance):
     assert config_instance.db_config == db_config
 
 
+@patch("pathlib.Path.is_dir", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_sim_telarray_path_property(config_instance):
+def test_sim_telarray_path_property(mock_is_dir, config_instance):
     config_instance.load(args={"sim_telarray_path": "/path/to/simtel"})
     assert config_instance.sim_telarray_path == Path("/path/to/simtel")
 
 
-@patch.dict(os.environ, {}, clear=True)
-def test_sim_telarray_path_property_none(config_instance):
-    config_instance.load()
-    assert config_instance.sim_telarray_path is None
+def test_sim_telarray_path_property_none():
+    config = _Config()
+    with pytest.raises(FileNotFoundError):
+        _ = config.sim_telarray_path
 
 
+@patch("os.access", return_value=True)
+@patch("pathlib.Path.is_dir", return_value=True)
+@patch("pathlib.Path.is_file", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_sim_telarray_exe_property(config_instance):
+def test_sim_telarray_exe_property(mock_is_file, mock_is_dir, mock_access, config_instance):
     config_instance.load(args={"sim_telarray_path": "/path/to/simtel"})
     assert config_instance.sim_telarray_exe == Path("/path/to/simtel/bin/sim_telarray")
 
 
-@patch.dict(os.environ, {}, clear=True)
-def test_sim_telarray_exe_property_none(config_instance):
-    config_instance.load()
-    assert config_instance.sim_telarray_exe is None
+def test_sim_telarray_exe_property_none(simtools_settings):
+    config = _Config()
+    with pytest.raises(FileNotFoundError):
+        _ = config.sim_telarray_exe
 
 
+@patch("os.access", return_value=True)
+@patch("pathlib.Path.is_dir", return_value=True)
+@patch("pathlib.Path.is_file", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_sim_telarray_exe_debug_trace_property(config_instance):
+def test_sim_telarray_exe_debug_trace_property(
+    mock_is_file, mock_is_dir, mock_access, config_instance
+):
     config_instance.load(args={"sim_telarray_path": "/path/to/simtel"})
     assert config_instance.sim_telarray_exe_debug_trace == Path(
         "/path/to/simtel/bin/sim_telarray_debug_trace"
     )
 
 
+@patch("pathlib.Path.is_dir", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_corsika_path_property(config_instance):
+def test_corsika_path_property(mock_is_dir, config_instance):
     config_instance.load(args={"corsika_path": "/path/to/corsika"})
     assert config_instance.corsika_path == Path("/path/to/corsika")
 
 
+@patch("os.access", return_value=True)
+@patch("pathlib.Path.is_dir", return_value=True)
+@patch("pathlib.Path.is_file", return_value=True)
+@patch("pathlib.Path.exists", return_value=False)
 @patch.dict(os.environ, {}, clear=True)
-def test_corsika_exe_property(config_instance):
-    with patch.object(Path, "exists", return_value=True):
-        config_instance.load(args={"corsika_path": "/path/to/corsika"})
-        assert config_instance.corsika_exe == Path("/path/to/corsika/corsika")
+def test_corsika_exe_property(mock_exists, mock_is_file, mock_is_dir, mock_access, config_instance):
+    config_instance.load(args={"corsika_path": "/path/to/corsika"})
+    assert config_instance.corsika_exe == Path("/path/to/corsika/corsika")
 
 
+@patch("os.access", return_value=True)
+@patch("pathlib.Path.exists", return_value=True)
+@patch("pathlib.Path.is_dir", return_value=True)
+@patch("pathlib.Path.is_file", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_corsika_exe_curved_property(config_instance):
-    with patch.object(Path, "exists", return_value=True):
-        config_instance.load(
-            args={
-                "corsika_path": "/path/to/corsika",
-                "corsika_he_interaction": "qgs3",
-                "corsika_le_interaction": "urqmd",
-            }
-        )
-        assert config_instance.corsika_exe_curved == Path(
-            "/path/to/corsika/corsika_qgs3_urqmd_curved"
-        )
+def test_corsika_exe_curved_property(
+    mock_is_file, mock_is_dir, mock_exists, mock_access, config_instance
+):
+    config_instance.load(
+        args={
+            "corsika_path": "/path/to/corsika",
+            "corsika_he_interaction": "qgs3",
+            "corsika_le_interaction": "urqmd",
+        }
+    )
+    assert config_instance.corsika_exe_curved == Path("/path/to/corsika/corsika_qgs3_urqmd_curved")
 
 
+@patch("pathlib.Path.is_dir", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_corsika_dummy_file_property(config_instance):
+def test_corsika_dummy_file_property(mock_is_dir, config_instance):
     config_instance.load(args={"sim_telarray_path": "/path/to/simtel"})
     assert config_instance.corsika_dummy_file == Path("/path/to/simtel/run9991.corsika.gz")
 
 
+def test_corsika_exe_curved_none():
+    config = _Config()
+    config._corsika_exe = None
+    with pytest.raises(AttributeError):
+        _ = config.corsika_exe_curved
+
+
+@patch("os.access", return_value=True)
+@patch("pathlib.Path.exists", return_value=True)
+@patch("pathlib.Path.is_dir", return_value=True)
+@patch("pathlib.Path.is_file", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_corsika_exe_curved_none(config_instance):
-    config_instance._corsika_exe = None
-    config_instance._corsika_path = "/path/to/corsika"
-    assert config_instance.corsika_exe_curved is None
+def test_corsika_exe_curved_flat(
+    mock_is_file, mock_is_dir, mock_exists, mock_access, config_instance
+):
+    config_instance.load(
+        args={
+            "corsika_path": "/path/to/corsika",
+            "corsika_he_interaction": "qgs3",
+            "corsika_le_interaction": "urqmd",
+        }
+    )
+    assert config_instance.corsika_exe_curved == Path("/path/to/corsika/corsika_qgs3_urqmd_curved")
 
 
+@patch("os.access", return_value=True)
+@patch("pathlib.Path.exists", return_value=False)
+@patch("pathlib.Path.is_dir", return_value=True)
+@patch("pathlib.Path.is_file", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_corsika_exe_curved_flat(config_instance):
-    with patch.object(Path, "exists", return_value=True):
-        config_instance.load(
-            args={
-                "corsika_path": "/path/to/corsika",
-                "corsika_he_interaction": "qgs3",
-                "corsika_le_interaction": "urqmd",
-            }
-        )
-        assert config_instance.corsika_exe_curved == Path(
-            "/path/to/corsika/corsika_qgs3_urqmd_curved"
-        )
+def test_corsika_exe_curved_legacy(
+    mock_is_file, mock_is_dir, mock_exists, mock_access, config_instance
+):
+    config_instance.load(
+        args={
+            "corsika_path": "/path/to/corsika",
+            "corsika_he_interaction": None,
+            "corsika_le_interaction": None,
+        }
+    )
+    assert config_instance.corsika_exe_curved == Path("/path/to/corsika/corsika-curved")
 
 
+@patch("pathlib.Path.is_dir", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_corsika_exe_curved_legacy(config_instance):
-    with patch.object(Path, "exists", return_value=True):
-        config_instance.load(
-            args={
-                "corsika_path": "/path/to/corsika",
-                "corsika_he_interaction": None,
-                "corsika_le_interaction": None,
-            }
-        )
-        assert config_instance.corsika_exe_curved == Path("/path/to/corsika/corsika-curved")
+def test_corsika_interaction_table_path_property(mock_is_dir, config_instance):
+    config_instance.load(args={"corsika_interaction_table_path": "/path/to/interaction_tables"})
+    assert config_instance.corsika_interaction_table_path == Path("/path/to/interaction_tables")
+
+
+def test_corsika_interaction_table_path_property_none():
+    config = _Config()
+    with pytest.raises(FileNotFoundError):
+        _ = config.corsika_interaction_table_path
+
+
+@patch("pathlib.Path.is_dir", return_value=False)
+@patch.dict(os.environ, {}, clear=True)
+def test_corsika_interaction_table_path_property_invalid(mock_is_dir, config_instance):
+    config_instance.load(args={"corsika_interaction_table_path": "/invalid/path"})
+    with pytest.raises(FileNotFoundError):
+        _ = config_instance.corsika_interaction_table_path
+
+
+@patch("pathlib.Path.is_dir", return_value=True)
+@patch.dict(os.environ, {}, clear=True)
+def test_corsika_interaction_table_path_args_priority(mock_is_dir, config_instance):
+    with patch.dict(os.environ, {"SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH": "/env/path"}):
+        config_instance.load(args={"corsika_interaction_table_path": "/args/path"})
+        assert config_instance.corsika_interaction_table_path == Path("/args/path")
