@@ -5,6 +5,8 @@ import socket
 from pathlib import Path
 from types import MappingProxyType
 
+from simtools.utils.general import find_executable_in_dir
+
 
 class _Config:
     """Centralized settings object with command line and environment variables."""
@@ -103,58 +105,59 @@ class _Config:
     @property
     def sim_telarray_path(self):
         """Path to the sim_telarray installation directory."""
-        return Path(self._sim_telarray_path) if self._sim_telarray_path is not None else None
+        if self._sim_telarray_path and Path(self._sim_telarray_path).is_dir():
+            return Path(self._sim_telarray_path)
+        raise FileNotFoundError(f"sim_telarray path not found: {self._sim_telarray_path}")
 
     @property
     def sim_telarray_exe(self):
         """Path to the sim_telarray executable."""
-        return (
-            Path(self._sim_telarray_path) / "bin" / self._sim_telarray_exe
-            if self._sim_telarray_path is not None
-            else None
+        return find_executable_in_dir(
+            self._sim_telarray_exe,
+            self.sim_telarray_path / "bin",
         )
 
     @property
     def sim_telarray_exe_debug_trace(self):
         """Path to the debug trace version of the sim_telarray executable."""
-        return (
-            Path(self._sim_telarray_path) / "bin" / (self._sim_telarray_exe + "_debug_trace")
-            if self._sim_telarray_path is not None
-            else None
+        return find_executable_in_dir(
+            self._sim_telarray_exe + "_debug_trace",
+            self.sim_telarray_path / "bin",
         )
 
     @property
     def corsika_path(self):
         """Path to the CORSIKA installation directory."""
-        return Path(self._corsika_path) if self._corsika_path is not None else None
+        if self._corsika_path and Path(self._corsika_path).is_dir():
+            return Path(self._corsika_path)
+        raise FileNotFoundError(f"CORSIKA path not found: {self._corsika_path}")
 
     @property
     def corsika_interaction_table_path(self):
         """Path to the CORSIKA interaction table directory."""
-        return (
-            Path(self._corsika_interaction_table_path)
-            if self._corsika_interaction_table_path is not None
-            else self.corsika_path
+        if (
+            self._corsika_interaction_table_path
+            and Path(self._corsika_interaction_table_path).is_dir()
+        ):
+            return Path(self._corsika_interaction_table_path)
+        raise FileNotFoundError(
+            f"CORSIKA interaction table path not found: {self._corsika_interaction_table_path}"
         )
 
     @property
     def corsika_exe(self):
         """Path to the CORSIKA executable."""
-        return (
-            Path(self._corsika_path) / self._corsika_exe if self._corsika_path is not None else None
-        )
+        return find_executable_in_dir(self._corsika_exe, self.corsika_path)
 
     @property
     def corsika_exe_curved(self):
         """Path to the curved version of the CORSIKA executable."""
-        if self._corsika_exe is None:
-            return None
         corsika_curved = (
             self._corsika_exe.name.replace("_flat", "_curved")
             if "_flat" in self._corsika_exe.name
             else self._corsika_exe.name + "-curved"  # legacy naming convention
         )
-        return Path(self._corsika_path) / corsika_curved if self._corsika_path is not None else None
+        return find_executable_in_dir(corsika_curved, self.corsika_path)
 
     @property
     def corsika_dummy_file(self):

@@ -2,7 +2,6 @@
 
 import datetime
 import logging
-import os
 import time
 from copy import copy
 from pathlib import Path
@@ -26,16 +25,6 @@ url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
 
 test_data = "Test data"
-
-
-def test_program_is_executable(caplog) -> None:
-    # (assume 'ls' exist on any system the test is running)
-    assert gen.program_is_executable("/bin/ls") is not None  # The actual path should not matter
-    assert gen.program_is_executable("this_program_probably_does_not_exist") is None
-    with caplog.at_level("WARNING"):
-        os.environ.pop("PATH", None)
-    assert gen.program_is_executable("this_program_probably_does_not_exist") is None
-    assert "PATH environment variable is not set." in caplog.text
 
 
 def test_get_file_age(tmp_test_directory) -> None:
@@ -897,3 +886,34 @@ def test_load_environment_variables(tmp_test_directory, monkeypatch):
     monkeypatch.setenv("SIMTOOLS_EXTERNAL_VAR", "external_value")
     result = gen.load_environment_variables(str(env_file), ["external_var"])
     assert result.get("external_var") == "external_value"
+
+
+def test_find_executable_in_dir(tmp_test_directory) -> None:
+    """Test finding an executable in a directory."""
+    executable_file = tmp_test_directory / "test_executable"
+    with open(executable_file, "w", encoding="utf-8") as f:
+        f.write("#!/bin/bash\necho 'test'")
+    executable_file.chmod(0o755)
+
+    result = gen.find_executable_in_dir("test_executable", tmp_test_directory)
+    assert result == executable_file
+
+
+def test_find_executable_in_dir_not_found(tmp_test_directory) -> None:
+    """Test finding a non-existent executable."""
+    with pytest.raises(FileNotFoundError, match=r"^Executable not found"):
+        gen.find_executable_in_dir("non_existent", tmp_test_directory)
+
+
+def test_find_executable_in_dir_not_executable(tmp_test_directory) -> None:
+    """Test finding a file that exists but is not executable."""
+    non_executable_file = tmp_test_directory / "test_file"
+    with open(non_executable_file, "w", encoding="utf-8") as f:
+        f.write("test content")
+    non_executable_file.chmod(0o644)
+
+    with pytest.raises(PermissionError, match=r"^Not executable"):
+        gen.find_executable_in_dir("test_file", tmp_test_directory)
+
+    with pytest.raises(ValueError, match=r"Both name and directory must be provided."):
+        gen.find_executable_in_dir(None, None)
