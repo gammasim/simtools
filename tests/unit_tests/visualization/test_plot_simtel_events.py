@@ -24,6 +24,13 @@ import pytest
 from simtools.visualization import plot_simtel_events
 
 
+@pytest.fixture(autouse=True)
+def close_all_figures():
+    """Automatically close all matplotlib figures after each test."""
+    yield
+    plt.close("all")
+
+
 @pytest.fixture
 def mock_event_data():
     """Create minimal mock event data."""
@@ -250,6 +257,8 @@ def test_plot_method_with_plots(mock_plotter):
     with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
         mock_plotter.plot(["signals"], {}, Path("test.pdf"))
         assert len(mock_plotter.figures) == 1
+        for fig in mock_plotter.figures:
+            plt.close(fig)
 
 
 def test_plot_method_with_save_png(mock_plotter):
@@ -258,11 +267,14 @@ def test_plot_method_with_save_png(mock_plotter):
         with mock.patch("simtools.visualization.plot_simtel_events.save_figure"):
             mock_plotter.plot(["time_traces"], {}, Path("test.pdf"), save_png=True, dpi=150)
             assert len(mock_plotter.figures) == 1
+            for fig in mock_plotter.figures:
+                plt.close(fig)
 
 
 def test_save_method(mock_plotter, io_handler, tmp_path):
     """Test save method."""
-    mock_plotter.figures = [plt.figure(), plt.figure()]
+    fig1, fig2 = plt.figure(), plt.figure()
+    mock_plotter.figures = [fig1, fig2]
     output_file = tmp_path / "test_output.pdf"
 
     with mock.patch(
@@ -276,8 +288,8 @@ def test_save_method(mock_plotter, io_handler, tmp_path):
             mock_dump.assert_called_once()
             assert mock_save.call_args[0][0] == mock_plotter.figures
 
-    for fig in mock_plotter.figures:
-        plt.close(fig)
+    plt.close(fig1)
+    plt.close(fig2)
 
 
 def test_save_method_no_figures(mock_plotter, tmp_path):
