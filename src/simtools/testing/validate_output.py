@@ -151,10 +151,10 @@ def _validate_output_path_and_file(config, integration_file_tests):
 
         if output_file_path.name.endswith(".simtel.zst"):
             assert assertions.check_output_from_sim_telarray(output_file_path, file_test)
-        elif output_file_path.name.endswith(".log_hist.tar.gz"):
-            assert assertions.check_simulation_logs(output_file_path, file_test)
-        elif output_file_path.suffix == ".log":
-            assert assertions.check_plain_log(output_file_path, file_test)
+        elif output_file_path.name.endswith(".log_hist.tar.gz") or output_file_path.name.endswith(
+            ".log"
+        ):
+            assert assertions.check_log_files(output_file_path, file_test)
 
 
 def _validate_model_parameter_json_file(config, model_parameter_validation):

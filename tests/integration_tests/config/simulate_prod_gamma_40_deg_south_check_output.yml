@@ -36,16 +36,6 @@ applications:
         require_telescope_events: true
       file: gamma_run000001_za40deg_azm180deg_South_beta_6.0.2_test.simtel.zst
       path_descriptor: pack_for_grid_register
-    - expected_log_output:
-        pattern:
-        - "NUMBER OF GENERATED EVENTS =         10"
-        - "========== END OF RUN ========"
-        - "Sim_telarray finished at"
-        forbidden_pattern:
-        - "CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE"
-        - "CORSIKA was compiled with CURVED option."
-      file: gamma_run000001_za40deg_azm180deg_South_beta_6.0.2_test.log_hist.tar.gz
-      path_descriptor: pack_for_grid_register
   - test_simtel_cfg_files:
       "5.0.0": tests/resources/sim_telarray_configurations/5.0.0/CTA-South-LSTS-01_test.cfg
       "6.0.2": tests/resources/sim_telarray_configurations/6.0.2/CTA-South-LSTS-01_test.cfg

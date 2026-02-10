@@ -47,6 +47,9 @@ class SimulatorArray(SimtelRunner):
             Additional commands for running simulations given in config.yml.
         """
         command = self.make_run_command(run_number=run_number, input_file=corsika_file)
+        log_file = self.runner_service.get_file_name(
+            file_type="sim_telarray_log", run_number=run_number
+        )
         sub_script = Path(sub_script)
         self._logger.debug(f"Run bash script - {sub_script}")
         self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
@@ -63,7 +66,11 @@ class SimulatorArray(SimtelRunner):
                 file.write("# End of extras\n\n")
 
             for _ in range(self.runs_per_set):
-                file.write(f"{sim_telarray_env_as_string()} " + " ".join(command) + "\n")
+                file.write(
+                    f"{sim_telarray_env_as_string()} "
+                    + " ".join(command)
+                    + f" | gzip > {log_file} 2>&1\n"
+                )
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
 

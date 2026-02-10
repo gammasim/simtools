@@ -1,14 +1,13 @@
 """Functions asserting certain conditions are met (used e.g., in integration tests)."""
 
-import gzip
 import json
 import logging
-import tarfile
 from pathlib import Path
 
 import yaml
 
-from simtools.testing import sim_telarray_output
+from simtools.simtel import simtel_output_validator
+from simtools.testing.log_inspector import check_plain_logs, check_tar_logs
 
 _logger = logging.getLogger(__name__)
 
@@ -85,11 +84,11 @@ def check_output_from_sim_telarray(file, file_test):
 
     for file_key, (func_name, param_name) in expected_output_key_map.items():
         if file_key in file_test:
-            func = getattr(sim_telarray_output, func_name)
+            func = getattr(simtel_output_validator, func_name)
             assert_sim_telarray.append(func(file=file, **{param_name: file_test[file_key]}))
 
     assert_sim_telarray.append(
-        sim_telarray_output.assert_n_showers_and_energy_range(
+        simtel_output_validator.assert_n_showers_and_energy_range(
             file,
             calibration_file=file_test.get("expected_sim_telarray_output", {}).get(
                 "require_calibration_events", False
@@ -100,46 +99,9 @@ def check_output_from_sim_telarray(file, file_test):
     return all(assert_sim_telarray)
 
 
-def check_simulation_logs(tar_file, file_test):
+def check_log_files(log_file, file_test):
     """
-    Check simulation logs for wanted and forbidden patterns.
-
-    Parameters
-    ----------
-    tar_file : str
-        Path to the tar file.
-    file_test : dict
-        Dictionary with the test configuration.
-
-    Returns
-    -------
-    bool
-        True if the logs are correct.
-    """
-    wanted, forbidden = _get_expected_patterns(file_test)
-    if wanted is None:
-        return True
-
-    if not tarfile.is_tarfile(tar_file):
-        raise ValueError(f"{tar_file} is not a tar file")
-
-    found_wanted = set()
-    found_forbidden = set()
-    with tarfile.open(tar_file, "r:*") as tar:
-        for member in tar.getmembers():
-            if not member.name.endswith(".log.gz"):
-                continue
-            _logger.info(f"Scanning {member.name}")
-            text = _read_log(member, tar)
-            found_wanted |= _find_patterns(text, wanted)
-            found_forbidden |= _find_patterns(text, forbidden)
-
-    return _validate_patterns(found_wanted, found_forbidden, wanted)
-
-
-def check_plain_log(log_file, file_test):
-    """
-    Check plain log file for wanted and forbidden patterns.
+    Check log file (plain, tar) for wanted and forbidden patterns.
 
     Parameters
     ----------
@@ -153,60 +115,6 @@ def check_plain_log(log_file, file_test):
     bool
         True if the logs are correct.
     """
-    wanted, forbidden = _get_expected_patterns(file_test)
-    if wanted is None:
-        return True
-
-    try:
-        with open(log_file, encoding="utf-8") as f:
-            text = f.read()
-    except FileNotFoundError:
-        _logger.error(f"Log file {log_file} not found")
-        return False
-
-    found = _find_patterns(text, wanted)
-    bad = _find_patterns(text, forbidden)
-
-    return _validate_patterns(found, bad, wanted)
-
-
-def _get_expected_patterns(file_test):
-    """Get wanted and forbidden patterns from file test configuration."""
-    expected_log = file_test.get("expected_log_output")
-    if isinstance(expected_log, dict):
-        wanted = expected_log.get("pattern", [])
-        forbidden = expected_log.get("forbidden_pattern", [])
-    else:
-        wanted = file_test.get("pattern", [])
-        forbidden = file_test.get("forbidden_pattern", [])
-    if not (wanted or forbidden):
-        _logger.debug(f"No expected log output provided, skipping checks {file_test}")
-        return None, None
-
-    return wanted, forbidden
-
-
-def _validate_patterns(found, bad, wanted):
-    """Validate found patterns against wanted and forbidden ones."""
-    if bad:
-        _logger.error(f"Forbidden patterns found: {list(bad)}")
-        return False
-    missing = [p for p in wanted if p not in found]
-    if missing:
-        _logger.error(f"Missing expected patterns: {missing}")
-        return False
-
-    _logger.debug(f"All expected patterns found: {wanted}")
-    return True
-
-
-def _find_patterns(text, patterns):
-    """Find patterns in text (case insensitive)."""
-    text_lower = text.lower()
-    return {p for p in patterns if p.lower() in text_lower}
-
-
-def _read_log(member, tar):
-    """Read and decode a gzipped log file from a tar archive."""
-    with tar.extractfile(member) as gz, gzip.open(gz, "rb") as f:
-        return f.read().decode("utf-8", "ignore")
+    if str(log_file).endswith(".tar.gz"):
+        return check_tar_logs(log_file, file_test)
+    return check_plain_logs(log_file, file_test)

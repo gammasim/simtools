@@ -1,7 +1,11 @@
 """Inspect logs and output for errors and warnings."""
 
+import gzip
 import logging
 import re
+import tarfile
+
+from simtools.utils import general as gen
 
 _logger = logging.getLogger(__name__)
 
@@ -54,3 +58,138 @@ def inspect(log_text):
         _logger.error(f"Error or warning found in log at line {lineno}: {line.strip()}")
 
     return not issues
+
+
+def check_tar_logs(tar_file, file_test):
+    """
+    Check log files in tar package for wanted and forbidden patterns.
+
+    Parameters
+    ----------
+    tar_file : str
+        Path to the tar file.
+    file_test : dict
+        Dictionary with the test configuration.
+
+    Returns
+    -------
+    bool
+        True if the logs are correct.
+    """
+    wanted, forbidden = _get_expected_patterns(file_test)
+    if wanted is None and forbidden is None:
+        return True
+
+    if not tarfile.is_tarfile(tar_file):
+        raise ValueError(f"{tar_file} is not a tar file")
+
+    found_wanted = set()
+    found_forbidden = set()
+    with tarfile.open(tar_file, "r:*") as tar:
+        for member in tar.getmembers():
+            if not member.name.endswith(".log.gz"):
+                continue
+            _logger.info(f"Scanning {member.name}")
+            text = _read_log(member, tar)
+            found_wanted |= _find_patterns(text, wanted)
+            found_forbidden |= _find_patterns(text, forbidden)
+
+    return _validate_patterns(found_wanted, found_forbidden, wanted)
+
+
+def check_plain_logs(log_files, file_test):
+    """
+    Check plain log file(s) for wanted and forbidden patterns.
+
+    Log file can be plain or gzipped.
+
+    Parameters
+    ----------
+    log_files : List, str
+        Path to the log file.
+    file_test : dict
+        Dictionary with the test configuration.
+
+    Returns
+    -------
+    bool
+        True if the logs are correct.
+    """
+    wanted, forbidden = _get_expected_patterns(file_test)
+    if wanted is None and forbidden is None:
+        return True
+
+    log_files = gen.ensure_iterable(log_files)
+
+    def file_open(file):
+        if file.suffix == ".gz":
+            return gzip.open(file, "rt", encoding="utf-8", errors="ignore")
+        return open(file, encoding="utf-8", errors="ignore")
+
+    found = set()
+    bad = set()
+    for log_file in log_files:
+        try:
+            with file_open(log_file) as f:
+                text = f.read()
+        except FileNotFoundError:
+            _logger.error(f"Log file {log_file} not found")
+            return False
+
+        found |= _find_patterns(text, wanted)
+        bad |= _find_patterns(text, forbidden)
+
+    return _validate_patterns(found, bad, wanted)
+
+
+def _get_expected_patterns(file_test):
+    """
+    Get wanted and forbidden patterns from file test configuration.
+
+    Parameters
+    ----------
+    file_test : dict
+        Dictionary with expected / forbidden patterns
+    """
+    expected_log = file_test.get("expected_log_output", file_test)
+    if isinstance(expected_log, dict):
+        wanted = expected_log.get("pattern", [])
+        forbidden = expected_log.get("forbidden_pattern", [])
+    else:
+        wanted = file_test.get("pattern", [])
+        forbidden = file_test.get("forbidden_pattern", [])
+    if not (wanted or forbidden):
+        _logger.debug(f"No expected log output provided, skipping checks {file_test}")
+        return None, None
+
+    return wanted, forbidden
+
+
+def _validate_patterns(found, bad, wanted):
+    """Validate found patterns against wanted and forbidden ones."""
+    if bad:
+        _logger.error(f"Forbidden patterns found: {list(bad)}")
+        return False
+    missing = [p for p in wanted if p and p not in found]
+    if missing:
+        _logger.error(f"Missing expected patterns: {missing}")
+        return False
+
+    _logger.debug(f"All expected patterns found: {wanted}")
+    return True
+
+
+def _find_patterns(text, patterns):
+    """Find patterns in text (case and space insensitive)."""
+
+    def _normalize(s):
+        return re.sub(r"\s+", "", s.lower())
+
+    text_n = _normalize(text)
+    return {p for p in patterns if p and _normalize(p) in text_n}
+
+
+def _read_log(member, tar):
+    """Read and decode a gzipped log file from a tar archive."""
+    with tar.extractfile(member) as gz, gzip.open(gz, "rb") as f:
+        return f.read().decode("utf-8", "ignore")
