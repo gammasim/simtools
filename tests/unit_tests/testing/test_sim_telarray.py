@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from simtools.testing.sim_telarray_metadata import (
+from simtools.testing.sim_telarray import (
     _assert_model_parameters,
     _assert_sim_telarray_seed,
     _sim_telarray_name_from_parameter_name,
