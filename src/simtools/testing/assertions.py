@@ -88,7 +88,14 @@ def check_output_from_sim_telarray(file, file_test):
             func = getattr(sim_telarray_output, func_name)
             assert_sim_telarray.append(func(file=file, **{param_name: file_test[file_key]}))
 
-    assert_sim_telarray.append(sim_telarray_output.assert_n_showers_and_energy_range(file=file))
+    assert_sim_telarray.append(
+        sim_telarray_output.assert_n_showers_and_energy_range(
+            file,
+            calibration_file=file_test.get("expected_sim_telarray_output", {}).get(
+                "require_calibration_events", False
+            ),
+        )
+    )
 
     return all(assert_sim_telarray)
 
