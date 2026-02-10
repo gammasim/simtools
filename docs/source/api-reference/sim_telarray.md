@@ -49,6 +49,15 @@ Support modules for running sim_telarray.
    :members:
 ```
 
+## simtel_event_reader
+
+(simtel-event-reader-1)=
+
+```{eval-rst}
+.. automodule:: simtel.simtel_event_reader
+   :members:
+```
+
 ## simulator_array
 
 (simulate-array-1)=
