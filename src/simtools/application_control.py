@@ -43,7 +43,6 @@ def setup_logging(logger_name=None, log_level="INFO", log_file=None):
 
     redact_filter = RedactFilter()
 
-    # 2. Console Handler (StreamHandler)
     console_format = logging.Formatter("%(levelname)s: %(message)s")
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(console_format)
