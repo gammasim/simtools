@@ -41,7 +41,6 @@ SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for database: ask the responsible pe
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
 SIMTOOLS_DB_SIMULATION_MODEL_VERSION='v0.9.0' # Version of the simulation model database (adjust accordingly)
 SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model'
-SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
 ```
 
 ## Browse the database
@@ -106,7 +105,6 @@ SIMTOOLS_DB_API_PW='password' # Password for database
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
 SIMTOOLS_DB_SIMULATION_MODEL_VERSION='v0.9.0' # Version of the simulation model database (adjust accordingly)
 SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model'
-SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
 ```
 
 Fill the model parameter database from the model repository (parameters must match the version defined in the `.env` file):

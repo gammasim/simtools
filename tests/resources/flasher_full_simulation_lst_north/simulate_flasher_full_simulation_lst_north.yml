@@ -1,0 +1,15 @@
+---
+applications:
+- application: simtools-simulate-flasher
+  configuration:
+    run_mode: full_simulation
+    light_source: LSFN-design
+    model_version: 7.0.0
+    output_path: tests/resources/flasher_full_simulation_lst_north/
+    site: North
+    telescope: LSTN-04
+    run_number: 10
+    test: true
+  model_version_use_current: true
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
