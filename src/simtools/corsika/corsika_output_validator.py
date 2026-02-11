@@ -1,4 +1,4 @@
-"""Validation of CORISKA data and log files."""
+"""Validation of CORSIKA data and log files."""
 
 import logging
 
@@ -23,13 +23,6 @@ def validate_corsika_output(data_files, log_files, expected_shower_events=None, 
         Expected number of shower events.
     curved_atmo: bool, optional
         Whether the CORSIKA simulation was run with the curved atmosphere option.
-
-    Raises
-    ------
-    ValueError
-         If the number of events in the data files does not match the expected values.
-     IOError
-         If there is an issue reading the data or log files.
     """
     data_files = general.ensure_iterable(data_files) if data_files is not None else []
     log_files = general.ensure_iterable(log_files)
@@ -42,7 +35,7 @@ def validate_corsika_output(data_files, log_files, expected_shower_events=None, 
 
 def validate_event_numbers(data_files, expected_shower_events, tolerance=1.0e-3):
     """
-    Verify the number of simulated events in CORSIKA output files.
+    Validate the number of simulated events in CORSIKA output files.
 
     Allow for a small mismatch in the number of requested events.
 
@@ -93,7 +86,23 @@ def validate_event_numbers(data_files, expected_shower_events, tolerance=1.0e-3)
 
 
 def validate_log_files(log_files, expected_shower_events=None, curved_atmo=False):
-    """Validate CORSIKA log files."""
+    """
+    Validate CORSIKA log files.
+
+    Parameters
+    ----------
+    log_files: list of Path
+        List of paths to CORSIKA log files.
+    expected_shower_events: int, optional
+        Expected number of shower events.
+    curved_atmo: bool, optional
+        Whether the CORSIKA simulation was run with the curved atmosphere option.
+
+    Raises
+    ------
+    ValueError
+        If log files do not contain expected patterns indicating successful completion.
+    """
     event_string = (
         f"NUMBER OF GENERATED EVENTS =          {expected_shower_events}"
         if expected_shower_events
