@@ -373,7 +373,7 @@ def validate_event_numbers(data_files, expected_mc_events, expected_shower_event
         raise ValueError(error_message)
 
 
-def assert_n_showers_and_energy_range(file, calibration_file=False):
+def assert_n_showers_and_energy_range(file):
     """
     Assert the number of showers and the energy range.
 
@@ -384,8 +384,6 @@ def assert_n_showers_and_energy_range(file, calibration_file=False):
     ----------
     file: Path
         Path to the sim_telarray file.
-    calibration_file: bool
-        Whether the file is a calibration file.
     """
     simulated_energies = []
     simulation_config = {}
@@ -394,9 +392,6 @@ def assert_n_showers_and_energy_range(file, calibration_file=False):
         try:
             simulated_energies.extend(event["mc_shower"]["energy"] for event in f)
         except KeyError as exc:
-            if calibration_file:
-                _logger.debug("Skip testing calibration file for showers and energy range")
-                return True
             raise KeyError(
                 f"Expected 'mc_shower' information in sim_telarray file {file} for checking "
                 "number of showers and energy range, but it was not found."
@@ -457,11 +452,7 @@ def assert_expected_sim_telarray_output(file, expected_sim_telarray_output):
     )
 
     for key, value in expected_sim_telarray_output.items():
-        if key in ("require_telescope_events", "require_calibration_events"):
-            test_events = key.replace("require_", "")
-            if value and item_to_check.get(f"n_{test_events}", 0) == 0:
-                _logger.error(f"Expected {test_events} but found none")
-                return False
+        if key == "event_type":
             continue
 
         if len(item_to_check[key]) == 0:
@@ -532,3 +523,27 @@ def assert_expected_sim_telarray_metadata(file, expected_sim_telarray_metadata):
         _logger.debug(f"Metadata key {key} matches expected value {value}")
 
     return True
+
+
+def assert_events_of_type(file, event_type="shower"):
+    """
+    Assert that events of the expected type are present in the sim_telarray file.
+
+    Parameters
+    ----------
+    file: Path
+        Path to the sim_telarray file.
+    event_type: str
+        Expected event type (e.g., "shower", "flasher", etc.).
+
+    """
+    expected_event_type = "data"
+    if event_type in ("pedestal", "direct_injection"):
+        expected_event_type = "calibration"
+    with SimTelFile(file) as f:
+        for event in f:
+            if event["type"] == expected_event_type:
+                return True
+
+    _logger.error(f"No events of type {event_type} found in sim_telarray file {file}")
+    return False

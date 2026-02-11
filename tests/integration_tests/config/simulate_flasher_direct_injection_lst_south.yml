@@ -26,7 +26,7 @@ applications:
         trigger_time:
         - 0
         - 50
-      require_calibration_events: true
+      event_type: direct_injection
       file: direct_injection_run000010_za20deg_azm000deg_South_1lst_6.0.2_test-flasher-direct-injection-lst-south.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray/run000010

@@ -87,13 +87,11 @@ def check_output_from_sim_telarray(file, file_test):
             func = getattr(simtel_output_validator, func_name)
             assert_sim_telarray.append(func(file=file, **{param_name: file_test[file_key]}))
 
+    event_type = file_test.get("expected_sim_telarray_output", {}).get("event_type", "shower")
+    if event_type == "shower":
+        assert_sim_telarray.append(simtel_output_validator.assert_n_showers_and_energy_range(file))
     assert_sim_telarray.append(
-        simtel_output_validator.assert_n_showers_and_energy_range(
-            file,
-            calibration_file=file_test.get("expected_sim_telarray_output", {}).get(
-                "require_calibration_events", False
-            ),
-        )
+        simtel_output_validator.assert_events_of_type(file, event_type=event_type)
     )
 
     return all(assert_sim_telarray)

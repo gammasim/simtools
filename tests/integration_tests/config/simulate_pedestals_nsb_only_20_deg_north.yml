@@ -22,7 +22,7 @@ applications:
       path_descriptor: output_path
       output_sub_path: sim_telarray/run000010
     - expected_sim_telarray_output:
-        require_calibration_events: true
+        event_type: pedestal
       file: pedestals_nsb_only_run000010_za20deg_azm000deg_North_1lst_6.0.2_test-nsb-only-pedestal-production-North.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray/run000010

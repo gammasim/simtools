@@ -24,7 +24,7 @@ applications:
         # trigger_time:
         # - 0
         # - 50
-        require_telescope_events: true
+        event_type: flasher
       file: full_simulation_run000010_South_7.0.0_simulate_flasher.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray

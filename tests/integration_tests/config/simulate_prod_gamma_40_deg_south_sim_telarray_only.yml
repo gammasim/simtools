@@ -24,7 +24,6 @@ applications:
         trigger_time:
         - 0
         - 50
-        require_telescope_events: true
       file: gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray/run000007
