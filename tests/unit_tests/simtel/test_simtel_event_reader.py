@@ -35,7 +35,7 @@ def test_read_events_telescope_not_found(monkeypatch, caplog):
     _setup_mocks(monkeypatch, None)
     event_ids, tel_desc, events = read_events("file.simtel", "LST", 0, 1)
     assert (event_ids, tel_desc, events) == (None, None, None)
-    assert "Telescope ID '1' not found in file 'file.simtel'." in caplog.text
+    assert "Telescope type 'LST' not found in file 'file.simtel'." in caplog.text
 
 
 def test_read_events_tel_id_missing_in_descriptions(monkeypatch, caplog):
