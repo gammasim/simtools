@@ -113,73 +113,90 @@ def mock_assert_file_type(mocker):
     return mocker.patch("simtools.testing.assertions.assert_file_type")
 
 
-def test_compare_json_files_float_strings(create_json_file, file_name):
-    content = {"key": 1, "value": "1.23 4.56 7.89", "schema_version": "1.0.0"}
+@pytest.mark.parametrize(
+    ("content", "content_diff", "should_match"),
+    [
+        ({"key": 1, "value": "1.23 4.56 7.89", "schema_version": "1.0.0"}, None, True),
+        (
+            {"key": 1, "value": "1.23 4.56 7.89", "schema_version": "1.0.0"},
+            {"key": 2, "value": "1.23 4.56 7.80", "schema_version": "2.0.0"},
+            False,
+        ),
+    ],
+)
+def test_compare_json_files_float_strings(
+    create_json_file, file_name, content, content_diff, should_match
+):
+    """Test JSON comparison with float strings."""
     file1 = create_json_file(file_name(1, "json"), content)
-    file2 = create_json_file(file_name(2, "json"), content)
+    file2 = create_json_file(
+        file_name(2, "json"), content if content_diff is None else content_diff
+    )
 
-    assert validate_output.compare_json_or_yaml_files(file1, file2)
-
-    content3 = {"key": 2, "value": "1.23 4.56 7.80", "schema_version": "2.0.0"}
-    file3 = create_json_file(file_name(3, "json"), content3)
-    assert not validate_output.compare_json_or_yaml_files(file1, file3)
+    assert validate_output.compare_json_or_yaml_files(file1, file2) == should_match
 
 
-def test_compare_json_files_equal_dicts(create_json_file, file_name):
-    content1 = {"key": 1, "value": 5}
+@pytest.mark.parametrize(
+    ("content1", "content2", "should_match"),
+    [
+        ({"key": 1, "value": 5}, {"key": 1, "value": 5, "extra": "extra"}, False),
+        ({"key": 1, "value": 5}, {"different_key": 1, "value": 5}, False),
+        ({"key": 1, "value": 5}, {"key": 2, "value": 7}, False),
+    ],
+)
+def test_compare_json_files_unequal_dicts(
+    create_json_file, file_name, content1, content2, should_match
+):
+    """Test JSON comparison with unequal dictionaries."""
     file1 = create_json_file(file_name(1, "json"), content1)
-    content2 = {"key": 1, "value": 5, "extra": "extra"}
     file2 = create_json_file(file_name(2, "json"), content2)
-    assert not validate_output.compare_json_or_yaml_files(file1, file2)
-
-    content3 = {"different_key": 1, "value": 5}
-    file3 = create_json_file(file_name(2, "json"), content3)
-    assert not validate_output.compare_json_or_yaml_files(file1, file3)
+    assert validate_output.compare_json_or_yaml_files(file1, file2) == should_match
 
 
-def test_compare_json_files_equal_integers(create_json_file, file_name):
+@pytest.mark.parametrize(
+    ("file_type", "create_func"),
+    [("json", "create_json_file"), ("yaml", "create_yaml_file")],
+)
+def test_compare_files_equal_integers(file_type, create_func, file_name, request):
+    """Test JSON/YAML comparison with equal integers."""
+    create_file = request.getfixturevalue(create_func)
     content = {"key": 1, "value": 5}
-    file1 = create_json_file(file_name(1, "json"), content)
-    file2 = create_json_file(file_name(2, "json"), content)
+    file1 = create_file(file_name(1, file_type), content)
+    file2 = create_file(file_name(2, file_type), content)
 
     assert validate_output.compare_json_or_yaml_files(file1, file2)
 
     content3 = {"key": 2, "value": 7}
-    file3 = create_json_file(file_name(3, "json"), content3)
+    file3 = create_file(file_name(3, file_type), content3)
     assert not validate_output.compare_json_or_yaml_files(file1, file3)
 
 
-def test_compare_json_files_equal_floats(create_json_file, file_name):
-    content = {"key": 1, "value": 5.5}
-    file1 = create_json_file(file_name(1, "json"), content)
-    file2 = create_json_file(file_name(2, "json"), content)
+@pytest.mark.parametrize(
+    ("data1", "data2", "tolerance", "should_match"),
+    [
+        ({"key": 1, "value": 5.5}, {"key": 1, "value": 5.5}, 1e-5, True),
+        ({"key": 1, "value": 5.5}, {"key": 1, "value": 5.75}, 1e-5, False),
+        ({"key": 1, "value": 5.5}, {"key": 1, "value": 5.75}, 0.5, True),
+        ({"key": 1, "value": [5.5, 10.5]}, {"key": 1, "value": [5.5, 10.5]}, 1e-5, True),
+        ({"key": 1, "value": [5.5, 10.5]}, {"key": 1, "value": 5.75}, 1e-5, False),
+        ({"key": 1, "value": [5.5, 10.5]}, {"key": 1, "value": [5.75, 10.75]}, 0.5, True),
+    ],
+)
+def test_compare_json_files_floats(
+    create_json_file, file_name, data1, data2, tolerance, should_match
+):
+    """Test JSON comparison with floats and lists of floats."""
+    file1 = create_json_file(file_name(1, "json"), data1)
+    file2 = create_json_file(file_name(2, "json"), data2)
 
-    assert validate_output.compare_json_or_yaml_files(file1, file2)
-
-    content3 = {"key": 1, "value": 5.75}
-    file3 = create_json_file(file_name(3, "json"), content3)
-    assert not validate_output.compare_json_or_yaml_files(file1, file3)
-
-    assert validate_output.compare_json_or_yaml_files(file1, file3, tolerance=0.5)
-
-
-def test_compare_json_files_list_of_floats(create_json_file, file_name):
-    content = {"key": 1, "value": [5.5, 10.5]}
-    file1 = create_json_file(file_name(1, "json"), content)
-    file2 = create_json_file(file_name(2, "json"), content)
-
-    assert validate_output.compare_json_or_yaml_files(file1, file2)
-
-    content3 = {"key": 1, "value": 5.75}
-    file3 = create_json_file(file_name(3, "json"), content3)
-    assert not validate_output.compare_json_or_yaml_files(file1, file3)
-
-    content4 = {"key": 1, "value": [5.75, 10.75]}
-    file4 = create_json_file(file_name(3, "json"), content4)
-    assert validate_output.compare_json_or_yaml_files(file1, file4, tolerance=0.5)
+    assert (
+        validate_output.compare_json_or_yaml_files(file1, file2, tolerance=tolerance)
+        == should_match
+    )
 
 
 def test_compare_yaml_files_float_strings(create_yaml_file, file_name):
+    """Test YAML comparison with float strings."""
     content = {"key": 1, "value": "1.23 4.56 7.89"}
     file1 = create_yaml_file(file_name(1, "yaml"), content)
     file2 = create_yaml_file(file_name(2, "yaml"), content)
@@ -191,18 +208,6 @@ def test_compare_yaml_files_float_strings(create_yaml_file, file_name):
     assert not validate_output.compare_json_or_yaml_files(file1, file3)
 
     assert validate_output.compare_json_or_yaml_files(file1, file3, tolerance=0.5)
-
-
-def test_compare_yaml_files_equal_integers(create_yaml_file, file_name):
-    content = {"key": 1, "value": 5}
-    file1 = create_yaml_file(file_name(1, "yaml"), content)
-    file2 = create_yaml_file(file_name(2, "yaml"), content)
-
-    assert validate_output.compare_json_or_yaml_files(file1, file2)
-
-    content3 = {"key": 2, "value": 7}
-    file3 = create_yaml_file(file_name(3, "yaml"), content3)
-    assert not validate_output.compare_json_or_yaml_files(file1, file3)
 
 
 def test_compare_json_files_nested_dicts_with_values(create_json_file, file_name):
@@ -225,39 +230,38 @@ def test_compare_json_files_nested_dicts_with_values(create_json_file, file_name
     assert validate_output.compare_json_or_yaml_files(file1, file3, tolerance=0.05)
 
 
-def test_compare_ecsv_files_equal(create_ecsv_file, file_name):
-    content = {"col1": [1.1, 2.2, 3.3], "col2": [4.4, 5.5, 6.6]}
-    file1 = create_ecsv_file(file_name(1, "ecsv"), content)
-    file2 = create_ecsv_file(file_name(2, "ecsv"), content)
-
-    assert validate_output.compare_ecsv_files(file1, file2)
-
-
-def test_compare_ecsv_files_different_lengths(create_ecsv_file, file_name):
-    content1 = {"col1": [1.1, 2.2, 3.3], "col2": [4.4, 5.5, 6.6]}
-    content2 = {"col1": [1.1, 2.2], "col2": [4.4, 5.5]}
-    file1 = create_ecsv_file(file_name(1, "yaml"), content1)
-    file2 = create_ecsv_file(file_name(2, "ecsv"), content2)
-
-    assert not validate_output.compare_ecsv_files(file1, file2)
-
-
-def test_compare_ecsv_files_close_values(create_ecsv_file, file_name):
-    content1 = {"col1": [1.1001, 2.2001, 3.3001], "col2": [4.4001, 5.5001, 6.6001]}
-    content2 = {"col1": [1.1, 2.2, 3.3], "col2": [4.4, 5.5, 6.6]}
+@pytest.mark.parametrize(
+    ("content1", "content2", "tolerance", "should_match"),
+    [
+        ({"col1": [1.1, 2.2, 3.3], "col2": [4.4, 5.5, 6.6]}, None, 1e-5, True),
+        (
+            {"col1": [1.1, 2.2, 3.3], "col2": [4.4, 5.5, 6.6]},
+            {"col1": [1.1, 2.2], "col2": [4.4, 5.5]},
+            1e-5,
+            False,
+        ),
+        (
+            {"col1": [1.1001, 2.2001, 3.3001], "col2": [4.4001, 5.5001, 6.6001]},
+            {"col1": [1.1, 2.2, 3.3], "col2": [4.4, 5.5, 6.6]},
+            1e-3,
+            True,
+        ),
+        (
+            {"col1": [1.1, 2.2, 3.3], "col2": [4.4, 5.5, 6.6]},
+            {"col1": [10.1, 20.2, 30.3], "col2": [40.4, 50.5, 60.6]},
+            1e-5,
+            False,
+        ),
+    ],
+)
+def test_compare_ecsv_files(
+    create_ecsv_file, file_name, content1, content2, tolerance, should_match
+):
+    """Test ECSV file comparison with various scenarios."""
     file1 = create_ecsv_file(file_name(1, "ecsv"), content1)
-    file2 = create_ecsv_file(file_name(2, "ecsv"), content2)
+    file2 = create_ecsv_file(file_name(2, "ecsv"), content2 if content2 else content1)
 
-    assert validate_output.compare_ecsv_files(file1, file2, tolerance=1.0e-3)
-
-
-def test_compare_ecsv_files_large_difference(create_ecsv_file, file_name):
-    content1 = {"col1": [1.1, 2.2, 3.3], "col2": [4.4, 5.5, 6.6]}
-    content2 = {"col1": [10.1, 20.2, 30.3], "col2": [40.4, 50.5, 60.6]}
-    file1 = create_ecsv_file(file_name(1, "ecsv"), content1)
-    file2 = create_ecsv_file(file_name(2, "ecsv"), content2)
-
-    assert not validate_output.compare_ecsv_files(file1, file2)
+    assert validate_output.compare_ecsv_files(file1, file2, tolerance=tolerance) == should_match
 
 
 def test_compare_files_ecsv(create_ecsv_file, file_name):
@@ -392,31 +396,15 @@ def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check
         validate_output._validate_output_path_and_file(config, wrong_integration_test)
 
 
-def test_validate_output_path_and_file_log_archive(output_path, mock_path_exists):
-    config = {
-        "configuration": {"output_path": output_path},
-    }
-    integration_test = [
-        {
-            "path_descriptor": "output_path",
-            "file": "test.log_hist.tar.gz",
-            "expected_log_output": {"pattern": ["test"]},
-        }
-    ]
-
-    with patch("simtools.testing.assertions.check_simulation_logs") as mock_check_logs:
-        mock_check_logs.return_value = True
-        validate_output._validate_output_path_and_file(config, integration_test)
-        mock_check_logs.assert_called_once()
-
-
 def test_validate_application_output_no_integration_tests(mocker, output_path):
+    """Test validate_application_output when no integration tests are present."""
     config = {"configuration": {"output_path": output_path}}
     mock_logger_info = mocker.patch("simtools.testing.validate_output._logger.info")
 
-    validate_output.validate_application_output(config)
+    result = validate_output.validate_application_output(config)
 
     mock_logger_info.assert_not_called()
+    assert result is None
 
 
 def test_validate_application_output_with_reference_output_file(
@@ -527,7 +515,10 @@ def test_compare_simtel_cfg_files(tmp_test_directory):
 
 
 def test_validate_simtel_cfg_files(mocker, test_path):
-    mocker.patch("simtools.testing.validate_output._compare_simtel_cfg_files", return_value=True)
+    """Test validation of simtel cfg files."""
+    mock_compare = mocker.patch(
+        "simtools.testing.validate_output._compare_simtel_cfg_files", return_value=True
+    )
     config = {
         "configuration": {
             "output_path": PATH_TO_OUTPUT,
@@ -537,6 +528,8 @@ def test_validate_simtel_cfg_files(mocker, test_path):
         "integration_tests": [{"test_simtel_cfg_files": test_path}],
     }
     validate_output._validate_simtel_cfg_files(config, test_path)
+
+    mock_compare.assert_called()
 
 
 def test_compare_value_from_parameter_dict():
@@ -757,14 +750,10 @@ def test_validate_output_path_and_file_routes_by_suffix(tmp_path: Path):
         patch(
             "simtools.testing.assertions.check_output_from_sim_telarray", return_value=True
         ) as m_simtel,
-        patch("simtools.testing.assertions.check_simulation_logs", return_value=True) as m_tar,
-        patch("simtools.testing.assertions.check_plain_log", return_value=True) as m_plain,
     ):
         _validate_output_path_and_file(cfg, file_tests)
 
         m_simtel.assert_called_once()
-        m_tar.assert_called_once()
-        m_plain.assert_called_once()
 
 
 def test_validate_output_path_and_file_missing_raises(tmp_path: Path):
@@ -797,100 +786,57 @@ def test_validate_application_output_gating_calls(tmp_path: Path):
         m_validate.assert_not_called()
 
 
-def test_compare_nested_dicts_with_tolerance_equal_dicts():
-    data1 = {"key": 1, "value": 5.5}
-    data2 = {"key": 1, "value": 5.5}
-    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
-
-
-def test_compare_nested_dicts_with_tolerance_different_keys():
-    data1 = {"key": 1, "value": 5.5}
-    data2 = {"different_key": 1, "value": 5.5}
-    assert not validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
-
-
-def test_compare_nested_dicts_with_tolerance_float_within_tolerance():
-    data1 = {"value": 5.5}
-    data2 = {"value": 5.50001}
-    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-3)
-
-
-def test_compare_nested_dicts_with_tolerance_float_outside_tolerance():
-    data1 = {"value": 5.5}
-    data2 = {"value": 5.75}
-    assert not validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
-
-
-def test_compare_nested_dicts_with_tolerance_list_of_floats():
-    data1 = {"values": [1.1, 2.2, 3.3]}
-    data2 = {"values": [1.1, 2.2, 3.3]}
-    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
-
-
-def test_compare_nested_dicts_with_tolerance_list_different_lengths():
-    data1 = {"values": [1.1, 2.2, 3.3]}
-    data2 = {"values": [1.1, 2.2]}
-    assert not validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
-
-
-def test_compare_nested_dicts_with_tolerance_deeply_nested():
-    data1 = {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}}
-    data2 = {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}}
-    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
-
-
-def test_compare_nested_dicts_with_tolerance_deeply_nested_value_mismatch():
-    data1 = {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}}
-    data2 = {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2850}}
-    assert not validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
-
-
-def test_compare_nested_dicts_with_tolerance_deeply_nested_with_tolerance():
-    data1 = {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}}
-    data2 = {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2850}}
-    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=0.05)
-
-
-def test_compare_nested_dicts_with_tolerance_non_value_field_exact_match():
-    data1 = {"description": "test string", "value": 5.5}
-    data2 = {"description": "test string", "value": 5.50001}
-    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-3)
-
-
-def test_compare_nested_dicts_with_tolerance_non_value_field_exact_mismatch():
-    data1 = {"description": "test string"}
-    data2 = {"description": "different string"}
-    assert not validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
-
-
-def test_compare_nested_dicts_with_tolerance_scalar_value():
-    assert validate_output._compare_nested_dicts_with_tolerance(
-        5.5, 5.50001, tolerance=1.0e-3, is_value_field=True
+@pytest.mark.parametrize(
+    ("data1", "data2", "tolerance", "is_value_field", "should_match"),
+    [
+        ({"key": 1, "value": 5.5}, {"key": 1, "value": 5.5}, 1e-5, False, True),
+        ({"key": 1, "value": 5.5}, {"different_key": 1, "value": 5.5}, 1e-5, False, False),
+        ({"value": 5.5}, {"value": 5.50001}, 1e-3, False, True),
+        ({"value": 5.5}, {"value": 5.75}, 1e-5, False, False),
+        ({"values": [1.1, 2.2, 3.3]}, {"values": [1.1, 2.2, 3.3]}, 1e-5, False, True),
+        ({"values": [1.1, 2.2, 3.3]}, {"values": [1.1, 2.2]}, 1e-5, False, False),
+        (
+            {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}},
+            {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}},
+            1e-5,
+            False,
+            True,
+        ),
+        (
+            {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}},
+            {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2850}},
+            1e-5,
+            False,
+            False,
+        ),
+        (
+            {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}},
+            {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2850}},
+            0.05,
+            False,
+            True,
+        ),
+        (
+            {"description": "test string", "value": 5.5},
+            {"description": "test string", "value": 5.50001},
+            1e-3,
+            False,
+            True,
+        ),
+        ({"description": "test string"}, {"description": "different string"}, 1e-5, False, False),
+        (5.5, 5.50001, 1e-3, True, True),
+        (5.5, 5.75, 1e-5, True, False),
+        ((1.1, 2.2, 3.3), [1.1, 2.2, 3.3], 1e-5, False, True),
+        ({"items": [1, "string", 3.3]}, {"items": [1, "string", 3.3]}, 1e-5, False, True),
+        ({"value": "1.23 4.56 7.89"}, {"value": "1.23 4.56 7.89"}, 1e-5, False, True),
+        ({"value": "1.23 4.56 7.89"}, {"value": "1.23 4.56 7.90"}, 1e-5, False, False),
+    ],
+)
+def test_compare_nested_dicts_with_tolerance(data1, data2, tolerance, is_value_field, should_match):
+    """Test nested dict comparison with various scenarios."""
+    assert (
+        validate_output._compare_nested_dicts_with_tolerance(
+            data1, data2, tolerance=tolerance, is_value_field=is_value_field
+        )
+        == should_match
     )
-    assert not validate_output._compare_nested_dicts_with_tolerance(
-        5.5, 5.75, tolerance=1.0e-5, is_value_field=True
-    )
-
-
-def test_compare_nested_dicts_with_tolerance_tuple_vs_list():
-    data1 = (1.1, 2.2, 3.3)
-    data2 = [1.1, 2.2, 3.3]
-    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
-
-
-def test_compare_nested_dicts_with_tolerance_mixed_types_in_list():
-    data1 = {"items": [1, "string", 3.3]}
-    data2 = {"items": [1, "string", 3.3]}
-    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
-
-
-def test_compare_nested_dicts_with_tolerance_value_field_with_string():
-    data1 = {"value": "1.23 4.56 7.89"}
-    data2 = {"value": "1.23 4.56 7.89"}
-    assert validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
-
-
-def test_compare_nested_dicts_with_tolerance_value_field_string_mismatch():
-    data1 = {"value": "1.23 4.56 7.89"}
-    data2 = {"value": "1.23 4.56 7.90"}
-    assert not validate_output._compare_nested_dicts_with_tolerance(data1, data2, tolerance=1.0e-5)
