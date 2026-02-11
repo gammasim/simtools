@@ -26,6 +26,7 @@ def validate_sim_telarray(
     expected_mc_events=None,
     expected_shower_events=None,
     curved_atmo=False,
+    allow_for_changes=None,
 ):
     """
     Validate sim_telarray output files and metadata.
@@ -44,6 +45,9 @@ def validate_sim_telarray(
         Expected number of shower events in the sim_telarray output files.
     curved_atmo: bool
         CORSIKA executable compiled with curved atmosphere option.
+    allow_for_changes: list
+        List of model parameters that are changed from command line ('-C')
+        Metadata checks allows these values to be different than expected from model.
 
     Raises
     ------
@@ -54,19 +58,19 @@ def validate_sim_telarray(
     log_files = general.ensure_iterable(log_files)
 
     if array_models:
-        validate_metadata(data_files, array_models)
+        validate_metadata(data_files, array_models, allow_for_changes)
 
     validate_log_files(log_files, expected_mc_events, expected_shower_events, curved_atmo)
     validate_event_numbers(data_files, expected_mc_events, expected_shower_events)
 
 
-def validate_metadata(files, array_models):
+def validate_metadata(files, array_models, allow_for_changes=None):
     """Validate metadata in the sim_telarray output files."""
     for model in array_models:
         output_file = next((f for f in files if model.model_version in str(f)), None)
         if output_file:
             _logger.info(f"Validating metadata for {output_file}")
-            assert_sim_telarray_metadata(output_file, model)
+            assert_sim_telarray_metadata(output_file, model, allow_for_changes)
             _logger.info(f"Metadata for sim_telarray file {output_file} is valid.")
         else:
             _logger.warning(
@@ -110,7 +114,7 @@ def validate_log_files(
     _logger.info(f"Sim_telarray log files validation passed: {log_files}")
 
 
-def assert_sim_telarray_metadata(file, array_model):
+def assert_sim_telarray_metadata(file, array_model, allow_for_changes=None):
     """
     Assert consistency of sim_telarray metadata with given array model.
 
@@ -120,10 +124,15 @@ def assert_sim_telarray_metadata(file, array_model):
         Path to the sim_telarray file.
     array_model: ArrayModel
         Array model to compare with.
+    allow_for_changes: list
+        List of model parameters that are changed from command line ('-C')
+        Metadata checks allows these values to be different than expected from model.
     """
     global_meta, telescope_meta = read_sim_telarray_metadata(file)
     _logger.info(f"Found metadata in sim_telarray file for {len(telescope_meta)} telescopes")
-    site_parameter_mismatch = _assert_model_parameters(global_meta, array_model.site_model)
+    site_parameter_mismatch = _assert_model_parameters(
+        global_meta, array_model.site_model, allow_for_changes
+    )
     sim_telarray_seed_mismatch = _assert_sim_telarray_seed(
         global_meta, array_model.sim_telarray_seed, file
     )
@@ -141,7 +150,7 @@ def assert_sim_telarray_metadata(file, array_model):
             raise ValueError(f"Telescope {telescope_name} not found in sim_telarray file metadata")
 
     telescope_parameter_mismatch = [
-        _assert_model_parameters(telescope_meta[i], model)
+        _assert_model_parameters(telescope_meta[i], model, allow_for_changes)
         for i, model in enumerate(array_model.telescope_models.values(), start=1)
     ]
 
@@ -154,7 +163,7 @@ def assert_sim_telarray_metadata(file, array_model):
         )
 
 
-def _assert_model_parameters(metadata, model):
+def _assert_model_parameters(metadata, model, allow_for_changes=None):
     """
     Assert that model parameter values matches the values in the sim_telarray metadata.
 
@@ -164,6 +173,9 @@ def _assert_model_parameters(metadata, model):
         Metadata dictionary.
     model: SiteModel, TelescopeModel
         Model to compare with.
+    allow_for_changes: list
+        List of model parameters that are changed from command line ('-C')
+        Metadata checks allows these values to be different than expected from model.
 
     Returns
     -------
@@ -188,10 +200,16 @@ def _assert_model_parameters(metadata, model):
                 value = (int)(value) if value.isnumeric() else value
 
             if not is_equal(value, model.parameters[param]["value"], parameter_type):
-                invalid_parameter_list.append(
-                    f"Parameter {param} mismatch between sim_telarray file: {value}, "
-                    f"and model: {model.parameters[param]['value']}"
-                )
+                if allow_for_changes and param in allow_for_changes:
+                    _logger.warning(
+                        f"Parameter {param} mismatch between sim_telarray file: {value}, "
+                        f"and model: {model.parameters[param]['value']}, but allowed for changes."
+                    )
+                else:
+                    invalid_parameter_list.append(
+                        f"Parameter {param} mismatch between sim_telarray file: {value}, "
+                        f"and model: {model.parameters[param]['value']}"
+                    )
 
     return invalid_parameter_list
 
