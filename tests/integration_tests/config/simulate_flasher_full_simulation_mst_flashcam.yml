@@ -30,6 +30,6 @@ applications:
       path_descriptor: output_path
       output_sub_path: sim_telarray
   model_version_use_current: true
-  test_name: full-simulation-msfx-flashcam-7.0.0
+  test_name: full-simulation-msfx-flashcam
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
