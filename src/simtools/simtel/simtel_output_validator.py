@@ -1,4 +1,4 @@
-"""Validation of sim_telarray data and metadata."""
+"""Validation of sim_telarray data, log, and metadata."""
 
 import logging
 from collections import defaultdict
@@ -46,7 +46,7 @@ def validate_sim_telarray(
     curved_atmo: bool
         CORSIKA executable compiled with curved atmosphere option.
     allow_for_changes: list
-        List of model parameters that are changed from command line ('-C')
+        List of model parameters that are changed using the command line ('-C')
         Metadata checks allows these values to be different than expected from model.
 
     Raises

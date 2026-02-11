@@ -605,3 +605,191 @@ class TestValidateSimTelArray:
                     mock_meta.assert_called_once()
                 else:
                     mock_meta.assert_not_called()
+
+
+class TestValidateMetadataCoverage:
+    """Test cases to improve coverage of validate_metadata."""
+
+    def test_validate_metadata_with_matching_file(self, tmp_path, caplog):
+        """Test validate_metadata logging when file matches."""
+        caplog.set_level(logging.INFO)
+        data_file = tmp_path / "model_v1.0.0.simtel.zst"
+        data_file.write_bytes(b"dummy")
+
+        model = MagicMock()
+        model.model_version = "1.0.0"
+        model.site_model = MagicMock()
+        model.site_model.parameters = {}
+        model.telescope_models = {}
+        model.sim_telarray_seed = None
+
+        with patch(
+            "simtools.simtel.simtel_output_validator.read_sim_telarray_metadata"
+        ) as mock_read:
+            mock_read.return_value = ({}, {})
+            validate_metadata([data_file], [model])
+            assert "Validating metadata for" in caplog.text
+
+    def test_validate_metadata_no_matching_file(self, tmp_path, caplog):
+        """Test validate_metadata logging when no file matches."""
+        caplog.set_level(logging.WARNING)
+        data_file = tmp_path / "other_v1.0.0.simtel.zst"
+        data_file.write_bytes(b"dummy")
+
+        model = MagicMock()
+        model.model_version = "2.0.0"
+
+        validate_metadata([data_file], [model])
+        assert "No sim_telarray file found" in caplog.text
+
+
+class TestAssertSimTelArraySeedCoverage:
+    """Test cases for seed assertions."""
+
+    def test_assert_sim_telarray_seed_matching_seed(self, tmp_path, caplog):
+        """Test seed assertion when seeds match."""
+        caplog.set_level(logging.INFO)
+        data_file = tmp_path / "test.simtel.zst"
+        data_file.write_bytes(b"dummy")
+
+        metadata = {
+            "instrument_seed": "12345",
+            "instrument_instances": "10",
+            "rng_select_seed": "0",
+        }
+        seed = MagicMock()
+        seed.instrument_seed = "12345"
+
+        with patch("simtools.simtel.simtel_output_validator.get_corsika_run_number") as mock_run:
+            with patch("simtools.simtel.simtel_output_validator.random.seeds") as mock_seeds:
+                mock_run.return_value = 1
+                mock_seeds.return_value = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+                result = _assert_sim_telarray_seed(metadata, seed, data_file)
+                assert result is None
+                assert "sim_telarray_seed in sim_telarray file" in caplog.text
+
+
+class TestAssertExpectedOutputCoverage:
+    """Test cases for expected output assertions."""
+
+    def test_assert_expected_output_no_data_found(self, tmp_path, caplog):
+        """Test when no data is found for expected key."""
+        caplog.set_level(logging.ERROR)
+        data_file = tmp_path / "test.simtel.zst"
+        data_file.write_bytes(b"dummy")
+
+        expected_output = {"pe_sum": (0, 100)}
+
+        with patch(
+            "simtools.simtel.simtel_output_validator._item_to_check_from_sim_telarray"
+        ) as mock_item:
+            mock_item.return_value = {
+                "n_telescope_events": 0,
+                "n_calibration_events": 0,
+                "pe_sum": [],
+            }
+            result = assert_expected_sim_telarray_output(data_file, expected_output)
+            assert result is False
+            assert "No data found" in caplog.text
+
+    def test_assert_expected_output_mean_out_of_range(self, tmp_path, caplog):
+        """Test when mean is out of expected range."""
+        caplog.set_level(logging.ERROR)
+        data_file = tmp_path / "test.simtel.zst"
+        data_file.write_bytes(b"dummy")
+
+        expected_output = {"pe_sum": (100, 200)}
+
+        with patch(
+            "simtools.simtel.simtel_output_validator._item_to_check_from_sim_telarray"
+        ) as mock_item:
+            mock_item.return_value = {
+                "n_telescope_events": 1,
+                "n_calibration_events": 0,
+                "pe_sum": [10.0, 20.0],
+            }
+            result = assert_expected_sim_telarray_output(data_file, expected_output)
+            assert result is False
+            assert "not in the expected range" in caplog.text
+
+
+class TestAssertExpectedMetadataCoverage:
+    """Test cases for expected metadata assertions."""
+
+    def test_assert_expected_metadata_matching_key(self, tmp_path, caplog):
+        """Test when metadata key matches."""
+        caplog.set_level(logging.DEBUG)
+        data_file = tmp_path / "test.simtel.zst"
+        data_file.write_bytes(b"dummy")
+
+        expected_metadata = {"test_key": "test_value"}
+
+        with patch(
+            "simtools.simtel.simtel_output_validator.read_sim_telarray_metadata"
+        ) as mock_read:
+            mock_read.return_value = ({"test_key": "test_value"}, {})
+            result = assert_expected_sim_telarray_metadata(data_file, expected_metadata)
+            assert result is True
+            assert "matches expected value" in caplog.text
+
+
+class TestAssertEventsOfTypeCoverage:
+    """Test cases for event type assertions."""
+
+    def test_assert_events_of_type_not_found(self, tmp_path, caplog):
+        """Test when no events of expected type are found."""
+        caplog.set_level(logging.ERROR)
+        data_file = tmp_path / "test.simtel.zst"
+        data_file.write_bytes(b"dummy")
+
+        with patch("simtools.simtel.simtel_output_validator.SimTelFile") as mock_file:
+            mock_file.return_value.__enter__.return_value = iter([{"type": "calibration"}])
+            result = assert_events_of_type(data_file, event_type="shower")
+            assert result is False
+            assert "No events of type" in caplog.text
+
+
+class TestAssertNShowersEnergyRange:
+    """Test assert_n_showers_and_energy_range."""
+
+    def test_assert_n_showers_pass(self, tmp_path):
+        """Test successful shower count validation."""
+        data_file = tmp_path / "test.simtel.zst"
+        data_file.write_bytes(b"dummy")
+
+        with patch("simtools.simtel.simtel_output_validator.SimTelFile") as mock_file:
+            mock_instance = MagicMock()
+            mock_instance.__enter__.return_value = mock_instance
+            mock_instance.__exit__.return_value = None
+            mock_instance.mc_run_headers = [{"n_showers": 100, "E_range": [0.01, 100.0]}]
+            mock_instance.__iter__.return_value = [
+                {"mc_shower": {"energy": 1.0}},
+                {"mc_shower": {"energy": 10.0}},
+                {"mc_shower": {"energy": 50.0}},
+            ] * 33 + [{"mc_shower": {"energy": 5.0}}]
+            mock_file.return_value = mock_instance
+
+            result = assert_n_showers_and_energy_range(data_file)
+            assert result is True
+
+
+class TestAssertSimTelArrayMetadataEdgeCases:
+    """Test edge cases for metadata assertions."""
+
+    def test_assert_sim_telarray_metadata_no_seed(self, tmp_path):
+        """Test metadata assertion when sim_telarray_seed is None."""
+        data_file = tmp_path / "test.simtel.zst"
+        data_file.write_bytes(b"dummy")
+
+        model = MagicMock()
+        model.site_model = MagicMock()
+        model.site_model.parameters = {}
+        model.telescope_models = {}
+        model.sim_telarray_seed = None
+
+        with patch(
+            "simtools.simtel.simtel_output_validator.read_sim_telarray_metadata"
+        ) as mock_read:
+            mock_read.return_value = ({}, {})
+            # Should not raise an error
+            assert_sim_telarray_metadata(data_file, model)
