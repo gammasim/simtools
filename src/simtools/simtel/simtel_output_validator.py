@@ -164,6 +164,72 @@ def assert_sim_telarray_metadata(file, array_model, allow_for_changes=None):
         )
 
 
+def _extract_parameter_value(metadata, sim_telarray_name, parameter_type):
+    """
+    Extract parameter value from metadata based on type.
+
+    Parameters
+    ----------
+    metadata: dict
+        Metadata dictionary.
+    sim_telarray_name: str
+        Name of the parameter in sim_telarray.
+    parameter_type: str
+        Type of the parameter.
+
+    Returns
+    -------
+    any
+        Extracted parameter value.
+    """
+    if parameter_type not in ("string", "dict", "boolean"):
+        config_reader = SimtelConfigReader()
+        value, _ = config_reader.extract_value_from_sim_telarray_column(
+            [metadata[sim_telarray_name]], parameter_type
+        )
+        return value
+
+    value = metadata[sim_telarray_name]
+    return (int)(value) if value.isnumeric() else value
+
+
+def _check_parameter_validity(param, value, model_value, parameter_type, allow_for_changes):
+    """
+    Check if parameter value matches model value and log discrepancies.
+
+    Parameters
+    ----------
+    param: str
+        Parameter name.
+    value: any
+        Extracted value from metadata.
+    model_value: any
+        Expected value from model.
+    parameter_type: str
+        Type of the parameter.
+    allow_for_changes: list
+        List of parameters allowed to change.
+
+    Returns
+    -------
+    str or None
+        Error message if parameter doesn't match, None otherwise.
+    """
+    if is_equal(value, model_value, parameter_type):
+        return None
+
+    if allow_for_changes and param in allow_for_changes:
+        _logger.warning(
+            f"Parameter {param} mismatch between sim_telarray file: {value}, "
+            f"and model: {model_value}, but allowed for changes."
+        )
+        return None
+
+    return (
+        f"Parameter {param} mismatch between sim_telarray file: {value}, and model: {model_value}"
+    )
+
+
 def _assert_model_parameters(metadata, model, allow_for_changes=None):
     """
     Assert that model parameter values matches the values in the sim_telarray metadata.
@@ -184,33 +250,22 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
         List of parameters that do not match.
 
     """
-    config_reader = SimtelConfigReader()
-
     invalid_parameter_list = []
 
     for param in model.parameters:
         sim_telarray_name = _sim_telarray_name_from_parameter_name(param)
-        if sim_telarray_name in metadata.keys():
-            parameter_type = model.parameters[param]["type"]
-            if parameter_type not in ("string", "dict", "boolean"):
-                value, _ = config_reader.extract_value_from_sim_telarray_column(
-                    [metadata[sim_telarray_name]], parameter_type
-                )
-            else:
-                value = metadata[sim_telarray_name]
-                value = (int)(value) if value.isnumeric() else value
+        if sim_telarray_name not in metadata.keys():
+            continue
 
-            if not is_equal(value, model.parameters[param]["value"], parameter_type):
-                if allow_for_changes and param in allow_for_changes:
-                    _logger.warning(
-                        f"Parameter {param} mismatch between sim_telarray file: {value}, "
-                        f"and model: {model.parameters[param]['value']}, but allowed for changes."
-                    )
-                else:
-                    invalid_parameter_list.append(
-                        f"Parameter {param} mismatch between sim_telarray file: {value}, "
-                        f"and model: {model.parameters[param]['value']}"
-                    )
+        parameter_type = model.parameters[param]["type"]
+        value = _extract_parameter_value(metadata, sim_telarray_name, parameter_type)
+        model_value = model.parameters[param]["value"]
+
+        error = _check_parameter_validity(
+            param, value, model_value, parameter_type, allow_for_changes
+        )
+        if error:
+            invalid_parameter_list.append(error)
 
     return invalid_parameter_list
 
@@ -468,6 +523,32 @@ def assert_expected_sim_telarray_output(file, expected_sim_telarray_output):
     return True
 
 
+def _process_trigger_time(event, item_to_check, expected_sim_telarray_output):
+    """Process trigger_time data from event if expected."""
+    if "trigger_time" in expected_sim_telarray_output:
+        item_to_check["trigger_time"].extend(event["trigger_information"]["trigger_times"])
+
+
+def _process_shower_event_data(event, item_to_check, expected_sim_telarray_output):
+    """Process data event (non-calibration) photoelectron data if expected."""
+    if "pe_sum" in expected_sim_telarray_output:
+        item_to_check["pe_sum"].extend(
+            event["photoelectron_sums"]["n_pe"][event["photoelectron_sums"]["n_pe"] > 0]
+        )
+    if "photons" in expected_sim_telarray_output:
+        item_to_check["photons"].extend(
+            event["photoelectron_sums"]["photons_atm_qe"][
+                event["photoelectron_sums"]["photons"] > 0
+            ]
+        )
+
+
+def _process_telescope_events(event, item_to_check):
+    """Process telescope event count."""
+    if "telescope_events" in event and len(event["telescope_events"]) > 0:
+        item_to_check["n_telescope_events"] += 1
+
+
 def _item_to_check_from_sim_telarray(file, expected_sim_telarray_output):
     """Read the relevant items from the sim_telarray file for checking against expected output."""
     item_to_check = defaultdict(list)
@@ -475,23 +556,12 @@ def _item_to_check_from_sim_telarray(file, expected_sim_telarray_output):
         item_to_check[key] = 0
     with SimTelFile(file) as f:
         for event in f:
-            if "trigger_time" in expected_sim_telarray_output:
-                item_to_check["trigger_time"].extend(event["trigger_information"]["trigger_times"])
-            if event["type"] != "calibration":
-                if "pe_sum" in expected_sim_telarray_output:
-                    item_to_check["pe_sum"].extend(
-                        event["photoelectron_sums"]["n_pe"][event["photoelectron_sums"]["n_pe"] > 0]
-                    )
-                if "photons" in expected_sim_telarray_output:
-                    item_to_check["photons"].extend(
-                        event["photoelectron_sums"]["photons_atm_qe"][
-                            event["photoelectron_sums"]["photons"] > 0
-                        ]
-                    )
-            else:
+            _process_trigger_time(event, item_to_check, expected_sim_telarray_output)
+            if event["type"] == "calibration":
                 item_to_check["n_calibration_events"] += 1
-            if "telescope_events" in event and len(event["telescope_events"]) > 0:
-                item_to_check["n_telescope_events"] += 1
+            else:
+                _process_shower_event_data(event, item_to_check, expected_sim_telarray_output)
+            _process_telescope_events(event, item_to_check)
 
     return item_to_check
 
