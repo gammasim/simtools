@@ -58,6 +58,16 @@ Support modules for running sim_telarray.
    :members:
 ```
 
+
+## simtel_output_validator
+
+(simtel-output-validator-1)=
+
+```{eval-rst}
+.. automodule:: simtel.simtel_output_validator
+   :members:
+```
+
 ## simulator_array
 
 (simulate-array-1)=
