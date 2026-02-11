@@ -327,6 +327,32 @@ def resolve_file_patterns(file_names):
     return _files
 
 
+def is_safe_tar_member(member_name):
+    """
+    Validate that a tar member path is safe and doesn't contain path traversal sequences.
+
+    Parameters
+    ----------
+    member_name : str
+        The path of the tar member to validate.
+
+    Returns
+    -------
+    bool
+        True if the path is safe, False otherwise.
+    """
+    # Check for absolute paths
+    if Path(member_name).is_absolute():
+        return False
+    # Check for parent directory references
+    if ".." in member_name:
+        return False
+    # Check for null bytes
+    if "\0" in member_name:
+        return False
+    return True
+
+
 def pack_tar_file(tar_file_name, file_list, sub_dir=None):
     """
     Pack files into a tar.gz archive.
