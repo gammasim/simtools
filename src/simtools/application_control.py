@@ -4,6 +4,7 @@ import logging
 import os
 import re
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -16,6 +17,73 @@ SECRET_ENV_VAR_NAMES = ["SIMTOOLS_DB_API_PW"]
 SECRET_KEY_PATTERNS = [
     r"(?:password|passwd|pwd|secret|token|api[_-]?key|auth)",
 ]
+
+
+def setup_logging(logger_name=None, log_level="INFO", log_file=None):
+    """
+    Set up logging configuration.
+
+    Parameters
+    ----------
+    logger_name : str, optional
+        Name for the logger. If None, uses the root logger. Default is None.
+    log_level : str, optional
+        Logging level as a string (e.g., "DEBUG", "INFO"). Default is "INFO".
+    """
+    if logger_name:
+        logger = logging.getLogger(logger_name)
+    else:
+        logger = logging.getLogger()
+    logger.setLevel(gen.get_log_level_from_user(log_level))
+
+    if logger.hasHandlers():
+        for handler in logger.handlers[:]:
+            handler.close()
+        logger.handlers.clear()
+
+    redact_filter = RedactFilter()
+
+    # 2. Console Handler (StreamHandler)
+    console_format = logging.Formatter("%(levelname)s: %(message)s")
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(console_format)
+    console_handler.addFilter(redact_filter)
+    logger.addHandler(console_handler)
+
+    # 3. File Handler
+    if log_file:
+        file_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(file_format)
+        file_handler.addFilter(redact_filter)
+        logger.addHandler(file_handler)
+        logging.info(f"Log messages will be written to: {log_file}")
+
+    return logger
+
+
+def get_log_file(args_dict):
+    """
+    Get log file path.
+
+    Generate log file path if needed from application name and startup time.
+
+    Returns
+    -------
+    Path, str or None
+        Log file path, or None if no logging to file is configured.
+    """
+    if args_dict.get("log_file") is not None:
+        return args_dict["log_file"]
+    if args_dict.get("application_label") is None:
+        return None
+
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    log_file = f"{args_dict['application_label']}_{timestamp}.log"
+    if args_dict.get("output_path"):
+        Path(args_dict["output_path"]).mkdir(parents=True, exist_ok=True)
+        return Path(args_dict["output_path"]) / log_file
+    return log_file
 
 
 class RedactFilter(logging.Filter):
@@ -57,20 +125,6 @@ class RedactFilter(logging.Filter):
         record.msg = msg
         record.args = ()
         return True
-
-
-def _apply_redact_filter_globally():
-    """
-    Apply RedactFilter to the root logging handlers.
-
-    This ensures that sensitive information is redacted from all log output,
-    regardless of which logger (root or child) emits the message.
-    """
-    redact_filter = RedactFilter()
-    root_logger = logging.getLogger()
-
-    for handler in root_logger.handlers:
-        handler.addFilter(redact_filter)
 
 
 @dataclass
@@ -141,12 +195,7 @@ def startup_application(parse_function, setup_io_handler=True, logger_name=None)
     args_dict, db_config = parse_function()
     config.load(args_dict, db_config)
 
-    _apply_redact_filter_globally()
-    if logger_name:
-        logger = logging.getLogger(logger_name)
-    else:
-        logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    logger = setup_logging(logger_name, args_dict["log_level"], log_file=get_log_file(args_dict))
 
     io_handler_instance = io_handler.IOHandler() if setup_io_handler else None
 

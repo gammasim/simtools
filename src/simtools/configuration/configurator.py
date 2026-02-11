@@ -159,6 +159,7 @@ class Configurator:
             self._initialize_output()
         _db_dict = self._get_db_parameters()
 
+        self.config["application_label"] = self.config.get("application_label", self.label)
         return self.config, _db_dict
 
     def _fill_from_command_line(self, arg_list=None, require_command_line=True):
