@@ -8,7 +8,7 @@ import tarfile
 import time
 import urllib.error
 import urllib.request
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from urllib.parse import urlparse
 
 import dotenv
@@ -341,15 +341,29 @@ def is_safe_tar_member(member_name):
     bool
         True if the path is safe, False otherwise.
     """
-    # Check for absolute paths
-    if Path(member_name).is_absolute():
-        return False
-    # Check for parent directory references
-    if ".." in member_name:
-        return False
     # Check for null bytes
     if "\0" in member_name:
         return False
+
+    # Check for absolute paths
+    if Path(member_name).is_absolute():
+        return False
+
+    # Normalize path and validate components
+    try:
+        parts = PurePosixPath(member_name).parts
+    except ValueError:
+        return False
+
+    # Reject if any component is ".." or if path becomes absolute
+    if ".." in parts:
+        return False
+
+    # Verify the normalized path is still relative
+    normalized = PurePosixPath(*parts) if parts else PurePosixPath(".")
+    if normalized.is_absolute():
+        return False
+
     return True
 
 

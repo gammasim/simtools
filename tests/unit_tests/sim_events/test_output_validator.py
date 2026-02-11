@@ -15,8 +15,7 @@ def test_validate_sim_events_calls_valid_event_numbers(tmp_path, monkeypatch):
         lambda *args, **kwargs: mock_tables,
     )
 
-    result = validate_sim_events(test_files, 4)
-    assert result is None
+    validate_sim_events(test_files, 4)
 
 
 def test_validate_sim_events_with_string_input(tmp_path, monkeypatch):
@@ -30,8 +29,7 @@ def test_validate_sim_events_with_string_input(tmp_path, monkeypatch):
         lambda *args, **kwargs: mock_tables,
     )
 
-    result = validate_sim_events(str(test_file), 3)
-    assert result is None
+    validate_sim_events(str(test_file), 3)
 
 
 def test_valid_event_numbers_single_file_match(tmp_path, monkeypatch):
@@ -45,8 +43,7 @@ def test_valid_event_numbers_single_file_match(tmp_path, monkeypatch):
         lambda *args, **kwargs: mock_tables,
     )
 
-    result = valid_event_numbers(str(test_file), 3)
-    assert result is None
+    valid_event_numbers(str(test_file), 3)
 
 
 def test_valid_event_numbers_single_file_mismatch(tmp_path, monkeypatch):
@@ -76,8 +73,7 @@ def test_valid_event_numbers_multiple_files_all_match(tmp_path, monkeypatch):
         lambda *args, **kwargs: mock_tables,
     )
 
-    result = valid_event_numbers(test_files, 4)
-    assert result is None
+    valid_event_numbers(test_files, 4)
 
 
 def test_valid_event_numbers_multiple_files_one_mismatch(tmp_path, monkeypatch):

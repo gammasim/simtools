@@ -69,7 +69,7 @@ class SimulatorArray(SimtelRunner):
                 file.write(
                     f"{sim_telarray_env_as_string()} "
                     + " ".join(command)
-                    + f" | gzip > {log_file} 2>&1\n"
+                    + f" 2>&1 | gzip > {log_file}\n"
                 )
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
