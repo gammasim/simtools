@@ -61,7 +61,8 @@ def validate_sim_telarray(
         validate_metadata(data_files, array_models, allow_for_changes)
 
     validate_log_files(log_files, expected_mc_events, expected_shower_events, curved_atmo)
-    validate_event_numbers(data_files, expected_mc_events, expected_shower_events)
+    if expected_mc_events and expected_shower_events:
+        validate_event_numbers(data_files, expected_mc_events, expected_shower_events)
 
 
 def validate_metadata(files, array_models, allow_for_changes=None):

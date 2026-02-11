@@ -284,7 +284,8 @@ class SimulatorLightEmission(SimtelRunner):
             ]
 
         cmd += ["-o", str(iact_output)]
-        return " ".join(cmd)
+        log_file = self.runner_service.get_file_name(file_type="light_emission_log")
+        return " ".join(cmd) + f" | gzip > {log_file} 2>&1\n"
 
     def _get_site_command(self, app_name, config_directory, corsika_observation_level):
         """Return site command with altitude, atmosphere and telescope_position handling."""
@@ -460,7 +461,9 @@ class SimulatorLightEmission(SimtelRunner):
 
         parts += [f"-C {key}={value}" for key, value in options]
 
-        return sim_telarray_env_as_string() + " ".join(parts)
+        log_file = self.runner_service.get_file_name(file_type="sim_telarray_log")
+
+        return sim_telarray_env_as_string() + " ".join(parts) + f"| gzip > {log_file} 2>&1\n"
 
     def calculate_distance_focal_plane_calibration_device(self):
         """
