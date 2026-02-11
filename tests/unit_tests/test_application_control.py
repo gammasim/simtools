@@ -2,7 +2,6 @@
 
 import logging
 import os
-import re
 from io import StringIO
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -503,16 +502,6 @@ def test_get_log_file_no_application_label():
     args_dict = {}
     result = get_log_file(args_dict)
     assert result is None
-
-
-def test_get_log_file_with_application_label():
-    """Test get_log_file generates log filename with timestamp."""
-    args_dict = {"application_label": "test_app"}
-    result = get_log_file(args_dict)
-    assert isinstance(result, str)
-    assert result.startswith("test_app_")
-    assert result.endswith(".log")
-    assert re.match(r"test_app_\d{8}T\d{6}Z\.log", result)
 
 
 def test_get_log_file_with_output_path(tmp_path):

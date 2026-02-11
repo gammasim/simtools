@@ -75,15 +75,13 @@ def get_log_file(args_dict):
     """
     if args_dict.get("log_file") is not None:
         return args_dict["log_file"]
-    if args_dict.get("application_label") is None:
+    if args_dict.get("application_label") is None or args_dict.get("output_path") is None:
         return None
 
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     log_file = f"{args_dict['application_label']}_{timestamp}.log"
-    if args_dict.get("output_path"):
-        Path(args_dict["output_path"]).mkdir(parents=True, exist_ok=True)
-        return Path(args_dict["output_path"]) / log_file
-    return log_file
+    Path(args_dict["output_path"]).mkdir(parents=True, exist_ok=True)
+    return Path(args_dict["output_path"]) / log_file
 
 
 class RedactFilter(logging.Filter):
