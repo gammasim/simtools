@@ -200,6 +200,15 @@ def test__get_pulse_shape_string_for_sim_telarray(
     )
 
 
+def _get_mock_param_side_effect_for_test_1(name):
+    """Mock side effect for test 1 in parametrize."""
+    if name == "array_element_position_ground":
+        return [1.0 * u.m, 2.0 * u.m, 3.0 * u.m]
+    if name == "flasher_wavelength":
+        return 450 * u.nm
+    return None
+
+
 def _get_mock_param_side_effect_for_test_3(name):
     """Mock side effect for test 3 in parametrize."""
     if name == "array_element_position_ground":
@@ -228,11 +237,7 @@ def _get_mock_param_side_effect_for_test_3(name):
         (
             {"flasher_photons": 1000000},
             450,
-            lambda name: [1.0 * u.m, 2.0 * u.m, 3.0 * u.m]
-            if name == "array_element_position_ground"
-            else 450 * u.nm
-            if name == "flasher_wavelength"
-            else None,
+            _get_mock_param_side_effect_for_test_1,
             "-x 100.0",
             "-y 200.0",
             "-z 300.0",
