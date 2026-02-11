@@ -567,10 +567,11 @@ class PSFParameterOptimizer:
         current_lr = learning_rate
 
         while iteration < max_iterations:
-            if current_metric <= rmsd_threshold:
+            tolerance = 0.1 * rmsd_threshold
+            if current_metric <= (rmsd_threshold + tolerance):
                 logger.info(
                     f"Optimization converged: RMSD {current_metric:.6f} <= "
-                    f"threshold {rmsd_threshold:.6f}"
+                    f"threshold {rmsd_threshold:.6f} (tolerance {tolerance:.6f})"
                 )
                 break
 
@@ -835,14 +836,10 @@ def get_previous_values(tel_model):
     -------
     dict
         Dictionary containing current values of PSF optimization parameters:
-        - 'mirror_reflection_random_angle': Random reflection angle parameters
         - 'mirror_align_random_horizontal': Horizontal alignment parameters
         - 'mirror_align_random_vertical': Vertical alignment parameters
     """
     return {
-        "mirror_reflection_random_angle": tel_model.get_parameter_value(
-            "mirror_reflection_random_angle"
-        ),
         "mirror_align_random_horizontal": tel_model.get_parameter_value(
             "mirror_align_random_horizontal"
         ),
@@ -1056,13 +1053,7 @@ def _add_units_to_psf_parameters(best_pars):
     """Add astropy units to PSF parameters based on their schemas."""
     psf_pars_with_units = {}
     for param_name, param_values in best_pars.items():
-        if param_name == "mirror_reflection_random_angle":
-            psf_pars_with_units[param_name] = [
-                param_values[0] * u.deg,
-                param_values[1] * u.dimensionless_unscaled,
-                param_values[2] * u.deg,
-            ]
-        elif param_name in ["mirror_align_random_horizontal", "mirror_align_random_vertical"]:
+        if param_name in ["mirror_align_random_horizontal", "mirror_align_random_vertical"]:
             psf_pars_with_units[param_name] = [
                 param_values[0] * u.deg,
                 param_values[1] * u.deg,
