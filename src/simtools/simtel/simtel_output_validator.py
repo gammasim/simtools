@@ -475,22 +475,23 @@ def _item_to_check_from_sim_telarray(file, expected_sim_telarray_output):
         item_to_check[key] = 0
     with SimTelFile(file) as f:
         for event in f:
-            if "pe_sum" in expected_sim_telarray_output:
-                item_to_check["pe_sum"].extend(
-                    event["photoelectron_sums"]["n_pe"][event["photoelectron_sums"]["n_pe"] > 0]
-                )
             if "trigger_time" in expected_sim_telarray_output:
                 item_to_check["trigger_time"].extend(event["trigger_information"]["trigger_times"])
-            if "photons" in expected_sim_telarray_output:
-                item_to_check["photons"].extend(
-                    event["photoelectron_sums"]["photons_atm_qe"][
-                        event["photoelectron_sums"]["photons"] > 0
-                    ]
-                )
+            if event["type"] != "calibration":
+                if "pe_sum" in expected_sim_telarray_output:
+                    item_to_check["pe_sum"].extend(
+                        event["photoelectron_sums"]["n_pe"][event["photoelectron_sums"]["n_pe"] > 0]
+                    )
+                if "photons" in expected_sim_telarray_output:
+                    item_to_check["photons"].extend(
+                        event["photoelectron_sums"]["photons_atm_qe"][
+                            event["photoelectron_sums"]["photons"] > 0
+                        ]
+                    )
+            else:
+                item_to_check["n_calibration_events"] += 1
             if "telescope_events" in event and len(event["telescope_events"]) > 0:
                 item_to_check["n_telescope_events"] += 1
-            if "type" in event and event["type"] == "calibration":
-                item_to_check["n_calibration_events"] += 1
 
     return item_to_check
 

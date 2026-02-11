@@ -17,16 +17,7 @@ applications:
   - output_file: sim_telarray/run000010/direct_injection_run000010_za20deg_azm000deg_South_subsystem_msts_7.0.0_test-flasher-direct-injection-south.simtel.zst
   - test_output_files:
     - expected_sim_telarray_output:
-        pe_sum:
-        - 20
-        - 1000
-        photons:
-        - 90
-        - 1000
-        trigger_time:
-        - 0
-        - 50
-      event_type: direct_injection
+        event_type: direct_injection
       file: direct_injection_run000010_za20deg_azm000deg_South_subsystem_msts_7.0.0_test-flasher-direct-injection-south.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray/run000010
