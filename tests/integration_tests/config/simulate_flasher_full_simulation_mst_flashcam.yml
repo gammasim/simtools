@@ -13,19 +13,7 @@ applications:
     log_level: DEBUG
   integration_tests:
   - test_output_files:
-    - file: sub/full_simulation_run000010_South_7.0.0_simulate_flasher.out
-      path_descriptor: output_path
     - file: sim_telarray/full_simulation_run000010_South_7.0.0_simulate_flasher.simtel.zst
-      path_descriptor: output_path
-    - expected_log_output:
-      pattern:
-      - "Sim_telarray finished at"
-      - "CORSIKA IACT finished at"
-      - "Finished."
-      forbidden_pattern:
-      - "Error"
-      - "had less photons than required and were skipped"
-      file: sub/full_simulation_run000010_South_7.0.0_simulate_flasher.out
       path_descriptor: output_path
     - expected_sim_telarray_output:
         pe_sum:

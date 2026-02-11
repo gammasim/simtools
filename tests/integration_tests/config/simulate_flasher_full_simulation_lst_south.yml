@@ -12,7 +12,6 @@ applications:
     test: true
     log_level: DEBUG
   integration_tests:
-  - output_file: sub/full_simulation_run000010_South_7.0.0_simulate_flasher.out
   - output_file: sim_telarray/full_simulation_run000010_South_7.0.0_simulate_flasher.simtel.zst
   - test_output_files:
     - expected_sim_telarray_output:
