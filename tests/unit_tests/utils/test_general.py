@@ -917,3 +917,29 @@ def test_find_executable_in_dir_not_executable(tmp_test_directory) -> None:
 
     with pytest.raises(ValueError, match=r"Both name and directory must be provided."):
         gen.find_executable_in_dir(None, None)
+
+
+def test_is_safe_tar_member_safe_relative_path() -> None:
+    """Test that safe relative paths are accepted."""
+    assert gen.is_safe_tar_member("logs/test.log.gz")
+    assert gen.is_safe_tar_member("subdir/logs/test.log.gz")
+    assert gen.is_safe_tar_member("test.log")
+
+
+def test_is_safe_tar_member_unsafe_absolute_path() -> None:
+    """Test that absolute paths are rejected."""
+    assert not gen.is_safe_tar_member("/etc/passwd")
+    assert not gen.is_safe_tar_member("/path/to/file.log")
+
+
+def test_is_safe_tar_member_unsafe_traversal() -> None:
+    """Test that parent directory traversal paths are rejected."""
+    assert not gen.is_safe_tar_member("logs/../../../etc/passwd")
+    assert not gen.is_safe_tar_member("../logs/test.log")
+    assert not gen.is_safe_tar_member("path/../../dangerous/file")
+
+
+def test_is_safe_tar_member_unsafe_null_byte() -> None:
+    """Test that paths with null bytes are rejected."""
+    assert not gen.is_safe_tar_member("path\x00withNull")
+    assert not gen.is_safe_tar_member("file.log\x00.exe")
