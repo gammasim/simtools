@@ -943,3 +943,11 @@ def test_is_safe_tar_member_unsafe_null_byte() -> None:
     """Test that paths with null bytes are rejected."""
     assert not gen.is_safe_tar_member("path\x00withNull")
     assert not gen.is_safe_tar_member("file.log\x00.exe")
+
+
+def test_is_safe_tar_member_benign_double_dot() -> None:
+    """Test that benign filenames with '..' in them are accepted."""
+    # These are valid filenames, not path traversal attempts
+    assert gen.is_safe_tar_member("foo..bar.txt")
+    assert gen.is_safe_tar_member("file..name..with..dots.log")
+    assert gen.is_safe_tar_member("version1..0.tar.gz")

@@ -833,7 +833,7 @@ def test__make_light_emission_script(simulator_instance):
         expected = (
             "/mock/simtel/sim_telarray/LightEmission/ff-1m -I. --altitude 2200 "
             "--photons 1000000 -o /output/ff-1m.iact.gz "
-            "| gzip > /output/test_log.log 2>&1\n"
+            "2>&1 | gzip > /output/test_log.log\n"
         )
         assert result == expected
 
@@ -869,7 +869,7 @@ def test__make_light_emission_script(simulator_instance):
             "/mock/simtel/sim_telarray/LightEmission/illuminator-app -h 2200 "
             "-x 100 -y 200 -A /config/dir/atm_profile.dat "
             "-o /output/illuminator-app.iact.gz "
-            "| gzip > /output/test_log.log 2>&1\n"
+            "2>&1 | gzip > /output/test_log.log\n"
         )
         assert result == expected
 
