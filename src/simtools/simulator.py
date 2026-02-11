@@ -418,6 +418,7 @@ class Simulator:
                 expected_mc_events=expected_mc_events,
                 expected_shower_events=expected_shower_events,
                 curved_atmo=_corsika_config.use_curved_atmosphere,
+                allow_for_changes=["nsb_scaling_factor", "stars"],
             )
         if "corsika" in self.simulation_software:
             corsika_output_validator.validate_corsika_output(
