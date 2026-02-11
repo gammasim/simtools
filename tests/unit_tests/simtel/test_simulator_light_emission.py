@@ -200,6 +200,15 @@ def test__get_pulse_shape_string_for_sim_telarray(
     )
 
 
+def _get_mock_param_side_effect_for_test_3(name):
+    """Mock side effect for test 3 in parametrize."""
+    if name == "array_element_position_ground":
+        return [10.0 * u.m, 20.0 * u.m, 30.0 * u.m]
+    if name == "flasher_wavelength":
+        return 500 * u.nm
+    return None
+
+
 @pytest.mark.parametrize(
     (
         "config",
@@ -255,11 +264,7 @@ def test__get_pulse_shape_string_for_sim_telarray(
         (
             {"flasher_photons": 500000, "light_source_position": None},
             500,
-            lambda name: [10.0 * u.m, 20.0 * u.m, 30.0 * u.m]
-            if name == "array_element_position_ground"
-            else 500 * u.nm
-            if name == "flasher_wavelength"
-            else None,
+            _get_mock_param_side_effect_for_test_3,
             "-x 1000.0",
             "-y 2000.0",
             "-z 3000.0",
@@ -290,11 +295,12 @@ def test__add_illuminator_command_options(
         get_param_side_effect
     )
 
-    pointing_vector = (
-        [0.1, 0.2, 0.3]
-        if "light_source_position" not in config
-        else ([0.8, 0.9, 1.0] if config.get("light_source_position") is None else [0.5, 0.6, 0.7])
-    )
+    if "light_source_position" not in config:
+        pointing_vector = [0.1, 0.2, 0.3]
+    elif config.get("light_source_position") is None:
+        pointing_vector = [0.8, 0.9, 1.0]
+    else:
+        pointing_vector = [0.5, 0.6, 0.7]
 
     with (
         patch.object(
@@ -399,7 +405,7 @@ def test__add_flasher_command_options(
         patch.object(
             simulator_instance,
             "_get_angular_distribution_string_for_sim_telarray",
-            return_value="gauss:2.5" if distance == 1200.0 else "uniform",
+            return_value="gauss:2.5" if np.isclose(distance, 1200.0) else "uniform",
         ),
         patch.object(
             simulator_instance,
