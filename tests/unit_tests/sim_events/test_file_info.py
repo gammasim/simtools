@@ -38,7 +38,7 @@ def test_get_simulated_events(sim_telarray_file_gamma):
 def test_get_simulated_events_corsika_iact(corsika_file_gamma):
     # Test CORSIKA IACT file
     n_showers, n_events = get_simulated_events(corsika_file_gamma)
-    assert n_showers > 0
+    assert n_showers == 10
     assert n_events == 0  # CORSIKA IACT files don't have MCEvent objects
 
 
