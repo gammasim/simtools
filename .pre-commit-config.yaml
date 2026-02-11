@@ -54,6 +54,10 @@ repos:
   rev: v2.4.1
   hooks:
   - id: codespell
+    args: [
+      "--skip=tests/resources/example_non_utf-8_file.lis",
+      "--ignore-words-list=als",
+    ]
 # markdownlint
 - repo: https://github.com/igorshubovych/markdownlint-cli
   rev: v0.47.0
