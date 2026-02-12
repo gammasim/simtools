@@ -62,7 +62,7 @@ def test_get_log_excerpt(tmp_test_directory) -> None:
     )
 
 
-def test_file_has_text(tmp_test_directory, caplog, file_has_text) -> None:
+def test_file_has_text(tmp_test_directory, file_has_text) -> None:
     """Test the file_has_text function."""
 
     # Test with file that has text.
@@ -919,7 +919,7 @@ def test_find_executable_in_dir_not_executable(tmp_test_directory) -> None:
         gen.find_executable_in_dir(None, None)
 
 
-def test_get_simtools_log_file_with_file_handler(tmp_test_directory, caplog) -> None:
+def test_get_simtools_log_file_with_file_handler(tmp_test_directory) -> None:
     """Test getting simtools log file when a FileHandler is attached."""
     log_file = tmp_test_directory / "test.log"
 
