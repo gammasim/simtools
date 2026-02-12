@@ -47,6 +47,7 @@ def redact_test_setup():
 
     if handler:
         handler.close()
+        app_context.logger.removeHandler(handler)
 
 
 @pytest.mark.parametrize(
@@ -541,7 +542,9 @@ def test_setup_logging_with_logger_name():
 def test_setup_logging_with_file_handler(tmp_path):
     """Test setup_logging creates and writes to file handler."""
     log_file = tmp_path / "test.log"
-    logger = setup_logging(log_level="INFO", log_file=str(log_file), logger_name="test_file_handler")
+    logger = setup_logging(
+        log_level="INFO", log_file=str(log_file), logger_name="test_file_handler"
+    )
     try:
         logger.info("Test message")
 
@@ -554,6 +557,8 @@ def test_setup_logging_with_file_handler(tmp_path):
         for handler in list(logger.handlers):
             handler.close()
             logger.removeHandler(handler)
+
+
 def test_setup_logging_handlers_have_formatters():
     """Test that setup_logging creates handlers with formatters."""
     logger = setup_logging(logger_name="test_format")
