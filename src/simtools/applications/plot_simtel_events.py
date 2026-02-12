@@ -73,8 +73,6 @@ Examples
 
 """
 
-from pathlib import Path
-
 import simtools.utils.general as gen
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
@@ -91,9 +89,8 @@ def _parse():
     )
 
     config.parser.add_argument(
-        "--simtel_files",
-        help="One or more sim_telarray files (.simtel.zst)",
-        nargs="+",
+        "--simtel_file",
+        help="Input sim_telarray file (.simtel.zst)",
         required=True,
     )
     config.parser.add_argument(
@@ -147,10 +144,11 @@ def _parse():
         help="Optional distance annotation for event_image (same units as input expects)",
     )
     config.parser.add_argument(
-        "--event_index",
+        "--event_id",
         type=int,
+        nargs="+",
         default=None,
-        help="0-based index of the event to plot; default is the first event",
+        help="Event ID(s) of the events to be plotted",
     )
     config.parser.add_argument(
         "--save_pngs",
@@ -165,17 +163,11 @@ def _parse():
 
 
 def main():
-    """Generate plots from sim_telarray files."""
+    """Generate plots from sim_telarray file."""
     app_context = startup_application(_parse)
 
-    simtel_files = [
-        Path(p).expanduser() for p in gen.ensure_iterable(app_context.args["simtel_files"])
-    ]
     plots = list(gen.ensure_iterable(app_context.args.get("plots")))
-
-    generate_and_save_plots(
-        simtel_files=simtel_files, plots=plots, args=app_context.args, ioh=app_context.io_handler
-    )
+    generate_and_save_plots(plots=plots, args=app_context.args, ioh=app_context.io_handler)
 
 
 if __name__ == "__main__":
