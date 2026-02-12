@@ -51,10 +51,11 @@ def read_events(file_name, telescope, event_id, max_events=1):
             return None, None, None
 
         for i, event in enumerate(f):
-            if i >= event_id:
-                events.append(event["telescope_events"][tel_id])
-                event_ids.append(i)
-            if len(events) >= max_events:
-                break
+            if tel_id in event["telescope_events"]:
+                if i >= event_id:
+                    events.append(event["telescope_events"][tel_id])
+                    event_ids.append(i)
+                if len(events) >= max_events:
+                    break
 
     return event_ids, tel_desc, events
