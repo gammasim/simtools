@@ -162,7 +162,7 @@ class CommandLineParser(argparse.ArgumentParser):
             "--log_file",
             help="log file path",
             required=False,
-            type=str,
+            type=Path,
         )
         _job_group.add_argument(
             "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"

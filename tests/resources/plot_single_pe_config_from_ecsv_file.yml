@@ -15,7 +15,7 @@ plot:
       column_x: 'amplitude'
       column_y: 'frequency (prompt+afterpulsing)'
     - file_name: tests/resources/Afterpulsing-probability-with-uncertainties.ecsv
-      label: 'LST-Afterpulsing-with-Errors'
+      label: 'LST-Afterpulsing-with-Uncertainties'
       column_x: 'amplitude'
       column_y: 'frequency (afterpulsing)'
       column_y_err: 'frequency stdev (afterpulsing)'

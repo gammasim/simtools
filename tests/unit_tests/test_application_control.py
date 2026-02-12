@@ -541,17 +541,19 @@ def test_setup_logging_with_logger_name():
 def test_setup_logging_with_file_handler(tmp_path):
     """Test setup_logging creates and writes to file handler."""
     log_file = tmp_path / "test.log"
-    logger = setup_logging(log_level="INFO", log_file=str(log_file))
+    logger = setup_logging(log_level="INFO", log_file=str(log_file), logger_name="test_file_handler")
+    try:
+        logger.info("Test message")
 
-    logger.info("Test message")
-
-    file_handlers = [h for h in logger.handlers if isinstance(h, logging.FileHandler)]
-    assert len(file_handlers) > 0
-    assert file_handlers[0].baseFilename == str(log_file)
-    assert log_file.exists()
-    assert "Test message" in log_file.read_text()
-
-
+        file_handlers = [h for h in logger.handlers if isinstance(h, logging.FileHandler)]
+        assert len(file_handlers) > 0
+        assert file_handlers[0].baseFilename == str(log_file)
+        assert log_file.exists()
+        assert "Test message" in log_file.read_text()
+    finally:
+        for handler in list(logger.handlers):
+            handler.close()
+            logger.removeHandler(handler)
 def test_setup_logging_handlers_have_formatters():
     """Test that setup_logging creates handlers with formatters."""
     logger = setup_logging(logger_name="test_format")
