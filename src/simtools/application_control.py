@@ -29,6 +29,9 @@ def setup_logging(logger_name=None, log_level="INFO", log_file=None):
         Name for the logger. If None, uses the root logger. Default is None.
     log_level : str, optional
         Logging level as a string (e.g., "DEBUG", "INFO"). Default is "INFO".
+    log_file : str or pathlib.Path, optional
+        Path to a log file. If provided, a file handler is added and log messages
+        are written to this file. If None, logging to file is disabled. Default is None.
     """
     if logger_name:
         logger = logging.getLogger(logger_name)
@@ -51,12 +54,15 @@ def setup_logging(logger_name=None, log_level="INFO", log_file=None):
 
     # 3. File Handler
     if log_file:
+        log_file_path = Path(log_file)
+        if log_file_path.parent:
+            log_file_path.parent.mkdir(parents=True, exist_ok=True)
         file_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-        file_handler = logging.FileHandler(log_file)
+        file_handler = logging.FileHandler(log_file_path)
         file_handler.setFormatter(file_format)
         file_handler.addFilter(redact_filter)
         logger.addHandler(file_handler)
-        logging.info(f"Log messages will be written to: {log_file}")
+        logging.info(f"Log messages will be written to: {log_file_path}")
 
     return logger
 
