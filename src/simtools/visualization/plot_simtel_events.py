@@ -56,6 +56,7 @@ def generate_and_save_plots(plots, args, ioh):
         file_name=args.get("simtel_file", None),
         telescope=args.get("telescope", None),
         event_ids=gen.ensure_iterable(args.get("event_id", None)),
+        max_events=args.get("max_events", None),
     )
     output_file = plotter.make_output_paths(ioh, args.get("output_file"))
     plotter.plot(
@@ -90,15 +91,18 @@ class PlotSimtelEvent:
         Path to the sim_telarray file.
     telescope : str
         Telescope name or ID to process.
-    event_ids : int
-        IDs of the event to process.
+    event_ids : int or list of int, optional
+        IDs of the event(s) to process.
+    max_events : int, optional
+        Maximum number of events to process.
     """
 
-    def __init__(self, file_name, telescope, event_ids):
+    def __init__(self, file_name, telescope, event_ids=None, max_events=None):
         """Initialize plotter for a single event."""
         self.file_name = Path(file_name) if file_name else None
         self.telescope = telescope
         self.event_ids = event_ids
+        self.max_events = max_events
         self.figures = []
         self.camera = None
 
@@ -111,7 +115,11 @@ class PlotSimtelEvent:
         Calculates pedestals, integrated image, time axis, and defines camera model.
         """
         _event_index, tel_desc, _events = read_events(
-            self.file_name, self.telescope, self.event_ids, max_events=1
+            self.file_name,
+            self.telescope,
+            self.event_ids,
+            max_events=self.max_events,
+            verbose=True,
         )
         if not _events:
             raise ValueError(f"No events read from file {self.file_name}")
@@ -176,8 +184,8 @@ class PlotSimtelEvent:
         """
         plots = self._plots_to_run(plots)
 
-        for event_index in self.event_data:
-            for plot_name in plots:
+        for plot_name in plots:
+            for event_index in self.event_data:
                 entry = self._plot_definitions.get(plot_name)
                 if entry is None:
                     _logger.warning("Unknown plot selection '%s'", plot_name)
@@ -192,7 +200,7 @@ class PlotSimtelEvent:
                 if save_png:
                     save_figure(
                         fig,
-                        output_file.with_name(f"{plot_name}.png"),
+                        output_file.with_name(f"{plot_name}_{event_index}.png"),
                         figure_format=["png"],
                         dpi=int(dpi),
                     )

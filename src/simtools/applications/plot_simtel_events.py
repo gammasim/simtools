@@ -151,6 +151,12 @@ def _parse():
         help="Event ID(s) of the events to be plotted",
     )
     config.parser.add_argument(
+        "--max_events",
+        type=int,
+        default=1,
+        help="Maximum number of events to process",
+    )
+    config.parser.add_argument(
         "--save_pngs",
         action="store_true",
         help="Also save individual PNG images per plot",
