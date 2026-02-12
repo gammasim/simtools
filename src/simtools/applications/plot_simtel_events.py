@@ -108,7 +108,7 @@ def _parse():
         "--n_pixels", type=int, default=3, help="For time_traces: number of pixel traces"
     )
     config.parser.add_argument(
-        "--pixel_step", type=int, default=100, help="Step between pixel ids for step plots"
+        "--pixel_step", type=int, default=10, help="Step between pixel ids for step plots"
     )
     config.parser.add_argument(
         "--max_pixels", type=int, default=None, help="Cap number of pixels for step traces"
