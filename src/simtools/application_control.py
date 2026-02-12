@@ -62,7 +62,7 @@ def setup_logging(logger_name=None, log_level="INFO", log_file=None):
         file_handler.setFormatter(file_format)
         file_handler.addFilter(redact_filter)
         logger.addHandler(file_handler)
-        logging.info(f"Log messages will be written to: {log_file_path}")
+        logger.info(f"Log messages will be written to: {log_file_path}")
 
     return logger
 
