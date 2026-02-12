@@ -80,16 +80,18 @@ def mock_plotter(mock_event_data, mock_camera):
 
 def test_plot_simtel_event_init(mock_plotter):
     assert mock_plotter.telescope == "LSTN-01"
-    assert mock_plotter.event_index == 0
-    assert mock_plotter.n_pixels == 100
-    assert mock_plotter.n_samples == 50
-    assert mock_plotter.adc_samples.shape == (100, 50)
-    assert mock_plotter.pedestals.shape == (100,)
-    assert mock_plotter.image.shape == (100,)
+    assert mock_plotter.event_ids == 0
+    assert 0 in mock_plotter.event_data
+    event = mock_plotter.event_data[0]
+    assert event.n_pixels == 100
+    assert event.n_samples == 50
+    assert event.adc_samples.shape == (100, 50)
+    assert event.pedestals.shape == (100,)
+    assert event.image.shape == (100,)
 
 
 def test_make_title(mock_plotter):
-    title = mock_plotter._make_title("test plot")
+    title = mock_plotter._make_title("test plot", 0)
     assert "LSTN-01" in title
     assert "test plot" in title
     assert "event 0" in title
@@ -119,49 +121,51 @@ def test_plots_to_run_specific(mock_plotter):
 
 
 def test_plot_time_traces(mock_plotter):
-    fig = mock_plotter.plot_time_traces(n_pixels=3)
+    fig = mock_plotter.plot_time_traces(event_index=0, n_pixels=3)
     assert fig is not None
     assert len(fig.axes) == 1
     plt.close(fig)
 
 
 def test_plot_waveforms(mock_plotter):
-    fig = mock_plotter.plot_waveforms()
+    fig = mock_plotter.plot_waveforms(event_index=0)
     assert fig is not None
     plt.close(fig)
 
 
 def test_plot_waveforms_with_vmax(mock_plotter):
-    fig = mock_plotter.plot_waveforms(vmax=150)
+    fig = mock_plotter.plot_waveforms(event_index=0, vmax=150)
     assert fig is not None
     plt.close(fig)
 
 
 def test_plot_waveforms_with_pixel_step(mock_plotter):
-    fig = mock_plotter.plot_waveforms(pixel_step=5)
+    fig = mock_plotter.plot_waveforms(event_index=0, pixel_step=5)
     assert fig is not None
     plt.close(fig)
 
 
 def test_plot_step_traces(mock_plotter):
-    fig = mock_plotter.plot_step_traces(pixel_step=50)
+    fig = mock_plotter.plot_step_traces(event_index=0, pixel_step=50)
     assert fig is not None
     plt.close(fig)
 
 
 def test_plot_step_traces_with_max_pixels(mock_plotter):
-    fig = mock_plotter.plot_step_traces(pixel_step=10, max_pixels=3)
+    fig = mock_plotter.plot_step_traces(event_index=0, pixel_step=10, max_pixels=3)
     assert fig is not None
     plt.close(fig)
 
 
 def test_histogram_edges_default(mock_plotter):
-    edges = mock_plotter._histogram_edges(None)
-    assert len(edges) == mock_plotter.n_samples + 1
+    event = mock_plotter.event_data[0]
+    edges = mock_plotter._histogram_edges(None, event.n_samples)
+    assert len(edges) == event.n_samples + 1
 
 
 def test_histogram_edges_with_bins(mock_plotter):
-    edges = mock_plotter._histogram_edges(20)
+    event = mock_plotter.event_data[0]
+    edges = mock_plotter._histogram_edges(20, event.n_samples)
     assert len(edges) == 21
 
 
@@ -209,10 +213,10 @@ def test_plot_choices_constant():
 def test_plot_pedestals(mock_plotter):
     """Test pedestal plot generation."""
     rng = np.random.default_rng(42)
-    # Ensure pedestals have variation to avoid xlim warning
-    mock_plotter.pedestals = rng.uniform(50, 70, mock_plotter.n_pixels)
+    event = mock_plotter.event_data[0]
+    event.pedestals = rng.uniform(50, 70, event.n_pixels)
     with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
-        fig = mock_plotter.plot_pedestals()
+        fig = mock_plotter.plot_pedestals(event_index=0)
         assert fig is not None
         plt.close(fig)
 
@@ -220,10 +224,10 @@ def test_plot_pedestals(mock_plotter):
 def test_plot_signals(mock_plotter):
     """Test signal plot generation."""
     rng = np.random.default_rng(42)
-    # Ensure signals have variation
-    mock_plotter.image = rng.uniform(100, 500, mock_plotter.n_pixels)
+    event = mock_plotter.event_data[0]
+    event.image = rng.uniform(100, 500, event.n_pixels)
     with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
-        fig = mock_plotter.plot_signals()
+        fig = mock_plotter.plot_signals(event_index=0)
         assert fig is not None
         plt.close(fig)
 
@@ -231,7 +235,7 @@ def test_plot_signals(mock_plotter):
 def test_plot_peak_timing_with_timing_bins(mock_plotter):
     """Test peak timing with custom timing bins."""
     with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
-        fig = mock_plotter.plot_peak_timing(sum_threshold=5.0, timing_bins=25)
+        fig = mock_plotter.plot_peak_timing(event_index=0, sum_threshold=5.0, timing_bins=25)
         assert fig is not None
         plt.close(fig)
 
@@ -239,13 +243,14 @@ def test_plot_peak_timing_with_timing_bins(mock_plotter):
 def test_plot_camera_image_and_histogram(mock_plotter):
     """Test camera image and histogram plotting."""
     rng = np.random.default_rng(42)
+    event = mock_plotter.event_data[0]
     with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
-        values = rng.uniform(0, 100, mock_plotter.n_pixels)
-        pix_ids = np.arange(mock_plotter.n_pixels)
+        values = rng.uniform(0, 100, event.n_pixels)
+        pix_ids = np.arange(event.n_pixels)
         edges = np.linspace(0, 100, 50)
 
         fig = mock_plotter._plot_camera_image_and_histogram(
-            values, pix_ids, mock_plotter.n_pixels, edges, "test", "count"
+            values, pix_ids, event.n_pixels, edges, "test", "count", event_index=0
         )
         assert fig is not None
         assert len(fig.axes) == 2
@@ -318,12 +323,13 @@ def test_read_and_init_event_no_events():
 
 def test_generate_and_save_plots(mock_event_data, mock_camera, io_handler, tmp_path):
     """Test generate_and_save_plots function."""
-    simtel_files = [tmp_path / "test.simtel"]
-    simtel_files[0].touch()
+    simtel_file = tmp_path / "test.simtel"
+    simtel_file.touch()
 
     args = {
+        "simtel_file": str(simtel_file),
         "telescope": "LSTN-01",
-        "event_index": 0,
+        "event_id": 0,
         "output_file": "test_output",
         "save_pngs": False,
         "dpi": 300,
@@ -339,9 +345,7 @@ def test_generate_and_save_plots(mock_event_data, mock_camera, io_handler, tmp_p
                 with mock.patch(
                     "simtools.visualization.plot_simtel_events.MetadataCollector.dump"
                 ) as mock_dump:
-                    plot_simtel_events.generate_and_save_plots(
-                        simtel_files, ["time_traces"], args, io_handler
-                    )
+                    plot_simtel_events.generate_and_save_plots(["time_traces"], args, io_handler)
                     mock_save.assert_called_once()
                     mock_dump.assert_called_once()
 
@@ -350,12 +354,13 @@ def test_generate_and_save_plots_multiple_events(
     mock_event_data, mock_camera, io_handler, tmp_path
 ):
     """Test generate_and_save_plots with multiple events."""
-    simtel_files = [tmp_path / "test.simtel"]
-    simtel_files[0].touch()
+    simtel_file = tmp_path / "test.simtel"
+    simtel_file.touch()
 
     args = {
+        "simtel_file": str(simtel_file),
         "telescope": "LSTN-01",
-        "event_index": [0, 1],
+        "event_id": [0, 1],
         "output_file": "test_output",
         "save_pngs": True,
         "dpi": 150,
@@ -372,8 +377,6 @@ def test_generate_and_save_plots_multiple_events(
                     with mock.patch(
                         "simtools.visualization.plot_simtel_events.MetadataCollector.dump"
                     ) as mock_dump:
-                        plot_simtel_events.generate_and_save_plots(
-                            simtel_files, ["waveforms"], args, io_handler
-                        )
-                        assert mock_save_doc.call_count == 2
-                        assert mock_dump.call_count == 2
+                        plot_simtel_events.generate_and_save_plots(["waveforms"], args, io_handler)
+                        mock_save_doc.assert_called_once()
+                        mock_dump.assert_called_once()
