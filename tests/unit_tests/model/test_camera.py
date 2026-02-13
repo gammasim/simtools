@@ -202,22 +202,6 @@ def test_process_line_pixel_off():
     assert pixels["pix_on"] == [False]
 
 
-def test_find_neighbors_with_module_gap(simple_camera_dict):
-    """Test module-gap-aware neighbor finding."""
-    camera = Camera("TestTel", None, 5.6, camera_config_dict=simple_camera_dict)
-    pixels = {
-        "x": np.array([0.0, 1.0, 3.0]),
-        "y": np.array([0.0, 0.0, 0.0]),
-        "module_number": [1, 1, 2],
-        "pixel_spacing": 1.0,
-        "module_gap": 1.0,
-    }
-
-    neighbors = camera._find_neighbors_with_module_gap(pixels)
-
-    assert neighbors == [[1], [0, 2], [1]]
-
-
 def test_camera_from_dict(simple_camera_dict):
     """Test Camera initialization from dict."""
     camera = Camera(

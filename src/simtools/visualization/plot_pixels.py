@@ -100,7 +100,7 @@ def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
     camera = Camera(
         telescope_name=telescope_model_name,
         camera_config_file=dat_file_path,
-        focal_length=kwargs.get("focal_length", 1.0),
+        focal_length=kwargs.get("focal_length", 1.0),  # 1 used as placeholder, not relevant
     )
 
     return _create_pixel_plot(
