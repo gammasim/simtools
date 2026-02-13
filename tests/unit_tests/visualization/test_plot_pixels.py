@@ -94,6 +94,8 @@ def test_configure_plot_calls_setup():
         "rotate_angle": 0.0,
     }
     ax = mock.MagicMock()
+    ax.get_xlim.return_value = (-0.5, 1.5)
+    ax.get_ylim.return_value = (-0.5, 1.5)
 
     with mock.patch(
         "simtools.visualization.plot_pixels.setup_camera_axis_properties"
