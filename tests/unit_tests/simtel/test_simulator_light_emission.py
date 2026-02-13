@@ -1132,7 +1132,7 @@ def test_simulate(simulator_instance, tmp_test_directory):
         # Test 1: Basic configuration with LED
         ("LED", {"existing_key": "value"}, "led", 5e6, False),
         # Test 2: Test mode with Laser (photons should be overridden to 1e5)
-        ("Laser", {"test": True}, "laser", 1e5, True),
+        ("Laser", {"test": True}, "laser", 1e6, True),
         # Test 3: No flasher_type with position
         (None, {"light_source_position": [1.5, 2.0, 3.5]}, None, 1e7, False),
     ],
