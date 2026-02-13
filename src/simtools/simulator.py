@@ -313,6 +313,7 @@ class Simulator:
         )
         output_files = self.get_files(file_type="sim_telarray_output")
         log_files = self.get_files(file_type="sim_telarray_log")
+        simtools_log_file = general.get_simtools_log_file()
         histogram_files = self.get_files(file_type="sim_telarray_histogram")
         reduced_event_files = (
             self.get_files(file_type="sim_telarray_event_data")
@@ -344,6 +345,9 @@ class Simulator:
                 + [str(self.get_files(file_type="corsika_log"))]
                 + list(general.ensure_iterable(model.pack_model_files()))
             )
+            # simtools log file duplicated for each model version
+            if simtools_log_file and Path(simtools_log_file).exists():
+                files_to_tar.append(str(simtools_log_file))
             general.pack_tar_file(tar_path, files_to_tar)
 
         for file_to_move in output_files + reduced_event_files:
