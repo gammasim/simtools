@@ -3,14 +3,18 @@
 import logging
 
 import matplotlib.colors as mcolors
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.collections import PatchCollection
 
-import simtools.visualization.legend_handlers as leg_h
 from simtools.model.model_utils import is_two_mirror_telescope
 from simtools.utils import names
+from simtools.visualization.camera_plot_utils import (
+    add_pixel_legend,
+    add_pixel_patch_collections,
+    create_pixel_patches_by_type,
+    pixel_shape,
+    setup_camera_axis_properties,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +47,7 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     if not is_two_mirror_telescope(camera.telescope_name) and not camera_in_sky_coor:
         camera.pixels["y"] = [(-1) * y_val for y_val in camera.pixels["y"]]
 
-    on_pixels, edge_pixels, off_pixels = _create_pixel_patches_by_type(camera)
+    on_pixels, edge_pixels, off_pixels = create_pixel_patches_by_type(camera)
     for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
         if camera.pixels["pix_id"][i_pix] < pixels_id_to_print + 1:
             font_size = (
@@ -52,45 +56,8 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
             plt.text(
                 x, y, camera.pixels["pix_id"][i_pix], ha="center", va="center", fontsize=font_size
             )
-    ax.add_collection(
-        PatchCollection(on_pixels, facecolor="none", edgecolor="black", linewidth=0.2)
-    )
-    ax.add_collection(
-        PatchCollection(
-            edge_pixels,
-            facecolor=(*mcolors.to_rgb("brown"), 0.5),
-            edgecolor=(*mcolors.to_rgb("black"), 1),
-            linewidth=0.2,
-        )
-    )
-    ax.add_collection(
-        PatchCollection(off_pixels, facecolor="black", edgecolor="black", linewidth=0.2)
-    )
-    legend_objects = [leg_h.PixelObject(), leg_h.EdgePixelObject()]
-    legend_labels = ["Pixel", "Edge pixel"]
-    legend_handler_map = {
-        leg_h.PixelObject: (
-            leg_h.HexPixelHandler()
-            if isinstance(on_pixels[0], mpatches.RegularPolygon)
-            else leg_h.SquarePixelHandler()
-        ),
-        leg_h.EdgePixelObject: (
-            leg_h.HexEdgePixelHandler()
-            if isinstance(on_pixels[0], mpatches.RegularPolygon)
-            else leg_h.SquareEdgePixelHandler()
-        ),
-        leg_h.OffPixelObject: (
-            leg_h.HexOffPixelHandler()
-            if isinstance(on_pixels[0], mpatches.RegularPolygon)
-            else leg_h.SquareOffPixelHandler()
-        ),
-    }
-
-    if len(off_pixels) > 0:
-        legend_objects.append(leg_h.OffPixelObject())
-        legend_labels.append("Disabled pixel")
-
-    _setup_camera_axis_properties(ax, camera, grid=True, axis_below=True, y_scale_factor=1.42)
+    add_pixel_patch_collections(ax, on_pixels, edge_pixels, off_pixels)
+    setup_camera_axis_properties(ax, camera, grid=True, axis_below=True, y_scale_factor=1.42)
     plt.xlabel("Horizontal scale [cm]", fontsize=18, labelpad=0)
     plt.ylabel("Vertical scale [cm]", fontsize=18, labelpad=0)
     ax.set_title(
@@ -134,13 +101,7 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
         color="black",
         fontsize=12,
     )
-    plt.legend(
-        legend_objects,
-        legend_labels,
-        handler_map=legend_handler_map,
-        prop={"size": 11},
-        loc="upper right",
-    )
+    add_pixel_legend(ax, on_pixels, off_pixels)
     ax.set_aspect("equal", "datalim")
     plt.tight_layout()
 
@@ -199,7 +160,7 @@ def plot_pixel_layout_with_image(
     colors, cmap, norm_obj = _color_normalization(image, colormap, norm, vmin, vmax)
 
     for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
-        shape = _pixel_shape(camera, x, y)
+        shape = pixel_shape(camera, x, y)
 
         if colors is not None and image is not None:
             facecolor = colors[i_pix]
@@ -225,7 +186,7 @@ def plot_pixel_layout_with_image(
         sm.set_array([])
         cbar = fig.colorbar(sm, ax=ax, fraction=0.02, pad=0.05)
         cbar.set_label(color_bar_label, fontsize=10)
-    _setup_camera_axis_properties(ax, camera, grid=True, grid_alpha=0.3, padding=1)
+    setup_camera_axis_properties(ax, camera, grid=True, grid_alpha=0.3, padding=1)
     ax.set_xlabel("x [cm]", fontsize=12)
     ax.set_ylabel("y [cm]", fontsize=12)
 
@@ -270,123 +231,6 @@ def _color_normalization(image, color_map, norm_type="lin", vmin=None, vmax=None
     colors = cmap(normalized_image)
 
     return colors, cmap, norm
-
-
-def _create_pixel_patches_by_type(camera):
-    """
-    Create pixel patches categorized by type (on, edge, off).
-
-    Parameters
-    ----------
-    camera : Camera
-        Camera object.
-
-    Returns
-    -------
-    on_pixels : list
-        List of on pixel patches.
-    edge_pixels : list
-        List of edge pixel patches.
-    off_pixels : list
-        List of off pixel patches.
-    """
-    on_pixels, edge_pixels, off_pixels = [], [], []
-
-    for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
-        shape = _pixel_shape(camera, x, y)
-        if camera.pixels["pix_on"][i_pix]:
-            neighbors = camera.get_neighbor_pixels()[i_pix]
-            if len(neighbors) < 6 and camera.pixels["pixel_shape"] in (1, 3):
-                edge_pixels.append(shape)
-            elif len(neighbors) < 4 and camera.pixels["pixel_shape"] == 2:
-                edge_pixels.append(shape)
-            else:
-                on_pixels.append(shape)
-        else:
-            off_pixels.append(shape)
-
-    return on_pixels, edge_pixels, off_pixels
-
-
-def _setup_camera_axis_properties(
-    ax, camera, grid=False, axis_below=False, grid_alpha=None, y_scale_factor=1.0, padding=0
-):
-    """
-    Set up common axis properties for camera plots.
-
-    Parameters
-    ----------
-    ax : plt.Axes
-        Axes to configure.
-    camera : Camera
-        Camera object containing pixel data.
-    grid : bool, optional
-        Whether to show grid (default False).
-    axis_below : bool, optional
-        Whether to place grid below plot elements (default False).
-    grid_alpha : float, optional
-        Grid transparency (None uses default).
-    y_scale_factor : float, optional
-        Scale factor for y-axis limits (default 1.0).
-    padding : float, optional
-        Extra padding around pixel layout in cm (default 0).
-    """
-    x_min, x_max = min(camera.pixels["x"]), max(camera.pixels["x"])
-    y_min, y_max = min(camera.pixels["y"]), max(camera.pixels["y"])
-
-    if y_scale_factor > 1.0:
-        ax.axis([x_min, x_max, y_min * y_scale_factor, y_max * y_scale_factor])
-    else:
-        ax.set_xlim(x_min - padding, x_max + padding)
-        ax.set_ylim(y_min - padding, y_max + padding)
-
-    ax.set_aspect("equal", "datalim")
-
-    if grid:
-        if grid_alpha is not None:
-            ax.grid(True, alpha=grid_alpha)
-        else:
-            ax.grid(True)
-
-    if axis_below:
-        ax.set_axisbelow(True)
-
-
-def _pixel_shape(camera, x, y):
-    """
-    Return the shape of the pixel.
-
-    Parameters
-    ----------
-    camera : Camera
-        Camera object.
-    x : float
-        x-coordinate of the pixel.
-    y : float
-        y-coordinate of the pixel.
-
-    Returns
-    -------
-    shape : matplotlib.patches.Patch
-        Shape of the pixel.
-    """
-    if camera.pixels["pixel_shape"] in (1, 3):
-        return mpatches.RegularPolygon(
-            (x, y),
-            numVertices=6,
-            radius=camera.pixels["pixel_diameter"] / np.sqrt(3),
-            orientation=np.deg2rad(camera.pixels["orientation"]),
-        )
-    if camera.pixels["pixel_shape"] == 2:
-        return mpatches.Rectangle(
-            (
-                x - camera.pixels["pixel_diameter"] / 2.0,
-                y - camera.pixels["pixel_diameter"] / 2.0,
-            ),
-            width=camera.pixels["pixel_diameter"],
-            height=camera.pixels["pixel_diameter"],
-        )
-    return None
 
 
 def _plot_axes_def(camera, plot, rotate_angle):
