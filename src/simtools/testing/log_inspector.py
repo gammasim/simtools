@@ -19,6 +19,11 @@ IGNORE_PATTERNS = [
     re.compile(r"Falling back to 'utf-8' with errors='ignore'", re.IGNORECASE),
     re.compile(r"Failed to get user name[^\n]*setting it to UNKNOWN_USER", re.IGNORECASE),
     re.compile(r"adjust_text::Error", re.IGNORECASE),
+    re.compile(r"Job output/error streams", re.IGNORECASE),
+    re.compile(
+        r"'[A-Za-z0-9_]+_error'", re.IGNORECASE
+    ),  # typically model parameters like 'transit_time_error'
+    re.compile(r"INFO:", re.IGNORECASE),
 ]
 
 
