@@ -390,6 +390,24 @@ def get_file_age(file_path):
     return (current_time - modification_time) / 60
 
 
+def get_simtools_log_file():
+    """
+    Get log file for simtools applications (attached to logger).
+
+    Returns
+    -------
+    str or None
+        Log file if attached to logger, otherwise None.
+    """
+    tmp_logger = _logger
+    while tmp_logger:
+        for h in tmp_logger.handlers:
+            if isinstance(h, logging.FileHandler):
+                return h.baseFilename
+        tmp_logger = tmp_logger.parent
+    return None
+
+
 def _process_dict_keys(input_dict, case_func):
     """
     Process dictionary keys recursively.
