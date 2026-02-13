@@ -122,6 +122,8 @@ class Camera:
         pixels["y"] = camera_config_dict["pixel_y"]
         pixels["pix_id"] = list(range(len(pixels["x"])))
         pixels["pix_on"] = np.ones(len(pixels["x"]), dtype=int).tolist()
+        pixels["module_number"] = None
+        pixels["module_gap"] = None
 
         Camera.validate_pixels(pixels, "from camera dict")
 
@@ -141,6 +143,8 @@ class Camera:
             "pixel_diameter": 9999,
             "pixel_shape": 9999,
             "pixel_spacing": 9999,
+            "module_gap": None,
+            "module_number": None,
             "lightguide_efficiency_angle_file": "none",
             "lightguide_efficiency_wavelength_file": "none",
             "rotate_angle": 0,
@@ -164,7 +168,13 @@ class Camera:
         """
         pix_info = line.split()
 
-        if line.startswith("PixType"):
+        if "Pixel spacing is" in line:
+            pixels["pixel_spacing"] = float(line.split("spacing is")[1].strip().split()[0])
+
+        elif "Between modules is an additional gap of" in line:
+            pixels["module_gap"] = float(line.split("gap of")[1].strip().split()[0])
+
+        elif line.startswith("PixType"):
             pixels["pixel_shape"] = int(pix_info[5].strip())
             pixels["pixel_diameter"] = float(pix_info[6].strip())
             pixels["lightguide_efficiency_angle_file"] = pix_info[8].strip().replace('"', "")
@@ -181,6 +191,11 @@ class Camera:
             pixels["x"].append(float(pix_info[3].strip()))
             pixels["y"].append(float(pix_info[4].strip()))
             pixels["pix_id"].append(int(pix_info[1].strip()))
+
+            if len(pix_info) > 5:
+                if pixels["module_number"] is None:
+                    pixels["module_number"] = []
+                pixels["module_number"].append(int(float(pix_info[5].strip())))
 
             if len(pix_info) > 9:
                 pixels["pix_on"].append(int(pix_info[9].strip()) != 0)
@@ -446,6 +461,51 @@ class Camera:
         neighbors = tree.query_ball_tree(tree, radius)
         return [list(np.setdiff1d(neigh, [i])) for i, neigh in enumerate(neighbors)]
 
+    def _find_neighbors_with_module_gap(self, pixels: dict) -> list[list[int]] | None:
+        """
+        Find neighbors using pixel spacing and module gap information when available.
+
+        Parameters
+        ----------
+        pixels : dict
+            Pixel dictionary containing positions and module information.
+
+        Returns
+        -------
+        list of lists or None
+            Neighbor indices per pixel, or None if module information is missing.
+        """
+        module_numbers = pixels.get("module_number")
+        if module_numbers is None or len(module_numbers) != len(pixels["x"]):
+            return None
+
+        pixel_spacing = pixels["pixel_spacing"]
+        if pixel_spacing == 9999:
+            pixel_spacing = pixels["pixel_diameter"]
+        module_gap = pixels["module_gap"] if pixels["module_gap"] is not None else 0.0
+
+        tolerance = 1e-6
+        radius = (pixel_spacing + module_gap) * 1.2 + tolerance
+        candidates = self._find_neighbors(pixels["x"], pixels["y"], radius)
+
+        neighbors = []
+        for i_pix, nn in enumerate(candidates):
+            filtered_neighbors = []
+            for j_pix in nn:
+                if i_pix == j_pix:
+                    continue
+                dist = np.sqrt(
+                    (pixels["x"][i_pix] - pixels["x"][j_pix]) ** 2
+                    + (pixels["y"][i_pix] - pixels["y"][j_pix]) ** 2
+                )
+                gap = 0.0 if module_numbers[i_pix] == module_numbers[j_pix] else module_gap
+                max_distance = (pixel_spacing + gap) * 1.2 + tolerance
+                if dist <= max_distance:
+                    filtered_neighbors.append(j_pix)
+            neighbors.append(filtered_neighbors)
+
+        return neighbors
+
     def _find_adjacent_neighbor_pixels(
         self, x_pos: np.ndarray, y_pos: np.ndarray, radius: float, row_column_dist: float
     ) -> list[list[int]]:
@@ -546,7 +606,13 @@ class Camera:
         """
         self._logger.debug("Searching for neighbor pixels")
 
-        if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
+        module_neighbors = None
+        if pixels["pixel_shape"] in (1, 3):
+            module_neighbors = self._find_neighbors_with_module_gap(pixels)
+
+        if module_neighbors is not None:
+            self._neighbors = module_neighbors
+        elif pixels["pixel_shape"] in (1, 3):
             self._neighbors = self._find_neighbors(
                 pixels["x"],
                 pixels["y"],
