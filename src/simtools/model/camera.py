@@ -468,9 +468,11 @@ class Camera:
         if abs(module_gap) < 1e-6:
             return None
 
-        pixel_spacing = pixels.get("pixel_spacing", pixels["pixel_diameter"])
+        pixel_spacing = pixels.get("pixel_spacing") or pixels.get("pixel_diameter")
+        if pixel_spacing is None:
+            return None
         if pixel_spacing == 9999:
-            pixel_spacing = pixels["pixel_diameter"]
+            pixel_spacing = pixels.get("pixel_diameter")
 
         tolerance = 1e-6
         radius = (pixel_spacing + module_gap) * 1.2 + tolerance
