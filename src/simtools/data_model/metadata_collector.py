@@ -207,7 +207,6 @@ class MetadataCollector:
         except (KeyError, TypeError, IndexError):
             pass
 
-        self._logger.warning("No schema file found.")
         return None
 
     def get_data_model_schema_dict(self):
