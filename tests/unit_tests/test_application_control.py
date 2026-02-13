@@ -3,6 +3,7 @@
 import logging
 import os
 from io import StringIO
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,116 +12,128 @@ from simtools.application_control import (
     _resolve_model_version_to_latest_patch,
     _version_info,
     get_application_label,
+    get_log_file,
+    setup_logging,
     startup_application,
 )
+
+
+def _reset_stream(handler):
+    """Helper to reset stream for reading output."""
+    handler.stream.seek(0)
+    handler.stream.truncate()
+
+
+def _read_stream(handler):
+    """Helper to read stream output."""
+    handler.stream.seek(0)
+    return handler.stream.read()
 
 
 @pytest.fixture
 def redact_test_setup():
     """Set up logging handler and application context for redaction testing."""
-    handler = logging.StreamHandler(StringIO())
-    handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter("%(message)s")
-    handler.setFormatter(formatter)
-    logging.getLogger().addHandler(handler)
-
     mock_args_dict = {"log_level": "debug"}
     mock_db_config = {}
     mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
     app_context = startup_application(mock_parse_function, setup_io_handler=False)
 
+    handler = app_context.logger.handlers[0] if app_context.logger.handlers else None
+
+    if handler and isinstance(handler, logging.StreamHandler):
+        handler.stream = StringIO()
+
     yield app_context, handler
 
-    logging.getLogger().removeHandler(handler)
-    handler.close()
+    if handler:
+        handler.close()
+        app_context.logger.removeHandler(handler)
 
 
-def test_redact_filter_env_var_value(redact_test_setup):
+@pytest.mark.parametrize(
+    ("log_message", "secret_value", "env_var", "non_secret_values"),
+    [
+        (
+            "Database password is: {secret}",
+            "my_secret_password_123",
+            "SIMTOOLS_DB_API_PW",
+            [],
+        ),
+        (
+            "Setting environment variables: {{"
+            "'SIMTOOLS_DB_API_PW': '{secret}', "
+            "'SIMTOOLS_DB_API_USER': 'api', "
+            "'SIMTOOLS_DB_SERVER': 'simtools-mongodb', "
+            "'USER': 'test_user'}}",
+            "my_secret_db_password",
+            "SIMTOOLS_DB_API_PW",
+            ["api", "simtools-mongodb"],
+        ),
+        (
+            "Environment: {{'SIMTOOLS_DB_API_PW': '{secret}', 'USER': 'test'}}",
+            "child_logger_secret_789",
+            "SIMTOOLS_DB_API_PW",
+            ["test"],
+        ),
+    ],
+)
+def test_redact_filter_env_var(
+    redact_test_setup, log_message, secret_value, env_var, non_secret_values
+):
     """Test that RedactFilter redacts secret values from environment variables."""
     app_context, handler = redact_test_setup
-    test_password = "my_secret_password_123"
 
-    with patch.dict(os.environ, {"SIMTOOLS_DB_API_PW": test_password}, clear=False):
-        stream = handler.stream
-        stream.seek(0)
-        stream.truncate()
-
-        app_context.logger.info(f"Database password is: {test_password}")
-
-        stream.seek(0)
-        output = stream.read()
+    with patch.dict(os.environ, {env_var: secret_value}, clear=False):
+        _reset_stream(handler)
+        app_context.logger.info(log_message.format(secret=secret_value))
+        output = _read_stream(handler)
 
         assert "***REDACTED***" in output
-        assert test_password not in output
+        assert secret_value not in output
+        for non_secret in non_secret_values:
+            assert non_secret in output
 
 
-def test_redact_filter_simtools_password(redact_test_setup):
-    """Test that SIMTOOLS_DB_API_PW password values are redacted from logs."""
+@pytest.mark.parametrize(
+    ("log_message", "secret_values", "non_secret_values"),
+    [
+        (
+            'Settings: {{"api_key": "abc123xyz", "host": "localhost"}}',
+            ["abc123xyz"],
+            ["localhost"],
+        ),
+        (
+            "Auth: {{'auth_token': 'xyz789', 'service': 'api'}}",
+            ["xyz789"],
+            ["api"],
+        ),
+        (
+            "Environment: PASSWORD=secret123 USER=admin",
+            ["secret123"],
+            ["admin"],
+        ),
+        (
+            "Variables: api_key=xyz789, host=localhost",
+            ["xyz789"],
+            ["localhost"],
+        ),
+    ],
+)
+def test_redact_filter_pattern_matching(
+    redact_test_setup, log_message, secret_values, non_secret_values
+):
+    """Test that RedactFilter redacts secrets based on pattern matching."""
     app_context, handler = redact_test_setup
-    test_password = "my_secret_db_password"
+    _reset_stream(handler)
 
-    with patch.dict(os.environ, {"SIMTOOLS_DB_API_PW": test_password}, clear=False):
-        stream = handler.stream
-        stream.seek(0)
-        stream.truncate()
-
-        # Simulate the actual log message from job_manager that the user reported
-        env_dict = {
-            "SIMTOOLS_DB_API_PW": test_password,
-            "SIMTOOLS_DB_API_USER": "api",
-            "SIMTOOLS_DB_SERVER": "simtools-mongodb",
-            "USER": "test_user",
-        }
-        app_context.logger.debug(f"Setting environment variables for job execution: {env_dict}")
-
-        stream.seek(0)
-        output = stream.read()
-
-        assert "***REDACTED***" in output
-        assert test_password not in output
-        assert "api" in output
-        assert "simtools-mongodb" in output
-
-
-def test_redact_filter_api_key_pattern(redact_test_setup):
-    """Test that API keys and auth tokens are redacted based on pattern matching."""
-    app_context, handler = redact_test_setup
-    stream = handler.stream
-    stream.seek(0)
-    stream.truncate()
-
-    # Test API key and auth token patterns
-    app_context.logger.debug('Settings: {"api_key": "abc123xyz", "host": "localhost"}')
-    app_context.logger.debug("Auth: {'auth_token': 'xyz789', 'service': 'api'}")
-
-    stream.seek(0)
-    output = stream.read()
+    app_context.logger.debug(log_message)
+    output = _read_stream(handler)
 
     assert "***REDACTED***" in output
-    assert "abc123xyz" not in output
-    assert "xyz789" not in output
-    assert "localhost" in output
-    assert "api" in output
-
-
-def test_redact_filter_env_var_format(redact_test_setup):
-    """Test that RedactFilter redacts environment variable assignments (KEY=value format)."""
-    app_context, handler = redact_test_setup
-    stream = handler.stream
-    stream.seek(0)
-    stream.truncate()
-
-    app_context.logger.debug("Environment: PASSWORD=secret123 USER=admin")
-    app_context.logger.debug("Variables: api_key=xyz789, host=localhost")
-
-    stream.seek(0)
-    output = stream.read()
-
-    assert "***REDACTED***" in output
-    assert "secret123" not in output
-    assert "xyz789" not in output
-    assert "admin" in output
-    assert "localhost" in output
+    for secret in secret_values:
+        assert secret not in output
+    for non_secret in non_secret_values:
+        assert non_secret in output
 
 
 def test_redact_filter_child_logger(redact_test_setup):
@@ -131,35 +144,29 @@ def test_redact_filter_child_logger(redact_test_setup):
     with patch.dict(os.environ, {"SIMTOOLS_DB_API_PW": test_password}, clear=False):
         child_logger = logging.getLogger("simtools.job_execution.job_manager")
         child_logger.setLevel(logging.DEBUG)
-
-        stream = handler.stream
-        stream.seek(0)
-        stream.truncate()
+        _reset_stream(handler)
 
         child_logger.debug(
             f"Environment: {{'SIMTOOLS_DB_API_PW': '{test_password}', 'USER': 'test'}}"
         )
-
-        stream.seek(0)
-        output = stream.read()
+        output = _read_stream(handler)
 
         assert "***REDACTED***" in output
         assert test_password not in output
 
 
-def test_get_application_label():
+@pytest.mark.parametrize(
+    ("file_path", "expected"),
+    [
+        ("/path/to/my_application.py", "my_application"),
+        ("/another/path/test_script.py", "test_script"),
+        ("simple_app.py", "simple_app"),
+    ],
+)
+def test_get_application_label(file_path, expected):
     """Test get_application_label function."""
-    file_path = "/path/to/my_application.py"
     result = get_application_label(file_path)
-    assert result == "my_application"
-
-    file_path = "/another/path/test_script.py"
-    result = get_application_label(file_path)
-    assert result == "test_script"
-
-    file_path = "simple_app.py"
-    result = get_application_label(file_path)
-    assert result == "simple_app"
+    assert result == expected
 
 
 def test_startup_application_basic():
@@ -479,3 +486,114 @@ def test_version_info_no_export_build_info():
                     _version_info(args_dict, mock_io_handler, logger)
 
                     mock_export.assert_not_called()
+
+
+def test_get_log_file_explicit_file():
+    """Test get_log_file when log_file is explicitly provided (takes precedence)."""
+    args_dict = {
+        "log_file": "/path/to/custom.log",
+        "application_label": "ignored",
+    }
+    result = get_log_file(args_dict)
+    assert result == "/path/to/custom.log"
+
+
+def test_get_log_file_no_application_label():
+    """Test get_log_file returns None when application_label is not set."""
+    args_dict = {}
+    result = get_log_file(args_dict)
+    assert result is None
+
+
+def test_get_log_file_with_output_path(tmp_path):
+    """Test get_log_file generates path and creates directory."""
+    output_path = tmp_path / "new_dir" / "nested"
+    args_dict = {"application_label": "test_app", "output_path": str(output_path)}
+    result = get_log_file(args_dict)
+
+    assert isinstance(result, Path)
+    assert result.parent == output_path
+    assert result.name.startswith("test_app_")
+    assert result.name.endswith(".log")
+    assert output_path.exists()
+
+
+@pytest.mark.parametrize(
+    ("log_level", "expected_level"),
+    [
+        ("INFO", logging.INFO),
+        ("DEBUG", logging.DEBUG),
+        ("WARNING", logging.WARNING),
+    ],
+)
+def test_setup_logging_log_levels(log_level, expected_level):
+    """Test setup_logging with different log levels."""
+    logger = setup_logging(log_level=log_level)
+    assert logger.level == expected_level
+    assert len(logger.handlers) > 0
+
+
+def test_setup_logging_with_logger_name():
+    """Test setup_logging with custom logger name."""
+    logger = setup_logging(logger_name="test_logger")
+    assert logger.name == "test_logger"
+
+
+def test_setup_logging_with_file_handler(tmp_path):
+    """Test setup_logging creates and writes to file handler."""
+    log_file = tmp_path / "test.log"
+    logger = setup_logging(
+        log_level="INFO", log_file=str(log_file), logger_name="test_file_handler"
+    )
+    try:
+        logger.info("Test message")
+
+        file_handlers = [h for h in logger.handlers if isinstance(h, logging.FileHandler)]
+        assert len(file_handlers) > 0
+        assert file_handlers[0].baseFilename == str(log_file)
+        assert log_file.exists()
+        assert "Test message" in log_file.read_text()
+    finally:
+        for handler in list(logger.handlers):
+            handler.close()
+            logger.removeHandler(handler)
+
+
+def test_setup_logging_handlers_have_formatters():
+    """Test that setup_logging creates handlers with formatters."""
+    logger = setup_logging(logger_name="test_format")
+
+    stream_handlers = [h for h in logger.handlers if isinstance(h, logging.StreamHandler)]
+    assert len(stream_handlers) > 0
+    assert stream_handlers[0].formatter is not None
+
+
+def test_setup_logging_clears_existing_handlers():
+    """Test that setup_logging clears existing handlers to avoid duplicates."""
+    logger = logging.getLogger("test_clear_handlers")
+    logger.addHandler(logging.StreamHandler())
+    initial_handler_count = len(logger.handlers)
+
+    setup_logging(logger_name="test_clear_handlers")
+
+    assert len(logger.handlers) <= initial_handler_count
+
+
+@pytest.mark.parametrize(
+    ("test_id", "log_message", "secret_value"),
+    [
+        ("env", "Password is {secret}", "test_secret_123"),
+        ("api", 'Config: {{"api_key": "{secret}"}}', "secret_xyz"),
+    ],
+)
+def test_setup_logging_redaction(tmp_path, test_id, log_message, secret_value):
+    """Test that setup_logging applies redaction filter."""
+    log_file = tmp_path / f"test_{test_id}.log"
+
+    with patch.dict(os.environ, {"SIMTOOLS_DB_API_PW": secret_value}, clear=False):
+        logger = setup_logging(logger_name=f"test_redact_{test_id}", log_file=str(log_file))
+        logger.info(log_message.format(secret=secret_value))
+
+        content = log_file.read_text()
+        assert "***REDACTED***" in content
+        assert secret_value not in content
