@@ -56,7 +56,7 @@ r"""
         --zenith_angle 20 --start_run 0 --run 1
 """
 
-from simtools.application_control import startup_application
+from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import commandline_parser, configurator
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.simulator import Simulator
@@ -64,7 +64,9 @@ from simtools.simulator import Simulator
 
 def _parse():
     """Parse command line configuration."""
-    config = configurator.Configurator(description="Run simulations for productions")
+    config = configurator.Configurator(
+        label=get_application_label(__file__), description="Run simulations for productions"
+    )
     config.parser.add_argument(
         "--corsika_file",
         help=(
@@ -133,14 +135,15 @@ def main():
     simulator.simulate()
     if app_context.args["save_reduced_event_lists"]:
         simulator.save_reduced_event_lists()
-    simulator.validate_simulations()
 
-    if app_context.args.get("pack_for_grid_register"):
-        simulator.pack_for_register(app_context.args["pack_for_grid_register"])
+    simulator.validate_simulations()
+    simulator.report()
+
     if app_context.args["save_file_lists"]:
         simulator.save_file_lists()
 
-    simulator.report()
+    if app_context.args.get("pack_for_grid_register"):
+        simulator.pack_for_register(app_context.args["pack_for_grid_register"])
 
 
 if __name__ == "__main__":
