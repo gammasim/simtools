@@ -62,7 +62,7 @@ def test_get_log_excerpt(tmp_test_directory) -> None:
     )
 
 
-def test_file_has_text(tmp_test_directory, caplog, file_has_text) -> None:
+def test_file_has_text(tmp_test_directory, file_has_text) -> None:
     """Test the file_has_text function."""
 
     # Test with file that has text.
@@ -951,3 +951,55 @@ def test_is_safe_tar_member_benign_double_dot() -> None:
     assert gen.is_safe_tar_member("foo..bar.txt")
     assert gen.is_safe_tar_member("file..name..with..dots.log")
     assert gen.is_safe_tar_member("version1..0.tar.gz")
+
+
+def test_get_simtools_log_file_with_file_handler(tmp_test_directory) -> None:
+    """Test getting simtools log file when a FileHandler is attached."""
+    log_file = tmp_test_directory / "test.log"
+
+    file_handler = logging.FileHandler(log_file)
+    gen._logger.addHandler(file_handler)
+
+    try:
+        result = gen.get_simtools_log_file()
+        assert result == str(log_file)
+    finally:
+        gen._logger.removeHandler(file_handler)
+        file_handler.close()
+
+
+def test_get_simtools_log_file_without_file_handler() -> None:
+    """Test getting simtools log file when no FileHandler is attached."""
+    original_handlers = gen._logger.handlers[:]
+    original_parent_handlers = []
+    parent_logger = gen._logger.parent
+
+    try:
+        gen._logger.handlers = []
+        # Temporarily save and clear parent logger handlers to isolate test
+        if parent_logger:
+            original_parent_handlers = parent_logger.handlers[:]
+            parent_logger.handlers = []
+
+        result = gen.get_simtools_log_file()
+        assert result is None
+    finally:
+        gen._logger.handlers = original_handlers
+        if parent_logger and original_parent_handlers:
+            parent_logger.handlers = original_parent_handlers
+
+
+def test_get_simtools_log_file_with_parent_logger_file_handler(tmp_test_directory) -> None:
+    """Test getting simtools log file from parent logger if no handler in current logger."""
+    log_file = tmp_test_directory / "parent.log"
+
+    parent_logger = logging.getLogger("simtools")
+    file_handler = logging.FileHandler(log_file)
+    parent_logger.addHandler(file_handler)
+
+    try:
+        result = gen.get_simtools_log_file()
+        assert result == str(log_file)
+    finally:
+        parent_logger.removeHandler(file_handler)
+        file_handler.close()
