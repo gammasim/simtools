@@ -9,7 +9,23 @@ from simtools.visualization import legend_handlers as leg_h
 
 
 def pixel_shape(camera, x, y):
-    """Return the shape of the pixel."""
+    """Return the shape of the pixel.
+
+    Parameters
+    ----------
+    camera : Camera
+        Camera object containing pixel configuration and properties.
+    x : float
+        X coordinate of the pixel center.
+    y : float
+        Y coordinate of the pixel center.
+
+    Returns
+    -------
+    matplotlib.patches.Patch or None
+        A patch object representing the pixel (hexagon, rectangle) or
+        None if shape is not recognized.
+    """
     if camera.pixels["pixel_shape"] in (1, 3):
         return mpatches.RegularPolygon(
             (x, y),
@@ -30,7 +46,21 @@ def pixel_shape(camera, x, y):
 
 
 def create_pixel_patches_by_type(camera):
-    """Create pixel patches categorized by type (on, edge, off)."""
+    """Create pixel patches categorized by type (on, edge, off).
+
+    Parameters
+    ----------
+    camera : Camera
+        Camera object containing pixel positions and status information.
+
+    Returns
+    -------
+    tuple of (list, list, list)
+        Three lists containing matplotlib patch objects:
+        - on_pixels: patches for enabled pixels not on the edge
+        - edge_pixels: patches for enabled pixels on the edge
+        - off_pixels: patches for disabled pixels
+    """
     on_pixels, edge_pixels, off_pixels = [], [], []
     edge_indices = set(camera.get_edge_pixels())
 
@@ -48,7 +78,21 @@ def create_pixel_patches_by_type(camera):
 
 
 def add_pixel_legend(ax, on_pixels, off_pixels):
-    """Add pixel/edge/off legend to the plot."""
+    """Add pixel/edge/off legend to the plot.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Axes object to add the legend to.
+    on_pixels : list
+        List of enabled pixel patches.
+    off_pixels : list
+        List of disabled pixel patches.
+
+    Returns
+    -------
+    None
+    """
     if not on_pixels:
         return
 
@@ -80,7 +124,23 @@ def add_pixel_legend(ax, on_pixels, off_pixels):
 
 
 def add_pixel_patch_collections(ax, on_pixels, edge_pixels, off_pixels):
-    """Add patch collections for on/edge/off pixels to the axes."""
+    """Add patch collections for on/edge/off pixels to the axes.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Axes object to add the patch collections to.
+    on_pixels : list
+        List of enabled pixel patches not on the edge.
+    edge_pixels : list
+        List of enabled pixel patches on the edge.
+    off_pixels : list
+        List of disabled pixel patches.
+
+    Returns
+    -------
+    None
+    """
     ax.add_collection(
         PatchCollection(on_pixels, facecolor="none", edgecolor="black", linewidth=0.2)
     )
@@ -100,7 +160,29 @@ def add_pixel_patch_collections(ax, on_pixels, edge_pixels, off_pixels):
 def setup_camera_axis_properties(
     ax, camera, grid=False, axis_below=False, grid_alpha=None, y_scale_factor=1.0, padding=0
 ):
-    """Set up common axis properties for camera plots."""
+    """Set up common axis properties for camera plots.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Axes object to configure.
+    camera : Camera
+        Camera object containing pixel positions and extent information.
+    grid : bool, optional
+        Whether to display grid lines. Default is False.
+    axis_below : bool, optional
+        Whether to place axis below the plot elements. Default is False.
+    grid_alpha : float, optional
+        Transparency level for grid lines. If None and grid is True, uses default alpha.
+    y_scale_factor : float, optional
+        Scaling factor for y-axis limits. Default is 1.0.
+    padding : float, optional
+        Padding around the camera extent. Default is 0.
+
+    Returns
+    -------
+    None
+    """
     x_min, x_max = min(camera.pixels["x"]), max(camera.pixels["x"])
     y_min, y_max = min(camera.pixels["y"]), max(camera.pixels["y"])
 
