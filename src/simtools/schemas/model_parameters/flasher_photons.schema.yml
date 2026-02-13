@@ -11,7 +11,7 @@ description: |-
 data:
   - type: int64
     unit: dimensionless
-    default: 1.e5
+    default: 100000
     allowed_range:
       min: 1
 instrument:
