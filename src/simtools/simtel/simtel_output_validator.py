@@ -83,36 +83,36 @@ def validate_log_files(
     log_files, expected_mc_events=None, expected_shower_events=None, curved_atmo=False
 ):
     """Validate sim_telarray log files."""
-    event_string = (
-        (
+    patterns = [
+        "Finished.",
+        "Sim_telarray finished at",
+    ]
+    forbidden = []
+
+    if expected_mc_events is not None and expected_shower_events is not None:
+        patterns.append(
             f"Run(s) completed as expected after {expected_mc_events} events "
             f"({expected_shower_events} showers)."
         )
-        if expected_mc_events and expected_shower_events
-        else ""
-    )
-    curved_good = None
-    curved_bad = None
+
+    curved_msg = "CORSIKA was compiled with CURVED option."
     if curved_atmo:
-        curved_good = "CORSIKA was compiled with CURVED option."
+        patterns.append(curved_msg)
     else:
-        curved_bad = "CORSIKA was compiled with CURVED option."
-    if not check_plain_logs(
+        forbidden.append(curved_msg)
+
+    ok = check_plain_logs(
         log_files,
         {
-            "pattern": [
-                "Finished.",
-                "Sim_telarray finished at",
-                event_string,
-                curved_good,
-            ],
-            "forbidden_pattern": [
-                curved_bad,
-            ],
+            "pattern": patterns,
+            "forbidden_pattern": forbidden,
         },
-    ):
+    )
+
+    if not ok:
         raise ValueError(f"Sim_telarray log files validation failed for {log_files}")
-    _logger.info(f"Sim_telarray log files validation passed: {log_files}")
+
+    _logger.info("Sim_telarray log files validation passed: %s", log_files)
 
 
 def assert_sim_telarray_metadata(file, array_model, allow_for_changes=None):

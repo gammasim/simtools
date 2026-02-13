@@ -21,7 +21,7 @@ applications:
         - 50000
         photons:
         - 90
-        - 100000
+        - 500000
         # trigger_time:
         # - 0
         # - 50

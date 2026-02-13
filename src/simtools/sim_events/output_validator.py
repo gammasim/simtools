@@ -20,10 +20,10 @@ def validate_sim_events(data_files, expected_mc_events):
         Expected number of simulated MC events.
     """
     data_files = general.ensure_iterable(data_files)
-    valid_event_numbers(data_files, expected_mc_events)
+    validate_event_numbers(data_files, expected_mc_events)
 
 
-def valid_event_numbers(data_files, expected_mc_events):
+def validate_event_numbers(data_files, expected_mc_events):
     """
     Validate that the number of simulated events in reduced event lists matches the expected number.
 
@@ -40,21 +40,21 @@ def valid_event_numbers(data_files, expected_mc_events):
         If the number of simulated events does not match the expected number.
     """
     event_errors = []
-    for file in data_files:
-        tables = table_handler.read_tables(file, ["SHOWERS"])
+    for data_file in data_files:
+        tables = table_handler.read_tables(data_file, ["SHOWERS"])
         try:
             mc_events = len(tables["SHOWERS"])
         except KeyError as exc:
-            raise ValueError(f"SHOWERS table not found in reduced event list {file}.") from exc
+            raise ValueError(f"SHOWERS table not found in reduced event list {data_file}.") from exc
 
         if mc_events != expected_mc_events:
             event_errors.append(
                 f"Number of simulated MC events ({mc_events}) does not match "
-                f"the expected number ({expected_mc_events}) in reduced event list {file}."
+                f"the expected number ({expected_mc_events}) in reduced event list {data_file}."
             )
         else:
             _logger.info(
-                f"Consistent number of events in reduced event list: {file}: MC events:"
+                f"Consistent number of events in reduced event list: {data_file}: MC events:"
                 f" {mc_events} (expected: {expected_mc_events})"
             )
 

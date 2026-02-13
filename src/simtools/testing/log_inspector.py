@@ -161,14 +161,16 @@ def _get_expected_patterns(file_test):
         Dictionary with expected / forbidden patterns
     """
     expected_log = file_test.get("expected_log_output", file_test)
-    if isinstance(expected_log, dict):
-        wanted = expected_log.get("pattern", [])
-        forbidden = expected_log.get("forbidden_pattern", [])
-    else:
-        wanted = file_test.get("pattern", [])
-        forbidden = file_test.get("forbidden_pattern", [])
+
+    if not isinstance(expected_log, dict):
+        _logger.debug("No expected log output provided, skipping checks %s", file_test)
+        return None, None
+
+    wanted = expected_log.get("pattern", [])
+    forbidden = expected_log.get("forbidden_pattern", [])
+
     if not (wanted or forbidden):
-        _logger.debug(f"No expected log output provided, skipping checks {file_test}")
+        _logger.debug("No expected log output provided, skipping checks %s", file_test)
         return None, None
 
     return wanted, forbidden
