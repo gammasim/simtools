@@ -122,8 +122,6 @@ class Camera:
         pixels["y"] = camera_config_dict["pixel_y"]
         pixels["pix_id"] = list(range(len(pixels["x"])))
         pixels["pix_on"] = np.ones(len(pixels["x"]), dtype=int).tolist()
-        pixels["module_number"] = None
-        pixels["module_gap"] = None
 
         Camera.validate_pixels(pixels, "from camera dict")
 
@@ -143,8 +141,6 @@ class Camera:
             "pixel_diameter": 9999,
             "pixel_shape": 9999,
             "pixel_spacing": 9999,
-            "module_gap": None,
-            "module_number": None,
             "lightguide_efficiency_angle_file": "none",
             "lightguide_efficiency_wavelength_file": "none",
             "rotate_angle": 0,
@@ -168,13 +164,7 @@ class Camera:
         """
         pix_info = line.split()
 
-        if "Pixel spacing is" in line:
-            pixels["pixel_spacing"] = float(line.split("spacing is")[1].strip().split()[0])
-
-        elif "Between modules is an additional gap of" in line:
-            pixels["module_gap"] = float(line.split("gap of")[1].strip().split()[0])
-
-        elif line.startswith("PixType"):
+        if line.startswith("PixType"):
             pixels["pixel_shape"] = int(pix_info[5].strip())
             pixels["pixel_diameter"] = float(pix_info[6].strip())
             pixels["lightguide_efficiency_angle_file"] = pix_info[8].strip().replace('"', "")
@@ -191,11 +181,6 @@ class Camera:
             pixels["x"].append(float(pix_info[3].strip()))
             pixels["y"].append(float(pix_info[4].strip()))
             pixels["pix_id"].append(int(pix_info[1].strip()))
-
-            if len(pix_info) > 5:
-                if pixels["module_number"] is None:
-                    pixels["module_number"] = []
-                pixels["module_number"].append(int(float(pix_info[5].strip())))
 
             if len(pix_info) > 9:
                 pixels["pix_on"].append(int(pix_info[9].strip()) != 0)
@@ -479,10 +464,15 @@ class Camera:
         if module_numbers is None or len(module_numbers) != len(pixels["x"]):
             return None
 
+        module_gap = pixels["module_gap"] if pixels["module_gap"] is not None else 0.0
+
+        # If no actual module gaps, fall back to standard PMT neighbor radius
+        if module_gap == 0.0:
+            return None
+
         pixel_spacing = pixels["pixel_spacing"]
         if pixel_spacing == 9999:
             pixel_spacing = pixels["pixel_diameter"]
-        module_gap = pixels["module_gap"] if pixels["module_gap"] is not None else 0.0
 
         tolerance = 1e-6
         radius = (pixel_spacing + module_gap) * 1.2 + tolerance
@@ -606,13 +596,7 @@ class Camera:
         """
         self._logger.debug("Searching for neighbor pixels")
 
-        module_neighbors = None
-        if pixels["pixel_shape"] in (1, 3):
-            module_neighbors = self._find_neighbors_with_module_gap(pixels)
-
-        if module_neighbors is not None:
-            self._neighbors = module_neighbors
-        elif pixels["pixel_shape"] in (1, 3):
+        if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
             self._neighbors = self._find_neighbors(
                 pixels["x"],
                 pixels["y"],

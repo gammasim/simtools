@@ -140,8 +140,6 @@ def test_initialize_pixel_dict():
     assert pixels["pixel_shape"] == 9999
     assert pixels["rotate_angle"] == pytest.approx(0)
     assert pixels["x"] == []
-    assert pixels["module_number"] is None
-    assert pixels["module_gap"] is None
 
 
 def test_read_pixel_list_from_dict(simple_camera_dict):
@@ -151,8 +149,6 @@ def test_read_pixel_list_from_dict(simple_camera_dict):
     assert pixels["pixel_shape"] == 1
     assert len(pixels["x"]) == 4
     assert pixels["pix_id"] == [0, 1, 2, 3]
-    assert pixels["module_number"] is None
-    assert pixels["module_gap"] is None
 
 
 def test_read_pixel_list_from_dict_nonunique_diameter():
@@ -198,29 +194,12 @@ def test_process_line_pixel():
     assert pixels["pix_on"] == [True]
 
 
-def test_process_line_pixel_module_number():
-    """Test processing Pixel line with module number."""
-    pixels = Camera.initialize_pixel_dict()
-    line = "Pixel 5 1 1 10.5 2 0.5 0 0 1 1"
-    Camera.process_line(line, pixels)
-    assert pixels["module_number"] == [2]
-
-
 def test_process_line_pixel_off():
     """Test processing Pixel line with pix_on=0."""
     pixels = Camera.initialize_pixel_dict()
     line = "Pixel 5 1 1 10.5 20.3 0 0 0 0 0"
     Camera.process_line(line, pixels)
     assert pixels["pix_on"] == [False]
-
-
-def test_process_line_pixel_spacing_and_gap():
-    """Test processing pixel spacing and module gap lines."""
-    pixels = Camera.initialize_pixel_dict()
-    Camera.process_line("Pixel spacing is 0.64", pixels)
-    Camera.process_line("Between modules is an additional gap of 0.02", pixels)
-    assert pixels["pixel_spacing"] == pytest.approx(0.64)
-    assert pixels["module_gap"] == pytest.approx(0.02)
 
 
 def test_find_neighbors_with_module_gap(simple_camera_dict):
