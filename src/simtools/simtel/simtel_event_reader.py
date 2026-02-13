@@ -57,13 +57,13 @@ def read_events(file_name, telescope, event_ids, max_events=1, verbose=False):
             return None, None, None
 
         for event in f:
-            if max_events and len(events) >= max_events:
-                break
             if event_ids and event["event_id"] not in event_ids:
                 continue
             if tel_id in event["telescope_events"]:
                 events.append(event["telescope_events"][tel_id])
                 ids_with_data.append(event["event_id"])
+                if max_events and len(events) >= max_events:
+                    break
             elif verbose:
                 triggered = event["trigger_information"]["triggered_telescopes"]
                 triggered_names = [tel_id_map.get(tid, f"ID {tid}") for tid in triggered]
