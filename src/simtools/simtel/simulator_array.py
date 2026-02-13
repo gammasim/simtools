@@ -19,21 +19,17 @@ class SimulatorArray(SimtelRunner):
         Instance label.
     use_multipipe: bool
         Use multipipe to run CORSIKA and sim_telarray.
-    is_calibration_run: bool
-        Flag to indicate if this is a calibration run.
     """
 
     def __init__(
         self,
         corsika_config,
         label=None,
-        is_calibration_run=False,
     ):
         """Initialize SimulatorArray."""
-        super().__init__(label=label, config=corsika_config, is_calibration_run=is_calibration_run)
+        super().__init__(label=label, config=corsika_config)
 
         self.corsika_config = corsika_config
-        self.is_calibration_run = is_calibration_run
         self.io_handler = io_handler.IOHandler()
         self._log_file = None
 
@@ -90,7 +86,7 @@ class SimulatorArray(SimtelRunner):
         self.file_list = self.runner_service.load_files(run_number=run_number)
         command = self._common_run_command(run_number)
 
-        if self.is_calibration_run:
+        if self.corsika_config.is_calibration_run():
             command += self._make_run_command_for_calibration_simulations()
         else:
             command += self._make_run_command_for_shower_simulations()
@@ -128,6 +124,9 @@ class SimulatorArray(SimtelRunner):
         for key in ("nsb_scaling_factor", "stars"):
             if key in cfg:
                 options[key] = cfg[key]
+                # stars cannot be 'None' (only 'none')
+                if key == "stars" and options[key] is None:
+                    options[key] = "none"
 
         run_mode = cfg.get("run_mode")
         if run_mode in ("pedestals", "pedestals_nsb_only"):

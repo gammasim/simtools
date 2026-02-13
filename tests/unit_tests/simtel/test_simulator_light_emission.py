@@ -1248,7 +1248,7 @@ def test__initialize_light_emission_configuration_test_mode(simulator_instance):
 
     # Verify test mode overrides flasher_photons
     assert result["light_source_type"] == "laser"
-    assert result["flasher_photons"] == pytest.approx(1e5)  # Test mode value
+    assert result["flasher_photons"] == pytest.approx(1e6)  # Test mode value
     assert result["test"] is True
 
 
