@@ -26,8 +26,6 @@ class CorsikaSimtelRunner:
     use_multipipe : bool
         Use multipipe to run CORSIKA and sim_telarray.
         Dictionary with configuration for sim_telarray random instrument setup.
-    is_calibration_run : bool
-        Flag to indicate if this is a calibration run.
     """
 
     def __init__(
@@ -36,7 +34,6 @@ class CorsikaSimtelRunner:
         label=None,
         sequential=False,
         curved_atmosphere_min_zenith_angle=None,
-        is_calibration_run=False,
     ):
         self._logger = logging.getLogger(__name__)
         self.corsika_config = gen.ensure_iterable(corsika_config)
@@ -61,13 +58,7 @@ class CorsikaSimtelRunner:
         # because it allows to define multiple sim_telarray instances
         self.simulator_array = []
         for _corsika_config in self.corsika_config:
-            self.simulator_array.append(
-                SimulatorArray(
-                    corsika_config=_corsika_config,
-                    label=label,
-                    is_calibration_run=is_calibration_run,
-                )
-            )
+            self.simulator_array.append(SimulatorArray(corsika_config=_corsika_config, label=label))
 
     def prepare_run(self, run_number=None, sub_script=None, corsika_file=None, extra_commands=None):
         """
