@@ -75,14 +75,14 @@ def validate_event_numbers(data_files, expected_shower_events, tolerance=1.0e-3)
                 f" (expected: {expected_shower_events})"
             )
 
-        if event_errors:
-            _logger.error("Inconsistent event counts found in CORSIKA output:")
-            for error in event_errors:
-                _logger.error(f" - {error}")
-            error_message = "Inconsistent event counts found in CORSIKA output:\n" + "\n".join(
-                f" - {error}" for error in event_errors
-            )
-            raise ValueError(error_message)
+    if event_errors:
+        _logger.error("Inconsistent event counts found in CORSIKA output:")
+        for error in event_errors:
+            _logger.error(f" - {error}")
+        error_message = "Inconsistent event counts found in CORSIKA output:\n" + "\n".join(
+            f" - {error}" for error in event_errors
+        )
+        raise ValueError(error_message)
 
 
 def validate_log_files(log_files, expected_shower_events=None, curved_atmo=False):
@@ -103,30 +103,26 @@ def validate_log_files(log_files, expected_shower_events=None, curved_atmo=False
     ValueError
         If log files do not contain expected patterns indicating successful completion.
     """
-    event_string = (
-        f"NUMBER OF GENERATED EVENTS =          {expected_shower_events}"
-        if expected_shower_events
-        else ""
-    )
-    curved_good = ""
-    curved_bad = ""
+    patterns = ["========== END OF RUN ======="]
+    forbidden = []
+
+    if expected_shower_events is not None:
+        patterns.append(f"NUMBER OF GENERATED EVENTS =          {expected_shower_events}")
+
     if curved_atmo:
-        curved_good = "CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE"
+        patterns.append("CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE")
     else:
-        curved_bad = "CORSIKA was compiled without CURVED option."
-    if not check_plain_logs(
+        forbidden.append("CORSIKA was compiled without CURVED option.")
+
+    ok = check_plain_logs(
         log_files,
         {
-            "pattern": [
-                "========== END OF RUN =======",
-                event_string,
-                curved_good,
-            ],
-            "forbidden_pattern": [
-                curved_bad,
-            ],
+            "pattern": patterns,
+            "forbidden_pattern": forbidden,
         },
-    ):
+    )
+
+    if not ok:
         raise ValueError(
             f"Log files {log_files} do not contain expected patterns "
             "indicating successful completion."

@@ -1,10 +1,10 @@
 import pytest
 
-from simtools.sim_events.output_validator import valid_event_numbers, validate_sim_events
+from simtools.sim_events.output_validator import validate_event_numbers, validate_sim_events
 
 
-def test_validate_sim_events_calls_valid_event_numbers(tmp_path, monkeypatch):
-    """Test validate_sim_events properly wraps valid_event_numbers."""
+def test_validate_sim_events_calls_validate_event_numbers(tmp_path, monkeypatch):
+    """Test validate_sim_events properly wraps validate_event_numbers."""
     test_files = [tmp_path / f"test_{i}.fits" for i in range(2)]
     for f in test_files:
         f.touch()
@@ -32,8 +32,8 @@ def test_validate_sim_events_with_string_input(tmp_path, monkeypatch):
     validate_sim_events(str(test_file), 3)
 
 
-def test_valid_event_numbers_single_file_match(tmp_path, monkeypatch):
-    """Test valid_event_numbers with matching event count."""
+def test_validate_event_numbers_single_file_match(tmp_path, monkeypatch):
+    """Test validate_event_numbers with matching event count."""
     test_file = tmp_path / "test_events.fits"
     test_file.touch()
 
@@ -43,11 +43,11 @@ def test_valid_event_numbers_single_file_match(tmp_path, monkeypatch):
         lambda *args, **kwargs: mock_tables,
     )
 
-    valid_event_numbers(str(test_file), 3)
+    validate_event_numbers(str(test_file), 3)
 
 
-def test_valid_event_numbers_single_file_mismatch(tmp_path, monkeypatch):
-    """Test valid_event_numbers raises ValueError when event count mismatches."""
+def test_validate_event_numbers_single_file_mismatch(tmp_path, monkeypatch):
+    """Test validate_event_numbers raises ValueError when event count mismatches."""
     test_file = tmp_path / "test_events.fits"
     test_file.touch()
 
@@ -58,11 +58,11 @@ def test_valid_event_numbers_single_file_mismatch(tmp_path, monkeypatch):
     )
 
     with pytest.raises(ValueError, match="Inconsistent event counts found in reduced event lists"):
-        valid_event_numbers(str(test_file), 5)
+        validate_event_numbers(str(test_file), 5)
 
 
-def test_valid_event_numbers_multiple_files_all_match(tmp_path, monkeypatch):
-    """Test valid_event_numbers with multiple files all matching."""
+def test_validate_event_numbers_multiple_files_all_match(tmp_path, monkeypatch):
+    """Test validate_event_numbers with multiple files all matching."""
     test_files = [tmp_path / f"test_{i}.fits" for i in range(2)]
     for f in test_files:
         f.touch()
@@ -73,11 +73,11 @@ def test_valid_event_numbers_multiple_files_all_match(tmp_path, monkeypatch):
         lambda *args, **kwargs: mock_tables,
     )
 
-    valid_event_numbers(test_files, 4)
+    validate_event_numbers(test_files, 4)
 
 
-def test_valid_event_numbers_multiple_files_one_mismatch(tmp_path, monkeypatch):
-    """Test valid_event_numbers with multiple files where one mismatches."""
+def test_validate_event_numbers_multiple_files_one_mismatch(tmp_path, monkeypatch):
+    """Test validate_event_numbers with multiple files where one mismatches."""
     test_files = [tmp_path / f"test_{i}.fits" for i in range(2)]
     for f in test_files:
         f.touch()
@@ -96,13 +96,13 @@ def test_valid_event_numbers_multiple_files_one_mismatch(tmp_path, monkeypatch):
     )
 
     with pytest.raises(ValueError, match="Inconsistent event counts found in reduced event lists"):
-        valid_event_numbers(test_files, 4)
+        validate_event_numbers(test_files, 4)
 
     assert call_count == 2
 
 
-def test_valid_event_numbers_missing_showers_table(tmp_path, monkeypatch):
-    """Test valid_event_numbers raises ValueError when SHOWERS table is missing."""
+def test_validate_event_numbers_missing_showers_table(tmp_path, monkeypatch):
+    """Test validate_event_numbers raises ValueError when SHOWERS table is missing."""
     test_file = tmp_path / "test_events.fits"
     test_file.touch()
 
@@ -113,4 +113,4 @@ def test_valid_event_numbers_missing_showers_table(tmp_path, monkeypatch):
     )
 
     with pytest.raises(ValueError, match="SHOWERS table not found in reduced event list"):
-        valid_event_numbers(str(test_file), 3)
+        validate_event_numbers(str(test_file), 3)
