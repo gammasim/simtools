@@ -26,18 +26,7 @@ def test_init_simulator_array(corsika_config_mock_array_model):
     )
     assert simulator.corsika_config == corsika_config_mock_array_model
     assert simulator.label == "test-label"
-    assert simulator.is_calibration_run is False
     assert simulator._log_file is None
-
-
-def test_init_simulator_array_with_seeds(corsika_config_mock_array_model):
-    """Test SimulatorArray initialization with sim_telarray_seeds."""
-    simulator = SimulatorArray(
-        corsika_config=corsika_config_mock_array_model,
-        label="test-label",
-        is_calibration_run=True,
-    )
-    assert simulator.is_calibration_run is True
 
 
 def test_prepare_run(simtel_runner, tmp_path, mocker):
@@ -108,9 +97,9 @@ def test_make_run_command_shower_simulation(simtel_runner, mocker):
 
 def test_make_run_command_calibration_simulation(simtel_runner, mocker):
     """Test make_run_command for calibration simulations."""
-    simtel_runner.is_calibration_run = True
     simtel_runner.runner_service = mocker.Mock()
     simtel_runner.runner_service.load_files.return_value = {}
+    simtel_runner.corsika_config.is_calibration_run = mocker.Mock(return_value=True)
 
     # Mock the methods
     mocker.patch.object(simtel_runner, "_common_run_command", return_value=["common_command"])
