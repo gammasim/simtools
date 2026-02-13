@@ -102,7 +102,7 @@ class PlotSimtelEvent:
     """
 
     def __init__(self, file_name, telescope, event_ids=None, max_events=None):
-        """Initialize plotter for a single event."""
+        """Initialize plotter for one or more events."""
         self.file_name = Path(file_name) if file_name else None
         self.telescope = telescope
         self.event_ids = event_ids

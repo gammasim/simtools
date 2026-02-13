@@ -23,18 +23,20 @@ def read_events(file_name, telescope, event_ids, max_events=1, verbose=False):
         Path to the sim_telarray file.
     telescope : str
         Telescope type to filter events.
-    event_ids : int or list of int
-        ID(s) of the event(s) to read.
-    max_events : int
-        Maximum number of events to read (starting from event_id).
-    verbose : bool
-        If True, print detailed information about the reading process.
+    event_ids : int or list of int, optional
+        Specific event ID or list of event IDs to include. If None, all events
+        are considered (subject to ``max_events``).
+    max_events : int, optional
+        Maximum total number of events to read. If ``event_ids`` is provided,
+        only those IDs are included, up to this limit.
+    verbose : bool, optional
+        If True, log detailed information about the reading process.
 
     Returns
     -------
     tuple
         A 3-tuple containing:
-        - ids_with_data (list of int): List of event indices that were read.
+        - ids_with_data (list of int): List of event IDs that were read.
         - tel_desc (dict): Telescope description dictionary.
         - events (list): List of telescope events.
         Returns (None, None, None) if telescope not found or no events available.
