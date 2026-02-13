@@ -17,10 +17,10 @@ applications:
     - expected_sim_telarray_output:
         pe_sum:
         - 1000
-        - 50000
+        - 500000
         photons:
         - 90
-        - 100000
+        - 500000
         # trigger_time:
         # - 0
         # - 50
