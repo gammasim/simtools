@@ -464,13 +464,11 @@ class Camera:
         if module_numbers is None or len(module_numbers) != len(pixels["x"]):
             return None
 
-        module_gap = pixels["module_gap"] if pixels["module_gap"] is not None else 0.0
-
-        # If no actual module gaps, fall back to standard PMT neighbor radius
-        if module_gap == 0.0:
+        module_gap = pixels.get("module_gap", 0.0)
+        if abs(module_gap) < 1e-6:
             return None
 
-        pixel_spacing = pixels["pixel_spacing"]
+        pixel_spacing = pixels.get("pixel_spacing", pixels["pixel_diameter"])
         if pixel_spacing == 9999:
             pixel_spacing = pixels["pixel_diameter"]
 
@@ -480,21 +478,61 @@ class Camera:
 
         neighbors = []
         for i_pix, nn in enumerate(candidates):
-            filtered_neighbors = []
-            for j_pix in nn:
-                if i_pix == j_pix:
-                    continue
-                dist = np.sqrt(
-                    (pixels["x"][i_pix] - pixels["x"][j_pix]) ** 2
-                    + (pixels["y"][i_pix] - pixels["y"][j_pix]) ** 2
-                )
-                gap = 0.0 if module_numbers[i_pix] == module_numbers[j_pix] else module_gap
-                max_distance = (pixel_spacing + gap) * 1.2 + tolerance
-                if dist <= max_distance:
-                    filtered_neighbors.append(j_pix)
+            filtered_neighbors = self._filter_neighbors_by_module_gap(
+                i_pix, nn, pixels, module_numbers, pixel_spacing, module_gap, tolerance
+            )
             neighbors.append(filtered_neighbors)
 
         return neighbors
+
+    def _filter_neighbors_by_module_gap(
+        self,
+        i_pix: int,
+        candidates: list[int],
+        pixels: dict,
+        module_numbers: list[int],
+        pixel_spacing: float,
+        module_gap: float,
+        tolerance: float,
+    ) -> list[int]:
+        """
+        Filter neighbor candidates based on module gap constraints.
+
+        Parameters
+        ----------
+        i_pix : int
+            Current pixel index.
+        candidates : list[int]
+            Candidate neighbor indices.
+        pixels : dict
+            Pixel dictionary with positions.
+        module_numbers : list[int]
+            Module assignment for each pixel.
+        pixel_spacing : float
+            Distance between adjacent pixels.
+        module_gap : float
+            Gap between modules.
+        tolerance : float
+            Numerical tolerance for distance calculations.
+
+        Returns
+        -------
+        list[int]
+            Filtered neighbor indices.
+        """
+        filtered_neighbors = []
+        for j_pix in candidates:
+            if i_pix == j_pix:
+                continue
+            dist = np.sqrt(
+                (pixels["x"][i_pix] - pixels["x"][j_pix]) ** 2
+                + (pixels["y"][i_pix] - pixels["y"][j_pix]) ** 2
+            )
+            gap = 0.0 if module_numbers[i_pix] == module_numbers[j_pix] else module_gap
+            max_distance = (pixel_spacing + gap) * 1.2 + tolerance
+            if dist <= max_distance:
+                filtered_neighbors.append(j_pix)
+        return filtered_neighbors
 
     def _find_adjacent_neighbor_pixels(
         self, x_pos: np.ndarray, y_pos: np.ndarray, radius: float, row_column_dist: float
