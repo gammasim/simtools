@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Plot array elements for a layout."""
 
+import logging
 from collections import Counter
 from typing import NamedTuple
 
@@ -17,6 +18,8 @@ from simtools.utils import geometry as transf
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
 from simtools.visualization import visualize
+
+logging.getLogger("adjustText").setLevel(logging.CRITICAL)
 
 
 class PlotBounds(NamedTuple):
