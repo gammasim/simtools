@@ -1,4 +1,10 @@
-"""Ray tracing simulations and analysis."""
+"""
+Ray tracing simulations and analysis.
+
+Simulates light propagation through telescope optics using simtel_array,
+processes photon lists to compute PSF (D80 containment diameter),
+effective mirror area, and effective focal length as functions of off-axis angle.
+"""
 
 import gzip
 import logging
@@ -192,7 +198,11 @@ class RayTracing:
 
     def simulate(self, test=False, force=False):
         """
-        Simulate RayTracing using SimulatorRayTracing.
+        Run ray tracing simulations using sim_telarray.
+
+        Generates photon lists for each off-axis angle and mirror configuration,
+        simulating light propagation through telescope optics.
+        Output files are automatically compressed with gzip.
 
         Parameters
         ----------
@@ -249,10 +259,11 @@ class RayTracing:
         containment_fraction=0.8,
     ):
         """
-        Ray tracing analysis.
+        Analyze ray tracing simulation results.
 
-        Involves the following: read simtel files, compute PSFs and eff areas, store the
-        results in _results.
+        Processes photon lists to compute PSF containment diameters (D80 by default),
+        effective mirror area (detected_photons * total_area / total_photons),
+        and effective focal length (centroid_radius / tan(off_axis_angle)).
 
         Parameters
         ----------
@@ -416,18 +427,17 @@ class RayTracing:
         tel_transmission,
     ):
         """
-        Analyze PSF image.
+        Extract analysis results from PSF image.
+
+        Computes effective focal length as f_eff = r / tan(off_axis_angle),
+        where r is the distance from the image centroid to the optical axis.
 
         Parameters
         ----------
         image: PSFImage
             PSF image object.
-        photons_file: Path
-            Path to the photons file.
         this_off_axis: float
-            Off-axis angle.
-        cm_to_deg: float
-            Conversion factor from centimeters to degrees.
+            Off-axis angle (deg)
         containment_fraction: float
             Containment fraction for PSF containment calculation.
         tel_transmission: float
@@ -436,14 +446,15 @@ class RayTracing:
         Returns
         -------
         tuple
-            Tuple containing analyzed results.
+            (off_axis_angle, psf_cm, psf_deg, eff_area, eff_focal_length)
         """
+        r = np.hypot(image.centroid_x, image.centroid_y)
         return (
             this_off_axis * u.deg,
             image.get_psf(containment_fraction, "cm") * u.cm,
             image.get_psf(containment_fraction, "deg") * u.deg,
             image.get_effective_area(tel_transmission) * u.m * u.m,
-            np.nan if this_off_axis == 0 else image.centroid_x / tan(this_off_axis * pi / 180.0),
+            np.nan if this_off_axis == 0 else r / tan(this_off_axis * pi / 180.0),
         )
 
     def _store_results(self, _rows):
@@ -499,7 +510,11 @@ class RayTracing:
 
     def plot(self, key, save=False, psf_diameter_cm=None, **kwargs):
         """
-        Plot key vs off-axis angle and save the figure in pdf.
+        Plot analysis results vs off-axis angle.
+
+        Visualizes computed PSF, effective area, or effective focal length
+        as a function of off-axis angle. Optionally saves individual PSF images
+        and cumulative distributions.
 
         Parameters
         ----------
@@ -634,7 +649,10 @@ class RayTracing:
 
     def images(self):
         """
-        Get list of PSFImages.
+        Get list of analyzed PSF images.
+
+        Returns PSFImage objects containing photon positions, centroids,
+        PSF containment diameters, and effective areas for each off-axis angle.
 
         Returns
         -------
