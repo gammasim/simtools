@@ -4,7 +4,9 @@ applications:
   configuration:
     run_mode: direct_injection
     light_source: LSFN-design
-    array_layout_name: 1lst
+    telescopes:
+    - LSTN-01
+    - LSTN-03
     label: test-flasher-direct-injection-lst-north
     log_level: DEBUG
     model_version: 7.0.0

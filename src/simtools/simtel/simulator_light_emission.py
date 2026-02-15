@@ -27,14 +27,18 @@ class SimulatorLightEmission(SimtelRunner):
     ----------
     light_emission_config : dict, optional
         Configuration for the light emission (e.g. number of events, model names)
+    telescope : str, optional
+        Telescope name.
     label : str, optional
         Label for the simulation
     """
 
-    def __init__(self, light_emission_config, label=None):
+    def __init__(self, light_emission_config, telescope=None, label=None):
         """Initialize SimulatorLightEmission."""
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
+        telescope = telescope or light_emission_config.get("telescope")
+        label = f"{label}_{telescope}" if label else telescope
 
         super().__init__(label=label, config=light_emission_config)
         self.job_files = runner_services.RunnerServices(
@@ -45,8 +49,9 @@ class SimulatorLightEmission(SimtelRunner):
             initialize_simulation_models(
                 label=label,
                 site=light_emission_config.get("site"),
-                telescope_name=light_emission_config.get("telescope"),
+                telescope_name=telescope,
                 calibration_device_name=light_emission_config.get("light_source"),
+                calibration_device_type=light_emission_config.get("light_source_type"),
                 model_version=light_emission_config.get("model_version"),
             )
         )

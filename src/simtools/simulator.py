@@ -115,6 +115,7 @@ class Simulator:
                 label=self.label,
                 site=self.site,
                 layout_name=settings.config.args.get("array_layout_name"),
+                array_elements=general.ensure_iterable(settings.config.args.get("telescopes", [])),
                 model_version=version,
                 calibration_device_types=self._get_calibration_device_types(self.run_mode),
                 overwrite_model_parameters=settings.config.args.get("overwrite_model_parameters"),
