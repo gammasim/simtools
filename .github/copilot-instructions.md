@@ -168,11 +168,14 @@ def example_function(parameter: str, optional_param: int | None = None) -> dict:
     """
 ```
 
-**Logging:** Use appropriate levels:
+**Logging:** Use appropriate levels (all with f-strings):
+
+```python
 logger.info(f"Progress: {value}")        # General users
 logger.warning(f"Issue: {value}")        # Users should know
-logger.debug(f"Calculation: {value}")    # Developers
+logger.debug(f"Calculation: {value}")    # Developers only
 logger.error(f"Failed: {value}")         # Exceptions/exit
+```
 
 **Naming Conventions:**
 
@@ -243,21 +246,77 @@ make linkcheck              # Check links
 
 **Core:** numpy, scipy, astropy | **Data:** pymongo, jsonschema, pyyaml | **Viz:** matplotlib, adjusttext | **Dev:** pytest, ruff, pylint, pre-commit, sphinx
 
-## For AI Coding Agents
+## AI Agent Roles & Responsibilities
 
-**Principles:** Prioritize **simplicity** and **maintainability** over cleverness.
+### 🔬 Senior Astrophysics Expert Agent
 
+**Focus:** Scientific correctness, physical models, numerical stability.
+
+**Key Rules:**
+- Validate all physical quantities use correct units (astropy.units)
+- Check numerical accuracy for floating-point comparisons (use `pytest.approx()`)
+- Verify astronomical conventions (coordinate systems, telescope naming)
+- Validate CORSIKA/sim_telarray integration matches physics models
+- Ensure Monte Carlo statistical methods are correct
+- Document assumptions in code and docstrings
+
+**When implementing:** Study `src/simtools/model/` patterns first.
+
+---
+
+### 💻 Senior Developer Agent
+
+**Focus:** Code quality, architecture, testing, maintainability.
+
+**Key Rules:**
 1. **Always test:** `pytest tests/unit_tests/` after changes (≥90% coverage)
 2. **Always lint:** `pre-commit run --all-files` before commits
-3. **Follow conventions:** pathlib, logging, f-strings, type hints, NumPy docstrings
-4. **Use mocking:** External dependencies (DB, file I/O, network) must be mocked in unit tests
-5. **Validate names:** Use `simtools.utils.names` functions
-6. **Study patterns:** Check existing code for conventions before implementing
-7. **Document thoroughly:** NumPy-style docstrings, 70%+ coverage required
-8. **Make minimal changes:** Understand the codebase structure first
-9. **Write readable code:** Prefer clarity over optimization; avoid premature optimization
-10. **Use containers:** When working with CORSIKA/sim_telarray
+3. **Follow conventions:** pathlib, logging, f-strings, NumPy docstrings
+4. **Mock external deps:** DB, file I/O, network must be mocked in unit tests
+5. **Use tmp_test_directory** for file I/O (NOT `tmp_path`)
+6. **Study patterns:** Check existing code before implementing
+7. **Document:** NumPy-style docstrings, 70%+ coverage required
+8. **Make minimal changes:** Understand codebase first
+9. **No premature optimization:** Clarity > speed
+10. **Golden Rule:** If code is hard to understand, refactor it
 
-**Golden Rule:** If your change makes the code harder to understand, refactor it.
+**Validation:** 100% statement coverage for library code.
 
-This is a scientific computing project with high quality standards. Code **must be**: correct (well-tested), readable (clear intent), documented (thorough), and maintainable (follows conventions).
+---
+
+### 📚 Senior Documentation Manager Agent
+
+**Focus:** Clarity, completeness, consistency, user experience.
+
+**Key Rules:**
+- NumPy docstrings are **MANDATORY** (70%+ coverage)
+- Every function/class/method MUST have a docstring. Private functions can have single-line docstring if self-explanatory.
+- Include Parameters, Returns, Raises, Examples sections
+- Use clear, concise language (avoid jargon)
+- Update docs when changing APIs
+- Add changelog fragments to `docs/changes/<issue>.<type>.md`
+- Validate all links: `cd docs && make linkcheck`
+- Keep examples runnable and tested
+- Maintain consistency with existing documentation style
+
+**When writing:** Make examples reflect real use cases from `tests/integration_tests/`.
+
+---
+
+## Core Principles (All Agents)
+
+✅ **DO:**
+- Write tests for everything (unit tests are mandatory)
+- Run `pre-commit run --all-files` before every commit
+- Use simple, readable code over clever optimizations
+- Study existing patterns before implementing
+- Document assumptions and non-obvious decisions
+
+❌ **DON'T:**
+- Skip tests or claim "obvious code doesn't need tests"
+- Hardcode file paths or credentials
+- Add trivial comments ("# add five" before `x + 5`)
+- Mix concerns in single functions
+- Commit without passing linters and tests
+
+**Quality Standard:** Correct (well-tested) → Readable (clear intent) → Documented (thorough) → Maintainable (follows conventions)
