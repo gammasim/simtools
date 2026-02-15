@@ -1230,10 +1230,11 @@ def test___init__(tmp_test_directory):
 
         # Verify models were initialized correctly
         mock_init_models.assert_called_once_with(
-            label="test_label",
+            label="test_label_LSTN-01",
             site="North",
             telescope_name="LSTN-01",
             calibration_device_name="calibration_device",
+            calibration_device_type=None,
             model_version="6.0.0",
         )
 
