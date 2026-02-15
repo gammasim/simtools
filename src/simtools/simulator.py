@@ -8,14 +8,15 @@ import numpy as np
 from astropy import units as u
 
 from simtools import settings
+from simtools.corsika import corsika_output_validator
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
 from simtools.job_execution import job_manager
 from simtools.model.array_model import ArrayModel
 from simtools.runners import corsika_runner, corsika_simtel_runner, runner_services, simtel_runner
-from simtools.sim_events import file_info, writer
+from simtools.sim_events import file_info, output_validator, writer
+from simtools.simtel import simtel_output_validator
 from simtools.simtel.simulator_array import SimulatorArray
-from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
 from simtools.utils import general
 
 
@@ -359,25 +360,6 @@ class Simulator:
 
         self.logger.info(f"Grid output files grid placed in {directory_for_grid_upload!s}")
 
-    def validate_metadata(self):
-        """Validate metadata in the sim_telarray output files."""
-        if "sim_telarray" not in self.simulation_software:
-            self.logger.info("No sim_telarray files to validate.")
-            return
-
-        for model in self.array_models:
-            files = general.ensure_iterable(self.get_files(file_type="sim_telarray_output"))
-
-            output_file = next((f for f in files if model.model_version in str(f)), None)
-            if output_file:
-                self.logger.info(f"Validating metadata for {output_file}")
-                assert_sim_telarray_metadata(output_file, model)
-                self.logger.info(f"Metadata for sim_telarray file {output_file} is valid.")
-            else:
-                self.logger.warning(
-                    f"No sim_telarray file found for model version {model.model_version}: {files}"
-                )
-
     @staticmethod
     def _get_calibration_device_types(run_mode):
         """
@@ -418,164 +400,46 @@ class Simulator:
         except (IndexError, TypeError) as exc:
             raise ValueError("CORSIKA configuration not found for verification.") from exc
 
-    def verify_simulations(self):
+    def validate_simulations(self):
         """
-        Verify simulations.
+        Validate simulations data and metadata.
 
-        This includes checking the number of simulated events.
-
+        Validates data, log, and metadata files from CORSIKA, sim_telarray and reduced event lists
+        (if saved).
         """
-        self.logger.info("Verifying simulations.")
-
         _corsika_config = self._get_first_corsika_config()
         expected_shower_events = _corsika_config.shower_events
         expected_mc_events = _corsika_config.mc_events
-
         self.logger.info(
-            f"Expected number of shower events: {expected_shower_events}, "
-            f"expected number of MC events: {expected_mc_events}"
+            "Validating simulations "
+            f"with {expected_mc_events} MC events and {expected_shower_events} shower events."
         )
-        if self.simulation_software in ["corsika_sim_telarray", "sim_telarray"]:
-            self._verify_simulated_events_in_sim_telarray(
-                expected_shower_events, expected_mc_events
+
+        if "sim_telarray" in self.simulation_software:
+            simtel_output_validator.validate_sim_telarray(
+                data_files=self.get_files(file_type="sim_telarray_output"),
+                log_files=self.get_files(file_type="sim_telarray_log"),
+                array_models=self.array_models,
+                expected_mc_events=expected_mc_events,
+                expected_shower_events=expected_shower_events,
+                curved_atmo=_corsika_config.use_curved_atmosphere,
+                allow_for_changes=["nsb_scaling_factor", "stars"],
             )
-        if self.simulation_software == "corsika":
-            self._verify_simulated_events_corsika(expected_mc_events)
+        if "corsika" in self.simulation_software:
+            corsika_output_validator.validate_corsika_output(
+                data_files=self.get_files(file_type="corsika_output")
+                if self.simulation_software == "corsika"
+                else None,
+                log_files=self.get_files(file_type="corsika_log"),
+                expected_shower_events=expected_shower_events,
+                curved_atmo=_corsika_config.use_curved_atmosphere,
+            )
+
         if settings.config.args.get("save_reduced_event_lists"):
-            self._verify_simulated_events_in_reduced_event_lists(expected_mc_events)
-
-    def _verify_simulated_events_corsika(self, expected_mc_events, tolerance=1.0e-3):
-        """
-        Verify the number of simulated events in CORSIKA output files.
-
-        Allow for a small mismatch in the number of requested events.
-
-        Parameters
-        ----------
-        expected_mc_events: int
-            Expected number of simulated MC events.
-
-        Raises
-        ------
-        ValueError
-            If the number of simulated events does not match the expected number.
-        """
-
-        def consistent(a, b, tol):
-            return abs(a - b) / max(a, b) <= tol
-
-        event_errors = []
-
-        file = self.get_files(file_type="corsika_output")
-        shower_events, _ = file_info.get_simulated_events(file)
-
-        if shower_events != expected_mc_events:
-            if consistent(shower_events, expected_mc_events, tol=tolerance):
-                self.logger.warning(
-                    f"Small mismatch in number of events in: {file}: "
-                    f"shower events: {shower_events} (expected: {expected_mc_events})"
-                )
-            else:
-                event_errors.append(
-                    f"Number of simulated MC events ({shower_events}) does not match "
-                    f"the expected number ({expected_mc_events}) in CORSIKA {file}."
-                )
-        else:
-            self.logger.info(
-                f"Consistent number of events in: {file}: shower events: {shower_events}"
+            output_validator.validate_sim_events(
+                data_files=self.get_files(file_type="sim_telarray_event_data"),
+                expected_mc_events=expected_mc_events,
             )
-
-        if event_errors:
-            self.logger.error("Inconsistent event counts found in CORSIKA output:")
-            for error in event_errors:
-                self.logger.error(f" - {error}")
-            error_message = "Inconsistent event counts found in CORSIKA output:\n" + "\n".join(
-                f" - {error}" for error in event_errors
-            )
-            raise ValueError(error_message)
-
-    def _verify_simulated_events_in_sim_telarray(self, expected_shower_events, expected_mc_events):
-        """
-        Verify the number of simulated events.
-
-        Parameters
-        ----------
-        expected_shower_events: int
-            Expected number of simulated shower events.
-        expected_mc_events: int
-            Expected number of simulated MC events.
-
-        Raises
-        ------
-        ValueError
-            If the number of simulated events does not match the expected number.
-        """
-        event_errors = []
-        for file in general.ensure_iterable(self.get_files(file_type="sim_telarray_output")):
-            shower_events, mc_events = file_info.get_simulated_events(file)
-
-            if (shower_events, mc_events) != (expected_shower_events, expected_mc_events):
-                event_errors.append(
-                    f"Event mismatch: shower/MC events in {file}: {shower_events}/{mc_events}"
-                    f" (expected: {expected_shower_events}/{expected_mc_events})"
-                )
-            else:
-                self.logger.info(
-                    f"Consistent number of events in: {file}: "
-                    f"shower events: {shower_events}, "
-                    f"MC events: {mc_events}"
-                )
-
-        if event_errors:
-            self.logger.error("Inconsistent event counts found:")
-            for error in event_errors:
-                self.logger.error(f" - {error}")
-            error_message = "Inconsistent event counts found:\n" + "\n".join(
-                f" - {error}" for error in event_errors
-            )
-            raise ValueError(error_message)
-
-    def _verify_simulated_events_in_reduced_event_lists(self, expected_mc_events):
-        """
-        Verify the number of simulated events in reduced event lists.
-
-        Parameters
-        ----------
-        expected_mc_events: int
-            Expected number of simulated MC events.
-
-        Raises
-        ------
-        ValueError
-            If the number of simulated events does not match the expected number.
-        """
-        event_errors = []
-        for file in self.get_files(file_type="sim_telarray_event_data"):
-            tables = table_handler.read_tables(file, ["SHOWERS"])
-            try:
-                mc_events = len(tables["SHOWERS"])
-            except KeyError as exc:
-                raise ValueError(f"SHOWERS table not found in reduced event list {file}.") from exc
-
-            if mc_events != expected_mc_events:
-                event_errors.append(
-                    f"Number of simulated MC events ({mc_events}) does not match "
-                    f"the expected number ({expected_mc_events}) in reduced event list {file}."
-                )
-            else:
-                self.logger.info(
-                    f"Consistent number of events in reduced event list: {file}: MC events:"
-                    f" {mc_events}"
-                )
-
-        if event_errors:
-            self.logger.error("Inconsistent event counts found in reduced event lists:")
-            for error in event_errors:
-                self.logger.error(f" - {error}")
-            error_message = "Inconsistent event counts found in reduced event lists:\n" + "\n".join(
-                f" - {error}" for error in event_errors
-            )
-            raise ValueError(error_message)
 
     def update_file_lists(self):
         """

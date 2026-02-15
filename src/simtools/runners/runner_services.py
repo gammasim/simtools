@@ -44,6 +44,11 @@ FILES_AND_PATHS = {
         "suffix": ".reduced_event_data.hdf5",
         "sub_dir_type": "run_number",
     },
+    # light_emission
+    "light_emission_log": {
+        "suffix": ".light_emission.log.gz",
+        "sub_dir_type": "run_number",
+    },
     # multipipe
     "multi_pipe_config": {
         "suffix": ".multi_pipe.cfg",
