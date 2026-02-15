@@ -40,3 +40,12 @@ Provide tools for reading, writing, and processing simulated shower and telescop
 .. automodule:: simtools.sim_events.histograms
    :members:
 ```
+
+## Validators
+
+(sim_events_validators-1)=
+
+```{eval-rst}
+.. automodule:: simtools.sim_events.output_validator
+   :members:
+```

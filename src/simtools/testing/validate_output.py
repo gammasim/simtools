@@ -130,14 +130,16 @@ def _validate_reference_output_file(config, integration_test):
 def _validate_output_path_and_file(config, integration_file_tests):
     """Check if output paths and files exist."""
     for file_test in integration_file_tests:
+        _logger.info(f"Validating output file for test: {file_test}")
         try:
             output_path = config["configuration"][file_test["path_descriptor"]]
         except KeyError as exc:
             raise KeyError(
                 f"Path {file_test['path_descriptor']} not found in integration test configuration."
             ) from exc
-
-        output_file_path = Path(output_path) / file_test["file"]
+        output_file_path = (
+            Path(output_path) / file_test.get("output_sub_path", "") / file_test["file"]
+        )
         _logger.info(f"Checking path: {output_file_path}")
         try:
             assert output_file_path.exists()
@@ -149,10 +151,10 @@ def _validate_output_path_and_file(config, integration_file_tests):
 
         if output_file_path.name.endswith(".simtel.zst"):
             assert assertions.check_output_from_sim_telarray(output_file_path, file_test)
-        elif output_file_path.name.endswith(".log_hist.tar.gz"):
-            assert assertions.check_simulation_logs(output_file_path, file_test)
-        elif output_file_path.suffix == ".log":
-            assert assertions.check_plain_log(output_file_path, file_test)
+        elif output_file_path.name.endswith(".log_hist.tar.gz") or output_file_path.name.endswith(
+            ".log"
+        ):
+            assert assertions.check_log_files(output_file_path, file_test)
 
 
 def _validate_model_parameter_json_file(config, model_parameter_validation):

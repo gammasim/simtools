@@ -134,11 +134,11 @@ def main():
                 label=app_context.args.get("label"),
             )
             light_source.simulate()
-            light_source.verify_simulations()
+            light_source.validate_simulations()
     elif app_context.args["run_mode"] == "direct_injection":
         light_source = Simulator(label=app_context.args.get("label"))
         light_source.simulate()
-        light_source.verify_simulations()
+        light_source.validate_simulations()
     else:
         raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
 
