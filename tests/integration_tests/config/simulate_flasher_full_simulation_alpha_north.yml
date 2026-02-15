@@ -3,11 +3,11 @@ applications:
 - application: simtools-simulate-flasher
   configuration:
     run_mode: full_simulation
-    light_source: LSFN-design
+    light_source_type: flat_fielding
     model_version: 7.0.0
     output_path: simtools-output
     site: North
-    telescope: LSTN-04
+    array_layout_name: alpha
     run_number: 10
     test: true
     log_level: DEBUG

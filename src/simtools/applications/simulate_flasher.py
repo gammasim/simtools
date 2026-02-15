@@ -57,8 +57,10 @@ telescope (str, optional)
 
 from simtools.application_control import get_application_label, startup_application
 from simtools.configuration import configurator
+from simtools.model.model_utils import get_array_elements_for_layout
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.simulator import Simulator
+from simtools.utils import general
 
 
 def _parse():
@@ -74,11 +76,16 @@ def _parse():
         required=True,
         default="direct_injection",
     )
-    config.parser.add_argument(
+    group = config.parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "--light_source",
         help="Flasher device associated with a specific telescope, i.e. MSFx-FlashCam",
         type=str,
-        required=True,
+    )
+    group.add_argument(
+        "--light_source_type",
+        help="Type of the light source (e.g. flat_fielding)",
+        type=str,
     )
     config.parser.add_argument(
         "--number_of_events",
@@ -89,7 +96,7 @@ def _parse():
     )
     return config.initialize(
         db_config=True,
-        simulation_model=["site", "layout", "telescope", "model_version"],
+        simulation_model=["site", "layout", "telescopes", "model_version"],
         simulation_configuration={
             "corsika_configuration": ["run_number"],
             "sim_telarray_configuration": ["all"],
@@ -102,8 +109,8 @@ def main():
     app_context = startup_application(_parse)
 
     tel_string = (
-        f"telescope {app_context.args['telescope']}"
-        if app_context.args.get("telescope")
+        f"telescope(s) {app_context.args['telescopes']}"
+        if app_context.args.get("telescopes")
         else f"array layout {app_context.args['array_layout_name']}"
     )
 
@@ -115,17 +122,25 @@ def main():
     )
 
     if app_context.args["run_mode"] == "full_simulation":
-        light_source = SimulatorLightEmission(
-            light_emission_config=app_context.args,
-            label=app_context.args.get("label"),
+        telescopes = (
+            get_array_elements_for_layout(app_context.args["array_layout_name"])
+            if app_context.args.get("array_layout_name") is not None
+            else general.ensure_iterable(app_context.args["telescopes"])
         )
+        for telescope in telescopes:
+            light_source = SimulatorLightEmission(
+                light_emission_config=app_context.args,
+                telescope=telescope,
+                label=app_context.args.get("label"),
+            )
+            light_source.simulate()
+            light_source.verify_simulations()
     elif app_context.args["run_mode"] == "direct_injection":
         light_source = Simulator(label=app_context.args.get("label"))
+        light_source.simulate()
+        light_source.verify_simulations()
     else:
         raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
-
-    light_source.simulate()
-    light_source.verify_simulations()
 
     app_context.logger.info("Flasher simulation completed.")
 
