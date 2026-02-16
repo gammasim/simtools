@@ -5,12 +5,15 @@ import logging
 
 from eventio import SimTelFile
 
-from simtools.simtel.simtel_io_metadata import get_sim_telarray_telescope_id
+from simtools.simtel.simtel_io_metadata import (
+    get_sim_telarray_telescope_id_to_telescope_name_mapping,
+)
+from simtools.utils import general as gen
 
 _logger = logging.getLogger(__name__)
 
 
-def read_events(file_name, telescope, event_id, max_events=1):
+def read_events(file_name, telescope, event_ids, max_events=1, verbose=False):
     """
     Read events from a sim_telarray file for a given telescope.
 
@@ -20,41 +23,55 @@ def read_events(file_name, telescope, event_id, max_events=1):
         Path to the sim_telarray file.
     telescope : str
         Telescope type to filter events.
-    event_id : int
-        ID of the event to read.
-    max_events : int
-        Maximum number of events to read (starting from event_id).
+    event_ids : int or list of int, optional
+        Specific event ID or list of event IDs to include. If None, all events
+        are considered (subject to ``max_events``).
+    max_events : int, optional
+        Maximum total number of events to read. If ``event_ids`` is provided,
+        only those IDs are included, up to this limit.
+    verbose : bool, optional
+        If True, log detailed information about the reading process.
 
     Returns
     -------
     tuple
         A 3-tuple containing:
-        - event_ids (list of int): List of event indices that were read.
+        - ids_with_data (list of int): List of event IDs that were read.
         - tel_desc (dict): Telescope description dictionary.
         - events (list): List of telescope events.
         Returns (None, None, None) if telescope not found or no events available.
     """
-    tel_id = get_sim_telarray_telescope_id(telescope, file_name)
+    tel_id_map = get_sim_telarray_telescope_id_to_telescope_name_mapping(file_name)
+    tel_id = next((k for k, v in tel_id_map.items() if v == telescope), None)
     if tel_id is None:
         _logger.warning(f"Telescope type '{telescope}' not found in file '{file_name}'.")
         return None, None, None
 
-    event_id = event_id or 0
+    event_ids = gen.ensure_iterable(event_ids) if event_ids is not None else []
+    ids_with_data, events = [], []
 
-    events = []
-    event_ids = []
     with SimTelFile(file_name, skip_calibration=False) as f:
-        try:
-            tel_desc = f.telescope_descriptions[tel_id]
-        except KeyError:
+        tel_desc = f.telescope_descriptions.get(tel_id)
+        if tel_desc is None:
             _logger.warning(f"Telescope ID '{tel_id}' not found in file '{file_name}'.")
             return None, None, None
 
-        for i, event in enumerate(f):
-            if i >= event_id:
+        for event in f:
+            if event_ids and event["event_id"] not in event_ids:
+                continue
+            if tel_id in event["telescope_events"]:
                 events.append(event["telescope_events"][tel_id])
-                event_ids.append(i)
-            if len(events) >= max_events:
-                break
+                ids_with_data.append(event["event_id"])
+                if max_events and len(events) >= max_events:
+                    break
+            elif verbose:
+                triggered = event["trigger_information"]["triggered_telescopes"]
+                triggered_names = [tel_id_map.get(tid, f"ID {tid}") for tid in triggered]
+                _logger.debug(
+                    f"event {event['event_id']} with {len(event['telescope_events'])} "
+                    f"telescope events (triggered telescopes: {triggered_names})"
+                )
 
-    return event_ids, tel_desc, events
+    _logger.info(f"Read {len(events)} events for telescope '{telescope}' from file '{file_name}'.")
+
+    return ids_with_data, tel_desc, events
