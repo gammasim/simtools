@@ -321,9 +321,10 @@ class InterpolationHandler:
         production_statistic, grid_points_no_energy = self._prepare_energy_independent_data()
         reduced_production_grid_points = self._prepare_production_grid_points()
 
-        self.interpolated_production_statistics = self._perform_interpolation(
+        result = self._perform_interpolation(
             grid_points_no_energy, production_statistic, reduced_production_grid_points
         )
+        self.interpolated_production_statistics = np.asarray(result).squeeze()
 
         # Energy-dependent interpolation
         self.interpolated_production_statistics_with_energy = (
