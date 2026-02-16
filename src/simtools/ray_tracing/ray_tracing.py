@@ -88,7 +88,6 @@ class RayTracing:
     ):
         """Initialize RayTracing class."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug(f"Initializing RayTracing class {single_mirror_mode}")
 
         self._io_handler = io_handler.IOHandler()
 
@@ -96,12 +95,15 @@ class RayTracing:
         self.label = label if label is not None else self.telescope_model.label
 
         self.zenith_angle = zenith_angle.to("deg").value
-        self.elevation_angle = 90.0 - self.zenith_angle
+        self.azimuth_angle = 0.0 * u.deg
+        self._logger.debug(
+            f"Telescope pointing set to zenith={self.zenith_angle:.3f} deg, "
+            f"azimuth={self.azimuth_angle:.3f} deg"
+        )
 
         # Process off-axis angles: convert to list of (x, y) tuples
         if offset_file is not None:
             self.off_axis_angle = self._load_offset_file(offset_file)
-            self._logger.info(f"Loaded {len(self.off_axis_angle)} offsets from {offset_file}")
         else:
             self.off_axis_angle = self._process_offset_angles(off_axis_angle, offset_directions)
 
@@ -184,41 +186,15 @@ class RayTracing:
         """
         offset_file = Path(offset_file_path)
         if not offset_file.exists():
-            msg = f"Offset file not found: {offset_file}"
-            self._logger.error(msg)
-            raise FileNotFoundError(msg)
+            raise FileNotFoundError(f"Offset file not found: {offset_file}")
+        table = astropy.io.ascii.read(offset_file, format="ecsv")
 
         try:
-            table = astropy.io.ascii.read(offset_file, format="ecsv")
             offsets = [(float(row["x"]), float(row["y"])) for row in table]
-            self._logger.info(f"Loaded {len(offsets)} offsets from {offset_file}")
-            return offsets
-        except Exception as e:
-            msg = f"Error reading offset file {offset_file}: {e}"
-            self._logger.error(msg)
-            raise RuntimeError(msg) from e
-
-    def _calculate_phi_from_offset(self, off_x, off_y):
-        """
-        Calculate telescope azimuth (phi) offset from x, y offsets considering zenith angle.
-
-        Parameters
-        ----------
-        off_x: float
-            Azimuth offset direction component in degrees.
-        off_y: float
-            Elevation offset direction component in degrees.
-
-        Returns
-        -------
-        float
-            Azimuth offset phi in degrees (change from original phi=0).
-        """
-        if off_x == 0.0 and off_y == 0.0:
-            return 0.0
-
-        zenith_rad = np.radians(self.zenith_angle)
-        return off_x * np.cos(zenith_rad)
+        except KeyError as e:
+            raise RuntimeError(f"Error reading offset file {offset_file}") from e
+        self._logger.info(f"Loaded {len(offsets)} offsets from {offset_file}")
+        return offsets
 
     def _initialize_mirror_configuration(
         self,
@@ -337,7 +313,6 @@ class RayTracing:
 
                 # Calculate theta (radial distance) and phi (azimuth)
                 theta_offset = np.sqrt(off_x**2 + off_y**2)
-                phi = self._calculate_phi_from_offset(off_x, off_y)
 
                 simtel = SimulatorRayTracing(
                     telescope_model=self.telescope_model,
@@ -349,7 +324,6 @@ class RayTracing:
                         "off_axis_x": off_x,
                         "off_axis_y": off_y,
                         "off_axis_theta": theta_offset,
-                        "off_axis_phi": phi,
                         "source_distance": mirror_data["source_distance"],
                         "single_mirror_mode": self.single_mirror_mode,
                         "use_random_focal_length": self.use_random_focal_length,
@@ -546,7 +520,11 @@ class RayTracing:
         PSFImage
             PSF image object.
         """
-        image = PSFImage(focal_length=focal_length, containment_fraction=containment_fraction)
+        image = PSFImage(
+            focal_length=focal_length,
+            containment_fraction=containment_fraction,
+            include_camera_rotation=False,
+        )
         image.process_photon_list(photons_file, use_rx)
         return image
 
@@ -583,15 +561,13 @@ class RayTracing:
         Returns
         -------
         tuple
-            (off_x, off_y, theta_offset, azimuth, psf_cm, psf_deg, eff_area, eff_focal_length)
+            (off_x, off_y, theta_offset, psf_cm, psf_deg, eff_area, eff_focal_length)
         """
         r = np.hypot(image.centroid_x, image.centroid_y)
-        azimuth = self._calculate_phi_from_offset(off_x, off_y)
         return (
             off_x * u.deg,
             off_y * u.deg,
             theta_offset * u.deg,
-            azimuth * u.deg,
             image.get_psf(containment_fraction, "cm") * u.cm,
             image.get_psf(containment_fraction, "deg") * u.deg,
             image.get_effective_area(tel_transmission) * u.m * u.m,
@@ -607,7 +583,7 @@ class RayTracing:
         _rows: list
             List of rows containing analysis results.
         """
-        _columns = ["off_x", "off_y", "off_theta", "off_azimuth"]
+        _columns = ["off_x", "off_y", "off_theta"]
         _columns.extend(list(self.YLABEL.keys()))
         if self.single_mirror_mode:
             _columns.append("mirror_number")
