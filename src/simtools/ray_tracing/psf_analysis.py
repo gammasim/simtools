@@ -494,7 +494,7 @@ class PSFImage:
         ax.set_xlabel("X Position (cm)")
         ax.set_ylabel("Y Position (cm)")
         ax.hist2d(data["X"], data["Y"], **kwargs_for_image)
-        ax.set_aspect("equal", "datalim")
+        ax.set_aspect("equal", "box")
 
         # PSF circle (containment fraction)
         fraction = self._containment_fraction if self._containment_fraction is not None else 0.8
