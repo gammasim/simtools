@@ -14,16 +14,6 @@ The Testing module provides tools for testing the code. This might be part of th
 
 ```
 
-(simtelarraymodule)=
-
-## sim_telarray_metadata
-
-```{eval-rst}
-.. automodule:: testing.sim_telarray_metadata
-   :members:
-
-```
-
 (testconfiguration_module)=
 
 ## configuration
