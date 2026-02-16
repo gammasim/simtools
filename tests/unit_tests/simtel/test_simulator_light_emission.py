@@ -989,11 +989,14 @@ def test__make_light_emission_script(simulator_instance):
         simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
         mock_settings.config.sim_telarray_path = Path("/mock/simtel/sim_telarray")
 
+        # Mock runner_service.get_file_name to return a string path
+        simulator_instance.runner_service.get_file_name.return_value = Path("/output/ff-1m.log.gz")
+
         result = simulator_instance._make_light_emission_command("/output/ff-1m.iact.gz")
 
         expected = (
             "/mock/simtel/sim_telarray/LightEmission/ff-1m -I. --altitude 2200 "
-            "--photons 1000000 -o /output/ff-1m.iact.gz"
+            "--photons 1000000 -o /output/ff-1m.iact.gz 2>&1 | gzip > /output/ff-1m.log.gz\n"
         )
         assert result == expected
 
@@ -1020,12 +1023,17 @@ def test__make_light_emission_script(simulator_instance):
         simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
         mock_settings.config.sim_telarray_path = Path("/mock/simtel/sim_telarray")
 
+        # Mock runner_service.get_file_name to return a string path
+        simulator_instance.runner_service.get_file_name.return_value = Path(
+            "/output/illuminator-app.log.gz"
+        )
+
         result = simulator_instance._make_light_emission_command("/output/illuminator-app.iact.gz")
 
         expected = (
             "/mock/simtel/sim_telarray/LightEmission/illuminator-app -h 2200 "
             "-x 100 -y 200 -A /config/dir/atm_profile.dat "
-            "-o /output/illuminator-app.iact.gz"
+            "-o /output/illuminator-app.iact.gz 2>&1 | gzip > /output/illuminator-app.log.gz\n"
         )
         assert result == expected
 
@@ -1594,30 +1602,33 @@ def test__get_angular_distribution_string_for_sim_telarray_isotropic(simulator_i
     simulator_instance.calibration_model.get_parameter_value_with_unit.assert_not_called()
 
 
-def test_verify_simulations_success(simulator_instance, tmp_test_directory):
-    """Test verify_simulations returns True when output file exists."""
+def test_validate_simulations_success(simulator_instance, tmp_test_directory):
+    """Test validate_simulations returns True when output file exists."""
     output_file = Path(tmp_test_directory) / "output.iact"
     output_file.write_text("test data", encoding="utf-8")
 
     simulator_instance.runner_service.get_file_name.return_value = output_file
 
-    result = simulator_instance.verify_simulations()
+    # Mock the validator to avoid actual validation
+    with patch(
+        "simtools.simtel.simulator_light_emission.simtel_output_validator.validate_sim_telarray"
+    ):
+        result = simulator_instance.validate_simulations()
 
-    assert result is True
-    simulator_instance._logger.info.assert_called_once()
-    assert "sim_telarray output found" in str(simulator_instance._logger.info.call_args)
+    # validate_simulations doesn't return anything (returns None on success)
+    assert result is None
 
 
-def test_verify_simulations_missing_output(simulator_instance, tmp_test_directory):
-    """Test verify_simulations returns False when output file does not exist."""
+def test_validate_simulations_missing_output(simulator_instance, tmp_test_directory):
+    """Test validate_simulations raises ValueError when validation fails."""
     output_file = Path(tmp_test_directory) / "nonexistent_output.iact"
 
     simulator_instance.runner_service.get_file_name.return_value = output_file
 
-    result = simulator_instance.verify_simulations()
-
-    assert result is False
-    simulator_instance._logger.error.assert_called_once()
-    assert "Expected sim_telarray output not found" in str(
-        simulator_instance._logger.error.call_args
-    )
+    # Mock the validator to raise an error for missing/invalid file
+    with patch(
+        "simtools.simtel.simulator_light_emission.simtel_output_validator.validate_sim_telarray",
+        side_effect=ValueError("Validation failed"),
+    ):
+        with pytest.raises(ValueError, match="Validation failed"):
+            simulator_instance.validate_simulations()
