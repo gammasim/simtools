@@ -1,0 +1,37 @@
+---
+applications:
+- application: simtools-simulate-flasher
+  configuration:
+    run_mode: full_simulation
+    light_source: MSFx-NectarCam
+    model_version: 7.0.0
+    output_path: simtools-output
+    site: North
+    array_layout_name: subsystem_msts
+    run_number: 10
+    test: true
+    log_level: DEBUG
+  integration_tests:
+  - test_output_files:
+    - file: sub/full_simulation_run000010_North_subsystem_msts_7.0.0_simulate_flasher_MSTN-01.out
+      path_descriptor: output_path
+    - file: sim_telarray/full_simulation_run000010_North_subsystem_msts_7.0.0_simulate_flasher_MSTN-01.simtel.zst
+      path_descriptor: output_path
+    - file: sub/full_simulation_run000010_North_subsystem_msts_7.0.0_simulate_flasher_MSTN-02.out
+      path_descriptor: output_path
+    - file: sim_telarray/full_simulation_run000010_North_subsystem_msts_7.0.0_simulate_flasher_MSTN-02.simtel.zst
+      path_descriptor: output_path
+    - expected_log_output:
+      pattern:
+      - "Sim_telarray finished at"
+      - "CORSIKA IACT finished at"
+      - "Finished."
+      forbidden_pattern:
+      - "Error"
+      - "had less photons than required and were skipped"
+      file: sub/full_simulation_run000010_North_subsystem_msts_7.0.0_simulate_flasher_MSTN-01.out
+      path_descriptor: output_path
+  model_version_use_current: true
+  test_name: full-simulation-layout-subsystem-msts-msfx-nectarcam-7.0.0
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
