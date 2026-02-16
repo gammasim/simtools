@@ -25,7 +25,5 @@ activity:
 source:
   - Initial instrument setup
 simulation_software:
-  - name: sim_telarray
-    internal_parameter_name: laser_var_photons
   - name: simtools
-    version: ">=0.21.0"
+    version: ">0.27.1"
