@@ -15,11 +15,11 @@ applications:
     sim_telarray_random_instrument_instances: 100
     site: North
   integration_tests:
-  - output_file: sim_telarray/run000010/direct_injection_run000010_za20deg_azm000deg_North_1lst_7.0.0_test-flasher-direct-injection-lst-north.simtel.zst
+  - output_file: sim_telarray/run000010/direct_injection_run000010_za20deg_azm000deg_North_7.0.0_test-flasher-direct-injection-lst-north.simtel.zst
   - test_output_files:
     - expected_sim_telarray_output:
         event_type: direct_injection
-      file: direct_injection_run000010_za20deg_azm000deg_North_1lst_7.0.0_test-flasher-direct-injection-lst-north.simtel.zst
+      file: direct_injection_run000010_za20deg_azm000deg_North_7.0.0_test-flasher-direct-injection-lst-north.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray/run000010
   test_name: direction_injection_lstn
