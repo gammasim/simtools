@@ -37,7 +37,7 @@ class SimulatorLightEmission(SimtelRunner):
         self.io_handler = io_handler.IOHandler()
 
         super().__init__(label=label, config=light_emission_config)
-        self.job_files = runner_services.RunnerServices(
+        self.submission_files = runner_services.RunnerServices(
             light_emission_config, run_type="sub", label=label
         )
 
@@ -81,8 +81,8 @@ class SimulatorLightEmission(SimtelRunner):
         run_script = self.prepare_run()
         job_manager.submit(
             run_script,
-            out_file=self.job_files.get_file_name("sub_out"),
-            err_file=self.job_files.get_file_name("sub_err"),
+            out_file=self.submission_files.get_file_name("sub_out"),
+            err_file=self.submission_files.get_file_name("sub_err"),
         )
 
     def prepare_run(self):
@@ -94,7 +94,7 @@ class SimulatorLightEmission(SimtelRunner):
         Path
             Full path of the run script.
         """
-        script_file = self.job_files.get_file_name(file_type="sub_script")
+        script_file = self.submission_files.get_file_name(file_type="sub_script")
         output_file = self.runner_service.get_file_name(file_type="sim_telarray_output")
         if output_file.exists():
             raise FileExistsError(
@@ -223,6 +223,7 @@ class SimulatorLightEmission(SimtelRunner):
         return telescope_position_file
 
     def _get_illuminator_position(self):
+        """Return illuminator position (x, y, z) in ground coordinates."""
         pos = self.light_emission_config.get("light_source_position")
         if pos is None:
             pos = self.calibration_model.get_parameter_value_with_unit(
@@ -231,6 +232,7 @@ class SimulatorLightEmission(SimtelRunner):
         return pos
 
     def _get_illuminator_pointing_vector(self, pos=None):
+        """Return illuminator pointing vector; prefer explicit config if available."""
         pointing_vector = self.light_emission_config.get("light_source_pointing")
         if pointing_vector is not None:
             return pointing_vector
@@ -241,6 +243,10 @@ class SimulatorLightEmission(SimtelRunner):
 
     @staticmethod
     def _should_use_telpos_file(pointing_vector):
+        """Decide whether to use telpos file based on pointing vector.
+
+        Rule: do not use telpos only if pointing is (0, 0, -1) (within tolerance).
+        """
         try:
             vec = np.asarray(pointing_vector, dtype=float)
         except (TypeError, ValueError):
@@ -408,7 +414,8 @@ class SimulatorLightEmission(SimtelRunner):
             f"--angular-distribution {angular_distribution}",
         ]
 
-    def _sanitize_name(self, value):
+    @staticmethod
+    def _sanitize_name(value):
         return "".join(ch if (ch.isalnum() or ch in ("-", "_")) else "_" for ch in str(value))
 
     def _add_illuminator_command_options(self):
