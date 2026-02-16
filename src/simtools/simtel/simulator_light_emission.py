@@ -13,6 +13,7 @@ from simtools.job_execution import job_manager
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
+from simtools.simtel import simtel_output_validator
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils.geometry import fiducial_radius_from_shape
 
@@ -283,7 +284,8 @@ class SimulatorLightEmission(SimtelRunner):
             ]
 
         cmd += ["-o", str(iact_output)]
-        return " ".join(cmd)
+        log_file = self.runner_service.get_file_name(file_type="light_emission_log")
+        return " ".join(cmd) + f" 2>&1 | gzip > {log_file}\n"
 
     def _get_site_command(self, app_name, config_directory, corsika_observation_level):
         """Return site command with altitude, atmosphere and telescope_position handling."""
@@ -459,7 +461,9 @@ class SimulatorLightEmission(SimtelRunner):
 
         parts += [f"-C {key}={value}" for key, value in options]
 
-        return sim_telarray_env_as_string() + " ".join(parts)
+        log_file = self.runner_service.get_file_name(file_type="sim_telarray_log")
+
+        return sim_telarray_env_as_string() + " ".join(parts) + f" 2>&1 | gzip > {log_file}\n"
 
     def calculate_distance_focal_plane_calibration_device(self):
         """
@@ -549,18 +553,10 @@ class SimulatorLightEmission(SimtelRunner):
             return f"{shape_out}:{float(expv)}"
         return shape_out
 
-    def verify_simulations(self):
-        """
-        Verify that the simulations were successful.
-
-        Returns
-        -------
-        bool
-            True if simulations were successful, False otherwise.
-        """
-        out = Path(self.runner_service.get_file_name(file_type="sim_telarray_output"))
-        if not out.exists():
-            self._logger.error(f"Expected sim_telarray output not found: {out}")
-            return False
-        self._logger.info(f"sim_telarray output found: {out}")
-        return True
+    def validate_simulations(self):
+        """Validate that the simulations were successful."""
+        simtel_output_validator.validate_sim_telarray(
+            data_files=Path(self.runner_service.get_file_name(file_type="sim_telarray_output")),
+            log_files=Path(self.runner_service.get_file_name(file_type="sim_telarray_log")),
+            array_models=None,
+        )
