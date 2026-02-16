@@ -110,6 +110,7 @@ def main():
 
     simulator = Simulator(label=app_context.args.get("label"))
     simulator.simulate()
+    simulator.validate_simulations()
 
 
 if __name__ == "__main__":

@@ -66,6 +66,9 @@ definitions:
         skip_for_production_db:
           type: boolean
           description: "Skip test if production DB is used."
+        skip_integration_test:
+          type: string
+          description: "Skip test with the given skip message."
         model_version_use_current:
           type: boolean
           description: |
