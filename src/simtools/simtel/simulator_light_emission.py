@@ -64,11 +64,18 @@ class SimulatorLightEmission(SimtelRunner):
                 "flasher_type"
             ).lower()
 
-        config["flasher_photons"] = (
-            self.calibration_model.get_parameter_value("flasher_photons")
-            if not config.get("test", False)
-            else 1e8
-        )
+        if not config.get("test", False):
+            config["flasher_photons"] = self.calibration_model.get_parameter_value(
+                "flasher_photons"
+            )
+        else:
+            light_source_type = config.get("light_source_type")
+            if light_source_type == "illuminator":
+                config["flasher_photons"] = 1e8
+            elif light_source_type == "flat_fielding":
+                config["flasher_photons"] = 1e6
+            else:
+                config["flasher_photons"] = 1e6
 
         if config.get("light_source_position") is not None:
             config["light_source_position"] = (
