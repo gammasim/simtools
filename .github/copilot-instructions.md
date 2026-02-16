@@ -248,7 +248,7 @@ make linkcheck              # Check links
 
 ## AI Agent Roles & Responsibilities
 
-### 🔬 Senior Astrophysics Expert Agent
+### 🔬 Astrophysics Expert Agent
 
 **Focus:** Scientific correctness, physical models, numerical stability.
 
@@ -264,12 +264,12 @@ make linkcheck              # Check links
 
 ---
 
-### 💻 Senior Developer Agent
+### 💻 Developer Agent
 
 **Focus:** Code quality, architecture, testing, maintainability.
 
 **Key Rules:**
-1. **Always test:** `pytest tests/unit_tests/` after changes (≥90% coverage)
+1. **Always test:** `pytest tests/unit_tests/` after changes (≥90% coverage) in conda environment 'simtools-dev'
 2. **Always lint:** `pre-commit run --all-files` before commits
 3. **Follow conventions:** pathlib, logging, f-strings, NumPy docstrings
 4. **Mock external deps:** DB, file I/O, network must be mocked in unit tests
@@ -284,7 +284,7 @@ make linkcheck              # Check links
 
 ---
 
-### 📚 Senior Documentation Manager Agent
+### 📚 Documentation Manager Agent
 
 **Focus:** Clarity, completeness, consistency, user experience.
 
@@ -311,6 +311,7 @@ make linkcheck              # Check links
 - Use simple, readable code over clever optimizations
 - Study existing patterns before implementing
 - Document assumptions and non-obvious decisions
+- Work in conda environment 'simtools-dev' for testing and documentation
 
 ❌ **DON'T:**
 - Skip tests or claim "obvious code doesn't need tests"
