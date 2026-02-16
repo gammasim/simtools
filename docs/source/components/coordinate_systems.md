@@ -1,4 +1,4 @@
-# Coordinate Systems in simtools
+# Coordinate Systems
 
 simtools uses multiple coordinate systems for telescope positioning, simulations, and analysis. This document describes the systems and how they are used.
 
@@ -9,7 +9,7 @@ The [pyproj](https://pyproj4.github.io/pyproj/stable/) library is used for trans
 
 ### Mercator (WGS84) System
 
-Geographic latitude and longitude (EPSG:4326).
+Geographic latitude and longitude
 
 - **Axes:** Latitude (x), Longitude (y)
 - **Units:** Degrees
@@ -17,12 +17,11 @@ Geographic latitude and longitude (EPSG:4326).
 
 ### UTM (Universal Transverse Mercator) System
 
-UTM coordinates in 60 zones (6° longitude each).
+UTM coordinates
 
 - **Axes:** Easting (x), Northing (y)
 - **Units:** Meters
 - **Scale factor:** $k_0 = 0.9996$ at central meridian
-- **EPSG codes:** 32601-32660 (Northern hemisphere)
 - **Altitude:** Height above sea level (meters)
 
 ### Ground (Local/sim_telarray) System
