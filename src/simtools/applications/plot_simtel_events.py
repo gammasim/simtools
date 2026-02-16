@@ -1,79 +1,81 @@
 #!/usr/bin/python3
 
 r"""
-Plot simulated events.
+Plot simulated events from sim_telarray files.
 
-Produces figures from one or more sim_telarray (.simtel.zst) files
-It is meant to run after simulations (e.g., simtools-simulate-flasher,
+Produces diagnostic figures from sim_telarray (.simtel.zst) files.
+Meant to run after simulations (e.g., simtools-simulate-flasher,
 simtools-simulate-illuminator).
 
 What it does
 ------------
-- Loads each provided sim_telarray file
-- Generates selected plots (camera image, time traces, waveform matrices, peak timing, etc.)
-- Optionally saves all figures to a single multi-page PDF per input file
-- Optionally also saves individual PNGs
+- Loads the provided sim_telarray file
+- Generates selected plots (signals, pedestals, time traces, waveforms, peak timing, etc.)
+- Saves all figures to a single multi-page PDF
+- Optionally also saves individual PNG files per figure
 
 Command line arguments
 ----------------------
-simtel_files (list, required)
-    One or more sim_telarray files to visualize (.simtel.zst).
+simtel_file (str, required)
+    A sim_telarray file to visualize (.simtel.zst).
+telescope (str, required)
+    Telescope name to process (e.g., LSTN-04, MSTN-01).
 plots (list, optional)
-    Which plots to generate. Choose from: event_image, time_traces, waveform_matrix,
-    step_traces, integrated_signal_image, integrated_pedestal_image, peak_timing, all.
+    Which plots to generate. Choices: pedestals, signals, peak_timing, time_traces,
+    waveforms, step_traces, all. Default: all.
 n_pixels (int, optional)
-    For time_traces: number of pixel traces to draw. Default: 3.
+    For time_traces: number of brightest pixel traces to plot. Default: 3.
 pixel_step (int, optional)
-    For step_traces and waveform_matrix: step between pixel indices. Default: 100.
+    For step_traces and waveforms: step between pixel indices. Default: 100.
 max_pixels (int, optional)
-    For step_traces: cap the number of plotted pixels. Default: None.
+    For step_traces: maximum number of pixels to plot. Default: None (no limit).
 vmax (float, optional)
-    For waveform_matrix: upper limit of color scale. Default: None.
-half_width (int, optional)
-    For integrated_*_image: half window width in samples. Default: 8.
-offset (int, optional)
-    For integrated_pedestal_image: offset between pedestal and peak windows. Default: 16.
+    For waveforms: upper limit of color scale. Default: None (auto-scale).
 sum_threshold (float, optional)
-    For peak_timing: minimum pixel sum to consider a pixel. Default: 10.0.
-peak_width (int, optional)
-    For peak_timing: expected peak width in samples. Default: 8.
-examples (int, optional)
-    For peak_timing: show example traces. Default: 3.
+    For peak_timing: minimum pixel sum to consider. Default: 10.0.
 timing_bins (int, optional)
-    For peak_timing: number of histogram bins for peak sample. Default: None (contiguous bins).
-distance (float, optional)
-    Optional distance annotation for signals.
+    For peak_timing: number of histogram bins. Default: None (unit-width bins).
+event_id (int or list, optional)
+    Specific event ID(s) to plot. Default: None (first event).
+max_events (int, optional)
+    Maximum number of events to process. Default: 1.
 output_file (str, optional)
-    Base name for output. If provided, outputs will be placed under the standard IOHandler
-    output directory and named ``<base>_<inputstem>.pdf``. If omitted, defaults are derived
-    from each input file name.
+    Base name for output files. PDF will be named ``<base>_<inputstem>.pdf``.
+    If omitted, uses input file stem.
 save_pngs (flag, optional)
-    Also save individual PNG files per figure.
+    Also save individual PNG files per plot.
 dpi (int, optional)
-    DPI for PNG outputs. Default: 300.
+    Resolution for PNG outputs. Default: 300.
 output_path (str, optional)
-    Path to save the output files.
+    Directory for output files.
 
 Examples
 --------
-1) Camera image and time traces for a single file, save a PDF:
+1) Plot signals and time traces for a telescope:
 
-   simtools-plot-simtel-events \
-     --simtel_files full_simulation_run000010_North_7.0.0_simulate_flasher.simtel.zst \
-     --plots signals time_traces \
-     --telescope LSTN-04 \
-     --output_file simulate_illuminator_inspect
+   simtools-plot-simtel-events \\
+     --simtel_file run000010_North_7.0.0_simulate_flasher.simtel.zst \\
+     --telescope LSTN-04 \\
+     --plots signals time_traces \\
+     --output_file flasher_inspect
 
-2) All plots for multiple files, PNGs and PDFs:
+2) Generate all plots with PNG outputs:
 
-   simtools-plot-simtel-events \
-     --simtel_files f1.simtel.zst f2.simtel.zst \
-     --plots all \
+   simtools-plot-simtel-events \\
+     --simtel_file run000010.simtel.zst \\
+     --telescope MSTN-01 \\
+     --plots all \\
      --save_pngs --dpi 200
 
-"""
+3) Plot specific events:
 
-from pathlib import Path
+   simtools-plot-simtel-events \\
+     --simtel_file run000010.simtel.zst \\
+     --telescope LSTN-04 \\
+     --event_id 5 10 15 \\
+     --plots signals pedestals
+
+"""
 
 import simtools.utils.general as gen
 from simtools.application_control import get_application_label, startup_application
@@ -91,23 +93,22 @@ def _parse():
     )
 
     config.parser.add_argument(
-        "--simtel_files",
-        help="One or more sim_telarray files (.simtel.zst)",
-        nargs="+",
+        "--simtel_file",
+        help="Input sim_telarray file (.simtel.zst)",
         required=True,
     )
     config.parser.add_argument(
         "--plots",
         help=f"Plots to generate. Choices: {', '.join(sorted(PLOT_CHOICES))}",
         nargs="+",
-        default=["signals"],
+        default=["all"],
         choices=sorted(PLOT_CHOICES),
     )
     config.parser.add_argument(
         "--n_pixels", type=int, default=3, help="For time_traces: number of pixel traces"
     )
     config.parser.add_argument(
-        "--pixel_step", type=int, default=100, help="Step between pixel ids for step plots"
+        "--pixel_step", type=int, default=10, help="Step between pixel ids for step plots"
     )
     config.parser.add_argument(
         "--max_pixels", type=int, default=None, help="Cap number of pixels for step traces"
@@ -147,10 +148,17 @@ def _parse():
         help="Optional distance annotation for event_image (same units as input expects)",
     )
     config.parser.add_argument(
-        "--event_index",
+        "--event_id",
         type=int,
+        nargs="+",
         default=None,
-        help="0-based index of the event to plot; default is the first event",
+        help="Event ID(s) of the events to be plotted",
+    )
+    config.parser.add_argument(
+        "--max_events",
+        type=int,
+        default=1,
+        help="Maximum number of events to process",
     )
     config.parser.add_argument(
         "--save_pngs",
@@ -165,17 +173,11 @@ def _parse():
 
 
 def main():
-    """Generate plots from sim_telarray files."""
+    """Generate plots from sim_telarray file."""
     app_context = startup_application(_parse)
 
-    simtel_files = [
-        Path(p).expanduser() for p in gen.ensure_iterable(app_context.args["simtel_files"])
-    ]
     plots = list(gen.ensure_iterable(app_context.args.get("plots")))
-
-    generate_and_save_plots(
-        simtel_files=simtel_files, plots=plots, args=app_context.args, ioh=app_context.io_handler
-    )
+    generate_and_save_plots(plots=plots, args=app_context.args, ioh=app_context.io_handler)
 
 
 if __name__ == "__main__":
