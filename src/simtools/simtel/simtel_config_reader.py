@@ -75,7 +75,6 @@ class SimtelConfigReader:
     ):
         """Initialize SimtelConfigReader."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init SimtelConfigReader")
 
         self.schema_file = schema_file
         self.schema_dict = (
@@ -302,9 +301,7 @@ class SimtelConfigReader:
         # string represents a lists of values (space or comma separated)
         if len(column) == 1:
             column = column[0].split(",") if "," in column[0] else column[0].split(" ")
-        self._logger.debug(
-            f"Adding value from simtel config: {column} (n_dim={n_dim}, default={default})"
-        )
+
         column = [None if item.lower() == "none" else item for item in column]
         column, except_from_all = self._resolve_all_in_column(column)
         # extend array to required length (simtel uses sometimes 'all:' for all entries)
