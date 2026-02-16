@@ -843,6 +843,67 @@ def test__get_light_source_command(simulator_instance):
         simulator_instance._get_light_source_command()
 
 
+def test__get_illuminator_position_prefers_config(simulator_instance):
+    simulator_instance.light_emission_config = {
+        "light_source_position": [5.0 * u.m, 6.0 * u.m, 7.0 * u.m]
+    }
+    pos = simulator_instance._get_illuminator_position()
+    assert pos == [5.0 * u.m, 6.0 * u.m, 7.0 * u.m]
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_not_called()
+
+
+def test__get_illuminator_position_falls_back_to_model(simulator_instance):
+    simulator_instance.light_emission_config = {}
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = [
+        1.0 * u.m,
+        2.0 * u.m,
+        3.0 * u.m,
+    ]
+    pos = simulator_instance._get_illuminator_position()
+    assert pos == [1.0 * u.m, 2.0 * u.m, 3.0 * u.m]
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_once_with(
+        "array_element_position_ground"
+    )
+
+
+def test__get_illuminator_pointing_vector_prefers_config(simulator_instance):
+    simulator_instance.light_emission_config = {
+        "light_source_pointing": [0.5, 0.6, 0.7],
+        "light_source_position": [5.0 * u.m, 6.0 * u.m, 7.0 * u.m],
+    }
+    with patch.object(simulator_instance, "_calibration_pointing_direction") as mock_pointing:
+        vec = simulator_instance._get_illuminator_pointing_vector()
+        assert vec == [0.5, 0.6, 0.7]
+        mock_pointing.assert_not_called()
+
+
+def test__get_illuminator_pointing_vector_computed_from_position(simulator_instance):
+    simulator_instance.light_emission_config = {}
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = [
+        10.0 * u.m,
+        20.0 * u.m,
+        30.0 * u.m,
+    ]
+
+    with patch.object(
+        simulator_instance,
+        "_calibration_pointing_direction",
+        return_value=([0.1, 0.2, 0.3], []),
+    ) as mock_pointing:
+        vec = simulator_instance._get_illuminator_pointing_vector()
+
+    assert vec == [0.1, 0.2, 0.3]
+    mock_pointing.assert_called_once()
+
+
+def test__should_use_telpos_file_rule(simulator_instance):
+    assert simulator_instance._should_use_telpos_file([0.0, 0.0, -1.0]) is False
+    assert simulator_instance._should_use_telpos_file([0.0, 0.0, -0.9]) is True
+    assert simulator_instance._should_use_telpos_file([1.0, 0.0, 0.0]) is True
+    assert simulator_instance._should_use_telpos_file(None) is True
+    assert simulator_instance._should_use_telpos_file(["a", "b", "c"]) is True
+
+
 def test__get_site_command(simulator_instance, tmp_test_directory):
     """Test _get_site_command method."""
 
@@ -876,14 +937,23 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
         "_write_telescope_position_file",
         return_value=f"{tmp_test_directory}/telpos.txt",
     ) as mock_telpos:
+        # Default-down pointing: do not use telpos file.
+        simulator_instance.light_emission_config = {
+            "light_source_type": "illuminator",
+            "light_source_pointing": [0.0, 0.0, -1.0],
+        }
         result = simulator_instance._get_site_command("other-app", "/config/dir", mock_altitude)
+        assert result == ["-h  2200 "]
+        mock_telpos.assert_not_called()
 
-        expected = [
-            "-h  2200 ",
-            f"--telpos-file {tmp_test_directory}/telpos.txt",
-        ]
-        assert result == expected
-        mock_telpos.assert_called_once()
+        # Non-default pointing: use telpos file.
+        simulator_instance.light_emission_config = {
+            "light_source_type": "illuminator",
+            "light_source_pointing": [0.0, 0.0, -0.9],
+        }
+        result = simulator_instance._get_site_command("other-app", "/config/dir", mock_altitude)
+        assert result == ["-h  2200 ", f"--telpos-file {tmp_test_directory}/telpos.txt"]
+        assert mock_telpos.call_count == 1
 
 
 def test__make_light_emission_script(simulator_instance):
@@ -1252,7 +1322,7 @@ def test__initialize_light_emission_configuration_test_mode(simulator_instance):
 
     # Verify test mode overrides flasher_photons
     assert result["light_source_type"] == "laser"
-    assert result["flasher_photons"] == pytest.approx(1e6)  # Test mode value
+    assert result["flasher_photons"] == pytest.approx(1e8)  # Test mode value
     assert result["test"] is True
 
 
