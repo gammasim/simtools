@@ -222,6 +222,34 @@ class SimulatorLightEmission(SimtelRunner):
         telescope_position_file.write_text(f"{x_tel} {y_tel} {z_tel} {radius}\n", encoding="utf-8")
         return telescope_position_file
 
+    def _get_illuminator_position(self):
+        pos = self.light_emission_config.get("light_source_position")
+        if pos is None:
+            pos = self.calibration_model.get_parameter_value_with_unit(
+                "array_element_position_ground"
+            )
+        return pos
+
+    def _get_illuminator_pointing_vector(self, pos=None):
+        pointing_vector = self.light_emission_config.get("light_source_pointing")
+        if pointing_vector is not None:
+            return pointing_vector
+        if pos is None:
+            pos = self._get_illuminator_position()
+        x_cal, y_cal, z_cal = pos
+        return self._calibration_pointing_direction(x_cal, y_cal, z_cal)[0]
+
+    @staticmethod
+    def _should_use_telpos_file(pointing_vector):
+        try:
+            vec = np.asarray(pointing_vector, dtype=float)
+        except (TypeError, ValueError):
+            return True
+        if vec.size < 3 or not np.all(np.isfinite(vec[:3])):
+            return True
+        is_default_down = np.allclose(vec[:3], [0.0, 0.0, -1.0], atol=1e-6)
+        return not is_default_down
+
     def _prepare_flasher_atmosphere_files(self, config_directory, model_id=1):
         """
         Prepare canonical atmosphere aliases for ff-1m and return model id.
@@ -300,26 +328,11 @@ class SimulatorLightEmission(SimtelRunner):
         cmd = [f"-h  {corsika_observation_level.to(u.m).value} "]
 
         if self.light_emission_config.get("light_source_type") == "illuminator":
-            pointing_vector = self.light_emission_config.get("light_source_pointing")
-            if pointing_vector is None:
-                pos = self.light_emission_config.get("light_source_position")
-                if pos is None:
-                    pos = self.calibration_model.get_parameter_value_with_unit(
-                        "array_element_position_ground"
-                    )
-                x_cal, y_cal, z_cal = pos
-                pointing_vector = self._calibration_pointing_direction(x_cal, y_cal, z_cal)[0]
-
-            try:
-                vec = np.array(pointing_vector, dtype=float)
-            except (TypeError, ValueError):
-                vec = np.array([], dtype=float)
-
-            is_default_down = vec.size >= 3 and np.allclose(vec[:3], [0.0, 0.0, -1.0], atol=1e-6)
-            if not is_default_down:
+            pointing_vector = self._get_illuminator_pointing_vector()
+            if self._should_use_telpos_file(pointing_vector):
                 self._logger.info(
                     "Using telescope position file for illuminator setup "
-                    f"(pointing={vec[:3].tolist() if vec.size >= 3 else pointing_vector})."
+                    f"(pointing={pointing_vector})."
                 )
                 cmd.append(f"--telpos-file {self._write_telescope_position_file()}")
         return cmd
@@ -400,16 +413,9 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _add_illuminator_command_options(self):
         """Get illuminator-specific command options for light emission script."""
-        pos = self.light_emission_config.get("light_source_position")
-        if pos is None:
-            pos = self.calibration_model.get_parameter_value_with_unit(
-                "array_element_position_ground"
-            )
+        pos = self._get_illuminator_position()
         x_cal, y_cal, z_cal = pos
-        if self.light_emission_config.get("light_source_pointing"):
-            pointing_vector = self.light_emission_config["light_source_pointing"]
-        else:
-            pointing_vector = self._calibration_pointing_direction(x_cal, y_cal, z_cal)[0]
+        pointing_vector = self._get_illuminator_pointing_vector(pos)
         flasher_wavelength = self.calibration_model.get_parameter_value_with_unit(
             "flasher_wavelength"
         )
