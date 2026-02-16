@@ -11,6 +11,7 @@ import logging
 import shutil
 from copy import copy
 from math import pi, tan
+from pathlib import Path
 
 import astropy.io.ascii
 import astropy.units as u
@@ -42,8 +43,10 @@ class RayTracing:
         label used for output file naming.
     zenith_angle: astropy.units.Quantity
         Zenith angle.
-    off_axis_angle: list of astropy.units.Quantity
-        Off-axis angles.
+    off_axis_angle: list of tuples or astropy.units.Quantity, optional
+        Off-axis angles as (x, y) tuples in degrees, or list of scalar angles
+        for backward compatibility. If scalar values provided, cardinal offsets
+        will be generated in N, S, E, W directions.
     source_distance: astropy.units.Quantity
         Source distance.
     single_mirror_mode: bool
@@ -54,6 +57,11 @@ class RayTracing:
         Seed for the random number generator used for focal length variation.
     mirror_numbers: list, str
         List of mirror numbers (or 'all').
+    offset_file: Path or str, optional
+        Path to ECSV file containing x, y offset columns (in degrees).
+    offset_directions: list, optional
+        Cardinal directions for offset generation: ['N', 'S', 'E', 'W'].
+        Only used when generating from scalar offsets.
     """
 
     YLABEL = {
@@ -75,6 +83,8 @@ class RayTracing:
         use_random_focal_length=False,
         random_focal_length_seed=None,
         mirror_numbers="all",
+        offset_file=None,
+        offset_directions=None,
     ):
         """Initialize RayTracing class."""
         self._logger = logging.getLogger(__name__)
@@ -86,7 +96,15 @@ class RayTracing:
         self.label = label if label is not None else self.telescope_model.label
 
         self.zenith_angle = zenith_angle.to("deg").value
-        self.off_axis_angle = np.around(off_axis_angle.to("deg").value, 5)
+        self.elevation_angle = 90.0 - self.zenith_angle
+
+        # Process off-axis angles: convert to list of (x, y) tuples
+        if offset_file is not None:
+            self.off_axis_angle = self._load_offset_file(offset_file)
+            self._logger.info(f"Loaded {len(self.off_axis_angle)} offsets from {offset_file}")
+        else:
+            self.off_axis_angle = self._process_offset_angles(off_axis_angle, offset_directions)
+
         self.single_mirror_mode = single_mirror_mode
         self.use_random_focal_length = use_random_focal_length
         self.random_focal_length_seed = random_focal_length_seed
@@ -99,9 +117,108 @@ class RayTracing:
         self._psf_images = {}
         self._results = None
 
-    def __repr__(self):
-        """Return string representation of RayTracing class."""
-        return f"RayTracing(label={self.label})\n"
+    def _process_offset_angles(self, off_axis_angle, offset_directions):
+        """
+        Process off-axis angles and convert to (x, y) tuples.
+
+        Parameters
+        ----------
+        off_axis_angle: astropy.units.Quantity
+            Scalar angles for backward compatibility.
+        offset_directions: list or None
+            Cardinal directions ['N', 'S', 'E', 'W'] for offset generation.
+
+        Returns
+        -------
+        list
+            List of (x, y) tuples in degrees.
+        """
+        # Convert to numpy array of degrees
+        angles_deg = np.around(off_axis_angle.to("deg").value, 5)
+
+        if not isinstance(angles_deg, np.ndarray):
+            angles_deg = np.atleast_1d(angles_deg)
+
+        # If offsets are already tuples, return as-is
+        if len(angles_deg) > 0 and isinstance(angles_deg[0], (tuple, list)):
+            return [tuple(float(x) for x in offset) for offset in angles_deg]
+
+        # Default to all four cardinal directions if not specified
+        if offset_directions is None:
+            offset_directions = ["N", "S", "E", "W"]
+
+        # Generate cardinal direction offsets
+        offsets = []
+        direction_map = {
+            "N": (0.0, 1.0),
+            "S": (0.0, -1.0),
+            "E": (1.0, 0.0),
+            "W": (-1.0, 0.0),
+        }
+
+        for angle in angles_deg:
+            for direction in offset_directions:
+                if direction not in direction_map:
+                    self._logger.warning(f"Unknown direction {direction}, skipping")
+                    continue
+                dx, dy = direction_map[direction]
+                offsets.append((dx * angle, dy * angle))
+
+        return offsets
+
+    def _load_offset_file(self, offset_file_path):
+        """
+        Load offsets from ECSV file.
+
+        Expected columns: x, y (in degrees)
+
+        Parameters
+        ----------
+        offset_file_path: Path or str
+            Path to ECSV file.
+
+        Returns
+        -------
+        list
+            List of (x, y) tuples in degrees.
+        """
+        offset_file = Path(offset_file_path)
+        if not offset_file.exists():
+            msg = f"Offset file not found: {offset_file}"
+            self._logger.error(msg)
+            raise FileNotFoundError(msg)
+
+        try:
+            table = astropy.io.ascii.read(offset_file, format="ecsv")
+            offsets = [(float(row["x"]), float(row["y"])) for row in table]
+            self._logger.info(f"Loaded {len(offsets)} offsets from {offset_file}")
+            return offsets
+        except Exception as e:
+            msg = f"Error reading offset file {offset_file}: {e}"
+            self._logger.error(msg)
+            raise RuntimeError(msg) from e
+
+    def _calculate_phi_from_offset(self, off_x, off_y):
+        """
+        Calculate telescope azimuth (phi) offset from x, y offsets considering zenith angle.
+
+        Parameters
+        ----------
+        off_x: float
+            Azimuth offset direction component in degrees.
+        off_y: float
+            Elevation offset direction component in degrees.
+
+        Returns
+        -------
+        float
+            Azimuth offset phi in degrees (change from original phi=0).
+        """
+        if off_x == 0.0 and off_y == 0.0:
+            return 0.0
+
+        zenith_rad = np.radians(self.zenith_angle)
+        return off_x * np.cos(zenith_rad)
 
     def _initialize_mirror_configuration(
         self,
@@ -211,11 +328,17 @@ class RayTracing:
         force: bool
             Force flag will remove existing files and simulate again.
         """
-        for this_off_axis in self.off_axis_angle:
+        for off_x, off_y in self.off_axis_angle:
             for mirror_number, mirror_data in self.mirrors.items():
                 self._logger.info(
-                    f"Simulating RayTracing for off_axis={this_off_axis}, mirror={mirror_number}"
+                    f"Simulating RayTracing for off_axis=({off_x:.3f}, {off_y:.3f}), "
+                    f"mirror={mirror_number}"
                 )
+
+                # Calculate theta (radial distance) and phi (azimuth)
+                theta_offset = np.sqrt(off_x**2 + off_y**2)
+                phi = self._calculate_phi_from_offset(off_x, off_y)
+
                 simtel = SimulatorRayTracing(
                     telescope_model=self.telescope_model,
                     site_model=self.site_model,
@@ -223,7 +346,10 @@ class RayTracing:
                     test=test,
                     config_data={
                         "zenith_angle": self.zenith_angle,
-                        "off_axis_angle": this_off_axis,
+                        "off_axis_x": off_x,
+                        "off_axis_y": off_y,
+                        "off_axis_theta": theta_offset,
+                        "off_axis_phi": phi,
                         "source_distance": mirror_data["source_distance"],
                         "single_mirror_mode": self.single_mirror_mode,
                         "use_random_focal_length": self.use_random_focal_length,
@@ -237,7 +363,8 @@ class RayTracing:
                     self._generate_file_name(
                         file_type="photons",
                         suffix=".lis",
-                        off_axis_angle=this_off_axis,
+                        off_axis_x=off_x,
+                        off_axis_y=off_y,
                         mirror_number=mirror_number if self.single_mirror_mode else None,
                     )
                 )
@@ -313,10 +440,6 @@ class RayTracing:
 
         Parameters
         ----------
-        all_mirrors: list
-            List of mirror numbers to analyze.
-        focal_length: float
-            Focal length of the telescope.
         tel_transmission_pars: list
             Telescope transmission parameters.
         do_analyze: bool
@@ -333,32 +456,43 @@ class RayTracing:
         """
         _rows = []
 
-        for this_off_axis in self.off_axis_angle:
+        for off_x, off_y in self.off_axis_angle:
             for mirror_number, mirror_data in self.mirrors.items():
-                self._logger.debug(f"Analyzing RayTracing for off_axis={this_off_axis}")
+                self._logger.debug(f"Analyzing RayTracing for off_axis=({off_x:.3f}, {off_y:.3f})")
 
                 photons_file = self.output_directory.joinpath(
                     self._generate_file_name(
-                        "photons", ".lis", off_axis_angle=this_off_axis, mirror_number=mirror_number
+                        "photons",
+                        ".lis",
+                        off_axis_x=off_x,
+                        off_axis_y=off_y,
+                        mirror_number=mirror_number,
                     )
                     + ".gz"
                 )
 
+                # Calculate theta and phi for transmission calculation
+                theta_offset = np.sqrt(off_x**2 + off_y**2)
+
                 tel_transmission = compute_telescope_transmission(
-                    tel_transmission_pars, this_off_axis
+                    tel_transmission_pars, theta_offset
                 )
                 image = self._create_psf_image(
                     photons_file,
                     mirror_data["focal_length"],
-                    this_off_axis,
                     containment_fraction,
                     use_rx,
                 )
 
+                # Store PSF image with (x, y) tuple key
+                self._psf_images[(off_x, off_y)] = copy(image)
+
                 if do_analyze:
                     _current_results = self._analyze_image(
                         image,
-                        this_off_axis,
+                        off_x,
+                        off_y,
+                        theta_offset,
                         containment_fraction,
                         tel_transmission,
                     )
@@ -390,9 +524,7 @@ class RayTracing:
             else [1, 0, 0, 0]
         )
 
-    def _create_psf_image(
-        self, photons_file, focal_length, this_off_axis, containment_fraction, use_rx=False
-    ):
+    def _create_psf_image(self, photons_file, focal_length, containment_fraction, use_rx=False):
         """
         Create PSF image from photons file.
 
@@ -402,8 +534,8 @@ class RayTracing:
             Path to the photons file.
         focal_length: float
             Focal length of the telescope.
-        this_off_axis: float
-            Off-axis angle.
+        theta_offset: float
+            Radial off-axis angle in degrees.
         containment_fraction: float
             Containment fraction for PSF containment calculation.
         use_rx: bool
@@ -416,13 +548,15 @@ class RayTracing:
         """
         image = PSFImage(focal_length=focal_length, containment_fraction=containment_fraction)
         image.process_photon_list(photons_file, use_rx)
-        self._psf_images[this_off_axis] = copy(image)
+        # Note: storage key is set in _process_off_axis_and_mirror with (x, y) tuple
         return image
 
     def _analyze_image(
         self,
         image,
-        this_off_axis,
+        off_x,
+        off_y,
+        theta_offset,
         containment_fraction,
         tel_transmission,
     ):
@@ -436,8 +570,12 @@ class RayTracing:
         ----------
         image: PSFImage
             PSF image object.
-        this_off_axis: float
-            Off-axis angle (deg)
+        off_x: float
+            X offset in degrees.
+        off_y: float
+            Y offset in degrees.
+        theta_offset: float
+            Radial offset (radial distance) in degrees.
         containment_fraction: float
             Containment fraction for PSF containment calculation.
         tel_transmission: float
@@ -446,15 +584,19 @@ class RayTracing:
         Returns
         -------
         tuple
-            (off_axis_angle, psf_cm, psf_deg, eff_area, eff_focal_length)
+            (off_x, off_y, theta_offset, azimuth, psf_cm, psf_deg, eff_area, eff_focal_length)
         """
         r = np.hypot(image.centroid_x, image.centroid_y)
+        azimuth = self._calculate_phi_from_offset(off_x, off_y)
         return (
-            this_off_axis * u.deg,
+            off_x * u.deg,
+            off_y * u.deg,
+            theta_offset * u.deg,
+            azimuth * u.deg,
             image.get_psf(containment_fraction, "cm") * u.cm,
             image.get_psf(containment_fraction, "deg") * u.deg,
             image.get_effective_area(tel_transmission) * u.m * u.m,
-            np.nan if this_off_axis == 0 else r / tan(this_off_axis * pi / 180.0),
+            np.nan if theta_offset == 0 else r / tan(theta_offset * pi / 180.0),
         )
 
     def _store_results(self, _rows):
@@ -466,7 +608,7 @@ class RayTracing:
         _rows: list
             List of rows containing analysis results.
         """
-        _columns = ["Off-axis angle"]
+        _columns = ["off_x", "off_y", "off_theta", "off_azimuth"]
         _columns.extend(list(self.YLABEL.keys()))
         if self.single_mirror_mode:
             _columns.append("mirror_number")
@@ -510,10 +652,10 @@ class RayTracing:
 
     def plot(self, key, save=False, psf_diameter_cm=None, **kwargs):
         """
-        Plot analysis results vs off-axis angle.
+        Plot analysis results vs radial off-axis angle.
 
         Visualizes computed PSF, effective area, or effective focal length
-        as a function of off-axis angle. Optionally saves individual PSF images
+        as a function of radial off-axis angle. Optionally saves individual PSF images
         and cumulative distributions.
 
         Parameters
@@ -536,7 +678,7 @@ class RayTracing:
 
         try:
             plot = visualize.plot_table(
-                self._results["Off-axis angle", key], self.YLABEL[key], no_legend=True, **kwargs
+                self._results["off_theta", key], self.YLABEL[key], no_legend=True, **kwargs
             )
         except KeyError as exc:
             raise KeyError(INVALID_KEY_TO_PLOT) from exc
@@ -552,10 +694,11 @@ class RayTracing:
             self._logger.info(f"Saving fig in {plot_file}")
             plot.savefig(plot_file)
 
-            for off_axis_key, image in self._psf_images.items():
+            for (off_x, off_y), image in self._psf_images.items():
                 image_file_name = self._generate_file_name(
                     file_type="ray_tracing",
-                    off_axis_angle=off_axis_key,
+                    off_axis_x=off_x,
+                    off_axis_y=off_y,
                     suffix=".pdf",
                     extra_label=f"image_{key}",
                 )
@@ -565,7 +708,8 @@ class RayTracing:
 
                 image_cumulative_file_name = self._generate_file_name(
                     file_type="ray_tracing",
-                    off_axis_angle=off_axis_key,
+                    off_axis_x=off_x,
+                    off_axis_y=off_y,
                     suffix=".pdf",
                     extra_label=f"cumulative_psf_{key}",
                 )
@@ -652,16 +796,16 @@ class RayTracing:
         Get list of analyzed PSF images.
 
         Returns PSFImage objects containing photon positions, centroids,
-        PSF containment diameters, and effective areas for each off-axis angle.
+        PSF containment diameters, and effective areas for each off-axis point.
 
         Returns
         -------
         List of PSFImages
         """
         images = [
-            self._psf_images[this_off_axis]
-            for this_off_axis in self.off_axis_angle
-            if self._psf_images and this_off_axis in self._psf_images
+            self._psf_images[(off_x, off_y)]
+            for off_x, off_y in self.off_axis_angle
+            if self._psf_images and (off_x, off_y) in self._psf_images
         ]
         if len(images) == 0:
             self._logger.warning("No image found")
@@ -669,9 +813,15 @@ class RayTracing:
         return images
 
     def _generate_file_name(
-        self, file_type, suffix, off_axis_angle=None, mirror_number=None, extra_label=None
+        self,
+        file_type,
+        suffix,
+        off_axis_x=None,
+        off_axis_y=None,
+        mirror_number=None,
+        extra_label=None,
     ):
-        """Generate file name for output files."""
+        """Generate file name for output files with (x, y) offsets."""
         file_type_prefix = file_type if file_type == "ray_tracing" else f"ray_tracing_{file_type}"
         return names.generate_file_name(
             file_type=file_type_prefix,
@@ -680,7 +830,8 @@ class RayTracing:
             telescope_model_name=self.telescope_model.name,
             source_distance=None if self.single_mirror_mode else self.mirrors[0]["source_distance"],
             zenith_angle=self.zenith_angle,
-            off_axis_angle=off_axis_angle,
+            off_axis_x=off_axis_x,
+            off_axis_y=off_axis_y,
             mirror_number=mirror_number if self.single_mirror_mode else None,
             label=self.label,
             extra_label=extra_label,
