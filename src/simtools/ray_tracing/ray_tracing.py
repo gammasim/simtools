@@ -520,11 +520,7 @@ class RayTracing:
         PSFImage
             PSF image object.
         """
-        image = PSFImage(
-            focal_length=focal_length,
-            containment_fraction=containment_fraction,
-            include_camera_rotation=False,
-        )
+        image = PSFImage(focal_length=focal_length, containment_fraction=containment_fraction)
         image.process_photon_list(photons_file, use_rx)
         return image
 
@@ -583,7 +579,7 @@ class RayTracing:
         _rows: list
             List of rows containing analysis results.
         """
-        _columns = ["off_x", "off_y", "off_theta"]
+        _columns = ["off_x", "off_y", "off axis angle"]
         _columns.extend(list(self.YLABEL.keys()))
         if self.single_mirror_mode:
             _columns.append("mirror_number")
@@ -653,7 +649,7 @@ class RayTracing:
 
         try:
             plot = visualize.plot_table(
-                self._results["off_theta", key], self.YLABEL[key], no_legend=True, **kwargs
+                self._results["off axis angle", key], self.YLABEL[key], no_legend=True, **kwargs
             )
         except KeyError as exc:
             raise KeyError(INVALID_KEY_TO_PLOT) from exc
