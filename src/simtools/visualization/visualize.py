@@ -606,7 +606,7 @@ def plot_hist_2d(data, **kwargs):
     plt.xlabel(x_title_unit)
     plt.ylabel(y_title_unit)
 
-    plt.gca().set_aspect("equal", adjustable="datalim")
+    plt.gca().set_aspect("equal", adjustable="box")
 
     if len(title) > 0:
         plt.title(title, y=1.02)

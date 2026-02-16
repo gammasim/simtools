@@ -16,6 +16,7 @@ import logging
 from pathlib import Path
 
 import astropy.units as u
+import numpy as np
 
 from simtools.io import ascii_handler
 from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
@@ -115,7 +116,7 @@ class ProductionStatisticsHandler:
             qrid_points_with_statistics.append(
                 {
                     "grid_point": grid_point,
-                    "interpolated_production_statistics": float(statistics),
+                    "interpolated_production_statistics": float(np.asarray(statistics).item()),
                 }
             )
         return qrid_points_with_statistics
