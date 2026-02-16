@@ -66,7 +66,7 @@ class SimulatorLightEmission(SimtelRunner):
         config["flasher_photons"] = (
             self.calibration_model.get_parameter_value("flasher_photons")
             if not config.get("test", False)
-            else 1e6
+            else 1e8
         )
 
         if config.get("light_source_position") is not None:
@@ -297,10 +297,32 @@ class SimulatorLightEmission(SimtelRunner):
                 f"--atmosphere {atmo_id}",
             ]
         # default path (not used for flasher now, but kept for completeness)
-        return [
-            f"-h  {corsika_observation_level.to(u.m).value} ",
-            f"--telpos-file {self._write_telescope_position_file()}",
-        ]
+        cmd = [f"-h  {corsika_observation_level.to(u.m).value} "]
+
+        if self.light_emission_config.get("light_source_type") == "illuminator":
+            pointing_vector = self.light_emission_config.get("light_source_pointing")
+            if pointing_vector is None:
+                pos = self.light_emission_config.get("light_source_position")
+                if pos is None:
+                    pos = self.calibration_model.get_parameter_value_with_unit(
+                        "array_element_position_ground"
+                    )
+                x_cal, y_cal, z_cal = pos
+                pointing_vector = self._calibration_pointing_direction(x_cal, y_cal, z_cal)[0]
+
+            try:
+                vec = np.array(pointing_vector, dtype=float)
+            except (TypeError, ValueError):
+                vec = np.array([], dtype=float)
+
+            is_default_down = vec.size >= 3 and np.allclose(vec[:3], [0.0, 0.0, -1.0], atol=1e-6)
+            if not is_default_down:
+                self._logger.info(
+                    "Using telescope position file for illuminator setup "
+                    f"(pointing={vec[:3].tolist() if vec.size >= 3 else pointing_vector})."
+                )
+                cmd.append(f"--telpos-file {self._write_telescope_position_file()}")
+        return cmd
 
     def _get_light_source_command(self):
         """Return light-source specific command options."""
