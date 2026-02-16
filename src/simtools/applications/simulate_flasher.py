@@ -134,7 +134,7 @@ def main():
         raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
 
     light_source.simulate()
-    light_source.verify_simulations()
+    light_source.validate_simulations()
 
     app_context.logger.info("Flasher simulation completed.")
 
