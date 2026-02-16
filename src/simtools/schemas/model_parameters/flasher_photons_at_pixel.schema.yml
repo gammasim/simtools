@@ -1,20 +1,19 @@
 %YAML 1.2
 ---
-title: Schema for flasher_var_photons model parameter
+title: Schema for flasher_photons_at_pixel model parameter
 schema_version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: flasher_var_photons
+name: flasher_photons_at_pixel
 description: |-
-  Variance on the number of photons per flasher shot.
+  Number of flasher photons at each photodetector.
 data:
-  - type: float64
+  - type: int64
     unit: dimensionless
-    default: 0.05
+    default: 500
     allowed_range:
-      min: 0
-      max: 1
+      min: 1
 instrument:
   class: Calibration
 activity:
@@ -25,5 +24,7 @@ activity:
 source:
   - Initial instrument setup
 simulation_software:
+  - name: sim_telarray
+    internal_parameter_name: laser_photons
   - name: simtools
     version: ">0.27.1"
