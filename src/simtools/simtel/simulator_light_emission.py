@@ -618,8 +618,8 @@ class SimulatorLightEmission(SimtelRunner):
             return f"{shape_out}:{float(expv)}"
         return shape_out
 
-    def validate_simulations(self):
-        """Validate that the simulations were successful."""
+    def verify_simulations(self):
+        """Verify that the simulations were successful."""
         simtel_output_validator.validate_sim_telarray(
             data_files=Path(self.runner_service.get_file_name(file_type="sim_telarray_output")),
             log_files=Path(self.runner_service.get_file_name(file_type="sim_telarray_log")),
