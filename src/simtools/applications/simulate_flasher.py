@@ -115,11 +115,13 @@ def main():
     )
 
     if app_context.args["run_mode"] == "full_simulation":
-        light_source = SimulatorLightEmission(
+        SimulatorLightEmission.simulate_from_config(
             light_emission_config=app_context.args,
             label=app_context.args.get("label"),
         )
-    elif app_context.args["run_mode"] == "direct_injection":
+        app_context.logger.info("Flasher simulation completed.")
+        return
+    if app_context.args["run_mode"] == "direct_injection":
         light_source = Simulator(label=app_context.args.get("label"))
     else:
         raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
