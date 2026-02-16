@@ -77,6 +77,26 @@ def create_pixel_patches_by_type(camera):
     return on_pixels, edge_pixels, off_pixels
 
 
+def _get_legend_handler(handler_type, is_hex):
+    """Get appropriate legend handler based on pixel shape.
+
+    Parameters
+    ----------
+    handler_type : str
+        Handler type prefix (e.g., "Pixel", "EdgePixel", "OffPixel").
+    is_hex : bool
+        True for hexagonal pixels, False for square pixels.
+
+    Returns
+    -------
+    Handler instance
+        Appropriate handler for the pixel shape and type.
+    """
+    shape = "Hex" if is_hex else "Square"
+    handler_name = f"{shape}{handler_type}Handler"
+    return getattr(leg_h, handler_name)()
+
+
 def add_pixel_legend(ax, on_pixels, off_pixels):
     """Add pixel/edge/off legend to the plot.
 
@@ -101,13 +121,9 @@ def add_pixel_legend(ax, on_pixels, off_pixels):
 
     is_hex = isinstance(on_pixels[0], mpatches.RegularPolygon)
     legend_handler_map = {
-        leg_h.PixelObject: leg_h.HexPixelHandler() if is_hex else leg_h.SquarePixelHandler(),
-        leg_h.EdgePixelObject: leg_h.HexEdgePixelHandler()
-        if is_hex
-        else leg_h.SquareEdgePixelHandler(),
-        leg_h.OffPixelObject: leg_h.HexOffPixelHandler()
-        if is_hex
-        else leg_h.SquareOffPixelHandler(),
+        leg_h.PixelObject: _get_legend_handler("Pixel", is_hex),
+        leg_h.EdgePixelObject: _get_legend_handler("EdgePixel", is_hex),
+        leg_h.OffPixelObject: _get_legend_handler("OffPixel", is_hex),
     }
 
     if off_pixels:
