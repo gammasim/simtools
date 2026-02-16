@@ -7,15 +7,11 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/si
 meta_schema_version: 0.1.0
 name: flasher_photons
 description: |-
-  Number of flasher photons simulated. Depending on the device and simulation type,
-  this might be the number of emitted photons or the number of photons at each
-  detector.
-short_description: |-
-  Number of flasher photons simulated.
+  Number of photons emitted by the flasher device.
 data:
   - type: int64
     unit: dimensionless
-    default: 500
+    default: 100000
     allowed_range:
       min: 1
 instrument:
@@ -28,7 +24,5 @@ activity:
 source:
   - Initial instrument setup
 simulation_software:
-  - name: sim_telarray
-    internal_parameter_name: laser_photons
   - name: simtools
-    version: ">=0.21.0"
+    version: ">0.27.1"
