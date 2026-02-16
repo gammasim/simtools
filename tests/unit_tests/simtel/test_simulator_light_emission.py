@@ -1546,5 +1546,3 @@ def test_simulate_from_config_requires_telescope_or_layout():
 
     with pytest.raises(ValueError, match="either --telescope or --array_layout_name"):
         SimulatorLightEmission.simulate_from_config(config, label="job")
-=======
->>>>>>> main
