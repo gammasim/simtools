@@ -755,7 +755,7 @@ def generate_file_name(
     name += f"_d{source_distance:.1f}km" if source_distance is not None else ""
     name += f"_za{float(zenith_angle):.1f}deg"
 
-    # Handle both old-style off_axis_angle and new-style (x, y) offsets
+    # Handle both 1D (r) and 2D (x,y) off_axis_angle offsets.
     if off_axis_x is not None and off_axis_y is not None:
         name += f"_off_x{off_axis_x:+.3f}_y{off_axis_y:+.3f}deg"
     elif off_axis_angle is not None:
