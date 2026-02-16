@@ -11,6 +11,7 @@ from simtools import settings
 from simtools.io import io_handler
 from simtools.job_execution import job_manager
 from simtools.model.model_utils import initialize_simulation_models
+from simtools.model.site_model import SiteModel
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
@@ -55,6 +56,70 @@ class SimulatorLightEmission(SimtelRunner):
         self.light_emission_config = self._initialize_light_emission_configuration(
             light_emission_config
         )
+
+    @staticmethod
+    def _get_per_telescope_label(base_label, telescope):
+        """Return a label string that is unique per telescope."""
+        return f"{base_label}_{telescope}" if base_label else str(telescope)
+
+    @classmethod
+    def simulate_from_config(cls, light_emission_config, label=None):
+        """Run one or multiple light-emission simulations from a single configuration.
+
+        If a telescope is provided, run a single simulation.
+        If array_layout_name is provided (and no telescope), run one simulation per telescope
+        in the layout.
+
+        Parameters
+        ----------
+        light_emission_config : dict
+            Configuration for the light emission simulation.
+        label : str, optional
+            Base label for output naming.
+
+        Returns
+        -------
+        bool
+            True if all simulations passed verification.
+        """
+        if light_emission_config.get("telescope"):
+            simulator = cls(light_emission_config=light_emission_config, label=label)
+            simulator.simulate()
+            return simulator.verify_simulations()
+
+        layout_names = light_emission_config.get("array_layout_name")
+        if not layout_names:
+            raise ValueError(
+                "For full simulation, provide either --telescope or --array_layout_name."
+            )
+
+        if not isinstance(layout_names, list):
+            layout_names = [layout_names]
+
+        site_model = SiteModel(
+            site=light_emission_config.get("site"),
+            model_version=light_emission_config.get("model_version"),
+            label=label,
+        )
+
+        all_verified = True
+        for layout_name in layout_names:
+            telescopes = site_model.get_array_elements_for_layout(layout_name)
+            for telescope in telescopes:
+                per_telescope_config = dict(light_emission_config)
+                per_telescope_config["telescope"] = telescope
+                per_telescope_config["layout"] = layout_name
+                per_telescope_label = cls._get_per_telescope_label(label, telescope)
+                per_telescope_config["label"] = per_telescope_label
+
+                simulator = cls(
+                    light_emission_config=per_telescope_config,
+                    label=per_telescope_label,
+                )
+                simulator.simulate()
+                all_verified = simulator.verify_simulations() and all_verified
+
+        return all_verified
 
     def _initialize_light_emission_configuration(self, config):
         """Initialize light emission configuration."""
