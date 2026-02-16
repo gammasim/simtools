@@ -37,6 +37,8 @@ class PSFImage:
         Scatter area of all photons in cm^2. If not given, effective area cannot be computed.
     containment_fraction: float
         Containment fraction for PSF calculation.
+    include_camera_rotation: bool
+        Reads photon position in camera or pixel (rotated) frame.
     """
 
     __PSF_RADIUS = "Radius [cm]"
@@ -47,6 +49,7 @@ class PSFImage:
         focal_length=None,
         total_scattered_area=None,
         containment_fraction=None,
+        include_camera_rotation=True,
     ):
         """Initialize PSFImage class."""
         self._logger = logging.getLogger(__name__)
@@ -56,6 +59,7 @@ class PSFImage:
         self._effective_area = None
         self.photon_pos_x = []
         self.photon_pos_y = []
+        self.camera_rotation = include_camera_rotation
         self.photon_r = []
         self.centroid_x = None
         self.centroid_y = None
@@ -226,9 +230,14 @@ class PSFImage:
             # Skipping comments
             pass
         else:
-            # Storing photon position from cols 2 and 3
-            self.photon_pos_x.append(float(words[2]))
-            self.photon_pos_y.append(float(words[3]))
+            # Storing photon position (including camera rotation) from cols 2 and 3
+            if self.camera_rotation:
+                self.photon_pos_x.append(float(words[2]))
+                self.photon_pos_y.append(float(words[3]))
+            # Lid frame
+            else:
+                self.photon_pos_x.append(float(words[9]))
+                self.photon_pos_y.append(float(words[10]))
 
     def get_effective_area(self, tel_transmission=1.0):
         """
