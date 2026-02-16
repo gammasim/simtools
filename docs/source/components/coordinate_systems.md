@@ -33,7 +33,7 @@ Local Cartesian system centered at array center.
 - **Units:** Meters
 - **Projection:** Transverse Mercator centered at array
 - **Scale factor:** $k_0$ depends on latitude and altitude (WGS84 ellipsoid)
-- **Altitude:** Height above sea level (meters)
+- **Z coordinate:** `position_z`, height above a reference altitude (e.g., CORSIKA observation level), in meters
 - **Usage:** CORSIKA and sim_telarray simulations (native system)
 
 #### CORSIKA specifics
