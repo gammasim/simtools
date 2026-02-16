@@ -114,7 +114,7 @@ class RayTracing:
         self._file_results = self.output_directory.joinpath("results").joinpath(
             self._generate_file_name(file_type="ray_tracing", suffix=".ecsv")
         )
-        self._psf_images = {}
+        self.psf_images = {}
         self._results = None
 
     def _process_offset_angles(self, off_axis_angle, offset_directions):
@@ -414,7 +414,7 @@ class RayTracing:
 
         tel_transmission_pars = self._get_telescope_transmission_params(no_tel_transmission)
 
-        self._psf_images = {}
+        self.psf_images = {}
 
         _rows = self._process_off_axis_and_mirror(
             tel_transmission_pars,
@@ -485,7 +485,7 @@ class RayTracing:
                 )
 
                 # Store PSF image with (x, y) tuple key
-                self._psf_images[(off_x, off_y)] = copy(image)
+                self.psf_images[(off_x, off_y)] = copy(image)
 
                 if do_analyze:
                     _current_results = self._analyze_image(
@@ -548,7 +548,6 @@ class RayTracing:
         """
         image = PSFImage(focal_length=focal_length, containment_fraction=containment_fraction)
         image.process_photon_list(photons_file, use_rx)
-        # Note: storage key is set in _process_off_axis_and_mirror with (x, y) tuple
         return image
 
     def _analyze_image(
@@ -694,7 +693,7 @@ class RayTracing:
             self._logger.info(f"Saving fig in {plot_file}")
             plot.savefig(plot_file)
 
-            for (off_x, off_y), image in self._psf_images.items():
+            for (off_x, off_y), image in self.psf_images.items():
                 image_file_name = self._generate_file_name(
                     file_type="ray_tracing",
                     off_axis_x=off_x,
@@ -803,9 +802,9 @@ class RayTracing:
         List of PSFImages
         """
         images = [
-            self._psf_images[(off_x, off_y)]
+            self.psf_images[(off_x, off_y)]
             for off_x, off_y in self.off_axis_angle
-            if self._psf_images and (off_x, off_y) in self._psf_images
+            if self.psf_images and (off_x, off_y) in self.psf_images
         ]
         if len(images) == 0:
             self._logger.warning("No image found")
