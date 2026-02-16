@@ -24,21 +24,26 @@ Example Usage
         --array_layout_name subsystem_msts --site South \
         --run_number 3
 
-2. Simulate flashers for a telescope (detailed simulation):
+2. Simulate flashers for a single telescope (detailed simulation):
 
     .. code-block:: console
 
         simtools-simulate-flasher --run_mode full_simulation \
         --light_source MSFx-NectarCam --model_version 6.0 \
-        --telescope MSTS-04 --site South --run_number 1 \
-        --array_layout_name 1mst
+        --telescope MSTS-04 --site South --run_number 1
+
+3. Simulate flashers for all telescopes in an array layout (detailed simulation):
+
+    .. code-block:: console
+
+        simtools-simulate-flasher --run_mode full_simulation \
+        --light_source MSFx-NectarCam --model_version 6.0 \
+        --array_layout_name subsystem_msts --site North --run_number 1
 
 Command Line Arguments
 ----------------------
 run_mode (str, required)
     Run mode, either "direct_injection" or "full_simulation".
-telescope (str, required)
-    Telescope model name (e.g. LSTN-01, MSTN-04, SSTS-04, ...)
 site (str, required)
     Site name (North or South).
 light_source (str, required)
@@ -48,11 +53,13 @@ number_of_events (int, optional):
 model_version (str, optional)
     Version of the simulation model.
 array_layout_name (str, optional)
-    Name of the array layout to use (required for direct injection mode).
+    Name of the array layout to use. In direct injection mode this defines the simulated layout.
+    In full simulation mode, if telescope is not given, one simulation is run per telescope in
+    this layout.
 run_number (int, optional)
     Run number to use (default: 1, required for direct injection mode).
 telescope (str, optional)
-    Telescope name (required for full simulation mode).
+    Telescope name. In full simulation mode, use this for a single-telescope run.
 """
 
 from simtools.application_control import get_application_label, startup_application
