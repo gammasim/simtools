@@ -133,12 +133,10 @@ def main():
     simulator = Simulator(label=app_context.args.get("label"))
 
     simulator.simulate()
-    simulator.validate_metadata()
-
     if app_context.args["save_reduced_event_lists"]:
         simulator.save_reduced_event_lists()
 
-    simulator.verify_simulations()
+    simulator.validate_simulations()
     simulator.report()
 
     if app_context.args["save_file_lists"]:
