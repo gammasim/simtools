@@ -109,6 +109,20 @@ def _parse():
         default=0.25,
     )
     config.parser.add_argument(
+        "--offset_file",
+        help="Path to ECSV file with x, y offset columns (in degrees). "
+        "If provided, overrides max_offset and offset_steps.",
+        type=str,
+        default=None,
+    )
+    config.parser.add_argument(
+        "--offset_directions",
+        help="Cardinal directions for offset generation (comma-separated): N,S,E,W. "
+        "Only used with max_offset. Default: all four directions.",
+        type=str,
+        default="N,S,E,W",
+    )
+    config.parser.add_argument(
         "--plot_images",
         help="Produce a multiple pages pdf file with the image plots.",
         action="store_true",
@@ -131,6 +145,14 @@ def main():
         f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n"
     )
 
+    # Parse offset directions
+    offset_directions = None
+    if app_context.args.get("offset_directions"):
+        offset_directions = [
+            d.strip().upper() for d in app_context.args["offset_directions"].split(",")
+        ]
+
+    # Create RayTracing object with appropriate offset configuration
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
@@ -143,6 +165,8 @@ def main():
             int(app_context.args["max_offset"] / app_context.args["offset_steps"]) + 1,
         )
         * u.deg,
+        offset_file=app_context.args.get("offset_file"),
+        offset_directions=offset_directions,
     )
     ray.simulate(test=app_context.args["test"], force=False)
     ray.analyze(force=True)
