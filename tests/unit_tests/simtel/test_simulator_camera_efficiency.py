@@ -13,6 +13,21 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
+def camera_efficiency_sst(io_handler, model_version):
+    return CameraEfficiency(
+        config_data={
+            "telescope": "SSTS-05",
+            "site": "South",
+            "model_version": model_version,
+            "zenith_angle": 20 * u.deg,
+            "azimuth_angle": 0 * u.deg,
+        },
+        label="validate_camera_efficiency",
+        efficiency_type="shower",
+    )
+
+
+@pytest.fixture
 def simulator_camera_efficiency(camera_efficiency_sst, site_model_south):
     camera_efficiency_sst.export_model_files()
     return SimulatorCameraEfficiency(
