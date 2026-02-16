@@ -8,7 +8,7 @@ import tarfile
 import time
 import urllib.error
 import urllib.request
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from urllib.parse import urlparse
 
 import dotenv
@@ -325,6 +325,46 @@ def resolve_file_patterns(file_names):
     if not _files:
         raise FileNotFoundError(f"No files found: {file_names}")
     return _files
+
+
+def is_safe_tar_member(member_name):
+    """
+    Validate that a tar member path is safe and doesn't contain path traversal sequences.
+
+    Parameters
+    ----------
+    member_name : str
+        The path of the tar member to validate.
+
+    Returns
+    -------
+    bool
+        True if the path is safe, False otherwise.
+    """
+    # Check for null bytes
+    if "\0" in member_name:
+        return False
+
+    # Check for absolute paths
+    if Path(member_name).is_absolute():
+        return False
+
+    # Normalize path and validate components
+    try:
+        parts = PurePosixPath(member_name).parts
+    except ValueError:
+        return False
+
+    # Reject if any component is ".." or if path becomes absolute
+    if ".." in parts:
+        return False
+
+    # Verify the normalized path is still relative
+    normalized = PurePosixPath(*parts) if parts else PurePosixPath(".")
+    if normalized.is_absolute():
+        return False
+
+    return True
 
 
 def pack_tar_file(tar_file_name, file_list, sub_dir=None):
