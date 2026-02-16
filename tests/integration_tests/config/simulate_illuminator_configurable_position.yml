@@ -34,6 +34,5 @@ applications:
       output_sub_path: sim_telarray
   model_version_use_current: true
   test_name: run-configurable-position
-  skip_integration_test: No events in sim_telarray file (issue 2042)
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
