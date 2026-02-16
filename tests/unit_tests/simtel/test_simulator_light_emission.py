@@ -27,22 +27,6 @@ def simulator_instance():
     return inst
 
 
-@patch.object(SimulatorLightEmission, "_get_telescope_pointing")
-@patch.object(SimulatorLightEmission, "_get_light_emission_application_name")
-def test__make_simtel_script(mock_app_name, mock_pointing, simulator_instance):
-    """Test _make_simtel_script method with different conditions."""
-    simulator_instance.telescope_model.config_file_directory = "/mock/config"
-    simulator_instance.telescope_model.config_file_path = "/mock/config/telescope.cfg"
-
-    mock_altitude = Mock()
-    mock_altitude.to.return_value.value = 2200
-    simulator_instance.site_model.get_parameter_value_with_unit.return_value = mock_altitude
-    simulator_instance.site_model.get_parameter_value.return_value = "atm_trans.dat"
-
-    mock_pointing.return_value = [10.5, 20.0]
-    mock_app_name.return_value = "test-app"
-
-
 def test__make_simtel_script_bypass_optics_condition(simulator_instance):
     """Test that flat_fielding adds Bypass_Optics option."""
     # Setup minimal mocks
@@ -1350,6 +1334,26 @@ def test__initialize_light_emission_configuration_test_mode_illuminator(simulato
 
     assert result["light_source_type"] == "illuminator"
     assert result["flasher_photons"] == pytest.approx(1e8)
+
+
+def test__initialize_light_emission_configuration_test_mode_unknown_type_fallback(
+    simulator_instance,
+):
+    """Test test-mode fallback photons for unknown light source types."""
+
+    def mock_get_parameter_value(param_name):
+        if param_name == "flasher_type":
+            return "laser"
+        if param_name == "flasher_photons":
+            return 5e6
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    result = simulator_instance._initialize_light_emission_configuration({"test": True})
+
+    assert result["light_source_type"] == "laser"
+    assert result["flasher_photons"] == pytest.approx(1e6)
 
 
 def test__initialize_light_emission_configuration_with_position(simulator_instance):
