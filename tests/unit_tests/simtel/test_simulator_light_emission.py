@@ -1547,3 +1547,97 @@ def test_verify_simulations_missing_output(simulator_instance, tmp_test_director
     assert "Expected sim_telarray output not found" in str(
         simulator_instance._logger.error.call_args
     )
+
+
+def test_simulate_from_config_single_telescope(monkeypatch):
+    """Test class-level dispatcher for single-telescope simulation."""
+    created = []
+    simulated = []
+
+    def _fake_init(self, light_emission_config, label=None):
+        self.light_emission_config = light_emission_config
+        self.label = label
+        created.append((light_emission_config, label))
+
+    def _fake_simulate(self):
+        simulated.append((self.light_emission_config["telescope"], self.label))
+
+    monkeypatch.setattr(SimulatorLightEmission, "__init__", _fake_init)
+    monkeypatch.setattr(SimulatorLightEmission, "simulate", _fake_simulate)
+    monkeypatch.setattr(SimulatorLightEmission, "verify_simulations", lambda self: True)
+
+    config = {
+        "site": "South",
+        "model_version": "7.0.0",
+        "light_source": "MSFx-FlashCam",
+        "run_mode": "full_simulation",
+        "telescope": "MSTS-01",
+    }
+
+    result = SimulatorLightEmission.simulate_from_config(config, label="job")
+
+    assert result is True
+    assert len(created) == 1
+    assert created[0][0] is config
+    assert created[0][1] == "job"
+    assert simulated == [("MSTS-01", "job")]
+
+
+def test_simulate_from_config_layout_loops_telescopes(monkeypatch):
+    """Test class-level dispatcher for layout-driven multi-telescope simulation."""
+    created = []
+    simulated = []
+
+    class _FakeSiteModel:
+        def __init__(self, site, model_version, label=None):
+            self.site = site
+            self.model_version = model_version
+            self.label = label
+
+        def get_array_elements_for_layout(self, layout_name):
+            assert layout_name == "subsystem_msts"
+            return ["MSTS-01", "MSTS-02"]
+
+    def _fake_init(self, light_emission_config, label=None):
+        self.light_emission_config = light_emission_config
+        self.label = label
+        created.append((light_emission_config, label))
+
+    def _fake_simulate(self):
+        simulated.append((self.light_emission_config["telescope"], self.label))
+
+    monkeypatch.setattr("simtools.simtel.simulator_light_emission.SiteModel", _FakeSiteModel)
+    monkeypatch.setattr(SimulatorLightEmission, "__init__", _fake_init)
+    monkeypatch.setattr(SimulatorLightEmission, "simulate", _fake_simulate)
+    monkeypatch.setattr(SimulatorLightEmission, "verify_simulations", lambda self: True)
+
+    config = {
+        "site": "South",
+        "model_version": "7.0.0",
+        "light_source": "MSFx-FlashCam",
+        "run_mode": "full_simulation",
+        "array_layout_name": ["subsystem_msts"],
+        "telescope": None,
+    }
+
+    result = SimulatorLightEmission.simulate_from_config(config, label="job")
+
+    assert result is True
+    assert len(created) == 2
+    assert {cfg["telescope"] for cfg, _ in created} == {"MSTS-01", "MSTS-02"}
+    assert {cfg["layout"] for cfg, _ in created} == {"subsystem_msts"}
+    assert {label for _, label in created} == {"job_MSTS-01", "job_MSTS-02"}
+    assert set(simulated) == {("MSTS-01", "job_MSTS-01"), ("MSTS-02", "job_MSTS-02")}
+
+
+def test_simulate_from_config_requires_telescope_or_layout():
+    """Test class-level dispatcher input validation."""
+    config = {
+        "site": "South",
+        "model_version": "7.0.0",
+        "light_source": "MSFx-FlashCam",
+        "run_mode": "full_simulation",
+    }
+
+    with pytest.raises(ValueError, match="either --telescope or --array_layout_name"):
+        SimulatorLightEmission.simulate_from_config(config, label="job")
