@@ -1423,7 +1423,6 @@ def test__get_angular_distribution_string_for_sim_telarray_isotropic(simulator_i
     # Verify width was NOT requested: the implementation returns early for isotropic distributions
     # before attempting to fetch the width via get_parameter_value_with_unit.
     simulator_instance.calibration_model.get_parameter_value_with_unit.assert_not_called()
-<<<<<<< add-array-based-full-flasher-simulations
 
 
 def test_verify_simulations_success(simulator_instance, tmp_test_directory):
