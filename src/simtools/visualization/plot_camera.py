@@ -3,7 +3,6 @@
 import logging
 
 import matplotlib.colors as mcolors
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -186,7 +185,7 @@ def plot_pixel_layout_with_image(
         sm.set_array([])
         cbar = fig.colorbar(sm, ax=ax, fraction=0.02, pad=0.05)
         cbar.set_label(color_bar_label, fontsize=10)
-    _setup_camera_axis_properties(ax, camera, grid=True, grid_alpha=0.3, padding=0.1)
+    setup_camera_axis_properties(ax, camera, grid=True, grid_alpha=0.3, padding=0.1)
     ax.set_xlabel("x [m]", fontsize=12)
     ax.set_ylabel("y [m]", fontsize=12)
 
@@ -231,123 +230,6 @@ def _color_normalization(image, color_map, norm_type="lin", vmin=None, vmax=None
     colors = cmap(normalized_image)
 
     return colors, cmap, norm
-
-
-def _create_pixel_patches_by_type(camera):
-    """
-    Create pixel patches categorized by type (on, edge, off).
-
-    Parameters
-    ----------
-    camera : Camera
-        Camera object.
-
-    Returns
-    -------
-    on_pixels : list
-        List of on pixel patches.
-    edge_pixels : list
-        List of edge pixel patches.
-    off_pixels : list
-        List of off pixel patches.
-    """
-    on_pixels, edge_pixels, off_pixels = [], [], []
-
-    for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
-        shape = _pixel_shape(camera, x, y)
-        if camera.pixels["pix_on"][i_pix]:
-            neighbors = camera.get_neighbor_pixels()[i_pix]
-            if len(neighbors) < 6 and camera.pixels["pixel_shape"] in (1, 3):
-                edge_pixels.append(shape)
-            elif len(neighbors) < 4 and camera.pixels["pixel_shape"] == 2:
-                edge_pixels.append(shape)
-            else:
-                on_pixels.append(shape)
-        else:
-            off_pixels.append(shape)
-
-    return on_pixels, edge_pixels, off_pixels
-
-
-def _setup_camera_axis_properties(
-    ax, camera, grid=False, axis_below=False, grid_alpha=None, y_scale_factor=1.0, padding=0
-):
-    """
-    Set up common axis properties for camera plots.
-
-    Parameters
-    ----------
-    ax : plt.Axes
-        Axes to configure.
-    camera : Camera
-        Camera object containing pixel data.
-    grid : bool, optional
-        Whether to show grid (default False).
-    axis_below : bool, optional
-        Whether to place grid below plot elements (default False).
-    grid_alpha : float, optional
-        Grid transparency (None uses default).
-    y_scale_factor : float, optional
-        Scale factor for y-axis limits (default 1.0).
-    padding : float, optional
-        Extra padding around pixel layout in cm (default 0).
-    """
-    x_min, x_max = min(camera.pixels["x"]), max(camera.pixels["x"])
-    y_min, y_max = min(camera.pixels["y"]), max(camera.pixels["y"])
-
-    if y_scale_factor > 1.0:
-        ax.axis([x_min, x_max, y_min * y_scale_factor, y_max * y_scale_factor])
-    else:
-        ax.set_xlim(x_min - padding, x_max + padding)
-        ax.set_ylim(y_min - padding, y_max + padding)
-
-    ax.set_aspect("equal", "box")
-
-    if grid:
-        if grid_alpha is not None:
-            ax.grid(True, alpha=grid_alpha)
-        else:
-            ax.grid(True)
-
-    if axis_below:
-        ax.set_axisbelow(True)
-
-
-def _pixel_shape(camera, x, y):
-    """
-    Return the shape of the pixel.
-
-    Parameters
-    ----------
-    camera : Camera
-        Camera object.
-    x : float
-        x-coordinate of the pixel.
-    y : float
-        y-coordinate of the pixel.
-
-    Returns
-    -------
-    shape : matplotlib.patches.Patch
-        Shape of the pixel.
-    """
-    if camera.pixels["pixel_shape"] in (1, 3):
-        return mpatches.RegularPolygon(
-            (x, y),
-            numVertices=6,
-            radius=camera.pixels["pixel_diameter"] / np.sqrt(3),
-            orientation=np.deg2rad(camera.pixels["orientation"]),
-        )
-    if camera.pixels["pixel_shape"] == 2:
-        return mpatches.Rectangle(
-            (
-                x - camera.pixels["pixel_diameter"] / 2.0,
-                y - camera.pixels["pixel_diameter"] / 2.0,
-            ),
-            width=camera.pixels["pixel_diameter"],
-            height=camera.pixels["pixel_diameter"],
-        )
-    return None
 
 
 def _plot_axes_def(camera, plot, rotate_angle):
