@@ -19,7 +19,7 @@ def simulator_instance():
     inst.telescope_model = Mock()
     inst.site_model = Mock()
     inst.light_emission_config = {}
-    inst.job_files = Mock()
+    inst.submission_files = Mock()
     inst.output_directory = "/test/output"
     inst._logger = Mock()
     inst.runner_service = Mock()
@@ -1090,13 +1090,15 @@ def test_prepare_run(simulator_instance, tmp_test_directory):
     script_dir.mkdir(parents=True, exist_ok=True)
     script_path = script_dir / "xyzls-light_emission.sh"
 
-    # Mock job_files.get_file_name to return the script path
+    # Mock submission_files.get_file_name to return the script path
     def job_files_get_file_name_side_effect(file_type):
         if file_type == "sub_script":
             return script_path
         return Path(tmp_test_directory) / "output" / f"{file_type}.tmp"
 
-    simulator_instance.job_files.get_file_name.side_effect = job_files_get_file_name_side_effect
+    simulator_instance.submission_files.get_file_name.side_effect = (
+        job_files_get_file_name_side_effect
+    )
 
     # Mock runner_service.get_file_name to return paths
     def get_file_name_side_effect(file_type):
@@ -1167,13 +1169,15 @@ def test_simulate(simulator_instance, tmp_test_directory):
     mock_script_path.parent.mkdir(parents=True, exist_ok=True)
     mock_output_file = Path(tmp_test_directory) / "output" / "test_output.simtel.gz"
 
-    # Setup job_files mock to return the script path
+    # Setup submission_files mock to return the script path
     def job_files_get_file_name_side_effect(file_type):
         if file_type == "sub_script":
             return mock_script_path
         return Path(tmp_test_directory) / "output" / f"{file_type}.tmp"
 
-    simulator_instance.job_files.get_file_name.side_effect = job_files_get_file_name_side_effect
+    simulator_instance.submission_files.get_file_name.side_effect = (
+        job_files_get_file_name_side_effect
+    )
 
     # Setup runner_service mock to return the output file and other paths
     def get_file_name_side_effect(file_type):
