@@ -144,12 +144,12 @@ pylint src/simtools/model/       # Check module
 - Use **astropy.units** for physical quantities
 - Validate names with `simtools.utils.names` functions
 - Use semantic versions without "v" prefix ("1.0.0", not "v1.0.0")
-- Do not use  **type hints** on function signatures
+- Do not use **type hints** on function signatures
 
-**Docstrings (MANDATORY):** NumPy style with Parameters, Returns, Raises, Examples sections. 70%+ coverage required for all public functions/methods. Private function can have single-line docstring if self-explanatory.
+**Docstrings (MANDATORY):** NumPy style with Parameters, Returns, Raises, Examples sections. 70%+ coverage required for all public functions/methods. Private functions can have single-line docstring if self-explanatory.
 
 ```python
-def example_function(parameter: str, optional_param: int | None = None) -> dict:
+def example_function(parameter, optional_param):
     """Brief one-liner.
 
     Longer description if needed.
