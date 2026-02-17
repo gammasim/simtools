@@ -15,7 +15,7 @@ applications:
     output_path: simtools-output/illuminator-variable
     site: North
     telescope: MSTN-04
-    test: true
+    flasher_photons: 1e8
     log_level: DEBUG
   integration_tests:
   - test_output_files:
