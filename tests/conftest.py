@@ -38,6 +38,17 @@ def _load_mock_db_json(file_name):
         return json.load(handle)
 
 
+def _apply_mock_param_defaults(parameters):
+    return {
+        name: {
+            **param,
+            "parameter_version": param.get("parameter_version", "1.0.0"),
+            "model_parameter_schema_version": param.get("model_parameter_schema_version", "1.0.0"),
+        }
+        for name, param in parameters.items()
+    }
+
+
 def pytest_addoption(parser):
     """Model version command line parameter."""
     parser.addoption("--model_version", action="store", default=None)
@@ -228,10 +239,16 @@ def mock_db_handler(request):
         db_instance.get_model_versions = MagicMock(return_value=["1.0.0", "5.0.0", "6.0.0"])
         return db_instance
 
-    mock_parameters = _load_mock_db_json("mock_parameters.json")
-    mock_sim_config_params = _load_mock_db_json("mock_sim_config_params.json")
-    site_specific_params_north = _load_mock_db_json("site_params_north.json")
-    site_specific_params_south = _load_mock_db_json("site_params_south.json")
+    mock_parameters = _apply_mock_param_defaults(_load_mock_db_json("mock_parameters.json"))
+    mock_sim_config_params = _apply_mock_param_defaults(
+        _load_mock_db_json("mock_sim_config_params.json")
+    )
+    site_specific_params_north = _apply_mock_param_defaults(
+        _load_mock_db_json("site_params_north.json")
+    )
+    site_specific_params_south = _apply_mock_param_defaults(
+        _load_mock_db_json("site_params_south.json")
+    )
 
     def mock_get_model_parameters(site, array_element_name, collection, model_version, **kwargs):
         """Return site-specific parameters based on the site."""
