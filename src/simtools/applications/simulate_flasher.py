@@ -45,6 +45,8 @@ light_source (str, required)
     Calibration light source, e.g., MSFx-FlashCam
 number_of_events (int, optional):
     Number of events to simulate (default: 1).
+flasher_photons (int, optional)
+    Override for calibration-model parameter flasher_photons. Applies to both run modes.
 model_version (str, optional)
     Version of the simulation model.
 array_layout_name (str, optional)
@@ -85,6 +87,15 @@ def _parse():
         help="Number of flasher events to simulate",
         type=int,
         default=1,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--flasher_photons",
+        help=(
+            "Override flasher photon yield (single value for all telescopes). "
+            "Accepts integers including scientific notation, e.g. 1e6."
+        ),
+        type=config.parser.scientific_int,
         required=False,
     )
     return config.initialize(
