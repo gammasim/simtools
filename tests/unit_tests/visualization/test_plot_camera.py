@@ -5,13 +5,15 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
+from simtools.visualization.camera_plot_utils import (
+    create_pixel_patches_by_type,
+    pixel_shape,
+    setup_camera_axis_properties,
+)
 from simtools.visualization.plot_camera import (
     _color_normalization,
-    _create_pixel_patches_by_type,
-    _pixel_shape,
     _plot_axes_def,
     _plot_one_axis_def,
-    _setup_camera_axis_properties,
     plot_pixel_layout_with_image,
 )
 
@@ -33,7 +35,7 @@ def simple_camera():
         "orientation": 0.0,
     }
     camera.calc_fov.return_value = (10.0, 5.0)
-    camera.get_neighbor_pixels.return_value = [[1, 2], [0, 2], [0, 1]]
+    camera.get_edge_pixels.return_value = [1]
     return camera
 
 
@@ -54,7 +56,7 @@ def camera_hexagon():
         "orientation": 0.0,
     }
     camera.calc_fov.return_value = (8.0, 4.0)
-    camera.get_neighbor_pixels.return_value = [[1, 2, 3, 4], [0, 2], [0, 1], [0, 4], [0, 3]]
+    camera.get_edge_pixels.return_value = [0, 3]
     return camera
 
 
@@ -75,33 +77,33 @@ def camera_square():
         "orientation": 0.0,
     }
     camera.calc_fov.return_value = (20.0, 10.0)
-    camera.get_neighbor_pixels.return_value = [[1, 2], [0, 2], [0, 1]]
+    camera.get_edge_pixels.return_value = [0]
     return camera
 
 
 def test_pixel_shape_hexagon_type1(simple_camera):
     """Test hexagon pixel shape (type 1)."""
-    shape = _pixel_shape(simple_camera, 0.0, 0.0)
+    shape = pixel_shape(simple_camera, 0.0, 0.0)
     assert shape is not None
 
 
 def test_pixel_shape_hexagon_type3(camera_hexagon):
     """Test hexagon pixel shape (type 3)."""
     camera_hexagon.pixels["pixel_shape"] = 3
-    shape = _pixel_shape(camera_hexagon, 0.5, 0.5)
+    shape = pixel_shape(camera_hexagon, 0.5, 0.5)
     assert shape is not None
 
 
 def test_pixel_shape_square(camera_square):
     """Test square pixel shape."""
-    shape = _pixel_shape(camera_square, 0.0, 0.0)
+    shape = pixel_shape(camera_square, 0.0, 0.0)
     assert shape is not None
 
 
 def test_pixel_shape_invalid(simple_camera):
     """Test invalid pixel shape returns None."""
     simple_camera.pixels["pixel_shape"] = 99
-    shape = _pixel_shape(simple_camera, 0.0, 0.0)
+    shape = pixel_shape(simple_camera, 0.0, 0.0)
     assert shape is None
 
 
@@ -109,7 +111,7 @@ def test_pixel_shape_with_different_diameters(camera_hexagon):
     """Test pixel shape with various diameters."""
     for diameter in [0.1, 0.5, 1.0, 2.0]:
         camera_hexagon.pixels["pixel_diameter"] = diameter
-        shape = _pixel_shape(camera_hexagon, 0.0, 0.0)
+        shape = pixel_shape(camera_hexagon, 0.0, 0.0)
         assert shape is not None
 
 
@@ -117,7 +119,7 @@ def test_pixel_shape_with_different_orientations(camera_hexagon):
     """Test pixel shape with various orientations."""
     for orientation in [0.0, np.pi / 6, np.pi / 4, np.pi / 2]:
         camera_hexagon.pixels["orientation"] = orientation
-        shape = _pixel_shape(camera_hexagon, 0.0, 0.0)
+        shape = pixel_shape(camera_hexagon, 0.0, 0.0)
         assert shape is not None
 
 
@@ -166,41 +168,41 @@ def test_color_normalization_different_colormaps():
 
 def test_create_pixel_patches_by_type_hexagon(camera_hexagon):
     """Test pixel patch creation with hexagonal pixels."""
-    on, edge, off = _create_pixel_patches_by_type(camera_hexagon)
+    on, edge, off = create_pixel_patches_by_type(camera_hexagon)
     assert len(on) + len(edge) + len(off) == 5
 
 
 def test_create_pixel_patches_by_type_square(camera_square):
     """Test pixel patch creation with square pixels."""
-    on, edge, off = _create_pixel_patches_by_type(camera_square)
+    on, edge, off = create_pixel_patches_by_type(camera_square)
     assert len(on) + len(edge) + len(off) == 3
 
 
 def test_create_pixel_patches_by_type_edge_hex(camera_hexagon):
     """Test edge detection for hexagon."""
-    camera_hexagon.get_neighbor_pixels.return_value = [[1], [0], [0], [0], [0]]
-    _, edge, _ = _create_pixel_patches_by_type(camera_hexagon)
+    camera_hexagon.get_edge_pixels.return_value = [0, 1]
+    _, edge, _ = create_pixel_patches_by_type(camera_hexagon)
     assert len(edge) >= 1
 
 
 def test_create_pixel_patches_by_type_edge_square(camera_square):
     """Test edge detection for square."""
-    camera_square.get_neighbor_pixels.return_value = [[1], [0], [0]]
-    _, edge, _ = _create_pixel_patches_by_type(camera_square)
+    camera_square.get_edge_pixels.return_value = [0]
+    _, edge, _ = create_pixel_patches_by_type(camera_square)
     assert len(edge) >= 1
 
 
 def test_setup_camera_axis_with_scale_factor(camera_hexagon):
     """Test axis setup with y_scale_factor > 1.0."""
     ax = MagicMock()
-    _setup_camera_axis_properties(ax, camera_hexagon, y_scale_factor=1.42)
+    setup_camera_axis_properties(ax, camera_hexagon, y_scale_factor=1.42)
     ax.axis.assert_called_once()
 
 
 def test_setup_camera_axis_with_padding(camera_hexagon):
     """Test axis setup with padding."""
     ax = MagicMock()
-    _setup_camera_axis_properties(ax, camera_hexagon, padding=0.5)
+    setup_camera_axis_properties(ax, camera_hexagon, padding=0.5)
     ax.set_xlim.assert_called_once()
     ax.set_ylim.assert_called_once()
 
@@ -208,28 +210,28 @@ def test_setup_camera_axis_with_padding(camera_hexagon):
 def test_setup_camera_axis_with_grid(camera_hexagon):
     """Test axis setup with grid and alpha."""
     ax = MagicMock()
-    _setup_camera_axis_properties(ax, camera_hexagon, grid=True, grid_alpha=0.3)
+    setup_camera_axis_properties(ax, camera_hexagon, grid=True, grid_alpha=0.3)
     ax.grid.assert_called_with(True, alpha=0.3)
 
 
 def test_setup_camera_axis_grid_no_alpha(camera_hexagon):
     """Test axis setup with grid but no alpha."""
     ax = MagicMock()
-    _setup_camera_axis_properties(ax, camera_hexagon, grid=True)
+    setup_camera_axis_properties(ax, camera_hexagon, grid=True)
     ax.grid.assert_called_with(True)
 
 
 def test_setup_camera_axis_below(camera_hexagon):
     """Test axis below flag."""
     ax = MagicMock()
-    _setup_camera_axis_properties(ax, camera_hexagon, axis_below=True)
+    setup_camera_axis_properties(ax, camera_hexagon, axis_below=True)
     ax.set_axisbelow.assert_called_with(True)
 
 
 def test_setup_camera_axis_no_grid(camera_hexagon):
     """Test axis setup without grid."""
     ax = MagicMock()
-    _setup_camera_axis_properties(ax, camera_hexagon, grid=False)
+    setup_camera_axis_properties(ax, camera_hexagon, grid=False)
     ax.grid.assert_not_called()
 
 
