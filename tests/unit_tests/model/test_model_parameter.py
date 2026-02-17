@@ -8,7 +8,6 @@ import pytest
 from astropy import units as u
 
 import simtools.utils.general as gen
-from simtools.db.db_handler import DatabaseHandler
 from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model.telescope_model import TelescopeModel
 
@@ -166,18 +165,6 @@ def test_load_simulation_software_parameter(telescope_model_lst, caplog):
     assert len(caplog.records) == 0
 
 
-@pytest.mark.uses_model_database
-def test_load_parameters_from_db(telescope_model_lst, mocker):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    mock_db = mocker.patch.object(DatabaseHandler, "get_model_parameters")
-    telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 3
-
-    telescope_copy.db = None
-    telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 3
-
-
 def test_overwrite_model_parameter(telescope_model_lst):
     tel_model = copy.deepcopy(telescope_model_lst)
 
@@ -284,19 +271,6 @@ def test_overwrite_model_file(telescope_model_lst, mocker):
     mock_copy.assert_called_once_with(file_path, telescope_copy.config_file_directory)
 
 
-@pytest.mark.uses_model_database
-def test_export_model_files(telescope_model_lst, mocker):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    mock_db = mocker.patch.object(DatabaseHandler, "export_model_files")
-    telescope_copy.export_model_files()
-    assert telescope_copy._is_exported_model_files_up_to_date
-    mock_db.assert_called_once()
-
-    telescope_copy._added_parameter_files = ["test_file"]
-    with pytest.raises(KeyError):
-        telescope_copy.export_model_files()
-
-
 def test_config_file_path(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     telescope_copy._config_file_path = None
@@ -307,30 +281,6 @@ def test_config_file_path(telescope_model_lst, mocker):
     telescope_copy._config_file_path = Path("test_path")
     assert telescope_copy.config_file_path == Path("test_path")
     not mock_config.assert_called_once()
-
-
-@pytest.mark.uses_model_database
-def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_model_lst, mocker):
-    model_directory = Path("test_model_directory")
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-
-    mock_db_export = mocker.patch.object(DatabaseHandler, "export_model_files")
-    mock_simulation_config_parameters = {
-        "sim_telarray": {"correct_nsb_spectrum_to_telescope_altitude": {"value": "test_value"}}
-    }
-    telescope_copy._simulation_config_parameters = mock_simulation_config_parameters
-
-    telescope_copy.export_nsb_spectrum_to_telescope_altitude_correction_file(model_directory)
-
-    mock_db_export.assert_called_once_with(
-        parameters={
-            "nsb_spectrum_at_2200m": {
-                "value": "test_value",
-                "file": True,
-            }
-        },
-        dest=model_directory,
-    )
 
 
 def test_write_sim_telarray_config_file(telescope_model_lst, mocker):

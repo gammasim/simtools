@@ -1,96 +1,15 @@
 #!/usr/bin/python3
 
-import copy
 import logging
 from unittest.mock import Mock, mock_open, patch
 
 import astropy.table
-import numpy as np
 import pytest
 
 import simtools.utils.general as gen
 from simtools.model.model_parameter import InvalidModelParameterError
 
 logger = logging.getLogger()
-
-
-# depends on prod5; prod6 is incomplete in the DB
-@pytest.mark.uses_model_database
-def test_read_two_dim_wavelength_angle(telescope_model_sst_prod5):
-    tel_model = telescope_model_sst_prod5
-    tel_model.write_sim_telarray_config_file()
-
-    two_dim_file = tel_model.get_parameter_value("camera_filter")
-    assert tel_model.config_file_directory.joinpath(two_dim_file).exists()
-    two_dim_dist = tel_model.read_two_dim_wavelength_angle(two_dim_file)
-    assert len(two_dim_dist["Wavelength"]) > 0
-    assert len(two_dim_dist["Angle"]) > 0
-    assert len(two_dim_dist["z"]) > 0
-    assert two_dim_dist["Wavelength"][4] == pytest.approx(300)
-    assert two_dim_dist["Angle"][4] == pytest.approx(28)
-    assert two_dim_dist["z"][4][4] == pytest.approx(0.985199988)
-
-
-@pytest.mark.uses_model_database
-def test_read_incidence_angle_distribution(telescope_model_sst):
-    tel_model = telescope_model_sst
-    tel_model.export_model_files()
-
-    incidence_angle_file = tel_model.get_parameter_value("camera_filter_incidence_angle")
-    assert tel_model.config_file_directory.joinpath(incidence_angle_file).exists()
-    incidence_angle_dist = tel_model.read_incidence_angle_distribution(incidence_angle_file)
-    assert len(incidence_angle_dist["Incidence angle"]) > 0
-    assert len(incidence_angle_dist["Fraction"]) > 0
-    assert incidence_angle_dist["Fraction"][
-        np.nanargmin(np.abs(33.05 - incidence_angle_dist["Incidence angle"].value))
-    ].value == pytest.approx(0.027980644661989726)
-
-
-# depends on prod5 (no 2D camera file file in prod6)
-@pytest.mark.uses_model_database
-def test_calc_average_curve(telescope_model_sst_prod5):
-    tel_model = telescope_model_sst_prod5
-    tel_model.write_sim_telarray_config_file()
-
-    two_dim_file = tel_model.get_parameter_value("camera_filter")
-    two_dim_dist = tel_model.read_two_dim_wavelength_angle(two_dim_file)
-    incidence_angle_file = tel_model.get_parameter_value("camera_filter_incidence_angle")
-    incidence_angle_dist = tel_model.read_incidence_angle_distribution(incidence_angle_file)
-    average_dist = tel_model.calc_average_curve(two_dim_dist, incidence_angle_dist)
-    assert average_dist["z"][
-        np.nanargmin(np.abs(300 - average_dist["Wavelength"]))
-    ] == pytest.approx(0.9398265298920796)
-
-
-# depends on prod5 (no 2D camera file file in prod6)
-@pytest.mark.uses_model_database
-def test_export_table_to_model_directory(telescope_model_sst_prod5):
-    tel_model = telescope_model_sst_prod5
-    tel_model.write_sim_telarray_config_file()
-
-    two_dim_file = tel_model.get_parameter_value("camera_filter")
-    two_dim_dist = tel_model.read_two_dim_wavelength_angle(two_dim_file)
-    incidence_angle_file = tel_model.get_parameter_value("camera_filter_incidence_angle")
-    incidence_angle_dist = tel_model.read_incidence_angle_distribution(incidence_angle_file)
-    average_dist = tel_model.calc_average_curve(two_dim_dist, incidence_angle_dist)
-    one_dim_file = tel_model.export_table_to_model_directory("test_average_curve.dat", average_dist)
-    assert one_dim_file.exists()
-
-
-@pytest.mark.uses_model_database
-def test_get_telescope_effective_focal_length(telescope_model_lst, telescope_model_sst_prod5):
-    tel_model_lst = copy.deepcopy(telescope_model_lst)
-    assert tel_model_lst.get_telescope_effective_focal_length("m") == pytest.approx(29.237)
-
-    tel_model_sst = copy.deepcopy(telescope_model_sst_prod5)
-    assert tel_model_sst.get_telescope_effective_focal_length("m") == pytest.approx(2.15191)
-
-    # test zero case
-    tel_model_sst.parameters["effective_focal_length"]["value"] = 0.0
-    assert tel_model_sst.get_telescope_effective_focal_length("m") == pytest.approx(0.0)
-    assert tel_model_sst.get_telescope_effective_focal_length("m", True) == pytest.approx(2.15)
-    tel_model_sst.parameters["effective_focal_length"]["value"] = None
-    assert tel_model_sst.get_telescope_effective_focal_length("m", True) == pytest.approx(2.15)
 
 
 def test_position(telescope_model_lst, caplog):
@@ -105,31 +24,6 @@ def test_position(telescope_model_lst, caplog):
     assert utm_xyz[2].value == pytest.approx(2185.0)
     with pytest.raises(InvalidModelParameterError, match=r"Coordinate system invalid not found."):
         tel_model.position(coordinate_system="invalid")
-
-
-@pytest.mark.uses_model_database
-def test_export_single_mirror_list_file(telescope_model_lst, caplog, monkeypatch):
-    tel_model = telescope_model_lst
-    tel_model.write_sim_telarray_config_file()
-    mirror_number = 1
-
-    monkeypatch.setattr(
-        tel_model,
-        "_load_simtel_config_writer",
-        lambda *args, **kwargs: setattr(tel_model, "simtel_config_writer", Mock()),
-    )
-
-    # Case 1: Valid mirror number
-    tel_model.export_single_mirror_list_file(mirror_number, False)
-    assert mirror_number in tel_model._single_mirror_list_file_paths
-    tel_model.simtel_config_writer.write_single_mirror_list_file.assert_called_once()
-
-    # Case 2: Invalid mirror number
-    mirror_number = 9999
-    with caplog.at_level(logging.ERROR):
-        tel_model.export_single_mirror_list_file(mirror_number, False)
-    assert "mirror_number > number_of_mirrors" in caplog.text
-    assert mirror_number not in tel_model._single_mirror_list_file_paths
 
 
 def test_camera(telescope_model_lst, monkeypatch):

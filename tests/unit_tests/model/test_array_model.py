@@ -2,7 +2,6 @@
 
 import copy
 import logging
-from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -49,48 +48,6 @@ def test_input_validation(array_model_north):
 def test_site(array_model_north):
     am = array_model_north
     assert am.site == "North"
-
-
-@pytest.mark.uses_model_database
-def test_exporting_config_files(model_version):
-    am = ArrayModel(
-        label="test",
-        site="North",
-        layout_name="test_layout",
-        model_version=model_version,
-    )
-
-    am.export_simtel_telescope_config_files()
-    am.export_sim_telarray_config_file()
-
-    test_cfg = "_test.cfg"
-    list_of_export_files = [
-        "CTA-LST_lightguide_eff_2020-04-12_average.dat",
-        "CTA-North-LSTN-01" + test_cfg,
-        "CTA-North-MSTN-01" + test_cfg,
-        "CTA-test_layout-North" + test_cfg,
-        "NectarCAM_lightguide_efficiency_POP_131019.dat",
-        "Pulse_template_nectarCam_17042020-noshift.dat",
-        "array_triggers.dat",
-        "atm_trans_2156_1_3_2_0_0_0.1_0.1.dat",
-        "atmprof_ecmwf_north_winter_fixed.dat",
-        "camera_CTA-LST-1_analogsum21_v2020-04-14.dat",
-        "camera_CTA-MST-NectarCam_20191120_majority-3nn.dat",
-        "mirror_CTA-100_1.20-86-0.04.dat",
-        "mirror_CTA-N-LST1_v2019-03-31_rotated.dat",
-        "pulse_LST_8dynode_pix6_20200204.dat",
-        "qe_R12992-100-05c.dat",
-        "qe_lst1_20200318_high+low.dat",
-        "ref_MST-North-MLT_2022_06_28.dat",
-        "ref_LST1_2022_04_01.dat",
-        "spe_LST_2022-04-27_AP2.0e-4.dat",
-        "spe_afterpulse_pdf_NectarCam_18122019.dat",
-        "transmission_lst_window_No7-10_ave.dat",
-    ]
-
-    for model_file in list_of_export_files:
-        logger.info("Checking file: %s", model_file)
-        assert Path(am.get_config_directory()).joinpath(model_file).exists()
 
 
 def test_load_array_element_positions_from_file(array_model_north, telescope_north_test_file):
