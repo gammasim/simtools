@@ -341,7 +341,7 @@ def mock_db_handler():
             "model_parameter_schema_version": "1.0.0",
         },
         "effective_focal_length": {
-            "value": 28.0,
+            "value": 29.237,
             "parameter_version": "1.0.0",
             "type": "float64",
             "unit": "m",
@@ -403,6 +403,46 @@ def mock_db_handler():
             "parameter_version": "1.0.0",
             "type": "str",
             "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "focus_offset": {
+            "value": [0.0, 1.0, 2.0],
+            "parameter_version": "1.0.0",
+            "type": "double",
+            "unit": ["cm", "cm", None],
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "teltrig_min_sigsum": {
+            "value": 10.5,
+            "parameter_version": "1.0.0",
+            "type": "double",
+            "unit": "mV ns",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "fadc_mhz": {
+            "value": 1000,
+            "parameter_version": "1.0.0",
+            "type": "int32",
+            "unit": "MHz",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "array_element_position_ground": {
+            "value": [-70.91, -52.35, 45.0],
+            "parameter_version": "1.0.0",
+            "type": "list",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "array_element_position_utm": {
+            "value": [217659.6, 3184995.1, 2185.0],
+            "parameter_version": "1.0.0",
+            "type": "list",
+            "unit": "m",
+            "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
     }
@@ -694,6 +734,35 @@ def mock_db_handler():
         # If parameter doesn't exist or version doesn't match, raise ValueError
         raise ValueError(f"Parameter {parameter} with version {parameter_version} not found")
 
+    def mock_export_model_files(dest_dir=None, parameters_to_export=None, **kwargs):
+        """Mock export_model_files by creating minimal dummy files."""
+        from pathlib import Path
+
+        if dest_dir is None:
+            return
+
+        dest_path = Path(dest_dir)
+        dest_path.mkdir(parents=True, exist_ok=True)
+
+        # Create dummy files for common file parameters
+        dummy_files = [
+            "mirror_list_dummy.dat",
+            "camera_filter_dummy.dat",
+            "camera_filter_incidence_angle_dummy.dat",
+            "optics_properties_dummy.dat",
+            "camera_transmission_dummy.dat",
+            "mirror_reflectivity_dummy.dat",
+            "quantum_efficiency_dummy.dat",
+        ]
+
+        for filename in dummy_files:
+            file_path = dest_path / filename
+            if not file_path.exists():
+                # Write minimal tabular data
+                file_path.write_text("# Dummy data file\n0.0 1.0\n1.0 1.0\n")
+
+        return
+
     mock_db = MagicMock()
     mock_db.is_configured.return_value = True
     mock_db.get_design_model.return_value = None
@@ -701,9 +770,36 @@ def mock_db_handler():
     mock_db.get_model_parameter.side_effect = mock_get_model_parameter
     mock_db.get_model_parameters_for_all_model_versions.return_value = {}
     mock_db.get_model_versions.return_value = ["6.0.2", "5.0.0"]
-    mock_db.get_array_elements.return_value = ["LSTN-01", "MSTS-01"]
+    mock_db.get_array_elements.return_value = [
+        "LSTN-01",
+        "LSTS-01",
+        "LSTS-02",
+        "LSTS-03",
+        "LSTS-04",
+        "MSTN-01",
+        "MSTN-02",
+        "MSTN-03",
+        "MSTN-04",
+        "MSTN-05",
+        "MSTS-01",
+        "MSTS-02",
+        "MSTS-03",
+        "MSTS-04",
+        "MSTS-05",
+        "MSTS-06",
+        "MSTS-07",
+        "MSTS-08",
+        "MSTS-09",
+        "MSTS-10",
+        "MSTS-11",
+        "SSTS-01",
+        "SSTS-02",
+        "SSTS-03",
+        "SSTS-04",
+        "SSTS-05",
+    ]
     mock_db.get_simulation_configuration_parameters.return_value = mock_sim_config_params
-    mock_db.export_model_files.return_value = None
+    mock_db.export_model_files.side_effect = mock_export_model_files
     mock_db.export_model_file.return_value = None
     mock_db.db_name = "test_db"
 
