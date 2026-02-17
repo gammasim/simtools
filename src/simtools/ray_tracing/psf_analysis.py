@@ -59,8 +59,9 @@ class PSFImage:
         self.photon_r = []
         self.centroid_x = None
         self.centroid_y = None
-        self.camera_rotation_angle = 0.0
         self._total_area = total_scattered_area
+        self.cos_camera_rotation = 1.0
+        self.sin_camera_rotation = 0.0
         self._stored_psf = {}
         try:
             self._cm_to_deg = 180.0 / pi / focal_length if focal_length is not None else None
@@ -222,15 +223,16 @@ class PSFImage:
                     " - Keeping the original value"
                 )
         elif b"Camera rotation angle" in line:
-            self.camera_rotation_angle = np.deg2rad(float(words[5]))
+            camera_rotation_angle = np.deg2rad(float(words[5]))
+            self.cos_camera_rotation = np.cos(camera_rotation_angle)
+            self.sin_camera_rotation = np.sin(camera_rotation_angle)
         elif b"#" in line or len(words) == 0:
             return
         else:
             # Photon positions from cols 2 and 3; apply camera rotation
             x, y = float(words[2]), float(words[3])
-            c, s = np.cos(self.camera_rotation_angle), np.sin(self.camera_rotation_angle)
-            self.photon_pos_x.append(x * c - y * s)
-            self.photon_pos_y.append(y * c + x * s)
+            self.photon_pos_x.append(x * self.cos_camera_rotation - y * self.sin_camera_rotation)
+            self.photon_pos_y.append(y * self.cos_camera_rotation + x * self.sin_camera_rotation)
 
     def get_effective_area(self, tel_transmission=1.0):
         """

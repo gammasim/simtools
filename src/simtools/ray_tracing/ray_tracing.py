@@ -125,8 +125,8 @@ class RayTracing:
 
         Parameters
         ----------
-        off_axis_angle: astropy.units.Quantity
-            Scalar angles for backward compatibility.
+        off_axis_angle: astropy.units.Quantity or list
+            Scalar angles for backward compatibility, or list of (x, y) tuples.
         offset_directions: list or None
             Cardinal directions ['N', 'S', 'E', 'W'] for offset generation.
 
@@ -135,14 +135,18 @@ class RayTracing:
         list
             List of (x, y) tuples in degrees.
         """
-        angles_deg = np.around(off_axis_angle.to("deg").value, 5)
+        # Check if input is already a list of tuples/lists before unit conversion
+        if isinstance(off_axis_angle, (list, tuple)):
+            if len(off_axis_angle) > 0 and isinstance(off_axis_angle[0], (tuple, list)):
+                return [tuple(float(x) for x in offset) for offset in off_axis_angle]
+            # If it's a plain list of numbers, convert to ndarray for processing
+            angles_deg = np.around(np.asarray(off_axis_angle), 5)
+        else:
+            # Assume it's an astropy.units.Quantity
+            angles_deg = np.around(off_axis_angle.to("deg").value, 5)
 
         if not isinstance(angles_deg, np.ndarray):
             angles_deg = np.atleast_1d(angles_deg)
-
-        # If offsets are already tuples, return as-is
-        if len(angles_deg) > 0 and isinstance(angles_deg[0], (tuple, list)):
-            return [tuple(float(x) for x in offset) for offset in angles_deg]
 
         if offset_directions is None:
             offset_directions = ["N", "S", "E", "W"]
@@ -505,8 +509,6 @@ class RayTracing:
             Path to the photons file.
         focal_length: float
             Focal length of the telescope.
-        theta_offset: float
-            Radial off-axis angle in degrees.
         containment_fraction: float
             Containment fraction for PSF containment calculation.
         use_rx: bool
