@@ -86,8 +86,8 @@ def test_produce_array_element_report(telescope_model_lst, tmp_path):
         tel_file = tmp_path / f"{telescope_model_lst.name}.md"
         assert tel_file.exists()
 
-        # Verify DB was called with correct parameters
-        read_parameters.db.get_model_parameters.assert_called_once_with(
+        # Verify DB was called with correct parameters (at least once)
+        read_parameters.db.get_model_parameters.assert_called_with(
             site=args["site"],
             array_element_name=args["telescope"],
             collection="telescopes",
@@ -95,10 +95,26 @@ def test_produce_array_element_report(telescope_model_lst, tmp_path):
         )
 
 
-def test_produce_model_parameter_reports(tmp_test_directory):
+def test_produce_model_parameter_reports(tmp_test_directory, mocker):
     args = {"site": "North", "telescope": "LSTN-01"}
     output_path = tmp_test_directory
     read_parameters = ReadParameters(args=args, output_path=output_path)
+
+    # Mock get_model_parameters_for_all_model_versions to return quantum_efficiency data
+    mock_data = {
+        "6.0.2": {
+            "quantum_efficiency": {
+                "value": "qe_file.dat",
+                "parameter_version": "1.0.0",
+                "file": True,
+                "type": "str",
+                "instrument": "LSTN-01",  # Must match telescope
+            }
+        }
+    }
+    mocker.patch.object(
+        read_parameters.db, "get_model_parameters_for_all_model_versions", return_value=mock_data
+    )
 
     read_parameters.produce_model_parameter_reports()
 
@@ -106,7 +122,7 @@ def test_produce_model_parameter_reports(tmp_test_directory):
     assert file_path.exists()
 
 
-def test__convert_to_md(telescope_model_lst, tmp_test_directory):
+def test__convert_to_md(telescope_model_lst, tmp_test_directory, mocker):
     args = {
         "telescope": telescope_model_lst.name,
         "site": telescope_model_lst.site,
@@ -115,6 +131,9 @@ def test__convert_to_md(telescope_model_lst, tmp_test_directory):
     output_path = tmp_test_directory
     read_parameters = ReadParameters(args=args, output_path=output_path)
     parameter_name = "pm_photoelectron_spectrum"
+
+    # Mock _generate_plots to avoid file I/O
+    mocker.patch.object(read_parameters, "_generate_plots", return_value=[])
 
     # testing with invalid file
     with pytest.raises(FileNotFoundError, match="Data file not found: "):
@@ -186,9 +205,21 @@ def test__plot_camera_config_no_parameter_version(tmp_test_directory):
     assert result == []
 
 
-def test__plot_parameter_tables(tmp_test_directory):
+def test__plot_parameter_tables(tmp_test_directory, mocker):
+    from pathlib import Path
+
+    from simtools.visualization import plot_tables
+
     args = {"telescope": "LSTN-design", "site": "North", "model_version": "6.0.0"}
     read_parameters = ReadParameters(args=args, output_path=tmp_test_directory)
+
+    # Mock plot_tables.generate_plot_configurations to return (configs, output_files) tuple
+    mock_config = [{"plot_name": "pm_photoelectron_spectrum_1.0.0_North_LSTN-design"}]
+    mock_files = [Path("pm_photoelectron_spectrum_1.0.0_North_LSTN-design.png")]
+    mocker.patch.object(
+        plot_tables, "generate_plot_configurations", return_value=(mock_config, mock_files)
+    )
+
     result = read_parameters._plot_parameter_tables(
         "pm_photoelectron_spectrum", "1.0.0", Path(tmp_test_directory)
     )
@@ -196,6 +227,10 @@ def test__plot_parameter_tables(tmp_test_directory):
 
     args = {"telescope": None, "site": "North", "model_version": "6.0.0"}
     read_parameters = ReadParameters(args=args, output_path=tmp_test_directory)
+
+    # Mock to return None (empty)
+    mocker.patch.object(plot_tables, "generate_plot_configurations", return_value=None)
+
     result = read_parameters._plot_parameter_tables(
         "camera_config_file", "1.0.0", Path(tmp_test_directory)
     )

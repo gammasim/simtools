@@ -569,6 +569,9 @@ def mock_db_handler():
     mock_db.get_design_model.return_value = None
     mock_db.get_model_parameters.side_effect = mock_get_model_parameters
     mock_db.get_model_parameter.side_effect = mock_get_model_parameter
+    mock_db.get_model_parameters_for_all_model_versions.return_value = {}
+    mock_db.get_model_versions.return_value = ["6.0.2", "5.0.0"]
+    mock_db.get_array_elements.return_value = ["LSTN-01", "MSTS-01"]
     mock_db.get_simulation_configuration_parameters.return_value = mock_sim_config_params
     mock_db.export_model_files.return_value = None
     mock_db.export_model_file.return_value = None
