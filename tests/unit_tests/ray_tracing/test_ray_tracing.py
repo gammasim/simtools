@@ -852,3 +852,299 @@ def test_plot_save_writes_psf_images_and_cumulative(ray_tracing_lst, mocker):
     assert str(c1).endswith("cumulative_psf_psf_cm_off2.000.pdf")
     assert img0.plot_cumulative.call_args.kwargs["psf_diameter_cm"] == pytest.approx(12.3)
     assert img1.plot_cumulative.call_args.kwargs["psf_diameter_cm"] == pytest.approx(12.3)
+
+
+def test_load_offset_file_valid(tmp_test_directory, telescope_model_lst_mock, site_model_north):
+    """Test loading valid offset file with x, y columns."""
+    offset_file = tmp_test_directory.join("offsets.ecsv")
+    offset_content = """# %ECSV 1.0
+# ---
+# datatype:
+# - {name: x, unit: deg, datatype: float64}
+# - {name: y, unit: deg, datatype: float64}
+x y
+0.0 0.0
+1.0 0.5
+2.0 1.5
+"""
+    offset_file.write(offset_content)
+
+    ray_tracing = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+        offset_file=offset_file,
+    )
+
+    assert len(ray_tracing.off_axis_angle) == 3
+    assert ray_tracing.off_axis_angle[0] == (0.0, 0.0)
+    assert ray_tracing.off_axis_angle[1] == (1.0, 0.5)
+    assert ray_tracing.off_axis_angle[2] == (2.0, 1.5)
+
+
+def test_load_offset_file_not_found(telescope_model_lst_mock, site_model_north):
+    """Test loading offset file that does not exist."""
+    with pytest.raises(FileNotFoundError, match="Offset file not found"):
+        RayTracing(
+            telescope_model=telescope_model_lst_mock,
+            site_model=site_model_north,
+            label="test",
+            zenith_angle=20 * u.deg,
+            source_distance=10 * u.km,
+            offset_file="/nonexistent/path/offsets.ecsv",
+        )
+
+
+def test_load_offset_file_missing_columns(
+    tmp_test_directory, telescope_model_lst_mock, site_model_north
+):
+    """Test loading offset file with missing x or y columns."""
+    offset_file = tmp_test_directory.join("offsets.ecsv")
+    offset_content = """# %ECSV 1.0
+# ---
+# datatype:
+# - {name: x, unit: deg, datatype: float64}
+x
+0.0
+1.0
+"""
+    offset_file.write(offset_content)
+
+    with pytest.raises(RuntimeError, match="Error reading offset file"):
+        RayTracing(
+            telescope_model=telescope_model_lst_mock,
+            site_model=site_model_north,
+            label="test",
+            zenith_angle=20 * u.deg,
+            source_distance=10 * u.km,
+            offset_file=offset_file,
+        )
+
+
+def test_load_offset_file_logging(
+    tmp_test_directory, telescope_model_lst_mock, site_model_north, caplog
+):
+    """Test that loading offset file logs correct number of offsets."""
+    offset_file = tmp_test_directory.join("offsets.ecsv")
+    offset_content = """# %ECSV 1.0
+# ---
+# datatype:
+# - {name: x, unit: deg, datatype: float64}
+# - {name: y, unit: deg, datatype: float64}
+x y
+0.0 0.0
+1.0 0.5
+"""
+    offset_file.write(offset_content)
+
+    with caplog.at_level(logging.INFO):
+        RayTracing(
+            telescope_model=telescope_model_lst_mock,
+            site_model=site_model_north,
+            label="test",
+            zenith_angle=20 * u.deg,
+            source_distance=10 * u.km,
+            offset_file=offset_file,
+        )
+
+    assert "Loaded 2 offsets from" in caplog.text
+
+
+def test_process_offset_angles_scalar_single(telescope_model_lst_mock, site_model_north):
+    """Test _process_offset_angles with single scalar angle."""
+    ray = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+        off_axis_angle=[0.0] * u.deg,
+        offset_directions=["N"],
+    )
+    result = ray._process_offset_angles([0.0] * u.deg, ["N"])
+    assert result == [(0.0, 0.0)]
+
+
+def test_process_offset_angles_scalar_multiple_angles(telescope_model_lst_mock, site_model_north):
+    """Test _process_offset_angles with multiple scalar angles."""
+    ray = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+    )
+    result = ray._process_offset_angles([1.0, 2.0] * u.deg, ["N", "S"])
+    assert len(result) == 4
+    assert result[0] == (0.0, 1.0)
+    assert result[1] == (0.0, -1.0)
+    assert result[2] == (0.0, 2.0)
+    assert result[3] == (0.0, -2.0)
+
+
+def test_process_offset_angles_all_directions(telescope_model_lst_mock, site_model_north):
+    """Test _process_offset_angles with all cardinal directions."""
+    ray = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+    )
+    result = ray._process_offset_angles([1.0] * u.deg, ["N", "S", "E", "W"])
+    assert len(result) == 4
+    assert (0.0, 1.0) in result
+    assert (0.0, -1.0) in result
+    assert (1.0, 0.0) in result
+    assert (-1.0, 0.0) in result
+
+
+def test_process_offset_angles_default_directions(telescope_model_lst_mock, site_model_north):
+    """Test _process_offset_angles with default directions when None provided."""
+    ray = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+    )
+    result = ray._process_offset_angles([1.0] * u.deg, None)
+    # Should use default ['N', 'S', 'E', 'W']
+    assert len(result) == 4
+    assert (0.0, 1.0) in result
+    assert (0.0, -1.0) in result
+    assert (1.0, 0.0) in result
+    assert (-1.0, 0.0) in result
+
+
+def test_process_offset_angles_unknown_direction(
+    telescope_model_lst_mock, site_model_north, caplog
+):
+    """Test _process_offset_angles with unknown direction."""
+    ray = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+    )
+    with caplog.at_level(logging.WARNING):
+        result = ray._process_offset_angles([1.0] * u.deg, ["N", "X"])
+    assert len(result) == 1
+    assert result[0] == (0.0, 1.0)
+    assert "Unknown direction X" in caplog.text
+
+
+def test_process_offset_angles_zero_angle(telescope_model_lst_mock, site_model_north):
+    """Test _process_offset_angles with zero angles."""
+    ray = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+    )
+    result = ray._process_offset_angles([0.0] * u.deg, ["N", "S", "E", "W"])
+    # All should result in (0, 0)
+    assert len(result) == 4
+    assert all(offset == (0.0, 0.0) for offset in result)
+
+
+def test_process_offset_angles_rounding(telescope_model_lst_mock, site_model_north):
+    """Test _process_offset_angles rounds angles correctly."""
+    ray = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+    )
+    result = ray._process_offset_angles([1.23456789] * u.deg, ["N"])
+    assert result[0] == pytest.approx((0.0, 1.23457), abs=1e-5)
+
+
+def test_process_offset_angles_single_direction(telescope_model_lst_mock, site_model_north):
+    """Test _process_offset_angles with single direction."""
+    ray = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+    )
+    result = ray._process_offset_angles([1.0, 2.0] * u.deg, ["E"])
+    assert len(result) == 2
+    assert result[0] == (1.0, 0.0)
+    assert result[1] == (2.0, 0.0)
+
+
+def test_process_offset_angles_north_direction(telescope_model_lst_mock, site_model_north):
+    """Test _process_offset_angles specifically for North direction."""
+    ray = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+    )
+    result = ray._process_offset_angles([2.5] * u.deg, ["N"])
+    assert result[0] == (0.0, 2.5)
+
+
+def test_process_offset_angles_south_direction(telescope_model_lst_mock, site_model_north):
+    """Test _process_offset_angles specifically for South direction."""
+    ray = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+    )
+    result = ray._process_offset_angles([2.5] * u.deg, ["S"])
+    assert result[0] == (0.0, -2.5)
+
+
+def test_process_offset_angles_east_direction(telescope_model_lst_mock, site_model_north):
+    """Test _process_offset_angles specifically for East direction."""
+    ray = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+    )
+    result = ray._process_offset_angles([2.5] * u.deg, ["E"])
+    assert result[0] == (2.5, 0.0)
+
+
+def test_process_offset_angles_west_direction(telescope_model_lst_mock, site_model_north):
+    """Test _process_offset_angles specifically for West direction."""
+    ray = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+    )
+    result = ray._process_offset_angles([2.5] * u.deg, ["W"])
+    assert result[0] == (-2.5, 0.0)
+
+
+def test_process_offset_angles_multiple_angles_single_direction(
+    telescope_model_lst_mock, site_model_north
+):
+    """Test _process_offset_angles with multiple angles and single direction."""
+    ray = RayTracing(
+        telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
+        label="test",
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+    )
+    result = ray._process_offset_angles([0.5, 1.0, 1.5] * u.deg, ["N"])
+    assert len(result) == 3
+    assert result[0] == (0.0, 0.5)
+    assert result[1] == (0.0, 1.0)
+    assert result[2] == (0.0, 1.5)

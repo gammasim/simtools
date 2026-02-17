@@ -145,14 +145,12 @@ def main():
         f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n"
     )
 
-    # Parse offset directions
     offset_directions = None
     if app_context.args.get("offset_directions"):
         offset_directions = [
             d.strip().upper() for d in app_context.args["offset_directions"].split(",")
         ]
 
-    # Create RayTracing object with appropriate offset configuration
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
