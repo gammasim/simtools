@@ -279,6 +279,13 @@ def mock_db_handler():
             "file": True,
             "model_parameter_schema_version": "1.0.0",
         },
+        "mirror_class": {
+            "value": 0,
+            "parameter_version": "1.0.0",
+            "type": "uint64",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
         # Site parameters (site-specific ones like reference_point_* are in site_specific_params)
         "array_layouts": {
             "value": "test_layout",
@@ -348,6 +355,56 @@ def mock_db_handler():
             "file": True,
             "model_parameter_schema_version": "1.0.0",
         },
+        "camera_filter_incidence_angle": {
+            "value": "camera_filter_incidence_angle_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "parabolic_dish": {
+            "value": True,
+            "parameter_version": "1.0.0",
+            "type": "bool",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "camera_filter": {
+            "value": "camera_filter_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "dish_shape_length": {
+            "value": 5.56,
+            "parameter_version": "1.0.0",
+            "type": "double",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "camera_transmission": {
+            "value": "camera_transmission_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "mirror_reflectivity": {
+            "value": "mirror_reflectivity_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "quantum_efficiency": {
+            "value": "quantum_efficiency_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
     }
 
     # Mock simulation configuration parameters
@@ -402,6 +459,20 @@ def mock_db_handler():
             "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
+        "atmospheric_transmission": {
+            "value": "atmospheric_transmission_north_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "atmospheric_profile": {
+            "value": "atmospheric_profile_north_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
     }
 
     site_specific_params_south = {
@@ -442,6 +513,20 @@ def mock_db_handler():
             "type": "float64",
             "unit": "m",
             "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "atmospheric_transmission": {
+            "value": "atmospheric_transmission_south_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "atmospheric_profile": {
+            "value": "atmospheric_profile_south_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
             "model_parameter_schema_version": "1.0.0",
         },
     }
