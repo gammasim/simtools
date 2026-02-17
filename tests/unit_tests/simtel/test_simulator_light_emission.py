@@ -1295,55 +1295,38 @@ def test__initialize_light_emission_configuration(simulator_instance):
     assert result["existing_key"] == "value"  # Existing key preserved
 
 
-def test__initialize_light_emission_configuration_test_mode(simulator_instance):
-    """Test _initialize_light_emission_configuration method in test mode."""
+def test__initialize_light_emission_configuration_with_flasher_photons_override(
+    simulator_instance,
+):
+    """Test explicit flasher_photons override from config."""
 
-    # Mock calibration model
     def mock_get_parameter_value(param_name):
         if param_name == "flasher_type":
             return "flat_fielding"
         if param_name == "flasher_photons":
-            return 5e6  # Will be overridden by test mode
+            return 1234567
         return None
 
     simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
 
-    # Test configuration with test=True
-    config = {"test": True}
+    config = {"flasher_photons": 1234567}
     result = simulator_instance._initialize_light_emission_configuration(config)
 
-    # Verify test mode overrides flasher_photons
     assert result["light_source_type"] == "flat_fielding"
-    assert result["flasher_photons"] == pytest.approx(1e6)
-    assert result["test"] is True
+    assert result["flasher_photons"] == pytest.approx(1234567)
+    simulator_instance.calibration_model.overwrite_model_parameter.assert_called_once_with(
+        "flasher_photons", 1234567
+    )
 
 
-def test__initialize_light_emission_configuration_test_mode_illuminator(simulator_instance):
-    """Test test mode photon setting for illuminator sources."""
+def test__initialize_light_emission_configuration_ignores_test_flag_for_photons(
+    simulator_instance,
+):
+    """Test that test flag no longer changes flasher_photons."""
 
     def mock_get_parameter_value(param_name):
         if param_name == "flasher_type":
             return "illuminator"
-        if param_name == "flasher_photons":
-            return 5e6  # Will be overridden by test mode
-        return None
-
-    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
-
-    result = simulator_instance._initialize_light_emission_configuration({"test": True})
-
-    assert result["light_source_type"] == "illuminator"
-    assert result["flasher_photons"] == pytest.approx(1e8)
-
-
-def test__initialize_light_emission_configuration_test_mode_unknown_type_fallback(
-    simulator_instance,
-):
-    """Test test-mode fallback photons for unknown light source types."""
-
-    def mock_get_parameter_value(param_name):
-        if param_name == "flasher_type":
-            return "laser"
         if param_name == "flasher_photons":
             return 5e6
         return None
@@ -1352,8 +1335,8 @@ def test__initialize_light_emission_configuration_test_mode_unknown_type_fallbac
 
     result = simulator_instance._initialize_light_emission_configuration({"test": True})
 
-    assert result["light_source_type"] == "laser"
-    assert result["flasher_photons"] == pytest.approx(1e6)
+    assert result["light_source_type"] == "illuminator"
+    assert result["flasher_photons"] == pytest.approx(5e6)
 
 
 def test__initialize_light_emission_configuration_with_position(simulator_instance):
