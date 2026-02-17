@@ -338,41 +338,30 @@ def mock_db_handler(request):
             return "SSTS-design"
         return None
 
+    array_element_counts = {
+        "LSTN": 4,
+        "LSTS": 4,
+        "MSTN": 5,
+        "MSTS": 11,
+        "SSTS": 5,
+    }
+
+    def _format_elements(prefix, count=None):
+        if count is None:
+            count = array_element_counts[prefix]
+        return [f"{prefix}-{idx:02d}" for idx in range(1, count + 1)]
+
     def mock_get_array_elements_of_type(
         array_element_type, model_version=None, collection=None, **kwargs
     ):
         """Mock get_array_elements_of_type to return telescopes matching the type prefix."""
-        all_elements = [
-            "LSTN-01",
-            "LSTN-02",
-            "LSTN-03",
-            "LSTN-04",
-            "LSTS-01",
-            "LSTS-02",
-            "LSTS-03",
-            "LSTS-04",
-            "MSTN-01",
-            "MSTN-02",
-            "MSTN-03",
-            "MSTN-04",
-            "MSTN-05",
-            "MSTS-01",
-            "MSTS-02",
-            "MSTS-03",
-            "MSTS-04",
-            "MSTS-05",
-            "MSTS-06",
-            "MSTS-07",
-            "MSTS-08",
-            "MSTS-09",
-            "MSTS-10",
-            "MSTS-11",
-            "SSTS-01",
-            "SSTS-02",
-            "SSTS-03",
-            "SSTS-04",
-            "SSTS-05",
-        ]
+        all_elements = (
+            _format_elements("LSTN")
+            + _format_elements("LSTS")
+            + _format_elements("MSTN")
+            + _format_elements("MSTS")
+            + _format_elements("SSTS")
+        )
         # Return elements that start with the requested type
         return [elem for elem in all_elements if elem.startswith(array_element_type)]
 
@@ -383,34 +372,13 @@ def mock_db_handler(request):
     mock_db.get_model_parameter.side_effect = mock_get_model_parameter
     mock_db.get_model_parameters_for_all_model_versions.return_value = {}
     mock_db.get_model_versions.return_value = ["6.0.2", "5.0.0"]
-    mock_db.get_array_elements.return_value = [
-        "LSTN-01",
-        "LSTS-01",
-        "LSTS-02",
-        "LSTS-03",
-        "LSTS-04",
-        "MSTN-01",
-        "MSTN-02",
-        "MSTN-03",
-        "MSTN-04",
-        "MSTN-05",
-        "MSTS-01",
-        "MSTS-02",
-        "MSTS-03",
-        "MSTS-04",
-        "MSTS-05",
-        "MSTS-06",
-        "MSTS-07",
-        "MSTS-08",
-        "MSTS-09",
-        "MSTS-10",
-        "MSTS-11",
-        "SSTS-01",
-        "SSTS-02",
-        "SSTS-03",
-        "SSTS-04",
-        "SSTS-05",
-    ]
+    mock_db.get_array_elements.return_value = (
+        _format_elements("LSTN", 1)
+        + _format_elements("LSTS")
+        + _format_elements("MSTN")
+        + _format_elements("MSTS")
+        + _format_elements("SSTS")
+    )
     mock_db.get_simulation_configuration_parameters.return_value = mock_sim_config_params
     mock_db.get_array_elements_of_type.side_effect = mock_get_array_elements_of_type
     mock_db.export_model_files.side_effect = mock_export_model_files
