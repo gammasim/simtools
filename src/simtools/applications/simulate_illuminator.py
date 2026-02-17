@@ -47,7 +47,7 @@ light_source (str, required)
 number_of_events (int, optional)
     Number of events to simulate.
 flasher_photons (int, optional)
-    Override for calibration-model parameter flasher_photons.
+    Overwrite the model parameter flasher_photons.
 telescope (str, required)
     Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, ...)
 site (str, required)
