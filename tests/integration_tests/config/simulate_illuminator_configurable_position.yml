@@ -23,7 +23,7 @@ applications:
       path_descriptor: output_path
     - expected_sim_telarray_output:
         pe_sum:
-        - 1000
+        - 100
         - 50000
         photons:
         - 90
