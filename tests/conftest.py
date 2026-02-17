@@ -5,8 +5,9 @@ import re
 import tarfile
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
+from types import MappingProxyType
 from unittest import mock
-from unittest.mock import PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import matplotlib.pyplot as plt
 import pytest
@@ -18,6 +19,7 @@ from simtools import settings
 from simtools.configuration.configurator import Configurator
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.db import db_handler
+from simtools.db.mongo_db import MongoDBHandler
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
@@ -300,14 +302,6 @@ def mock_db_handler(request):
             "file": True,
             "model_parameter_schema_version": "1.0.0",
         },
-        "effective_focal_length": {
-            "value": 29.237,
-            "parameter_version": "1.0.0",
-            "type": "float64",
-            "unit": "m",
-            "file": False,
-            "model_parameter_schema_version": "1.0.0",
-        },
         "optics_properties": {
             "value": "optics_properties_dummy.dat",
             "parameter_version": "1.0.0",
@@ -407,7 +401,6 @@ def mock_db_handler(request):
         },
     }
 
-    # Mock simulation configuration parameters
     mock_sim_config_params = {
         "correct_nsb_spectrum_to_telescope_altitude": {
             "value": "nsb_spectrum_dummy.dat",
@@ -680,29 +673,27 @@ def mock_db_handler(request):
         params = dict(mock_parameters)
 
         # Telescope-specific parameters based on array_element_name
-        if array_element_name:
-            if "SST" in array_element_name or array_element_name in ["SSTS-design", "SSTS-D"]:
-                # SST-specific values
-                params.update(
-                    {
-                        "effective_focal_length": {
-                            "value": 2.15191,
-                            "parameter_version": "1.0.0",
-                            "type": "float64",
-                            "unit": "m",
-                            "file": False,
-                            "model_parameter_schema_version": "1.0.0",
-                        },
-                        "mirror_focal_length": {
-                            "value": 2.15,
-                            "parameter_version": "1.0.0",
-                            "type": "float64",
-                            "unit": "m",
-                            "file": False,
-                            "model_parameter_schema_version": "1.0.0",
-                        },
-                    }
-                )
+        if array_element_name and "SSTS" in array_element_name:
+            params.update(
+                {
+                    "effective_focal_length": {
+                        "value": 2.15191,
+                        "parameter_version": "1.0.0",
+                        "type": "float64",
+                        "unit": "m",
+                        "file": False,
+                        "model_parameter_schema_version": "1.0.0",
+                    },
+                    "mirror_focal_length": {
+                        "value": 2.15,
+                        "parameter_version": "1.0.0",
+                        "type": "float64",
+                        "unit": "m",
+                        "file": False,
+                        "model_parameter_schema_version": "1.0.0",
+                    },
+                }
+            )
 
         # Override with site-specific values
         if site == "North":
@@ -754,7 +745,6 @@ def mock_db_handler(request):
 
     def mock_get_ecsv_file_as_astropy_table(file_name=None, **kwargs):
         """Mock get_ecsv_file_as_astropy_table to return table with Quantity columns."""
-        import astropy.units as u
         from astropy.table import Column, Table
 
         # Return a minimal NSB spectrum table with proper Quantity columns
@@ -770,16 +760,17 @@ def mock_db_handler(request):
         model_version, array_element_name=None, collection="telescopes", **kwargs
     ):
         """Mock get_design_model to return design model name for telescopes."""
-        if array_element_name:
-            if array_element_name.endswith("-design"):
-                return array_element_name
-            # Return generic design model based on telescope type
-            if "LST" in array_element_name:
-                return "LSTN-design"
-            if "MST" in array_element_name:
-                return "MSTN-design"
-            if "SST" in array_element_name:
-                return "SSTS-design"
+        if not array_element_name:
+            return None
+        if array_element_name.endswith("-design"):
+            return array_element_name
+        # Return generic design model based on telescope type
+        if "LST" in array_element_name:
+            return "LSTN-design"
+        if "MST" in array_element_name:
+            return "MSTN-design"
+        if "SST" in array_element_name:
+            return "SSTS-design"
         return None
 
     def mock_get_array_elements_of_type(
@@ -894,11 +885,6 @@ def mock_database_handler(request, mocker):
 @pytest.fixture
 def db(request):
     """Database object with configuration from settings.config.db_handler."""
-    from types import MappingProxyType
-    from unittest.mock import MagicMock, patch
-
-    from simtools import settings
-    from simtools.db.mongo_db import MongoDBHandler
 
     test_file_path = str(request.node.fspath)
     if "unit_tests/db/" not in test_file_path:
