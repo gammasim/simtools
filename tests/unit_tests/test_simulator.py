@@ -471,6 +471,71 @@ def test_get_calibration_device_types(run_mode, expected_devices):
     assert Simulator._get_calibration_device_types(run_mode) == expected_devices
 
 
+def test_overwrite_flasher_photons_for_direct_injection(mocker):
+    """Overwrite flasher photons for all calibration models in direct injection mode."""
+    simulator = Simulator.__new__(Simulator)
+    simulator.run_mode = "direct_injection"
+    simulator.logger = mocker.Mock()
+
+    calib_1 = mocker.Mock()
+    calib_2 = mocker.Mock()
+    array_model = mocker.Mock()
+    array_model.calibration_models = {
+        "TEL01": {"CAL01": calib_1},
+        "TEL02": {"CAL02": calib_2},
+    }
+    simulator.array_models = [array_model]
+
+    mock_settings = mocker.Mock()
+    mock_settings.config.args = {"flasher_photons": 1234567}
+    mocker.patch("simtools.simulator.settings", mock_settings)
+
+    simulator._overwrite_flasher_photons_for_direct_injection()
+
+    calib_1.overwrite_model_parameter.assert_called_once_with("flasher_photons", 1234567)
+    calib_2.overwrite_model_parameter.assert_called_once_with("flasher_photons", 1234567)
+
+
+def test_overwrite_flasher_photons_for_direct_injection_noop_without_value(mocker):
+    """Do nothing when no override value is configured."""
+    simulator = Simulator.__new__(Simulator)
+    simulator.run_mode = "direct_injection"
+    simulator.logger = mocker.Mock()
+
+    calib = mocker.Mock()
+    array_model = mocker.Mock()
+    array_model.calibration_models = {"TEL01": {"CAL01": calib}}
+    simulator.array_models = [array_model]
+
+    mock_settings = mocker.Mock()
+    mock_settings.config.args = {"flasher_photons": None}
+    mocker.patch("simtools.simulator.settings", mock_settings)
+
+    simulator._overwrite_flasher_photons_for_direct_injection()
+
+    calib.overwrite_model_parameter.assert_not_called()
+
+
+def test_overwrite_flasher_photons_for_direct_injection_noop_for_other_modes(mocker):
+    """Do nothing in non direct-injection modes."""
+    simulator = Simulator.__new__(Simulator)
+    simulator.run_mode = "full_simulation"
+    simulator.logger = mocker.Mock()
+
+    calib = mocker.Mock()
+    array_model = mocker.Mock()
+    array_model.calibration_models = {"TEL01": {"CAL01": calib}}
+    simulator.array_models = [array_model]
+
+    mock_settings = mocker.Mock()
+    mock_settings.config.args = {"flasher_photons": 999}
+    mocker.patch("simtools.simulator.settings", mock_settings)
+
+    simulator._overwrite_flasher_photons_for_direct_injection()
+
+    calib.overwrite_model_parameter.assert_not_called()
+
+
 def test_report(array_simulator, mocker, caplog):
     """Test report method for complete coverage."""
 
