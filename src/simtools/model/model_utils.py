@@ -166,6 +166,6 @@ def get_array_elements_for_layout(layout_name, site=None, model_version=None):
         site=site or settings.config.args.get("site"),
         model_version=model_version or settings.config.args.get("model_version"),
         label="label",
-        overwrite_model_parameter_dict=settings.config.args.get("overwrite_model_parameters"),
+        overwrite_model_parameter_dict=read_overwrite_model_parameter_dict(),
     )
     return site_model.get_array_elements_for_layout(layout_name)
