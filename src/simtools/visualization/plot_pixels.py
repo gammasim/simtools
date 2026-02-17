@@ -11,6 +11,7 @@ import numpy as np
 from simtools.db import db_handler
 from simtools.io import io_handler
 from simtools.model.camera import Camera
+from simtools.model.model_utils import is_two_mirror_telescope
 from simtools.utils import names
 from simtools.visualization import visualize
 from simtools.visualization.camera_plot_utils import (
@@ -37,6 +38,7 @@ def plot(config, output_file):
         - parameter_version: str, version of the parameter
         - telescope : str, name of the telescope
         - focal_length : float, optional focal length for Camera initialization
+        - rotate_angle : astropy.units.Quantity, optional rotation angle to apply (default 0 deg)
     output_file : str
         Path where to save the plot
 
@@ -55,12 +57,14 @@ def plot(config, output_file):
         export_file_as_table=False,
     )
     data_file_path = Path(io_handler.IOHandler().get_output_directory() / f"{config['file_name']}")
-    fig = plot_pixel_layout_from_file(
-        data_file_path,
-        config["telescope"],
-        pixels_id_to_print=80,
-        focal_length=config.get("focal_length", 1.0),
-    )
+    plot_kwargs = {
+        "pixels_id_to_print": 80,
+        "focal_length": config.get("focal_length", 1.0),
+    }
+    if config.get("rotate_angle") is not None:
+        plot_kwargs["rotate_angle"] = config.get("rotate_angle")
+
+    fig = plot_pixel_layout_from_file(data_file_path, config["telescope"], **plot_kwargs)
     visualize.save_figure(fig, output_file)
     plt.close(fig)
 
@@ -101,6 +105,12 @@ def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
         telescope_name=telescope_model_name,
         camera_config_file=dat_file_path,
         focal_length=kwargs.get("focal_length", 1.0),  # 1 used as placeholder, not relevant
+    )
+
+    _apply_telescope_specific_pixel_transform(
+        camera,
+        camera_config_file=dat_file_path,
+        rotate_angle=kwargs.get("rotate_angle"),
     )
 
     return _create_pixel_plot(
@@ -201,7 +211,7 @@ def _configure_plot(ax, camera, title=None, xtitle=None, ytitle=None):
     )
     plt.tick_params(axis="both", which="major", labelsize=15)
 
-    rotation = (camera.pixels["rotate_angle"] * u.rad) + (90 * u.deg)
+    rotation = camera.pixels.get("plot_rotate_angle", camera.pixels["rotate_angle"]) * u.rad
     _add_coordinate_axes(ax, rotation)
     x_min = min(camera.pixels["x"]) - (max(camera.pixels["x"]) - min(camera.pixels["x"])) * 0.05
     y_min = min(camera.pixels["y"]) - (max(camera.pixels["y"]) - min(camera.pixels["y"])) * 0.05
@@ -271,3 +281,46 @@ def _add_coordinate_axes(ax, rotation=0 * u.deg):
     y_dx = axis_length * arrow_length * np.sin(rot_angle)
     y_dy = -axis_length * arrow_length * np.cos(rot_angle)
     add_arrow_label(x_origin, y_origin_pix, y_dx, y_dy, "$\\mathrm{y}_\\mathrm{pix}$", 0.45)
+
+
+def _apply_telescope_specific_pixel_transform(camera, camera_config_file, rotate_angle=None):
+    """Apply telescope-specific pixel position adjustments in-place.
+
+    Notes
+    -----
+    The `Camera` class rotates pixel positions during initialization. For the pixel-layout plot
+    we want to reproduce the historic (pre-refactor) convention used by `plot_pixels`, which is
+    based on the *raw* sim_telarray pixel list plus telescope-specific flip/rotation.
+    Therefore we read the raw pixel list again from the config file and apply the transform once.
+    """
+    raw_pixels = Camera.read_pixel_list(camera_config_file)
+    x_pos = np.asarray(raw_pixels["x"], dtype=float)
+    y_pos = np.asarray(raw_pixels["y"], dtype=float)
+
+    if not is_two_mirror_telescope(camera.telescope_name):
+        y_pos = -y_pos
+
+    if rotate_angle is None:
+        raw_rotate_angle = raw_pixels.get("rotate_angle")
+        rotate_angle = 0.0 * u.deg if raw_rotate_angle is None else (raw_rotate_angle * u.rad)
+
+    if isinstance(rotate_angle, (int, float, np.floating)):
+        rotate_angle = float(rotate_angle) * u.deg
+
+    rotate_angle = rotate_angle.to(u.deg)
+
+    array_element_type = names.get_array_element_type_from_name(camera.telescope_name)
+    if "SST" in array_element_type or "SCT" in array_element_type:
+        total_rotation = (90 * u.deg) - rotate_angle
+    else:
+        total_rotation = (-90 * u.deg) - rotate_angle
+
+    rot_angle = total_rotation.to(u.rad).value
+    x_rot = x_pos * np.cos(rot_angle) - y_pos * np.sin(rot_angle)
+    y_rot = y_pos * np.cos(rot_angle) + x_pos * np.sin(rot_angle)
+
+    camera.pixels["x"] = x_rot
+    camera.pixels["y"] = y_rot
+    if camera.pixels.get("pixel_shape") in (1, 3):
+        camera.pixels["orientation"] = 30 if camera.pixels.get("pixel_shape") == 3 else 0
+    camera.pixels["plot_rotate_angle"] = float(rot_angle)
