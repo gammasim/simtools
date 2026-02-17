@@ -15,7 +15,7 @@ applications:
     output_path: simtools-output/illuminator-variable
     site: North
     telescope: MSTN-04
-    test: true
+    flasher_photons: 1e9
     log_level: DEBUG
   integration_tests:
   - test_output_files:
@@ -24,16 +24,15 @@ applications:
     - expected_sim_telarray_output:
         pe_sum:
         - 1000
-        - 50000
+        - 10000
         photons:
-        - 90
-        - 100000
+        - 5000
+        - 13000
         event_type: illuminator
       file: illuminator_North_7.0.0_simulate_illuminator.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray
   model_version_use_current: true
   test_name: run-configurable-position
-  skip_integration_test: No events in sim_telarray file (issue 2042)
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
