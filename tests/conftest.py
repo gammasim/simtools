@@ -293,53 +293,6 @@ def mock_db_handler(request):
             "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
-        # Site parameters (site-specific ones like reference_point_* are in site_specific_params)
-        "array_layouts": {
-            "value": "test_layout",
-            "parameter_version": "1.0.0",
-            "type": "str",
-            "file": False,
-            "model_parameter_schema_version": "1.0.0",
-        },
-        "geomag_horizontal": {
-            "value": 20.0,
-            "parameter_version": "1.0.0",
-            "type": "float64",
-            "unit": "uT",
-            "file": False,
-            "model_parameter_schema_version": "1.0.0",
-        },
-        "geomag_vertical": {
-            "value": -10.0,
-            "parameter_version": "1.0.0",
-            "type": "float64",
-            "unit": "uT",
-            "file": False,
-            "model_parameter_schema_version": "1.0.0",
-        },
-        "geomag_rotation": {
-            "value": 0.0,
-            "parameter_version": "1.0.0",
-            "type": "float64",
-            "unit": "deg",
-            "file": False,
-            "model_parameter_schema_version": "1.0.0",
-        },
-        "nsb_reference_spectrum": {
-            "value": "nsb_spectrum_dummy.dat",
-            "parameter_version": "1.0.0",
-            "type": "str",
-            "file": True,
-            "model_parameter_schema_version": "1.0.0",
-        },
-        "nsb_reference_value": {
-            "value": 0.24,
-            "parameter_version": "1.0.0",
-            "type": "float64",
-            "unit": "1/(sr*ns*cm**2)",
-            "file": False,
-            "model_parameter_schema_version": "1.0.0",
-        },
         "camera_config_file": {
             "value": "camera_config_dummy.dat",
             "parameter_version": "1.0.0",
@@ -506,15 +459,15 @@ def mock_db_handler(request):
             "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
-        "atmospheric_transmission": {
-            "value": "atmospheric_transmission_north_dummy.dat",
+        "atmospheric_profile": {
+            "value": "atmospheric_profile_north_dummy.dat",
             "parameter_version": "1.0.0",
             "type": "str",
             "file": True,
             "model_parameter_schema_version": "1.0.0",
         },
-        "atmospheric_profile": {
-            "value": "atmospheric_profile_north_dummy.dat",
+        "atmospheric_transmission": {
+            "value": "atmospheric_transmission_north_dummy.dat",
             "parameter_version": "1.0.0",
             "type": "str",
             "file": True,
@@ -540,14 +493,6 @@ def mock_db_handler(request):
                         "SSTS-05",
                     ],
                 },
-                {
-                    "name": "4lst",
-                    "elements": ["LSTN-01", "LSTN-02", "LSTN-03", "LSTN-04"],
-                },
-                {
-                    "name": "alpha",
-                    "elements": ["LSTN-01", "MSTS-01", "MSTS-02", "SSTS-01"],
-                },
             ],
             "parameter_version": "1.0.0",
             "type": "list",
@@ -559,6 +504,21 @@ def mock_db_handler(request):
             "parameter_version": "1.0.0",
             "type": "str",
             "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "nsb_reference_spectrum": {
+            "value": "nsb_reference_spectrum_north_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "nsb_reference_value": {
+            "value": 0.24,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "1/(sr*ns*cm**2)",
+            "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
         "geomag_horizontal": {
@@ -627,15 +587,15 @@ def mock_db_handler(request):
             "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
-        "atmospheric_transmission": {
-            "value": "atmospheric_transmission_south_dummy.dat",
+        "atmospheric_profile": {
+            "value": "atmospheric_profile_south_dummy.dat",
             "parameter_version": "1.0.0",
             "type": "str",
             "file": True,
             "model_parameter_schema_version": "1.0.0",
         },
-        "atmospheric_profile": {
-            "value": "atmospheric_profile_south_dummy.dat",
+        "atmospheric_transmission": {
+            "value": "atmospheric_transmission_south_dummy.dat",
             "parameter_version": "1.0.0",
             "type": "str",
             "file": True,
@@ -660,15 +620,7 @@ def mock_db_handler(request):
                         "SSTS-04",
                         "SSTS-05",
                     ],
-                },
-                {
-                    "name": "4lst",
-                    "elements": ["LSTN-01", "LSTN-02", "LSTN-03", "LSTN-04"],
-                },
-                {
-                    "name": "alpha",
-                    "elements": ["LSTN-01", "MSTS-01", "MSTS-02", "SSTS-01"],
-                },
+                }
             ],
             "parameter_version": "1.0.0",
             "type": "list",
@@ -680,6 +632,21 @@ def mock_db_handler(request):
             "parameter_version": "1.0.0",
             "type": "str",
             "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "nsb_reference_spectrum": {
+            "value": "nsb_reference_spectrum_south_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "nsb_reference_value": {
+            "value": 0.24,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "1/(sr*ns*cm**2)",
+            "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
         "geomag_horizontal": {
@@ -782,38 +749,8 @@ def mock_db_handler(request):
     def mock_export_model_files(
         parameters=None, file_names=None, dest=None, db_name=None, **kwargs
     ):
-        """Mock export_model_files by creating minimal dummy files."""
-        from pathlib import Path
-
-        if dest is None:
-            return {}
-
-        dest_path = Path(dest)
-        dest_path.mkdir(parents=True, exist_ok=True)
-
-        if file_names:
-            file_names = [file_names] if not isinstance(file_names, list) else file_names
-        elif parameters:
-            file_names = [
-                info["value"]
-                for info in parameters.values()
-                if info and info.get("file") and info["value"] is not None
-            ]
-        else:
-            return {}
-
-        instance_ids = {}
-        for filename in file_names:
-            file_path = dest_path / filename
-            file_path.parent.mkdir(parents=True, exist_ok=True)
-            if file_path.exists():
-                instance_ids[filename] = "file exists"
-            else:
-                # Write minimal tabular data
-                file_path.write_text("# Dummy data file\n0.0 1.0\n1.0 1.0\n")
-                instance_ids[filename] = "mock file"
-
-        return instance_ids
+        """Mock export_model_files for unit tests (no file I/O)."""
+        return {}
 
     def mock_get_ecsv_file_as_astropy_table(file_name=None, **kwargs):
         """Mock get_ecsv_file_as_astropy_table to return table with Quantity columns."""
