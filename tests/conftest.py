@@ -256,15 +256,15 @@ def mock_db_handler():
             "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
-        # Site parameters
-        "corsika_observation_level": {
-            "value": 2200.0,
+        "telescope_sphere_radius": {
+            "value": 15.0,
             "parameter_version": "1.0.0",
             "type": "float64",
             "unit": "m",
             "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
+        # Site parameters (site-specific ones like reference_point_* are in site_specific_params)
         "array_layouts": {
             "value": "test_layout",
             "parameter_version": "1.0.0",
@@ -272,26 +272,27 @@ def mock_db_handler():
             "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
-        "reference_point_utm_east": {
-            "value": 500000.0,
+        "geomag_horizontal": {
+            "value": 20.0,
             "parameter_version": "1.0.0",
             "type": "float64",
-            "unit": "m",
+            "unit": "uT",
             "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
-        "reference_point_utm_north": {
-            "value": 3000000.0,
+        "geomag_vertical": {
+            "value": -10.0,
             "parameter_version": "1.0.0",
             "type": "float64",
-            "unit": "m",
+            "unit": "uT",
             "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
-        "epsg_code": {
-            "value": 32733,
+        "geomag_rotation": {
+            "value": 0.0,
             "parameter_version": "1.0.0",
-            "type": "int32",
+            "type": "float64",
+            "unit": "deg",
             "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
@@ -345,14 +346,119 @@ def mock_db_handler():
         },
     }
 
+    # Site-specific parameters (different for North and South)
+    site_specific_params_north = {
+        "reference_point_utm_east": {
+            "value": 217611.227,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "reference_point_utm_north": {
+            "value": 3185066.278,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "reference_point_altitude": {
+            "value": 2156.0,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "epsg_code": {
+            "value": 32628,
+            "parameter_version": "1.0.0",
+            "type": "int32",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "corsika_observation_level": {
+            "value": 2158.0,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+    }
+
+    site_specific_params_south = {
+        "reference_point_utm_east": {
+            "value": 366822.0,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "reference_point_utm_north": {
+            "value": 7269466.0,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "reference_point_altitude": {
+            "value": 2162.0,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "epsg_code": {
+            "value": 32719,
+            "parameter_version": "1.0.0",
+            "type": "int32",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "corsika_observation_level": {
+            "value": 2147.0,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+    }
+
+    def mock_get_model_parameters(site, array_element_name, collection, model_version):
+        """Return site-specific parameters based on the site."""
+        params = dict(mock_parameters)
+        # Override with site-specific values
+        if site == "North":
+            params.update(site_specific_params_north)
+        elif site == "South":
+            params.update(site_specific_params_south)
+        return params
+
     def mock_get_model_parameter(parameter, parameter_version, **kwargs):
         """
         Mock get_model_parameter to return parameters only if they exist with the exact version.
 
         This allows tests to check for parameter existence in the DB.
         """
-        if parameter in mock_parameters:
-            param_data = mock_parameters[parameter]
+        # Get site from kwargs if provided
+        site = kwargs.get("site")
+        params = dict(mock_parameters)
+
+        # Override with site-specific values
+        if site == "North":
+            params.update(site_specific_params_north)
+        elif site == "South":
+            params.update(site_specific_params_south)
+
+        if parameter in params:
+            param_data = params[parameter]
             if param_data.get("parameter_version") == parameter_version:
                 return param_data
         # If parameter doesn't exist or version doesn't match, raise ValueError
@@ -361,7 +467,7 @@ def mock_db_handler():
     mock_db = MagicMock()
     mock_db.is_configured.return_value = True
     mock_db.get_design_model.return_value = None
-    mock_db.get_model_parameters.return_value = mock_parameters
+    mock_db.get_model_parameters.side_effect = mock_get_model_parameters
     mock_db.get_model_parameter.side_effect = mock_get_model_parameter
     mock_db.get_simulation_configuration_parameters.return_value = mock_sim_config_params
     mock_db.export_model_files.return_value = None
