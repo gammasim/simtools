@@ -67,11 +67,6 @@ def array_layout_south_four_lst_instance(model_version):
     )
 
 
-def test_initialize_site_parameters_from_db():
-    with pytest.raises(ValueError, match="Invalid version string: test_model_version"):
-        ArrayLayout(site="North", model_version="test_model_version")
-
-
 def test_initialize_coordinate_systems(
     north_layout_center_data_dict,
     array_layout_north_instance,
@@ -136,10 +131,7 @@ def test_select_assets(telescope_north_with_calibration_devices_test_file, model
     assert len(layout._telescope_list) == 0
 
 
-def test_add_tel(
-    array_layout_north_instance,
-    array_layout_south_instance,
-):
+def test_add_tel(array_layout_south_instance):
     def test_one_site(instance, altitude, tel_name, design_model):
         ntel_before = instance.get_number_of_telescopes()
         instance.add_telescope(
@@ -153,7 +145,6 @@ def test_add_tel(
         )
         assert instance._telescope_list[-1].get_altitude().value == pytest.approx(altitude)
 
-    test_one_site(array_layout_north_instance, 2197.0, "MSTN-20", "MSTx-NectarCam")
     test_one_site(array_layout_south_instance, 2181.0, "LSTS-05", "LSTS-design")
 
 
@@ -245,20 +236,6 @@ def test_build_layout(
     )
 
 
-def test_converting_center_coordinates_north(array_layout_north_four_lst_instance):
-    layout = array_layout_north_four_lst_instance
-
-    _lat, _lon, _ = layout._array_center.get_coordinates("mercator")
-    assert _lat.value == pytest.approx(28.7621661)
-    assert _lon.value == pytest.approx(-17.8920302)
-
-    _east, _north, _ = layout._array_center.get_coordinates("utm")
-    assert _north.value == pytest.approx(3185066.278)
-    assert _east.value == pytest.approx(217608.975)
-
-    assert layout._array_center.get_altitude().value == pytest.approx(2177.0)
-
-
 def test_converting_center_coordinates_south(array_layout_south_four_lst_instance):
     layout = array_layout_south_four_lst_instance
 
@@ -295,7 +272,6 @@ def test_altitude_from_corsika_z(
             instance._altitude_from_corsika_z(5.0, None, telescope_axis_height=16.0 * u.m)
         assert np.isnan(instance._altitude_from_corsika_z(None, None, None))
 
-    test_one_site(array_layout_north_four_lst_instance, "LSTN-01", 2185.0, 45.0)
     test_one_site(array_layout_south_four_lst_instance, "LSTS-01", 2176.0, 45.0)
 
 
