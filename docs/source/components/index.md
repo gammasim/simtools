@@ -51,7 +51,3 @@ Incomplete documentation
 ```
 
 - software tool for geomagnetic field determination
-
-## Coordinate Systems
-
-simtools uses multiple [coordinate systems](coordinate_systems.md) for telescope positioning, simulations, and analysis

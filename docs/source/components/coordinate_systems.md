@@ -1,6 +1,7 @@
 # Coordinate Systems
 
 simtools uses multiple coordinate systems for telescope positioning, simulations, and analysis. This document describes the systems and how they are used.
+Please refer to th CORSIKA and sim_telarray documentation for details on systems used in these simulation tools.
 
 ## Geospatial Coordinate Systems
 
@@ -14,6 +15,11 @@ Geographic latitude and longitude
 - **Axes:** Latitude (x), Longitude (y)
 - **Units:** Degrees
 - **Altitude:** Height above sea level (meters)
+
+This implementation uses **Latitude=x** and **Longitude=y**, which is unconventional compared to standard GIS and geographic conventions. Most geographic information systems follow (longitude, latitude) or equivalently (x, y) where:
+
+- x = Longitude (east-west axis)
+- y = Latitude (north-south axis)
 
 ### UTM (Universal Transverse Mercator) System
 
@@ -65,3 +71,7 @@ Photosensor positions in the focal plane.
 - **Storage:** `simtools.model.camera.Camera` class
 
 Includes pixel position (x, y), ID, on/off status, and diameter.
+
+### Camera Coordinates
+
+same as pixel coordinates, but no camera rotation applied.
