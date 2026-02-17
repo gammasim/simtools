@@ -13,6 +13,7 @@ from simtools.job_execution import job_manager
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
+from simtools.simtel import simtel_output_validator
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils.geometry import fiducial_radius_from_shape
 
@@ -37,7 +38,7 @@ class SimulatorLightEmission(SimtelRunner):
         self.io_handler = io_handler.IOHandler()
 
         super().__init__(label=label, config=light_emission_config)
-        self.job_files = runner_services.RunnerServices(
+        self.submission_files = runner_services.RunnerServices(
             light_emission_config, run_type="sub", label=label
         )
 
@@ -63,11 +64,12 @@ class SimulatorLightEmission(SimtelRunner):
                 "flasher_type"
             ).lower()
 
-        config["flasher_photons"] = (
-            self.calibration_model.get_parameter_value("flasher_photons")
-            if not config.get("test", False)
-            else 1e6
-        )
+        if config.get("flasher_photons"):
+            self.calibration_model.overwrite_model_parameter(
+                "flasher_photons",
+                config["flasher_photons"],
+            )
+        config["flasher_photons"] = self.calibration_model.get_parameter_value("flasher_photons")
 
         if config.get("light_source_position") is not None:
             config["light_source_position"] = (
@@ -81,8 +83,8 @@ class SimulatorLightEmission(SimtelRunner):
         run_script = self.prepare_run()
         job_manager.submit(
             run_script,
-            out_file=self.job_files.get_file_name("sub_out"),
-            err_file=self.job_files.get_file_name("sub_err"),
+            out_file=self.submission_files.get_file_name("sub_out"),
+            err_file=self.submission_files.get_file_name("sub_err"),
         )
 
     def prepare_run(self):
@@ -94,7 +96,7 @@ class SimulatorLightEmission(SimtelRunner):
         Path
             Full path of the run script.
         """
-        script_file = self.job_files.get_file_name(file_type="sub_script")
+        script_file = self.submission_files.get_file_name(file_type="sub_script")
         output_file = self.runner_service.get_file_name(file_type="sim_telarray_output")
         if output_file.exists():
             raise FileExistsError(
@@ -222,6 +224,40 @@ class SimulatorLightEmission(SimtelRunner):
         telescope_position_file.write_text(f"{x_tel} {y_tel} {z_tel} {radius}\n", encoding="utf-8")
         return telescope_position_file
 
+    def _get_illuminator_position(self):
+        """Return illuminator position (x, y, z) in ground coordinates."""
+        pos = self.light_emission_config.get("light_source_position")
+        if pos is None:
+            pos = self.calibration_model.get_parameter_value_with_unit(
+                "array_element_position_ground"
+            )
+        return pos
+
+    def _get_illuminator_pointing_vector(self, pos=None):
+        """Return illuminator pointing vector; prefer explicit config if available."""
+        pointing_vector = self.light_emission_config.get("light_source_pointing")
+        if pointing_vector is not None:
+            return pointing_vector
+        if pos is None:
+            pos = self._get_illuminator_position()
+        x_cal, y_cal, z_cal = pos
+        return self._calibration_pointing_direction(x_cal, y_cal, z_cal)[0]
+
+    @staticmethod
+    def _should_use_telpos_file(pointing_vector):
+        """Decide whether to use telpos file based on pointing vector.
+
+        Rule: do not use telpos only if pointing is (0, 0, -1) (within tolerance).
+        """
+        try:
+            vec = np.asarray(pointing_vector, dtype=float)
+        except (TypeError, ValueError):
+            return True
+        if vec.size < 3 or not np.all(np.isfinite(vec[:3])):
+            return True
+        is_default_down = np.allclose(vec[:3], [0.0, 0.0, -1.0], atol=1e-6)
+        return not is_default_down
+
     def _prepare_flasher_atmosphere_files(self, config_directory, model_id=1):
         """
         Prepare canonical atmosphere aliases for ff-1m and return model id.
@@ -283,7 +319,8 @@ class SimulatorLightEmission(SimtelRunner):
             ]
 
         cmd += ["-o", str(iact_output)]
-        return " ".join(cmd)
+        log_file = self.runner_service.get_file_name(file_type="light_emission_log")
+        return " ".join(cmd) + f" 2>&1 | gzip > {log_file}\n"
 
     def _get_site_command(self, app_name, config_directory, corsika_observation_level):
         """Return site command with altitude, atmosphere and telescope_position handling."""
@@ -297,10 +334,17 @@ class SimulatorLightEmission(SimtelRunner):
                 f"--atmosphere {atmo_id}",
             ]
         # default path (not used for flasher now, but kept for completeness)
-        return [
-            f"-h  {corsika_observation_level.to(u.m).value} ",
-            f"--telpos-file {self._write_telescope_position_file()}",
-        ]
+        cmd = [f"-h  {corsika_observation_level.to(u.m).value} "]
+
+        if self.light_emission_config.get("light_source_type") == "illuminator":
+            pointing_vector = self._get_illuminator_pointing_vector()
+            if self._should_use_telpos_file(pointing_vector):
+                self._logger.info(
+                    "Using telescope position file for illuminator setup "
+                    f"(pointing={pointing_vector})."
+                )
+                cmd.append(f"--telpos-file {self._write_telescope_position_file()}")
+        return cmd
 
     def _get_light_source_command(self):
         """Return light-source specific command options."""
@@ -373,21 +417,15 @@ class SimulatorLightEmission(SimtelRunner):
             f"--angular-distribution {angular_distribution}",
         ]
 
-    def _sanitize_name(self, value):
+    @staticmethod
+    def _sanitize_name(value):
         return "".join(ch if (ch.isalnum() or ch in ("-", "_")) else "_" for ch in str(value))
 
     def _add_illuminator_command_options(self):
         """Get illuminator-specific command options for light emission script."""
-        pos = self.light_emission_config.get("light_source_position")
-        if pos is None:
-            pos = self.calibration_model.get_parameter_value_with_unit(
-                "array_element_position_ground"
-            )
+        pos = self._get_illuminator_position()
         x_cal, y_cal, z_cal = pos
-        if self.light_emission_config.get("light_source_pointing"):
-            pointing_vector = self.light_emission_config["light_source_pointing"]
-        else:
-            pointing_vector = self._calibration_pointing_direction(x_cal, y_cal, z_cal)[0]
+        pointing_vector = self._get_illuminator_pointing_vector(pos)
         flasher_wavelength = self.calibration_model.get_parameter_value_with_unit(
             "flasher_wavelength"
         )
@@ -459,7 +497,9 @@ class SimulatorLightEmission(SimtelRunner):
 
         parts += [f"-C {key}={value}" for key, value in options]
 
-        return sim_telarray_env_as_string() + " ".join(parts)
+        log_file = self.runner_service.get_file_name(file_type="sim_telarray_log")
+
+        return sim_telarray_env_as_string() + " ".join(parts) + f" 2>&1 | gzip > {log_file}\n"
 
     def calculate_distance_focal_plane_calibration_device(self):
         """
@@ -549,18 +589,10 @@ class SimulatorLightEmission(SimtelRunner):
             return f"{shape_out}:{float(expv)}"
         return shape_out
 
-    def verify_simulations(self):
-        """
-        Verify that the simulations were successful.
-
-        Returns
-        -------
-        bool
-            True if simulations were successful, False otherwise.
-        """
-        out = Path(self.runner_service.get_file_name(file_type="sim_telarray_output"))
-        if not out.exists():
-            self._logger.error(f"Expected sim_telarray output not found: {out}")
-            return False
-        self._logger.info(f"sim_telarray output found: {out}")
-        return True
+    def validate_simulations(self):
+        """Validate that the simulations were successful."""
+        simtel_output_validator.validate_sim_telarray(
+            data_files=Path(self.runner_service.get_file_name(file_type="sim_telarray_output")),
+            log_files=Path(self.runner_service.get_file_name(file_type="sim_telarray_log")),
+            array_models=None,
+        )

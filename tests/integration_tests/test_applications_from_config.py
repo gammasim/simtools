@@ -53,6 +53,9 @@ def test_applications_from_config(tmp_test_directory, config, request):
     if skip_message:
         pytest.skip(skip_message)
 
+    if tmp_config.get("skip_integration_test"):
+        pytest.skip(tmp_config["skip_integration_test"])
+
     logger.info(f"Test configuration from config file: {tmp_config}")
     logger.info(f"Model version: {model_version}")
     logger.info(f"Application configuration: {tmp_config}")

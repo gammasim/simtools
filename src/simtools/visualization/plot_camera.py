@@ -141,7 +141,6 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
         prop={"size": 11},
         loc="upper right",
     )
-    ax.set_aspect("equal", "datalim")
     plt.tight_layout()
 
     return fig
@@ -225,9 +224,9 @@ def plot_pixel_layout_with_image(
         sm.set_array([])
         cbar = fig.colorbar(sm, ax=ax, fraction=0.02, pad=0.05)
         cbar.set_label(color_bar_label, fontsize=10)
-    _setup_camera_axis_properties(ax, camera, grid=True, grid_alpha=0.3, padding=1)
-    ax.set_xlabel("x [cm]", fontsize=12)
-    ax.set_ylabel("y [cm]", fontsize=12)
+    _setup_camera_axis_properties(ax, camera, grid=True, grid_alpha=0.3, padding=0.1)
+    ax.set_xlabel("x [m]", fontsize=12)
+    ax.set_ylabel("y [m]", fontsize=12)
 
     return fig
 
@@ -340,7 +339,7 @@ def _setup_camera_axis_properties(
         ax.set_xlim(x_min - padding, x_max + padding)
         ax.set_ylim(y_min - padding, y_max + padding)
 
-    ax.set_aspect("equal", "datalim")
+    ax.set_aspect("equal", "box")
 
     if grid:
         if grid_alpha is not None:

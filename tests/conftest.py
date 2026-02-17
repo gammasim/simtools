@@ -15,7 +15,6 @@ from dotenv import load_dotenv
 
 import simtools.io.io_handler
 from simtools import settings
-from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.configuration.configurator import Configurator
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.db import db_handler
@@ -25,6 +24,11 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.runners.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
+
+
+def pytest_addoption(parser):
+    """Model version command line parameter."""
+    parser.addoption("--model_version", action="store", default=None)
 
 
 @pytest.fixture(autouse=True)
@@ -201,11 +205,6 @@ def db():
     return db_handler.DatabaseHandler()
 
 
-def pytest_addoption(parser):
-    """Model version command line parameter."""
-    parser.addoption("--model_version", action="store", default=None)
-
-
 @pytest.fixture
 def model_version():
     """Simulation model version used in tests."""
@@ -351,18 +350,6 @@ def corsika_config_data(model_version):
 
 
 @pytest.fixture
-def corsika_config(io_handler, corsika_config_data, array_model_south):
-    """Corsika configuration object (using array model South)."""
-    corsika_config = CorsikaConfig(
-        array_model=array_model_south,
-        label="test-corsika-config",
-        args_dict=corsika_config_data,
-    )
-    corsika_config.run_number = 1
-    return corsika_config
-
-
-@pytest.fixture
 def corsika_config_mock_array_model(corsika_config_data, model_version):
     """Corsika configuration object (using array model South)."""
     array_model = mock.MagicMock()
@@ -419,15 +406,6 @@ def corsika_config_mock_array_model(corsika_config_data, model_version):
 
 
 @pytest.fixture
-def corsika_runner(corsika_config, io_handler):
-    return CorsikaRunner(
-        corsika_config=corsika_config,
-        label="test-corsika-runner",
-        use_multipipe=False,
-    )
-
-
-@pytest.fixture
 def corsika_runner_mock_array_model(corsika_config_mock_array_model, io_handler):
     return CorsikaRunner(
         corsika_config=corsika_config_mock_array_model,
@@ -473,21 +451,6 @@ def safe_tar_open():
             yield tar
 
     return _open
-
-
-@pytest.fixture
-def camera_efficiency_sst(io_handler, model_version):
-    return CameraEfficiency(
-        config_data={
-            "telescope": "SSTS-05",
-            "site": "South",
-            "model_version": model_version,
-            "zenith_angle": 20 * u.deg,
-            "azimuth_angle": 0 * u.deg,
-        },
-        label="validate_camera_efficiency",
-        efficiency_type="shower",
-    )
 
 
 @pytest.fixture

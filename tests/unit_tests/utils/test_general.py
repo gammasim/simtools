@@ -919,6 +919,40 @@ def test_find_executable_in_dir_not_executable(tmp_test_directory) -> None:
         gen.find_executable_in_dir(None, None)
 
 
+def test_is_safe_tar_member_safe_relative_path() -> None:
+    """Test that safe relative paths are accepted."""
+    assert gen.is_safe_tar_member("logs/test.log.gz")
+    assert gen.is_safe_tar_member("subdir/logs/test.log.gz")
+    assert gen.is_safe_tar_member("test.log")
+
+
+def test_is_safe_tar_member_unsafe_absolute_path() -> None:
+    """Test that absolute paths are rejected."""
+    assert not gen.is_safe_tar_member("/etc/passwd")
+    assert not gen.is_safe_tar_member("/path/to/file.log")
+
+
+def test_is_safe_tar_member_unsafe_traversal() -> None:
+    """Test that parent directory traversal paths are rejected."""
+    assert not gen.is_safe_tar_member("logs/../../../etc/passwd")
+    assert not gen.is_safe_tar_member("../logs/test.log")
+    assert not gen.is_safe_tar_member("path/../../dangerous/file")
+
+
+def test_is_safe_tar_member_unsafe_null_byte() -> None:
+    """Test that paths with null bytes are rejected."""
+    assert not gen.is_safe_tar_member("path\x00withNull")
+    assert not gen.is_safe_tar_member("file.log\x00.exe")
+
+
+def test_is_safe_tar_member_benign_double_dot() -> None:
+    """Test that benign filenames with '..' in them are accepted."""
+    # These are valid filenames, not path traversal attempts
+    assert gen.is_safe_tar_member("foo..bar.txt")
+    assert gen.is_safe_tar_member("file..name..with..dots.log")
+    assert gen.is_safe_tar_member("version1..0.tar.gz")
+
+
 def test_get_simtools_log_file_with_file_handler(tmp_test_directory) -> None:
     """Test getting simtools log file when a FileHandler is attached."""
     log_file = tmp_test_directory / "test.log"
@@ -936,23 +970,24 @@ def test_get_simtools_log_file_with_file_handler(tmp_test_directory) -> None:
 
 def test_get_simtools_log_file_without_file_handler() -> None:
     """Test getting simtools log file when no FileHandler is attached."""
-    original_handlers = gen._logger.handlers[:]
-    original_parent_handlers = []
-    parent_logger = gen._logger.parent
+    # Save all handlers from the entire logger hierarchy
+    saved_handlers = {}
+    current_logger = gen._logger
+    level = 0
+
+    while current_logger:
+        saved_handlers[level] = (current_logger, current_logger.handlers[:])
+        current_logger.handlers = []
+        current_logger = current_logger.parent
+        level += 1
 
     try:
-        gen._logger.handlers = []
-        # Temporarily save and clear parent logger handlers to isolate test
-        if parent_logger:
-            original_parent_handlers = parent_logger.handlers[:]
-            parent_logger.handlers = []
-
         result = gen.get_simtools_log_file()
         assert result is None
     finally:
-        gen._logger.handlers = original_handlers
-        if parent_logger and original_parent_handlers:
-            parent_logger.handlers = original_parent_handlers
+        # Restore all handlers
+        for level, (logger, handlers) in saved_handlers.items():
+            logger.handlers = handlers
 
 
 def test_get_simtools_log_file_with_parent_logger_file_handler(tmp_test_directory) -> None:
