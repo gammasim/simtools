@@ -1,10 +1,10 @@
 ---
 # A conda environment with all useful package for simtools developers
-name: simtools-dev-314
+name: simtools-dev
 channels:
   - conda-forge
 dependencies:
-  - python=3.14
+  - python=3.12
   - adjustText
   - astropy-base
   - boost-histogram
