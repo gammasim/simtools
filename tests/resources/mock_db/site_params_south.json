@@ -1,56 +1,42 @@
 {
   "reference_point_utm_east": {
     "value": 366822.0,
-    "parameter_version": "1.0.0",
     "type": "float64",
     "unit": "m",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "reference_point_utm_north": {
     "value": 7269466.0,
-    "parameter_version": "1.0.0",
     "type": "float64",
     "unit": "m",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "reference_point_altitude": {
     "value": 2162.0,
-    "parameter_version": "1.0.0",
     "type": "float64",
     "unit": "m",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "epsg_code": {
     "value": 32719,
-    "parameter_version": "1.0.0",
     "type": "int32",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "corsika_observation_level": {
     "value": 2147.0,
-    "parameter_version": "1.0.0",
     "type": "float64",
     "unit": "m",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "atmospheric_profile": {
     "value": "atmospheric_profile_south_dummy.dat",
-    "parameter_version": "1.0.0",
     "type": "str",
-    "file": true,
-    "model_parameter_schema_version": "1.0.0"
+    "file": true
   },
   "atmospheric_transmission": {
     "value": "atmospheric_transmission_south_dummy.dat",
-    "parameter_version": "1.0.0",
     "type": "str",
-    "file": true,
-    "model_parameter_schema_version": "1.0.0"
+    "file": true
   },
   "array_layouts": {
     "value": [
@@ -73,55 +59,41 @@
         ]
       }
     ],
-    "parameter_version": "1.0.0",
     "type": "list",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "nsb_spectrum": {
     "value": "nsb_spectrum_south_dummy.dat",
-    "parameter_version": "1.0.0",
     "type": "str",
-    "file": true,
-    "model_parameter_schema_version": "1.0.0"
+    "file": true
   },
   "nsb_reference_spectrum": {
     "value": "nsb_reference_spectrum_south_dummy.dat",
-    "parameter_version": "1.0.0",
     "type": "str",
-    "file": true,
-    "model_parameter_schema_version": "1.0.0"
+    "file": true
   },
   "nsb_reference_value": {
     "value": 0.24,
-    "parameter_version": "1.0.0",
     "type": "float64",
     "unit": "1/(sr*ns*cm**2)",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "geomag_horizontal": {
     "value": 20.0,
-    "parameter_version": "1.0.0",
     "type": "float64",
     "unit": "uT",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "geomag_vertical": {
     "value": -23.0,
-    "parameter_version": "1.0.0",
     "type": "float64",
     "unit": "uT",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "geomag_rotation": {
     "value": -5.5,
-    "parameter_version": "1.0.0",
     "type": "float64",
     "unit": "deg",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   }
 }

@@ -1,9 +1,7 @@
 {
   "correct_nsb_spectrum_to_telescope_altitude": {
     "value": "nsb_spectrum_dummy.dat",
-    "parameter_version": "1.0.0",
     "file": true,
-    "type": "str",
-    "model_parameter_schema_version": "1.0.0"
+    "type": "str"
   }
 }

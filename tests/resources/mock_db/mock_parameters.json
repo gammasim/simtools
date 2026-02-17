@@ -1,181 +1,133 @@
 {
   "num_gains": {
     "value": 2,
-    "parameter_version": "1.0.0",
     "type": "int64",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "camera_pixels": {
     "value": 1855,
-    "parameter_version": "1.0.0",
     "type": "int32",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "mirror_focal_length": {
     "value": 28.0,
-    "parameter_version": "1.0.0",
     "type": "float64",
     "unit": "m",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "mirror_reflection_random_angle": {
     "value": [0.0066, 0.0],
-    "parameter_version": "1.0.0",
     "type": "float64",
     "unit": "deg",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "telescope_axis_height": {
     "value": 16.0,
-    "parameter_version": "1.0.0",
     "type": "float64",
     "unit": "m",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "telescope_transmission": {
     "value": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-    "parameter_version": "1.0.0",
     "type": "float64",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "telescope_sphere_radius": {
     "value": 15.0,
-    "parameter_version": "1.0.0",
     "type": "float64",
     "unit": "m",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "focal_length": {
     "value": 1600.0,
-    "parameter_version": "1.0.0",
     "type": "float64",
     "unit": "cm",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "mirror_list": {
     "value": "mirror_list_dummy.dat",
-    "parameter_version": "1.0.0",
     "type": "str",
-    "file": true,
-    "model_parameter_schema_version": "1.0.0"
+    "file": true
   },
   "mirror_class": {
     "value": 0,
-    "parameter_version": "1.0.0",
     "type": "uint64",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "camera_config_file": {
     "value": "camera_config_dummy.dat",
-    "parameter_version": "1.0.0",
     "type": "str",
-    "file": true,
-    "model_parameter_schema_version": "1.0.0"
+    "file": true
   },
   "optics_properties": {
     "value": "optics_properties_dummy.dat",
-    "parameter_version": "1.0.0",
     "type": "str",
-    "file": true,
-    "model_parameter_schema_version": "1.0.0"
+    "file": true
   },
   "camera_filter_incidence_angle": {
     "value": "camera_filter_incidence_angle_dummy.dat",
-    "parameter_version": "1.0.0",
     "type": "str",
-    "file": true,
-    "model_parameter_schema_version": "1.0.0"
+    "file": true
   },
   "parabolic_dish": {
     "value": true,
-    "parameter_version": "1.0.0",
     "type": "bool",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "camera_filter": {
     "value": "camera_filter_dummy.dat",
-    "parameter_version": "1.0.0",
     "type": "str",
-    "file": true,
-    "model_parameter_schema_version": "1.0.0"
+    "file": true
   },
   "dish_shape_length": {
     "value": 5.56,
-    "parameter_version": "1.0.0",
     "type": "double",
     "unit": "m",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "camera_transmission": {
     "value": "camera_transmission_dummy.dat",
-    "parameter_version": "1.0.0",
     "type": "str",
-    "file": true,
-    "model_parameter_schema_version": "1.0.0"
+    "file": true
   },
   "mirror_reflectivity": {
     "value": "mirror_reflectivity_dummy.dat",
-    "parameter_version": "1.0.0",
     "type": "str",
-    "file": true,
-    "model_parameter_schema_version": "1.0.0"
+    "file": true
   },
   "quantum_efficiency": {
     "value": "quantum_efficiency_dummy.dat",
-    "parameter_version": "1.0.0",
     "type": "str",
-    "file": true,
-    "model_parameter_schema_version": "1.0.0"
+    "file": true
   },
   "focus_offset": {
     "value": [0.0, 1.0, 2.0],
-    "parameter_version": "1.0.0",
     "type": "double",
     "unit": ["cm", "cm", null],
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "teltrig_min_sigsum": {
     "value": 10.5,
-    "parameter_version": "1.0.0",
     "type": "double",
     "unit": "mV ns",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "fadc_mhz": {
     "value": 1000,
-    "parameter_version": "1.0.0",
     "type": "int32",
     "unit": "MHz",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "array_element_position_ground": {
     "value": [-70.91, -52.35, 45.0],
-    "parameter_version": "1.0.0",
     "type": "list",
     "unit": "m",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   },
   "array_element_position_utm": {
     "value": [217659.6, 3184995.1, 2185.0],
-    "parameter_version": "1.0.0",
     "type": "list",
     "unit": "m",
-    "file": false,
-    "model_parameter_schema_version": "1.0.0"
+    "file": false
   }
 }
