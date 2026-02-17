@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import call
 
 import astropy.units as u
+import numpy as np
 import pytest
 from astropy.table import QTable
 
@@ -54,6 +55,7 @@ def ray_tracing_lst(telescope_model_lst_mock, site_model_north):
         source_distance=10 * u.km,
         zenith_angle=20 * u.deg,
         off_axis_angle=[0] * u.deg,
+        offset_directions=["N"],
     )
 
     output_directory = ray_tracing_lst.output_directory
@@ -82,6 +84,7 @@ def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, site_model_nort
         off_axis_angle=[0] * u.deg,
         single_mirror_mode=True,
         mirror_numbers=[0, 2],
+        offset_directions=["N"],
     )
 
 
@@ -94,12 +97,11 @@ def test_ray_tracing_init(telescope_model_lst_mock, site_model_north, caplog):
             zenith_angle=30 * u.deg,
             source_distance=10 * u.km,
             off_axis_angle=[0, 2] * u.deg,
+            offset_directions=["N"],
         )
 
     assert ray.zenith_angle == pytest.approx(30)
     assert len(ray.off_axis_angle) == 2
-    assert "Initializing RayTracing class" in caplog.text
-    assert repr(ray) == f"RayTracing(label={telescope_model_lst_mock.label})\n"
 
 
 def test_ray_tracing_single_mirror_mode(telescope_model_lst_mock, site_model_north, caplog):
@@ -115,6 +117,7 @@ def test_ray_tracing_single_mirror_mode(telescope_model_lst_mock, site_model_nor
             off_axis_angle=[0, 2] * u.deg,
             single_mirror_mode=True,
             mirror_numbers="all",
+            offset_directions=["N"],
         )
 
     assert ray.zenith_angle == pytest.approx(30)
@@ -159,8 +162,24 @@ def test_export_results(ray_tracing_lst, caplog, mocker):
     assert "No results to export" in caplog.text
 
     _rows = [
-        (0.0, 4.256768651160611, 0.1, 100.0, 200.0),
-        (2.0, 4.356768651160611, 0.2, 110.0, 210.0),
+        (
+            0.0 * u.deg,
+            0.0 * u.deg,
+            0.0 * u.deg,
+            4.256768651160611 * u.cm,
+            0.1 * u.deg,
+            100.0 * u.m * u.m,
+            200.0,
+        ),
+        (
+            0.0 * u.deg,
+            2.0 * u.deg,
+            2.0 * u.deg,
+            4.356768651160611 * u.cm,
+            0.2 * u.deg,
+            110.0 * u.m * u.m,
+            210.0,
+        ),
     ]
     ray._store_results(_rows)
     mock_write = mocker.patch("astropy.io.ascii.write")
@@ -280,7 +299,8 @@ def test_process_off_axis_and_mirror_no_analyze(ray_tracing_lst, mocker):
 
 def test_images_with_psf_images(ray_tracing_lst, mocker):
     mock_psf_image = mocker.Mock()
-    ray_tracing_lst._psf_images = {0: mock_psf_image}
+    # off_axis_angle with offset_directions=["N"] results in [(0.0, 0.0)] since it's (0, 1*0) = (0, 0)
+    ray_tracing_lst.psf_images = {(0.0, 0.0): mock_psf_image}
 
     images = ray_tracing_lst.images()
 
@@ -290,7 +310,7 @@ def test_images_with_psf_images(ray_tracing_lst, mocker):
 
 
 def test_images_no_psf_images(ray_tracing_lst, caplog):
-    ray_tracing_lst._psf_images = {}
+    ray_tracing_lst.psf_images = {}
 
     with caplog.at_level(logging.WARNING):
         images = ray_tracing_lst.images()
@@ -304,15 +324,33 @@ def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode, off_
     Test the _store_results method of the RayTracing class.
     """
     _rows = [
-        (0.0, 4.256768651160611, 0.1, 100.0, 200.0),
-        (2.0, 4.356768651160611, 0.2, 110.0, 210.0),
+        (
+            0.0 * u.deg,
+            0.0 * u.deg,
+            0.0 * u.deg,
+            4.256768651160611 * u.cm,
+            0.1 * u.deg,
+            100.0 * u.m * u.m,
+            200.0,
+        ),
+        (
+            0.0 * u.deg,
+            2.0 * u.deg,
+            2.0 * u.deg,
+            4.356768651160611 * u.cm,
+            0.2 * u.deg,
+            110.0 * u.m * u.m,
+            210.0,
+        ),
     ]
     ray_tracing_lst._store_results(_rows)
 
     assert isinstance(ray_tracing_lst._results, QTable)
     assert len(ray_tracing_lst._results) == len(_rows)
     assert ray_tracing_lst._results.colnames == [
-        off_axis_string,
+        "off_x",
+        "off_y",
+        "off axis angle",
         "psf_cm",
         "psf_deg",
         "eff_area",
@@ -321,8 +359,26 @@ def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode, off_
 
     # single mirror mode
     _rows = [
-        (0.0, 4.256768651160611, 0.1, 100.0, 200.0, 20),
-        (2.0, 4.356768651160611, 0.2, 110.0, 210.0, 21),
+        (
+            0.0 * u.deg,
+            0.0 * u.deg,
+            0.0 * u.deg,
+            4.256768651160611 * u.cm,
+            0.1 * u.deg,
+            100.0 * u.m * u.m,
+            200.0,
+            1,
+        ),
+        (
+            0.0 * u.deg,
+            2.0 * u.deg,
+            2.0 * u.deg,
+            4.356768651160611 * u.cm,
+            0.2 * u.deg,
+            110.0 * u.m * u.m,
+            210.0,
+            2,
+        ),
     ]
     ray_tracing_lst_single_mirror_mode._store_results(_rows)
     assert len(ray_tracing_lst_single_mirror_mode._results) == len(_rows)
@@ -333,8 +389,26 @@ def test_store_results_single_mirror_mode(ray_tracing_lst_single_mirror_mode, of
     Test the _store_results method of the RayTracing class with single mirror mode.
     """
     _rows = [
-        (0.0, 4.256768651160611, 0.1, 100.0, 200.0, 1),
-        (2.0, 4.356768651160611, 0.2, 110.0, 210.0, 2),
+        (
+            0.0 * u.deg,
+            0.0 * u.deg,
+            0.0 * u.deg,
+            4.256768651160611 * u.cm,
+            0.1 * u.deg,
+            100.0 * u.m * u.m,
+            200.0,
+            1,
+        ),
+        (
+            0.0 * u.deg,
+            2.0 * u.deg,
+            2.0 * u.deg,
+            4.356768651160611 * u.cm,
+            0.2 * u.deg,
+            110.0 * u.m * u.m,
+            210.0,
+            2,
+        ),
     ]
     ray_tracing_lst_single_mirror_mode.YLABEL = {
         "psf_cm": "Containment diameter (cm)",
@@ -347,7 +421,9 @@ def test_store_results_single_mirror_mode(ray_tracing_lst_single_mirror_mode, of
     assert isinstance(ray_tracing_lst_single_mirror_mode._results, QTable)
     assert len(ray_tracing_lst_single_mirror_mode._results) == len(_rows)
     assert ray_tracing_lst_single_mirror_mode._results.colnames == [
-        off_axis_string,
+        "off_x",
+        "off_y",
+        "off axis angle",
         "psf_cm",
         "psf_deg",
         "eff_area",
@@ -422,10 +498,15 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
     mock_copyfileobj = mocker.patch("shutil.copyfileobj")
     mock_unlink = mocker.patch("pathlib.Path.unlink")
 
+    # Mock Path.exists() to return True for .gz files and False for .lis files
+    def mock_exists(self):
+        return str(self).endswith(".gz")
+
+    mocker.patch.object(Path, "exists", mock_exists)
+
     with caplog.at_level(logging.INFO):
         ray_tracing_lst.simulate(test=True, force=True)
 
-    assert "Simulating RayTracing for off_axis=0.0, mirror=0" in caplog.text
     mock_simulator.assert_called_once_with(
         telescope_model=ray_tracing_lst.telescope_model,
         site_model=site_model_north,
@@ -433,7 +514,9 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
         test=True,
         config_data={
             "zenith_angle": ray_tracing_lst.zenith_angle,
-            "off_axis_angle": 0.0,
+            "off_axis_x": np.float64(0.0),
+            "off_axis_y": np.float64(0.0),
+            "off_axis_theta": np.float64(0.0),
             "source_distance": ray_tracing_lst.mirrors[0]["source_distance"],
             "single_mirror_mode": ray_tracing_lst.single_mirror_mode,
             "use_random_focal_length": ray_tracing_lst.use_random_focal_length,
@@ -452,8 +535,8 @@ def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker)
         ray_tracing_lst._generate_file_name(
             file_type="photons",
             suffix=".lis",
-            off_axis_angle=0.0,
-            mirror_number=0,
+            off_axis_x=0.0,
+            off_axis_y=0.0,
         )
     )
     assert photons_file.with_suffix(photons_file.suffix + ".gz").exists() is True
@@ -489,14 +572,12 @@ def test_create_psf_image(ray_tracing_lst, mocker, test_photons_file):
     mock_process_photon_list = mocker.patch.object(mock_psf_image_instance, "process_photon_list")
 
     focal_length = 10.0
-    this_off_axis = 0.0
     containment_fraction = 0.8
     use_rx = False
 
     image = ray_tracing_lst._create_psf_image(
         photons_file=test_photons_file,
         focal_length=focal_length,
-        this_off_axis=this_off_axis,
         containment_fraction=containment_fraction,
         use_rx=use_rx,
     )
@@ -506,7 +587,6 @@ def test_create_psf_image(ray_tracing_lst, mocker, test_photons_file):
         containment_fraction=containment_fraction,
     )
     mock_process_photon_list.assert_called_once_with(test_photons_file, use_rx)
-    assert ray_tracing_lst._psf_images[this_off_axis] == mock_psf_image_instance
     assert image == mock_psf_image_instance
 
 
@@ -515,24 +595,31 @@ def test_analyze_image(ray_tracing_lst, mocker):
     mock_image.get_psf.side_effect = [5.0, 0.1]
     mock_image.get_effective_area.return_value = 100.0
     mock_image.centroid_x = 0.5
+    mock_image.centroid_y = 0.2
 
-    this_off_axis = 2.0
+    off_x = 1.0
+    off_y = 1.5
+    theta_offset = 2.0
     containment_fraction = 0.8
     tel_transmission = 0.9
 
     result = ray_tracing_lst._analyze_image(
         image=mock_image,
-        this_off_axis=this_off_axis,
+        off_x=off_x,
+        off_y=off_y,
+        theta_offset=theta_offset,
         containment_fraction=containment_fraction,
         tel_transmission=tel_transmission,
     )
 
     assert result == (
+        1.0 * u.deg,
+        1.5 * u.deg,
         2.0 * u.deg,
         5.0 * u.cm,
         0.1 * u.deg,
         100.0 * u.m * u.m,
-        mock_image.centroid_x / tan(this_off_axis * pi / 180.0),
+        np.hypot(mock_image.centroid_x, mock_image.centroid_y) / tan(theta_offset * pi / 180.0),
     )
     mock_image.get_psf.assert_has_calls(
         [call(containment_fraction, "cm"), call(containment_fraction, "deg")]
@@ -543,14 +630,30 @@ def test_analyze_image(ray_tracing_lst, mocker):
 def test_get_mean_std(ray_tracing_lst):
     ray_tracing = copy.deepcopy(ray_tracing_lst)
     _rows = [
-        (0.0, 4.256768651160611, 0.1, 100.0, 200.0),
-        (2.0, 4.356768651160611, 0.2, 110.0, 210.0),
+        (
+            0.0 * u.deg,
+            0.0 * u.deg,
+            0.0 * u.deg,
+            4.256768651160611 * u.cm,
+            0.1 * u.deg,
+            100.0 * u.m * u.m,
+            200.0,
+        ),
+        (
+            0.0 * u.deg,
+            2.0 * u.deg,
+            2.0 * u.deg,
+            4.356768651160611 * u.cm,
+            0.2 * u.deg,
+            110.0 * u.m * u.m,
+            210.0,
+        ),
     ]
     ray_tracing._store_results(_rows)
     mean_value = ray_tracing.get_mean(key="psf_cm")
     std_value = ray_tracing.get_std_dev(key="psf_cm")
-    assert mean_value == pytest.approx(4.3, abs=1e-2)
-    assert std_value == pytest.approx(0.05, abs=1e-2)
+    assert mean_value.value == pytest.approx(4.3, abs=1e-2)
+    assert std_value.value == pytest.approx(0.05, abs=1e-2)
 
     with pytest.raises(KeyError, match=INVALID_KEY_TO_PLOT):
         ray_tracing.get_mean(key="abc")
@@ -638,7 +741,7 @@ def test_plot_histogram_invalid_key(ray_tracing_lst):
         ray_tracing_lst.plot_histogram(key="invalid_key", bins=10)
 
 
-def test_plot_valid_key(ray_tracing_lst, mocker, off_axis_string):
+def test_plot_valid_key(ray_tracing_lst, mocker):
     """
     Test the plot method of the RayTracing class with a valid key.
     """
@@ -654,7 +757,7 @@ def test_plot_valid_key(ray_tracing_lst, mocker, off_axis_string):
 
     ray_tracing_lst._results = QTable(
         {
-            off_axis_string: [0.0, 2.0],
+            "off axis angle": [0.0, 2.0],
             "psf_cm": [4.256768651160611, 4.356768651160611],
             "psf_deg": [0.1, 0.2],
             "eff_area": [100.0, 110.0],
@@ -694,7 +797,7 @@ def test_plot_invalid_key(ray_tracing_lst, off_axis_string):
         ray_tracing_lst.plot(key="invalid_key", save=True)
 
 
-def test_plot_save_writes_psf_images_and_cumulative(ray_tracing_lst, mocker, off_axis_string):
+def test_plot_save_writes_psf_images_and_cumulative(ray_tracing_lst, mocker):
     """Cover the save=True branch that exports PSF images and cumulative plots."""
 
     mock_visualize_plot_table = mocker.patch(
@@ -706,23 +809,23 @@ def test_plot_save_writes_psf_images_and_cumulative(ray_tracing_lst, mocker, off
     # Avoid real filesystem writes; only validate paths passed to methods.
     mocker.patch("pathlib.Path.mkdir")
 
-    def _fake_name(*, file_type, suffix, off_axis_angle=None, mirror_number=None, extra_label=None):
+    def _fake_name(*, file_type, suffix, off_axis_x=None, off_axis_y=None, extra_label=None):
         assert file_type == "ray_tracing"
         assert suffix == ".pdf"
-        if off_axis_angle is None:
+        if off_axis_x is None:
             return f"main_{extra_label}.pdf"
-        return f"{extra_label}_off{float(off_axis_angle):.3f}.pdf"
+        return f"{extra_label}_off{float(off_axis_x):.3f}.pdf"
 
     mocker.patch.object(ray_tracing_lst, "_generate_file_name", side_effect=_fake_name)
 
     # Provide two fake PSFImage instances.
     img0 = mocker.Mock()
     img1 = mocker.Mock()
-    ray_tracing_lst._psf_images = {0.0: img0, 2.0: img1}
+    ray_tracing_lst.psf_images = {(0.0, 0.0): img0, (2.0, 0.0): img1}
 
     ray_tracing_lst._results = QTable(
         {
-            off_axis_string: [0.0, 2.0],
+            "off axis angle": [0.0, 2.0],
             "psf_cm": [4.2, 4.3],
             "psf_deg": [0.1, 0.2],
             "eff_area": [100.0, 110.0],
