@@ -9,25 +9,27 @@ applications:
     site: North
     telescope: MSTN-04
     run_number: 10
-    test: true
+    flasher_photons: 1e6
     log_level: DEBUG
   integration_tests:
   - test_output_files:
-    - file: sub/full_simulation_run000010_North_7.0.0_simulate_flasher.out
-      path_descriptor: output_path
     - file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher.simtel.zst
       path_descriptor: output_path
-    - expected_log_output:
-      pattern:
-      - "Sim_telarray finished at"
-      - "CORSIKA IACT finished at"
-      - "Finished."
-      forbidden_pattern:
-      - "Error"
-      - "had less photons than required and were skipped"
-      file: sub/full_simulation_run000010_North_7.0.0_simulate_flasher.out
+    - expected_sim_telarray_output:
+        pe_sum:
+        - 1000
+        - 50000
+        photons:
+        - 90
+        - 100000
+        # trigger_time:
+        # - 0
+        # - 50
+        event_type: flasher
+      file: full_simulation_run000010_North_7.0.0_simulate_flasher.simtel.zst
       path_descriptor: output_path
+      output_sub_path: sim_telarray
   model_version_use_current: true
-  test_name: full-simulation_msfx_nectarcam-7.0.0
+  test_name: full-simulation-msfx-nectarcam
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

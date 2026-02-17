@@ -20,7 +20,7 @@ Example Usage
 
         simtools-simulate-illuminator --light_source ILLN-01 \
         --telescope MSTN-04 --site North \
-        --model_version 6.0.0
+        --model_version 7.0.0
 
 2. Simulate at a configurable position (1km above array center) and pointing downwards:
 
@@ -30,14 +30,24 @@ Example Usage
         --light_source_position 0. 0. 1000. \
         --light_source_pointing 0. 0. -1. \
         --telescope MSTN-15 --site North \
-        --model_version 6.0.0
+        --model_version 7.0.0
+
+3. Simulate with explicit number of photons override (e.g. for testing purposes):
+
+    .. code-block:: console
+
+        simtools-simulate-illuminator --light_source ILLN-01 \
+        --telescope MSTN-04 --site North --model_version 7.0.0 \
+        --flasher_photons 1e8
 
 Command Line Arguments
 ----------------------
-light_source (str, optional)
+light_source (str, required)
     Illuminator in array, e.g., ILLN-01.
 number_of_events (int, optional)
     Number of events to simulate.
+flasher_photons (int, optional)
+    Overwrite the model parameter flasher_photons.
 telescope (str, required)
     Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, ...)
 site (str, required)
@@ -98,6 +108,15 @@ def _parse():
         default=1,
         required=False,
     )
+    config.parser.add_argument(
+        "--flasher_photons",
+        help=(
+            "Override flasher photon yield. "
+            "Accepts integers including scientific notation, e.g. 1e8."
+        ),
+        type=config.parser.scientific_int,
+        required=False,
+    )
     return config.initialize(
         db_config=True,
         simulation_model=["telescope", "model_version"],
@@ -114,7 +133,7 @@ def main():
         label=app_context.args.get("label"),
     )
     light_source.simulate()
-    light_source.verify_simulations()
+    light_source.validate_simulations()
 
 
 if __name__ == "__main__":

@@ -19,28 +19,12 @@ def simulator_instance():
     inst.telescope_model = Mock()
     inst.site_model = Mock()
     inst.light_emission_config = {}
-    inst.job_files = Mock()
+    inst.submission_files = Mock()
     inst.output_directory = "/test/output"
     inst._logger = Mock()
     inst.runner_service = Mock()
     inst.io_handler = Mock()
     return inst
-
-
-@patch.object(SimulatorLightEmission, "_get_telescope_pointing")
-@patch.object(SimulatorLightEmission, "_get_light_emission_application_name")
-def test__make_simtel_script(mock_app_name, mock_pointing, simulator_instance):
-    """Test _make_simtel_script method with different conditions."""
-    simulator_instance.telescope_model.config_file_directory = "/mock/config"
-    simulator_instance.telescope_model.config_file_path = "/mock/config/telescope.cfg"
-
-    mock_altitude = Mock()
-    mock_altitude.to.return_value.value = 2200
-    simulator_instance.site_model.get_parameter_value_with_unit.return_value = mock_altitude
-    simulator_instance.site_model.get_parameter_value.return_value = "atm_trans.dat"
-
-    mock_pointing.return_value = [10.5, 20.0]
-    mock_app_name.return_value = "test-app"
 
 
 def test__make_simtel_script_bypass_optics_condition(simulator_instance):
@@ -843,6 +827,67 @@ def test__get_light_source_command(simulator_instance):
         simulator_instance._get_light_source_command()
 
 
+def test__get_illuminator_position_prefers_config(simulator_instance):
+    simulator_instance.light_emission_config = {
+        "light_source_position": [5.0 * u.m, 6.0 * u.m, 7.0 * u.m]
+    }
+    pos = simulator_instance._get_illuminator_position()
+    assert pos == [5.0 * u.m, 6.0 * u.m, 7.0 * u.m]
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_not_called()
+
+
+def test__get_illuminator_position_falls_back_to_model(simulator_instance):
+    simulator_instance.light_emission_config = {}
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = [
+        1.0 * u.m,
+        2.0 * u.m,
+        3.0 * u.m,
+    ]
+    pos = simulator_instance._get_illuminator_position()
+    assert pos == [1.0 * u.m, 2.0 * u.m, 3.0 * u.m]
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_once_with(
+        "array_element_position_ground"
+    )
+
+
+def test__get_illuminator_pointing_vector_prefers_config(simulator_instance):
+    simulator_instance.light_emission_config = {
+        "light_source_pointing": [0.5, 0.6, 0.7],
+        "light_source_position": [5.0 * u.m, 6.0 * u.m, 7.0 * u.m],
+    }
+    with patch.object(simulator_instance, "_calibration_pointing_direction") as mock_pointing:
+        vec = simulator_instance._get_illuminator_pointing_vector()
+        assert vec == [0.5, 0.6, 0.7]
+        mock_pointing.assert_not_called()
+
+
+def test__get_illuminator_pointing_vector_computed_from_position(simulator_instance):
+    simulator_instance.light_emission_config = {}
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = [
+        10.0 * u.m,
+        20.0 * u.m,
+        30.0 * u.m,
+    ]
+
+    with patch.object(
+        simulator_instance,
+        "_calibration_pointing_direction",
+        return_value=([0.1, 0.2, 0.3], []),
+    ) as mock_pointing:
+        vec = simulator_instance._get_illuminator_pointing_vector()
+
+    assert vec == [0.1, 0.2, 0.3]
+    mock_pointing.assert_called_once()
+
+
+def test__should_use_telpos_file_rule(simulator_instance):
+    assert simulator_instance._should_use_telpos_file([0.0, 0.0, -1.0]) is False
+    assert simulator_instance._should_use_telpos_file([0.0, 0.0, -0.9]) is True
+    assert simulator_instance._should_use_telpos_file([1.0, 0.0, 0.0]) is True
+    assert simulator_instance._should_use_telpos_file(None) is True
+    assert simulator_instance._should_use_telpos_file(["a", "b", "c"]) is True
+
+
 def test__get_site_command(simulator_instance, tmp_test_directory):
     """Test _get_site_command method."""
 
@@ -876,14 +921,23 @@ def test__get_site_command(simulator_instance, tmp_test_directory):
         "_write_telescope_position_file",
         return_value=f"{tmp_test_directory}/telpos.txt",
     ) as mock_telpos:
+        # Default-down pointing: do not use telpos file.
+        simulator_instance.light_emission_config = {
+            "light_source_type": "illuminator",
+            "light_source_pointing": [0.0, 0.0, -1.0],
+        }
         result = simulator_instance._get_site_command("other-app", "/config/dir", mock_altitude)
+        assert result == ["-h  2200 "]
+        mock_telpos.assert_not_called()
 
-        expected = [
-            "-h  2200 ",
-            f"--telpos-file {tmp_test_directory}/telpos.txt",
-        ]
-        assert result == expected
-        mock_telpos.assert_called_once()
+        # Non-default pointing: use telpos file.
+        simulator_instance.light_emission_config = {
+            "light_source_type": "illuminator",
+            "light_source_pointing": [0.0, 0.0, -0.9],
+        }
+        result = simulator_instance._get_site_command("other-app", "/config/dir", mock_altitude)
+        assert result == ["-h  2200 ", f"--telpos-file {tmp_test_directory}/telpos.txt"]
+        assert mock_telpos.call_count == 1
 
 
 def test__make_light_emission_script(simulator_instance):
@@ -919,11 +973,14 @@ def test__make_light_emission_script(simulator_instance):
         simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
         mock_settings.config.sim_telarray_path = Path("/mock/simtel/sim_telarray")
 
+        # Mock runner_service.get_file_name to return a string path
+        simulator_instance.runner_service.get_file_name.return_value = Path("/output/ff-1m.log.gz")
+
         result = simulator_instance._make_light_emission_command("/output/ff-1m.iact.gz")
 
         expected = (
             "/mock/simtel/sim_telarray/LightEmission/ff-1m -I. --altitude 2200 "
-            "--photons 1000000 -o /output/ff-1m.iact.gz"
+            "--photons 1000000 -o /output/ff-1m.iact.gz 2>&1 | gzip > /output/ff-1m.log.gz\n"
         )
         assert result == expected
 
@@ -950,12 +1007,17 @@ def test__make_light_emission_script(simulator_instance):
         simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
         mock_settings.config.sim_telarray_path = Path("/mock/simtel/sim_telarray")
 
+        # Mock runner_service.get_file_name to return a string path
+        simulator_instance.runner_service.get_file_name.return_value = Path(
+            "/output/illuminator-app.log.gz"
+        )
+
         result = simulator_instance._make_light_emission_command("/output/illuminator-app.iact.gz")
 
         expected = (
             "/mock/simtel/sim_telarray/LightEmission/illuminator-app -h 2200 "
             "-x 100 -y 200 -A /config/dir/atm_profile.dat "
-            "-o /output/illuminator-app.iact.gz"
+            "-o /output/illuminator-app.iact.gz 2>&1 | gzip > /output/illuminator-app.log.gz\n"
         )
         assert result == expected
 
@@ -1090,13 +1152,15 @@ def test_prepare_run(simulator_instance, tmp_test_directory):
     script_dir.mkdir(parents=True, exist_ok=True)
     script_path = script_dir / "xyzls-light_emission.sh"
 
-    # Mock job_files.get_file_name to return the script path
+    # Mock submission_files.get_file_name to return the script path
     def job_files_get_file_name_side_effect(file_type):
         if file_type == "sub_script":
             return script_path
         return Path(tmp_test_directory) / "output" / f"{file_type}.tmp"
 
-    simulator_instance.job_files.get_file_name.side_effect = job_files_get_file_name_side_effect
+    simulator_instance.submission_files.get_file_name.side_effect = (
+        job_files_get_file_name_side_effect
+    )
 
     # Mock runner_service.get_file_name to return paths
     def get_file_name_side_effect(file_type):
@@ -1167,13 +1231,15 @@ def test_simulate(simulator_instance, tmp_test_directory):
     mock_script_path.parent.mkdir(parents=True, exist_ok=True)
     mock_output_file = Path(tmp_test_directory) / "output" / "test_output.simtel.gz"
 
-    # Setup job_files mock to return the script path
+    # Setup submission_files mock to return the script path
     def job_files_get_file_name_side_effect(file_type):
         if file_type == "sub_script":
             return mock_script_path
         return Path(tmp_test_directory) / "output" / f"{file_type}.tmp"
 
-    simulator_instance.job_files.get_file_name.side_effect = job_files_get_file_name_side_effect
+    simulator_instance.submission_files.get_file_name.side_effect = (
+        job_files_get_file_name_side_effect
+    )
 
     # Setup runner_service mock to return the output file and other paths
     def get_file_name_side_effect(file_type):
@@ -1229,27 +1295,48 @@ def test__initialize_light_emission_configuration(simulator_instance):
     assert result["existing_key"] == "value"  # Existing key preserved
 
 
-def test__initialize_light_emission_configuration_test_mode(simulator_instance):
-    """Test _initialize_light_emission_configuration method in test mode."""
+def test__initialize_light_emission_configuration_with_flasher_photons_override(
+    simulator_instance,
+):
+    """Test explicit flasher_photons override from config."""
 
-    # Mock calibration model
     def mock_get_parameter_value(param_name):
         if param_name == "flasher_type":
-            return "Laser"
+            return "flat_fielding"
         if param_name == "flasher_photons":
-            return 5e6  # Will be overridden by test mode
+            return 1234567
         return None
 
     simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
 
-    # Test configuration with test=True
-    config = {"test": True}
+    config = {"flasher_photons": 1234567}
     result = simulator_instance._initialize_light_emission_configuration(config)
 
-    # Verify test mode overrides flasher_photons
-    assert result["light_source_type"] == "laser"
-    assert result["flasher_photons"] == pytest.approx(1e6)  # Test mode value
-    assert result["test"] is True
+    assert result["light_source_type"] == "flat_fielding"
+    assert result["flasher_photons"] == pytest.approx(1234567)
+    simulator_instance.calibration_model.overwrite_model_parameter.assert_called_once_with(
+        "flasher_photons", 1234567
+    )
+
+
+def test__initialize_light_emission_configuration_ignores_test_flag_for_photons(
+    simulator_instance,
+):
+    """Test that test flag no longer changes flasher_photons."""
+
+    def mock_get_parameter_value(param_name):
+        if param_name == "flasher_type":
+            return "illuminator"
+        if param_name == "flasher_photons":
+            return 5e6
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    result = simulator_instance._initialize_light_emission_configuration({"test": True})
+
+    assert result["light_source_type"] == "illuminator"
+    assert result["flasher_photons"] == pytest.approx(5e6)
 
 
 def test__initialize_light_emission_configuration_with_position(simulator_instance):
@@ -1520,30 +1607,33 @@ def test__get_angular_distribution_string_for_sim_telarray_isotropic(simulator_i
     simulator_instance.calibration_model.get_parameter_value_with_unit.assert_not_called()
 
 
-def test_verify_simulations_success(simulator_instance, tmp_test_directory):
-    """Test verify_simulations returns True when output file exists."""
+def test_validate_simulations_success(simulator_instance, tmp_test_directory):
+    """Test validate_simulations returns True when output file exists."""
     output_file = Path(tmp_test_directory) / "output.iact"
     output_file.write_text("test data", encoding="utf-8")
 
     simulator_instance.runner_service.get_file_name.return_value = output_file
 
-    result = simulator_instance.verify_simulations()
+    # Mock the validator to avoid actual validation
+    with patch(
+        "simtools.simtel.simulator_light_emission.simtel_output_validator.validate_sim_telarray"
+    ):
+        result = simulator_instance.validate_simulations()
 
-    assert result is True
-    simulator_instance._logger.info.assert_called_once()
-    assert "sim_telarray output found" in str(simulator_instance._logger.info.call_args)
+    # validate_simulations doesn't return anything (returns None on success)
+    assert result is None
 
 
-def test_verify_simulations_missing_output(simulator_instance, tmp_test_directory):
-    """Test verify_simulations returns False when output file does not exist."""
+def test_validate_simulations_missing_output(simulator_instance, tmp_test_directory):
+    """Test validate_simulations raises ValueError when validation fails."""
     output_file = Path(tmp_test_directory) / "nonexistent_output.iact"
 
     simulator_instance.runner_service.get_file_name.return_value = output_file
 
-    result = simulator_instance.verify_simulations()
-
-    assert result is False
-    simulator_instance._logger.error.assert_called_once()
-    assert "Expected sim_telarray output not found" in str(
-        simulator_instance._logger.error.call_args
-    )
+    # Mock the validator to raise an error for missing/invalid file
+    with patch(
+        "simtools.simtel.simulator_light_emission.simtel_output_validator.validate_sim_telarray",
+        side_effect=ValueError("Validation failed"),
+    ):
+        with pytest.raises(ValueError, match="Validation failed"):
+            simulator_instance.validate_simulations()
