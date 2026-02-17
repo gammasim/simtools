@@ -46,7 +46,7 @@ light_source (str, required)
 number_of_events (int, optional):
     Number of events to simulate (default: 1).
 flasher_photons (int, optional)
-    Override for calibration-model parameter flasher_photons. Applies to both run modes.
+    Overwrite the model parameter flasher_photons. Applies to both run modes.
 model_version (str, optional)
     Version of the simulation model.
 array_layout_name (str, optional)
