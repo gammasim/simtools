@@ -217,6 +217,26 @@ def generate_new_production(model_version, simulation_models_path):
     _apply_changes_to_model_parameters(changes, simulation_models_path)
 
 
+def _get_production_table_key(table_name):
+    """
+    Get the production table key for a given table name.
+
+    CORSIKA configuration uses 'xSTx-design' as a placeholder to indicate
+    that parameters are site-wide and independent of specific telescope designs.
+
+    Parameters
+    ----------
+    table_name : str
+        Table name (e.g., 'configuration_corsika', 'LSTN-01').
+
+    Returns
+    -------
+    str
+        Production table key to use in parameter dictionaries.
+    """
+    return "xSTx-design" if table_name == "configuration_corsika" else table_name
+
+
 def _apply_changes_to_production_tables(
     changes, base_model_version, model_version, update_type, simulation_models_path
 ):
@@ -288,14 +308,10 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
     """
     data["model_version"] = model_version
     if table_name in changes:
-        if table_name == "configuration_corsika":
-            table_parameters = (
-                {} if patch_update else data.get("parameters", {}).get("xSTx-design", {})
-            )
-        else:
-            table_parameters = (
-                {} if patch_update else data.get("parameters", {}).get(table_name, {})
-            )
+        production_key = _get_production_table_key(table_name)
+        table_parameters = (
+            {} if patch_update else data.get("parameters", {}).get(production_key, {})
+        )
         parameters, deprecated = _update_parameters_dict(table_parameters, changes, table_name)
         data["parameters"] = parameters
         if deprecated and patch_update:
@@ -408,7 +424,7 @@ def _update_parameters_dict(table_parameters, changes, table_name):
         Dictionary containing only the new/changed parameters for the specified table.
         List of deprecated parameters.
     """
-    new_table_name = table_name if table_name != "configuration_corsika" else "xSTx-design"
+    new_table_name = _get_production_table_key(table_name)
     new_params = {new_table_name: table_parameters}
     deprecated_params = []
 
