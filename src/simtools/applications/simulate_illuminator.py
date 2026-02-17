@@ -20,7 +20,7 @@ Example Usage
 
         simtools-simulate-illuminator --light_source ILLN-01 \
         --telescope MSTN-04 --site North \
-        --model_version 6.0.0
+        --model_version 7.0.0
 
 2. Simulate at a configurable position (1km above array center) and pointing downwards:
 
@@ -30,11 +30,19 @@ Example Usage
         --light_source_position 0. 0. 1000. \
         --light_source_pointing 0. 0. -1. \
         --telescope MSTN-15 --site North \
-        --model_version 6.0.0
+        --model_version 7.0.0
+
+3. Simulate with explicit photon-yield override:
+
+    .. code-block:: console
+
+        simtools-simulate-illuminator --light_source ILLN-01 \
+        --telescope MSTN-04 --site North --model_version 7.0.0 \
+        --flasher_photons 1e8
 
 Command Line Arguments
 ----------------------
-light_source (str, optional)
+light_source (str, required)
     Illuminator in array, e.g., ILLN-01.
 number_of_events (int, optional)
     Number of events to simulate.
