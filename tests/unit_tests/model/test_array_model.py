@@ -51,6 +51,7 @@ def test_site(array_model_north):
     assert am.site == "North"
 
 
+@pytest.mark.uses_model_database
 def test_exporting_config_files(model_version):
     am = ArrayModel(
         label="test",

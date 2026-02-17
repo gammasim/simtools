@@ -166,6 +166,7 @@ def test_load_simulation_software_parameter(telescope_model_lst, caplog):
     assert len(caplog.records) == 0
 
 
+@pytest.mark.uses_model_database
 def test_load_parameters_from_db(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_db = mocker.patch.object(DatabaseHandler, "get_model_parameters")
@@ -283,6 +284,7 @@ def test_overwrite_model_file(telescope_model_lst, mocker):
     mock_copy.assert_called_once_with(file_path, telescope_copy.config_file_directory)
 
 
+@pytest.mark.uses_model_database
 def test_export_model_files(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_db = mocker.patch.object(DatabaseHandler, "export_model_files")
@@ -307,6 +309,7 @@ def test_config_file_path(telescope_model_lst, mocker):
     not mock_config.assert_called_once()
 
 
+@pytest.mark.uses_model_database
 def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_model_lst, mocker):
     model_directory = Path("test_model_directory")
     telescope_copy = copy.deepcopy(telescope_model_lst)
