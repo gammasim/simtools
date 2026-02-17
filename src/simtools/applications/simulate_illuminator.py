@@ -32,7 +32,7 @@ Example Usage
         --telescope MSTN-15 --site North \
         --model_version 7.0.0
 
-3. Simulate with explicit photon-yield override:
+3. Simulate with explicit number of photons override (e.g. for testing purposes):
 
     .. code-block:: console
 
