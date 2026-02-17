@@ -214,11 +214,17 @@ def test__plot_parameter_tables(tmp_test_directory, mocker):
     read_parameters = ReadParameters(args=args, output_path=tmp_test_directory)
 
     # Mock plot_tables.generate_plot_configurations to return (configs, output_files) tuple
-    mock_config = [{"plot_name": "pm_photoelectron_spectrum_1.0.0_North_LSTN-design"}]
+    mock_config = {
+        "tables": [{"table_name": "test_table"}],
+        "plot_name": "pm_photoelectron_spectrum_1.0.0_North_LSTN-design",
+    }
     mock_files = [Path("pm_photoelectron_spectrum_1.0.0_North_LSTN-design.png")]
     mocker.patch.object(
-        plot_tables, "generate_plot_configurations", return_value=(mock_config, mock_files)
+        plot_tables, "generate_plot_configurations", return_value=([mock_config], mock_files)
     )
+
+    # Mock plot_tables.plot to avoid actual plotting
+    mocker.patch.object(plot_tables, "plot")
 
     result = read_parameters._plot_parameter_tables(
         "pm_photoelectron_spectrum", "1.0.0", Path(tmp_test_directory)
@@ -322,10 +328,13 @@ def test__group_model_versions_by_parameter_version(tmp_path):
     assert result == expected
 
 
-def test__compare_parameter_across_versions(tmp_test_directory):
+def test__compare_parameter_across_versions(tmp_test_directory, mocker):
     args = {"site": "North", "telescope": "LSTN-01"}
     output_path = tmp_test_directory
     read_parameters = ReadParameters(args=args, output_path=output_path)
+
+    # Mock get_model_versions to return versions matching mock_data
+    mocker.patch.object(read_parameters.db, "get_model_versions", return_value=["5.0.0", "6.0.0"])
 
     mock_data = {
         "5.0.0": {
@@ -419,10 +428,13 @@ def test__compare_parameter_across_versions(tmp_test_directory):
     assert "none_valued_param" not in comparison_data
 
 
-def test__compare_parameter_across_versions_empty_param_dict(tmp_path):
+def test__compare_parameter_across_versions_empty_param_dict(tmp_path, mocker):
     """Test _compare_parameter_across_versions with empty parameter dictionaries."""
     args = {"site": "North", "telescope": "LSTN-01"}
     read_parameters = ReadParameters(args=args, output_path=tmp_path)
+
+    # Mock get_model_versions to return versions matching mock_data
+    mocker.patch.object(read_parameters.db, "get_model_versions", return_value=["5.0.0", "6.0.0"])
 
     # Test data with empty parameter dictionary for version 5.0.0
     mock_data = {
