@@ -264,6 +264,21 @@ def mock_db_handler():
             "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
+        "focal_length": {
+            "value": 1600.0,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "cm",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "mirror_list": {
+            "value": "mirror_list_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
         # Site parameters (site-specific ones like reference_point_* are in site_specific_params)
         "array_layouts": {
             "value": "test_layout",
