@@ -223,7 +223,7 @@ def main():
 
             # Add text annotations
             ax = plt.gca()
-            text_str = f"Offset: ({off_x:+.2f}°, {off_y:+.2f}°)\nPSF: {psf_cm:.2f} cm"
+            text_str = f"Offset: ({off_x:+.2f} deg, {off_y:+.2f} deg)\nPSF: {psf_cm:.2f} cm"
             ax.text(
                 0.02,
                 0.98,
