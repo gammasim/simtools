@@ -200,14 +200,21 @@ def db_config():
 
 
 @pytest.fixture
-def mock_db_handler():
+def mock_db_handler(request):
     """
     Mock DatabaseHandler for unit tests.
 
     Provides common mock behaviors to avoid real database connections.
     Returns a MagicMock configured with typical DatabaseHandler methods.
+    Tests in tests/unit_tests/db/ receive a real DatabaseHandler instance.
     """
     from unittest.mock import MagicMock
+
+    test_file_path = str(request.node.fspath)
+    if "unit_tests/db/" in test_file_path:
+        db_instance = request.getfixturevalue("db")
+        db_instance.get_model_versions = MagicMock(return_value=["1.0.0", "5.0.0", "6.0.0"])
+        return db_instance
 
     # Minimal mock parameters for common telescope model tests
     mock_parameters = {
@@ -737,14 +744,23 @@ def mock_db_handler():
             params.update(site_specific_params_south)
         return params
 
-    def mock_get_model_parameter(parameter, parameter_version, **kwargs):
+    def mock_get_model_parameter(
+        parameter,
+        site,
+        array_element_name,
+        parameter_version=None,
+        model_version=None,
+        **kwargs,
+    ):
         """
         Mock get_model_parameter to return parameters only if they exist with the exact version.
 
         This allows tests to check for parameter existence in the DB.
         """
-        # Get site from kwargs if provided
-        site = kwargs.get("site")
+        if model_version is not None and isinstance(model_version, list):
+            raise ValueError(
+                "Only one model version can be passed to get_model_parameter, not a list."
+            )
         params = dict(mock_parameters)
 
         # Override with site-specific values
@@ -755,39 +771,49 @@ def mock_db_handler():
 
         if parameter in params:
             param_data = params[parameter]
-            if param_data.get("parameter_version") == parameter_version:
+            if (
+                parameter_version is None
+                or param_data.get("parameter_version") == parameter_version
+            ):
                 return param_data
         # If parameter doesn't exist or version doesn't match, raise ValueError
         raise ValueError(f"Parameter {parameter} with version {parameter_version} not found")
 
-    def mock_export_model_files(dest_dir=None, parameters_to_export=None, **kwargs):
+    def mock_export_model_files(
+        parameters=None, file_names=None, dest=None, db_name=None, **kwargs
+    ):
         """Mock export_model_files by creating minimal dummy files."""
         from pathlib import Path
 
-        if dest_dir is None:
-            return
+        if dest is None:
+            return {}
 
-        dest_path = Path(dest_dir)
+        dest_path = Path(dest)
         dest_path.mkdir(parents=True, exist_ok=True)
 
-        # Create dummy files for common file parameters
-        dummy_files = [
-            "mirror_list_dummy.dat",
-            "camera_filter_dummy.dat",
-            "camera_filter_incidence_angle_dummy.dat",
-            "optics_properties_dummy.dat",
-            "camera_transmission_dummy.dat",
-            "mirror_reflectivity_dummy.dat",
-            "quantum_efficiency_dummy.dat",
-        ]
+        if file_names:
+            file_names = [file_names] if not isinstance(file_names, list) else file_names
+        elif parameters:
+            file_names = [
+                info["value"]
+                for info in parameters.values()
+                if info and info.get("file") and info["value"] is not None
+            ]
+        else:
+            return {}
 
-        for filename in dummy_files:
+        instance_ids = {}
+        for filename in file_names:
             file_path = dest_path / filename
-            if not file_path.exists():
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            if file_path.exists():
+                instance_ids[filename] = "file exists"
+            else:
                 # Write minimal tabular data
                 file_path.write_text("# Dummy data file\n0.0 1.0\n1.0 1.0\n")
+                instance_ids[filename] = "mock file"
 
-        return
+        return instance_ids
 
     def mock_get_ecsv_file_as_astropy_table(file_name=None, **kwargs):
         """Mock get_ecsv_file_as_astropy_table to return table with Quantity columns."""
@@ -803,9 +829,13 @@ def mock_db_handler():
         )
         return table
 
-    def mock_get_design_model(model_version=None, array_element_name=None, **kwargs):
+    def mock_get_design_model(
+        model_version, array_element_name=None, collection="telescopes", **kwargs
+    ):
         """Mock get_design_model to return design model name for telescopes."""
         if array_element_name:
+            if array_element_name.endswith("-design"):
+                return array_element_name
             # Return generic design model based on telescope type
             if "LST" in array_element_name:
                 return "LSTN-design"
@@ -815,7 +845,9 @@ def mock_db_handler():
                 return "SSTS-design"
         return None
 
-    def mock_get_array_elements_of_type(array_element_type, **kwargs):
+    def mock_get_array_elements_of_type(
+        array_element_type, model_version=None, collection=None, **kwargs
+    ):
         """Mock get_array_elements_of_type to return telescopes matching the type prefix."""
         all_elements = [
             "LSTN-01",
@@ -897,7 +929,7 @@ def mock_db_handler():
 
 
 @pytest.fixture(autouse=True)
-def mock_database_handler(request, mock_db_handler, mocker):
+def mock_database_handler(request, mocker):
     """
     Automatically mock DatabaseHandler for all unit tests except those in db/.
 
@@ -912,6 +944,8 @@ def mock_database_handler(request, mock_db_handler, mocker):
         yield
         return
 
+    mock_db_handler = request.getfixturevalue("mock_db_handler")
+
     # Mock schema validation to avoid version check issues
     mocker.patch("simtools.model.model_parameter.ModelParameter._check_model_parameter_versions")
 
@@ -921,9 +955,64 @@ def mock_database_handler(request, mock_db_handler, mocker):
 
 
 @pytest.fixture
-def db():
+def db(request):
     """Database object with configuration from settings.config.db_handler."""
-    return db_handler.DatabaseHandler()
+    from types import MappingProxyType
+    from unittest.mock import MagicMock, patch
+
+    from simtools import settings
+    from simtools.db.mongo_db import MongoDBHandler
+
+    test_file_path = str(request.node.fspath)
+    if "unit_tests/db/" not in test_file_path:
+        db_instance = db_handler.DatabaseHandler()
+        yield db_instance
+        return
+
+    request.getfixturevalue("reset_db_client")
+
+    db_config = {
+        "db_server": "localhost",
+        "db_api_port": 27017,
+        "db_api_user": "user",
+        "db_api_pw": "pw",
+        "db_api_authentication_database": "admin",
+        "db_simulation_model": "CTAO-Simulation-Model",
+        "db_simulation_model_version": "v0-12-0",
+    }
+    previous_state = {
+        "_args": settings.config._args,
+        "_db_config": settings.config._db_config,
+        "_sim_telarray_path": settings.config._sim_telarray_path,
+        "_sim_telarray_exe": settings.config._sim_telarray_exe,
+        "_corsika_path": settings.config._corsika_path,
+        "_corsika_interaction_table_path": settings.config._corsika_interaction_table_path,
+        "_corsika_exe": settings.config._corsika_exe,
+    }
+    previous_db_client = MongoDBHandler.db_client
+
+    settings.config._args = MappingProxyType({"corsika_path": None, "sim_telarray_path": None})
+    settings.config._db_config = MappingProxyType(db_config)
+    settings.config._sim_telarray_path = None
+    settings.config._sim_telarray_exe = None
+    settings.config._corsika_path = None
+    settings.config._corsika_interaction_table_path = None
+    settings.config._corsika_exe = None
+    with patch("simtools.db.mongo_db.MongoClient", return_value=MagicMock()):
+        db_instance = db_handler.DatabaseHandler()
+        MongoDBHandler.db_client = MongoDBHandler.db_client or MagicMock()
+        yield db_instance
+
+    settings.config._args = previous_state["_args"]
+    settings.config._db_config = previous_state["_db_config"]
+    settings.config._sim_telarray_path = previous_state["_sim_telarray_path"]
+    settings.config._sim_telarray_exe = previous_state["_sim_telarray_exe"]
+    settings.config._corsika_path = previous_state["_corsika_path"]
+    settings.config._corsika_interaction_table_path = previous_state[
+        "_corsika_interaction_table_path"
+    ]
+    settings.config._corsika_exe = previous_state["_corsika_exe"]
+    MongoDBHandler.db_client = previous_db_client
 
 
 @pytest.fixture
