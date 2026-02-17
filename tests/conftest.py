@@ -345,10 +345,24 @@ def mock_db_handler():
         },
     }
 
+    def mock_get_model_parameter(parameter, parameter_version, **kwargs):
+        """
+        Mock get_model_parameter to return parameters only if they exist with the exact version.
+
+        This allows tests to check for parameter existence in the DB.
+        """
+        if parameter in mock_parameters:
+            param_data = mock_parameters[parameter]
+            if param_data.get("parameter_version") == parameter_version:
+                return param_data
+        # If parameter doesn't exist or version doesn't match, raise ValueError
+        raise ValueError(f"Parameter {parameter} with version {parameter_version} not found")
+
     mock_db = MagicMock()
     mock_db.is_configured.return_value = True
     mock_db.get_design_model.return_value = None
     mock_db.get_model_parameters.return_value = mock_parameters
+    mock_db.get_model_parameter.side_effect = mock_get_model_parameter
     mock_db.get_simulation_configuration_parameters.return_value = mock_sim_config_params
     mock_db.export_model_files.return_value = None
     mock_db.export_model_file.return_value = None
