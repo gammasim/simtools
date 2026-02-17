@@ -9,7 +9,7 @@ applications:
     site: South
     telescope: MSTS-04
     run_number: 10
-    test: true
+    flasher_photons: 1e6
     log_level: DEBUG
   integration_tests:
   - test_output_files:

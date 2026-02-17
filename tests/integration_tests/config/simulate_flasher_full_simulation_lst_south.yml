@@ -9,7 +9,7 @@ applications:
     site: South
     telescope: LSTS-04
     run_number: 10
-    test: true
+    flasher_photons: 1e6
     log_level: DEBUG
   integration_tests:
   - output_file: sim_telarray/full_simulation_run000010_South_7.0.0_simulate_flasher_LSTS-04.simtel.zst
