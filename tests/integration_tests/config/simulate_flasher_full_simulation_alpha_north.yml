@@ -9,7 +9,7 @@ applications:
     site: North
     array_layout_name: alpha
     run_number: 10
-    test: true
+    flasher_photons: 1e6
     log_level: DEBUG
   integration_tests:
   - output_file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher_LSTN-01.simtel.zst
