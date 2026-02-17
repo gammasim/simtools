@@ -197,10 +197,7 @@ class PSFImage:
         bool
             True if photon positions are ok, False if they are not.
         """
-        cond1 = len(self.photon_pos_x) != 0
-        cond2 = len(self.photon_pos_y) != 0
-        cond3 = len(self.photon_pos_x) == len(self.photon_pos_y)
-        return cond1 and cond2 and cond3
+        return len(self.photon_pos_x) > 0 and len(self.photon_pos_x) == len(self.photon_pos_y)
 
     def _process_simtel_line(self, line):
         """
