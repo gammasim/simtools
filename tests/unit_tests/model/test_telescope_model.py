@@ -240,3 +240,164 @@ def test_get_calibration_device_name():
     )
     result = telescope_model.get_calibration_device_name(telescope_model, "flasher")
     assert result is None
+
+
+def test_mirrors_property(telescope_model_lst, monkeypatch):
+    """Test mirrors property lazy loading."""
+    tel_model = telescope_model_lst
+    load_mirrors_mock = Mock()
+    monkeypatch.setattr(tel_model, "_load_mirrors", load_mirrors_mock)
+
+    # First call should load mirrors
+    _ = tel_model.mirrors
+    assert load_mirrors_mock.call_count == 1
+
+    # Second call should not load again if mirrors already loaded
+    tel_model._mirrors = "mock_mirrors"
+    result = tel_model.mirrors
+    assert result == "mock_mirrors"
+    assert load_mirrors_mock.call_count == 1
+
+
+def test_export_single_mirror_list_file(telescope_model_lst, monkeypatch, caplog):
+    """Test export_single_mirror_list_file method."""
+    tel_model = telescope_model_lst
+    tel_model._mirrors = Mock()
+    tel_model._mirrors.number_of_mirrors = 5
+
+    # Mock simtel_config_writer
+    mock_writer = Mock()
+    tel_model._load_simtel_config_writer = Mock()
+    tel_model.simtel_config_writer = mock_writer
+
+    # Test valid mirror number
+    tel_model.export_single_mirror_list_file(mirror_number=1, set_focal_length_to_zero=True)
+    assert mock_writer.write_single_mirror_list_file.called
+    assert 1 in tel_model._single_mirror_list_file_paths
+
+    # Test invalid mirror number (too high)
+    with caplog.at_level(logging.ERROR):
+        tel_model.export_single_mirror_list_file(mirror_number=10, set_focal_length_to_zero=False)
+    assert "mirror_number > number_of_mirrors" in caplog.text
+
+
+def test_get_telescope_effective_focal_length(telescope_model_lst):
+    """Test get_telescope_effective_focal_length with various edge cases."""
+    import astropy.units as u
+
+    tel_model = telescope_model_lst
+
+    # Test case 1: Normal case with effective_focal_length
+    mock_value = 2.15 * u.m
+    tel_model.get_parameter_value_with_unit = Mock(return_value=mock_value)
+    result = tel_model.get_telescope_effective_focal_length(unit="m")
+    assert result == pytest.approx(2.15)
+
+    # Test case 2: effective_focal_length returns tuple
+    tel_model.get_parameter_value_with_unit = Mock(return_value=(mock_value,))
+    result = tel_model.get_telescope_effective_focal_length(unit="cm")
+    assert result == pytest.approx(215.0)
+
+    # Test case 3: effective_focal_length is None (AttributeError)
+    tel_model.get_parameter_value_with_unit = Mock(return_value=None)
+    result = tel_model.get_telescope_effective_focal_length(unit="m")
+    assert result == pytest.approx(0.0)
+
+    # Test case 4: return_focal_length_if_zero=True with 0 value
+    tel_model.get_parameter_value_with_unit = Mock(
+        side_effect=[
+            0.0 * u.m,  # effective_focal_length
+            1600.0 * u.cm,  # focal_length fallback
+        ]
+    )
+    result = tel_model.get_telescope_effective_focal_length(
+        unit="m", return_focal_length_if_zero=True
+    )
+    assert result == pytest.approx(16.0)
+
+
+def test_read_two_dim_wavelength_angle(telescope_model_lst, tmp_path):
+    """Test read_two_dim_wavelength_angle method."""
+
+    tel_model = telescope_model_lst
+
+    # Create mock file in config directory
+    file_content = (
+        "# Test file\n"
+        "ANGLE = 0.0 10.0 20.0\n"
+        "300.0 0.8 0.75 0.7\n"
+        "400.0 0.9 0.85 0.8\n"
+        "500.0 0.95 0.9 0.85\n"
+    )
+
+    mock_file_path = tel_model.config_file_directory / "test_2d.dat"
+    mock_file_path.write_text(file_content)
+
+    result = tel_model.read_two_dim_wavelength_angle("test_2d.dat")
+
+    assert "Wavelength" in result
+    assert "Angle" in result
+    assert "z" in result
+    assert len(result["Wavelength"]) == 3
+    assert len(result["Angle"]) == 3
+    assert result["z"].shape == (3, 3)
+
+
+def test_read_incidence_angle_distribution(telescope_model_lst):
+    """Test read_incidence_angle_distribution method."""
+    tel_model = telescope_model_lst
+
+    # Create a mock file in config directory
+    file_content = "# Incidence angle distribution\nIncidence_angle Fraction\n0.0 0.5\n10.0 0.3\n"
+
+    mock_file_path = tel_model.config_file_directory / "incidence.dat"
+    mock_file_path.write_text(file_content)
+
+    result = tel_model.read_incidence_angle_distribution("incidence.dat")
+
+    assert isinstance(result, astropy.table.Table)
+    assert len(result) == 2
+
+
+def test_calc_average_curve():
+    """Test calc_average_curve static method."""
+    import numpy as np
+
+    from simtools.model.telescope_model import TelescopeModel
+
+    # Mock curves data
+    curves = {
+        "Wavelength": np.array([300.0, 400.0, 500.0]),
+        "Angle": np.array([0.0, 10.0, 20.0]),
+        "z": np.array([[0.8, 0.85, 0.9], [0.75, 0.8, 0.85], [0.7, 0.75, 0.8]]),
+    }
+
+    # Mock incidence angle distribution
+    incidence_angle_dist = astropy.table.Table(
+        {
+            "Incidence angle": [0.0, 10.0, 20.0],
+            "Fraction": [0.5, 0.3, 0.2],
+        }
+    )
+
+    result = TelescopeModel.calc_average_curve(curves, incidence_angle_dist)
+
+    assert isinstance(result, astropy.table.Table)
+    assert "Wavelength" in result.colnames
+    assert "z" in result.colnames
+    assert len(result) == 3
+
+
+def test_export_table_to_model_directory(telescope_model_lst):
+    """Test export_table_to_model_directory method."""
+    tel_model = telescope_model_lst
+
+    # Create a mock table
+    test_table = astropy.table.Table({"Wavelength": [300.0, 400.0], "Value": [0.8, 0.9]})
+
+    file_name = "test_output.dat"
+    result = tel_model.export_table_to_model_directory(file_name, test_table)
+
+    expected_path = tel_model.config_file_directory / file_name
+    assert result == expected_path.absolute()
+    assert expected_path.exists()
