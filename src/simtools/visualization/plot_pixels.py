@@ -284,15 +284,7 @@ def _add_coordinate_axes(ax, rotation=0 * u.deg):
 
 
 def _apply_telescope_specific_pixel_transform(camera, camera_config_file, rotate_angle=None):
-    """Apply telescope-specific pixel position adjustments in-place.
-
-    Notes
-    -----
-    The `Camera` class rotates pixel positions during initialization. For the pixel-layout plot
-    we want to reproduce the historic (pre-refactor) convention used by `plot_pixels`, which is
-    based on the *raw* sim_telarray pixel list plus telescope-specific flip/rotation.
-    Therefore we read the raw pixel list again from the config file and apply the transform once.
-    """
+    """Apply telescope-specific pixel position adjustments in-place."""
     raw_pixels = Camera.read_pixel_list(camera_config_file)
     x_pos = np.asarray(raw_pixels["x"], dtype=float)
     y_pos = np.asarray(raw_pixels["y"], dtype=float)
