@@ -15,6 +15,7 @@ logger = logging.getLogger()
 
 
 # depends on prod5; prod6 is incomplete in the DB
+@pytest.mark.uses_model_database
 def test_read_two_dim_wavelength_angle(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
     tel_model.write_sim_telarray_config_file()
@@ -30,6 +31,7 @@ def test_read_two_dim_wavelength_angle(telescope_model_sst_prod5):
     assert two_dim_dist["z"][4][4] == pytest.approx(0.985199988)
 
 
+@pytest.mark.uses_model_database
 def test_read_incidence_angle_distribution(telescope_model_sst):
     tel_model = telescope_model_sst
     tel_model.export_model_files()
@@ -45,6 +47,7 @@ def test_read_incidence_angle_distribution(telescope_model_sst):
 
 
 # depends on prod5 (no 2D camera file file in prod6)
+@pytest.mark.uses_model_database
 def test_calc_average_curve(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
     tel_model.write_sim_telarray_config_file()
@@ -60,6 +63,7 @@ def test_calc_average_curve(telescope_model_sst_prod5):
 
 
 # depends on prod5 (no 2D camera file file in prod6)
+@pytest.mark.uses_model_database
 def test_export_table_to_model_directory(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
     tel_model.write_sim_telarray_config_file()
@@ -73,6 +77,7 @@ def test_export_table_to_model_directory(telescope_model_sst_prod5):
     assert one_dim_file.exists()
 
 
+@pytest.mark.uses_model_database
 def test_get_telescope_effective_focal_length(telescope_model_lst, telescope_model_sst_prod5):
     tel_model_lst = copy.deepcopy(telescope_model_lst)
     assert tel_model_lst.get_telescope_effective_focal_length("m") == pytest.approx(29.237)
@@ -102,6 +107,7 @@ def test_position(telescope_model_lst, caplog):
         tel_model.position(coordinate_system="invalid")
 
 
+@pytest.mark.uses_model_database
 def test_export_single_mirror_list_file(telescope_model_lst, caplog, monkeypatch):
     tel_model = telescope_model_lst
     tel_model.write_sim_telarray_config_file()
