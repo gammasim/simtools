@@ -295,13 +295,61 @@ def mock_db_handler():
             "file": False,
             "model_parameter_schema_version": "1.0.0",
         },
+        "nsb_reference_spectrum": {
+            "value": "nsb_spectrum_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "nsb_reference_value": {
+            "value": 0.24,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "1/(sr*ns*cm**2)",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "camera_config_file": {
+            "value": "camera_config_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "effective_focal_length": {
+            "value": 28.0,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "optics_properties": {
+            "value": "optics_properties_dummy.dat",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": True,
+            "model_parameter_schema_version": "1.0.0",
+        },
+    }
+
+    # Mock simulation configuration parameters
+    mock_sim_config_params = {
+        "correct_nsb_spectrum_to_telescope_altitude": {
+            "value": "nsb_spectrum_dummy.dat",
+            "parameter_version": "1.0.0",
+            "file": True,
+            "type": "str",
+            "model_parameter_schema_version": "1.0.0",
+        },
     }
 
     mock_db = MagicMock()
     mock_db.is_configured.return_value = True
     mock_db.get_design_model.return_value = None
     mock_db.get_model_parameters.return_value = mock_parameters
-    mock_db.get_simulation_configuration_parameters.return_value = {}
+    mock_db.get_simulation_configuration_parameters.return_value = mock_sim_config_params
     mock_db.export_model_files.return_value = None
     mock_db.export_model_file.return_value = None
     mock_db.db_name = "test_db"
