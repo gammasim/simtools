@@ -596,10 +596,6 @@ def plot_hist_2d(data, **kwargs):
     gs = gridspec.GridSpec(1, 1)
     fig = plt.figure(figsize=(8, 6))
 
-    ##########################################################################################
-    # Plot the data
-    ##########################################################################################
-
     plt.subplot(gs[0])
     assert len(data.dtype.names) == 2, "Input array must have two columns with titles."
     x_title, y_title = data.dtype.names[0], data.dtype.names[1]

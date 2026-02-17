@@ -135,7 +135,6 @@ class RayTracing:
         list
             List of (x, y) tuples in degrees.
         """
-        # Convert to numpy array of degrees
         angles_deg = np.around(off_axis_angle.to("deg").value, 5)
 
         if not isinstance(angles_deg, np.ndarray):
@@ -145,11 +144,9 @@ class RayTracing:
         if len(angles_deg) > 0 and isinstance(angles_deg[0], (tuple, list)):
             return [tuple(float(x) for x in offset) for offset in angles_deg]
 
-        # Default to all four cardinal directions if not specified
         if offset_directions is None:
             offset_directions = ["N", "S", "E", "W"]
 
-        # Generate cardinal direction offsets
         offsets = []
         direction_map = {
             "N": (0.0, 1.0),
