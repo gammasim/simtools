@@ -38,6 +38,8 @@ light_source (str, optional)
     Illuminator in array, e.g., ILLN-01.
 number_of_events (int, optional)
     Number of events to simulate.
+flasher_photons (int, optional)
+    Override for calibration-model parameter flasher_photons.
 telescope (str, required)
     Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, ...)
 site (str, required)
@@ -96,6 +98,15 @@ def _parse():
         help="Number of events to simulate",
         type=int,
         default=1,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--flasher_photons",
+        help=(
+            "Override flasher photon yield. "
+            "Accepts integers including scientific notation, e.g. 1e8."
+        ),
+        type=config.parser.scientific_int,
         required=False,
     )
     return config.initialize(
