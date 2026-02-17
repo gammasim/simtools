@@ -291,7 +291,7 @@ class CommandLineParser(argparse.ArgumentParser):
         if "telescopes" in model_options:
             _job_group.add_argument(
                 "--telescopes",
-                help="list of telescope (e.g., LSTN-01, SSTS-design, ...)",
+                help="list of telescopes (e.g., LSTN-01, SSTS-design, ...)",
                 type=self.telescope,
                 nargs="+",
             )
