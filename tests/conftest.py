@@ -701,9 +701,35 @@ def mock_db_handler():
         },
     }
 
-    def mock_get_model_parameters(site, array_element_name, collection, model_version):
+    def mock_get_model_parameters(site, array_element_name, collection, model_version, **kwargs):
         """Return site-specific parameters based on the site."""
         params = dict(mock_parameters)
+
+        # Telescope-specific parameters based on array_element_name
+        if array_element_name:
+            if "SST" in array_element_name or array_element_name in ["SSTS-design", "SSTS-D"]:
+                # SST-specific values
+                params.update(
+                    {
+                        "effective_focal_length": {
+                            "value": 2.15191,
+                            "parameter_version": "1.0.0",
+                            "type": "float64",
+                            "unit": "m",
+                            "file": False,
+                            "model_parameter_schema_version": "1.0.0",
+                        },
+                        "mirror_focal_length": {
+                            "value": 2.15,
+                            "parameter_version": "1.0.0",
+                            "type": "float64",
+                            "unit": "m",
+                            "file": False,
+                            "model_parameter_schema_version": "1.0.0",
+                        },
+                    }
+                )
+
         # Override with site-specific values
         if site == "North":
             params.update(site_specific_params_north)
@@ -763,9 +789,71 @@ def mock_db_handler():
 
         return
 
+    def mock_get_ecsv_file_as_astropy_table(file_name=None, **kwargs):
+        """Mock get_ecsv_file_as_astropy_table to return table with Quantity columns."""
+        import astropy.units as u
+        from astropy.table import Column, Table
+
+        # Return a minimal NSB spectrum table with proper Quantity columns
+        # Using Table (not QTable) since code expects .quantity attribute
+        table = Table()
+        table["wavelength"] = Column([300.0, 400.0, 500.0, 600.0, 700.0] * u.nm)
+        table["differential photon rate"] = Column(
+            [1.0, 1.2, 1.0, 0.8, 0.5] / (u.nm * u.cm**2 * u.ns * u.sr)
+        )
+        return table
+
+    def mock_get_design_model(model_version=None, array_element_name=None, **kwargs):
+        """Mock get_design_model to return design model name for telescopes."""
+        if array_element_name:
+            # Return generic design model based on telescope type
+            if "LST" in array_element_name:
+                return "LSTN-design"
+            if "MST" in array_element_name:
+                return "MSTN-design"
+            if "SST" in array_element_name:
+                return "SSTS-design"
+        return None
+
+    def mock_get_array_elements_of_type(array_element_type, **kwargs):
+        """Mock get_array_elements_of_type to return telescopes matching the type prefix."""
+        all_elements = [
+            "LSTN-01",
+            "LSTN-02",
+            "LSTN-03",
+            "LSTN-04",
+            "LSTS-01",
+            "LSTS-02",
+            "LSTS-03",
+            "LSTS-04",
+            "MSTN-01",
+            "MSTN-02",
+            "MSTN-03",
+            "MSTN-04",
+            "MSTN-05",
+            "MSTS-01",
+            "MSTS-02",
+            "MSTS-03",
+            "MSTS-04",
+            "MSTS-05",
+            "MSTS-06",
+            "MSTS-07",
+            "MSTS-08",
+            "MSTS-09",
+            "MSTS-10",
+            "MSTS-11",
+            "SSTS-01",
+            "SSTS-02",
+            "SSTS-03",
+            "SSTS-04",
+            "SSTS-05",
+        ]
+        # Return elements that start with the requested type
+        return [elem for elem in all_elements if elem.startswith(array_element_type)]
+
     mock_db = MagicMock()
     mock_db.is_configured.return_value = True
-    mock_db.get_design_model.return_value = None
+    mock_db.get_design_model.side_effect = mock_get_design_model
     mock_db.get_model_parameters.side_effect = mock_get_model_parameters
     mock_db.get_model_parameter.side_effect = mock_get_model_parameter
     mock_db.get_model_parameters_for_all_model_versions.return_value = {}
@@ -799,8 +887,10 @@ def mock_db_handler():
         "SSTS-05",
     ]
     mock_db.get_simulation_configuration_parameters.return_value = mock_sim_config_params
+    mock_db.get_array_elements_of_type.side_effect = mock_get_array_elements_of_type
     mock_db.export_model_files.side_effect = mock_export_model_files
     mock_db.export_model_file.return_value = None
+    mock_db.get_ecsv_file_as_astropy_table.side_effect = mock_get_ecsv_file_as_astropy_table
     mock_db.db_name = "test_db"
 
     return mock_db
