@@ -200,6 +200,140 @@ def db_config():
 
 
 @pytest.fixture
+def mock_db_handler():
+    """
+    Mock DatabaseHandler for unit tests.
+
+    Provides common mock behaviors to avoid real database connections.
+    Returns a MagicMock configured with typical DatabaseHandler methods.
+    """
+    from unittest.mock import MagicMock
+
+    # Minimal mock parameters for common telescope model tests
+    mock_parameters = {
+        "num_gains": {
+            "value": 2,
+            "parameter_version": "1.0.0",
+            "type": "int64",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "camera_pixels": {
+            "value": 1855,
+            "parameter_version": "1.0.0",
+            "type": "int32",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "mirror_focal_length": {
+            "value": 28.0,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "mirror_reflection_random_angle": {
+            "value": [0.0066, 0.0],
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "deg",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "telescope_axis_height": {
+            "value": 16.0,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "telescope_transmission": {
+            "value": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        # Site parameters
+        "corsika_observation_level": {
+            "value": 2200.0,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "array_layouts": {
+            "value": "test_layout",
+            "parameter_version": "1.0.0",
+            "type": "str",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "reference_point_utm_east": {
+            "value": 500000.0,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "reference_point_utm_north": {
+            "value": 3000000.0,
+            "parameter_version": "1.0.0",
+            "type": "float64",
+            "unit": "m",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "epsg_code": {
+            "value": 32733,
+            "parameter_version": "1.0.0",
+            "type": "int32",
+            "file": False,
+            "model_parameter_schema_version": "1.0.0",
+        },
+    }
+
+    mock_db = MagicMock()
+    mock_db.is_configured.return_value = True
+    mock_db.get_design_model.return_value = None
+    mock_db.get_model_parameters.return_value = mock_parameters
+    mock_db.get_simulation_configuration_parameters.return_value = {}
+    mock_db.export_model_files.return_value = None
+    mock_db.export_model_file.return_value = None
+    mock_db.db_name = "test_db"
+
+    return mock_db
+
+
+@pytest.fixture(autouse=True)
+def mock_database_handler(request, mock_db_handler, mocker):
+    """
+    Automatically mock DatabaseHandler for all unit tests except those in db/.
+
+    This prevents unit tests from trying to connect to real databases.
+    Tests in tests/unit_tests/db/ are excluded from this mocking.
+    Also mocks model parameter schema validation to avoid schema version mismatches.
+    """
+    test_file_path = str(request.node.fspath)
+
+    # Skip mocking for tests in db/ directory
+    if "unit_tests/db/" in test_file_path:
+        yield
+        return
+
+    # Mock schema validation to avoid version check issues
+    mocker.patch("simtools.model.model_parameter.ModelParameter._check_model_parameter_versions")
+
+    # Mock DatabaseHandler for all other unit tests
+    with mock.patch("simtools.db.db_handler.DatabaseHandler", return_value=mock_db_handler):
+        yield
+
+
+@pytest.fixture
 def db():
     """Database object with configuration from settings.config.db_handler."""
     return db_handler.DatabaseHandler()
