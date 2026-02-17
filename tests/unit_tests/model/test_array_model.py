@@ -288,3 +288,171 @@ def test_build_telescope_models():
 
 def test_sim_telarray_seeds_property(array_model_north):
     assert array_model_north.sim_telarray_seed is None
+
+
+def test_export_simtel_telescope_config_files(array_model_north):
+    """Test export_simtel_telescope_config_files exports config for each telescope."""
+    am = array_model_north
+
+    # Mock the telescope models' write method
+    for tel_model in am.telescope_models.values():
+        tel_model.write_sim_telarray_config_file = Mock()
+
+    am.export_simtel_telescope_config_files()
+
+    # Verify write_sim_telarray_config_file was called for each telescope
+    for tel_model in am.telescope_models.values():
+        tel_model.write_sim_telarray_config_file.assert_called_once()
+
+    assert am._telescope_model_files_exported is True
+
+
+def test_export_simtel_telescope_config_files_skips_duplicates(mocker):
+    """Test export_simtel_telescope_config_files skips duplicate telescope models."""
+    am = Mock(spec=ArrayModel)
+    am._logger = Mock()
+    am._telescope_model_files_exported = False
+    am.calibration_models = {}
+
+    # Create two telescope objects with the same name
+    tel_model_1 = Mock()
+    tel_model_1.name = "LST_1"
+    tel_model_1.write_sim_telarray_config_file = Mock()
+
+    tel_model_2 = Mock()
+    tel_model_2.name = "LST_1"  # Same name as tel_model_1
+    tel_model_2.write_sim_telarray_config_file = Mock()
+
+    am.telescope_models = {"LSTN-01": tel_model_1, "LSTN-02": tel_model_2}
+
+    # Call the actual method
+    ArrayModel.export_simtel_telescope_config_files(am)
+
+    # Verify write was called only once (for the first telescope with this name)
+    tel_model_1.write_sim_telarray_config_file.assert_called_once()
+    tel_model_2.write_sim_telarray_config_file.assert_not_called()
+
+    # Verify the logger was called for the second telescope
+    am._logger.debug.assert_called_once()
+    assert "already exists" in am._logger.debug.call_args[0][0]
+
+    assert am._telescope_model_files_exported is True
+
+
+def test_export_simtel_telescope_config_files_with_calibration_models(mocker):
+    """Test export_simtel_telescope_config_files passes calibration models to write method."""
+    am = Mock(spec=ArrayModel)
+    am._logger = Mock()
+    am._telescope_model_files_exported = False
+
+    # Create telescope and calibration models
+    tel_model = Mock()
+    tel_model.name = "LSTN-01"
+    tel_model.write_sim_telarray_config_file = Mock()
+
+    calibration_model = Mock()
+    am.calibration_models = {"LSTN-01": {"flasher": calibration_model}}
+    am.telescope_models = {"LSTN-01": tel_model}
+
+    ArrayModel.export_simtel_telescope_config_files(am)
+
+    # Verify write was called with the calibration models
+    tel_model.write_sim_telarray_config_file.assert_called_once_with(
+        additional_models={"flasher": calibration_model}
+    )
+
+
+def test_export_simtel_telescope_config_files_with_empty_calibration_models(mocker):
+    """Test export_simtel_telescope_config_files with telescopes that have no calibration models."""
+    am = Mock(spec=ArrayModel)
+    am._logger = Mock()
+    am._telescope_model_files_exported = False
+
+    tel_model = Mock()
+    tel_model.name = "MSTN-01"
+    tel_model.write_sim_telarray_config_file = Mock()
+
+    am.calibration_models = {}
+    am.telescope_models = {"MSTN-01": tel_model}
+
+    ArrayModel.export_simtel_telescope_config_files(am)
+
+    # Verify write was called with None (no calibration models)
+    tel_model.write_sim_telarray_config_file.assert_called_once_with(additional_models=None)
+
+
+def test_export_sim_telarray_config_file(array_model_north, mocker):
+    """Test export_sim_telarray_config_file exports array config and site model files."""
+    am = array_model_north
+
+    # Mock the site model's export method
+    mocker.patch.object(am.site_model, "export_model_files")
+
+    # Mock the SimtelConfigWriter
+    mock_simtel_writer = mocker.MagicMock()
+    mocker.patch(
+        "simtools.model.array_model.simtel_config_writer.SimtelConfigWriter",
+        return_value=mock_simtel_writer,
+    )
+
+    # Mock the metadata method
+    mock_metadata = {"nsb_integrated_flux": 42.0}
+    mocker.patch.object(am, "_get_additional_simtel_metadata", return_value=mock_metadata)
+
+    am.export_sim_telarray_config_file()
+
+    # Verify site model export was called
+    am.site_model.export_model_files.assert_called_once()
+
+    # Verify SimtelConfigWriter was instantiated with correct parameters
+    mock_simtel_writer.write_array_config_file.assert_called_once()
+    call_args = mock_simtel_writer.write_array_config_file.call_args
+    assert call_args[1]["config_file_path"] == am.config_file_path
+    assert call_args[1]["telescope_model"] == am.telescope_models
+    assert call_args[1]["site_model"] == am.site_model
+    assert call_args[1]["additional_metadata"] == mock_metadata
+
+    # Verify the flag is set
+    assert am._array_model_file_exported is True
+
+
+def test_export_sim_telarray_config_file_creates_writer_correctly(array_model_north, mocker):
+    """Test that SimtelConfigWriter is created with correct parameters."""
+    am = array_model_north
+
+    mocker.patch.object(am.site_model, "export_model_files")
+    mock_simtel_writer_class = mocker.patch(
+        "simtools.model.array_model.simtel_config_writer.SimtelConfigWriter"
+    )
+    mock_simtel_writer = mocker.MagicMock()
+    mock_simtel_writer_class.return_value = mock_simtel_writer
+
+    mocker.patch.object(am, "_get_additional_simtel_metadata", return_value={})
+
+    am.export_sim_telarray_config_file()
+
+    # Verify SimtelConfigWriter was instantiated with correct parameters
+    mock_simtel_writer_class.assert_called_once_with(
+        site=am.site_model.site,
+        layout_name=am.layout_name,
+        model_version=am.model_version,
+        label=am.label,
+    )
+
+
+def test_export_sim_telarray_config_file_idempotent(array_model_north, mocker):
+    """Test that calling export multiple times sets flag correctly."""
+    am = array_model_north
+
+    mocker.patch.object(am.site_model, "export_model_files")
+    mocker.patch("simtools.model.array_model.simtel_config_writer.SimtelConfigWriter")
+    mocker.patch.object(am, "_get_additional_simtel_metadata", return_value={})
+
+    assert am._array_model_file_exported is False
+
+    am.export_sim_telarray_config_file()
+    assert am._array_model_file_exported is True
+
+    # Calling again should still have the flag set
+    am.export_sim_telarray_config_file()
+    assert am._array_model_file_exported is True

@@ -155,91 +155,58 @@ def test_load_camera(telescope_model_lst, monkeypatch, caplog):
 
 
 def test_is_file_2d_true(telescope_model_lst):
-    mock_self = Mock()
-    mock_self.get_parameter_value.return_value = "file.txt"
-    mock_self.config_file_directory.joinpath.return_value = "dummy_path"
-
     with patch("builtins.open", mock_open(read_data="something @RPOL@ inside")):
         result = telescope_model_lst.is_file_2d("mirror_list")
         assert result is True
 
 
 def test_is_file_2d_false(telescope_model_lst):
-    mock_self = Mock()
-    mock_self.get_parameter_value.return_value = "file.txt"
-    mock_self.config_file_directory.joinpath.return_value = "dummy_path"
-
     with patch("builtins.open", mock_open(read_data="no marker here")):
         result = telescope_model_lst.is_file_2d("mirror_list")
         assert result is False
 
 
 def test_is_file_2d_keyerror(telescope_model_lst, caplog):
-    mock_self = Mock()
-    mock_self.get_parameter_value.side_effect = KeyError
-
     result = telescope_model_lst.is_file_2d("missing_param")
     assert result is False
     assert "does not exist" in caplog.text
 
 
 def test_get_on_axis_eff_optical_area_ok(telescope_model_lst):
-    mock_self = Mock()
-    mock_self.get_parameter_value.return_value = "optics.txt"
-    mock_self.config_file_directory.joinpath.return_value = "dummy_path"
-
-    # Fake astropy table with correct 0 off-axis angle
     fake_table = astropy.table.Table({"Off-axis angle": [0.0], "eff_area": [123.4]})
-
     with patch("astropy.io.ascii.read", return_value=fake_table):
         result = telescope_model_lst.get_on_axis_eff_optical_area()
         assert result == pytest.approx(123.4)
 
 
 def test_get_on_axis_eff_optical_area_wrong_angle(telescope_model_lst):
-    mock_self = Mock()
-    mock_self.get_parameter_value.return_value = "optics.txt"
-    mock_self.config_file_directory.joinpath.return_value = "dummy_path"
-    mock_self._logger = Mock()
-
     fake_table = astropy.table.Table({"Off-axis angle": [1.0], "eff_area": [123.4]})
-
     with patch("astropy.io.ascii.read", return_value=fake_table):
         with pytest.raises(ValueError, match=r"^No value for the on-axis"):
             telescope_model_lst.get_on_axis_eff_optical_area()
 
 
-def test_get_calibration_device_name():
-    """Test get_calibration_device_name method with mocked get_parameter_value."""
-    from simtools.model.telescope_model import TelescopeModel
-
-    # Create a mock telescope model instance
-    telescope_model = Mock(spec=TelescopeModel)
-    telescope_model.get_calibration_device_name = TelescopeModel.get_calibration_device_name
+def test_get_calibration_device_name(telescope_model_lst, monkeypatch):
+    """Test get_calibration_device_name method."""
+    tel_model = telescope_model_lst
 
     # Test case 1: Parameter exists and device type found
     mock_devices = {"flasher": "my_flasher_device", "illuminator": "my_illuminator_device"}
-    telescope_model.get_parameter_value = Mock(return_value=mock_devices)
+    tel_model.get_parameter_value = Mock(return_value=mock_devices)
+    assert tel_model.get_calibration_device_name("flasher") == "my_flasher_device"
 
-    result = telescope_model.get_calibration_device_name(telescope_model, "flasher")
-    assert result == "my_flasher_device"
-    telescope_model.get_parameter_value.assert_called_with("calibration_devices")
+    # Test case 2: Device type not found
+    assert tel_model.get_calibration_device_name("nonexistent_device") is None
 
-    # Test case 2: Parameter exists but device type not found
-    result = telescope_model.get_calibration_device_name(telescope_model, "nonexistent_device")
-    assert result is None
+    # Test case 3: Parameter is None
+    tel_model.get_parameter_value = Mock(return_value=None)
+    assert tel_model.get_calibration_device_name("flasher") is None
 
-    # Test case 3: Parameter exists but is None
-    telescope_model.get_parameter_value = Mock(return_value=None)
-    result = telescope_model.get_calibration_device_name(telescope_model, "flasher")
-    assert result is None
-
-    # Test case 4: Parameter does not exist (InvalidModelParameterError raised)
-    telescope_model.get_parameter_value = Mock(
+    # Test case 4: Parameter does not exist
+    tel_model.get_parameter_value = Mock(
         side_effect=InvalidModelParameterError("Parameter not found")
     )
-    result = telescope_model.get_calibration_device_name(telescope_model, "flasher")
-    assert result is None
+    assert tel_model.get_calibration_device_name("flasher") is None
 
 
 def test_mirrors_property(telescope_model_lst, monkeypatch):
