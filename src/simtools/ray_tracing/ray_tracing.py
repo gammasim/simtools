@@ -135,32 +135,95 @@ class RayTracing:
         list
             List of (x, y) tuples in degrees.
         """
-        # Check if input is already a list of tuples/lists before unit conversion
-        if isinstance(off_axis_angle, (list, tuple)):
-            if len(off_axis_angle) > 0 and isinstance(off_axis_angle[0], (tuple, list)):
-                result = []
-                for offset in off_axis_angle:
-                    converted_offset = []
-                    for x in offset:
-                        if isinstance(x, u.Quantity):
-                            converted_offset.append(x.to("deg").value)
-                        else:
-                            converted_offset.append(float(x))
-                    result.append(tuple(converted_offset))
-                return result
-            # If it's a plain list of numbers, convert to ndarray for processing
-            angles_deg = np.around(np.asarray(off_axis_angle), 5)
-        else:
-            # Assume it's an astropy.units.Quantity
-            angles_deg = np.around(off_axis_angle.to("deg").value, 5)
+        # Check if input is already a list of tuples
+        if self._is_list_of_tuples(off_axis_angle):
+            return self._convert_tuples_to_degrees(off_axis_angle)
 
-        if not isinstance(angles_deg, np.ndarray):
-            angles_deg = np.atleast_1d(angles_deg)
+        # Convert scalar angles to numpy array
+        angles_deg = self._extract_scalar_angles(off_axis_angle)
 
+        # Generate offsets from scalar angles
         if offset_directions is None:
             offset_directions = ["N", "S", "E", "W"]
 
-        offsets = []
+        return self._generate_offsets_from_angles(angles_deg, offset_directions)
+
+    def _is_list_of_tuples(self, off_axis_angle):
+        """
+        Check if input is a list of tuples or lists.
+
+        Parameters
+        ----------
+        off_axis_angle: any
+            Input to check.
+
+        Returns
+        -------
+        bool
+            True if input is a list of tuples/lists.
+        """
+        if not isinstance(off_axis_angle, (list, tuple)):
+            return False
+        return len(off_axis_angle) > 0 and isinstance(off_axis_angle[0], (tuple, list))
+
+    def _convert_tuples_to_degrees(self, offset_tuples):
+        """
+        Convert tuple offsets to degrees, handling units.
+
+        Parameters
+        ----------
+        offset_tuples: list
+            List of (x, y) tuples, possibly with units.
+
+        Returns
+        -------
+        list
+            List of (x, y) tuples in degrees.
+        """
+        result = []
+        for offset in offset_tuples:
+            converted_offset = tuple(
+                x.to("deg").value if isinstance(x, u.Quantity) else float(x) for x in offset
+            )
+            result.append(converted_offset)
+        return result
+
+    def _extract_scalar_angles(self, off_axis_angle):
+        """
+        Extract scalar angles and convert to degrees.
+
+        Parameters
+        ----------
+        off_axis_angle: astropy.units.Quantity or list
+            Input angles.
+
+        Returns
+        -------
+        numpy.ndarray
+            Angles in degrees.
+        """
+        if isinstance(off_axis_angle, (list, tuple)):
+            angles_deg = np.asarray(off_axis_angle)
+        else:
+            angles_deg = off_axis_angle.to("deg").value
+        return np.atleast_1d(np.around(angles_deg, 5))
+
+    def _generate_offsets_from_angles(self, angles_deg, offset_directions):
+        """
+        Generate (x, y) offsets for given angles and directions.
+
+        Parameters
+        ----------
+        angles_deg: numpy.ndarray
+            Angles in degrees.
+        offset_directions: list
+            Cardinal directions.
+
+        Returns
+        -------
+        list
+            List of (x, y) tuples.
+        """
         direction_map = {
             "N": (0.0, 1.0),
             "S": (0.0, -1.0),
@@ -168,6 +231,7 @@ class RayTracing:
             "W": (-1.0, 0.0),
         }
 
+        offsets = []
         for angle in angles_deg:
             for direction in offset_directions:
                 if direction not in direction_map:
