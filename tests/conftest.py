@@ -29,6 +29,8 @@ from simtools.runners.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
 
+UNIT_TEST_DB = "unit_tests/db"
+
 
 @functools.lru_cache
 def _load_mock_db_json(file_name):
@@ -234,7 +236,7 @@ def mock_db_handler(request):
     from unittest.mock import MagicMock
 
     test_file_path = str(request.node.fspath)
-    if "unit_tests/db/" in test_file_path:
+    if UNIT_TEST_DB in test_file_path:
         db_instance = request.getfixturevalue("db")
         db_instance.get_model_versions = MagicMock(return_value=["1.0.0", "5.0.0", "6.0.0"])
         return db_instance
@@ -418,7 +420,7 @@ def mock_database_handler(request, mocker):
     test_file_path = str(request.node.fspath)
 
     # Skip mocking for tests in db/ directory
-    if "unit_tests/db/" in test_file_path:
+    if UNIT_TEST_DB in test_file_path:
         yield
         return
 
@@ -437,7 +439,7 @@ def db(request):
     """Database object with configuration from settings.config.db_handler."""
 
     test_file_path = str(request.node.fspath)
-    if "unit_tests/db/" not in test_file_path:
+    if UNIT_TEST_DB not in test_file_path:
         db_instance = db_handler.DatabaseHandler()
         yield db_instance
         return

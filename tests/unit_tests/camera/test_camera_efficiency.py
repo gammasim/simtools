@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 import logging
+from pathlib import Path
+from unittest.mock import MagicMock
 
 import astropy.units as u
 import numpy as np
@@ -26,25 +28,18 @@ def config_data_lst(model_version_prod5):
 
 @pytest.fixture
 def camera_efficiency_lst(config_data_lst, mocker):
-    from unittest.mock import MagicMock
-
-    import astropy.units as u
-
     camera_eff = CameraEfficiency(
         config_data=config_data_lst, efficiency_type="shower", label="validate_camera_efficiency"
     )
-    # Create a mock camera object with the needed methods
     mock_camera = MagicMock()
     mock_camera.get_camera_fill_factor.return_value = 0.8
     mock_camera.get_pixel_active_solid_angle.return_value = 1.0e-6
-    # Replace the camera property with our mock
     mocker.patch.object(
         type(camera_eff.telescope_model),
         "camera",
         new_callable=mocker.PropertyMock,
         return_value=mock_camera,
     )
-    # Mock get_on_axis_eff_optical_area to avoid loading optics_properties file
     mocker.patch.object(
         camera_eff.telescope_model,
         "get_on_axis_eff_optical_area",
@@ -55,14 +50,10 @@ def camera_efficiency_lst(config_data_lst, mocker):
 
 @pytest.fixture
 def prepare_results_file(camera_efficiency_lst, mocker):
-    from pathlib import Path
-
-    # The actual test resource file has "table_" and "validate_camera_efficiency" in the name
     test_resource_file = Path(
         "tests/resources/"
         "camera_efficiency_table_North_LSTN-01_za20.0deg_azm000deg_validate_camera_efficiency.ecsv"
     )
-    # Mock _file["results"] to point to the test resource file
     mocker.patch.object(
         camera_efficiency_lst,
         "_file",

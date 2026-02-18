@@ -40,21 +40,6 @@ def test_file_2():
 
 
 @pytest.fixture
-def fs_files():
-    return "fs.files"
-
-
-@pytest.fixture
-def value_unit_type():
-    return "simtools.db.db_handler.value_conversion.get_value_unit_type"
-
-
-@pytest.fixture
-def mock_open(mocker):
-    return mocker.patch("builtins.open", mocker.mock_open(read_data=b"file_content"))
-
-
-@pytest.fixture
 def mock_get_collection_name(mocker):
     return mocker.patch(
         "simtools.db.db_handler.names.get_collection_name_from_parameter_name",
@@ -71,16 +56,6 @@ def mock_read_simtel_table(mocker):
 
 
 @pytest.fixture
-def validate_model_parameter():
-    return "simtools.db.db_handler.validate_data.DataValidator.validate_model_parameter"
-
-
-@pytest.fixture
-def mock_gridfs(mocker):
-    return mocker.patch("simtools.db.mongo_db.gridfs.GridFS")
-
-
-@pytest.fixture
 def standard_test_params():
     """Common test parameters used across multiple tests."""
     return {
@@ -91,31 +66,6 @@ def standard_test_params():
         "collection": "telescopes",
         "parameter": "test_param",
     }
-
-
-@pytest.fixture
-def mock_collection_setup(mocker, db):
-    """Common fixture for mocking collection operations."""
-    mock_collection = mocker.Mock()
-    mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mock_collection)
-    return {"collection": mock_collection, "get_collection": mock_get_collection}
-
-
-@pytest.fixture
-def mock_db_client(mocker, db, test_db):
-    """Common fixture for mocking db_client."""
-
-    mock_client = {test_db: mocker.Mock()}
-    return mocker.patch.object(MongoDBHandler, "db_client", mock_client)
-
-
-@pytest.fixture
-def mock_file_system(mocker, mock_gridfs):
-    """Setup mock file system objects."""
-    mock_fs = mock_gridfs.return_value
-    mock_file_instance = mocker.Mock(_id="file_id")
-    mock_fs.find_one.return_value = mock_file_instance
-    return {"fs": mock_fs, "instance": mock_file_instance}
 
 
 @pytest.fixture
