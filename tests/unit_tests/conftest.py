@@ -516,8 +516,9 @@ def db(request):
         if hasattr(MongoDBHandler.db_client, "close"):
             try:
                 MongoDBHandler.db_client.close()
-            except Exception:
-                pass
+            except Exception as exc:
+                # Ignore close errors in tests to avoid masking real test failures
+                logger.debug("Ignoring exception while closing mock MongoDB client: %r", exc)
 
     settings.config._args = previous_state["_args"]
     settings.config._db_config = previous_state["_db_config"]
