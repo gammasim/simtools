@@ -8,8 +8,13 @@ import pytest
 from astropy import units as u
 
 import simtools.utils.general as gen
-from simtools.model.model_parameter import InvalidModelParameterError
+from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
 from simtools.model.telescope_model import TelescopeModel
+
+# Capture the original static method at import time, before autouse fixtures can mock it
+_check_model_parameter_versions = ModelParameter.__dict__[
+    "_check_model_parameter_versions"
+].__func__
 
 logger = logging.getLogger()
 
@@ -542,3 +547,72 @@ def test__get_key_for_parameter_changes(telescope_model_lst):
         telescope_model_lst._get_key_for_parameter_changes("North", "LSTN-design", {lst: "abc"})
         is None
     )
+
+
+def test_check_model_parameter_versions(mocker):
+    """Test _check_model_parameter_versions with up-to-date and unknown parameters.
+
+    Uses the module-level reference captured at import time to bypass the autouse
+    fixture that patches the method on the class.
+    """
+    parameters = {
+        "num_gains": {
+            "value": 2,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "unknown_param": {  # Not in schema - should be silently skipped
+            "value": 42,
+            "model_parameter_schema_version": "1.0.0",
+        },
+    }
+
+    mocker.patch(
+        "simtools.model.model_parameter.names.model_parameters",
+        return_value={"num_gains": {"schema_version": "1.0.0"}},
+    )
+    mock_validate = mocker.patch(
+        "simtools.model.model_parameter.schema.validate_deprecation_and_version"
+    )
+    mock_apply = mocker.patch(
+        "simtools.model.model_parameter.legacy_model_parameter.apply_legacy_updates_to_parameters"
+    )
+
+    _check_model_parameter_versions(parameters, ignore_software_version=False)
+
+    # validate called only for "num_gains" (known in schema); "unknown_param" is skipped
+    mock_validate.assert_called_once_with(
+        data={"schema_version": "1.0.0"},
+        software_name=None,
+        ignore_software_version=False,
+    )
+    # apply always called unconditionally at the end, with empty legacy updates
+    mock_apply.assert_called_once_with(parameters, {})
+
+
+def test_check_model_parameter_versions_triggers_legacy_update(mocker):
+    """Test _check_model_parameter_versions triggers legacy update for outdated schema version."""
+    parameters = {
+        "num_gains": {
+            "value": 2,
+            "model_parameter_schema_version": "0.9.0",  # Outdated - does not match schema
+        }
+    }
+
+    mocker.patch(
+        "simtools.model.model_parameter.names.model_parameters",
+        return_value={"num_gains": {"schema_version": "1.0.0"}},
+    )
+    mocker.patch("simtools.model.model_parameter.schema.validate_deprecation_and_version")
+    mock_update = mocker.patch(
+        "simtools.model.model_parameter.legacy_model_parameter.update_parameter",
+        return_value={"num_gains": {"value": 99}},
+    )
+    mock_apply = mocker.patch(
+        "simtools.model.model_parameter.legacy_model_parameter.apply_legacy_updates_to_parameters"
+    )
+
+    _check_model_parameter_versions(parameters, ignore_software_version=False)
+
+    # Legacy update triggered because schema version mismatch (0.9.0 != 1.0.0)
+    mock_update.assert_called_once_with("num_gains", parameters, "1.0.0")
+    mock_apply.assert_called_once_with(parameters, {"num_gains": {"value": 99}})
