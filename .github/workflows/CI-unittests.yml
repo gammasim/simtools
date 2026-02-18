@@ -22,11 +22,6 @@ on:
 
 jobs:
   unit_tests:
-    env:
-      SIMTOOLS_DB_SERVER: ${{ 'localhost' }}
-      SIMTOOLS_DB_API_USER: ${{ 'api' }}
-      SIMTOOLS_DB_API_PW: ${{ 'password' }}
-      SIMTOOLS_DB_API_PORT: ${{ '27017' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
