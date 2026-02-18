@@ -315,15 +315,21 @@ def test_read_incidence_angle_distribution(telescope_model_lst):
     tel_model = telescope_model_lst
 
     # Create a mock file in config directory
-    file_content = "# Incidence angle distribution\nIncidence_angle Fraction\n0.0 0.5\n10.0 0.3\n"
+    mock_file_path = tel_model.config_file_directory / "incidence.ecsv"
+    incidence_table = astropy.table.Table(
+        {
+            "Incidence angle": [0.0, 10.0],
+            "Fraction": [0.5, 0.3],
+        }
+    )
+    incidence_table.write(mock_file_path, format="ascii.ecsv", overwrite=True)
 
-    mock_file_path = tel_model.config_file_directory / "incidence.dat"
-    mock_file_path.write_text(file_content)
-
-    result = tel_model.read_incidence_angle_distribution("incidence.dat")
+    result = tel_model.read_incidence_angle_distribution("incidence.ecsv")
 
     assert isinstance(result, astropy.table.Table)
     assert len(result) == 2
+    assert "Incidence angle" in result.colnames
+    assert "Fraction" in result.colnames
 
 
 def test_calc_average_curve():

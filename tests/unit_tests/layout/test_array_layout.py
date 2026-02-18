@@ -272,6 +272,7 @@ def test_altitude_from_corsika_z(
             instance._altitude_from_corsika_z(5.0, None, telescope_axis_height=16.0 * u.m)
         assert np.isnan(instance._altitude_from_corsika_z(None, None, None))
 
+    test_one_site(array_layout_north_four_lst_instance, "LSTN-01", 2187.0, 45.0)
     test_one_site(array_layout_south_four_lst_instance, "LSTS-01", 2176.0, 45.0)
 
 
