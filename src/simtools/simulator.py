@@ -188,6 +188,68 @@ class Simulator:
             env=simtel_runner.SIM_TELARRAY_ENV,
         )
 
+    @staticmethod
+    def _parse_sequence(value, cast):
+        """Parse scalar/list/string sequence into a list of typed values."""
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return [cast(item) for item in value]
+        if isinstance(value, tuple):
+            return [cast(item) for item in value]
+        if isinstance(value, str) and "," in value:
+            return [cast(item.strip()) for item in value.split(",") if item.strip()]
+        return [cast(value)]
+
+    @classmethod
+    def simulate_direct_injection_sequence(cls, label=None):
+        """Simulate direct injection for one or multiple event/photon settings."""
+        base_args = dict(settings.config.args)
+        base_db_config = dict(settings.config.db_config)
+        base_run_number = int(base_args.get("run_number", 1))
+
+        events = cls._parse_sequence(base_args.get("number_of_events", 1), int)
+        photons = cls._parse_sequence(base_args.get("flasher_photons"), float)
+        photons = [max(1, round(photon)) for photon in photons]
+
+        n_runs = max(len(events), len(photons), 1)
+
+        if len(events) == 0:
+            events = [1]
+        if len(events) == 1 and n_runs > 1:
+            events = events * n_runs
+        elif len(events) != n_runs:
+            raise ValueError(
+                "Invalid number_of_events list length for direct_injection. "
+                "Use one value or one value per photon intensity."
+            )
+
+        if len(photons) == 0:
+            photons = [None] * n_runs
+        elif len(photons) == 1 and n_runs > 1:
+            photons = photons * n_runs
+        elif len(photons) != n_runs:
+            raise ValueError(
+                "Invalid flasher_photons list length for direct_injection. "
+                "Use one value or one value per event setting."
+            )
+
+        try:
+            for idx in range(n_runs):
+                run_args = base_args.copy()
+                run_args["run_number"] = base_run_number + idx
+                run_args["number_of_events"] = int(events[idx])
+                if photons[idx] is not None:
+                    run_args["flasher_photons"] = int(photons[idx])
+
+                settings.config.load(args=run_args, db_config=base_db_config)
+
+                simulator = cls(label=label)
+                simulator.simulate()
+                simulator.validate_simulations()
+        finally:
+            settings.config.load(args=base_args, db_config=base_db_config)
+
     def _get_corsika_file(self):
         """
         Get the CORSIKA input file if applicable (for sim_telarray simulations).
