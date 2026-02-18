@@ -228,7 +228,11 @@ class RunnerServices:
             + f"za{round(zenith):02}deg_"
             + f"azm{self.config.azimuth_angle:03}deg_"
             + f"{self.config.array_model.site}_"
-            + f"{self.config.array_model.layout_name}_"
+            + (
+                f"{self.config.array_model.layout_name}_"
+                if self.config.array_model.layout_name
+                else ""
+            )
             + (self.config.array_model.model_version if not is_multi_pipe else "")
             + file_label
         )
