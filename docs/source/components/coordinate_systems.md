@@ -1,14 +1,14 @@
 # Coordinate Systems
 
 simtools uses multiple coordinate systems for telescope positioning, simulations, and analysis. This document describes the systems and how they are used.
-Please refer to th CORSIKA and sim_telarray documentation for details on systems used in these simulation tools.
+Please refer to the CORSIKA and sim_telarray documentation for details on systems used in these simulation tools.
 
 ## Geospatial Coordinate Systems
 
 Three coordinate systems define array element positions on Earth, implemented via `GeoCoordinates` and `TelescopePosition` classes in `simtools.layout`.
 The [pyproj](https://pyproj4.github.io/pyproj/stable/) library is used for transformations between these systems.
 
-### Mercator (WGS84) System
+### Local Transverse Mercator (WGS84)
 
 Geographic latitude and longitude
 
@@ -38,11 +38,13 @@ Local Cartesian system centered at array center.
 - **Axes:** X→North, Y→West, Z→Up (NWU)
 - **Units:** Meters
 - **Projection:** Transverse Mercator centered at array
-- **Scale factor:** $k_0$ depends on latitude and altitude (WGS84 ellipsoid)
+- **Scale factor:** $k_0=(R+altitude)/R$ depends on latitude and altitude (WGS84 ellipsoid; R is the geocentric radius)
 - **Z coordinate:** `position_z`, height above a reference altitude (e.g., CORSIKA observation level), in meters
 - **Usage:** CORSIKA and sim_telarray simulations (native system)
 
-#### CORSIKA specifics
+Note the differences between the altitude of the array center and the CORSIKA observation level.
+
+#### CORSIKA Specifics
 
 Telescope positions in CORSIKA are defined by their (x, y) coordinates in the ground system and an altitude (z) calculated as:
 
@@ -66,7 +68,7 @@ Photosensor positions in the focal plane.
 - **Plane:** Focal plane
 - **Origin:** Camera center
 - **Units:** Centimeters (cm)
-- **Pixel shapes:** Hexagonal (codes 1, 3) or Square (code 2)
+- **Pixel shapes:** Hexagonal (codes 1, 3 for different orientation) or Square (code 2)
 - **Data source:** sim_telarray camera configuration files
 - **Storage:** `simtools.model.camera.Camera` class
 
