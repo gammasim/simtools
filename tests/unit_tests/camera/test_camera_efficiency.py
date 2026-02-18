@@ -94,24 +94,26 @@ def test_read_results(camera_efficiency_lst, prepare_results_file):
 
 def test_calc_camera_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    result = camera_efficiency_lst.calc_camera_efficiency()
-    assert isinstance(result, float)
-    assert 0.0 < result < 1.0  # Efficiency should be between 0 and 1
+    camera_efficiency_lst.export_model_files()
+    assert camera_efficiency_lst.calc_camera_efficiency() == pytest.approx(
+        0.2038155637771062
+    )  # Value for Prod5 LST-1
 
 
 def test_calc_tel_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    result = camera_efficiency_lst.calc_tel_efficiency()
-    assert isinstance(result, float)
-    assert 0.0 < result < 1.0  # Efficiency should be between 0 and 1
+    camera_efficiency_lst.export_model_files()
+    assert camera_efficiency_lst.calc_tel_efficiency() == pytest.approx(
+        0.19982362487828242
+    )  # Value for Prod5 LST-1
 
 
 def test_calc_tot_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    tel_efficiency = camera_efficiency_lst.calc_tel_efficiency()
-    tot_efficiency = camera_efficiency_lst.calc_tot_efficiency(tel_efficiency)
-    assert isinstance(tot_efficiency, float)
-    assert 0.0 < tot_efficiency < 1.0  # Total efficiency should be between 0 and 1
+    camera_efficiency_lst.export_model_files()
+    assert camera_efficiency_lst.calc_tot_efficiency(
+        camera_efficiency_lst.calc_tel_efficiency()
+    ) == pytest.approx(0.43825674914158097)  # Value for Prod5 LST-1
 
 
 def test_calc_reflectivity(camera_efficiency_lst, prepare_results_file):
@@ -123,10 +125,11 @@ def test_calc_reflectivity(camera_efficiency_lst, prepare_results_file):
 
 def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    nsb_rate, nsb_rate_ref_conditions = camera_efficiency_lst.calc_nsb_rate()
-    assert nsb_rate is not None
-    assert nsb_rate_ref_conditions.unit == u.GHz
-    assert nsb_rate_ref_conditions.value > 0  # Should be positive rate
+    camera_efficiency_lst.export_model_files()
+    _, nsb_rate_ref_conditions = camera_efficiency_lst.calc_nsb_rate()
+    assert nsb_rate_ref_conditions.value == pytest.approx(
+        0.02674288588465676
+    )  # Value for Prod5 LST-1
 
 
 def test_export_results(mocker, camera_efficiency_lst, caplog, prepare_results_file):
