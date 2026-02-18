@@ -67,9 +67,10 @@ light_source_type (str, optional)
     because the corresponding flasher model is read from the model-parameter database
     for each telescope.
 number_of_events (int, optional):
-    Number of events to simulate (default: 1).
+    Number of events to simulate (default: 1). Can be a single value or a list.
 flasher_photons (int, optional)
-    Overwrite the model parameter flasher_photons. Applies to both run modes.
+    Overwrite the model parameter flasher_photons. Can be a single value or
+    a list for filter wheel sequences.
 model_version (str, optional)
     Version of the simulation model.
 run_number (int, optional)
@@ -126,6 +127,7 @@ def _parse():
         help="Number of flasher events to simulate",
         type=int,
         default=1,
+        nargs="+",
         required=False,
     )
     config.parser.add_argument(
@@ -135,6 +137,7 @@ def _parse():
             "Accepts integers including scientific notation, e.g. 1e6."
         ),
         type=config.parser.scientific_int,
+        nargs="+",
         required=False,
     )
     return config.initialize(
@@ -150,6 +153,13 @@ def _parse():
 def main():
     """Simulate flasher devices."""
     app_context = startup_application(_parse)
+
+    if app_context.args["run_mode"] == "direct_injection":
+        # currently filter wheel implemented only for full simulations
+        if isinstance(app_context.args.get("number_of_events"), list):
+            app_context.args["number_of_events"] = app_context.args["number_of_events"][0]
+        if isinstance(app_context.args.get("flasher_photons"), list):
+            app_context.args["flasher_photons"] = app_context.args["flasher_photons"][0]
 
     tel_string = (
         f"telescope(s) {app_context.args['telescopes']}"
