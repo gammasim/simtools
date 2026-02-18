@@ -1,3 +1,5 @@
+"""Common fixtures for unit tests."""
+
 import functools
 import json
 import logging
@@ -35,7 +37,7 @@ UNIT_TEST_DB = "unit_tests/db"
 
 @functools.lru_cache
 def _load_mock_db_json(file_name):
-    mock_db_dir = Path(__file__).resolve().parent / "resources" / "mock_db"
+    mock_db_dir = Path(__file__).resolve().parent.parent / "resources" / "mock_db"
     file_path = mock_db_dir / file_name
     with file_path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
