@@ -138,7 +138,16 @@ class RayTracing:
         # Check if input is already a list of tuples/lists before unit conversion
         if isinstance(off_axis_angle, (list, tuple)):
             if len(off_axis_angle) > 0 and isinstance(off_axis_angle[0], (tuple, list)):
-                return [tuple(float(x) for x in offset) for offset in off_axis_angle]
+                result = []
+                for offset in off_axis_angle:
+                    converted_offset = []
+                    for x in offset:
+                        if isinstance(x, u.Quantity):
+                            converted_offset.append(x.to("deg").value)
+                        else:
+                            converted_offset.append(float(x))
+                    result.append(tuple(converted_offset))
+                return result
             # If it's a plain list of numbers, convert to ndarray for processing
             angles_deg = np.around(np.asarray(off_axis_angle), 5)
         else:
