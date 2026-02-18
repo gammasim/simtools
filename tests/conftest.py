@@ -420,7 +420,7 @@ def mock_database_handler(request, mocker):
     test_file_path = str(request.node.fspath)
 
     # Skip mocking for tests in db/ directory
-    if UNIT_TEST_DB in test_file_path:
+    if "unit_tests/db/" in test_file_path:
         yield
         return
 
@@ -439,7 +439,7 @@ def db(request):
     """Database object with configuration from settings.config.db_handler."""
 
     test_file_path = str(request.node.fspath)
-    if UNIT_TEST_DB not in test_file_path:
+    if "unit_tests/db/" not in test_file_path:
         db_instance = db_handler.DatabaseHandler()
         yield db_instance
         return
