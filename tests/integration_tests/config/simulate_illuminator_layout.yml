@@ -11,7 +11,7 @@ applications:
     log_level: DEBUG
   integration_tests:
   - test_output_files:
-    - file: sim_telarray/illuminator_North_7.0.0_simulate_illuminator.simtel.zst
+    - file: sim_telarray/illuminator_North_7.0.0_simulate_illuminator_MSTN-04.simtel.zst
       path_descriptor: output_path
     - expected_sim_telarray_output:
         pe_sum:
@@ -21,7 +21,7 @@ applications:
         - 3000
         - 10000
         event_type: illuminator
-      file: illuminator_North_7.0.0_simulate_illuminator.simtel.zst
+      file: illuminator_North_7.0.0_simulate_illuminator_MSTN-04.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray
   model_version_use_current: true
