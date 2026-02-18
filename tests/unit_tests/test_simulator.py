@@ -536,6 +536,74 @@ def test_overwrite_flasher_photons_for_direct_injection_noop_for_other_modes(moc
     calib.overwrite_model_parameter.assert_not_called()
 
 
+def test_simulate_direct_injection_sequence_reloads_config_per_run(mocker):
+    """Run direct-injection sequences by reloading settings config per run."""
+    base_args = {
+        "run_mode": "direct_injection",
+        "run_number": 10,
+        "number_of_events": [2, 1, 1],
+        "flasher_photons": ["1e6", "2e6", "3e6"],
+    }
+    base_db_config = {"db_api_user": "user"}
+
+    mock_config = mocker.Mock()
+    mock_config.args = base_args
+    mock_config.db_config = base_db_config
+    mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
+
+    mock_init = mocker.patch.object(Simulator, "__init__", return_value=None)
+    mock_simulate = mocker.patch.object(Simulator, "simulate")
+    mock_validate = mocker.patch.object(Simulator, "validate_simulations")
+
+    Simulator.simulate_direct_injection_sequence(label="test-label")
+
+    assert mock_init.call_count == 3
+    assert mock_simulate.call_count == 3
+    assert mock_validate.call_count == 3
+
+    assert mock_config.load.call_count == 4
+    run0_args = mock_config.load.call_args_list[0].kwargs["args"]
+    run1_args = mock_config.load.call_args_list[1].kwargs["args"]
+    run2_args = mock_config.load.call_args_list[2].kwargs["args"]
+    restore_args = mock_config.load.call_args_list[3].kwargs["args"]
+
+    assert run0_args["run_number"] == 10
+    assert run1_args["run_number"] == 11
+    assert run2_args["run_number"] == 12
+    assert run0_args["number_of_events"] == 2
+    assert run1_args["number_of_events"] == 1
+    assert run2_args["number_of_events"] == 1
+    assert run0_args["flasher_photons"] == 1000000
+    assert run1_args["flasher_photons"] == 2000000
+    assert run2_args["flasher_photons"] == 3000000
+    assert restore_args == base_args
+
+
+def test_simulate_direct_injection_sequence_restores_config_after_failure(mocker):
+    """Restore original settings config even when one run fails."""
+    base_args = {
+        "run_mode": "direct_injection",
+        "run_number": 10,
+        "number_of_events": 3,
+        "flasher_photons": 100,
+    }
+    base_db_config = {"db_api_user": "user"}
+
+    mock_config = mocker.Mock()
+    mock_config.args = base_args
+    mock_config.db_config = base_db_config
+    mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
+
+    mocker.patch.object(Simulator, "__init__", return_value=None)
+    mocker.patch.object(Simulator, "simulate", side_effect=RuntimeError("boom"))
+
+    with pytest.raises(RuntimeError, match="boom"):
+        Simulator.simulate_direct_injection_sequence(label="test-label")
+
+    assert mock_config.load.call_count == 2
+    assert mock_config.load.call_args_list[-1].kwargs["args"] == base_args
+
+
 def test_report(array_simulator, mocker, caplog):
     """Test report method for complete coverage."""
 
