@@ -13,7 +13,7 @@ applications:
     log_level: DEBUG
   integration_tests:
   - test_output_files:
-    - file: sim_telarray/full_simulation_run000010_South_7.0.0_simulate_flasher.simtel.zst
+    - file: sim_telarray/full_simulation_run000010_South_7.0.0_simulate_flasher_MSTS-04.simtel.zst
       path_descriptor: output_path
     - expected_sim_telarray_output:
         pe_sum:
@@ -26,10 +26,10 @@ applications:
         # - 0
         # - 50
         event_type: flasher
-      file: full_simulation_run000010_South_7.0.0_simulate_flasher.simtel.zst
+      file: full_simulation_run000010_South_7.0.0_simulate_flasher_MSTS-04.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray
   model_version_use_current: true
-  test_name: full-simulation-msfx-flashcam
+  test_name: full_simulation_msfx_flashcam
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

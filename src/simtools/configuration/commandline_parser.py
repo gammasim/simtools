@@ -9,7 +9,7 @@ import astropy.units as u
 
 import simtools.version
 from simtools import constants
-from simtools.utils import names
+from simtools.utils import general, names
 
 
 class CommandLineParser(argparse.ArgumentParser):
@@ -277,7 +277,8 @@ class CommandLineParser(argparse.ArgumentParser):
         )
 
         if any(
-            option in model_options for option in ["site", "telescope", "layout", "layout_file"]
+            option in model_options
+            for option in ["site", "telescope", "telescopes", "layout", "layout_file"]
         ):
             self._add_model_option_site(_job_group)
 
@@ -286,6 +287,13 @@ class CommandLineParser(argparse.ArgumentParser):
                 "--telescope",
                 help="telescope model name (e.g., LSTN-01, SSTS-design, ...)",
                 type=self.telescope,
+            )
+        if "telescopes" in model_options:
+            _job_group.add_argument(
+                "--telescopes",
+                help="list of telescopes (e.g., LSTN-01, SSTS-design, ...)",
+                type=self.telescope,
+                nargs="+",
             )
         if "layout" in model_options or "layout_file" in model_options:
             self._add_model_option_layout(
@@ -655,25 +663,22 @@ class CommandLineParser(argparse.ArgumentParser):
     @staticmethod
     def telescope(value):
         """
-        Argument parser type to check that a valid telescope name is given.
+        Argument parser type to check that valid telescope names are given.
 
         Parameters
         ----------
-        value: str
-            telescope name
+        value: str, list of str
+            telescope name(s)
 
         Returns
         -------
-        str
-            Validated telescope name
-
-        Raises
-        ------
-        argparse.ArgumentTypeError
-            for invalid telescope
+        str or list of str
+            Validated telescope name(s)
         """
-        names.validate_array_element_name(str(value))
-        return str(value)
+        values = general.ensure_iterable(value)
+        for v in values:
+            names.validate_array_element_name(str(v))
+        return values if len(values) > 1 else values[0]
 
     @staticmethod
     def efficiency_interval(value):
