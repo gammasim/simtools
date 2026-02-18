@@ -6,6 +6,7 @@ import os
 import re
 import tarfile
 from contextlib import ExitStack, contextmanager
+from itertools import chain
 from pathlib import Path
 from types import MappingProxyType
 from unittest import mock
@@ -204,6 +205,130 @@ def mongo_db_logger_settings():
     logger.info("[TEST SETUP] Suppressing MongoDB 'IdleConnectionMonitor' DEBUG logs.")
 
 
+# Array element configuration for mock database
+_ARRAY_ELEMENT_COUNTS = {"LSTN": 4, "LSTS": 4, "MSTN": 5, "MSTS": 11, "SSTS": 5}
+_ARRAY_ELEMENT_TYPES = list(_ARRAY_ELEMENT_COUNTS.keys())
+_TELESCOPE_TYPE_TO_DESIGN_MODEL = {"LST": "LSTN-design", "MST": "MSTN-design", "SST": "SSTS-design"}
+
+
+def _format_elements(prefix, count=None):
+    """Format array element names (e.g., 'LSTN-01', 'LSTN-02')."""
+    if count is None:
+        count = _ARRAY_ELEMENT_COUNTS[prefix]
+    return [f"{prefix}-{idx:02d}" for idx in range(1, count + 1)]
+
+
+def _format_all_array_elements():
+    """Format all available array elements."""
+    return list(
+        chain.from_iterable(_format_elements(elem_type) for elem_type in _ARRAY_ELEMENT_TYPES)
+    )
+
+
+def _get_design_model_for_element(array_element_name):
+    """Get design model for given array element."""
+    if not array_element_name or array_element_name.endswith("-design"):
+        return array_element_name
+    for prefix, design_model in _TELESCOPE_TYPE_TO_DESIGN_MODEL.items():
+        if prefix in array_element_name:
+            return design_model
+    return None
+
+
+def _get_site_params(site, site_specific_params_north, site_specific_params_south):
+    """Get site-specific parameters based on site name."""
+    return site_specific_params_north if site == "North" else site_specific_params_south
+
+
+def _mock_get_model_parameters_impl(
+    site,
+    array_element_name,
+    collection,
+    model_version,
+    mock_parameters,
+    site_specific_params_north,
+    site_specific_params_south,
+):
+    """Implementation of mock_get_model_parameters."""
+    params = dict(mock_parameters)
+
+    # Add SSTS-specific parameters if needed
+    if array_element_name and "SSTS" in array_element_name:
+        params.update(
+            {
+                "effective_focal_length": {
+                    "value": 2.15191,
+                    "parameter_version": "1.0.0",
+                    "type": "float64",
+                    "unit": "m",
+                    "file": False,
+                    "model_parameter_schema_version": "1.0.0",
+                },
+                "mirror_focal_length": {
+                    "value": 2.15,
+                    "parameter_version": "1.0.0",
+                    "type": "float64",
+                    "unit": "m",
+                    "file": False,
+                    "model_parameter_schema_version": "1.0.0",
+                },
+            }
+        )
+
+    # Apply site-specific overrides
+    site_params = _get_site_params(site, site_specific_params_north, site_specific_params_south)
+    params.update(site_params)
+    return params
+
+
+def _mock_get_model_parameter_impl(
+    parameter,
+    site,
+    array_element_name,
+    parameter_version,
+    model_version,
+    mock_parameters,
+    site_specific_params_north,
+    site_specific_params_south,
+):
+    """Implementation of mock_get_model_parameter."""
+    if model_version is not None and isinstance(model_version, list):
+        raise ValueError("Only one model version can be passed to get_model_parameter, not a list.")
+
+    params = dict(mock_parameters)
+    site_params = _get_site_params(site, site_specific_params_north, site_specific_params_south)
+    params.update(site_params)
+
+    if parameter in params:
+        param_data = params[parameter]
+        if parameter_version is None or param_data.get("parameter_version") == parameter_version:
+            return param_data
+
+    raise ValueError(f"Parameter {parameter} with version {parameter_version} not found")
+
+
+def _mock_export_model_files(*args, **kwargs):
+    """Mock export_model_files (no file I/O)."""
+    return {}
+
+
+def _mock_get_ecsv_file_as_astropy_table(*args, **kwargs):
+    """Mock get_ecsv_file_as_astropy_table with Quantity columns."""
+    from astropy.table import Column, Table
+
+    table = Table()
+    table["wavelength"] = Column([300.0, 400.0, 500.0, 600.0, 700.0] * u.nm)
+    table["differential photon rate"] = Column(
+        [1.0, 1.2, 1.0, 0.8, 0.5] / (u.nm * u.cm**2 * u.ns * u.sr)
+    )
+    return table
+
+
+def _mock_get_array_elements_of_type(array_element_type, all_elements):
+    """Filter array elements by type prefix."""
+    return [elem for elem in all_elements if elem.startswith(array_element_type)]
+
+
 @pytest.fixture
 def db_config():
     """DB configuration from .env file."""
@@ -233,14 +358,13 @@ def mock_db_handler(request):
     Returns a MagicMock configured with typical DatabaseHandler methods.
     Tests in tests/unit_tests/db/ receive a real DatabaseHandler instance.
     """
-    from unittest.mock import MagicMock
-
     test_file_path = str(request.node.fspath)
     if UNIT_TEST_DB in test_file_path:
         db_instance = request.getfixturevalue("db")
         db_instance.get_model_versions = MagicMock(return_value=["1.0.0", "5.0.0", "6.0.0"])
         return db_instance
 
+    # Load mock data from JSON files
     mock_parameters = _apply_mock_param_defaults(_load_mock_db_json("mock_parameters.json"))
     mock_sim_config_params = _apply_mock_param_defaults(
         _load_mock_db_json("mock_sim_config_params.json")
@@ -252,138 +376,46 @@ def mock_db_handler(request):
         _load_mock_db_json("site_params_south.json")
     )
 
+    # Create closures for mock functions with captured data
     def mock_get_model_parameters(site, array_element_name, collection, model_version, **kwargs):
-        """Return site-specific parameters based on the site."""
-        params = dict(mock_parameters)
-
-        # Telescope-specific parameters based on array_element_name
-        if array_element_name and "SSTS" in array_element_name:
-            params.update(
-                {
-                    "effective_focal_length": {
-                        "value": 2.15191,
-                        "parameter_version": "1.0.0",
-                        "type": "float64",
-                        "unit": "m",
-                        "file": False,
-                        "model_parameter_schema_version": "1.0.0",
-                    },
-                    "mirror_focal_length": {
-                        "value": 2.15,
-                        "parameter_version": "1.0.0",
-                        "type": "float64",
-                        "unit": "m",
-                        "file": False,
-                        "model_parameter_schema_version": "1.0.0",
-                    },
-                }
-            )
-
-        # Override with site-specific values
-        if site == "North":
-            params.update(site_specific_params_north)
-        elif site == "South":
-            params.update(site_specific_params_south)
-        return params
+        return _mock_get_model_parameters_impl(
+            site,
+            array_element_name,
+            collection,
+            model_version,
+            mock_parameters,
+            site_specific_params_north,
+            site_specific_params_south,
+        )
 
     def mock_get_model_parameter(
-        parameter,
-        site,
-        array_element_name,
-        parameter_version=None,
-        model_version=None,
-        **kwargs,
+        parameter, site, array_element_name, parameter_version=None, model_version=None, **kwargs
     ):
-        """
-        Mock get_model_parameter to return parameters only if they exist with the exact version.
-
-        This allows tests to check for parameter existence in the DB.
-        """
-        if model_version is not None and isinstance(model_version, list):
-            raise ValueError(
-                "Only one model version can be passed to get_model_parameter, not a list."
-            )
-        params = dict(mock_parameters)
-
-        # Override with site-specific values
-        if site == "North":
-            params.update(site_specific_params_north)
-        elif site == "South":
-            params.update(site_specific_params_south)
-
-        if parameter in params:
-            param_data = params[parameter]
-            if (
-                parameter_version is None
-                or param_data.get("parameter_version") == parameter_version
-            ):
-                return param_data
-        # If parameter doesn't exist or version doesn't match, raise ValueError
-        raise ValueError(f"Parameter {parameter} with version {parameter_version} not found")
-
-    def mock_export_model_files(
-        parameters=None, file_names=None, dest=None, db_name=None, **kwargs
-    ):
-        """Mock export_model_files for unit tests (no file I/O)."""
-        return {}
-
-    def mock_get_ecsv_file_as_astropy_table(file_name=None, **kwargs):
-        """Mock get_ecsv_file_as_astropy_table to return table with Quantity columns."""
-        from astropy.table import Column, Table
-
-        # Return a minimal NSB spectrum table with proper Quantity columns
-        # Using Table (not QTable) since code expects .quantity attribute
-        table = Table()
-        table["wavelength"] = Column([300.0, 400.0, 500.0, 600.0, 700.0] * u.nm)
-        table["differential photon rate"] = Column(
-            [1.0, 1.2, 1.0, 0.8, 0.5] / (u.nm * u.cm**2 * u.ns * u.sr)
+        return _mock_get_model_parameter_impl(
+            parameter,
+            site,
+            array_element_name,
+            parameter_version,
+            model_version,
+            mock_parameters,
+            site_specific_params_north,
+            site_specific_params_south,
         )
-        return table
 
     def mock_get_design_model(
         model_version, array_element_name=None, collection="telescopes", **kwargs
     ):
-        """Mock get_design_model to return design model name for telescopes."""
-        if not array_element_name:
-            return None
-        if array_element_name.endswith("-design"):
-            return array_element_name
-        # Return generic design model based on telescope type
-        if "LST" in array_element_name:
-            return "LSTN-design"
-        if "MST" in array_element_name:
-            return "MSTN-design"
-        if "SST" in array_element_name:
-            return "SSTS-design"
-        return None
+        return _get_design_model_for_element(array_element_name)
 
-    array_element_counts = {
-        "LSTN": 4,
-        "LSTS": 4,
-        "MSTN": 5,
-        "MSTS": 11,
-        "SSTS": 5,
-    }
-
-    def _format_elements(prefix, count=None):
-        if count is None:
-            count = array_element_counts[prefix]
-        return [f"{prefix}-{idx:02d}" for idx in range(1, count + 1)]
+    # Pre-format all array elements
+    all_array_elements = _format_all_array_elements()
 
     def mock_get_array_elements_of_type(
         array_element_type, model_version=None, collection=None, **kwargs
     ):
-        """Mock get_array_elements_of_type to return telescopes matching the type prefix."""
-        all_elements = (
-            _format_elements("LSTN")
-            + _format_elements("LSTS")
-            + _format_elements("MSTN")
-            + _format_elements("MSTS")
-            + _format_elements("SSTS")
-        )
-        # Return elements that start with the requested type
-        return [elem for elem in all_elements if elem.startswith(array_element_type)]
+        return _mock_get_array_elements_of_type(array_element_type, all_array_elements)
 
+    # Configure mock database
     mock_db = MagicMock()
     mock_db.is_configured.return_value = True
     mock_db.get_design_model.side_effect = mock_get_design_model
@@ -391,18 +423,14 @@ def mock_db_handler(request):
     mock_db.get_model_parameter.side_effect = mock_get_model_parameter
     mock_db.get_model_parameters_for_all_model_versions.return_value = {}
     mock_db.get_model_versions.return_value = ["6.0.2", "5.0.0"]
-    mock_db.get_array_elements.return_value = (
-        _format_elements("LSTN", 1)
-        + _format_elements("LSTS")
-        + _format_elements("MSTN")
-        + _format_elements("MSTS")
-        + _format_elements("SSTS")
+    mock_db.get_array_elements.return_value = _format_elements("LSTN", 1) + list(
+        chain.from_iterable(_format_elements(t) for t in ["LSTS", "MSTN", "MSTS", "SSTS"])
     )
     mock_db.get_simulation_configuration_parameters.return_value = mock_sim_config_params
     mock_db.get_array_elements_of_type.side_effect = mock_get_array_elements_of_type
-    mock_db.export_model_files.side_effect = mock_export_model_files
+    mock_db.export_model_files.side_effect = _mock_export_model_files
     mock_db.export_model_file.return_value = None
-    mock_db.get_ecsv_file_as_astropy_table.side_effect = mock_get_ecsv_file_as_astropy_table
+    mock_db.get_ecsv_file_as_astropy_table.side_effect = _mock_get_ecsv_file_as_astropy_table
     mock_db.db_name = "test_db"
 
     return mock_db

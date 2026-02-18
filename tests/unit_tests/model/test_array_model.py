@@ -178,15 +178,11 @@ def test_get_additional_simtel_metadata(array_model_north, mocker):
 def test_build_calibration_models():
     """Test _build_calibration_models method with mocked dependencies."""
 
-    # Create a mock array model instance
     array_model_north = Mock(spec=ArrayModel)
     array_model_north._build_calibration_models = ArrayModel._build_calibration_models
-
-    # Mock telescope model
     telescope_model = Mock()
     telescope_model.get_calibration_device_name = Mock()
 
-    # Mock site model
     site_model = Mock()
     site_model.site = "North"
 
@@ -216,12 +212,10 @@ def test_build_calibration_models():
 
     telescope_model.get_calibration_device_name.side_effect = mock_device_name
 
-    # Mock the CalibrationModel constructor
     with patch("simtools.model.array_model.CalibrationModel") as mock_calibration_model:
         mock_calibration_instance = Mock()
         mock_calibration_model.return_value = mock_calibration_instance
 
-        # Set up array model attributes for CalibrationModel initialization
         array_model_north.model_version = "6.0.0"
         array_model_north.label = "test_label"
         array_model_north.overwrite_model_parameter_dict = None
@@ -233,7 +227,6 @@ def test_build_calibration_models():
             ["flasher", "illuminator", "nonexistent"],
         )
 
-        # Should create calibration models for flasher and illuminator, but not nonexistent
         assert len(result) == 2
         assert "device_flasher" in result
         assert "device_illuminator" in result
@@ -294,13 +287,11 @@ def test_export_simtel_telescope_config_files(array_model_north):
     """Test export_simtel_telescope_config_files exports config for each telescope."""
     am = array_model_north
 
-    # Mock the telescope models' write method
     for tel_model in am.telescope_models.values():
         tel_model.write_sim_telarray_config_file = Mock()
 
     am.export_simtel_telescope_config_files()
 
-    # Verify write_sim_telarray_config_file was called for each telescope
     for tel_model in am.telescope_models.values():
         tel_model.write_sim_telarray_config_file.assert_called_once()
 
@@ -325,7 +316,6 @@ def test_export_simtel_telescope_config_files_skips_duplicates(mocker):
 
     am.telescope_models = {"LSTN-01": tel_model_1, "LSTN-02": tel_model_2}
 
-    # Call the actual method
     ArrayModel.export_simtel_telescope_config_files(am)
 
     # Verify write was called only once (for the first telescope with this name)
@@ -345,7 +335,6 @@ def test_export_simtel_telescope_config_files_with_calibration_models(mocker):
     am._logger = Mock()
     am._telescope_model_files_exported = False
 
-    # Create telescope and calibration models
     tel_model = Mock()
     tel_model.name = "LSTN-01"
     tel_model.write_sim_telarray_config_file = Mock()
@@ -384,18 +373,14 @@ def test_export_simtel_telescope_config_files_with_empty_calibration_models(mock
 def test_export_sim_telarray_config_file(array_model_north, mocker):
     """Test export_sim_telarray_config_file exports array config and site model files."""
     am = array_model_north
-
-    # Mock the site model's export method
     mocker.patch.object(am.site_model, "export_model_files")
 
-    # Mock the SimtelConfigWriter
     mock_simtel_writer = mocker.MagicMock()
     mocker.patch(
         "simtools.model.array_model.simtel_config_writer.SimtelConfigWriter",
         return_value=mock_simtel_writer,
     )
 
-    # Mock the metadata method
     mock_metadata = {"nsb_integrated_flux": 42.0}
     mocker.patch.object(am, "_get_additional_simtel_metadata", return_value=mock_metadata)
 
