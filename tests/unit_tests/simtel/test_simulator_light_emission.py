@@ -530,8 +530,8 @@ def test__add_flasher_command_options_different_values(simulator_instance):
         assert result[8] == "--angular-distribution uniform"  # different angular distribution
 
 
-def test__add_flasher_command_options_multi_intensity_with_event_list(simulator_instance):
-    """Test ff-1m event mapping for one event value per photon intensity."""
+def _setup_multi_intensity_flasher_test(simulator_instance):
+    """Set up common mocks for multi-intensity flasher command-option tests."""
 
     def mock_get_param_with_unit(name):
         if name == "flasher_position":
@@ -551,6 +551,11 @@ def test__add_flasher_command_options_multi_intensity_with_event_list(simulator_
     mock_diameter.to.return_value.value = 180.0
     simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
     simulator_instance.telescope_model.get_parameter_value.return_value = "hexagonal"
+
+
+def test__add_flasher_command_options_multi_intensity_with_event_list(simulator_instance):
+    """Test ff-1m event mapping for one event value per photon intensity."""
+    _setup_multi_intensity_flasher_test(simulator_instance)
 
     with (
         patch.object(
@@ -588,25 +593,7 @@ def test__add_flasher_command_options_multi_intensity_with_event_list(simulator_
 
 def test__add_flasher_command_options_multi_intensity_with_single_event_value(simulator_instance):
     """Test ff-1m event mapping repeats a single event value for all photon intensities."""
-
-    def mock_get_param_with_unit(name):
-        if name == "flasher_position":
-            return [1.0 * u.cm, -1.0 * u.cm]
-        if name == "flasher_wavelength":
-            return 450.0 * u.nm
-        return None
-
-    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
-        mock_get_param_with_unit
-    )
-    simulator_instance.calibration_model.get_parameter_value.side_effect = (
-        lambda name: 4000 if name == "flasher_bunch_size" else ["Gauss", 0.0, 0.0]
-    )
-
-    mock_diameter = Mock()
-    mock_diameter.to.return_value.value = 180.0
-    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
-    simulator_instance.telescope_model.get_parameter_value.return_value = "hexagonal"
+    _setup_multi_intensity_flasher_test(simulator_instance)
 
     with (
         patch.object(
