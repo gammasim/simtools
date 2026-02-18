@@ -6,7 +6,7 @@
   },
   "camera_pixels": {
     "value": 1855,
-    "type": "int32",
+    "type": "int64",
     "file": false
   },
   "mirror_focal_length": {
@@ -81,7 +81,7 @@
   },
   "dish_shape_length": {
     "value": 5.56,
-    "type": "double",
+    "type": "float64",
     "unit": "m",
     "file": false
   },
@@ -102,31 +102,31 @@
   },
   "focus_offset": {
     "value": [0.0, 1.0, 2.0],
-    "type": "double",
+    "type": "float64",
     "unit": ["cm", "cm", null],
     "file": false
   },
   "teltrig_min_sigsum": {
     "value": 10.5,
-    "type": "double",
+    "type": "float64",
     "unit": "mV ns",
     "file": false
   },
   "fadc_mhz": {
     "value": 1000,
-    "type": "int32",
+    "type": "float64",
     "unit": "MHz",
     "file": false
   },
   "array_element_position_ground": {
     "value": [-70.91, -52.35, 45.0],
-    "type": "list",
+    "type": "float64",
     "unit": "m",
     "file": false
   },
   "array_element_position_utm": {
     "value": [217659.6, 3184995.1, 2185.0],
-    "type": "list",
+    "type": "float64",
     "unit": "m",
     "file": false
   }

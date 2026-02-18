@@ -434,13 +434,13 @@ def mock_db_handler(request):
 
 
 @pytest.fixture(autouse=True)
-def mock_database_handler(request, mocker):
+def patch_database_handler(request, mocker):
     """
-    Automatically mock DatabaseHandler for all unit tests except those in db/.
+    Automatically patch DatabaseHandler for all unit tests except those in db/.
 
-    This prevents unit tests from trying to connect to real databases.
+    This global fixture prevents unit tests from trying to connect to real databases.
     Tests in tests/unit_tests/db/ are excluded from this mocking.
-    Also mocks model parameter schema validation to avoid schema version mismatches.
+    Also patches model parameter schema validation to avoid schema version mismatches.
     """
     test_file_path = str(request.node.fspath)
 
@@ -450,7 +450,6 @@ def mock_database_handler(request, mocker):
         return
 
     mock_db_handler = request.getfixturevalue("mock_db_handler")
-
     # Mock schema validation to avoid version check issues
     mocker.patch("simtools.model.model_parameter.ModelParameter._check_model_parameter_versions")
 
@@ -507,7 +506,7 @@ def db(request):
         db_instance = db_handler.DatabaseHandler()
         MongoDBHandler.db_client = MongoDBHandler.db_client or mock_mongo_client
         yield db_instance
-        # Explicitly close the mock client to avoid unraisable exception warnings
+        # Explicitly close the mock client to avoid un-raisable exception warnings
         if hasattr(MongoDBHandler.db_client, "close"):
             try:
                 MongoDBHandler.db_client.close()
@@ -582,7 +581,7 @@ def site_model_north(model_version):
 
 
 @pytest.fixture
-def telescope_model_lst(io_handler, model_version):
+def telescope_model_lst(model_version):
     """Telescope model LST North."""
     return TelescopeModel(
         site="North",
@@ -593,7 +592,7 @@ def telescope_model_lst(io_handler, model_version):
 
 
 @pytest.fixture
-def telescope_model_mst(io_handler, model_version):
+def telescope_model_mst(model_version):
     """Telescope model MST FlashCam."""
     return TelescopeModel(
         site="South",
@@ -604,24 +603,12 @@ def telescope_model_mst(io_handler, model_version):
 
 
 @pytest.fixture
-def telescope_model_sst(io_handler, model_version):
+def telescope_model_sst(model_version):
     """Telescope model SST South."""
     return TelescopeModel(
         site="South",
         telescope_name="SSTS-design",
         model_version=model_version,
-        label="test-telescope-model-sst",
-    )
-
-
-# keep 5.0.0 model until a complete prod6 model is in the DB
-@pytest.fixture
-def telescope_model_sst_prod5(io_handler, model_version_prod5):
-    """Telescope model SST South (prod5/5.0.0)."""
-    return TelescopeModel(
-        site="South",
-        telescope_name="SSTS-design",
-        model_version=model_version_prod5,
         label="test-telescope-model-sst",
     )
 
@@ -704,7 +691,7 @@ def corsika_config_mock_array_model(corsika_config_data, model_version):
 
 
 @pytest.fixture
-def corsika_runner_mock_array_model(corsika_config_mock_array_model, io_handler):
+def corsika_runner_mock_array_model(corsika_config_mock_array_model):
     return CorsikaRunner(
         corsika_config=corsika_config_mock_array_model,
         label="test-corsika-runner",
