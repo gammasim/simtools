@@ -18,6 +18,7 @@ def initialize_simulation_models(
     site,
     telescope_name,
     calibration_device_name=None,
+    calibration_device_type=None,
 ):
     """
     Initialize simulation models for a single telescope, site, and calibration device model.
@@ -34,6 +35,8 @@ def initialize_simulation_models(
         Name of the telescope.
     calibration_device_name: str, optional
         Name of the calibration device.
+    calibration_device_type: str, optional
+        Type of the calibration device.
 
     Returns
     -------
@@ -41,27 +44,22 @@ def initialize_simulation_models(
         Tuple containing the telescope site, (optional) calibration device model.
     """
     overwrite_model_parameter_dict = read_overwrite_model_parameter_dict()
+    common = {
+        "site": site,
+        "model_version": model_version,
+        "label": label,
+        "overwrite_model_parameter_dict": overwrite_model_parameter_dict,
+    }
 
-    tel_model = TelescopeModel(
-        site=site,
-        telescope_name=telescope_name,
-        model_version=model_version,
-        label=label,
-        overwrite_model_parameter_dict=overwrite_model_parameter_dict,
-    )
-    site_model = SiteModel(
-        site=site,
-        model_version=model_version,
-        label=label,
-        overwrite_model_parameter_dict=overwrite_model_parameter_dict,
+    tel_model = TelescopeModel(telescope_name=telescope_name, **common)
+    site_model = SiteModel(**common)
+
+    calibration_device_name = calibration_device_name or tel_model.get_calibration_device_name(
+        calibration_device_type
     )
     if calibration_device_name is not None:
         calibration_model = CalibrationModel(
-            site=site,
-            calibration_device_model_name=calibration_device_name,
-            model_version=model_version,
-            label=label,
-            overwrite_model_parameter_dict=overwrite_model_parameter_dict,
+            calibration_device_model_name=calibration_device_name, **common
         )
     else:
         calibration_model = None
@@ -141,3 +139,33 @@ def is_two_mirror_telescope(telescope_model_name: str) -> bool:
     if "SST" in tel_type or "SCT" in tel_type:
         return True
     return False
+
+
+def get_array_elements_for_layout(layout_name, site=None, model_version=None):
+    """
+    Get array elements for a given array layout.
+
+    Parameters
+    ----------
+    layout_name: str
+        Name of the array layout.
+    site: str, optional
+        Site name (use central configuration if not provided).
+    model_version: str, optional
+        Model version (use central configuration if not provided).
+
+    Returns
+    -------
+    list
+        List of array elements for the given array layout.
+    """
+    if not layout_name or (isinstance(layout_name, list) and len(layout_name) > 1):
+        raise ValueError("Single array layout name must be provided.")
+    layout_name = layout_name[0] if isinstance(layout_name, list) else layout_name
+    site_model = SiteModel(
+        site=site or settings.config.args.get("site"),
+        model_version=model_version or settings.config.args.get("model_version"),
+        label="label",
+        overwrite_model_parameter_dict=read_overwrite_model_parameter_dict(),
+    )
+    return site_model.get_array_elements_for_layout(layout_name)
