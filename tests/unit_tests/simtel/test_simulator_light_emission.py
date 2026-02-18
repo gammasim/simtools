@@ -530,6 +530,135 @@ def test__add_flasher_command_options_different_values(simulator_instance):
         assert result[8] == "--angular-distribution uniform"  # different angular distribution
 
 
+def test__add_flasher_command_options_multi_intensity_with_event_list(simulator_instance):
+    """Test ff-1m event mapping for one event value per photon intensity."""
+
+    def mock_get_param_with_unit(name):
+        if name == "flasher_position":
+            return [1.0 * u.cm, 1.0 * u.cm]
+        if name == "flasher_wavelength":
+            return 450.0 * u.nm
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_param_with_unit
+    )
+    simulator_instance.calibration_model.get_parameter_value.side_effect = (
+        lambda name: 4000 if name == "flasher_bunch_size" else ["Gauss", 0.0, 0.0]
+    )
+
+    mock_diameter = Mock()
+    mock_diameter.to.return_value.value = 180.0
+    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
+    simulator_instance.telescope_model.get_parameter_value.return_value = "hexagonal"
+
+    with (
+        patch.object(
+            simulator_instance, "calculate_distance_focal_plane_calibration_device"
+        ) as mock_distance,
+        patch(
+            "simtools.simtel.simulator_light_emission.fiducial_radius_from_shape",
+            return_value=90.0,
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_angular_distribution_string_for_sim_telarray",
+            return_value="gauss:2.5",
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_pulse_shape_string_for_sim_telarray",
+            return_value="gauss:2.0",
+        ),
+    ):
+        mock_distance_value = Mock()
+        mock_distance_value.to.return_value.value = 1000.0
+        mock_distance.return_value = mock_distance_value
+
+        simulator_instance.light_emission_config = {
+            "number_of_events": [100, 50, 20],
+            "flasher_photons": [1000000, 2000000, 3000000],
+        }
+
+        result = simulator_instance._add_flasher_command_options()
+
+        assert "--events 100,50,20" in result
+        assert "--photons 1000000,2000000,3000000" in result
+
+
+def test__add_flasher_command_options_multi_intensity_with_single_event_value(simulator_instance):
+    """Test ff-1m event mapping repeats a single event value for all photon intensities."""
+
+    def mock_get_param_with_unit(name):
+        if name == "flasher_position":
+            return [1.0 * u.cm, -1.0 * u.cm]
+        if name == "flasher_wavelength":
+            return 450.0 * u.nm
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_param_with_unit
+    )
+    simulator_instance.calibration_model.get_parameter_value.side_effect = (
+        lambda name: 4000 if name == "flasher_bunch_size" else ["Gauss", 0.0, 0.0]
+    )
+
+    mock_diameter = Mock()
+    mock_diameter.to.return_value.value = 180.0
+    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
+    simulator_instance.telescope_model.get_parameter_value.return_value = "hexagonal"
+
+    with (
+        patch.object(
+            simulator_instance, "calculate_distance_focal_plane_calibration_device"
+        ) as mock_distance,
+        patch(
+            "simtools.simtel.simulator_light_emission.fiducial_radius_from_shape",
+            return_value=90.0,
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_angular_distribution_string_for_sim_telarray",
+            return_value="gauss:2.5",
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_pulse_shape_string_for_sim_telarray",
+            return_value="gauss:2.0",
+        ),
+    ):
+        mock_distance_value = Mock()
+        mock_distance_value.to.return_value.value = 1000.0
+        mock_distance.return_value = mock_distance_value
+
+        simulator_instance.light_emission_config = {
+            "number_of_events": 100,
+            "flasher_photons": [1000000, 2000000, 3000000],
+        }
+
+        result = simulator_instance._add_flasher_command_options()
+
+        assert "--events 100,100,100" in result
+        assert "--photons 1000000,2000000,3000000" in result
+
+
+def test__add_flasher_command_options_event_length_mismatch_raises(simulator_instance):
+    """Test event list length mismatch with photons raises ValueError."""
+
+    simulator_instance.light_emission_config = {
+        "number_of_events": [100, 50],
+        "flasher_photons": [1000000, 2000000, 3000000],
+    }
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"Invalid number_of_events list length\. Use one value or one value per photon intensity"
+        ),
+    ):
+        simulator_instance._build_flasher_event_and_photon_sequences()
+
+
 def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_test_directory):
     """When pulse width and decay exist, a pulse table is written and used."""
 
