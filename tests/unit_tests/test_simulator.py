@@ -7,10 +7,12 @@ import tarfile
 import warnings
 from pathlib import Path
 from unittest import mock
+from unittest.mock import call
 
 import pytest
 
 from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.sim_events import file_info
 from simtools.simulator import Simulator
 
@@ -490,10 +492,50 @@ def test_overwrite_flasher_photons_for_direct_injection(mocker):
     mock_settings.config.args = {"flasher_photons": 1234567}
     mocker.patch("simtools.simulator.settings", mock_settings)
 
+    for calib in (calib_1, calib_2):
+        calib.name = "CAL"
+        calib.site = "North"
+        calib.parameters = {
+            "flasher_photons_at_pixel": {
+                "value": 100000,
+                "parameter": "flasher_photons_at_pixel",
+            },
+        }
+        calib.get_parameter_value.side_effect = [100000, 1234567]
+
     simulator._overwrite_flasher_photons_for_direct_injection()
 
-    calib_1.overwrite_model_parameter.assert_called_once_with("flasher_photons", 1234567)
-    calib_2.overwrite_model_parameter.assert_called_once_with("flasher_photons", 1234567)
+    expected_calls = [call("flasher_photons_at_pixel", 1234567)]
+    assert calib_1.overwrite_model_parameter.call_args_list == expected_calls
+    assert calib_2.overwrite_model_parameter.call_args_list == expected_calls
+
+
+def test_overwrite_flasher_photons_for_direct_injection_raises_when_at_pixel_missing(mocker):
+    """Propagate model-layer error if flasher_photons_at_pixel is missing."""
+    simulator = Simulator.__new__(Simulator)
+    simulator.run_mode = "direct_injection"
+    simulator.logger = mocker.Mock()
+
+    calib = mocker.Mock()
+    calib.name = "MSFx-NectarCam"
+    calib.site = "North"
+    calib.parameters = {}
+    calib.overwrite_model_parameter.side_effect = InvalidModelParameterError("missing")
+
+    array_model = mocker.Mock()
+    array_model.calibration_models = {"TEL01": {"CAL01": calib}}
+    simulator.array_models = [array_model]
+
+    mock_settings = mocker.Mock()
+    mock_settings.config.args = {"flasher_photons": 1234567}
+    mocker.patch("simtools.simulator.settings", mock_settings)
+
+    with pytest.raises(
+        InvalidModelParameterError,
+        match="missing",
+    ):
+        simulator._overwrite_flasher_photons_for_direct_injection()
+    calib.overwrite_model_parameter.assert_called_once_with("flasher_photons_at_pixel", 1234567)
 
 
 def test_overwrite_flasher_photons_for_direct_injection_noop_without_value(mocker):
