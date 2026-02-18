@@ -13,13 +13,11 @@ import yaml
 import simtools.io.ascii_handler as ascii_handler
 from simtools.constants import MODEL_PARAMETER_METASCHEMA, MODEL_PARAMETER_SCHEMA_PATH
 
-from ..conftest import get_test_data_file
-
 FAILED_TO_READ_FILE_ERROR = r"^Failed to read file"
 url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
 
-def test_collect_dict_data(io_handler):
+def test_collect_dict_data(io_handler, get_test_data_file):
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
     test_yaml_file = io_handler.get_output_file(file_name="test_collect_dict_data.yml")
     if not Path(test_yaml_file).exists():

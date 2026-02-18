@@ -779,30 +779,48 @@ _TEST_DATA_FILES = {
 }
 
 
-def get_test_data_file(file_type, variant="gamma"):
-    """Get test data file path by file type and variant.
-
-    Parameters
-    ----------
-    file_type : str
-        Type of file: "corsika", "sim_telarray", "sim_telarray_hdata", "telescope_positions"
-    variant : str, optional
-        Variant of file: "gamma" (default for simulation files), "proton", "North", "South", "utm", etc.
+@pytest.fixture
+def get_test_data_file():
+    """Fixture providing test data file path retrieval.
 
     Returns
     -------
-    str
-        Path to test data file
+    callable
+        Function to get test data file path by file type and variant.
+        Call as: get_test_data_file(file_type, variant="gamma")
 
-    Raises
-    ------
-    KeyError
-        If the requested file type and variant combination is not available
+    Examples
+    --------
+    >>> corsika_path = get_test_data_file("corsika", "gamma")
+    >>> pos_path = get_test_data_file("telescope_positions", "North")
     """
-    key = (file_type, variant)
-    if key not in _TEST_DATA_FILES:
-        available = ", ".join(f"{ft}[{v}]" for ft, v in _TEST_DATA_FILES.keys())
-        raise KeyError(
-            f"Test data file not found for {file_type}[{variant}]. Available: {available}"
-        )
-    return _TEST_DATA_FILES[key]
+
+    def _get_test_data_file(file_type, variant="gamma"):
+        """Get test data file path by file type and variant.
+
+        Parameters
+        ----------
+        file_type : str
+            Type of file: "corsika", "sim_telarray", "sim_telarray_hdata", "telescope_positions"
+        variant : str, optional
+            Variant of file: "gamma" (default for simulation files), "proton", "North", "South", "utm", etc.
+
+        Returns
+        -------
+        str
+            Path to test data file
+
+        Raises
+        ------
+        KeyError
+            If the requested file type and variant combination is not available
+        """
+        key = (file_type, variant)
+        if key not in _TEST_DATA_FILES:
+            available = ", ".join(f"{ft}[{v}]" for ft, v in _TEST_DATA_FILES.keys())
+            raise KeyError(
+                f"Test data file not found for {file_type}[{variant}]. Available: {available}"
+            )
+        return _TEST_DATA_FILES[key]
+
+    return _get_test_data_file

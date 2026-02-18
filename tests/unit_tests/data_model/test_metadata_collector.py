@@ -16,8 +16,6 @@ from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.utils import names
 
-from ..conftest import get_test_data_file
-
 logger = logging.getLogger()
 
 
@@ -120,7 +118,9 @@ def test_get_site(args_dict_site):
     assert _collector_2.get_site(from_input_meta=False) == "South"  # from args_dict
 
 
-def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplog):
+def test_read_input_metadata_from_file(
+    args_dict_site, tmp_test_directory, caplog, get_test_data_file
+):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
 
