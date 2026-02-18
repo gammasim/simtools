@@ -20,6 +20,35 @@ class TelescopePosition:
     Altitude describes always the element height above sea level, position_z
     the height above a reference altitude (e.g., CORSIKA observation level).
 
+    Each array element stores its position in multiple coordinate systems
+    with the TelescopePosition.crs dictionary. The definition of coordinate
+    systems and corresponding axes is as follows::
+
+        {
+            "ground": {
+                "crs": <pyproj.CRS>,
+                "xx": {"name": "position_x", "value": float, "unit": m},
+                "yy": {"name": "position_y", "value": float, "unit": m},
+                "zz": {"name": "position_z", "value": float, "unit": m},
+            },
+            "utm": {
+                "crs": <pyproj.CRS>,
+                "xx": {"name": "utm_east", "value": float, "unit": m},
+                "yy": {"name": "utm_north", "value": float, "unit": m},
+                "zz": {"name": "altitude", "value": float, "unit": m},
+            },
+            "mercator": {
+                "crs": <pyproj.CRS>,
+                "xx": {"name": "latitude", "value": float, "unit": deg},
+                "yy": {"name": "longitude", "value": float, "unit": deg},
+                "zz": {"name": "altitude", "value": float, "unit": m},
+            },
+            "auxiliary": {
+                "telescope_sphere_radius": {...},
+                "telescope_axis_height": {...},
+            }
+        }
+
     Parameters
     ----------
     name: str
