@@ -471,10 +471,21 @@ def db(request):
     settings.config._corsika_path = None
     settings.config._corsika_interaction_table_path = None
     settings.config._corsika_exe = None
-    with patch("simtools.db.mongo_db.MongoClient", return_value=MagicMock()):
+
+    # Create a mock MongoClient that properly handles close()
+    mock_mongo_client = MagicMock()
+    mock_mongo_client.close = MagicMock()
+
+    with patch("simtools.db.mongo_db.MongoClient", return_value=mock_mongo_client):
         db_instance = db_handler.DatabaseHandler()
-        MongoDBHandler.db_client = MongoDBHandler.db_client or MagicMock()
+        MongoDBHandler.db_client = MongoDBHandler.db_client or mock_mongo_client
         yield db_instance
+        # Explicitly close the mock client to avoid unraisable exception warnings
+        if hasattr(MongoDBHandler.db_client, "close"):
+            try:
+                MongoDBHandler.db_client.close()
+            except Exception:
+                pass
 
     settings.config._args = previous_state["_args"]
     settings.config._db_config = previous_state["_db_config"]
