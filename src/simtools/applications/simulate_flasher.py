@@ -154,13 +154,6 @@ def main():
     """Simulate flasher devices."""
     app_context = startup_application(_parse)
 
-    if app_context.args["run_mode"] == "direct_injection":
-        # currently filter wheel implemented only for full simulations
-        if isinstance(app_context.args.get("number_of_events"), list):
-            app_context.args["number_of_events"] = app_context.args["number_of_events"][0]
-        if isinstance(app_context.args.get("flasher_photons"), list):
-            app_context.args["flasher_photons"] = app_context.args["flasher_photons"][0]
-
     tel_string = (
         f"telescope(s) {app_context.args['telescopes']}"
         if app_context.args.get("telescopes")
@@ -189,9 +182,7 @@ def main():
             light_source.simulate()
             light_source.validate_simulations()
     elif app_context.args["run_mode"] == "direct_injection":
-        light_source = Simulator(label=app_context.args.get("label"))
-        light_source.simulate()
-        light_source.validate_simulations()
+        Simulator.simulate_direct_injection_sequence(label=app_context.args.get("label"))
     else:
         raise ValueError(f"Unsupported run_mode: {app_context.args['run_mode']}")
 
