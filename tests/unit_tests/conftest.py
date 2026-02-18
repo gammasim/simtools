@@ -54,11 +54,6 @@ def _apply_mock_param_defaults(parameters):
     }
 
 
-def pytest_addoption(parser):
-    """Model version command line parameter."""
-    parser.addoption("--model_version", action="store", default=None)
-
-
 @pytest.fixture(autouse=True)
 def simtools_settings(tmp_test_directory, db_config):
     """Load simtools settings for the test session."""
@@ -632,30 +627,6 @@ def telescope_model_sst_prod5(io_handler, model_version_prod5):
 
 
 @pytest.fixture
-def telescope_north_with_calibration_devices_test_file():
-    """Telescope positions North with calibration devices."""
-    return "tests/resources/telescope_positions-North-with-calibration-devices-ground.ecsv"
-
-
-@pytest.fixture
-def telescope_north_test_file():
-    """Telescope positions North."""
-    return "tests/resources/telescope_positions-North-ground.ecsv"
-
-
-@pytest.fixture
-def telescope_north_utm_test_file():
-    """Telescope positions North (UTM coordinates)."""
-    return "tests/resources/telescope_positions-North-utm.ecsv"
-
-
-@pytest.fixture
-def telescope_south_test_file():
-    """Telescope positions South."""
-    return "tests/resources/telescope_positions-South-ground.ecsv"
-
-
-@pytest.fixture
 def corsika_config_data(model_version):
     """Corsika configuration data (as given by CorsikaConfig)."""
     return {
@@ -780,33 +751,58 @@ def safe_tar_open():
     return _open
 
 
-@pytest.fixture
-def corsika_file_gamma():
-    """Gamma corsika file for testing."""
-    return (
-        "tests/resources/"
-        "gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst"
-    )
+# Test data file utilities
+_TEST_DATA_FILES = {
+    (
+        "corsika",
+        "gamma",
+    ): "tests/resources/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst",
+    (
+        "sim_telarray",
+        "gamma",
+    ): "tests/resources/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst",
+    (
+        "sim_telarray",
+        "proton",
+    ): "tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst",
+    (
+        "sim_telarray_hdata",
+        "gamma",
+    ): "tests/resources/gamma_run2_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst",
+    ("telescope_positions", "North"): "tests/resources/telescope_positions-North-ground.ecsv",
+    (
+        "telescope_positions",
+        "North-calibration",
+    ): "tests/resources/telescope_positions-North-with-calibration-devices-ground.ecsv",
+    ("telescope_positions", "North-utm"): "tests/resources/telescope_positions-North-utm.ecsv",
+    ("telescope_positions", "South"): "tests/resources/telescope_positions-South-ground.ecsv",
+}
 
 
-@pytest.fixture
-def sim_telarray_file_gamma():
-    """Gamma sim_telarray file for testing."""
-    return (
-        "tests/resources/"
-        "gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst"
-    )
+def get_test_data_file(file_type, variant="gamma"):
+    """Get test data file path by file type and variant.
 
+    Parameters
+    ----------
+    file_type : str
+        Type of file: "corsika", "sim_telarray", "sim_telarray_hdata", "telescope_positions"
+    variant : str, optional
+        Variant of file: "gamma" (default for simulation files), "proton", "North", "South", "utm", etc.
 
-@pytest.fixture
-def sim_telarray_file_proton():
-    """Proton sim_telarray file for testing."""
-    return (
-        "tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst"
-    )
+    Returns
+    -------
+    str
+        Path to test data file
 
-
-@pytest.fixture
-def sim_telarray_hdata_file_gamma():
-    """Gamma sim_telarray histogram file for testing."""
-    return "tests/resources/gamma_run2_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst"
+    Raises
+    ------
+    KeyError
+        If the requested file type and variant combination is not available
+    """
+    key = (file_type, variant)
+    if key not in _TEST_DATA_FILES:
+        available = ", ".join(f"{ft}[{v}]" for ft, v in _TEST_DATA_FILES.keys())
+        raise KeyError(
+            f"Test data file not found for {file_type}[{variant}]. Available: {available}"
+        )
+    return _TEST_DATA_FILES[key]
