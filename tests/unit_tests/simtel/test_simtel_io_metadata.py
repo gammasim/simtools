@@ -6,8 +6,6 @@ import pytest
 
 import simtools.simtel.simtel_io_metadata as simtel_io_metadata
 
-from ..conftest import get_test_data_file
-
 
 def test_decode_success():
     test_meta = {b"key1": b"value1", b"key2": b"value2"}
@@ -30,7 +28,7 @@ def test_decode_with_unicode_error(caplog):
     assert "Unable to decode metadata with encoding utf-8" in caplog.text
 
 
-def test_read_sim_telarray_metadata():
+def test_read_sim_telarray_metadata(get_test_data_file):
     global_meta, telescope_meta = simtel_io_metadata.read_sim_telarray_metadata(
         get_test_data_file("sim_telarray", "gamma")
     )
@@ -50,13 +48,13 @@ def test_read_sim_telarray_metadata():
 
 
 @mock.patch.object(simtel_io_metadata, "_decode_dictionary", return_value=None, autospec=True)
-def test_read_sim_telarray_metadata_attribute_error(mock_decode):
+def test_read_sim_telarray_metadata_attribute_error(mock_decode, get_test_data_file):
     simtel_io_metadata.read_sim_telarray_metadata.cache_clear()
     with pytest.raises(AttributeError, match=r"^Error reading metadata from file"):
         simtel_io_metadata.read_sim_telarray_metadata(get_test_data_file("sim_telarray", "gamma"))
 
 
-def test_get_sim_telarray_telescope_id():
+def test_get_sim_telarray_telescope_id(get_test_data_file):
     assert (
         simtel_io_metadata.get_sim_telarray_telescope_id(
             "LSTN-01", get_test_data_file("sim_telarray", "gamma")
@@ -77,7 +75,7 @@ def test_get_sim_telarray_telescope_id():
     )
 
 
-def test_get_sim_telarray_telescope_id_to_telescope_name_mapping():
+def test_get_sim_telarray_telescope_id_to_telescope_name_mapping(get_test_data_file):
     tel_mapping = simtel_io_metadata.get_sim_telarray_telescope_id_to_telescope_name_mapping(
         get_test_data_file("sim_telarray", "gamma")
     )

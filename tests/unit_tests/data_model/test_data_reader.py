@@ -10,8 +10,6 @@ from astropy.table import Table
 
 from simtools.data_model import data_reader, schema
 
-from ..conftest import get_test_data_file
-
 logger = logging.getLogger()
 
 JSON_TEST_FILE = "test_read_value_from_file_1.json"
@@ -22,7 +20,7 @@ def reference_point_altitude_file():
     return "tests/resources/reference_point_altitude.json"
 
 
-def test_read_table_from_file():
+def test_read_table_from_file(get_test_data_file):
     assert isinstance(
         data_reader.read_table_from_file(get_test_data_file("telescope_positions", "North")),
         Table,
@@ -35,7 +33,7 @@ def test_read_table_from_file():
         data_reader.read_table_from_file(None)
 
 
-def test_read_table_from_file_and_validate():
+def test_read_table_from_file_and_validate(get_test_data_file):
     # schema file from metadata in table
     assert isinstance(
         data_reader.read_table_from_file(

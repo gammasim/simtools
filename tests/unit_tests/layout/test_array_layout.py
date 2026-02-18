@@ -10,8 +10,6 @@ from astropy.table import QTable
 from simtools.data_model import data_reader
 from simtools.layout.array_layout import ArrayLayout, InvalidTelescopeListFileError
 
-from ..conftest import get_test_data_file
-
 logger = logging.getLogger()
 
 
@@ -112,7 +110,7 @@ def test_initialize_coordinate_systems(
     )
 
 
-def test_select_assets(model_version):
+def test_select_assets(model_version, get_test_data_file):
     layout = ArrayLayout(
         site="North",
         name="test_layout",
@@ -280,6 +278,7 @@ def test_altitude_from_corsika_z(
 def test_try_set_altitude(
     array_layout_north_instance,
     array_layout_south_instance,
+    get_test_data_file,
 ):
     obs_level_north = 2158.0
     manual_z_positions_north = [43.00, 32.00, 28.70, 32.00, 50.3, 24.0]
@@ -322,6 +321,7 @@ def test_try_set_altitude(
 def test_try_set_coordinate(
     array_layout_north_instance,
     array_layout_south_instance,
+    get_test_data_file,
 ):
     manual_xx_north = [-70.99, -35.38, 75.22, 30.78, -211.61, -153.34]
     manual_yy_north = [-52.08, 66.14, 50.45, -64.51, 5.67, 169.04]
@@ -359,7 +359,7 @@ def test_try_set_coordinate(
     )
 
 
-def test_len(model_version):
+def test_len(model_version, get_test_data_file):
     layout = ArrayLayout(
         telescope_list_file=get_test_data_file("telescope_positions", "North"),
         model_version=model_version,
@@ -369,7 +369,7 @@ def test_len(model_version):
     assert layout.get_number_of_telescopes() == 13
 
 
-def test_getitem(model_version):
+def test_getitem(model_version, get_test_data_file):
     layout = ArrayLayout(
         telescope_list_file=get_test_data_file("telescope_positions", "North"),
         model_version=model_version,
@@ -381,6 +381,7 @@ def test_getitem(model_version):
 
 def test_export_telescope_list_table(
     model_version,
+    get_test_data_file,
 ):
     layout = ArrayLayout(
         site="North",
@@ -413,7 +414,7 @@ def test_export_telescope_list_table(
         pytest.fail("IndexError raised")
 
 
-def test_export_one_telescope_as_json(model_version):
+def test_export_one_telescope_as_json(model_version, get_test_data_file):
     layout = ArrayLayout(
         site="North",
         model_version=model_version,
@@ -442,7 +443,7 @@ def test_export_one_telescope_as_json(model_version):
         layout_utm.export_one_telescope_as_json(crs_name="ground")
 
 
-def test_read_table_from_json_file(model_version):
+def test_read_table_from_json_file(model_version, get_test_data_file):
     ground_table_file = "tests/resources/model_parameters/array_element_position_ground-2.0.0.json"
     layout = ArrayLayout(
         site="North",
