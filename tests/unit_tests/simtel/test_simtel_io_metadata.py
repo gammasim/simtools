@@ -6,6 +6,8 @@ import pytest
 
 import simtools.simtel.simtel_io_metadata as simtel_io_metadata
 
+from ..conftest import get_test_data_file
+
 
 def test_decode_success():
     test_meta = {b"key1": b"value1", b"key2": b"value2"}
@@ -28,9 +30,9 @@ def test_decode_with_unicode_error(caplog):
     assert "Unable to decode metadata with encoding utf-8" in caplog.text
 
 
-def test_read_sim_telarray_metadata(sim_telarray_file_gamma):
+def test_read_sim_telarray_metadata():
     global_meta, telescope_meta = simtel_io_metadata.read_sim_telarray_metadata(
-        sim_telarray_file_gamma
+        get_test_data_file("sim_telarray", "gamma")
     )
     assert global_meta is not None
     assert len(telescope_meta) > 0
@@ -48,23 +50,36 @@ def test_read_sim_telarray_metadata(sim_telarray_file_gamma):
 
 
 @mock.patch.object(simtel_io_metadata, "_decode_dictionary", return_value=None, autospec=True)
-def test_read_sim_telarray_metadata_attribute_error(mock_decode, sim_telarray_file_gamma):
+def test_read_sim_telarray_metadata_attribute_error(mock_decode):
     simtel_io_metadata.read_sim_telarray_metadata.cache_clear()
     with pytest.raises(AttributeError, match=r"^Error reading metadata from file"):
-        simtel_io_metadata.read_sim_telarray_metadata(sim_telarray_file_gamma)
+        simtel_io_metadata.read_sim_telarray_metadata(get_test_data_file("sim_telarray", "gamma"))
 
 
-def test_get_sim_telarray_telescope_id(sim_telarray_file_gamma):
-    assert simtel_io_metadata.get_sim_telarray_telescope_id("LSTN-01", sim_telarray_file_gamma) == 1
-    assert simtel_io_metadata.get_sim_telarray_telescope_id("MSTN-01", sim_telarray_file_gamma) == 5
+def test_get_sim_telarray_telescope_id():
     assert (
-        simtel_io_metadata.get_sim_telarray_telescope_id("MSTS-01", sim_telarray_file_gamma) is None
+        simtel_io_metadata.get_sim_telarray_telescope_id(
+            "LSTN-01", get_test_data_file("sim_telarray", "gamma")
+        )
+        == 1
+    )
+    assert (
+        simtel_io_metadata.get_sim_telarray_telescope_id(
+            "MSTN-01", get_test_data_file("sim_telarray", "gamma")
+        )
+        == 5
+    )
+    assert (
+        simtel_io_metadata.get_sim_telarray_telescope_id(
+            "MSTS-01", get_test_data_file("sim_telarray", "gamma")
+        )
+        is None
     )
 
 
-def test_get_sim_telarray_telescope_id_to_telescope_name_mapping(sim_telarray_file_gamma):
+def test_get_sim_telarray_telescope_id_to_telescope_name_mapping():
     tel_mapping = simtel_io_metadata.get_sim_telarray_telescope_id_to_telescope_name_mapping(
-        sim_telarray_file_gamma
+        get_test_data_file("sim_telarray", "gamma")
     )
     assert isinstance(tel_mapping, dict)
     assert len(tel_mapping) > 0

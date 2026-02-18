@@ -11,6 +11,8 @@ from astropy.table import QTable
 from simtools.data_model import schema
 from simtools.model.array_model import ArrayModel
 
+from ..conftest import get_test_data_file
+
 logger = logging.getLogger()
 
 
@@ -24,12 +26,12 @@ def array_model_north_from_list(model_version):
     )
 
 
-def test_array_model_north_from_file(model_version, telescope_north_test_file):
+def test_array_model_north_from_file(model_version):
     am = ArrayModel(
         label="test",
         site="North",
         model_version=model_version,
-        array_elements=telescope_north_test_file,
+        array_elements=get_test_data_file("telescope_positions", "North"),
     )
     assert am.number_of_telescopes == 13
 
@@ -50,9 +52,11 @@ def test_site(array_model_north):
     assert am.site == "North"
 
 
-def test_load_array_element_positions_from_file(array_model_north, telescope_north_test_file):
+def test_load_array_element_positions_from_file(array_model_north):
     am = array_model_north
-    telescopes = am._load_array_element_positions_from_file(telescope_north_test_file, "North")
+    telescopes = am._load_array_element_positions_from_file(
+        get_test_data_file("telescope_positions", "North"), "North"
+    )
     assert len(telescopes) > 0
 
 
