@@ -24,6 +24,7 @@ The following simulation software packages are used by simtools:
 Simulation software is external to simtools and developed by the respective teams. The integration of these components into simtools is done through interfaces, allowing for flexibility and future updates.
 ```
 
+
 ## Simulation Models
 
 [Simulation models and parameters](simulation_models.md) describe the properties of all relevant elements of the observatory, including site, telescopes, and calibration devices.
@@ -34,6 +35,7 @@ Simulation software is external to simtools and developed by the respective team
 :maxdepth: 1
 corsika.md
 sim_telarray.md
+coordinate_systems.md
 simulation_models.md
 databases.md
 ```
