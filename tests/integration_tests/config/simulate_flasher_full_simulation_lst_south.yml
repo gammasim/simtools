@@ -12,7 +12,7 @@ applications:
     flasher_photons: 1e6
     log_level: DEBUG
   integration_tests:
-  - output_file: sim_telarray/full_simulation_run000010_South_7.0.0_simulate_flasher.simtel.zst
+  - output_file: sim_telarray/full_simulation_run000010_South_7.0.0_simulate_flasher_LSTS-04.simtel.zst
   - test_output_files:
     - expected_sim_telarray_output:
         pe_sum:
@@ -25,10 +25,10 @@ applications:
         # - 0
         # - 50
         event_type: flasher
-      file: full_simulation_run000010_South_7.0.0_simulate_flasher.simtel.zst
+      file: full_simulation_run000010_South_7.0.0_simulate_flasher_LSTS-04.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray
   model_version_use_current: true
-  test_name: full-simulation_lsfs_design
+  test_name: full_simulation_lsfs_design
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

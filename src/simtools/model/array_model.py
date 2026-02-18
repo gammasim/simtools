@@ -110,7 +110,7 @@ class ArrayModel:
                 array_elements_config, site
             )
         # Case 2: array elements is a list of elements
-        elif isinstance(array_elements_config, list):
+        elif isinstance(array_elements_config, list) and len(array_elements_config) > 0:
             array_elements = self._get_array_elements_from_list(array_elements_config, site_model)
         # Case 3: array elements defined in DB by array layout name
         elif self.layout_name is not None:
