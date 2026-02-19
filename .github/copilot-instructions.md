@@ -313,8 +313,11 @@ make linkcheck              # Check links
 - Study existing patterns before implementing
 - Document assumptions and non-obvious decisions
 - Work in conda environment 'simtools-dev' for testing and documentation
+- import statements should be at the top of the file (even for unit test files)
 
 ❌ **DON'T:**
+- Do not add inconsistent import statements or random package imports.
+- Do not use non-ascii characters in code or docstrings (e.g., fancy quotes, degree symbols)
 - Skip tests or claim "obvious code doesn't need tests"
 - Hardcode file paths or credentials
 - Add trivial comments ("# add five" before `x + 5`)
