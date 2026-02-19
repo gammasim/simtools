@@ -149,6 +149,19 @@ def test_build_uri_remote_connection(valid_db_config):
     assert "directConnection=true" not in uri
 
 
+@pytest.mark.parametrize("server_name", ["simtools-MongoDB", "local-simtools-mongodb", "127.0.0.1"])
+def test_build_uri_direct_connection_local_aliases(valid_db_config, server_name):
+    """Test _build_uri with local aliases requiring direct connection."""
+    valid_db_config["db_server"] = server_name
+
+    uri = mongo_db.MongoDBHandler._build_uri(valid_db_config)
+
+    assert f"mongodb://test_user:test_password@{server_name}:27017/" in uri
+    assert "authSource=admin" in uri
+    assert "directConnection=true" in uri
+    assert "ssl=true" not in uri
+
+
 def test_initialize_client(mocker, valid_db_config):
     """Test _initialize_client method."""
     mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient")
