@@ -69,12 +69,18 @@ class SimulatorLightEmission(SimtelRunner):
                 "flasher_type"
             ).lower()
 
-        if config.get("flasher_photons"):
-            self.calibration_model.overwrite_model_parameter(
-                "flasher_photons",
-                config["flasher_photons"],
+        if config.get("flasher_photons") is not None:
+            photons = self._as_number_list(config["flasher_photons"], int)
+            if len(photons) == 1:
+                photon_value = photons[0]
+                self.calibration_model.overwrite_model_parameter("flasher_photons", photon_value)
+                config["flasher_photons"] = photon_value
+            else:
+                config["flasher_photons"] = photons
+        else:
+            config["flasher_photons"] = self.calibration_model.get_parameter_value(
+                "flasher_photons"
             )
-        config["flasher_photons"] = self.calibration_model.get_parameter_value("flasher_photons")
 
         if config.get("light_source_position") is not None:
             config["light_source_position"] = (
@@ -82,6 +88,39 @@ class SimulatorLightEmission(SimtelRunner):
             )
 
         return config
+
+    @staticmethod
+    def _as_number_list(value, cast=float):
+        """Return a list of numbers from scalar/list/comma-separated input."""
+        if isinstance(value, (list, tuple)):
+            values = value
+        elif isinstance(value, str) and "," in value:
+            values = [item.strip() for item in value.split(",") if item.strip()]
+        else:
+            values = [value]
+        return [cast(item) for item in values]
+
+    @staticmethod
+    def _repeat_or_map_events(events, n_photon_levels):
+        """Apply ff-1m event mapping rules to event counts."""
+        if n_photon_levels == 1:
+            return [events[0]]
+        if len(events) == n_photon_levels:
+            return events
+        if len(events) == 1:
+            return [events[0]] * n_photon_levels
+        raise ValueError(
+            "Invalid number_of_events list length. Use one value or one value per photon intensity."
+        )
+
+    def _build_flasher_event_and_photon_sequences(self):
+        """Build ff-1m-compatible events/photons sequences."""
+        photons_int = self._as_number_list(self.light_emission_config.get("flasher_photons"), int)
+
+        events = self._as_number_list(self.light_emission_config.get("number_of_events", 1), int)
+        events_int = self._repeat_or_map_events(events, len(photons_int))
+
+        return events_int, photons_int
 
     def simulate(self):
         """Simulate light emission."""
@@ -363,6 +402,7 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _add_flasher_command_options(self):
         """Add flasher options for all telescope types (ff-1m style)."""
+        events, photons = self._build_flasher_event_and_photon_sequences()
         flasher_xyz = self.calibration_model.get_parameter_value_with_unit("flasher_position")
         camera_diam_cm = (
             self.telescope_model.get_parameter_value_with_unit("camera_body_diameter")
@@ -411,8 +451,8 @@ class SimulatorLightEmission(SimtelRunner):
                 self._logger.warning(f"Failed to write pulse shape table, using token: {err}")
 
         return [
-            f"--events {self.light_emission_config['number_of_events']}",
-            f"--photons {self.light_emission_config['flasher_photons']}",
+            f"--events {','.join(str(event) for event in events)}",
+            f"--photons {','.join(str(photon) for photon in photons)}",
             f"--bunchsize {self.calibration_model.get_parameter_value('flasher_bunch_size')}",
             f"--xy {flasher_xyz[0].to(u.cm).value},{flasher_xyz[1].to(u.cm).value}",
             f"--distance {dist_cm}",
