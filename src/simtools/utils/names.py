@@ -705,6 +705,8 @@ def generate_file_name(
     zenith_angle,
     azimuth_angle=None,
     off_axis_angle=None,
+    off_axis_x=None,
+    off_axis_y=None,
     source_distance=None,
     mirror_number=None,
     label=None,
@@ -730,7 +732,11 @@ def generate_file_name(
     azimuth_angle: float
         Azimuth angle (deg).
     off_axis_angle: float
-        Off-axis angle (deg).
+        Off-axis angle (deg). Use off_axis_x and off_axis_y for (x, y) offsets.
+    off_axis_x: float
+        X component of off-axis offset (deg).
+    off_axis_y: float
+        Y component of off-axis offset (deg).
     source_distance: float
         Source distance (km).
     mirror_number: int
@@ -748,7 +754,13 @@ def generate_file_name(
     name = f"{file_type}_{site}_{telescope_model_name}"
     name += f"_d{source_distance:.1f}km" if source_distance is not None else ""
     name += f"_za{float(zenith_angle):.1f}deg"
-    name += f"_off{off_axis_angle:.3f}deg" if off_axis_angle is not None else ""
+
+    # Handle both 1D (r) and 2D (x,y) off_axis_angle offsets.
+    if off_axis_x is not None and off_axis_y is not None:
+        name += f"_off_x{off_axis_x:+.3f}_y{off_axis_y:+.3f}deg"
+    elif off_axis_angle is not None:
+        name += f"_off{off_axis_angle:.3f}deg"
+
     name += f"_azm{round(azimuth_angle):03}deg" if azimuth_angle is not None else ""
     name += f"_mirror{mirror_number}" if mirror_number is not None else ""
     name += f"_{label}" if label is not None else ""

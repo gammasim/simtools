@@ -79,6 +79,7 @@ extensions = [
     "myst_parser",
     "numpydoc",
     "sphinx_design",
+    "sphinx.ext.mathjax",
 ]
 
 nitpicky = True
@@ -179,6 +180,7 @@ myst_enable_extensions = [
     "tasklist",
     "attrs_block",
     "attrs_inline",
+    "dollarmath",
 ]
 
 
