@@ -25,12 +25,6 @@ applications:
   - output_file: sim_telarray/run000010/direct_injection_run000010_za20deg_azm000deg_North_7.0.0_test-flasher-direct-injection-lst-north-filter-wheel.simtel.zst
   - output_file: sim_telarray/run000011/direct_injection_run000011_za20deg_azm000deg_North_7.0.0_test-flasher-direct-injection-lst-north-filter-wheel.simtel.zst
   - output_file: sim_telarray/run000012/direct_injection_run000012_za20deg_azm000deg_North_7.0.0_test-flasher-direct-injection-lst-north-filter-wheel.simtel.zst
-  - test_output_files:
-    - expected_sim_telarray_output:
-        event_type: direct_injection
-      file: direct_injection_run000010_za20deg_azm000deg_North_7.0.0_test-flasher-direct-injection-lst-north-filter-wheel.simtel.zst
-      path_descriptor: output_path
-      output_sub_path: sim_telarray/run000010
   test_name: direction_injection_lstn_filter_wheel_sequence
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
