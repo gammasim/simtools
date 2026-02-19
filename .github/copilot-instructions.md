@@ -272,13 +272,14 @@ make linkcheck              # Check links
 1. **Always test:** `pytest tests/unit_tests/` after changes (≥90% coverage) in conda environment 'simtools-dev'
 2. **Always lint:** `pre-commit run --all-files` before commits
 3. **Follow conventions:** pathlib, logging, f-strings, NumPy docstrings
-4. **Mock external deps:** DB, file I/O, network must be mocked in unit tests
-5. **Use tmp_test_directory** for file I/O (NOT `tmp_path`)
-6. **Study patterns:** Check existing code before implementing
-7. **Document:** NumPy-style docstrings, 70%+ coverage required
-8. **Make minimal changes:** Understand codebase first
-9. **No premature optimization:** Clarity > speed
-10. **Golden Rule:** If code is hard to understand, refactor it
+4. **Error messages:** no `logger.error`, put the error message into the error (e.g. `ValueError("Invalid type")`) and always do `from exc`
+5. **Mock external deps:** DB, file I/O, network must be mocked in unit tests
+6. **Use tmp_test_directory** for file I/O (NOT `tmp_path`)
+7. **Study patterns:** Check existing code before implementing
+8. **Document:** NumPy-style docstrings, 70%+ coverage required
+9. **Make minimal changes:** Understand codebase first
+10. **No premature optimization:** Clarity > speed
+11. **Golden Rule:** If code is hard to understand, refactor it
 
 **Validation:** 100% statement coverage for library code.
 
@@ -289,7 +290,7 @@ make linkcheck              # Check links
 **Focus:** Clarity, completeness, consistency, user experience.
 
 **Key Rules:**
-- NumPy docstrings are **MANDATORY** (70%+ coverage)
+- NumPy docstrings are **MANDATORY**, with the exception of private functions (where a single-line docstring is acceptable if self-explanatory).
 - Every function/class/method MUST have a docstring. Private functions can have single-line docstring if self-explanatory.
 - Include Parameters, Returns, Raises, Examples sections
 - Use clear, concise language (avoid jargon)
@@ -312,8 +313,11 @@ make linkcheck              # Check links
 - Study existing patterns before implementing
 - Document assumptions and non-obvious decisions
 - Work in conda environment 'simtools-dev' for testing and documentation
+- import statements should be at the top of the file (even for unit test files)
 
 ❌ **DON'T:**
+- Do not add inconsistent import statements or random package imports.
+- Do not use non-ascii characters in code or docstrings (e.g., fancy quotes, degree symbols)
 - Skip tests or claim "obvious code doesn't need tests"
 - Hardcode file paths or credentials
 - Add trivial comments ("# add five" before `x + 5`)
