@@ -621,6 +621,104 @@ def test_simulate_direct_injection_sequence_reloads_config_per_run(mocker):
     assert restore_args == base_args
 
 
+def test_simulate_direct_injection_sequence_defaults_events_and_photons_when_missing(mocker):
+    """Default to one run with one event when both sequences are missing."""
+    base_args = {
+        "run_mode": "direct_injection",
+        "run_number": 10,
+        "number_of_events": None,
+        "flasher_photons": None,
+    }
+    base_db_config = {"db_api_user": "user"}
+
+    mock_config = mocker.Mock()
+    mock_config.args = base_args
+    mock_config.db_config = base_db_config
+    mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
+
+    mocker.patch.object(Simulator, "__init__", return_value=None)
+    mocker.patch.object(Simulator, "simulate")
+    mocker.patch.object(Simulator, "validate_simulations")
+
+    Simulator.simulate_direct_injection_sequence(label="test-label")
+
+    run_args = mock_config.load.call_args_list[0].kwargs["args"]
+    assert run_args["run_number"] == 10
+    assert run_args["number_of_events"] == 1
+    assert "flasher_photons" not in run_args
+
+
+def test_simulate_direct_injection_sequence_expands_single_event_for_multiple_photon_runs(mocker):
+    """Expand scalar event setting to match multiple photon intensity runs."""
+    base_args = {
+        "run_mode": "direct_injection",
+        "run_number": 20,
+        "number_of_events": [3],
+        "flasher_photons": [100, 200],
+    }
+    base_db_config = {"db_api_user": "user"}
+
+    mock_config = mocker.Mock()
+    mock_config.args = base_args
+    mock_config.db_config = base_db_config
+    mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
+
+    mocker.patch.object(Simulator, "__init__", return_value=None)
+    mocker.patch.object(Simulator, "simulate")
+    mocker.patch.object(Simulator, "validate_simulations")
+
+    Simulator.simulate_direct_injection_sequence(label="test-label")
+
+    run0_args = mock_config.load.call_args_list[0].kwargs["args"]
+    run1_args = mock_config.load.call_args_list[1].kwargs["args"]
+    assert run0_args["number_of_events"] == 3
+    assert run1_args["number_of_events"] == 3
+
+
+def test_simulate_direct_injection_sequence_raises_for_invalid_event_list_length(mocker):
+    """Raise if number_of_events length does not match number of photon settings."""
+    base_args = {
+        "run_mode": "direct_injection",
+        "run_number": 10,
+        "number_of_events": [1, 2],
+        "flasher_photons": [100, 200, 300],
+    }
+    base_db_config = {"db_api_user": "user"}
+
+    mock_config = mocker.Mock()
+    mock_config.args = base_args
+    mock_config.db_config = base_db_config
+    mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
+
+    with pytest.raises(
+        ValueError,
+        match="Invalid number_of_events list length for direct_injection",
+    ):
+        Simulator.simulate_direct_injection_sequence(label="test-label")
+
+
+def test_simulate_direct_injection_sequence_raises_for_invalid_photon_list_length(mocker):
+    """Raise if flasher_photons length does not match number of event settings."""
+    base_args = {
+        "run_mode": "direct_injection",
+        "run_number": 10,
+        "number_of_events": [1, 2, 3],
+        "flasher_photons": [100, 200],
+    }
+    base_db_config = {"db_api_user": "user"}
+
+    mock_config = mocker.Mock()
+    mock_config.args = base_args
+    mock_config.db_config = base_db_config
+    mocker.patch("simtools.simulator.settings", mocker.Mock(config=mock_config))
+
+    with pytest.raises(
+        ValueError,
+        match="Invalid flasher_photons list length for direct_injection",
+    ):
+        Simulator.simulate_direct_injection_sequence(label="test-label")
+
+
 def test_simulate_direct_injection_sequence_restores_config_after_failure(mocker):
     """Restore original settings config even when one run fails."""
     base_args = {
