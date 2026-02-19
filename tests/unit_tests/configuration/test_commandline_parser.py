@@ -270,7 +270,7 @@ def test_simulation_model():
     # No telescope model without site model; parameter_version only
     _parser_t = parser.CommandLineParser()
     _parser_t.initialize_default_arguments(
-        simulation_model=["telescope", "site", "parameter_version"]
+        simulation_model=["telescope", "telescopes", "site", "parameter_version"]
     )
     job_groups = _parser_t._action_groups
     assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
@@ -279,6 +279,7 @@ def test_simulation_model():
             assert any(action.dest == "parameter_version" for action in group._group_actions)
             assert any(action.dest == "site" for action in group._group_actions)
             assert any(action.dest == "telescope" for action in group._group_actions)
+            assert any(action.dest == "telescopes" for action in group._group_actions)
 
 
 def test_db_configuration():

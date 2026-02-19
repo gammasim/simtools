@@ -54,6 +54,7 @@ class Simulator:
         self.run_number = self._initialize_from_tool_configuration()
 
         self.array_models, self.corsika_configurations = self._initialize_array_models()
+        self._overwrite_flasher_photons_for_direct_injection()
         self._simulation_runner = self._initialize_simulation_runner()
         self.runner_service = runner_services.RunnerServices(
             self._get_first_corsika_config(),
@@ -116,6 +117,7 @@ class Simulator:
                 label=self.label,
                 site=self.site,
                 layout_name=settings.config.args.get("array_layout_name"),
+                array_elements=general.ensure_iterable(settings.config.args.get("telescopes", [])),
                 model_version=version,
                 calibration_device_types=self._get_calibration_device_types(self.run_mode),
                 overwrite_model_parameters=settings.config.args.get("overwrite_model_parameters"),
@@ -377,6 +379,17 @@ class Simulator:
         if run_mode == "direct_injection":
             return ["flat_fielding"]
         return []
+
+    def _overwrite_flasher_photons_for_direct_injection(self):
+        """Overwrite flasher_photons in calibration models for direct-injection runs."""
+        flasher_photons = settings.config.args.get("flasher_photons")
+        if self.run_mode != "direct_injection" or flasher_photons is None:
+            return
+
+        for array_model in general.ensure_iterable(self.array_models):
+            for calibration_models in array_model.calibration_models.values():
+                for calibration_model in calibration_models.values():
+                    calibration_model.overwrite_model_parameter("flasher_photons", flasher_photons)
 
     def _get_first_corsika_config(self):
         """

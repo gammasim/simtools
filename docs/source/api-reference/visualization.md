@@ -107,3 +107,10 @@ the visualization module.
 
    :members:
 ```
+
+## camera_plot_utils
+
+```{eval-rst}
+.. automodule:: visualization.camera_plot_utils
+   :members:
+```
