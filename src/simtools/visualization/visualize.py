@@ -13,6 +13,8 @@ from cycler import cycler
 from matplotlib import gridspec
 from matplotlib.backends.backend_pdf import PdfPages
 
+import simtools.utils.general as gen
+
 COLORS = {}
 COLORS["classic"] = [
     "#ba2c54",
@@ -444,8 +446,8 @@ def plot_main_data(data_dict, kwargs, plot_args):
     for label, data_now in data_dict.items():
         x_col, y_col, x_err_col, y_err_col = _get_data_columns(data_now)
 
-        x_title = kwargs.get("xtitle", x_col)
-        y_title = kwargs.get("ytitle", y_col)
+        x_title = kwargs.get("xtitle") or x_col
+        y_title = kwargs.get("ytitle") or y_col
 
         x_title_unit = _add_unit(x_title, data_now[x_col])
         y_title_unit = _add_unit(y_title, data_now[y_col])
@@ -555,6 +557,8 @@ def plot_table(table, y_title, **kwargs):
     for column in table.keys()[1:]:
         data_dict[column] = QTable([table[x_axis], table[column]], names=[x_axis, y_title])
 
+    kwargs["xtitle"] = x_axis
+    kwargs["ytitle"] = y_title
     return plot_1d(data_dict, **kwargs)
 
 
@@ -592,10 +596,6 @@ def plot_hist_2d(data, **kwargs):
     gs = gridspec.GridSpec(1, 1)
     fig = plt.figure(figsize=(8, 6))
 
-    ##########################################################################################
-    # Plot the data
-    ##########################################################################################
-
     plt.subplot(gs[0])
     assert len(data.dtype.names) == 2, "Input array must have two columns with titles."
     x_title, y_title = data.dtype.names[0], data.dtype.names[1]
@@ -631,7 +631,7 @@ def save_figure(fig, output_file, figure_format=("pdf", "png"), log_title="", dp
     title: str
         Title of the figure to be added to the log message.
     """
-    for fmt in figure_format:
+    for fmt in gen.ensure_iterable(figure_format):
         _file = Path(output_file).with_suffix(f".{fmt}")
         fig.savefig(_file, format=fmt, bbox_inches="tight", dpi=dpi)
         logging.info(f"Saved plot {log_title} to {_file}")
