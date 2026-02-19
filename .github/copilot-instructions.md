@@ -290,7 +290,7 @@ make linkcheck              # Check links
 **Focus:** Clarity, completeness, consistency, user experience.
 
 **Key Rules:**
-- NumPy docstrings are **MANDATORY** (70%+ coverage), with the exception of private function (single line is fine).
+- NumPy docstrings are **MANDATORY**, with the exception of private function (single line is fine).
 - Every function/class/method MUST have a docstring. Private functions can have single-line docstring if self-explanatory.
 - Include Parameters, Returns, Raises, Examples sections
 - Use clear, concise language (avoid jargon)
