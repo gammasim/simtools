@@ -4,6 +4,7 @@ import logging
 from collections import namedtuple
 
 import astropy.units as u
+import numpy as np
 
 from simtools import settings
 from simtools.io import io_handler
@@ -29,11 +30,12 @@ class SimulatorRayTracing(SimtelRunner):
         label used for output file naming.
     config_data: namedtuple
         namedtuple containing the configurable parameters as values (expected units in
-        brackets): zenith_angle (deg), off_axis_angle (deg), source_distance (km),
-        single_mirror_mode, use_random_focal_length,
-        mirror_numbers.
+        brackets): zenith_angle (deg), off_axis_x (deg), off_axis_y (deg),
+        source_distance (km), single_mirror_mode, use_random_focal_length, mirror_numbers.
     force_simulate: bool
         Remove existing files and force re-running of the ray-tracing simulation.
+    test: bool
+        If activated, application will be faster by simulating fewer photons.
     """
 
     def __init__(
@@ -47,8 +49,6 @@ class SimulatorRayTracing(SimtelRunner):
     ):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init SimulatorRayTracing")
-
         super().__init__(label=label)
 
         self.telescope_model = telescope_model
@@ -94,7 +94,8 @@ class SimulatorRayTracing(SimtelRunner):
                     None if self.config.single_mirror_mode else self.config.source_distance
                 ),
                 zenith_angle=self.config.zenith_angle,
-                off_axis_angle=self.config.off_axis_angle,
+                off_axis_x=self.config.off_axis_x,
+                off_axis_y=self.config.off_axis_y,
                 mirror_number=(
                     self.config.mirror_numbers if self.config.single_mirror_mode else None
                 ),
@@ -115,7 +116,8 @@ class SimulatorRayTracing(SimtelRunner):
                 file.write(f"#{50 * '='}\n")
                 file.write(f"# config_file = {config_file_path}\n")
                 file.write(f"# zenith_angle [deg] = {self.config.zenith_angle}\n")
-                file.write(f"# off_axis_angle [deg] = {self.config.off_axis_angle}\n")
+                file.write(f"# off_axis_x [deg] = {self.config.off_axis_x}\n")
+                file.write(f"# off_axis_y [deg] = {self.config.off_axis_y}\n")
                 file.write(f"# source_distance [km] = {self.config.source_distance}\n")
                 if self.config.single_mirror_mode:
                     file.write(f"# mirror_number = {self.config.mirror_numbers}\n\n")
@@ -153,14 +155,21 @@ class SimulatorRayTracing(SimtelRunner):
                 self.telescope_model.get_parameter_value("mirror_focal_length")
             )
 
+        # x_cam pointing downwards
+        telescope_theta = self.config.zenith_angle - self.config.off_axis_x
+        # y_cam pointing rightwards
+        telescope_phi = self.config.azimuth_angle
+        if self.config.zenith_angle > 1.0e-6:
+            telescope_phi += self.config.off_axis_y / np.sin(np.radians(self.config.zenith_angle))
+
         options = {
             "random_state": "none",
             "IMAGING_LIST": str(self._photons_file),
             "stars": str(self._stars_file),
             "altitude": self.site_model.get_parameter_value("corsika_observation_level"),
-            "telescope_theta": self.config.zenith_angle + self.config.off_axis_angle,
+            "telescope_theta": telescope_theta,
+            "telescope_phi": telescope_phi,
             "star_photons": str(self.photons_per_run),
-            "telescope_phi": "0",
             "camera_transmission": "1.0",
             "nightsky_background": "all:0.",
             "trigger_current_limit": "1e10",
@@ -260,7 +269,9 @@ class SimulatorRayTracing(SimtelRunner):
             "Config",
             [
                 "zenith_angle",
-                "off_axis_angle",
+                "azimuth_angle",
+                "off_axis_x",
+                "off_axis_y",
                 "source_distance",
                 "single_mirror_mode",
                 "use_random_focal_length",
@@ -269,7 +280,9 @@ class SimulatorRayTracing(SimtelRunner):
         )
         return config_data(
             zenith_angle=data_dict["zenith_angle"],
-            off_axis_angle=data_dict["off_axis_angle"],
+            azimuth_angle=data_dict.get("azimuth_angle", 0.0),
+            off_axis_x=data_dict["off_axis_x"],
+            off_axis_y=data_dict["off_axis_y"],
             source_distance=data_dict["source_distance"],
             single_mirror_mode=data_dict["single_mirror_mode"],
             use_random_focal_length=data_dict["use_random_focal_length"],
