@@ -70,13 +70,13 @@ class SimulatorLightEmission(SimtelRunner):
             ).lower()
 
         if config.get("flasher_photons") is not None:
-            photons = self._as_number_list(config["flasher_photons"], float)
+            photons = self._as_number_list(config["flasher_photons"], int)
             if len(photons) == 1:
-                photon_value = max(1, round(photons[0]))
+                photon_value = photons[0]
                 self.calibration_model.overwrite_model_parameter("flasher_photons", photon_value)
                 config["flasher_photons"] = photon_value
             else:
-                config["flasher_photons"] = [max(1, round(photon)) for photon in photons]
+                config["flasher_photons"] = photons
         else:
             config["flasher_photons"] = self.calibration_model.get_parameter_value(
                 "flasher_photons"
@@ -92,8 +92,6 @@ class SimulatorLightEmission(SimtelRunner):
     @staticmethod
     def _as_number_list(value, cast=float):
         """Return a list of numbers from scalar/list/comma-separated input."""
-        if value is None:
-            return []
         if isinstance(value, (list, tuple)):
             values = value
         elif isinstance(value, str) and "," in value:
@@ -105,8 +103,6 @@ class SimulatorLightEmission(SimtelRunner):
     @staticmethod
     def _repeat_or_map_events(events, n_photon_levels):
         """Apply ff-1m event mapping rules to event counts."""
-        if not events:
-            raise ValueError("At least one event count is required.")
         if n_photon_levels == 1:
             return [events[0]]
         if len(events) == n_photon_levels:
@@ -119,18 +115,10 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _build_flasher_event_and_photon_sequences(self):
         """Build ff-1m-compatible events/photons sequences."""
-        photons = self._as_number_list(self.light_emission_config.get("flasher_photons"), float)
-        if not photons:
-            raise ValueError("flasher_photons must be defined for flasher simulations.")
-
-        photons_int = []
-        for photon in photons:
-            photons_int.append(max(1, round(photon)))
+        photons_int = self._as_number_list(self.light_emission_config.get("flasher_photons"), int)
 
         events = self._as_number_list(self.light_emission_config.get("number_of_events", 1), int)
         events_int = self._repeat_or_map_events(events, len(photons_int))
-        if any(event <= 0 for event in events_int):
-            raise ValueError("number_of_events must be positive.")
 
         return events_int, photons_int
 
