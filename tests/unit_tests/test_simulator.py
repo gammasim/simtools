@@ -645,7 +645,7 @@ def test_simulate_direct_injection_sequence_defaults_events_and_photons_when_mis
     run_args = mock_config.load.call_args_list[0].kwargs["args"]
     assert run_args["run_number"] == 10
     assert run_args["number_of_events"] == 1
-    assert "flasher_photons" not in run_args
+    assert run_args.get("flasher_photons") is None
 
 
 def test_simulate_direct_injection_sequence_expands_single_event_for_multiple_photon_runs(mocker):
