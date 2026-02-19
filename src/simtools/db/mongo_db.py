@@ -182,11 +182,16 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         str
             MongoDB connection URI.
         """
-        direct_connection = db_config["db_server"] in (
+        server = db_config["db_server"]
+        direct_connection_servers = {
             "localhost",
+            "127.0.0.1",
+            "::1",
             "simtools-mongodb",
+            "local-simtools-mongodb",
             "mongodb",
-        )
+        }
+        direct_connection = server.casefold() in direct_connection_servers
         auth_source = (
             db_config.get("db_api_authentication_database")
             if db_config.get("db_api_authentication_database")
@@ -195,7 +200,6 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
 
         username = db_config["db_api_user"]
         password = db_config["db_api_pw"]
-        server = db_config["db_server"]
         port = db_config["db_api_port"]
 
         uri_base = f"mongodb://{username}:{password}@{server}:{port}/"
