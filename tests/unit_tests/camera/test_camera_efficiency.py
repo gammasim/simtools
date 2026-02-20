@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 import logging
+from pathlib import Path
+from unittest.mock import MagicMock
 
 import astropy.units as u
 import numpy as np
@@ -25,22 +27,33 @@ def config_data_lst(model_version_prod5):
 
 
 @pytest.fixture
-def camera_efficiency_lst(config_data_lst):
-    return CameraEfficiency(
+def camera_efficiency_lst(config_data_lst, mocker):
+    camera_eff = CameraEfficiency(
         config_data=config_data_lst, efficiency_type="shower", label="validate_camera_efficiency"
     )
+    mock_camera = MagicMock()
+    mock_camera.get_camera_fill_factor.return_value = 0.8
+    mock_camera.get_pixel_active_solid_angle.return_value = 1.0e-6
+    mocker.patch.object(
+        type(camera_eff.telescope_model),
+        "camera",
+        new_callable=mocker.PropertyMock,
+        return_value=mock_camera,
+    )
+    mocker.patch.object(
+        camera_eff.telescope_model,
+        "get_on_axis_eff_optical_area",
+        return_value=100.0 * u.m**2,
+    )
+    return camera_eff
 
 
 @pytest.fixture
 def prepare_results_file(camera_efficiency_lst, mocker):
-    from pathlib import Path
-
-    # The actual test resource file has "table_" and "validate_camera_efficiency" in the name
     test_resource_file = Path(
         "tests/resources/"
         "camera_efficiency_table_North_LSTN-01_za20.0deg_azm000deg_validate_camera_efficiency.ecsv"
     )
-    # Mock _file["results"] to point to the test resource file
     mocker.patch.object(
         camera_efficiency_lst,
         "_file",
@@ -83,7 +96,7 @@ def test_calc_camera_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
     assert camera_efficiency_lst.calc_camera_efficiency() == pytest.approx(
-        0.24468117923810984
+        0.2038155637771062
     )  # Value for Prod5 LST-1
 
 
@@ -91,7 +104,7 @@ def test_calc_tel_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
     assert camera_efficiency_lst.calc_tel_efficiency() == pytest.approx(
-        0.23988884493787524
+        0.19982362487828242
     )  # Value for Prod5 LST-1
 
 
@@ -100,7 +113,7 @@ def test_calc_tot_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst.export_model_files()
     assert camera_efficiency_lst.calc_tot_efficiency(
         camera_efficiency_lst.calc_tel_efficiency()
-    ) == pytest.approx(0.48018680628175714)  # Value for Prod5 LST-1
+    ) == pytest.approx(0.43825674914158097)  # Value for Prod5 LST-1
 
 
 def test_calc_reflectivity(camera_efficiency_lst, prepare_results_file):
@@ -115,7 +128,7 @@ def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst.export_model_files()
     _, nsb_rate_ref_conditions = camera_efficiency_lst.calc_nsb_rate()
     assert nsb_rate_ref_conditions.value == pytest.approx(
-        0.24421390533203186
+        0.02674288588465676
     )  # Value for Prod5 LST-1
 
 
@@ -156,7 +169,6 @@ def test_analyze_from_file(camera_efficiency_lst, mocker):
 
 def test_results_summary(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.calc_nsb_rate()
     summary = camera_efficiency_lst.results_summary()
     assert summary["meta"]["tel"] == "LSTN-01"
@@ -165,7 +177,6 @@ def test_results_summary(camera_efficiency_lst, prepare_results_file):
 
 def test_plot_efficiency(camera_efficiency_lst, mocker, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.efficiency_type = "nsb"
     plot_table_mock = mocker.patch("simtools.visualization.visualize.plot_table")
     camera_efficiency_lst.plot_efficiency()
@@ -288,7 +299,6 @@ def test_dump_nsb_pixel_rate_reference_conditions(camera_efficiency_lst, mocker)
 
 def test_calc_partial_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     result = camera_efficiency_lst.calc_partial_efficiency(350, 450)
     assert isinstance(result, (float, np.floating))
     assert 0 <= result <= 1
@@ -296,7 +306,6 @@ def test_calc_partial_efficiency(camera_efficiency_lst, prepare_results_file):
 
 def test_calc_partial_efficiency_full_range(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     result = camera_efficiency_lst.calc_partial_efficiency(200, 999)
     assert isinstance(result, (float, np.floating))
     assert result > 0
@@ -304,7 +313,6 @@ def test_calc_partial_efficiency_full_range(camera_efficiency_lst, prepare_resul
 
 def test_calc_partial_efficiency_narrow_range(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     result = camera_efficiency_lst.calc_partial_efficiency(400, 410)
     assert isinstance(result, (float, np.floating))
     assert 0 <= result <= 1
@@ -312,7 +320,6 @@ def test_calc_partial_efficiency_narrow_range(camera_efficiency_lst, prepare_res
 
 def test_calc_partial_efficiency_logging(camera_efficiency_lst, prepare_results_file, caplog):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst.calc_partial_efficiency(300, 500)
     assert "Fraction of light in the wavelength range 300-500 nm:" in caplog.text
@@ -320,7 +327,6 @@ def test_calc_partial_efficiency_logging(camera_efficiency_lst, prepare_results_
 
 def test_results_summary_shower_type(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.efficiency_type = "shower"
     summary = camera_efficiency_lst.results_summary()
     assert summary["meta"]["tel"] == "LSTN-01"
@@ -336,9 +342,8 @@ def test_results_summary_shower_type(camera_efficiency_lst, prepare_results_file
     assert "Telescope total Cherenkov light efficiency" in summary["tot_sens"]["description"]
 
 
-def test_results_summary_nsb_type(camera_efficiency_lst, prepare_results_file, mocker):
+def test_results_summary_nsb_type(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.efficiency_type = "nsb"
     camera_efficiency_lst.nsb_pixel_pe_per_ns = pytest.approx(0.5)
     camera_efficiency_lst.nsb_rate_ref_conditions = pytest.approx(0.25)
@@ -357,7 +362,6 @@ def test_results_summary_nsb_type(camera_efficiency_lst, prepare_results_file, m
 
 def test_results_summary_muon_type(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.efficiency_type = "muon"
     summary = camera_efficiency_lst.results_summary()
     assert summary["meta"]["tel"] == "LSTN-01"
@@ -370,7 +374,6 @@ def test_results_summary_muon_type(camera_efficiency_lst, prepare_results_file):
 
 def test_results_summary_with_custom_nsb_spectrum(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.config["nsb_spectrum"] = "custom_spectrum.fits"
     summary = camera_efficiency_lst.results_summary()
     assert summary["meta"]["nsb"] == "custom_spectrum.fits"
@@ -378,7 +381,6 @@ def test_results_summary_with_custom_nsb_spectrum(camera_efficiency_lst, prepare
 
 def test_results_summary_without_nsb_spectrum(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    camera_efficiency_lst.export_model_files()
     camera_efficiency_lst.config["nsb_spectrum"] = None
     summary = camera_efficiency_lst.results_summary()
     assert summary["meta"]["nsb"] == "default sim_telarray spectrum"

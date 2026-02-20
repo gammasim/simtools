@@ -20,9 +20,9 @@ def reference_point_altitude_file():
     return "tests/resources/reference_point_altitude.json"
 
 
-def test_read_table_from_file(telescope_north_test_file):
+def test_read_table_from_file(get_test_data_file):
     assert isinstance(
-        data_reader.read_table_from_file(telescope_north_test_file),
+        data_reader.read_table_from_file(get_test_data_file("telescope_positions", "North")),
         Table,
     )
 
@@ -33,10 +33,12 @@ def test_read_table_from_file(telescope_north_test_file):
         data_reader.read_table_from_file(None)
 
 
-def test_read_table_from_file_and_validate(telescope_north_test_file):
+def test_read_table_from_file_and_validate(get_test_data_file):
     # schema file from metadata in table
     assert isinstance(
-        data_reader.read_table_from_file(telescope_north_test_file, validate=True),
+        data_reader.read_table_from_file(
+            get_test_data_file("telescope_positions", "North"), validate=True
+        ),
         Table,
     )
 

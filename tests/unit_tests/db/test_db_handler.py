@@ -40,21 +40,6 @@ def test_file_2():
 
 
 @pytest.fixture
-def fs_files():
-    return "fs.files"
-
-
-@pytest.fixture
-def value_unit_type():
-    return "simtools.db.db_handler.value_conversion.get_value_unit_type"
-
-
-@pytest.fixture
-def mock_open(mocker):
-    return mocker.patch("builtins.open", mocker.mock_open(read_data=b"file_content"))
-
-
-@pytest.fixture
 def mock_get_collection_name(mocker):
     return mocker.patch(
         "simtools.db.db_handler.names.get_collection_name_from_parameter_name",
@@ -71,16 +56,6 @@ def mock_read_simtel_table(mocker):
 
 
 @pytest.fixture
-def validate_model_parameter():
-    return "simtools.db.db_handler.validate_data.DataValidator.validate_model_parameter"
-
-
-@pytest.fixture
-def mock_gridfs(mocker):
-    return mocker.patch("simtools.db.mongo_db.gridfs.GridFS")
-
-
-@pytest.fixture
 def standard_test_params():
     """Common test parameters used across multiple tests."""
     return {
@@ -91,31 +66,6 @@ def standard_test_params():
         "collection": "telescopes",
         "parameter": "test_param",
     }
-
-
-@pytest.fixture
-def mock_collection_setup(mocker, db):
-    """Common fixture for mocking collection operations."""
-    mock_collection = mocker.Mock()
-    mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mock_collection)
-    return {"collection": mock_collection, "get_collection": mock_get_collection}
-
-
-@pytest.fixture
-def mock_db_client(mocker, db, test_db):
-    """Common fixture for mocking db_client."""
-
-    mock_client = {test_db: mocker.Mock()}
-    return mocker.patch.object(MongoDBHandler, "db_client", mock_client)
-
-
-@pytest.fixture
-def mock_file_system(mocker, mock_gridfs):
-    """Setup mock file system objects."""
-    mock_fs = mock_gridfs.return_value
-    mock_file_instance = mocker.Mock(_id="file_id")
-    mock_fs.find_one.return_value = mock_file_instance
-    return {"fs": mock_fs, "instance": mock_file_instance}
 
 
 @pytest.fixture
@@ -194,7 +144,7 @@ def test_set_up_connection_with_config(db):
 
 
 def test_get_model_parameters(
-    db,
+    mock_db_handler,
     common_mock_read_production_table,
     common_mock_get_array_element_list,
     common_mock_read_cache,
@@ -207,7 +157,9 @@ def test_get_model_parameters(
     model_version = standard_test_params["model_version"]
     collection = standard_test_params["collection"]
 
-    result = db.get_model_parameters(site, array_element_name, collection, model_version)
+    result = mock_db_handler.get_model_parameters(
+        site, array_element_name, collection, model_version
+    )
 
     common_mock_read_production_table.assert_called_once_with(collection, model_version)
     common_mock_get_array_element_list.assert_called_once_with(
@@ -243,7 +195,7 @@ def test_get_model_parameters(
 
 
 def test_get_model_parameters_for_all_model_versions(
-    db,
+    mock_db_handler,
     mocker,
     standard_test_params,
 ):
@@ -253,11 +205,11 @@ def test_get_model_parameters_for_all_model_versions(
     collection = standard_test_params["collection"]
 
     mock_get_model_versions = mocker.patch.object(
-        db, "get_model_versions", return_value=["5.0.0", "6.0.0"]
+        mock_db_handler, "get_model_versions", return_value=["5.0.0", "6.0.0"]
     )
 
     mock_get_parameter = mocker.patch.object(
-        db,
+        mock_db_handler,
         "get_model_parameters",
         side_effect=lambda site, array_element_name, collection, version: {
             "param1": "val1" if version == "5.0.0" else "val5",
@@ -266,7 +218,9 @@ def test_get_model_parameters_for_all_model_versions(
         },
     )
 
-    result = db.get_model_parameters_for_all_model_versions(site, array_element_name, collection)
+    result = mock_db_handler.get_model_parameters_for_all_model_versions(
+        site, array_element_name, collection
+    )
 
     # Verify that the mocks were called correctly
     mock_get_model_versions.assert_called_once_with(collection)
@@ -289,7 +243,7 @@ def test_get_model_parameters_for_all_model_versions(
 
 
 def test_get_model_parameters_for_all_model_versions_mst(
-    db,
+    mock_db_handler,
     mocker,
     standard_test_params,
 ):
@@ -299,7 +253,7 @@ def test_get_model_parameters_for_all_model_versions_mst(
     collection = standard_test_params["collection"]
 
     mock_get_model_versions = mocker.patch.object(
-        db, "get_model_versions", return_value=["5.0.0", "6.0.0"]
+        mock_db_handler, "get_model_versions", return_value=["5.0.0", "6.0.0"]
     )
 
     # Mock get_model_parameters to raise KeyError for version 5.0.0
@@ -314,13 +268,15 @@ def test_get_model_parameters_for_all_model_versions_mst(
         }
 
     mock_get_parameter = mocker.patch.object(
-        db, "get_model_parameters", side_effect=mock_get_parameters
+        mock_db_handler, "get_model_parameters", side_effect=mock_get_parameters
     )
 
     # Mock logger to verify debug message
-    mock_logger = mocker.patch.object(db._logger, "debug")
+    mock_logger = mocker.patch.object(mock_db_handler._logger, "debug")
 
-    result = db.get_model_parameters_for_all_model_versions(site, array_element_name, collection)
+    result = mock_db_handler.get_model_parameters_for_all_model_versions(
+        site, array_element_name, collection
+    )
 
     # Verify that the mocks were called correctly
     mock_get_model_versions.assert_called_once_with(collection)
@@ -343,7 +299,7 @@ def test_get_model_parameters_for_all_model_versions_mst(
     assert result == expected
 
 
-def test_get_model_parameters_with_cache(db, mocker, standard_test_params):
+def test_get_model_parameters_with_cache(mock_db_handler, mocker, standard_test_params):
     """Test get_model_parameters method with cache."""
     site = standard_test_params["site"]
     array_element_name = standard_test_params["array_element_name"]
@@ -351,18 +307,22 @@ def test_get_model_parameters_with_cache(db, mocker, standard_test_params):
     collection = standard_test_params["collection"]
 
     mock_get_production_table = mocker.patch.object(
-        db,
+        mock_db_handler,
         "read_production_table_from_db",
         return_value={"parameters": {"LSTN-01": {"param1": "v1"}}},
     )
     mock_get_array_element_list = mocker.patch.object(
-        db, "_get_array_element_list", return_value=["LSTN-01"]
+        mock_db_handler, "_get_array_element_list", return_value=["LSTN-01"]
     )
     mock_read_cache = mocker.patch.object(
-        db, "_read_cache", return_value=("cache_key", {"param1": {"value": "cached_value"}})
+        mock_db_handler,
+        "_read_cache",
+        return_value=("cache_key", {"param1": {"value": "cached_value"}}),
     )
 
-    result = db.get_model_parameters(site, array_element_name, collection, model_version)
+    result = mock_db_handler.get_model_parameters(
+        site, array_element_name, collection, model_version
+    )
 
     mock_get_production_table.assert_called_once_with(collection, model_version)
     mock_get_array_element_list.assert_called_once_with(
@@ -378,7 +338,7 @@ def test_get_model_parameters_with_cache(db, mocker, standard_test_params):
     assert result == {"param1": {"value": "cached_value"}}
 
 
-def test_get_model_parameters_no_parameters(db, mocker, standard_test_params):
+def test_get_model_parameters_no_parameters(mock_db_handler, mocker, standard_test_params):
     """Test get_model_parameters method with no parameters."""
     site = standard_test_params["site"]
     array_element_name = standard_test_params["array_element_name"]
@@ -386,14 +346,18 @@ def test_get_model_parameters_no_parameters(db, mocker, standard_test_params):
     collection = standard_test_params["collection"]
 
     mock_get_production_table = mocker.patch.object(
-        db, "read_production_table_from_db", return_value={"parameters": {}}
+        mock_db_handler, "read_production_table_from_db", return_value={"parameters": {}}
     )
     mock_get_array_element_list = mocker.patch.object(
-        db, "_get_array_element_list", return_value=["LSTN-01"]
+        mock_db_handler, "_get_array_element_list", return_value=["LSTN-01"]
     )
-    mock_read_cache = mocker.patch.object(db, "_read_cache", return_value=("cache_key", None))
+    mock_read_cache = mocker.patch.object(
+        mock_db_handler, "_read_cache", return_value=("cache_key", None)
+    )
 
-    result = db.get_model_parameters(site, array_element_name, collection, model_version)
+    result = mock_db_handler.get_model_parameters(
+        site, array_element_name, collection, model_version
+    )
 
     mock_get_production_table.assert_called_once_with(collection, model_version)
     mock_get_array_element_list.assert_called_once_with(
@@ -410,7 +374,7 @@ def test_get_model_parameters_no_parameters(db, mocker, standard_test_params):
 
 
 def test_get_model_parameter_with_model_version_list(
-    db, mock_get_collection_name, common_mock_read_db, mocker, standard_test_params
+    mock_db_handler, mock_get_collection_name, common_mock_read_db, mocker, standard_test_params
 ):
     """Test get_model_parameter method with model_version as list."""
     site = standard_test_params["site"]
@@ -419,7 +383,7 @@ def test_get_model_parameter_with_model_version_list(
 
     # Mock the production table reading
     mock_read_production_table = mocker.patch.object(
-        db,
+        mock_db_handler,
         "read_production_table_from_db",
         return_value={
             "parameters": {
@@ -431,14 +395,14 @@ def test_get_model_parameter_with_model_version_list(
 
     # Mock array element list
     mock_get_array_element_list = mocker.patch.object(
-        db, "_get_array_element_list", return_value=["LSTN-design", "LSTN-01"]
+        mock_db_handler, "_get_array_element_list", return_value=["LSTN-design", "LSTN-01"]
     )
 
     # Update common_mock_read_db to return the expected format
     common_mock_read_db.return_value = {"test_param": {"value": "test_value"}}
 
     # Test with single version as string - should work
-    db.get_model_parameter(
+    mock_db_handler.get_model_parameter(
         parameter="test_param",
         site=site,
         array_element_name=array_element_name,
@@ -470,7 +434,7 @@ def test_get_model_parameter_with_model_version_list(
     error_message = "Only one model version can be passed to get_model_parameter, not a list."
     # Test with multiple versions - should raise ValueError
     with pytest.raises(ValueError, match=error_message):
-        db.get_model_parameter(
+        mock_db_handler.get_model_parameter(
             parameter="test_param",
             site=site,
             array_element_name=array_element_name,
@@ -482,7 +446,7 @@ def test_get_model_parameter_with_model_version_list(
         ValueError,
         match=error_message,
     ):
-        db.get_model_parameter(
+        mock_db_handler.get_model_parameter(
             parameter="test_param",
             site=site,
             array_element_name=array_element_name,
@@ -714,7 +678,7 @@ def test_read_production_table_from_db_with_cache(db, mocker, test_db):
         db.read_production_table_from_db(collection_name, model_version)
 
 
-def test_get_array_elements_of_type(db, mocker):
+def test_get_array_elements_of_type(mock_db_handler, mocker):
     """Test get_array_elements_of_type method."""
     array_element_type = "LSTN"
     model_version = "1.0.0"
@@ -732,22 +696,26 @@ def test_get_array_elements_of_type(db, mocker):
 
     for prod_table, expected in test_cases:
         mock_get_production_table = mocker.patch.object(
-            db, "read_production_table_from_db", return_value=prod_table
+            mock_db_handler, "read_production_table_from_db", return_value=prod_table
         )
-        result = db.get_array_elements_of_type(array_element_type, model_version, collection)
+        result = mock_db_handler.get_array_elements_of_type(
+            array_element_type, model_version, collection
+        )
         mock_get_production_table.assert_called_once_with(collection, model_version)
         assert result == expected
 
     # Test with different array element type
     array_element_type = "MSTS"
     mocker.patch.object(
-        db,
+        mock_db_handler,
         "read_production_table_from_db",
         return_value={
             "parameters": {"LSTN-01": "value1", "MSTS-01": "value3", "MSTS-02": "value4"}
         },
     )
-    result = db.get_array_elements_of_type(array_element_type, model_version, collection)
+    result = mock_db_handler.get_array_elements_of_type(
+        array_element_type, model_version, collection
+    )
     assert result == ["MSTS-01", "MSTS-02"]
 
 

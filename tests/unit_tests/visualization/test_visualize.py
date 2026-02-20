@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-import simtools.utils.general as gen
 from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
@@ -22,7 +21,7 @@ def wavelength():
     return "Wavelength [nm]"
 
 
-def test_plot_1d(db, io_handler, wavelength):
+def test_plot_1d(io_handler, wavelength):
     logger.debug("Testing plot_1d")
 
     x_title = wavelength
@@ -30,16 +29,16 @@ def test_plot_1d(db, io_handler, wavelength):
     headers_type = {"names": (x_title, y_title), "formats": ("f8", "f8")}
     title = "Test 1D plot"
 
+    # Create test data file instead of fetching from DB
     test_file_name = "ref_LST1_2022_04_01.dat"
-    db.export_model_files(
-        db_name=None,
-        dest=io_handler.get_output_directory(sub_dir="model"),
-        file_names=test_file_name,
-    )
-    test_data_file = gen.find_file(
-        test_file_name,
-        io_handler.get_output_directory(sub_dir="model"),
-    )
+    test_data_file = io_handler.get_output_directory(sub_dir="model") / test_file_name
+    test_data_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # Write minimal test data
+    with open(test_data_file, "w") as f:
+        for wavelength_val in range(300, 700, 10):
+            f.write(f"{wavelength_val} 0.85\n")
+
     data_in = np.loadtxt(test_data_file, usecols=(0, 1), dtype=headers_type)
 
     # Change y-axis to percent
