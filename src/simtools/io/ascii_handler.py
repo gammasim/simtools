@@ -127,6 +127,7 @@ def collect_data_from_http(url):
     except TypeError as exc:
         raise TypeError(f"Invalid url {url}") from exc
     except urllib.error.HTTPError as exc:
+        exc.close()  # Properly close the HTTPError to avoid ResourceWarning
         raise FileNotFoundError(f"Failed to download file from {url}") from exc
 
     _logger.debug(f"Downloaded file from {url}")

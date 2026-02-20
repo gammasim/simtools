@@ -171,7 +171,13 @@ def test_make_run_command(simulator_ray_tracing_sst, model_version):
     assert stderr_file.name == log_file
 
 
-def test_make_run_command_single_mirror(simulator_ray_tracing_single_mirror):
+def test_make_run_command_single_mirror(simulator_ray_tracing_single_mirror, mocker):
+    # Mock get_single_mirror_list_file to avoid loading actual mirror list file
+    mocker.patch.object(
+        simulator_ray_tracing_single_mirror.telescope_model,
+        "get_single_mirror_list_file",
+        return_value="single_mirror_list_test.dat",
+    )
     command, _, _ = simulator_ray_tracing_single_mirror.make_run_command()
 
     assert any("bin/sim_telarray" in str(cmd) for cmd in command)

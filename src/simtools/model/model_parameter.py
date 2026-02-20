@@ -325,13 +325,18 @@ class ModelParameter:
                 )
             )
             self.overwrite_parameters(self.overwrite_model_parameter_dict)
-            self._check_model_parameter_versions(self.parameters)
+            self._check_model_parameter_versions(self.parameters, self.ignore_software_version)
 
         self._load_simulation_software_parameter()
         for software_name, parameters in self._simulation_config_parameters.items():
-            self._check_model_parameter_versions(parameters, software_name=software_name)
+            self._check_model_parameter_versions(
+                parameters,
+                ignore_software_version=self.ignore_software_version,
+                software_name=software_name,
+            )
 
-    def _check_model_parameter_versions(self, parameters, software_name=None):
+    @staticmethod
+    def _check_model_parameter_versions(parameters, ignore_software_version, software_name=None):
         """
         Ensure parameters follow the latest schema and are compatible with installed software.
 
@@ -345,6 +350,8 @@ class ModelParameter:
         ----------
         parameters: dict
             Dictionary containing model parameters.
+        ignore_software_version: bool
+            If True, ignore software version checks for deprecated parameters.
         software_name: str
             Name of the software for which the parameters are checked.
         """
@@ -354,7 +361,7 @@ class ModelParameter:
                 schema.validate_deprecation_and_version(
                     data=parameter_schema[par_name],
                     software_name=software_name,
-                    ignore_software_version=self.ignore_software_version,
+                    ignore_software_version=ignore_software_version,
                 )
                 _latest_schema_version = parameter_schema[par_name]["schema_version"]
                 if par_data["model_parameter_schema_version"] != _latest_schema_version:
