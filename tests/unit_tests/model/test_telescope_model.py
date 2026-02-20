@@ -186,7 +186,7 @@ def test_get_on_axis_eff_optical_area_wrong_angle(telescope_model_lst):
             telescope_model_lst.get_on_axis_eff_optical_area()
 
 
-def test_get_calibration_device_name(telescope_model_lst, monkeypatch):
+def test_get_calibration_device_name(telescope_model_lst):
     """Test get_calibration_device_name method."""
     tel_model = telescope_model_lst
 
@@ -226,7 +226,7 @@ def test_mirrors_property(telescope_model_lst, monkeypatch):
     assert load_mirrors_mock.call_count == 1
 
 
-def test_export_single_mirror_list_file(telescope_model_lst, monkeypatch, caplog):
+def test_export_single_mirror_list_file(telescope_model_lst, caplog):
     """Test export_single_mirror_list_file method."""
     tel_model = telescope_model_lst
     tel_model._mirrors = Mock()

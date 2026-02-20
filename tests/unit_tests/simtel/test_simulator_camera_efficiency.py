@@ -13,7 +13,7 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def camera_efficiency_sst(io_handler, model_version, mocker):
+def camera_efficiency_sst(model_version, mocker):
     from unittest.mock import MagicMock
 
     camera_eff = CameraEfficiency(
@@ -62,40 +62,7 @@ def simulator_camera_efficiency(camera_efficiency_sst, site_model_south, mocker)
     return simulator
 
 
-@pytest.fixture
-def expected_command():
-    return [
-        "testeff",
-        "-fnsb",
-        "-alt",
-        "2147.0",
-        "-fatm",
-        "atm_trans_2147_1_10_2_0_2147.dat",
-        "-flen",
-        "2.15191",
-        "-fcur",
-        "4.241",
-        "-spix",
-        "0.6",
-        "-fmir",
-        "weighted_average_1D_primary_mirror_incidence_angle_ref_astri-2d_2018-01-17.dat",
-        "-m2",
-        "-teltrans",
-        "0.921",
-        "transmission_sstcam_weighted_220512.dat",
-        "-fqe",
-        "PDE_lvr3_6mm_75um_uncoated_5.9V.dat",
-    ]
-
-
-@pytest.fixture
-def benn_ellison_spectrum_file_name():
-    return "Benn_LaPalma_sky_converted.lis"
-
-
-def test_make_run_command(
-    simulator_camera_efficiency, expected_command, benn_ellison_spectrum_file_name
-):
+def test_make_run_command(simulator_camera_efficiency):
     # With mocked database, just verify make_run_command() executes without errors
     command, std_out_file, std_err_file = simulator_camera_efficiency.make_run_command()
 
@@ -110,7 +77,7 @@ def test_make_run_command(
     assert std_err_file is None
 
 
-def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency, expected_command):
+def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency):
     # With mocked database, just verify make_run_command() executes without errors
     simulator_camera_efficiency.nsb_spectrum = (
         "tests/resources/benn_ellison_spectrum_for_testing.txt"
@@ -128,9 +95,7 @@ def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency, expecte
     assert any("benn_ellison_spectrum_for_testing.txt" in str(cmd) for cmd in command)
 
 
-def test_make_run_command_without_altitude_correction(
-    simulator_camera_efficiency, expected_command, benn_ellison_spectrum_file_name
-):
+def test_make_run_command_without_altitude_correction(simulator_camera_efficiency):
     # With mocked database, just verify make_run_command() executes without errors
     simulator_camera_efficiency.skip_correction_to_nsb_spectrum = True
     command, _, _ = simulator_camera_efficiency.make_run_command()
