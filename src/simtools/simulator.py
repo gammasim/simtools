@@ -486,7 +486,17 @@ class Simulator:
         )
 
     def _overwrite_required_parameter(self, calibration_model, parameter_name, flasher_photons):
-        """Overwrite one required calibration parameter."""
+        """Overwrite a required calibration parameter in the model.
+
+        Parameters
+        ----------
+        calibration_model : CalibrationModel
+            Calibration model instance whose parameter should be updated.
+        parameter_name : str
+            Name of the calibration parameter to overwrite.
+        flasher_photons : int or float
+            Value to write to ``parameter_name``.
+        """
         calibration_model.overwrite_model_parameter(parameter_name, flasher_photons)
 
     def _get_first_corsika_config(self):
