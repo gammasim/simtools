@@ -91,7 +91,21 @@ class SimulatorLightEmission(SimtelRunner):
 
     @staticmethod
     def _as_number_list(value, cast=float):
-        """Return a list of numbers from scalar/list/comma-separated input."""
+        """Return a list of converted numeric values from flexible input formats.
+
+        Parameters
+        ----------
+        value : Any
+            Input value to parse. Can be a scalar, a ``list``/``tuple``, or a
+            comma-separated ``str``.
+        cast : callable, optional
+            Conversion function applied to each parsed item. Defaults to ``float``.
+
+        Returns
+        -------
+        list
+            List of values converted with ``cast``.
+        """
         if isinstance(value, (list, tuple)):
             values = value
         elif isinstance(value, str) and "," in value:
