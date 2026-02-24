@@ -478,25 +478,7 @@ class Simulator:
         flasher_photons,
     ):
         """Overwrite direct-injection photon parameter used by sim_telarray."""
-        self._overwrite_required_parameter(
-            calibration_model=calibration_model,
-            parameter_name="flasher_photons_at_pixel",
-            flasher_photons=flasher_photons,
-        )
-
-    def _overwrite_required_parameter(self, calibration_model, parameter_name, flasher_photons):
-        """Overwrite a required calibration parameter in the model.
-
-        Parameters
-        ----------
-        calibration_model : CalibrationModel
-            Calibration model instance whose parameter should be updated.
-        parameter_name : str
-            Name of the calibration parameter to overwrite.
-        flasher_photons : int or float
-            Value to write to ``parameter_name``.
-        """
-        calibration_model.overwrite_model_parameter(parameter_name, flasher_photons)
+        calibration_model.overwrite_model_parameter("flasher_photons_at_pixel", flasher_photons)
 
     def _get_first_corsika_config(self):
         """
