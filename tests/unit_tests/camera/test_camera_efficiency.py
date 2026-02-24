@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+import shutil
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -49,21 +50,29 @@ def camera_efficiency_lst(config_data_lst, mocker):
 
 
 @pytest.fixture
-def prepare_results_file(camera_efficiency_lst, mocker):
+def prepare_results_file(camera_efficiency_lst, mocker, tmp_test_directory):
+    # The actual test resource file has "table_" and "validate_camera_efficiency" in the name
     test_resource_file = Path(
         "tests/resources/"
         "camera_efficiency_table_North_LSTN-01_za20.0deg_azm000deg_validate_camera_efficiency.ecsv"
     )
+    test_results_file = (
+        Path(tmp_test_directory)
+        / "camera_efficiency_table_North_LSTN-01_za20.0deg_azm000deg_validate_camera_efficiency.ecsv"
+    )
+    shutil.copyfile(test_resource_file, test_results_file)
+
+    # Mock _file["results"] to point to a temporary copy
     mocker.patch.object(
         camera_efficiency_lst,
         "_file",
         {
-            "results": test_resource_file,
+            "results": test_results_file,
             "sim_telarray": camera_efficiency_lst._file["sim_telarray"],
             "log": camera_efficiency_lst._file["log"],
         },
     )
-    return test_resource_file
+    return test_results_file
 
 
 def test_report(camera_efficiency_lst):
@@ -153,8 +162,6 @@ def test_analyze_has_results(camera_efficiency_lst, prepare_results_file):
 
 
 def test_analyze_from_file(camera_efficiency_lst, mocker):
-    from pathlib import Path
-
     camera_efficiency_lst._file["sim_telarray"] = Path(
         "tests/resources/"
         "camera_efficiency_North_MSTx-NectarCam_za20.0deg_azm000deg_validate_camera_efficiency.dat"
