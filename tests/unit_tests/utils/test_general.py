@@ -794,6 +794,15 @@ def test_ensure_iterable():
     assert gen.ensure_iterable((1, 2, 3)) == (1, 2, 3)
 
 
+def test_parse_typed_sequence():
+    assert gen.parse_typed_sequence(None) == []
+    assert gen.parse_typed_sequence(["1", "2"], int) == [1, 2]
+    assert gen.parse_typed_sequence(("1", "2"), int) == [1, 2]
+    assert gen.parse_typed_sequence("1, 2,3", int) == [1, 2, 3]
+    assert gen.parse_typed_sequence(5, int) == [5]
+    assert gen.parse_typed_sequence("2.5") == [2.5]
+
+
 @patch("tarfile.open")  # NOSONAR
 def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
     tar_file_name = tmp_test_directory / "test_archive.tar.gz"
