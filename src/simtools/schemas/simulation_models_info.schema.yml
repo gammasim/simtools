@@ -32,7 +32,10 @@ definitions:
         type: object
         description: A map of design names to their parameter changes.
         propertyNames:
-          $ref: 'common_definitions.schema.yml#/$defs/telescope_name_pattern'
+          anyOf:
+            - $ref: 'common_definitions.schema.yml#/$defs/telescope_name_pattern'
+            - enum:
+                - "configuration_corsika"
         additionalProperties:
           type: object
           additionalProperties:

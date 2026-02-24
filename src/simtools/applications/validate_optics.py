@@ -109,6 +109,20 @@ def _parse():
         default=0.25,
     )
     config.parser.add_argument(
+        "--offset_file",
+        help="Path to ECSV file with x, y offset columns (in degrees). "
+        "If provided, overrides max_offset and offset_steps.",
+        type=str,
+        default=None,
+    )
+    config.parser.add_argument(
+        "--offset_directions",
+        help="Cardinal directions for offset generation (comma-separated): N,S,E,W. "
+        "Only used with max_offset. Default: all four directions.",
+        type=str,
+        default="N,S,E,W",
+    )
+    config.parser.add_argument(
         "--plot_images",
         help="Produce a multiple pages pdf file with the image plots.",
         action="store_true",
@@ -131,6 +145,12 @@ def main():
         f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n"
     )
 
+    offset_directions = None
+    if app_context.args.get("offset_directions"):
+        offset_directions = [
+            d.strip().upper() for d in app_context.args["offset_directions"].split(",")
+        ]
+
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
@@ -143,6 +163,8 @@ def main():
             int(app_context.args["max_offset"] / app_context.args["offset_steps"]) + 1,
         )
         * u.deg,
+        offset_file=app_context.args.get("offset_file"),
+        offset_directions=offset_directions,
     )
     ray.simulate(test=app_context.args["test"], force=False)
     ray.analyze(force=True)
@@ -150,12 +172,11 @@ def main():
     # Plotting
     for key in ["psf_deg", "psf_cm", "eff_area", "eff_flen"]:
         plt.figure(figsize=(8, 6), tight_layout=True)
-
-        ray.plot(key, marker="o", linestyle=":", color="k")
-
+        ray.plot(key, marker="o", linestyle="none", color="k")
         plot_file_name = "_".join((app_context.args.get("label"), tel_model.name, key))
         plot_file = app_context.io_handler.get_output_file(plot_file_name)
-        visualize.save_figure(plt, plot_file)
+        visualize.save_figure(plt, plot_file, figure_format="png")
+        plt.close()
 
     # Plotting images
     if app_context.args["plot_images"]:
@@ -165,12 +186,55 @@ def main():
 
         app_context.logger.info(f"Plotting images into {plot_file}")
 
-        for image in ray.images():
+        # First pass: find the maximum extent in x and y across all images
+        images_dict = ray.psf_images
+        max_x_extent = 0.0
+        max_y_extent = 0.0
+
+        for image in images_dict.values():
+            data = image.get_image_data(centralized=True)
+            if len(data) > 0:
+                x_extent = np.max(np.abs(data["X"]))
+                y_extent = np.max(np.abs(data["Y"]))
+                max_x_extent = max(max_x_extent, x_extent)
+                max_y_extent = max(max_y_extent, y_extent)
+
+        max_extent = max(max_x_extent, max_y_extent)
+        max_extent_rounded = np.ceil(max_extent * 2) / 2  # Round up to nearest 0.5
+
+        app_context.logger.info(
+            f"Setting consistent image axes: x,y range = +-{max_extent_rounded} cm"
+        )
+
+        # Second pass: plot all images with consistent axes
+        for (off_x, off_y), image in images_dict.items():
             fig = plt.figure(figsize=(8, 6), tight_layout=True)
-            image.plot_image()
+            image.plot_image(
+                image_range=[
+                    [-max_extent_rounded, max_extent_rounded],
+                    [-max_extent_rounded, max_extent_rounded],
+                ]
+            )
+
+            # Get PSF in cm
+            psf_cm = image.get_psf(fraction=0.8, unit="cm")
+
+            # Add text annotations
+            ax = plt.gca()
+            text_str = f"Offset: ({off_x:+.2f} deg, {off_y:+.2f} deg)\nPSF: {psf_cm:.2f} cm"
+            ax.text(
+                0.02,
+                0.98,
+                text_str,
+                transform=ax.transAxes,
+                verticalalignment="top",
+                bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.8},
+                fontsize=10,
+                family="monospace",
+            )
+
             pdf_pages.savefig(fig)
-            plt.clf()
-        plt.close()
+            plt.close(fig)
         pdf_pages.close()
 
 

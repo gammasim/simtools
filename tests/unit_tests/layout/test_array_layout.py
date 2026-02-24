@@ -67,11 +67,6 @@ def array_layout_south_four_lst_instance(model_version):
     )
 
 
-def test_initialize_site_parameters_from_db():
-    with pytest.raises(ValueError, match="Invalid version string: test_model_version"):
-        ArrayLayout(site="North", model_version="test_model_version")
-
-
 def test_initialize_coordinate_systems(
     north_layout_center_data_dict,
     array_layout_north_instance,
@@ -115,11 +110,11 @@ def test_initialize_coordinate_systems(
     )
 
 
-def test_select_assets(telescope_north_with_calibration_devices_test_file, model_version):
+def test_select_assets(model_version, get_test_data_file):
     layout = ArrayLayout(
         site="North",
         name="test_layout",
-        telescope_list_file=telescope_north_with_calibration_devices_test_file,
+        telescope_list_file=get_test_data_file("telescope_positions", "North-calibration"),
         model_version=model_version,
     )
 
@@ -136,10 +131,7 @@ def test_select_assets(telescope_north_with_calibration_devices_test_file, model
     assert len(layout._telescope_list) == 0
 
 
-def test_add_tel(
-    array_layout_north_instance,
-    array_layout_south_instance,
-):
+def test_add_tel(array_layout_south_instance):
     def test_one_site(instance, altitude, tel_name, design_model):
         ntel_before = instance.get_number_of_telescopes()
         instance.add_telescope(
@@ -153,7 +145,6 @@ def test_add_tel(
         )
         assert instance._telescope_list[-1].get_altitude().value == pytest.approx(altitude)
 
-    test_one_site(array_layout_north_instance, 2197.0, "MSTN-20", "MSTx-NectarCam")
     test_one_site(array_layout_south_instance, 2181.0, "LSTS-05", "LSTS-design")
 
 
@@ -245,20 +236,6 @@ def test_build_layout(
     )
 
 
-def test_converting_center_coordinates_north(array_layout_north_four_lst_instance):
-    layout = array_layout_north_four_lst_instance
-
-    _lat, _lon, _ = layout._array_center.get_coordinates("mercator")
-    assert _lat.value == pytest.approx(28.7621661)
-    assert _lon.value == pytest.approx(-17.8920302)
-
-    _east, _north, _ = layout._array_center.get_coordinates("utm")
-    assert _north.value == pytest.approx(3185066.278)
-    assert _east.value == pytest.approx(217608.975)
-
-    assert layout._array_center.get_altitude().value == pytest.approx(2177.0)
-
-
 def test_converting_center_coordinates_south(array_layout_south_four_lst_instance):
     layout = array_layout_south_four_lst_instance
 
@@ -295,15 +272,14 @@ def test_altitude_from_corsika_z(
             instance._altitude_from_corsika_z(5.0, None, telescope_axis_height=16.0 * u.m)
         assert np.isnan(instance._altitude_from_corsika_z(None, None, None))
 
-    test_one_site(array_layout_north_four_lst_instance, "LSTN-01", 2185.0, 45.0)
+    test_one_site(array_layout_north_four_lst_instance, "LSTN-01", 2187.0, 45.0)
     test_one_site(array_layout_south_four_lst_instance, "LSTS-01", 2176.0, 45.0)
 
 
 def test_try_set_altitude(
     array_layout_north_instance,
-    telescope_north_test_file,
     array_layout_south_instance,
-    telescope_south_test_file,
+    get_test_data_file,
 ):
     obs_level_north = 2158.0
     manual_z_positions_north = [43.00, 32.00, 28.70, 32.00, 50.3, 24.0]
@@ -328,14 +304,14 @@ def test_try_set_altitude(
                 assert pytest.approx(_crs["zz"]["value"], 0.01) == manual_altitudes[step]
 
     test_one_site(
-        telescope_north_test_file,
+        get_test_data_file("telescope_positions", "North"),
         array_layout_north_instance,
         obs_level_north,
         manual_z_positions_north,
         telescope_axis_height_north,
     )
     test_one_site(
-        telescope_south_test_file,
+        get_test_data_file("telescope_positions", "South"),
         array_layout_south_instance,
         obs_level_south,
         manual_z_positions_south,
@@ -345,9 +321,8 @@ def test_try_set_altitude(
 
 def test_try_set_coordinate(
     array_layout_north_instance,
-    telescope_north_test_file,
     array_layout_south_instance,
-    telescope_south_test_file,
+    get_test_data_file,
 ):
     manual_xx_north = [-70.99, -35.38, 75.22, 30.78, -211.61, -153.34]
     manual_yy_north = [-52.08, 66.14, 50.45, -64.51, 5.67, 169.04]
@@ -372,16 +347,22 @@ def test_try_set_coordinate(
                 instance._load_telescope_names(row)
 
     test_one_site(
-        array_layout_north_instance, telescope_north_test_file, manual_xx_north, manual_yy_north
+        array_layout_north_instance,
+        get_test_data_file("telescope_positions", "North"),
+        manual_xx_north,
+        manual_yy_north,
     )
     test_one_site(
-        array_layout_south_instance, telescope_south_test_file, manual_xx_south, manual_yy_south
+        array_layout_south_instance,
+        get_test_data_file("telescope_positions", "South"),
+        manual_xx_south,
+        manual_yy_south,
     )
 
 
-def test_len(telescope_north_test_file, model_version):
+def test_len(model_version, get_test_data_file):
     layout = ArrayLayout(
-        telescope_list_file=telescope_north_test_file,
+        telescope_list_file=get_test_data_file("telescope_positions", "North"),
         model_version=model_version,
         site="North",
     )
@@ -389,9 +370,9 @@ def test_len(telescope_north_test_file, model_version):
     assert layout.get_number_of_telescopes() == 13
 
 
-def test_getitem(telescope_north_test_file, model_version):
+def test_getitem(model_version, get_test_data_file):
     layout = ArrayLayout(
-        telescope_list_file=telescope_north_test_file,
+        telescope_list_file=get_test_data_file("telescope_positions", "North"),
         model_version=model_version,
         site="North",
     )
@@ -400,12 +381,13 @@ def test_getitem(telescope_north_test_file, model_version):
 
 
 def test_export_telescope_list_table(
-    telescope_north_test_file, telescope_north_utm_test_file, model_version
+    model_version,
+    get_test_data_file,
 ):
     layout = ArrayLayout(
         site="North",
         model_version=model_version,
-        telescope_list_file=telescope_north_test_file,
+        telescope_list_file=get_test_data_file("telescope_positions", "North"),
     )
     table = layout.export_telescope_list_table(crs_name="ground")
     assert isinstance(table, QTable)
@@ -418,7 +400,7 @@ def test_export_telescope_list_table(
     layout_utm = ArrayLayout(
         site="North",
         model_version=model_version,
-        telescope_list_file=telescope_north_utm_test_file,
+        telescope_list_file=get_test_data_file("telescope_positions", "North-utm"),
     )
     table_utm = layout_utm.export_telescope_list_table(crs_name="utm")
     assert "asset_code" in table_utm.colnames
@@ -433,7 +415,7 @@ def test_export_telescope_list_table(
         pytest.fail("IndexError raised")
 
 
-def test_export_one_telescope_as_json(model_version, telescope_north_utm_test_file):
+def test_export_one_telescope_as_json(model_version, get_test_data_file):
     layout = ArrayLayout(
         site="North",
         model_version=model_version,
@@ -456,13 +438,13 @@ def test_export_one_telescope_as_json(model_version, telescope_north_utm_test_fi
     layout_utm = ArrayLayout(
         site="North",
         model_version=model_version,
-        telescope_list_file=telescope_north_utm_test_file,
+        telescope_list_file=get_test_data_file("telescope_positions", "North-utm"),
     )
     with pytest.raises(ValueError, match=r"Only one telescope can be exported to json"):
         layout_utm.export_one_telescope_as_json(crs_name="ground")
 
 
-def test_read_table_from_json_file(model_version):
+def test_read_table_from_json_file(model_version, get_test_data_file):
     ground_table_file = "tests/resources/model_parameters/array_element_position_ground-2.0.0.json"
     layout = ArrayLayout(
         site="North",

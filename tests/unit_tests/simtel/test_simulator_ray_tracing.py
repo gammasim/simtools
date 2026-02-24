@@ -46,7 +46,8 @@ def simulator_ray_tracing_sst(ray_tracing_sst, telescope_model_sst, site_model_s
         site_model=site_model_south,
         config_data={
             "zenith_angle": ray_tracing_sst.zenith_angle,
-            "off_axis_angle": 0.0,
+            "off_axis_x": 0.0,
+            "off_axis_y": 0.0,
             "source_distance": 10,
             "single_mirror_mode": ray_tracing_sst.single_mirror_mode,
             "use_random_focal_length": ray_tracing_sst.use_random_focal_length,
@@ -63,7 +64,8 @@ def simulator_ray_tracing_single_mirror(ray_tracing_mst, telescope_model_mst, si
         site_model=site_model_south,
         config_data={
             "zenith_angle": ray_tracing_mst.zenith_angle,
-            "off_axis_angle": 0.0,
+            "off_axis_x": 0.0,
+            "off_axis_y": 0.0,
             "source_distance": 10.0 * u.km,
             "single_mirror_mode": True,
             "use_random_focal_length": ray_tracing_mst.use_random_focal_length,
@@ -162,12 +164,20 @@ def test_make_run_command(simulator_ray_tracing_sst, model_version):
     assert any("altitude=2147.0" in str(cmd) for cmd in command)
     assert any("telescope_theta=20.0" in str(cmd) for cmd in command)
     assert any("star_photons=100000" in str(cmd) for cmd in command)
-    log_file = f"ray_tracing_log_South_SSTS-design_d10.0km_za20.0deg_off0.000deg_{LABEL}.log"
+    log_file = (
+        f"ray_tracing_log_South_SSTS-design_d10.0km_za20.0deg_off_x+0.000_y+0.000deg_{LABEL}.log"
+    )
     assert stdout_file.name == log_file
     assert stderr_file.name == log_file
 
 
-def test_make_run_command_single_mirror(simulator_ray_tracing_single_mirror):
+def test_make_run_command_single_mirror(simulator_ray_tracing_single_mirror, mocker):
+    # Mock get_single_mirror_list_file to avoid loading actual mirror list file
+    mocker.patch.object(
+        simulator_ray_tracing_single_mirror.telescope_model,
+        "get_single_mirror_list_file",
+        return_value="single_mirror_list_test.dat",
+    )
     command, _, _ = simulator_ray_tracing_single_mirror.make_run_command()
 
     assert any("bin/sim_telarray" in str(cmd) for cmd in command)
