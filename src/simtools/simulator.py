@@ -226,8 +226,7 @@ class Simulator:
         base_run_number = int(base_args.get("run_number", 1))
 
         events = cls._parse_sequence(base_args.get("number_of_events", 1), int)
-        photons = cls._parse_sequence(base_args.get("flasher_photons"), float)
-        photons = [max(1, round(photon)) for photon in photons]
+        photons = cls._parse_sequence(base_args.get("flasher_photons"), int)
 
         n_runs = max(len(events), len(photons), 1)
 
@@ -257,7 +256,7 @@ class Simulator:
                 run_args["run_number"] = base_run_number + idx
                 run_args["number_of_events"] = int(events[idx])
                 if photons[idx] is not None:
-                    run_args["flasher_photons"] = int(photons[idx])
+                    run_args["flasher_photons"] = photons[idx]
 
                 settings.config.load(args=run_args, db_config=base_db_config)
 
