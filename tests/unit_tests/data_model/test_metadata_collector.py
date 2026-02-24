@@ -119,7 +119,7 @@ def test_get_site(args_dict_site):
 
 
 def test_read_input_metadata_from_file(
-    args_dict_site, tmp_test_directory, caplog, sim_telarray_file_proton, corsika_file_gamma
+    args_dict_site, tmp_test_directory, caplog, get_test_data_file
 ):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
@@ -162,12 +162,12 @@ def test_read_input_metadata_from_file(
         metadata_1._read_input_metadata_from_file()
 
     with caplog.at_level(logging.WARNING):
-        metadata_1.args_dict["input_meta"] = sim_telarray_file_proton
+        metadata_1.args_dict["input_meta"] = get_test_data_file("sim_telarray", "proton")
         metadata_1._read_input_metadata_from_file()
     assert "Metadata extraction from sim_telarray files is not supported yet." in caplog.text
 
     with caplog.at_level(logging.WARNING):
-        metadata_1.args_dict["input_meta"] = corsika_file_gamma
+        metadata_1.args_dict["input_meta"] = get_test_data_file("corsika", "gamma")
         metadata_1._read_input_metadata_from_file()
     assert "Metadata extraction from CORSIKA files is not supported yet." in caplog.text
 

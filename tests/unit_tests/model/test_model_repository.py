@@ -319,6 +319,36 @@ def test_update_parameters_dict_new_function():
     assert "param_to_deprecate" in deprecated  # Should be in deprecated list
 
 
+def test_get_production_table_key_configuration_corsika():
+    """Test mapping configuration_corsika to xSTx-design."""
+    assert model_repository._get_production_table_key("configuration_corsika") == "xSTx-design"
+
+
+def test_get_production_table_key_passthrough():
+    """Test passthrough for non-configuration tables."""
+    assert model_repository._get_production_table_key("LSTN-01") == "LSTN-01"
+
+
+def test_update_parameters_dict_configuration_corsika_key_mapping():
+    """Test _update_parameters_dict uses xSTx-design for configuration_corsika."""
+    existing_params = {"corsika_param": "1.0.0", "obsolete": "1.0.0"}
+    changes = {
+        "configuration_corsika": {
+            "corsika_param": {"version": "2.0.0", "value": 12.0},
+            "obsolete": {"version": "1.0.0", "deprecated": True},
+        }
+    }
+
+    parameters, deprecated = model_repository._update_parameters_dict(
+        existing_params, changes, "configuration_corsika"
+    )
+
+    assert "configuration_corsika" not in parameters
+    assert parameters["xSTx-design"]["corsika_param"] == "2.0.0"
+    assert "obsolete" not in parameters["xSTx-design"]
+    assert "obsolete" in deprecated
+
+
 def test_apply_changes_to_production_table_update_model_version():
     """Test updating the model version in the production table."""
     data = {
@@ -368,6 +398,59 @@ def test_apply_changes_to_production_table_update_parameters_dict():
     # Only parameters for the matching production_table_name should be included
     assert data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
     assert "MSTx-NectarCam" not in data["parameters"]
+
+
+def test_apply_changes_to_production_table_configuration_corsika_full_update():
+    """Test configuration_corsika updates use xSTx-design in full update mode."""
+    data = {
+        "production_table_name": "configuration_corsika",
+        "parameters": {
+            "xSTx-design": {"corsika_param": "1.0.0", "obsolete": "1.0.0"},
+        },
+    }
+    changes = {
+        "configuration_corsika": {
+            "corsika_param": {"version": "2.0.0", "value": 12.0},
+            "obsolete": {"version": "1.0.0", "deprecated": True},
+        }
+    }
+    model_version = "6.5.0"
+
+    model_repository._apply_changes_to_production_table(
+        data["production_table_name"], data, changes, model_version, False
+    )
+
+    assert data["model_version"] == "6.5.0"
+    assert "configuration_corsika" not in data["parameters"]
+    assert data["parameters"]["xSTx-design"]["corsika_param"] == "2.0.0"
+    assert "obsolete" not in data["parameters"]["xSTx-design"]
+
+
+def test_apply_changes_to_production_table_configuration_corsika_patch_update():
+    """Test configuration_corsika updates use xSTx-design in patch update mode."""
+    data = {
+        "production_table_name": "configuration_corsika",
+        "parameters": {
+            "xSTx-design": {"corsika_param": "1.0.0", "extra_param": "1.2.0"},
+        },
+    }
+    changes = {
+        "configuration_corsika": {
+            "corsika_param": {"version": "2.0.0", "value": 12.0},
+            "extra_param": {"version": "1.2.0", "deprecated": True},
+        }
+    }
+    model_version = "6.5.0"
+
+    model_repository._apply_changes_to_production_table(
+        data["production_table_name"], data, changes, model_version, True
+    )
+
+    assert data["model_version"] == "6.5.0"
+    assert "configuration_corsika" not in data["parameters"]
+    assert data["parameters"]["xSTx-design"]["corsika_param"] == "2.0.0"
+    assert "extra_param" not in data["parameters"]["xSTx-design"]
+    assert data["deprecated_parameters"] == ["extra_param"]
 
 
 def test_apply_changes_to_production_table_no_parameters():

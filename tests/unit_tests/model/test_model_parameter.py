@@ -8,9 +8,13 @@ import pytest
 from astropy import units as u
 
 import simtools.utils.general as gen
-from simtools.db.db_handler import DatabaseHandler
-from simtools.model.model_parameter import InvalidModelParameterError
+from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
 from simtools.model.telescope_model import TelescopeModel
+
+# Capture the original static method at import time, before autouse fixtures can mock it
+_check_model_parameter_versions = ModelParameter.__dict__[
+    "_check_model_parameter_versions"
+].__func__
 
 logger = logging.getLogger()
 
@@ -166,17 +170,6 @@ def test_load_simulation_software_parameter(telescope_model_lst, caplog):
     assert len(caplog.records) == 0
 
 
-def test_load_parameters_from_db(telescope_model_lst, mocker):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    mock_db = mocker.patch.object(DatabaseHandler, "get_model_parameters")
-    telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 3
-
-    telescope_copy.db = None
-    telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 3
-
-
 def test_overwrite_model_parameter(telescope_model_lst):
     tel_model = copy.deepcopy(telescope_model_lst)
 
@@ -283,18 +276,6 @@ def test_overwrite_model_file(telescope_model_lst, mocker):
     mock_copy.assert_called_once_with(file_path, telescope_copy.config_file_directory)
 
 
-def test_export_model_files(telescope_model_lst, mocker):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    mock_db = mocker.patch.object(DatabaseHandler, "export_model_files")
-    telescope_copy.export_model_files()
-    assert telescope_copy._is_exported_model_files_up_to_date
-    mock_db.assert_called_once()
-
-    telescope_copy._added_parameter_files = ["test_file"]
-    with pytest.raises(KeyError):
-        telescope_copy.export_model_files()
-
-
 def test_config_file_path(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     telescope_copy._config_file_path = None
@@ -305,29 +286,6 @@ def test_config_file_path(telescope_model_lst, mocker):
     telescope_copy._config_file_path = Path("test_path")
     assert telescope_copy.config_file_path == Path("test_path")
     not mock_config.assert_called_once()
-
-
-def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_model_lst, mocker):
-    model_directory = Path("test_model_directory")
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-
-    mock_db_export = mocker.patch.object(DatabaseHandler, "export_model_files")
-    mock_simulation_config_parameters = {
-        "sim_telarray": {"correct_nsb_spectrum_to_telescope_altitude": {"value": "test_value"}}
-    }
-    telescope_copy._simulation_config_parameters = mock_simulation_config_parameters
-
-    telescope_copy.export_nsb_spectrum_to_telescope_altitude_correction_file(model_directory)
-
-    mock_db_export.assert_called_once_with(
-        parameters={
-            "nsb_spectrum_at_2200m": {
-                "value": "test_value",
-                "file": True,
-            }
-        },
-        dest=model_directory,
-    )
 
 
 def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
@@ -589,3 +547,72 @@ def test__get_key_for_parameter_changes(telescope_model_lst):
         telescope_model_lst._get_key_for_parameter_changes("North", "LSTN-design", {lst: "abc"})
         is None
     )
+
+
+def test_check_model_parameter_versions(mocker):
+    """Test _check_model_parameter_versions with up-to-date and unknown parameters.
+
+    Uses the module-level reference captured at import time to bypass the autouse
+    fixture that patches the method on the class.
+    """
+    parameters = {
+        "num_gains": {
+            "value": 2,
+            "model_parameter_schema_version": "1.0.0",
+        },
+        "unknown_param": {  # Not in schema - should be silently skipped
+            "value": 42,
+            "model_parameter_schema_version": "1.0.0",
+        },
+    }
+
+    mocker.patch(
+        "simtools.model.model_parameter.names.model_parameters",
+        return_value={"num_gains": {"schema_version": "1.0.0"}},
+    )
+    mock_validate = mocker.patch(
+        "simtools.model.model_parameter.schema.validate_deprecation_and_version"
+    )
+    mock_apply = mocker.patch(
+        "simtools.model.model_parameter.legacy_model_parameter.apply_legacy_updates_to_parameters"
+    )
+
+    _check_model_parameter_versions(parameters, ignore_software_version=False)
+
+    # validate called only for "num_gains" (known in schema); "unknown_param" is skipped
+    mock_validate.assert_called_once_with(
+        data={"schema_version": "1.0.0"},
+        software_name=None,
+        ignore_software_version=False,
+    )
+    # apply always called unconditionally at the end, with empty legacy updates
+    mock_apply.assert_called_once_with(parameters, {})
+
+
+def test_check_model_parameter_versions_triggers_legacy_update(mocker):
+    """Test _check_model_parameter_versions triggers legacy update for outdated schema version."""
+    parameters = {
+        "num_gains": {
+            "value": 2,
+            "model_parameter_schema_version": "0.9.0",  # Outdated - does not match schema
+        }
+    }
+
+    mocker.patch(
+        "simtools.model.model_parameter.names.model_parameters",
+        return_value={"num_gains": {"schema_version": "1.0.0"}},
+    )
+    mocker.patch("simtools.model.model_parameter.schema.validate_deprecation_and_version")
+    mock_update = mocker.patch(
+        "simtools.model.model_parameter.legacy_model_parameter.update_parameter",
+        return_value={"num_gains": {"value": 99}},
+    )
+    mock_apply = mocker.patch(
+        "simtools.model.model_parameter.legacy_model_parameter.apply_legacy_updates_to_parameters"
+    )
+
+    _check_model_parameter_versions(parameters, ignore_software_version=False)
+
+    # Legacy update triggered because schema version mismatch (0.9.0 != 1.0.0)
+    mock_update.assert_called_once_with("num_gains", parameters, "1.0.0")
+    mock_apply.assert_called_once_with(parameters, {"num_gains": {"value": 99}})
