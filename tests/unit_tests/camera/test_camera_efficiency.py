@@ -3,6 +3,7 @@
 import logging
 import shutil
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import astropy.units as u
 import numpy as np
