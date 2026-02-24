@@ -220,7 +220,25 @@ class Simulator:
 
     @classmethod
     def simulate_direct_injection_sequence(cls, label=None):
-        """Simulate direct injection for one or multiple event/photon settings."""
+        """Run direct-injection simulations for one or multiple intensity settings.
+
+        This method supports filter-wheel-like sequences by allowing
+        ``number_of_events`` and ``flasher_photons`` to be provided as either
+        scalars or sequences. For multi-step runs, one value can be broadcast to
+        all steps, or one value per step can be provided explicitly.
+
+        Parameters
+        ----------
+        label : str or None, optional
+                Optional simulation label passed to the simulator instance for each
+                sequence step.
+
+        Returns
+        -------
+        None
+                This method runs simulations as side effects and does not return a
+                value.
+        """
         base_args = dict(settings.config.args)
         base_db_config = dict(settings.config.db_config)
         base_run_number = int(base_args.get("run_number", 1))
