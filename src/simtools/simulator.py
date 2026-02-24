@@ -188,36 +188,6 @@ class Simulator:
             env=simtel_runner.SIM_TELARRAY_ENV,
         )
 
-    @staticmethod
-    def _parse_sequence(value, cast=float):
-        """Parse scalar or sequence input into a list of typed values.
-
-        Supports ``None``, scalars, lists/tuples, and comma-separated strings.
-        All parsed items are converted with the provided ``cast`` callable.
-
-        Parameters
-        ----------
-        value : Any
-            Input value to parse. Supported forms are ``None``, a scalar,
-            a ``list``/``tuple``, or a comma-separated ``str``.
-        cast : callable, optional
-            Conversion callable applied to each parsed item. Defaults to ``float``.
-
-        Returns
-        -------
-        list
-            List of converted values. Returns an empty list when ``value`` is ``None``.
-        """
-        if value is None:
-            return []
-        if isinstance(value, list):
-            return [cast(item) for item in value]
-        if isinstance(value, tuple):
-            return [cast(item) for item in value]
-        if isinstance(value, str) and "," in value:
-            return [cast(item.strip()) for item in value.split(",") if item.strip()]
-        return [cast(value)]
-
     @classmethod
     def simulate_direct_injection_sequence(cls, label=None):
         """Run direct-injection simulations for one or multiple intensity settings.
@@ -243,8 +213,8 @@ class Simulator:
         base_db_config = dict(settings.config.db_config)
         base_run_number = int(base_args.get("run_number", 1))
 
-        events = cls._parse_sequence(base_args.get("number_of_events", 1), int)
-        photons = cls._parse_sequence(base_args.get("flasher_photons"), int)
+        events = general.parse_typed_sequence(base_args.get("number_of_events", 1), int)
+        photons = general.parse_typed_sequence(base_args.get("flasher_photons"), int)
 
         n_runs = max(len(events), len(photons), 1)
 
