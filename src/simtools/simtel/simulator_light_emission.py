@@ -15,6 +15,7 @@ from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel import simtel_output_validator
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.utils import general
 from simtools.utils.geometry import fiducial_radius_from_shape
 
 
@@ -70,7 +71,7 @@ class SimulatorLightEmission(SimtelRunner):
             ).lower()
 
         if config.get("flasher_photons") is not None:
-            photons = self._as_number_list(config["flasher_photons"], int)
+            photons = general.parse_typed_sequence(config["flasher_photons"], int)
             if len(photons) == 1:
                 photon_value = photons[0]
                 self.calibration_model.overwrite_model_parameter("flasher_photons", photon_value)
@@ -90,31 +91,6 @@ class SimulatorLightEmission(SimtelRunner):
         return config
 
     @staticmethod
-    def _as_number_list(value, cast=float):
-        """Return a list of converted numeric values from flexible input formats.
-
-        Parameters
-        ----------
-        value : Any
-            Input value to parse. Can be a scalar, a ``list``/``tuple``, or a
-            comma-separated ``str``.
-        cast : callable, optional
-            Conversion function applied to each parsed item. Defaults to ``float``.
-
-        Returns
-        -------
-        list
-            List of values converted with ``cast``.
-        """
-        if isinstance(value, (list, tuple)):
-            values = value
-        elif isinstance(value, str) and "," in value:
-            values = [item.strip() for item in value.split(",") if item.strip()]
-        else:
-            values = [value]
-        return [cast(item) for item in values]
-
-    @staticmethod
     def _repeat_or_map_events(events, n_photon_levels):
         """Apply ff-1m event mapping rules to event counts."""
         if n_photon_levels == 1:
@@ -129,9 +105,13 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _build_flasher_event_and_photon_sequences(self):
         """Build ff-1m-compatible events/photons sequences."""
-        photons_int = self._as_number_list(self.light_emission_config.get("flasher_photons"), int)
+        photons_int = general.parse_typed_sequence(
+            self.light_emission_config.get("flasher_photons"), int
+        )
 
-        events = self._as_number_list(self.light_emission_config.get("number_of_events", 1), int)
+        events = general.parse_typed_sequence(
+            self.light_emission_config.get("number_of_events", 1), int
+        )
         events_int = self._repeat_or_map_events(events, len(photons_int))
 
         return events_int, photons_int
