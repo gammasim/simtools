@@ -485,18 +485,9 @@ class Simulator:
         for array_model in general.ensure_iterable(self.array_models):
             for calibration_models in array_model.calibration_models.values():
                 for calibration_model in calibration_models.values():
-                    self._overwrite_direct_injection_flasher_photons_for_model(
-                        calibration_model=calibration_model,
-                        flasher_photons=flasher_photons,
+                    calibration_model.overwrite_model_parameter(
+                        "flasher_photons_at_pixel", flasher_photons
                     )
-
-    def _overwrite_direct_injection_flasher_photons_for_model(
-        self,
-        calibration_model,
-        flasher_photons,
-    ):
-        """Overwrite direct-injection photon parameter used by sim_telarray."""
-        calibration_model.overwrite_model_parameter("flasher_photons_at_pixel", flasher_photons)
 
     def _get_first_corsika_config(self):
         """
