@@ -189,8 +189,25 @@ class Simulator:
         )
 
     @staticmethod
-    def _parse_sequence(value, cast):
-        """Parse scalar/list/string sequence into a list of typed values."""
+    def _parse_sequence(value, cast=float):
+        """Parse scalar or sequence input into a list of typed values.
+
+        Supports ``None``, scalars, lists/tuples, and comma-separated strings.
+        All parsed items are converted with the provided ``cast`` callable.
+
+        Parameters
+        ----------
+        value : Any
+            Input value to parse. Supported forms are ``None``, a scalar,
+            a ``list``/``tuple``, or a comma-separated ``str``.
+        cast : callable, optional
+            Conversion callable applied to each parsed item. Defaults to ``float``.
+
+        Returns
+        -------
+        list
+            List of converted values. Returns an empty list when ``value`` is ``None``.
+        """
         if value is None:
             return []
         if isinstance(value, list):
