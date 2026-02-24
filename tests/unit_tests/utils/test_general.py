@@ -799,8 +799,12 @@ def test_parse_typed_sequence():
     assert gen.parse_typed_sequence(["1", "2"], int) == [1, 2]
     assert gen.parse_typed_sequence(("1", "2"), int) == [1, 2]
     assert gen.parse_typed_sequence("1, 2,3", int) == [1, 2, 3]
+    assert gen.parse_typed_sequence(["1e6", "2e6"], int) == [1000000, 2000000]
     assert gen.parse_typed_sequence(5, int) == [5]
     assert gen.parse_typed_sequence("2.5") == [2.5]
+
+    with pytest.raises(ValueError, match="Cannot safely cast non-integer value"):
+        gen.parse_typed_sequence("1.5", int)
 
 
 @patch("tarfile.open")  # NOSONAR
