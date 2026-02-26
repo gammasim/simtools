@@ -188,6 +188,72 @@ class Simulator:
             env=simtel_runner.SIM_TELARRAY_ENV,
         )
 
+    @classmethod
+    def simulate_direct_injection_sequence(cls, label=None):
+        """Run direct-injection simulations for one or multiple intensity settings.
+
+        This method supports filter-wheel-like sequences by allowing
+        ``number_of_events`` and ``flasher_photons`` to be provided as either
+        scalars or sequences. For multi-step runs, one value can be broadcast to
+        all steps, or one value per step can be provided explicitly.
+
+        Parameters
+        ----------
+        label : str or None, optional
+                Optional simulation label passed to the simulator instance for each
+                sequence step.
+
+        Returns
+        -------
+        None
+                This method runs simulations as side effects and does not return a
+                value.
+        """
+        base_args = dict(settings.config.args)
+        base_db_config = dict(settings.config.db_config)
+        base_run_number = int(base_args.get("run_number", 1))
+
+        events = general.parse_typed_sequence(base_args.get("number_of_events", 1), int)
+        photons = general.parse_typed_sequence(base_args.get("flasher_photons"), int)
+
+        n_runs = max(len(events), len(photons), 1)
+
+        if len(events) == 0:
+            events = [1]
+        if len(events) == 1 and n_runs > 1:
+            events = events * n_runs
+        elif len(events) != n_runs:
+            raise ValueError(
+                "Invalid number_of_events list length for direct_injection. "
+                "Use one value or one value per photon intensity."
+            )
+
+        if len(photons) == 0:
+            photons = [None] * n_runs
+        elif len(photons) == 1 and n_runs > 1:
+            photons = photons * n_runs
+        elif len(photons) != n_runs:
+            raise ValueError(
+                "Invalid flasher_photons list length for direct_injection. "
+                "Use one value or one value per event setting."
+            )
+
+        try:
+            for idx in range(n_runs):
+                run_args = base_args.copy()
+                run_args["run_number"] = base_run_number + idx
+                run_args["number_of_events"] = int(events[idx])
+                if photons[idx] is not None:
+                    run_args["flasher_photons"] = photons[idx]
+
+                settings.config.load(args=run_args, db_config=base_db_config)
+
+                simulator = cls(label=label)
+                simulator.simulate()
+                simulator.validate_simulations()
+        finally:
+            settings.config.load(args=base_args, db_config=base_db_config)
+
     def _get_corsika_file(self):
         """
         Get the CORSIKA input file if applicable (for sim_telarray simulations).
@@ -381,7 +447,7 @@ class Simulator:
         return []
 
     def _overwrite_flasher_photons_for_direct_injection(self):
-        """Overwrite flasher_photons in calibration models for direct-injection runs."""
+        """Overwrite direct-injection photons-per-pixel in calibration models."""
         flasher_photons = settings.config.args.get("flasher_photons")
         if self.run_mode != "direct_injection" or flasher_photons is None:
             return
@@ -389,7 +455,9 @@ class Simulator:
         for array_model in general.ensure_iterable(self.array_models):
             for calibration_models in array_model.calibration_models.values():
                 for calibration_model in calibration_models.values():
-                    calibration_model.overwrite_model_parameter("flasher_photons", flasher_photons)
+                    calibration_model.overwrite_model_parameter(
+                        "flasher_photons_at_pixel", flasher_photons
+                    )
 
     def _get_first_corsika_config(self):
         """
