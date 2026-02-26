@@ -252,9 +252,7 @@ def parse_typed_sequence(value, cast=float):
 
     if value is None:
         return []
-    if isinstance(value, list):
-        return [_cast_item(item) for item in value]
-    if isinstance(value, tuple):
+    if isinstance(value, (list, tuple)):
         return [_cast_item(item) for item in value]
     if isinstance(value, str) and "," in value:
         return [_cast_item(item.strip()) for item in value.split(",") if item.strip()]
