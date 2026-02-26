@@ -1,0 +1,30 @@
+---
+applications:
+- application: simtools-simulate-flasher
+  configuration:
+    run_mode: full_simulation
+    light_source: LSFS-design
+    model_version: 7.0.0
+    output_path: simtools-output
+    site: South
+    telescopes:
+    - LSTS-01
+    run_number: 10
+    number_of_events:
+    - 10
+    - 5
+    - 2
+    flasher_photons:
+    - 1e6
+    - 2e6
+    - 3e6
+    log_level: DEBUG
+  integration_tests:
+  - test_output_files:
+    - path_descriptor: output_path
+      output_sub_path: sim_telarray
+      file: full_simulation_run000010_South_7.0.0_simulate_flasher_LSTS-01.simtel.zst
+  model_version_use_current: true
+  test_name: full_simulation_lst_filter_wheel_different_intensities
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

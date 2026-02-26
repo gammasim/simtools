@@ -1,0 +1,30 @@
+---
+applications:
+- application: simtools-simulate-flasher
+  configuration:
+    run_mode: full_simulation
+    light_source_type: flat_fielding
+    model_version: 7.0.0
+    output_path: simtools-output
+    site: South
+    telescopes:
+    - LSTS-01
+    run_number: 20
+    number_of_events: 4
+    flasher_photons:
+    - 1e6
+    - 2e6
+    - 3e6
+    log_level: DEBUG
+  integration_tests:
+  - output_file: sim_telarray/full_simulation_run000020_South_7.0.0_simulate_flasher_LSTS-01.simtel.zst
+  - test_output_files:
+    - expected_sim_telarray_output:
+        event_type: flasher
+      file: full_simulation_run000020_South_7.0.0_simulate_flasher_LSTS-01.simtel.zst
+      path_descriptor: output_path
+      output_sub_path: sim_telarray
+  model_version_use_current: true
+  test_name: full_simulation_lst_filter_wheel_single_event_value
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

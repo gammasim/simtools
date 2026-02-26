@@ -220,6 +220,45 @@ def ensure_iterable(value):
     return value if isinstance(value, list | tuple) else [value]
 
 
+def parse_typed_sequence(value, cast=float):
+    """Parse scalar or sequence input into a list of typed values.
+
+    Parameters
+    ----------
+    value : any
+        Input value to parse. Supported forms are ``None``, scalar values,
+        ``list``/``tuple``, or comma-separated strings.
+    cast : callable, optional
+        Conversion callable applied to each parsed item. Defaults to ``float``.
+
+    Returns
+    -------
+    list
+        List of converted values. Returns an empty list when ``value`` is ``None``.
+    """
+
+    def _cast_item(item):
+        if cast is int:
+            try:
+                return int(item)
+            except (TypeError, ValueError) as exc:
+                float_value = float(item)
+                if not float_value.is_integer():
+                    raise ValueError(
+                        f"Cannot safely cast non-integer value '{item}' to int"
+                    ) from exc
+                return int(float_value)
+        return cast(item)
+
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        return [_cast_item(item) for item in value]
+    if isinstance(value, str) and "," in value:
+        return [_cast_item(item.strip()) for item in value.split(",") if item.strip()]
+    return [_cast_item(value)]
+
+
 def _search_directory(directory, filename, rec=False):
     if not Path(directory).exists():
         _logger.debug(f"Directory {directory} does not exist")
