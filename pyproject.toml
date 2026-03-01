@@ -131,10 +131,8 @@ scripts.simtools-validate-optics = "simtools.applications.validate_optics:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
-
-[tool.setuptools.packages.find]
-where = [ "src" ]
-exclude = [ "simtools._dev_version.*" ]
+packages.find.where = [ "src" ]
+packages.find.exclude = [ "simtools._dev_version.*" ]
 
 [tool.setuptools_scm]
 write_to = "src/simtools/_version.py"
@@ -147,7 +145,6 @@ exclude = [
   "pyproject.toml",
   "simtools/_version.py",
 ]
-
 format.indent-style = "space"
 format.quote-style = "double"
 format.line-ending = "auto"
@@ -180,7 +177,7 @@ lint.ignore = [
   "G004",   # Logging statement uses f-string
   "ISC001", # incompatible with ruff format
   "PTH123", # open("foo") should be replaced by Path("foo").open()
-  "RUF012", #  Mutable class attributes should be annotated
+  "RUF012", # Mutable class attributes should be annotated
 ]
 lint.per-file-ignores."**/tests/**" = [
   "D",
@@ -188,12 +185,11 @@ lint.per-file-ignores."**/tests/**" = [
 lint.per-file-ignores."**/tests_*.py" = [
   "D",
 ]
-
 lint.pydocstyle.convention = "numpy"
 
-[tool.pylint.main]
+[tool.pylint]
 # Good variable names which should always be accepted, separated by a comma.
-good-names = [
+main.good-names = [
   "e",
   "i",
   "j",
@@ -231,16 +227,15 @@ good-names = [
   "veritas",
 ]
 # Ignore files
-ignore = [
+main.ignore = [
   "__init__.py",
   "scm_version.py",
   "_version.py",
 ]
-
 # See discussion in issue 521
 # Agreed to not have module docstring (missing-module-docstring)
 # Pylint cannot handle overload (used in pyproj; unpacking-non-sequence)
-disable = [
+main.disable = [
   "missing-module-docstring",
   "unpacking-non-sequence",
   "logging-format-interpolation",
@@ -250,50 +245,49 @@ disable = [
   "logging-fstring-interpolation",
 ]
 # see https://github.com/pylint-dev/pylint/issues/2289
-generated-members = [
+main.generated-members = [
   "gist_heat_r",
 ]
 # see https://stackoverflow.com/questions/49846940/incorrect-pylint-errors-on-astropy-in-vscode
 # (required to suppress warnings from astropy.units when using pylint; not only vscode)
-ignored-classes = [
+main.ignored-classes = [
   "astropy.units",
 ]
-
 # Maximum number of characters on a single line.
-max-line-length = 100
+main.max-line-length = 100
 # Maximum number of lines in a module. (default 1000)
-max-module-lines = 1500
+main.max-module-lines = 1500
 # Maximum number of branch for function / method body. (default=12)
-max-branches = 15
+main.max-branches = 15
 # Maximum number of arguments for function / method (default=5).
-max-args = 15
+main.max-args = 15
 # Maximum number of locals for function / method body (default=15).
-max-locals = 30
+main.max-locals = 30
 # Maximum number of attributes for a class (see R0902). (default=7)
-max-attributes = 20
+main.max-attributes = 20
 # Maximum number of positional arguments for function / method (default=5.)
-max-positional-arguments = 15
+main.max-positional-arguments = 15
 # Maximum number of statements in function / method body. (default=50)
-max-statements = 80
+main.max-statements = 80
 # Maximum number of public methods for a class (see R0904). (default=20)
-max-public-methods = 30
+main.max-public-methods = 30
 # Minimum number of public methods for a class (see R0903). (default=2)
-min-public-methods = 1
+main.min-public-methods = 1
 
 [tool.codespell]
 ignore-words-list = "chec,arrang,livetime"
 
-[tool.pytest.ini_options]
-markers = [
+[tool.pytest]
+ini_options.markers = [
   "uses_model_database: test uses model parameter database.",
 ]
-minversion = "6.0"
-norecursedirs = [
+ini_options.minversion = "6.0"
+ini_options.norecursedirs = [
   "build",
   "docs/_build",
   "src/simtools/applications",
 ]
-addopts = [
+ini_options.addopts = [
   "-v",
   "--cov=simtools",
   "--cov-report=xml",
@@ -301,22 +295,20 @@ addopts = [
   "-p",
   "pytest_requirements",
 ]
-testpaths = "tests/unit_tests/"
-filterwarnings = [
+ini_options.testpaths = "tests/unit_tests/"
+ini_options.filterwarnings = [
   # treat warnings as errors
   "error",
   # Ignore the warning about fontTools.misc.py23
   "ignore:The py23 module has been deprecated:DeprecationWarning",
 ]
 
-[tool.coverage.report]
-exclude_also = [
-  "if __name__ == \"__main__\":",
+[tool.coverage]
+run.omit = [ "*__init__*", "src/simtools/_version.py", "src/simtools/applications/**" ]
+run.relative_files = true
+report.exclude_also = [
+  'if __name__ == "__main__":',
 ]
-
-[tool.coverage.run]
-omit = [ "src/simtools/_version.py", "*__init__*", "src/simtools/applications/**" ]
-relative_files = true
 
 [tool.towncrier]
 package = "simtools"
@@ -326,27 +318,15 @@ underlines = [ "", "", "" ]
 title_format = "## [{version}](https://github.com/gammasim/simtools/releases/tag/{version}) - {project_date}"
 issue_format = "[#{issue}](https://github.com/gammasim/simtools/pull/{issue})"
 start_string = "<!-- towncrier release notes start -->\n"
-
-[tool.towncrier.fragment.api]
-name = "API Changes"
-showcontent = true
-
-[tool.towncrier.fragment.bugfix]
-name = "Bugfixes"
-showcontent = true
-
-[tool.towncrier.fragment.doc]
-name = "Documentation"
-showcontent = true
-
-[tool.towncrier.fragment.feature]
-name = "New Features"
-showcontent = true
-
-[tool.towncrier.fragment.maintenance]
-name = "Maintenance"
-showcontent = true
-
-[tool.towncrier.fragment.model]
-name = "Simulation model"
-showcontent = true
+fragment.api.name = "API Changes"
+fragment.api.showcontent = true
+fragment.bugfix.name = "Bugfixes"
+fragment.bugfix.showcontent = true
+fragment.doc.name = "Documentation"
+fragment.doc.showcontent = true
+fragment.feature.name = "New Features"
+fragment.feature.showcontent = true
+fragment.maintenance.name = "Maintenance"
+fragment.maintenance.showcontent = true
+fragment.model.name = "Simulation model"
+fragment.model.showcontent = true
