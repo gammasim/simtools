@@ -109,12 +109,12 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian(
     }
 
     # Mock calibration model values
-    simulator_instance.calibration_model.get_parameter_value.side_effect = (
-        lambda name: "Lambertian" if name == "flasher_angular_distribution" else None
+    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda name: (
+        "Lambertian" if name == "flasher_angular_distribution" else None
     )
     # Width is ignored for Lambertian; no need to mock width conversion.
-    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
-        lambda name: None
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = lambda name: (
+        None
     )
 
     result = simulator_instance._get_angular_distribution_string_for_sim_telarray()
@@ -136,8 +136,8 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian_failure(
 ):
     """Test Lambertian distribution failure handling."""
     # Mock calibration model values
-    simulator_instance.calibration_model.get_parameter_value.side_effect = (
-        lambda name: "Lambertian" if name == "flasher_angular_distribution" else None
+    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda name: (
+        "Lambertian" if name == "flasher_angular_distribution" else None
     )
 
     # Mock _generate_lambertian_angular_distribution_table to raise OSError
@@ -543,8 +543,8 @@ def _setup_multi_intensity_flasher_test(simulator_instance):
     simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
         mock_get_param_with_unit
     )
-    simulator_instance.calibration_model.get_parameter_value.side_effect = (
-        lambda name: 4000 if name == "flasher_bunch_size" else ["Gauss", 0.0, 0.0]
+    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda name: (
+        4000 if name == "flasher_bunch_size" else ["Gauss", 0.0, 0.0]
     )
 
     mock_diameter = Mock()
@@ -656,8 +656,8 @@ def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_t
         # Provide full 3-element pulse shape so writer path can read width/exp
         "flasher_pulse_shape": ["Gauss-Exponential", 2.0, 6.0],
     }
-    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
-        lambda name: params_with_unit.get(name)
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = lambda name: (
+        params_with_unit.get(name)
     )
 
     # Provide specific returns for plain-valued params used inside the call
@@ -666,16 +666,16 @@ def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_t
         "flasher_angular_distribution": "gaussian",
         "flasher_pulse_shape": ["Gauss-Exponential", 2.0, 6.0],
     }
-    simulator_instance.calibration_model.get_parameter_value.side_effect = (
-        lambda name: plain_params.get(name)
+    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda name: (
+        plain_params.get(name)
     )
 
     # Mock telescope values
     mock_diameter = Mock()
     mock_diameter.to.return_value.value = 180.0
     simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
-    simulator_instance.telescope_model.get_parameter_value.side_effect = (
-        lambda key: 40 if key == "fadc_sum_bins" else "hexagonal"
+    simulator_instance.telescope_model.get_parameter_value.side_effect = lambda key: (
+        40 if key == "fadc_sum_bins" else "hexagonal"
     )
 
     # Mock distance and helpers
@@ -755,8 +755,8 @@ def test__add_flasher_command_options_writer_fallback(simulator_instance, tmp_te
     mock_diameter = Mock()
     mock_diameter.to.return_value.value = 160.0
     simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
-    simulator_instance.telescope_model.get_parameter_value.side_effect = (
-        lambda key: 40 if key == "fadc_sum_bins" else "hexagonal"
+    simulator_instance.telescope_model.get_parameter_value.side_effect = lambda key: (
+        40 if key == "fadc_sum_bins" else "hexagonal"
     )
 
     # IO and helpers
@@ -832,16 +832,16 @@ def test__add_flasher_command_options_invalid_gauss_exponential_width(simulator_
     simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
         mock_get_param_with_unit
     )
-    simulator_instance.calibration_model.get_parameter_value.side_effect = (
-        lambda k: 8000 if k == "flasher_bunch_size" else ["Gauss-Exponential", 0.0, 5.0]
+    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda k: (
+        8000 if k == "flasher_bunch_size" else ["Gauss-Exponential", 0.0, 5.0]
     )
 
     # Telescope minimal mocks
     mock_diameter = Mock()
     mock_diameter.to.return_value.value = 200.0
     simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
-    simulator_instance.telescope_model.get_parameter_value.side_effect = (
-        lambda k: 40 if k == "fadc_sum_bins" else "hexagonal"
+    simulator_instance.telescope_model.get_parameter_value.side_effect = lambda k: (
+        40 if k == "fadc_sum_bins" else "hexagonal"
     )
 
     simulator_instance.light_emission_config = {"number_of_events": 1, "flasher_photons": 100}
@@ -881,16 +881,16 @@ def test__add_flasher_command_options_invalid_gauss_exponential_decay(simulator_
     simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
         mock_get_param_with_unit
     )
-    simulator_instance.calibration_model.get_parameter_value.side_effect = (
-        lambda k: 4000 if k == "flasher_bunch_size" else ["Gauss-Exponential", 2.0, 0.0]
+    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda k: (
+        4000 if k == "flasher_bunch_size" else ["Gauss-Exponential", 2.0, 0.0]
     )
 
     # Telescope minimal mocks
     mock_diameter = Mock()
     mock_diameter.to.return_value.value = 160.0
     simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
-    simulator_instance.telescope_model.get_parameter_value.side_effect = (
-        lambda k: 40 if k == "fadc_sum_bins" else "hexagonal"
+    simulator_instance.telescope_model.get_parameter_value.side_effect = lambda k: (
+        40 if k == "fadc_sum_bins" else "hexagonal"
     )
 
     simulator_instance.light_emission_config = {"number_of_events": 1, "flasher_photons": 100}

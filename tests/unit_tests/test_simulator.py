@@ -415,9 +415,9 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
     mocker.patch.object(
         array_simulator,
         "get_files",
-        side_effect=lambda file_type: mock_output_files
-        if file_type == "sim_telarray_output"
-        else mock_event_data_files,
+        side_effect=lambda file_type: (
+            mock_output_files if file_type == "sim_telarray_output" else mock_event_data_files
+        ),
     )
 
     mock_generator = mocker.MagicMock()
