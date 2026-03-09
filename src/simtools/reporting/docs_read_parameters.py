@@ -262,12 +262,9 @@ class ReadParameters:
             isinstance(v, dict) for v in value_data
         )
 
-        if (
-            not value_is_list_of_dicts
-            and len(value_data) > 5
-            and np.allclose(value_data, value_data[0])
-        ):
-            return f"all: {value_data[0]} {unit}".strip()
+        if not value_is_list_of_dicts and len(value_data) > 5:
+            if np.allclose(value_data, value_data[0]):
+                return f"all: {value_data[0]} {unit}".strip()
 
         return (
             ", ".join(f"{v} {u}" for v, u in zip(value_data, unit))
