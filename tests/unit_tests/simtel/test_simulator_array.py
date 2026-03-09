@@ -323,8 +323,8 @@ def test_common_run_command_config_file_path(simtel_runner, mocker):
     simtel_runner.corsika_config.azimuth_angle = 0.0
 
     simtel_runner.runner_service = mocker.Mock()
-    simtel_runner.runner_service.get_file_name.side_effect = (
-        lambda file_type, run_number: f"{file_type}_{run_number}"
+    simtel_runner.runner_service.get_file_name.side_effect = lambda file_type, run_number: (
+        f"{file_type}_{run_number}"
     )
 
     result = simtel_runner._common_run_command(run_number=1)
