@@ -39,8 +39,8 @@ def mock_models(monkeypatch):
 
     site = MagicMock()
     site.site = "North"
-    site.get_parameter_value.side_effect = (
-        lambda key: 2150.0 if key == "corsika_observation_level" else 0.0
+    site.get_parameter_value.side_effect = lambda key: (
+        2150.0 if key == "corsika_observation_level" else 0.0
     )
 
     dummy = object()
