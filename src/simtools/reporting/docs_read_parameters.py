@@ -258,8 +258,17 @@ class ReadParameters:
         if isinstance(value_data, (str, int, float)):
             return f"{value_data} {unit}".strip()
 
-        if len(value_data) > 5 and np.allclose(value_data, value_data[0]):
+        value_is_list_of_dicts = isinstance(value_data, (list, tuple)) and all(
+            isinstance(v, dict) for v in value_data
+        )
+
+        if (
+            not value_is_list_of_dicts
+            and len(value_data) > 5
+            and np.allclose(value_data, value_data[0])
+        ):
             return f"all: {value_data[0]} {unit}".strip()
+
         return (
             ", ".join(f"{v} {u}" for v, u in zip(value_data, unit))
             if isinstance(unit, list)
