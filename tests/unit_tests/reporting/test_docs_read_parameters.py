@@ -1005,9 +1005,9 @@ def test_produce_calibration_reports(mocker, tmp_path):
     with patch.object(
         read_parameters,
         "get_all_parameter_descriptions",
-        side_effect=lambda collection: mock_position_descriptions
-        if collection == "telescopes"
-        else mock_calib_descriptions,
+        side_effect=lambda collection: (
+            mock_position_descriptions if collection == "telescopes" else mock_calib_descriptions
+        ),
     ) as mock_desc:
         result = read_parameters.get_calibration_data(
             mock_data[args.get("model_version")], "ILLN-01"
