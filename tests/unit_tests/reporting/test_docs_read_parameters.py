@@ -267,6 +267,10 @@ def test__format_parameter_value(tmp_path):
     result_5 = read_parameters._format_parameter_value(parameter_name, *mock_data_5)
     assert result_5 == "{'a': 1, 'b': 2} m"
 
+    mock_data_6 = [[{"a": 1}, {"b": 2}, {"c": 3}], "m", False, "1.0.0"]
+    result_6 = read_parameters._format_parameter_value(parameter_name, *mock_data_6)
+    assert result_6 == "{'a': 1} m, {'b': 2} m, {'c': 3} m"
+
 
 def test__group_model_versions_by_parameter_version(tmp_path):
     read_parameters = ReadParameters(args={}, output_path=tmp_path)
