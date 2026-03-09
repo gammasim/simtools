@@ -252,10 +252,7 @@ class ReadParameters:
             output_file_name = self._convert_to_md(parameter, parameter_version, input_file_name)
             return f"[{Path(value_data).name}]({output_file_name})".strip()
 
-        if isinstance(value_data, dict):
-            return f"{value_data} {unit}".strip()
-
-        if isinstance(value_data, (str, int, float)):
+        if isinstance(value_data, (str, int, float, dict)):
             return f"{value_data} {unit}".strip()
 
         value_is_list_of_dicts = isinstance(value_data, (list, tuple)) and all(
