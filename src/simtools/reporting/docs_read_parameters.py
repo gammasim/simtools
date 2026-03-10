@@ -277,7 +277,13 @@ class ReadParameters:
 
         for parameter_name, items in grouped_data.items():
             version_grouped = defaultdict(
-                lambda: {"model_versions": [], "value": None, "file_flag": None}
+                lambda: {
+                    "model_versions": [],
+                    "value": None,
+                    "file_flag": None,
+                    "dict_table": None,
+                    "dict_unit": None,
+                }
             )
 
             for item in items:
@@ -287,18 +293,65 @@ class ReadParameters:
                 if version_grouped[param_version]["value"] is None:
                     version_grouped[param_version]["value"] = item["value"]
                     version_grouped[param_version]["file_flag"] = item["file_flag"]
+                    version_grouped[param_version]["dict_table"] = item.get("dict_table")
+                    version_grouped[param_version]["dict_unit"] = item.get("dict_unit")
 
             result[parameter_name] = [
                 {
                     "value": data["value"],
                     "parameter_version": param_version,
                     "file_flag": data["file_flag"],
+                    "dict_table": data.get("dict_table"),
+                    "dict_unit": data.get("dict_unit"),
                     "model_version": ", ".join(sort_versions(data["model_versions"])),
                 }
                 for param_version, data in version_grouped.items()
             ]
 
         return result
+
+    def _is_list_of_dicts(self, value_data):
+        """Return True if value_data is a non-empty list/tuple of dictionaries."""
+        return (
+            isinstance(value_data, (list, tuple))
+            and value_data
+            and all(isinstance(entry, dict) for entry in value_data)
+        )
+
+    def _export_model_files_for_version(self, version, all_param_data):
+        """Export model files for a given model version."""
+        Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
+        self.db.export_model_files(
+            parameters=all_param_data.get(version), dest=f"{self.output_path}/model"
+        )
+
+    def _build_version_parameter_item(self, version, parameter_name, parameter_data):
+        """Build a grouped-data item for a given model version and parameter."""
+        if parameter_data.get("instrument") != self.array_element:
+            return None
+
+        unit = parameter_data.get("unit") or " "
+        value_data = parameter_data.get("value")
+        if value_data is None:
+            return None
+
+        file_flag = parameter_data.get("file", False)
+        parameter_version = parameter_data.get("parameter_version")
+        value = self._format_parameter_value(
+            parameter_name, value_data, unit, file_flag, parameter_version=None
+        )
+
+        dict_table = value_data if self._is_list_of_dicts(value_data) else None
+        dict_unit = unit if dict_table is not None else None
+
+        return {
+            "value": value,
+            "parameter_version": parameter_version,
+            "model_version": version,
+            "file_flag": file_flag,
+            "dict_table": dict_table,
+            "dict_unit": dict_unit,
+        }
 
     def _compare_parameter_across_versions(self, all_param_data, all_parameter_names):
         """
@@ -327,40 +380,14 @@ class ReadParameters:
             if not parameter_dict:
                 continue
 
-            Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
-            self.db.export_model_files(
-                parameters=all_param_data.get(version), dest=f"{self.output_path}/model"
-            )
+            self._export_model_files_for_version(version, all_param_data)
 
             for parameter_name in filter(parameter_dict.__contains__, all_parameter_names):
                 parameter_data = parameter_dict.get(parameter_name)
 
-                # Skip if instrument doesn't match
-                if parameter_data.get("instrument") != self.array_element:
-                    continue
-
-                unit = parameter_data.get("unit") or " "
-                value_data = parameter_data.get("value")
-
-                if value_data is None:
-                    continue
-
-                file_flag = parameter_data.get("file", False)
-                parameter_version = parameter_data.get("parameter_version")
-                value = self._format_parameter_value(
-                    parameter_name, value_data, unit, file_flag, parameter_version=None
-                )
-                model_version = version
-
-                # Group the data by parameter version and store model versions as a list
-                grouped_data[parameter_name].append(
-                    {
-                        "value": value,
-                        "parameter_version": parameter_version,
-                        "model_version": model_version,
-                        "file_flag": file_flag,
-                    }
-                )
+                item = self._build_version_parameter_item(version, parameter_name, parameter_data)
+                if item is not None:
+                    grouped_data[parameter_name].append(item)
 
         return self._group_model_versions_by_parameter_version(grouped_data)
 
@@ -415,6 +442,7 @@ class ReadParameters:
         self.db.export_model_files(parameters=all_parameter_data, dest=f"{self.output_path}/model")
         parameter_descriptions = self.get_all_parameter_descriptions()
         data = []
+        dict_tables = []
 
         for parameter in filter(all_parameter_data.__contains__, names.model_parameters().keys()):
             parameter_data = all_parameter_data.get(parameter)
@@ -426,6 +454,12 @@ class ReadParameters:
                 continue
 
             file_flag = parameter_data.get("file", False)
+            if (
+                isinstance(value_data, (list, tuple))
+                and value_data
+                and all(isinstance(entry, dict) for entry in value_data)
+            ):
+                dict_tables.append((parameter, value_data, unit))
             value = self._format_parameter_value(
                 parameter, value_data, unit, file_flag, parameter_version
             )
@@ -456,7 +490,7 @@ class ReadParameters:
                 ]
             )
 
-        return data
+        return data, dict_tables
 
     def _write_to_file(self, data, file):
         # Write table header and separator row
@@ -493,71 +527,79 @@ class ReadParameters:
         """Get data and descriptions for simulation configuration parameters."""
 
         def get_param_data(telescope, site):
-            """Retrieve and format parameter data for one telescope-site combo."""
-            param_dict = self.db.get_simulation_configuration_parameters(
-                simulation_software=self.software,
-                site=site,
-                array_element_name=telescope,
-                model_version=self.model_version,
-            )
-
-            parameter_descriptions = self.get_all_parameter_descriptions(
-                collection=f"configuration_{self.software}"
-            )
-
-            model_output_path = Path(f"{self.output_path}/model")
-            model_output_path.mkdir(parents=True, exist_ok=True)
-            self.db.export_model_files(parameters=param_dict, dest=str(model_output_path))
-
-            data = []
-            for parameter, parameter_data in param_dict.items():
-                description = parameter_descriptions.get(parameter).get("description")
-                short_description = parameter_descriptions.get(parameter).get(
-                    "short_description", description
-                )
-                value_data = parameter_data.get("value")
-
-                if value_data is None:
-                    continue
-
-                unit = parameter_data.get("unit") or " "
-                file_flag = parameter_data.get("file", False)
-                parameter_version = parameter_data.get("parameter_version")
-                value = self._format_parameter_value(
-                    parameter, value_data, unit, file_flag, parameter_version
-                )
-
-                data.append(
-                    [
-                        telescope,
-                        parameter,
-                        parameter_version,
-                        value,
-                        description,
-                        short_description,
-                    ]
-                )
-            return data
+            return self._get_simulation_configuration_data_for_telescope_site(telescope, site)
 
         if self.software == "corsika":
             return get_param_data(self.array_element, self.site)
 
         results = []
+        dict_tables = []
         telescopes = self.db.get_array_elements(self.model_version)
         for telescope in telescopes:
             valid_site = names.get_site_from_array_element_name(telescope)
-            if not isinstance(valid_site, list):
-                results.extend(get_param_data(telescope, valid_site))
-            else:
-                for site in valid_site:
-                    results.extend(get_param_data(telescope, site))
-        return results
+            sites = valid_site if isinstance(valid_site, list) else [valid_site]
+            for site in sites:
+                data, tables = get_param_data(telescope, site)
+                results.extend(data)
+                dict_tables.extend(tables)
+        return results, dict_tables
+
+    def _get_simulation_configuration_data_for_telescope_site(self, telescope, site):
+        """Retrieve and format simulation-configuration parameter data for one telescope-site."""
+        param_dict = self.db.get_simulation_configuration_parameters(
+            simulation_software=self.software,
+            site=site,
+            array_element_name=telescope,
+            model_version=self.model_version,
+        )
+
+        parameter_descriptions = self.get_all_parameter_descriptions(
+            collection=f"configuration_{self.software}"
+        )
+
+        model_output_path = Path(f"{self.output_path}/model")
+        model_output_path.mkdir(parents=True, exist_ok=True)
+        self.db.export_model_files(parameters=param_dict, dest=str(model_output_path))
+
+        data = []
+        dict_tables = []
+        for parameter, parameter_data in param_dict.items():
+            value_data = parameter_data.get("value")
+            if value_data is None:
+                continue
+
+            unit = parameter_data.get("unit") or " "
+            description = parameter_descriptions.get(parameter).get("description")
+            short_description = parameter_descriptions.get(parameter).get(
+                "short_description", description
+            )
+            file_flag = parameter_data.get("file", False)
+            parameter_version = parameter_data.get("parameter_version")
+            value = self._format_parameter_value(
+                parameter, value_data, unit, file_flag, parameter_version
+            )
+
+            if self._is_list_of_dicts(value_data):
+                dict_tables.append((telescope, parameter, value_data, unit))
+
+            data.append(
+                [
+                    telescope,
+                    parameter,
+                    parameter_version,
+                    value,
+                    description,
+                    short_description,
+                ]
+            )
+
+        return data, dict_tables
 
     def produce_simulation_configuration_report(self):
         """Write simulation configuration report."""
         output_filename = Path(self.output_path / (f"configuration_{self.software}.md"))
         output_filename.parent.mkdir(parents=True, exist_ok=True)
-        data = self.get_simulation_configuration_data()
+        data, dict_tables = self.get_simulation_configuration_data()
 
         with output_filename.open("w", encoding="utf-8") as file:
             file.write(f"# configuration_{self.software}\n")
@@ -568,8 +610,15 @@ class ReadParameters:
                     file.write(f"## [{telescope}]({telescope}.md)\n")
                     file.write("\n\n")
                     self._write_to_file(group, file)
+
+                    for table_telescope, parameter, value_data, unit in dict_tables:
+                        if table_telescope == telescope:
+                            self._write_dict_table(parameter, file, value_data, unit)
             else:
                 self._write_to_file(data, file)
+
+                for _, parameter, value_data, unit in dict_tables:
+                    self._write_dict_table(parameter, file, value_data, unit)
 
     def produce_array_element_report(self):
         """
@@ -592,7 +641,7 @@ class ReadParameters:
 
         output_filename = Path(self.output_path / (telescope_model.name + ".md"))
         output_filename.parent.mkdir(parents=True, exist_ok=True)
-        data = self.get_array_element_parameter_data(telescope_model)
+        data, dict_tables = self.get_array_element_parameter_data(telescope_model)
         # Sort data by class to prepare for grouping
         if not isinstance(data, str):
             data.sort(key=lambda x: (x[0], x[1]), reverse=True)
@@ -617,6 +666,9 @@ class ReadParameters:
                 group = sorted(group, key=lambda x: x[1])
                 file.write(f"## {class_name}\n\n")
                 self._write_to_file(group, file)
+
+            for parameter, value_data, unit in dict_tables:
+                self._write_dict_table(parameter, file, value_data, unit)
 
     def produce_model_parameter_reports(self, collection="telescopes"):
         """
@@ -657,6 +709,23 @@ class ReadParameters:
                 # Write header and table
                 self._write_parameter_header(file, parameter, description)
                 self._write_table_rows(file, parameter, comparison_data)
+
+                dict_items = [
+                    item
+                    for item in comparison_data.get(parameter)
+                    if item.get("dict_table") is not None
+                ]
+                if dict_items:
+                    latest_dict_item = max(
+                        dict_items,
+                        key=lambda x: tuple(map(int, x["parameter_version"].split("."))),
+                    )
+                    self._write_dict_table(
+                        parameter,
+                        file,
+                        latest_dict_item["dict_table"],
+                        latest_dict_item.get("dict_unit") or " ",
+                    )
 
                 # If entries reference files, write the image/plot section
                 if comparison_data.get(parameter)[0]["file_flag"]:
@@ -754,12 +823,20 @@ class ReadParameters:
 
     def _write_dict_table(self, parameter, file, value_data, unit):
         """Write a markdown table for parameters that are lists of dictionaries."""
-        file.write(f"## {parameter.replace('_', ' ').title()}\n\n")
+        if not value_data:
+            return
+
+        file.write(f"\n## {parameter.replace('_', ' ').title()}\n\n")
         headers = value_data[0].keys()
         file.write("| " + " | ".join(headers) + " |\n")
         file.write("|" + " --- |" * len(headers) + "\n")
         for entry in value_data:
-            row = "| " + " | ".join(f"{entry[h]} {unit}".strip() for h in headers) + " |\n"
+            formatted_cells = []
+            for h in headers:
+                cell_value = entry.get(h, "")
+                u = unit if h == "value" and cell_value is not None else ""
+                formatted_cells.append(f"{cell_value} {u}".strip())
+            row = "| " + " | ".join(formatted_cells) + " |\n"
             file.write(row)
 
     def _write_array_layouts_section(self, file, layouts):
@@ -805,38 +882,56 @@ class ReadParameters:
             "| Parameter | Value | Parameter Version |\n"
             "|-----------|--------|-------------------|\n"
         )
+        dict_tables = self._collect_dict_tables_from_parameters(all_parameter_data)
+
+        for param_name, param_data in sorted(all_parameter_data.items()):
+            value = param_data.get("value")
+            if value is None:
+                continue
+            self._write_parameter_table_row(file, param_name, param_data)
+
+        file.write("\n")
+
+        for param_name, value, unit in dict_tables:
+            self._write_dict_table(param_name, file, value, unit)
+
+    def _write_parameter_table_row(self, file, param_name, param_data):
+        """Write a single parameter table row."""
+        unit = param_data.get("unit") or " "
+        file_flag = param_data.get("file", False)
+        parameter_version = param_data.get("parameter_version")
+        value = param_data.get("value")
+
+        if param_name == "array_layouts":
+            file.write(
+                f"| array_layouts | [View Array Layouts](#array-layouts) | {parameter_version} |\n"
+            )
+        elif param_name == "array_triggers":
+            file.write(
+                "| array_triggers | [View Trigger Configurations]"
+                f"(#array-trigger-configurations) | {parameter_version} |\n"
+            )
+        else:
+            formatted_value = self._format_parameter_value(
+                param_name, value, unit, file_flag, parameter_version
+            )
+            file.write(f"| {param_name} | {formatted_value} | {parameter_version} |\n")
+
+    def _collect_dict_tables_from_parameters(self, all_parameter_data):
+        """Collect parameters that are lists of dictionaries for table writing."""
+        dict_tables = []
         for param_name, param_data in sorted(all_parameter_data.items()):
             value = param_data.get("value")
             unit = param_data.get("unit") or " "
-            file_flag = param_data.get("file", False)
-            parameter_version = param_data.get("parameter_version")
-
-            if value is None:
+            if param_name in ("array_layouts", "array_triggers"):
                 continue
-
-            if param_name == "array_layouts":
-                file.write(
-                    "| array_layouts | [View Array Layouts](#array-layouts)"
-                    f" | {parameter_version} |\n"
-                )
-            elif param_name == "array_triggers":
-                file.write(
-                    "| array_triggers | [View Trigger Configurations]"
-                    f"(#array-trigger-configurations) | {parameter_version} |\n"
-                )
-            else:
-                formatted_value = self._format_parameter_value(
-                    param_name, value, unit, file_flag, parameter_version
-                )
-                file.write(f"| {param_name} | {formatted_value} | {parameter_version} |\n")
-
-                if (
-                    isinstance(value, (list, tuple))
-                    and value
-                    and all(isinstance(entry, dict) for entry in value)
-                ):
-                    self._write_dict_table(param_name, file, value, unit)
-        file.write("\n")
+            if (
+                isinstance(value, (list, tuple))
+                and value
+                and all(isinstance(entry, dict) for entry in value)
+            ):
+                dict_tables.append((param_name, value, unit))
+        return dict_tables
 
     def produce_observatory_report(self):
         """Produce a markdown report of all observatory parameters for a given site."""
@@ -878,62 +973,74 @@ class ReadParameters:
         )
         # get descriptions of array element positions from the telescope collection
         telescope_descriptions = self.get_all_parameter_descriptions(collection="telescopes")
-        data = []
         class_grouped_data = {}
+        dict_tables = []
 
-        for parameter in all_parameter_data.keys():
+        for parameter, parameter_data in all_parameter_data.items():
             parameter_descriptions = calibration_descriptions.get(
                 parameter
             ) or telescope_descriptions.get(parameter)
 
-            parameter_data = all_parameter_data.get(parameter)
-            parameter_version = parameter_data.get("parameter_version")
-            unit = parameter_data.get("unit") or " "
-            value_data = parameter_data.get("value")
-
-            if value_data is None:
+            row, dict_table = self._build_calibration_row(
+                parameter,
+                parameter_data,
+                parameter_descriptions,
+                array_element,
+            )
+            if row is None:
                 continue
 
-            file_flag = parameter_data.get("file", False)
-            value = self._format_parameter_value(
-                parameter, value_data, unit, file_flag, parameter_version
-            )
+            if dict_table is not None:
+                dict_tables.append(dict_table)
 
-            description = parameter_descriptions.get("description")
-            short_description = parameter_descriptions.get("short_description") or description
-
-            inst_class = parameter_descriptions.get("inst_class")
-
-            matching_instrument = parameter_data["instrument"] == array_element
-            if not names.is_design_type(array_element) and matching_instrument:
-                parameter = f"***{parameter}***"
-                parameter_version = f"***{parameter_version}***"
-                if not self.is_markdown_link(value):
-                    value = f"***{value}***"
-                description = f"***{description}***"
-                short_description = f"***{short_description}***"
-
-            # Group by class name
-            if inst_class not in class_grouped_data:
-                class_grouped_data[inst_class] = []
-
-            class_grouped_data[inst_class].append(
-                [
-                    inst_class,
-                    parameter,
-                    parameter_version,
-                    value,
-                    description,
-                    short_description,
-                ]
-            )
+            inst_class = row[0]
+            class_grouped_data.setdefault(inst_class, []).append(row)
 
         data = []
         for class_name in sorted(class_grouped_data.keys(), reverse=True):
             sorted_class_data = sorted(class_grouped_data[class_name], key=lambda x: x[1])
             data.extend(sorted_class_data)
 
-        return data
+        return data, dict_tables
+
+    def _build_calibration_row(
+        self, parameter, parameter_data, parameter_descriptions, array_element
+    ):
+        """Build one calibration table row and optional dict-table payload."""
+        value_data = parameter_data.get("value")
+        if value_data is None:
+            return None, None
+
+        parameter_version = parameter_data.get("parameter_version")
+        unit = parameter_data.get("unit") or " "
+        file_flag = parameter_data.get("file", False)
+
+        dict_table = (parameter, value_data, unit) if self._is_list_of_dicts(value_data) else None
+        value = self._format_parameter_value(
+            parameter, value_data, unit, file_flag, parameter_version
+        )
+
+        description = parameter_descriptions.get("description")
+        short_description = parameter_descriptions.get("short_description") or description
+        inst_class = parameter_descriptions.get("inst_class")
+
+        matching_instrument = parameter_data["instrument"] == array_element
+        if not names.is_design_type(array_element) and matching_instrument:
+            parameter = f"***{parameter}***"
+            parameter_version = f"***{parameter_version}***"
+            if not self.is_markdown_link(value):
+                value = f"***{value}***"
+            description = f"***{description}***"
+            short_description = f"***{short_description}***"
+
+        return [
+            inst_class,
+            parameter,
+            parameter_version,
+            value,
+            description,
+            short_description,
+        ], dict_table
 
     def is_markdown_link(self, value):
         """
@@ -968,14 +1075,14 @@ class ReadParameters:
 
             output_filename = Path(self.output_path / (f"{calibration_device}.md"))
             output_filename.parent.mkdir(parents=True, exist_ok=True)
-            data = self.get_calibration_data(all_parameter_data, calibration_device)
+            data, dict_tables = self.get_calibration_data(all_parameter_data, calibration_device)
 
             design_model = self.db.get_design_model(
                 self.model_version, calibration_device, "calibration_devices"
             )
 
             self._write_single_calibration_report(
-                output_filename, calibration_device, data, design_model
+                output_filename, calibration_device, data, design_model, dict_tables=dict_tables
             )
 
     def _collect_calibration_array_elements(self):
@@ -993,7 +1100,7 @@ class ReadParameters:
         return array_elements
 
     def _write_single_calibration_report(
-        self, output_filename, calibration_device, data, design_model
+        self, output_filename, calibration_device, data, design_model, dict_tables=None
     ):
         """Write a single calibration device markdown report file."""
         with output_filename.open("w", encoding="utf-8") as file:
@@ -1032,6 +1139,10 @@ class ReadParameters:
                     display_group.append(new_row)
 
                 self._write_to_file(display_group, file)
+
+            if dict_tables:
+                for parameter, value_data, unit in dict_tables:
+                    self._write_dict_table(parameter, file, value_data, unit)
 
     def generate_model_parameter_reports_for_devices(self, array_elements):
         """Create model-parameter comparison reports for calibration devices."""
