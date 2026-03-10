@@ -269,7 +269,7 @@ def test__format_parameter_value(tmp_path):
 
     mock_data_6 = [[{"a": 1}, {"b": 2}, {"c": 3}], "m", False, "1.0.0"]
     result_6 = read_parameters._format_parameter_value(parameter_name, *mock_data_6)
-    assert result_6 == "{'a': 1} m, {'b': 2} m, {'c': 3} m"
+    assert result_6 == "[View Test](#test)"
 
 
 def test__group_model_versions_by_parameter_version(tmp_path):
@@ -695,6 +695,11 @@ def test__write_parameters_table(tmp_path):
         "site_elevation": {"value": 2200, "unit": "m", "parameter_version": "1.0.0"},
         "array_layouts": {"value": [], "unit": None, "parameter_version": "2.0.0"},
         "array_triggers": {"value": [], "unit": None, "parameter_version": "3.0.0"},
+        "dict_param": {
+            "value": [{"a": 1, "b": 2}, {"a": 3, "b": 4}],
+            "unit": "m",
+            "parameter_version": "4.0.0",
+        },
     }
 
     with StringIO() as file:
@@ -713,6 +718,13 @@ def test__write_parameters_table(tmp_path):
         "| array_triggers | [View Trigger Configurations](#array-trigger-configurations) | 3.0.0 |"
         in output
     )
+
+    # Verify list-of-dicts parameter is linked and table is written below
+    assert "| dict_param | [View Dict Param](#dict-param) | 4.0.0 |" in output
+    assert "## Dict Param" in output
+    assert "| a | b |" in output
+    assert "| 1 m | 2 m |" in output
+    assert "| 3 m | 4 m |" in output
 
 
 def test_model_version_setter_with_valid_string(tmp_path):
