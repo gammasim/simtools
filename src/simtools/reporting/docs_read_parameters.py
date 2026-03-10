@@ -259,9 +259,11 @@ class ReadParameters:
             isinstance(v, dict) for v in value_data
         )
 
-        if not value_is_list_of_dicts and len(value_data) > 5:
-            if np.allclose(value_data, value_data[0]):
-                return f"all: {value_data[0]} {unit}".strip()
+        if value_is_list_of_dicts:
+            return f"[View {parameter.replace('_', ' ').title()}](#{parameter.replace('_', '-')})"
+
+        if len(value_data) > 5 and np.allclose(value_data, value_data[0]):
+            return f"all: {value_data[0]} {unit}".strip()
 
         return (
             ", ".join(f"{v} {u}" for v, u in zip(value_data, unit))
@@ -750,6 +752,16 @@ class ReadParameters:
         description = plot_descriptions.get(parameter, "Parameter plot")
         file.write(f"![{description}.]({image_path.as_posix()})")
 
+    def _write_dict_table(self, parameter, file, value_data, unit):
+        """Write a markdown table for parameters that are lists of dictionaries."""
+        file.write(f"## {parameter.replace('_', ' ').title()}\n\n")
+        headers = value_data[0].keys()
+        file.write("| " + " | ".join(headers) + " |\n")
+        file.write("|" + " --- |" * len(headers) + "\n")
+        for entry in value_data:
+            row = "| " + " | ".join(f"{entry[h]} {unit}".strip() for h in headers) + " |\n"
+            file.write(row)
+
     def _write_array_layouts_section(self, file, layouts):
         """Write the array layouts section of the report."""
         file.write("\n## Array Layouts\n\n")
@@ -817,6 +829,13 @@ class ReadParameters:
                     param_name, value, unit, file_flag, parameter_version
                 )
                 file.write(f"| {param_name} | {formatted_value} | {parameter_version} |\n")
+
+                if (
+                    isinstance(value, (list, tuple))
+                    and value
+                    and all(isinstance(entry, dict) for entry in value)
+                ):
+                    self._write_dict_table(param_name, file, value, unit)
         file.write("\n")
 
     def produce_observatory_report(self):
