@@ -254,7 +254,7 @@ class ProductionGridPlotter:
         if len(visible_indices) < 2:
             return []
 
-        split_indices = np.where(np.diff(visible_indices) > 1)[0] + 1
+        split_indices = np.nonzero(np.diff(visible_indices) > 1)[0] + 1
         segments = np.split(visible_indices, split_indices)
         return [segment for segment in segments if len(segment) >= 2]
 
