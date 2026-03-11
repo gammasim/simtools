@@ -16,7 +16,7 @@ from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
-from simtools.version import sort_versions
+from simtools.version import base_version_for_patch_delta, sort_versions
 from simtools.visualization import plot_mirrors, plot_pixels, plot_tables
 
 logger = logging.getLogger()
@@ -65,18 +65,236 @@ class ReadParameters:
             )
         self._model_version = model_version
 
+    def _values_equal(self, value1, value2):
+        """Compare nested values with tolerance for numerics."""
+        result = False
+
+        if value1 is None or value2 is None:
+            result = value1 is None and value2 is None
+        elif isinstance(value1, (int, float)) and isinstance(value2, (int, float)):
+            result = bool(
+                np.isclose(
+                    value1,
+                    value2,
+                    rtol=0.0,
+                    atol=0.0,
+                    equal_nan=True,
+                )
+            )
+        elif isinstance(value1, (list, tuple)) and isinstance(value2, (list, tuple)):
+            result = len(value1) == len(value2) and all(
+                self._values_equal(v1, v2) for v1, v2 in zip(value1, value2)
+            )
+        elif isinstance(value1, dict) and isinstance(value2, dict):
+            result = value1.keys() == value2.keys() and all(
+                self._values_equal(value1[k], value2[k]) for k in value1
+            )
+        else:
+            result = value1 == value2
+
+        return result
+
+    def _parameter_changed(self, base_param_data, current_param_data):
+        """Return True if a parameter differs between base and current versions."""
+        if base_param_data is None or current_param_data is None:
+            return True
+
+        if (base_param_data.get("parameter_version")) != (
+            current_param_data.get("parameter_version")
+        ):
+            return True
+        if (base_param_data.get("unit") or " ") != (current_param_data.get("unit") or " "):
+            return True
+        if bool(base_param_data.get("file", False)) != bool(current_param_data.get("file", False)):
+            return True
+
+        return not self._values_equal(base_param_data.get("value"), current_param_data.get("value"))
+
+    def _format_value_for_delta(self, parameter, param_data):
+        """Format a parameter value for delta reports without generating plots/files."""
+        if not param_data:
+            return "-"
+
+        value_data = param_data.get("value")
+        unit = param_data.get("unit") or " "
+        file_flag = param_data.get("file", False)
+
+        if self._is_list_of_dicts(value_data):
+            return f"{len(value_data)} rows"
+
+        # For delta reports, never convert referenced files to local markdown.
+        if file_flag:
+            return self._format_parameter_value(
+                parameter, value_data, unit, file_flag, parameter_version=None
+            )
+
+        if isinstance(value_data, (list, tuple)) and len(value_data) > 10:
+            preview = ", ".join(str(v) for v in value_data[:3])
+            return f"[{preview}, …] {unit}".strip()
+
+        return self._format_parameter_value(
+            parameter, value_data, unit, file_flag, parameter_version="delta"
+        )
+
+    def _write_delta_report_table(self, file, changes):
+        """Write markdown table for delta report."""
+        file.write(
+            "| Parameter | Base parameter version | New parameter version | "
+            "Base value | New value |\n"
+            "|---|---:|---:|---|---|\n"
+        )
+        for row in changes:
+            file.write(
+                f"| {row['parameter']} | {row['base_param_version']} | "
+                f"{row['new_param_version']} | {row['base_value']} | "
+                f"{row['new_value']} |\n"
+            )
+
+    def _produce_array_element_delta_report(self, base_model_version):
+        """Produce a compact delta report for patch model versions."""
+        base_parameter_data = self.db.get_model_parameters(
+            site=self.site,
+            array_element_name=self.array_element,
+            collection="telescopes",
+            model_version=base_model_version,
+        )
+        if not base_parameter_data:
+            return False
+
+        current_parameter_data = self.db.get_model_parameters(
+            site=self.site,
+            array_element_name=self.array_element,
+            collection="telescopes",
+            model_version=self.model_version,
+        )
+        if not current_parameter_data:
+            return False
+
+        parameter_names = set(base_parameter_data.keys()) | set(current_parameter_data.keys())
+        parameter_names &= set(names.model_parameters(None).keys())
+        changes = []
+        for parameter in sorted(parameter_names):
+            base_param_data = base_parameter_data.get(parameter)
+            current_param_data = current_parameter_data.get(parameter)
+
+            if not self._parameter_changed(base_param_data, current_param_data):
+                continue
+
+            changes.append(
+                {
+                    "parameter": parameter,
+                    "base_param_version": (base_param_data or {}).get("parameter_version", "-"),
+                    "new_param_version": (current_param_data or {}).get("parameter_version", "-"),
+                    "base_value": self._format_value_for_delta(parameter, base_param_data),
+                    "new_value": self._format_value_for_delta(parameter, current_param_data),
+                }
+            )
+
+        output_filename = Path(self.output_path / f"{self.array_element}.md")
+        output_filename.parent.mkdir(parents=True, exist_ok=True)
+
+        with output_filename.open("w", encoding="utf-8") as file:
+            file.write(f"# {self.array_element}\n\n")
+            file.write(
+                f"This report lists changes in model version **{self.model_version}** "
+                f"relative to **{base_model_version}**.\n\n"
+            )
+            file.write(
+                f"Full base report: [{base_model_version}]"
+                f"(../{base_model_version}/{self.array_element}.md)\n\n"
+            )
+
+            if not changes:
+                file.write("No parameter changes detected.\n")
+                return True
+
+            self._write_delta_report_table(file, changes)
+
+        return True
+
+    def _produce_observatory_delta_report(self, base_model_version):
+        """Produce a compact delta report for observatory parameters."""
+        base_parameter_data = self.db.get_model_parameters(
+            site=self.site,
+            array_element_name="OBS-" + self.site,
+            collection="sites",
+            model_version=base_model_version,
+        )
+        if not base_parameter_data:
+            return False
+
+        current_parameter_data = self.db.get_model_parameters(
+            site=self.site,
+            array_element_name="OBS-" + self.site,
+            collection="sites",
+            model_version=self.model_version,
+        )
+        if not current_parameter_data:
+            return False
+
+        parameter_names = set(base_parameter_data.keys()) | set(current_parameter_data.keys())
+        changes = []
+        for parameter in sorted(parameter_names):
+            base_param_data = base_parameter_data.get(parameter)
+            current_param_data = current_parameter_data.get(parameter)
+
+            if not self._parameter_changed(base_param_data, current_param_data):
+                continue
+
+            changes.append(
+                {
+                    "parameter": parameter,
+                    "base_param_version": (base_param_data or {}).get("parameter_version", "-"),
+                    "new_param_version": (current_param_data or {}).get("parameter_version", "-"),
+                    "base_value": self._format_value_for_delta(parameter, base_param_data),
+                    "new_value": self._format_value_for_delta(parameter, current_param_data),
+                }
+            )
+
+        output_filename = Path(self.output_path / f"OBS-{self.site}.md")
+        output_filename.parent.mkdir(parents=True, exist_ok=True)
+
+        with output_filename.open("w", encoding="utf-8") as file:
+            file.write(f"# Observatory Parameters - {self.site} Site (delta report)\n\n")
+            file.write(
+                f"This report lists changes in model version **{self.model_version}** "
+                f"relative to **{base_model_version}**.\n\n"
+            )
+            file.write(
+                f"Full base report: [{base_model_version}]"
+                f"(../{base_model_version}/OBS-{self.site}.md)\n\n"
+            )
+
+            if not changes:
+                file.write("No parameter changes detected.\n")
+                return True
+
+            self._write_delta_report_table(file, changes)
+
+        return True
+
     def _generate_plots(self, parameter, parameter_version, input_file, outpath):
         """Generate plots based on the parameter type."""
         plot_names = []
 
         if parameter == "camera_config_file":
-            plot_names = self._plot_camera_config(parameter, parameter_version, input_file, outpath)
+            plot_names = self._plot_camera_config(
+                parameter,
+                parameter_version,
+                input_file,
+                outpath,
+            )
         elif parameter in (
             "mirror_list",
             "primary_mirror_segmentation",
             "secondary_mirror_segmentation",
         ):
-            plot_names = self._plot_mirror_config(parameter, parameter_version, input_file, outpath)
+            plot_names = self._plot_mirror_config(
+                parameter,
+                parameter_version,
+                input_file,
+                outpath,
+            )
         elif parameter_version:
             plot_names = self._plot_parameter_tables(
                 parameter,
@@ -631,6 +849,10 @@ class ReadParameters:
             self.produce_observatory_report()
             return
 
+        base_version = base_version_for_patch_delta(self.model_version)
+        if base_version and self._produce_array_element_delta_report(base_version):
+            return
+
         telescope_model = TelescopeModel(
             site=self.site,
             telescope_name=self.array_element,
@@ -935,6 +1157,10 @@ class ReadParameters:
 
     def produce_observatory_report(self):
         """Produce a markdown report of all observatory parameters for a given site."""
+        base_version = base_version_for_patch_delta(self.model_version)
+        if base_version and self._produce_observatory_delta_report(base_version):
+            return
+
         output_filename = Path(self.output_path / f"OBS-{self.site}.md")
         output_filename.parent.mkdir(parents=True, exist_ok=True)
 

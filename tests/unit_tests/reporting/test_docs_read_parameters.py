@@ -35,7 +35,9 @@ def test_produce_array_element_report(telescope_model_lst, tmp_path):
     # Test observatory report path
     args = {
         "site": telescope_model_lst.site,
-        "model_version": telescope_model_lst.model_version,
+        # Use a base model version to exercise the full-report path
+        # (patch versions are handled by dedicated delta-report tests).
+        "model_version": "6.0.0",
         "observatory": True,
     }
     read_parameters = ReadParameters(args=args, output_path=tmp_path)
@@ -77,17 +79,27 @@ def test_produce_array_element_report(telescope_model_lst, tmp_path):
         }
     }
 
-    with patch.object(
-        read_parameters.db, "get_model_parameters", return_value=mock_telescope_params
+    with (
+        patch.object(
+            read_parameters.db, "get_model_parameters", return_value=mock_telescope_params
+        ),
+        patch.object(read_parameters.db, "export_model_files"),
+        patch("simtools.reporting.docs_read_parameters.TelescopeModel") as telescope_model,
     ):
+        telescope_model.return_value.name = telescope_model_lst.name
+        telescope_model.return_value.site = telescope_model_lst.site
+        telescope_model.return_value.model_version = args["model_version"]
+        telescope_model.return_value.design_model = telescope_model_lst.name
+        telescope_model.return_value.get_parameter_version.return_value = "1.0.0"
+
         read_parameters.produce_array_element_report()
 
         # Verify telescope report was generated
         tel_file = tmp_path / f"{telescope_model_lst.name}.md"
         assert tel_file.exists()
 
-        # Verify DB was called with correct parameters (at least once)
-        read_parameters.db.get_model_parameters.assert_called_with(
+        # Verify DB was called with correct parameters
+        read_parameters.db.get_model_parameters.assert_called_once_with(
             site=args["site"],
             array_element_name=args["telescope"],
             collection="telescopes",
@@ -122,6 +134,100 @@ def test_produce_model_parameter_reports(tmp_test_directory, mocker):
 
     file_path = output_path / args["telescope"] / "quantum_efficiency.md"
     assert file_path.exists()
+
+
+def test_produce_array_element_report_patch_version_writes_delta(tmp_test_directory, mocker):
+    args = {
+        "site": "North",
+        "telescope": "LSTN-01",
+        "model_version": "6.0.1",
+        "observatory": False,
+    }
+    read_parameters = ReadParameters(args=args, output_path=tmp_test_directory)
+
+    base_params = {
+        "focal_length": {
+            "value": 2800.0,
+            "unit": "cm",
+            "parameter_version": "1.0.0",
+            "instrument": "LSTN-01",
+        }
+    }
+    current_params = {
+        "focal_length": {
+            "value": 2810.0,
+            "unit": "cm",
+            "parameter_version": "1.0.1",
+            "instrument": "LSTN-01",
+        }
+    }
+
+    get_model_parameters = mocker.patch.object(
+        read_parameters.db,
+        "get_model_parameters",
+        side_effect=[base_params, current_params],
+    )
+    export_model_files = mocker.patch.object(read_parameters.db, "export_model_files")
+    telescope_model = mocker.patch("simtools.reporting.docs_read_parameters.TelescopeModel")
+
+    read_parameters.produce_array_element_report()
+
+    # Delta path should avoid full report generation side effects.
+    telescope_model.assert_not_called()
+    export_model_files.assert_not_called()
+
+    report_file = tmp_test_directory / "LSTN-01.md"
+    assert report_file.exists()
+    content = report_file.read_text(encoding="utf-8")
+    assert "../6.0.0/LSTN-01.md" in content
+    assert "focal_length" in content
+
+    # Ensure both base and current versions were queried.
+    assert get_model_parameters.call_count == 2
+
+
+def test_produce_observatory_report_patch_version_writes_delta(tmp_test_directory, mocker):
+    args = {
+        "site": "South",
+        "model_version": "6.2.1",
+        "observatory": True,
+    }
+    read_parameters = ReadParameters(args=args, output_path=tmp_test_directory)
+
+    base_params = {
+        "site_elevation": {
+            "value": 2200,
+            "unit": "m",
+            "parameter_version": "1.0.0",
+        }
+    }
+    current_params = {
+        "site_elevation": {
+            "value": 2201,
+            "unit": "m",
+            "parameter_version": "1.0.1",
+        }
+    }
+
+    get_model_parameters = mocker.patch.object(
+        read_parameters.db,
+        "get_model_parameters",
+        side_effect=[base_params, current_params],
+    )
+    export_model_files = mocker.patch.object(read_parameters.db, "export_model_files")
+
+    read_parameters.produce_observatory_report()
+
+    export_model_files.assert_not_called()
+
+    report_file = tmp_test_directory / "OBS-South.md"
+    assert report_file.exists()
+    content = report_file.read_text(encoding="utf-8")
+    assert "delta report" in content
+    assert "../6.2.0/OBS-South.md" in content
+    assert "site_elevation" in content
+
+    assert get_model_parameters.call_count == 2
 
 
 def test__convert_to_md(telescope_model_lst, tmp_test_directory, mocker):
