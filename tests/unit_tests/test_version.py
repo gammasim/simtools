@@ -204,6 +204,24 @@ def test_compare_versions():
         version.compare_versions("not_a_version", "1.0.0")
 
 
+def test_base_version_for_patch_delta():
+    assert version.base_version_for_patch_delta("6.0.2") == "6.0.0"
+    assert version.base_version_for_patch_delta("v6.1.3") == "6.1.0"
+    assert version.base_version_for_patch_delta("6.0.0") is None
+    assert version.base_version_for_patch_delta("6.0") is None
+    assert version.base_version_for_patch_delta("6") is None
+    assert version.base_version_for_patch_delta(None) is None
+    assert version.base_version_for_patch_delta("not_a_version") is None
+
+
+def test_base_version_for_patch_delta_non_final_versions():
+    assert version.base_version_for_patch_delta("6.0.1a1") is None
+    assert version.base_version_for_patch_delta("6.0.1rc1") is None
+    assert version.base_version_for_patch_delta("6.0.1.post1") is None
+    assert version.base_version_for_patch_delta("6.0.1.dev1") is None
+    assert version.base_version_for_patch_delta("6.0.1+local") is None
+
+
 def test_check_version_constraint():
     assert version.check_version_constraint("6.0.2", ">=6.0.0")
     assert version.check_version_constraint("6.0.2", "<=6.0.2")
