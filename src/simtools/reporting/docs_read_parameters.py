@@ -130,7 +130,7 @@ class ReadParameters:
 
         if isinstance(value_data, (list, tuple)) and len(value_data) > 10:
             preview = ", ".join(str(v) for v in value_data[:3])
-            return f"[{preview}, …] {unit}".strip()
+            return f"[{preview}, ...] {unit}".strip()
 
         return self._format_parameter_value(
             parameter, value_data, unit, file_flag, parameter_version="delta"
