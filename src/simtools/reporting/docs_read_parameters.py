@@ -150,6 +150,41 @@ class ReadParameters:
                 f"{row['new_value']} |\n"
             )
 
+    def _build_delta_changes(self, base_parameter_data, current_parameter_data, parameters=None):
+        """Build list of changed parameters for delta reports."""
+        parameter_names = set(base_parameter_data.keys()) | set(current_parameter_data.keys())
+        if parameters is not None:
+            parameter_names &= set(parameters)
+
+        changes = []
+        for parameter in sorted(parameter_names):
+            base_param_data = base_parameter_data.get(parameter)
+            current_param_data = current_parameter_data.get(parameter)
+
+            if not self._parameter_changed(base_param_data, current_param_data):
+                continue
+
+            changes.append(
+                {
+                    "parameter": parameter,
+                    "base_param_version": (base_param_data or {}).get("parameter_version", "-"),
+                    "new_param_version": (current_param_data or {}).get("parameter_version", "-"),
+                    "base_value": self._format_value_for_delta(parameter, base_param_data),
+                    "new_value": self._format_value_for_delta(parameter, current_param_data),
+                }
+            )
+
+        return changes
+
+    def _write_delta_report_header(self, file, title, base_model_version, base_report_path):
+        """Write delta report heading and base report link."""
+        file.write(f"# {title}\n\n")
+        file.write(
+            f"This report lists changes in model version **{self.model_version}** "
+            f"relative to **{base_model_version}**.\n\n"
+        )
+        file.write(f"Full base report: [{base_model_version}]({base_report_path})\n\n")
+
     def _produce_array_element_delta_report(self, base_model_version):
         """Produce a compact delta report for patch model versions."""
         base_parameter_data = self.db.get_model_parameters(
@@ -170,38 +205,21 @@ class ReadParameters:
         if not current_parameter_data:
             return False
 
-        parameter_names = set(base_parameter_data.keys()) | set(current_parameter_data.keys())
-        parameter_names &= set(names.model_parameters(None).keys())
-        changes = []
-        for parameter in sorted(parameter_names):
-            base_param_data = base_parameter_data.get(parameter)
-            current_param_data = current_parameter_data.get(parameter)
-
-            if not self._parameter_changed(base_param_data, current_param_data):
-                continue
-
-            changes.append(
-                {
-                    "parameter": parameter,
-                    "base_param_version": (base_param_data or {}).get("parameter_version", "-"),
-                    "new_param_version": (current_param_data or {}).get("parameter_version", "-"),
-                    "base_value": self._format_value_for_delta(parameter, base_param_data),
-                    "new_value": self._format_value_for_delta(parameter, current_param_data),
-                }
-            )
+        changes = self._build_delta_changes(
+            base_parameter_data,
+            current_parameter_data,
+            parameters=names.model_parameters(None).keys(),
+        )
 
         output_filename = Path(self.output_path / f"{self.array_element}.md")
         output_filename.parent.mkdir(parents=True, exist_ok=True)
 
         with output_filename.open("w", encoding="utf-8") as file:
-            file.write(f"# {self.array_element}\n\n")
-            file.write(
-                f"This report lists changes in model version **{self.model_version}** "
-                f"relative to **{base_model_version}**.\n\n"
-            )
-            file.write(
-                f"Full base report: [{base_model_version}]"
-                f"(../{base_model_version}/{self.array_element}.md)\n\n"
+            self._write_delta_report_header(
+                file,
+                self.array_element,
+                base_model_version,
+                f"../{base_model_version}/{self.array_element}.md",
             )
 
             if not changes:
@@ -232,37 +250,17 @@ class ReadParameters:
         if not current_parameter_data:
             return False
 
-        parameter_names = set(base_parameter_data.keys()) | set(current_parameter_data.keys())
-        changes = []
-        for parameter in sorted(parameter_names):
-            base_param_data = base_parameter_data.get(parameter)
-            current_param_data = current_parameter_data.get(parameter)
-
-            if not self._parameter_changed(base_param_data, current_param_data):
-                continue
-
-            changes.append(
-                {
-                    "parameter": parameter,
-                    "base_param_version": (base_param_data or {}).get("parameter_version", "-"),
-                    "new_param_version": (current_param_data or {}).get("parameter_version", "-"),
-                    "base_value": self._format_value_for_delta(parameter, base_param_data),
-                    "new_value": self._format_value_for_delta(parameter, current_param_data),
-                }
-            )
+        changes = self._build_delta_changes(base_parameter_data, current_parameter_data)
 
         output_filename = Path(self.output_path / f"OBS-{self.site}.md")
         output_filename.parent.mkdir(parents=True, exist_ok=True)
 
         with output_filename.open("w", encoding="utf-8") as file:
-            file.write(f"# Observatory Parameters - {self.site} Site (delta report)\n\n")
-            file.write(
-                f"This report lists changes in model version **{self.model_version}** "
-                f"relative to **{base_model_version}**.\n\n"
-            )
-            file.write(
-                f"Full base report: [{base_model_version}]"
-                f"(../{base_model_version}/OBS-{self.site}.md)\n\n"
+            self._write_delta_report_header(
+                file,
+                f"Observatory Parameters - {self.site} Site (delta report)",
+                base_model_version,
+                f"../{base_model_version}/OBS-{self.site}.md",
             )
 
             if not changes:
