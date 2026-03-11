@@ -71,12 +71,72 @@ class GridGeneration:
         self.observing_time = observing_time
         self.lookup_table = lookup_table
         self.telescope_ids = telescope_ids
+        self.interpolated_limits = {}
 
         # Store target values for each axis
         self.target_values = self._generate_target_values()
 
         if self.lookup_table:
-            self._apply_lookup_table_limits()
+            if self.coordinate_system == "ra_dec":
+                self._prepare_lookup_table_limits_for_point_interpolation()
+            else:
+                self._apply_lookup_table_limits()
+
+    def _load_matching_lookup_arrays(self):
+        """Load and filter lookup-table arrays for selected telescope IDs."""
+        lookup_table = Table.read(self.lookup_table, format="ascii.ecsv")
+
+        matching_rows = [
+            row for row in lookup_table if set(self.telescope_ids) == set(row["telescope_ids"])
+        ]
+
+        if not matching_rows:
+            raise ValueError(
+                f"No matching rows in the lookup table for telescope_ids: {self.telescope_ids}"
+            )
+
+        def extract_array(field, transform=lambda x: x):
+            return np.array([transform(row[field]) for row in matching_rows])
+
+        zeniths = extract_array("zenith")
+        azimuths = extract_array("azimuth", lambda x: x % 360)
+        nsb_values = extract_array("nsb", lambda x: 1 if x == "dark" else 5)
+
+        return {
+            "points": np.column_stack((zeniths, azimuths, nsb_values)),
+            "energy": extract_array("lower_energy_threshold"),
+            "radius": extract_array("upper_radius_threshold"),
+            "viewcone": extract_array("viewcone_radius"),
+        }
+
+    def _prepare_lookup_table_limits_for_point_interpolation(self):
+        """Prepare lookup arrays for per-point interpolation in RA/Dec grid mode."""
+        lookup_arrays = self._load_matching_lookup_arrays()
+
+        points = lookup_arrays["points"]
+        azimuths = points[:, 1]
+        azimuths_wrapped = np.concatenate([azimuths + shift for shift in (0, 360, -360)])
+
+        def repeat_3(arr):
+            """Repeat an array three times."""
+            return np.tile(arr, 3)
+
+        self.lookup_points_for_interpolation = np.column_stack(
+            (
+                repeat_3(points[:, 0]),
+                azimuths_wrapped,
+                repeat_3(points[:, 2]),
+            )
+        )
+        self.lookup_values_for_interpolation = {
+            "energy": repeat_3(lookup_arrays["energy"]),
+            "radius": repeat_3(lookup_arrays["radius"]),
+            "viewcone": repeat_3(lookup_arrays["viewcone"]),
+        }
+
+    def _has_radec_axes(self):
+        """Return True if axes define a native RA/Dec grid."""
+        return "ra" in self.axes and "dec" in self.axes
 
     def _generate_target_values(self):
         """
@@ -119,26 +179,15 @@ class GridGeneration:
 
     def _apply_lookup_table_limits(self):
         """Apply limits from the lookup table and interpolate values."""
-        lookup_table = Table.read(self.lookup_table, format="ascii.ecsv")
+        lookup_arrays = self._load_matching_lookup_arrays()
+        points_base = lookup_arrays["points"]
+        lower_energy_thresholds = lookup_arrays["energy"]
+        upper_radius_thresholds = lookup_arrays["radius"]
+        viewcone_radii = lookup_arrays["viewcone"]
 
-        matching_rows = [
-            row for row in lookup_table if set(self.telescope_ids) == set(row["telescope_ids"])
-        ]
-
-        if not matching_rows:
-            raise ValueError(
-                f"No matching rows in the lookup table for telescope_ids: {self.telescope_ids}"
-            )
-
-        def extract_array(field, transform=lambda x: x):
-            return np.array([transform(row[field]) for row in matching_rows])
-
-        zeniths = extract_array("zenith")
-        azimuths = extract_array("azimuth", lambda x: x % 360)
-        nsb_values = extract_array("nsb", lambda x: 1 if x == "dark" else 5)
-        lower_energy_thresholds = extract_array("lower_energy_threshold")
-        upper_radius_thresholds = extract_array("upper_radius_threshold")
-        viewcone_radii = extract_array("viewcone_radius")
+        zeniths = points_base[:, 0]
+        azimuths = points_base[:, 1]
+        nsb_values = points_base[:, 2]
 
         # Wrap azimuths and repeat others
         azimuths_wrapped = np.concatenate([azimuths + shift for shift in (0, 360, -360)])
@@ -182,6 +231,173 @@ class GridGeneration:
             "radius": interpolate(upper_radius_thresholds),
             "viewcone": interpolate(viewcone_radii),
         }
+
+    def _generate_radec_grid_direction_points(self):
+        """Generate direction points from declination lines and hour-angle spacing."""
+        if self.observing_time is None:
+            raise ValueError("Observing time is required for ra_dec grid generation.")
+
+        max_zenith = self.axes.get("zenith_angle", {}).get("range", [0, 70])[1]
+        lst_deg = self.observing_time.sidereal_time(
+            "apparent", longitude=self.observing_location.lon
+        ).deg
+
+        direction_points = []
+        for declination in np.arange(-90.0, 91.0, 1.0):
+            cos_dec = abs(np.cos(np.deg2rad(declination)))
+            step_ha = 1.0 / cos_dec if cos_dec > 1e-6 else 360.0
+            n_ha = max(1, int(np.ceil(360.0 / step_ha)))
+            hour_angles = np.linspace(-180.0, 180.0, n_ha, endpoint=False)
+            ra_values = (lst_deg - hour_angles) % 360.0
+
+            skycoord = SkyCoord(
+                ra=ra_values * u.deg,
+                dec=np.full_like(ra_values, declination) * u.deg,
+                frame="icrs",
+            )
+            altaz = skycoord.transform_to(
+                AltAz(location=self.observing_location, obstime=self.observing_time)
+            )
+
+            zenith_values = (90.0 * u.deg - altaz.alt).to(u.deg).value
+            mask = (zenith_values >= 0.0) & (zenith_values <= max_zenith)
+
+            for idx in np.nonzero(mask)[0]:
+                direction_points.append(
+                    {
+                        "zenith_angle": zenith_values[idx] * u.deg,
+                        "azimuth": altaz.az.deg[idx] * u.deg,
+                    }
+                )
+        return direction_points
+
+    def _get_radec_grid_filter_limits(self):
+        """Return zenith limits to apply for native RA/Dec axes."""
+        if "zenith_angle" in self.axes:
+            return self.axes["zenith_angle"].get("range", [0, 90])
+        return [0, 90]
+
+    def _generate_extra_axis_combinations(self, excluded_keys):
+        """Generate combinations for all axes except the excluded ones."""
+        extra_axes = {
+            key: value for key, value in self.target_values.items() if key not in excluded_keys
+        }
+        if not extra_axes:
+            return list(extra_axes.keys()), [], [np.array([])]
+
+        extra_value_arrays = [value.value for value in extra_axes.values()]
+        extra_units = [value.unit for value in extra_axes.values()]
+        extra_grid = np.meshgrid(*extra_value_arrays, indexing="ij")
+        extra_combinations = np.vstack(list(map(np.ravel, extra_grid))).T
+        return list(extra_axes.keys()), extra_units, extra_combinations
+
+    def _add_lookup_limits_to_point(self, point, zenith, azimuth):
+        """Interpolate and attach lookup-table limits to a grid point."""
+        if not self.lookup_table:
+            return
+
+        nsb_value = point.get("nsb", 1)
+        if isinstance(nsb_value, Quantity):
+            nsb_value = nsb_value.value
+        limits = self._interpolate_limits_for_point(
+            zenith=zenith,
+            azimuth=azimuth,
+            nsb=float(nsb_value),
+        )
+        point["energy_threshold"] = {"lower": limits["energy"] * u.TeV}
+        point["radius"] = limits["radius"] * u.m
+        point["viewcone"] = limits["viewcone"] * u.deg
+
+    def _generate_grid_from_radec_axes(self):
+        """Generate grid points from explicit RA/Dec axes definitions.
+
+        All explicit RA/Dec combinations defined by the input axes are preserved,
+        even when their transformed Alt/Az coordinates fall below the local horizon.
+        """
+        if self.observing_time is None:
+            raise ValueError("Observing time is required for ra_dec grid generation.")
+
+        axis_keys = [key for key in self.target_values if key not in ("zenith_angle", "azimuth")]
+        value_arrays = [self.target_values[key].value for key in axis_keys]
+        units = [self.target_values[key].unit for key in axis_keys]
+        grid = np.meshgrid(*value_arrays, indexing="ij")
+        combinations = np.vstack(list(map(np.ravel, grid))).T
+
+        grid_points = []
+        for combination in combinations:
+            grid_point = {
+                key: Quantity(combination[i], units[i]) for i, key in enumerate(axis_keys)
+            }
+
+            skycoord = SkyCoord(
+                ra=grid_point["ra"].to(u.deg),
+                dec=grid_point["dec"].to(u.deg),
+                frame="icrs",
+            )
+            altaz = skycoord.transform_to(
+                AltAz(location=self.observing_location, obstime=self.observing_time)
+            )
+            zenith = (90.0 * u.deg - altaz.alt).to(u.deg).value
+
+            self._add_lookup_limits_to_point(grid_point, zenith=zenith, azimuth=altaz.az.deg)
+
+            grid_points.append(grid_point)
+
+        return grid_points
+
+    def _interpolate_limits_for_point(self, zenith, azimuth, nsb):
+        """Interpolate lookup-table limits for a single point."""
+        target = np.array([[zenith, azimuth % 360.0, nsb]])
+        return {
+            "energy": griddata(
+                self.lookup_points_for_interpolation,
+                self.lookup_values_for_interpolation["energy"],
+                target,
+                method="linear",
+                fill_value=np.nan,
+            )[0],
+            "radius": griddata(
+                self.lookup_points_for_interpolation,
+                self.lookup_values_for_interpolation["radius"],
+                target,
+                method="linear",
+                fill_value=np.nan,
+            )[0],
+            "viewcone": griddata(
+                self.lookup_points_for_interpolation,
+                self.lookup_values_for_interpolation["viewcone"],
+                target,
+                method="linear",
+                fill_value=np.nan,
+            )[0],
+        }
+
+    def _generate_grid_radec_mode(self):
+        """Generate grid points for RA/Dec mode using uniform declination lines."""
+        if self._has_radec_axes():
+            return self._generate_grid_from_radec_axes()
+
+        direction_points = self._generate_radec_grid_direction_points()
+        extra_keys, extra_units, extra_combinations = self._generate_extra_axis_combinations(
+            excluded_keys=("zenith_angle", "azimuth")
+        )
+
+        grid_points = []
+        for direction_point in direction_points:
+            for extra_combination in extra_combinations:
+                point = dict(direction_point)
+                for i, key in enumerate(extra_keys):
+                    point[key] = Quantity(extra_combination[i], extra_units[i])
+
+                self._add_lookup_limits_to_point(
+                    point,
+                    zenith=point["zenith_angle"].value,
+                    azimuth=point["azimuth"].value,
+                )
+
+                grid_points.append(point)
+
+        return grid_points
 
     def create_circular_binning(self, azimuth_range, num_bins):
         """
@@ -233,6 +449,9 @@ class GridGeneration:
             A list of grid points, each represented as a dictionary with axis names
             as keys and axis values as values. Axis values may include units where defined.
         """
+        if self.coordinate_system == "ra_dec":
+            return self._generate_grid_radec_mode()
+
         value_arrays = [value.value for value in self.target_values.values()]
         units = [value.unit for value in self.target_values.values()]
         grid = np.meshgrid(*value_arrays, indexing="ij")
