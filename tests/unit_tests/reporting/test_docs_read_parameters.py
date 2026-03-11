@@ -1802,7 +1802,7 @@ def test__format_value_for_delta(tmp_path):
 
     long_list = list(range(15))
     result = rp._format_value_for_delta("p", {"value": long_list, "unit": "m", "file": False})
-    assert "..." in result or "…" in result
+    assert "..." in result
 
     result = rp._format_value_for_delta("p", {"value": 42.0, "unit": "m", "file": False})
     assert "42.0" in result
