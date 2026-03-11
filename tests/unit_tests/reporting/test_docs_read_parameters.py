@@ -1722,6 +1722,226 @@ def test__plot_mirror_config_no_parameter_version(tmp_test_directory):
     assert result == []
 
 
+@pytest.mark.parametrize(
+    ("v1", "v2", "expected"),
+    [
+        (None, None, True),
+        (None, 1, False),
+        (1, None, False),
+        (1, 1, True),
+        (1, 2, False),
+        (1.0, 1.0, True),
+        (float("nan"), float("nan"), True),
+        ([1, 2], [1, 2], True),
+        ([1, 2], [1, 3], False),
+        ([1, 2], [1], False),
+        ({"a": 1}, {"a": 1}, True),
+        ({"a": 1}, {"a": 2}, False),
+        ({"a": 1}, {"b": 1}, False),
+        ("x", "x", True),
+        ("x", "y", False),
+    ],
+)
+def test__values_equal(v1, v2, expected, tmp_path):
+    rp = ReadParameters(args={}, output_path=tmp_path)
+    assert rp._values_equal(v1, v2) == expected
+
+
+@pytest.mark.parametrize(
+    ("base", "current", "expected"),
+    [
+        (None, {"parameter_version": "1.0"}, True),
+        ({"parameter_version": "1.0"}, None, True),
+        (
+            {"parameter_version": "1.0", "unit": "m", "file": False, "value": 1},
+            {"parameter_version": "2.0", "unit": "m", "file": False, "value": 1},
+            True,
+        ),
+        (
+            {"parameter_version": "1.0", "unit": "m", "file": False, "value": 1},
+            {"parameter_version": "1.0", "unit": "cm", "file": False, "value": 1},
+            True,
+        ),
+        (
+            {"parameter_version": "1.0", "unit": "m", "file": False, "value": 1},
+            {"parameter_version": "1.0", "unit": "m", "file": True, "value": 1},
+            True,
+        ),
+        (
+            {"parameter_version": "1.0", "unit": "m", "file": False, "value": 1},
+            {"parameter_version": "1.0", "unit": "m", "file": False, "value": 2},
+            True,
+        ),
+        (
+            {"parameter_version": "1.0", "unit": "m", "file": False, "value": 1},
+            {"parameter_version": "1.0", "unit": "m", "file": False, "value": 1},
+            False,
+        ),
+    ],
+)
+def test__parameter_changed(base, current, expected, tmp_path):
+    rp = ReadParameters(args={}, output_path=tmp_path)
+    assert rp._parameter_changed(base, current) == expected
+
+
+def test__format_value_for_delta(tmp_path):
+    rp = ReadParameters(args={}, output_path=tmp_path)
+
+    assert rp._format_value_for_delta("p", None) == "-"
+    assert rp._format_value_for_delta("p", {}) == "-"
+
+    assert (
+        rp._format_value_for_delta(
+            "p", {"value": [{"a": 1}, {"b": 2}], "unit": None, "file": False}
+        )
+        == "2 rows"
+    )
+
+    result = rp._format_value_for_delta("p", {"value": "some_file.dat", "unit": " ", "file": True})
+    assert "some_file.dat" in result
+
+    long_list = list(range(15))
+    result = rp._format_value_for_delta("p", {"value": long_list, "unit": "m", "file": False})
+    assert "..." in result or "…" in result
+
+    result = rp._format_value_for_delta("p", {"value": 42.0, "unit": "m", "file": False})
+    assert "42.0" in result
+
+
+def test__write_delta_report_header(tmp_path):
+    rp = ReadParameters(args={"model_version": "6.0.1"}, output_path=tmp_path)
+    buf = StringIO()
+    rp._write_delta_report_header(buf, "My Title", "6.0.0", "../6.0.0/target.md")
+    content = buf.getvalue()
+    assert "# My Title" in content
+    assert "6.0.1" in content
+    assert "6.0.0" in content
+    assert "../6.0.0/target.md" in content
+
+
+def test__write_delta_report_table(tmp_path):
+    rp = ReadParameters(args={}, output_path=tmp_path)
+    buf = StringIO()
+    changes = [
+        {
+            "parameter": "focal_length",
+            "base_param_version": "1.0.0",
+            "new_param_version": "1.0.1",
+            "base_value": "2800",
+            "new_value": "2810",
+        }
+    ]
+    rp._write_delta_report_table(buf, changes)
+    content = buf.getvalue()
+    assert "focal_length" in content
+    assert "1.0.0" in content
+    assert "2810" in content
+
+
+@pytest.mark.parametrize(
+    ("parameters", "base_data", "current_data", "expected_count"),
+    [
+        (
+            None,
+            {"a": {"parameter_version": "1.0", "unit": "m", "file": False, "value": 1}},
+            {"a": {"parameter_version": "1.0", "unit": "m", "file": False, "value": 2}},
+            1,
+        ),
+        (
+            None,
+            {"a": {"parameter_version": "1.0", "unit": "m", "file": False, "value": 1}},
+            {"a": {"parameter_version": "1.0", "unit": "m", "file": False, "value": 1}},
+            0,
+        ),
+        (
+            ["b"],
+            {
+                "a": {"parameter_version": "1.0", "unit": "m", "file": False, "value": 1},
+                "b": {"parameter_version": "1.0", "unit": "m", "file": False, "value": 5},
+            },
+            {
+                "a": {"parameter_version": "1.0", "unit": "m", "file": False, "value": 9},
+                "b": {"parameter_version": "1.0", "unit": "m", "file": False, "value": 5},
+            },
+            0,
+        ),
+    ],
+)
+def test__build_delta_changes(parameters, base_data, current_data, expected_count, tmp_path):
+    rp = ReadParameters(args={}, output_path=tmp_path)
+    changes = rp._build_delta_changes(base_data, current_data, parameters=parameters)
+    assert len(changes) == expected_count
+
+
+def test__produce_array_element_delta_report_empty_base(tmp_path, mocker):
+    rp = ReadParameters(
+        args={"site": "North", "telescope": "LSTN-01", "model_version": "6.0.1"},
+        output_path=tmp_path,
+    )
+    mocker.patch.object(rp.db, "get_model_parameters", return_value={})
+    assert rp._produce_array_element_delta_report("6.0.0") is False
+
+
+def test__produce_array_element_delta_report_empty_current(tmp_path, mocker):
+    rp = ReadParameters(
+        args={"site": "North", "telescope": "LSTN-01", "model_version": "6.0.1"},
+        output_path=tmp_path,
+    )
+    base = {"focal_length": {"parameter_version": "1.0", "unit": "m", "file": False, "value": 1}}
+    mocker.patch.object(rp.db, "get_model_parameters", side_effect=[base, {}])
+    assert rp._produce_array_element_delta_report("6.0.0") is False
+
+
+def test__produce_array_element_delta_report_no_changes(tmp_path, mocker):
+    rp = ReadParameters(
+        args={"site": "North", "telescope": "LSTN-01", "model_version": "6.0.1"},
+        output_path=tmp_path,
+    )
+    param = {"focal_length": {"parameter_version": "1.0", "unit": "m", "file": False, "value": 1}}
+    mocker.patch.object(rp.db, "get_model_parameters", side_effect=[param, param])
+    mocker.patch("simtools.utils.names.model_parameters", return_value={"focal_length": {}})
+
+    assert rp._produce_array_element_delta_report("6.0.0") is True
+    content = (tmp_path / "LSTN-01.md").read_text()
+    assert "No parameter changes detected" in content
+
+
+def test__produce_observatory_delta_report_empty_base(tmp_path, mocker):
+    rp = ReadParameters(
+        args={"site": "South", "model_version": "6.2.1"},
+        output_path=tmp_path,
+    )
+    mocker.patch.object(rp.db, "get_model_parameters", return_value={})
+    assert rp._produce_observatory_delta_report("6.2.0") is False
+
+
+def test__produce_observatory_delta_report_empty_current(tmp_path, mocker):
+    rp = ReadParameters(
+        args={"site": "South", "model_version": "6.2.1"},
+        output_path=tmp_path,
+    )
+    base = {
+        "site_elevation": {"parameter_version": "1.0", "unit": "m", "file": False, "value": 2200}
+    }
+    mocker.patch.object(rp.db, "get_model_parameters", side_effect=[base, {}])
+    assert rp._produce_observatory_delta_report("6.2.0") is False
+
+
+def test__produce_observatory_delta_report_no_changes(tmp_path, mocker):
+    rp = ReadParameters(
+        args={"site": "South", "model_version": "6.2.1"},
+        output_path=tmp_path,
+    )
+    param = {
+        "site_elevation": {"parameter_version": "1.0", "unit": "m", "file": False, "value": 2200}
+    }
+    mocker.patch.object(rp.db, "get_model_parameters", side_effect=[param, param])
+
+    assert rp._produce_observatory_delta_report("6.2.0") is True
+    content = (tmp_path / "OBS-South.md").read_text()
+    assert "No parameter changes detected" in content
+
+
 def test__plot_mirror_config(tmp_test_directory, mocker):
     """Test _plot_mirror_config with valid parameter_version."""
     args = {"telescope": "LSTN-01", "site": "North", "model_version": "6.0.0"}
