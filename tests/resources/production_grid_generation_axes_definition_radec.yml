@@ -1,0 +1,22 @@
+---
+axes:
+  ra:
+    range: [0, 360]
+    binning: 36
+    scaling: linear
+    units: deg
+  dec:
+    range: [-90, 90]
+    binning: 18
+    scaling: linear
+    units: deg
+  nsb:
+    range: [4, 4]
+    binning: 1
+    scaling: linear
+    units: MHz
+  offset:
+    range: [0, 10]
+    binning: 2
+    scaling: linear
+    units: deg
