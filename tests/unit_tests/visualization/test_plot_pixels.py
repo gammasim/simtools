@@ -86,10 +86,8 @@ def test_plot_pixel_layout_from_file_smoke():
         mock.patch("simtools.visualization.plot_pixels.add_pixel_patch_collections") as mock_add,
     ):
         mock_camera_cls.return_value = camera
-        mock_transform.side_effect = (
-            lambda cam, camera_config_file, rotate_angle=None: cam.pixels.__setitem__(
-                "plot_rotate_angle", (90.0 * u.deg).to(u.rad).value
-            )
+        mock_transform.side_effect = lambda cam, camera_config_file, rotate_angle=None: (
+            cam.pixels.__setitem__("plot_rotate_angle", (90.0 * u.deg).to(u.rad).value)
         )
         mock_p.return_value = ([], [], [])
 

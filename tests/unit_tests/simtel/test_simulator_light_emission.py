@@ -109,12 +109,12 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian(
     }
 
     # Mock calibration model values
-    simulator_instance.calibration_model.get_parameter_value.side_effect = (
-        lambda name: "Lambertian" if name == "flasher_angular_distribution" else None
+    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda name: (
+        "Lambertian" if name == "flasher_angular_distribution" else None
     )
     # Width is ignored for Lambertian; no need to mock width conversion.
-    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
-        lambda name: None
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = lambda name: (
+        None
     )
 
     result = simulator_instance._get_angular_distribution_string_for_sim_telarray()
@@ -136,8 +136,8 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian_failure(
 ):
     """Test Lambertian distribution failure handling."""
     # Mock calibration model values
-    simulator_instance.calibration_model.get_parameter_value.side_effect = (
-        lambda name: "Lambertian" if name == "flasher_angular_distribution" else None
+    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda name: (
+        "Lambertian" if name == "flasher_angular_distribution" else None
     )
 
     # Mock _generate_lambertian_angular_distribution_table to raise OSError
@@ -530,6 +530,122 @@ def test__add_flasher_command_options_different_values(simulator_instance):
         assert result[8] == "--angular-distribution uniform"  # different angular distribution
 
 
+def _setup_multi_intensity_flasher_test(simulator_instance):
+    """Set up common mocks for multi-intensity flasher command-option tests."""
+
+    def mock_get_param_with_unit(name):
+        if name == "flasher_position":
+            return [1.0 * u.cm, 1.0 * u.cm]
+        if name == "flasher_wavelength":
+            return 450.0 * u.nm
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_param_with_unit
+    )
+    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda name: (
+        4000 if name == "flasher_bunch_size" else ["Gauss", 0.0, 0.0]
+    )
+
+    mock_diameter = Mock()
+    mock_diameter.to.return_value.value = 180.0
+    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
+    simulator_instance.telescope_model.get_parameter_value.return_value = "hexagonal"
+
+
+def test__add_flasher_command_options_multi_intensity_with_event_list(simulator_instance):
+    """Test ff-1m event mapping for one event value per photon intensity."""
+    _setup_multi_intensity_flasher_test(simulator_instance)
+
+    with (
+        patch.object(
+            simulator_instance, "calculate_distance_focal_plane_calibration_device"
+        ) as mock_distance,
+        patch(
+            "simtools.simtel.simulator_light_emission.fiducial_radius_from_shape",
+            return_value=90.0,
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_angular_distribution_string_for_sim_telarray",
+            return_value="gauss:2.5",
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_pulse_shape_string_for_sim_telarray",
+            return_value="gauss:2.0",
+        ),
+    ):
+        mock_distance_value = Mock()
+        mock_distance_value.to.return_value.value = 1000.0
+        mock_distance.return_value = mock_distance_value
+
+        simulator_instance.light_emission_config = {
+            "number_of_events": [100, 50, 20],
+            "flasher_photons": [1000000, 2000000, 3000000],
+        }
+
+        result = simulator_instance._add_flasher_command_options()
+
+        assert "--events 100,50,20" in result
+        assert "--photons 1000000,2000000,3000000" in result
+
+
+def test__add_flasher_command_options_multi_intensity_with_single_event_value(simulator_instance):
+    """Test ff-1m event mapping repeats a single event value for all photon intensities."""
+    _setup_multi_intensity_flasher_test(simulator_instance)
+
+    with (
+        patch.object(
+            simulator_instance, "calculate_distance_focal_plane_calibration_device"
+        ) as mock_distance,
+        patch(
+            "simtools.simtel.simulator_light_emission.fiducial_radius_from_shape",
+            return_value=90.0,
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_angular_distribution_string_for_sim_telarray",
+            return_value="gauss:2.5",
+        ),
+        patch.object(
+            simulator_instance,
+            "_get_pulse_shape_string_for_sim_telarray",
+            return_value="gauss:2.0",
+        ),
+    ):
+        mock_distance_value = Mock()
+        mock_distance_value.to.return_value.value = 1000.0
+        mock_distance.return_value = mock_distance_value
+
+        simulator_instance.light_emission_config = {
+            "number_of_events": 100,
+            "flasher_photons": [1000000, 2000000, 3000000],
+        }
+
+        result = simulator_instance._add_flasher_command_options()
+
+        assert "--events 100,100,100" in result
+        assert "--photons 1000000,2000000,3000000" in result
+
+
+def test__add_flasher_command_options_event_length_mismatch_raises(simulator_instance):
+    """Test event list length mismatch with photons raises ValueError."""
+
+    simulator_instance.light_emission_config = {
+        "number_of_events": [100, 50],
+        "flasher_photons": [1000000, 2000000, 3000000],
+    }
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"Invalid number_of_events list length\. Use one value or one value per photon intensity"
+        ),
+    ):
+        simulator_instance._build_flasher_event_and_photon_sequences()
+
+
 def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_test_directory):
     """When pulse width and decay exist, a pulse table is written and used."""
 
@@ -540,8 +656,8 @@ def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_t
         # Provide full 3-element pulse shape so writer path can read width/exp
         "flasher_pulse_shape": ["Gauss-Exponential", 2.0, 6.0],
     }
-    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
-        lambda name: params_with_unit.get(name)
+    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = lambda name: (
+        params_with_unit.get(name)
     )
 
     # Provide specific returns for plain-valued params used inside the call
@@ -550,16 +666,16 @@ def test__add_flasher_command_options_with_pulse_table(simulator_instance, tmp_t
         "flasher_angular_distribution": "gaussian",
         "flasher_pulse_shape": ["Gauss-Exponential", 2.0, 6.0],
     }
-    simulator_instance.calibration_model.get_parameter_value.side_effect = (
-        lambda name: plain_params.get(name)
+    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda name: (
+        plain_params.get(name)
     )
 
     # Mock telescope values
     mock_diameter = Mock()
     mock_diameter.to.return_value.value = 180.0
     simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
-    simulator_instance.telescope_model.get_parameter_value.side_effect = (
-        lambda key: 40 if key == "fadc_sum_bins" else "hexagonal"
+    simulator_instance.telescope_model.get_parameter_value.side_effect = lambda key: (
+        40 if key == "fadc_sum_bins" else "hexagonal"
     )
 
     # Mock distance and helpers
@@ -639,8 +755,8 @@ def test__add_flasher_command_options_writer_fallback(simulator_instance, tmp_te
     mock_diameter = Mock()
     mock_diameter.to.return_value.value = 160.0
     simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
-    simulator_instance.telescope_model.get_parameter_value.side_effect = (
-        lambda key: 40 if key == "fadc_sum_bins" else "hexagonal"
+    simulator_instance.telescope_model.get_parameter_value.side_effect = lambda key: (
+        40 if key == "fadc_sum_bins" else "hexagonal"
     )
 
     # IO and helpers
@@ -716,16 +832,16 @@ def test__add_flasher_command_options_invalid_gauss_exponential_width(simulator_
     simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
         mock_get_param_with_unit
     )
-    simulator_instance.calibration_model.get_parameter_value.side_effect = (
-        lambda k: 8000 if k == "flasher_bunch_size" else ["Gauss-Exponential", 0.0, 5.0]
+    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda k: (
+        8000 if k == "flasher_bunch_size" else ["Gauss-Exponential", 0.0, 5.0]
     )
 
     # Telescope minimal mocks
     mock_diameter = Mock()
     mock_diameter.to.return_value.value = 200.0
     simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
-    simulator_instance.telescope_model.get_parameter_value.side_effect = (
-        lambda k: 40 if k == "fadc_sum_bins" else "hexagonal"
+    simulator_instance.telescope_model.get_parameter_value.side_effect = lambda k: (
+        40 if k == "fadc_sum_bins" else "hexagonal"
     )
 
     simulator_instance.light_emission_config = {"number_of_events": 1, "flasher_photons": 100}
@@ -765,16 +881,16 @@ def test__add_flasher_command_options_invalid_gauss_exponential_decay(simulator_
     simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = (
         mock_get_param_with_unit
     )
-    simulator_instance.calibration_model.get_parameter_value.side_effect = (
-        lambda k: 4000 if k == "flasher_bunch_size" else ["Gauss-Exponential", 2.0, 0.0]
+    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda k: (
+        4000 if k == "flasher_bunch_size" else ["Gauss-Exponential", 2.0, 0.0]
     )
 
     # Telescope minimal mocks
     mock_diameter = Mock()
     mock_diameter.to.return_value.value = 160.0
     simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = mock_diameter
-    simulator_instance.telescope_model.get_parameter_value.side_effect = (
-        lambda k: 40 if k == "fadc_sum_bins" else "hexagonal"
+    simulator_instance.telescope_model.get_parameter_value.side_effect = lambda k: (
+        40 if k == "fadc_sum_bins" else "hexagonal"
     )
 
     simulator_instance.light_emission_config = {"number_of_events": 1, "flasher_photons": 100}

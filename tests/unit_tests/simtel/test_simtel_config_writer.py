@@ -568,6 +568,21 @@ def test_get_flasher_parameters_for_sim_telarray_missing_params(simtel_config_wr
     assert result["existing_param"] == "existing_value"
 
 
+def test_get_parameters_for_sim_telarray_maps_flasher_photons_from_calibration_model(
+    simtel_config_writer,
+):
+    """Map calibration flasher_photons_at_pixel to sim_telarray laser_photons via schema."""
+    parameters = {
+        "flasher_photons_at_pixel": {"value": 777},
+        "flasher_photons": {"value": 555},
+    }
+
+    result = simtel_config_writer._get_parameters_for_sim_telarray(parameters, "dummy.cfg")
+
+    assert result["laser_photons"] == 777
+    assert "flasher_photons" not in result
+
+
 def test_write_array_triggers_file_mixed_hardstereo(simtel_config_writer, tmp_test_directory):
     """Test array triggers file generation with mixed hardstereo settings."""
 
