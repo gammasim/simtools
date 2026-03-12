@@ -528,7 +528,7 @@ class ReadParameters:
 
     def _is_list_of_dicts(self, value_data):
         """Return True if value_data is a non-empty list/tuple of dictionaries."""
-        return (
+        return bool(
             isinstance(value_data, (list, tuple))
             and value_data
             and all(isinstance(entry, dict) for entry in value_data)
