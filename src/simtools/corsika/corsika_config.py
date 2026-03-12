@@ -478,7 +478,7 @@ class CorsikaConfig:
         if not isinstance(value_entry, list):
             return value_entry
 
-        tel_types = {tel.design_model for tel in self.array_model.telescope_model.values()}
+        tel_types = {tel.design_model for tel in self.array_model.telescope_models.values()}
         particle = self.primary_particle.name
         matched_values = self._get_matching_grammage_values(value_entry, tel_types, particle)
 
