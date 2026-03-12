@@ -52,9 +52,9 @@ class ProductionGridPlotter:
         self.output_path = Path(output_path)
         self.output_path.mkdir(parents=True, exist_ok=True)
 
-        latitude = u.Quantity(site_location_lat, unit=u.deg, copy=False)
-        longitude = u.Quantity(site_location_lon, unit=u.deg, copy=False)
-        height = u.Quantity(site_location_height, unit=u.m, copy=False)
+        latitude = u.Quantity(site_location_lat, unit=u.deg)
+        longitude = u.Quantity(site_location_lon, unit=u.deg)
+        height = u.Quantity(site_location_height, unit=u.m)
 
         self.location = EarthLocation(
             lat=latitude,
