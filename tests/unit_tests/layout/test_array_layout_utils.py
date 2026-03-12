@@ -150,8 +150,8 @@ def test_get_ctao_array_element_name():
 def test_get_ctao_layouts_per_site(mock_names):
     """Test getting array layouts per site."""
     # Mock site determination function
-    mock_names.get_site_from_array_element_name.side_effect = (
-        lambda x: "north" if "N" in x else "south"
+    mock_names.get_site_from_array_element_name.side_effect = lambda x: (
+        "north" if "N" in x else "south"
     )
 
     # Test data
@@ -663,8 +663,8 @@ def test_read_array_layouts_from_db_specific_layouts(mocker):
     """Test _read_array_layouts_from_db with specific layout names."""
     mock_site_model = mocker.patch(PATCH_SITEMODEL)
     instance = mock_site_model.return_value
-    instance.get_array_elements_for_layout.side_effect = (
-        lambda name: [1, 2] if name == "LST" else [3, 4]
+    instance.get_array_elements_for_layout.side_effect = lambda name: (
+        [1, 2] if name == "LST" else [3, 4]
     )
 
     layouts = ["LST", "MST"]
@@ -685,8 +685,8 @@ def test_read_array_layouts_from_db_all_layouts(mocker):
     mock_site_model = mocker.patch("simtools.layout.array_layout_utils.SiteModel")
     instance = mock_site_model.return_value
     instance.get_list_of_array_layouts.return_value = ["LST", "MST"]
-    instance.get_array_elements_for_layout.side_effect = (
-        lambda name: [10, 20] if name == "LST" else [30, 40]
+    instance.get_array_elements_for_layout.side_effect = lambda name: (
+        [10, 20] if name == "LST" else [30, 40]
     )
 
     layouts = ["all"]
@@ -1112,8 +1112,8 @@ def test_get_array_elements_from_db_for_layouts_specific_layouts(mocker):
     """Test get_array_elements_from_db_for_layouts with specific layout names."""
     mock_site_model = mocker.patch(PATCH_SITEMODEL)
     instance = mock_site_model.return_value
-    instance.get_array_elements_for_layout.side_effect = (
-        lambda name: ["tel1", "tel2"] if name == "LST" else ["tel3", "tel4"]
+    instance.get_array_elements_for_layout.side_effect = lambda name: (
+        ["tel1", "tel2"] if name == "LST" else ["tel3", "tel4"]
     )
 
     layouts = ["LST", "MST"]

@@ -251,10 +251,18 @@ class ReadParameters:
                 ).strip()
             output_file_name = self._convert_to_md(parameter, parameter_version, input_file_name)
             return f"[{Path(value_data).name}]({output_file_name})".strip()
-        if isinstance(value_data, (str | int | float)):
+
+        if isinstance(value_data, (str, int, float, dict)):
             return f"{value_data} {unit}".strip()
-        if len(value_data) > 5 and np.allclose(value_data, value_data[0]):
-            return f"all: {value_data[0]} {unit}".strip()
+
+        value_is_list_of_dicts = isinstance(value_data, (list, tuple)) and all(
+            isinstance(v, dict) for v in value_data
+        )
+
+        if not value_is_list_of_dicts and len(value_data) > 5:
+            if np.allclose(value_data, value_data[0]):
+                return f"all: {value_data[0]} {unit}".strip()
+
         return (
             ", ".join(f"{v} {u}" for v, u in zip(value_data, unit))
             if isinstance(unit, list)
