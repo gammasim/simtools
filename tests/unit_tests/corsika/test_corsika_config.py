@@ -336,7 +336,7 @@ def test_input_config_corsika_starting_grammage_muon_grammage(
     # Create telescope model mock that behaves like a dictionary
     telescope_model_mock = MagicMock()
     telescope_model_mock.values = MagicMock(return_value=[tel1, tel2])
-    corsika_config_mock_array_model_teltype.array_model.telescope_model = telescope_model_mock
+    corsika_config_mock_array_model_teltype.array_model.telescope_models = telescope_model_mock
 
     corsika_config_mock_array_model_teltype.primary_particle = {
         "primary": MUON_PLUS_PARTICLE,
@@ -1121,7 +1121,7 @@ def test_get_starting_grammage_value_list_multiple_matches_returns_min(
     """Test _get_starting_grammage_value returns minimum of multiple matches."""
     mock_telescope = MagicMock()
     mock_telescope.design_model = "LSTS-design"
-    corsika_config_mock_array_model.array_model.telescope_model.values.return_value = [
+    corsika_config_mock_array_model.array_model.telescope_models.values.return_value = [
         mock_telescope
     ]
 
