@@ -6,6 +6,7 @@ import logging
 import re
 import textwrap
 from collections import defaultdict
+from dataclasses import dataclass
 from itertools import groupby
 from pathlib import Path
 
@@ -21,6 +22,48 @@ from simtools.visualization import plot_mirrors, plot_pixels, plot_tables
 
 logger = logging.getLogger()
 MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+
+
+@dataclass(frozen=True)
+class ParameterDelta:
+    """Store a changed parameter for delta report rendering."""
+
+    parameter: str
+    base_param_version: str
+    new_param_version: str
+    base_value: str
+    new_value: str
+
+    @staticmethod
+    def _normalized_unit(param_data):
+        """Return a normalized unit value for safe comparisons."""
+        return (param_data or {}).get("unit") or ""
+
+    @classmethod
+    def parameter_changed(cls, base_param_data, current_param_data, values_equal):
+        """Return True if parameter metadata or values changed."""
+        if base_param_data is None or current_param_data is None:
+            return True
+
+        if base_param_data.get("parameter_version") != current_param_data.get("parameter_version"):
+            return True
+        if cls._normalized_unit(base_param_data) != cls._normalized_unit(current_param_data):
+            return True
+        if bool(base_param_data.get("file", False)) != bool(current_param_data.get("file", False)):
+            return True
+
+        return not values_equal(base_param_data.get("value"), current_param_data.get("value"))
+
+    @classmethod
+    def from_parameter_data(cls, parameter, base_param_data, current_param_data, value_formatter):
+        """Construct a delta row from base and current parameter entries."""
+        return cls(
+            parameter=parameter,
+            base_param_version=(base_param_data or {}).get("parameter_version", "-"),
+            new_param_version=(current_param_data or {}).get("parameter_version", "-"),
+            base_value=value_formatter(parameter, base_param_data),
+            new_value=value_formatter(parameter, current_param_data),
+        )
 
 
 class ReadParameters:
@@ -76,8 +119,8 @@ class ReadParameters:
                 np.isclose(
                     value1,
                     value2,
-                    rtol=0.0,
-                    atol=0.0,
+                    rtol=1e-12,
+                    atol=1e-12,
                     equal_nan=True,
                 )
             )
@@ -96,19 +139,9 @@ class ReadParameters:
 
     def _parameter_changed(self, base_param_data, current_param_data):
         """Return True if a parameter differs between base and current versions."""
-        if base_param_data is None or current_param_data is None:
-            return True
-
-        if (base_param_data.get("parameter_version")) != (
-            current_param_data.get("parameter_version")
-        ):
-            return True
-        if (base_param_data.get("unit") or " ") != (current_param_data.get("unit") or " "):
-            return True
-        if bool(base_param_data.get("file", False)) != bool(current_param_data.get("file", False)):
-            return True
-
-        return not self._values_equal(base_param_data.get("value"), current_param_data.get("value"))
+        return ParameterDelta.parameter_changed(
+            base_param_data, current_param_data, self._values_equal
+        )
 
     def _format_value_for_delta(self, parameter, param_data):
         """Format a parameter value for delta reports without generating plots/files."""
@@ -116,7 +149,7 @@ class ReadParameters:
             return "-"
 
         value_data = param_data.get("value")
-        unit = param_data.get("unit") or " "
+        unit = param_data.get("unit") or ""
         file_flag = param_data.get("file", False)
 
         if self._is_list_of_dicts(value_data):
@@ -127,10 +160,6 @@ class ReadParameters:
             return self._format_parameter_value(
                 parameter, value_data, unit, file_flag, parameter_version=None
             )
-
-        if isinstance(value_data, (list, tuple)) and len(value_data) > 10:
-            preview = ", ".join(str(v) for v in value_data[:3])
-            return f"[{preview}, ...] {unit}".strip()
 
         return self._format_parameter_value(
             parameter, value_data, unit, file_flag, parameter_version="delta"
@@ -145,9 +174,9 @@ class ReadParameters:
         )
         for row in changes:
             file.write(
-                f"| {row['parameter']} | {row['base_param_version']} | "
-                f"{row['new_param_version']} | {row['base_value']} | "
-                f"{row['new_value']} |\n"
+                f"| {row.parameter} | {row.base_param_version} | "
+                f"{row.new_param_version} | {row.base_value} | "
+                f"{row.new_value} |\n"
             )
 
     def _build_delta_changes(self, base_parameter_data, current_parameter_data, parameters=None):
@@ -165,13 +194,12 @@ class ReadParameters:
                 continue
 
             changes.append(
-                {
-                    "parameter": parameter,
-                    "base_param_version": (base_param_data or {}).get("parameter_version", "-"),
-                    "new_param_version": (current_param_data or {}).get("parameter_version", "-"),
-                    "base_value": self._format_value_for_delta(parameter, base_param_data),
-                    "new_value": self._format_value_for_delta(parameter, current_param_data),
-                }
+                ParameterDelta.from_parameter_data(
+                    parameter,
+                    base_param_data,
+                    current_param_data,
+                    self._format_value_for_delta,
+                )
             )
 
         return changes

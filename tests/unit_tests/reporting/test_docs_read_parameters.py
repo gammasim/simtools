@@ -5,7 +5,7 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 
-from simtools.reporting.docs_read_parameters import ReadParameters
+from simtools.reporting.docs_read_parameters import ParameterDelta, ReadParameters
 from simtools.utils import names
 
 # Test constants
@@ -1192,6 +1192,8 @@ def test_generate_model_parameter_reports_for_devices(tmp_path):
     ("value1", "value2", "expected"),
     [
         (None, 1, False),
+        (1.0, 1.0 + 1e-13, True),
+        (1.0, 1.0 + 1e-9, False),
         ([1, {"a": 2}], [1, {"a": 2}], True),
         ({"a": 1}, {"a": 1, "b": 2}, False),
         ("same", "same", True),
@@ -1500,7 +1502,7 @@ DELTA_SITE_DATA = {"site_elevation": _delta_entry(2200)}
         ({}, "-"),
         ({"value": [{"a": 1}, {"b": 2}], "unit": None, "file": False}, "2 rows"),
         ({"value": "some_file.dat", "unit": " ", "file": True}, "some_file.dat"),
-        ({"value": list(range(15)), "unit": "m", "file": False}, "..."),
+        ({"value": list(range(15)), "unit": "m", "file": False}, "14 m"),
         ({"value": 42.0, "unit": "m", "file": False}, "42.0"),
     ],
 )
@@ -1516,13 +1518,13 @@ def test__write_delta_helpers(tmp_path):
     rp._write_delta_report_table(
         buf,
         [
-            {
-                "parameter": "focal_length",
-                "base_param_version": "1.0.0",
-                "new_param_version": "1.0.1",
-                "base_value": "2800",
-                "new_value": "2810",
-            }
+            ParameterDelta(
+                parameter="focal_length",
+                base_param_version="1.0.0",
+                new_param_version="1.0.1",
+                base_value="2800",
+                new_value="2810",
+            )
         ],
     )
     content = buf.getvalue()
