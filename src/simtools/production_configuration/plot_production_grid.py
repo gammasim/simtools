@@ -13,6 +13,7 @@ from simtools.io import ascii_handler
 
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
+DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8
 DEFAULT_GRID_LINE_WIDTH = 0.6
 GRID_GROUP_ROUND_DECIMALS = 6
@@ -67,7 +68,8 @@ class ProductionGridPlotter:
 
         logger.info(f"Loaded {len(self.grid_points)} grid points from {self.grid_points_file}")
         logger.info(
-            f"Site location: lat={latitude.to_value(u.deg)}°, lon={longitude.to_value(u.deg)}°"
+            f"Site location: lat={latitude.to_value(u.deg)} deg, "
+            f"lon={longitude.to_value(u.deg)} deg"
         )
         logger.info(f"Observation time: {observation_time}")
 
@@ -296,10 +298,11 @@ class ProductionGridPlotter:
         )
         figure.tight_layout(rect=(0.0, 0.0, 1.0, 0.95))
 
-        for extension in ("pdf", "png"):
-            output_file = self.output_path / f"{DEFAULT_OUTPUT_FILE_STEM}.{extension}"
-            figure.savefig(output_file, bbox_inches="tight", dpi=150)
-            logger.info(f"Saved sky projection plot to {output_file}")
+        output_file = self.output_path / (
+            f"{DEFAULT_OUTPUT_FILE_STEM}.{DEFAULT_OUTPUT_FILE_EXTENSION}"
+        )
+        figure.savefig(output_file, bbox_inches="tight", dpi=300)
+        logger.info(f"Saved sky projection plot to {output_file}")
 
         plt.close(figure)
 
@@ -343,16 +346,20 @@ class ProductionGridPlotter:
                 dec_max += 5.0
             axis.set_ylim(dec_min, dec_max)
 
-    def _scatter_altaz_group(self, axis, plot_points, label, color):
-        """Scatter a group of Alt/Az points."""
+    @staticmethod
+    def _scatter_group(axis, plot_points, label, color, x_key, y_key, x_transform=None):
+        """Scatter a group of points with configurable coordinates."""
         if not plot_points:
             return 0
 
-        azimuths = np.radians([point["azimuth"] for point in plot_points])
-        zeniths = [point["zenith"] for point in plot_points]
+        x_values = [point[x_key] for point in plot_points]
+        y_values = [point[y_key] for point in plot_points]
+        if x_transform is not None:
+            x_values = x_transform(x_values)
+
         axis.scatter(
-            azimuths,
-            zeniths,
+            x_values,
+            y_values,
             s=DEFAULT_MARKER_SIZE,
             linewidths=1.0,
             edgecolors=color,
@@ -362,24 +369,60 @@ class ProductionGridPlotter:
         )
         return len(plot_points)
 
-    def _scatter_radec_group(self, axis, plot_points, label, color):
-        """Scatter a group of RA/Dec points."""
-        if not plot_points:
+    def _plot_frame_points(
+        self,
+        axis,
+        plot_points,
+        primary_frame,
+        secondary_frame,
+        primary_label,
+        secondary_label,
+        primary_color,
+        secondary_color,
+        x_key,
+        y_key,
+        panel_name,
+        require_altaz_visibility=False,
+        x_transform=None,
+    ):
+        """Plot primary and transformed point groups for a given panel."""
+        primary_points = self._split_points_by_frame(
+            plot_points,
+            primary_frame,
+            require_altaz_visibility=require_altaz_visibility,
+        )
+        secondary_points = self._split_points_by_frame(
+            plot_points,
+            secondary_frame,
+            require_altaz_visibility=require_altaz_visibility,
+        )
+
+        plotted_points = 0
+        plotted_points += self._scatter_group(
+            axis,
+            primary_points,
+            label=primary_label,
+            color=primary_color,
+            x_key=x_key,
+            y_key=y_key,
+            x_transform=x_transform,
+        )
+        plotted_points += self._scatter_group(
+            axis,
+            secondary_points,
+            label=secondary_label,
+            color=secondary_color,
+            x_key=x_key,
+            y_key=y_key,
+            x_transform=x_transform,
+        )
+
+        if plotted_points == 0:
+            logger.warning(f"No valid grid points found for {panel_name} plotting")
             return 0
 
-        right_ascensions = [point["ra"] for point in plot_points]
-        declinations = [point["dec"] for point in plot_points]
-        axis.scatter(
-            right_ascensions,
-            declinations,
-            s=DEFAULT_MARKER_SIZE,
-            linewidths=1.0,
-            edgecolors=color,
-            facecolors="none",
-            label=label,
-            zorder=10,
-        )
-        return len(plot_points)
+        logger.info(f"Plotted {plotted_points} grid points in the {panel_name} panel")
+        return plotted_points
 
     def _plot_altaz_points(self, axis, plot_points):
         """
@@ -393,41 +436,25 @@ class ProductionGridPlotter:
             Normalized plot points.
         """
         self._configure_altaz_axis(axis)
-
-        native_altaz_points = self._split_points_by_frame(
-            plot_points,
-            "altaz",
+        plotted_points = self._plot_frame_points(
+            axis=axis,
+            plot_points=plot_points,
+            primary_frame="altaz",
+            secondary_frame="radec",
+            primary_label="Native Alt/Az points",
+            secondary_label="RA/Dec transformed to Alt/Az",
+            primary_color="tab:blue",
+            secondary_color="tab:orange",
+            x_key="azimuth",
+            y_key="zenith",
+            panel_name="Alt/Az",
             require_altaz_visibility=True,
-        )
-        converted_radec_points = self._split_points_by_frame(
-            plot_points,
-            "radec",
-            require_altaz_visibility=True,
-        )
-
-        plotted_points = 0
-        plotted_points += self._scatter_altaz_group(
-            axis,
-            native_altaz_points,
-            label="Native Alt/Az points",
-            color="tab:blue",
-        )
-        plotted_points += self._scatter_altaz_group(
-            axis,
-            converted_radec_points,
-            label="RA/Dec transformed to Alt/Az",
-            color="tab:orange",
+            x_transform=np.radians,
         )
 
         hidden_points = sum(not point["visible_in_altaz"] for point in plot_points)
         if hidden_points > 0:
             logger.info(f"Skipping {hidden_points} RA/Dec points below the horizon in Alt/Az panel")
-
-        if plotted_points == 0:
-            logger.warning("No valid grid points found for Alt/Az plotting")
-            return 0
-
-        logger.info(f"Plotted {plotted_points} grid points in the Alt/Az panel")
         return plotted_points
 
     def _plot_radec_points(self, axis, plot_points):
@@ -442,30 +469,19 @@ class ProductionGridPlotter:
             Normalized plot points.
         """
         self._configure_radec_axis(axis, plot_points)
-
-        native_radec_points = self._split_points_by_frame(plot_points, "radec")
-        converted_altaz_points = self._split_points_by_frame(plot_points, "altaz")
-
-        plotted_points = 0
-        plotted_points += self._scatter_radec_group(
-            axis,
-            native_radec_points,
-            label="Native RA/Dec points",
-            color="tab:orange",
+        return self._plot_frame_points(
+            axis=axis,
+            plot_points=plot_points,
+            primary_frame="radec",
+            secondary_frame="altaz",
+            primary_label="Native RA/Dec points",
+            secondary_label="Alt/Az transformed to RA/Dec",
+            primary_color="tab:orange",
+            secondary_color="tab:blue",
+            x_key="ra",
+            y_key="dec",
+            panel_name="RA/Dec",
         )
-        plotted_points += self._scatter_radec_group(
-            axis,
-            converted_altaz_points,
-            label="Alt/Az transformed to RA/Dec",
-            color="tab:blue",
-        )
-
-        if plotted_points == 0:
-            logger.warning("No valid grid points found for RA/Dec plotting")
-            return 0
-
-        logger.info(f"Plotted {plotted_points} grid points in the RA/Dec panel")
-        return plotted_points
 
     def _plot_radec_track_group(self, axis, group, color, label=None, linestyle="-"):
         """Plot a single inferred RA/Dec track group on the Alt/Az panel."""
@@ -554,7 +570,7 @@ class ProductionGridPlotter:
                     zenith_track[mask],
                     color=color,
                     lw=2,
-                    label=f"Dec = {dec_val:.1f}°",
+                    label=f"Dec = {dec_val:.1f} deg",
                     alpha=0.7,
                 )
 
