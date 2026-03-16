@@ -61,6 +61,15 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
+(plot-production-grid)=
+
+## plot_production_grid
+
+```{eval-rst}
+.. automodule:: production_configuration.plot_production_grid
+   :members:
+```
+
 (merge-corsika-limits)=
 
 ## merge_corsika_limits
