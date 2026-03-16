@@ -83,6 +83,7 @@ simtools-maintain-simulation-model-verify-production-tables <applications/simtoo
 simtools-maintain-simulation-model-write-array-element-positions <applications/simtools-maintain-simulation-model-write-array-element-positions>
 simtools-merge-tables <applications/simtools-merge-tables>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
+simtools-plot-production-grid <applications/simtools-plot-production-grid>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabular-data-for-model-parameter>
 simtools-plot-simtel-events <applications/simtools-plot-simtel-events>
