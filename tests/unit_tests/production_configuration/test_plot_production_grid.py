@@ -168,11 +168,10 @@ def test_plot_sky_projection_creates_outputs(tmp_test_directory):
     plotter.plot_sky_projection(plot_ra_dec_tracks=True, dec_values=[20.0, 30.0])
 
     assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM}.png").exists()
-    assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM}.pdf").exists()
 
 
 def test_plot_sky_projection_infers_radec_grid_tracks(tmp_test_directory):
-    """Plot inferred RA/Dec grid tracks without explicit declination values."""
+    """Plot inferred RA/Dec grid tracks."""
     location = EarthLocation(lat=28.76 * u.deg, lon=-17.89 * u.deg, height=2200.0 * u.m)
     observation_time = Time("2025-01-01 00:00:00")
     lst = observation_time.sidereal_time("apparent", longitude=location.lon).deg
@@ -203,4 +202,3 @@ def test_plot_sky_projection_infers_radec_grid_tracks(tmp_test_directory):
     plotter.plot_sky_projection(plot_ra_dec_tracks=True)
 
     assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM}.png").exists()
-    assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM}.pdf").exists()

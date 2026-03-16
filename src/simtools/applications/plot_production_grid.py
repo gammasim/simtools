@@ -43,7 +43,7 @@ To plot grid points on a sky projection:
 
 Output
 ------
-The output will be PDF and PNG plots showing the grid points on a polar sky projection.
+The output plot showing the grid points on a polar sky projection.
 """
 
 import logging
