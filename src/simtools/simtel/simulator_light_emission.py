@@ -177,6 +177,9 @@ class SimulatorLightEmission(SimtelRunner):
         Return telescope pointing based on light source type.
 
         For flat_fielding sims, avoid calibration pointing entirely; default angles to (0,0).
+        For fixed light-source positions, keep vertical-up telescope pointing.
+        Otherwise (layout/default), derive telescope angles from calibration geometry so
+        axis-offset corrections are reflected in source and telescope pointing.
 
         Returns
         -------
@@ -209,8 +212,10 @@ class SimulatorLightEmission(SimtelRunner):
             )
         x_cal, y_cal, z_cal = [coord.to(u.m).value for coord in (x_cal, y_cal, z_cal)]
         cal_vect = np.array([x_cal, y_cal, z_cal])
-        x_tel, y_tel, z_tel = self.telescope_model.get_parameter_value_with_unit(
-            "array_element_position_ground"
+        x_tel, y_tel, z_tel = self._get_telescope_position_ground_with_axis_offset(
+            x_cal=x_cal * u.m,
+            y_cal=y_cal * u.m,
+            z_cal=z_cal * u.m,
         )
         x_tel, y_tel, z_tel = [coord.to(u.m).value for coord in (x_tel, y_tel, z_tel)]
         tel_vect = np.array([x_tel, y_tel, z_tel])
@@ -237,7 +242,80 @@ class SimulatorLightEmission(SimtelRunner):
         )
         return pointing_vector.tolist(), [tel_theta, tel_phi, source_theta, source_phi]
 
-    def _write_telescope_position_file(self):
+    def _get_telescope_position_ground_with_axis_offset(self, x_cal=None, y_cal=None, z_cal=None):
+        """Return telescope position with illuminator-axis offset correction in ground coordinates.
+
+        The first axes_offsets component is a horizontal offset from the azimuth axis towards the
+        reflector. For illuminator simulations, offsets are applied in the telescope frame using
+        the current pointing direction.
+        """
+        x_tel, y_tel, z_tel = self.telescope_model.get_parameter_value_with_unit(
+            "array_element_position_ground"
+        )
+
+        axes_offsets = self.telescope_model.get_parameter_value_with_unit("axes_offsets")
+
+        offset_1 = axes_offsets[0].to(u.m).value
+        offset_2 = axes_offsets[1].to(u.m).value if len(axes_offsets) > 1 else 0.0
+        if np.isclose(offset_1, 0.0) and np.isclose(offset_2, 0.0):
+            return x_tel, y_tel, z_tel
+
+        if x_cal is None or y_cal is None or z_cal is None:
+            x_cal, y_cal, z_cal = self.calibration_model.get_parameter_value_with_unit(
+                "array_element_position_ground"
+            )
+
+        x_tel_m = x_tel.to(u.m).value
+        y_tel_m = y_tel.to(u.m).value
+        z_tel_m = z_tel.to(u.m).value
+        x_cal_m = x_cal.to(u.m).value
+        y_cal_m = y_cal.to(u.m).value
+        z_cal_m = z_cal.to(u.m).value
+
+        delta_x = x_cal_m - x_tel_m
+        delta_y = y_cal_m - y_tel_m
+        delta_z = z_cal_m - z_tel_m
+
+        source_direction = np.array([delta_x, delta_y, delta_z], dtype=float)
+        norm_source = np.linalg.norm(source_direction)
+        if np.isclose(norm_source, 0.0):
+            return x_tel, y_tel, z_tel
+
+        norm_horizontal = np.hypot(delta_x, delta_y)
+        if np.isclose(norm_horizontal, 0.0):
+            return x_tel, y_tel, z_tel
+
+        phi = np.arctan2(delta_x, delta_y)
+        el = np.arctan2(delta_z, norm_horizontal)
+
+        # Unit vectors in telescope-pointing convention (phi, el).
+        u_pointing = np.array(
+            [
+                np.cos(el) * np.sin(phi),
+                np.cos(el) * np.cos(phi),
+                np.sin(el),
+            ],
+            dtype=float,
+        )
+        u_xy = np.array([np.sin(phi), np.cos(phi), 0.0], dtype=float)
+        altitude_axis = np.array([np.cos(phi), -np.sin(phi), 0.0], dtype=float)
+
+        v_perpendicular = np.cross(altitude_axis, u_pointing)
+        norm_v = np.linalg.norm(v_perpendicular)
+        if np.isclose(norm_v, 0.0):
+            return x_tel, y_tel, z_tel
+        v_perpendicular /= norm_v
+
+        corrected_position = np.array([x_tel_m, y_tel_m, z_tel_m], dtype=float)
+        corrected_position += offset_1 * u_xy + offset_2 * v_perpendicular
+
+        return (
+            corrected_position[0] * u.m,
+            corrected_position[1] * u.m,
+            corrected_position[2] * u.m,
+        )
+
+    def _write_telescope_position_file(self, illuminator_position=None):
         """
         Write the telescope positions to a telescope_position file.
 
@@ -248,8 +326,11 @@ class SimulatorLightEmission(SimtelRunner):
         Path
             The path to the generated telescope_position file.
         """
-        x_tel, y_tel, z_tel = self.telescope_model.get_parameter_value_with_unit(
-            "array_element_position_ground"
+        x_cal, y_cal, z_cal = illuminator_position or self._get_illuminator_position()
+        x_tel, y_tel, z_tel = self._get_telescope_position_ground_with_axis_offset(
+            x_cal=x_cal,
+            y_cal=y_cal,
+            z_cal=z_cal,
         )
         x_tel, y_tel, z_tel = [coord.to(u.cm).value for coord in (x_tel, y_tel, z_tel)]
 
@@ -375,13 +456,16 @@ class SimulatorLightEmission(SimtelRunner):
         cmd = [f"-h  {corsika_observation_level.to(u.m).value} "]
 
         if self.light_emission_config.get("light_source_type") == "illuminator":
-            pointing_vector = self._get_illuminator_pointing_vector()
+            illuminator_position = self._get_illuminator_position()
+            pointing_vector = self._get_illuminator_pointing_vector(illuminator_position)
             if self._should_use_telpos_file(pointing_vector):
                 self._logger.info(
                     "Using telescope position file for illuminator setup "
                     f"(pointing={pointing_vector})."
                 )
-                cmd.append(f"--telpos-file {self._write_telescope_position_file()}")
+                cmd.append(
+                    f"--telpos-file {self._write_telescope_position_file(illuminator_position)}"
+                )
         return cmd
 
     def _get_light_source_command(self):
