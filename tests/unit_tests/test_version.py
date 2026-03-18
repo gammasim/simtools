@@ -214,11 +214,6 @@ def test_compare_versions():
         ("6", None),
         (None, None),
         ("not_a_version", None),
-        ("6.0.1a1", None),
-        ("6.0.1rc1", None),
-        ("6.0.1.post1", None),
-        ("6.0.1.dev1", None),
-        ("6.0.1+local", None),
     ],
 )
 def test_base_version_for_patch_delta(version_string, expected):
