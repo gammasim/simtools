@@ -195,42 +195,20 @@ def compare_versions(version_string_1, version_string_2, level=MAJOR_MINOR_PATCH
 
 
 def base_version_for_patch_delta(version_string):
-    """Return base version for patch releases (x.y.z -> x.y.0) or None.
-
-    Parameters
-    ----------
-    version_string : str
-        Version string to evaluate.
-
-    Returns
-    -------
-    str or None
-        Base version (major.minor.0) for patch releases where patch > 0.
-        Returns None for invalid, non-patch, or non-final versions.
-    """
-    if version_string is None:
+    """Return major.minor.0 version for patch releases (x.y.z -> x.y.0) or None."""
+    if not version_string:
         return None
 
-    version_string = str(version_string).strip()
-    if version_string.startswith("v"):
-        version_string = version_string[1:]
-
     try:
-        parsed_version = Version(version_string)
+        v = Version(str(version_string).strip().removeprefix("v"))
     except InvalidVersion:
         return None
 
-    if any((parsed_version.pre, parsed_version.post, parsed_version.dev, parsed_version.local)):
-        return None
+    if len(v.release) == 3 and v.release[2] > 0:
+        major, minor, _ = v.release
+        return f"{major}.{minor}.0"
 
-    if len(parsed_version.release) != 3:
-        return None
-
-    major, minor, patch = parsed_version.release
-    if patch == 0:
-        return None
-
-    return f"{major}.{minor}.0"
+    return None
 
 
 def is_valid_semantic_version(version_string, strict=True):
