@@ -13,12 +13,41 @@ from simtools.production_configuration.plot_production_grid import (
     ProductionGridPlotter,
 )
 
+SITE_LOCATION_LAT = 28.76
+SITE_LOCATION_LON = -17.89
+SITE_LOCATION_HEIGHT = 2200.0
+
 
 def _write_grid_file(tmp_test_directory, file_name, grid_points):
     """Write grid points to a temporary JSON file."""
     file_path = Path(tmp_test_directory) / file_name
     file_path.write_text(json.dumps(grid_points), encoding="utf-8")
     return file_path
+
+
+def _build_radec_mesh_grid_points(location, observation_time):
+    """Build a small RA/Dec mesh around local sidereal time."""
+    lst = observation_time.sidereal_time("apparent", longitude=location.lon).deg
+    ra_values = [(lst - 5.0) % 360.0, (lst + 5.0) % 360.0]
+    dec_values = [20.0, 30.0]
+
+    return [
+        {"ra": {"value": ra_value, "unit": "deg"}, "dec": {"value": dec_value, "unit": "deg"}}
+        for dec_value in dec_values
+        for ra_value in ra_values
+    ]
+
+
+def _create_plotter(grid_file, observation_time, output_path):
+    """Create a plotter with the standard test site parameters."""
+    return ProductionGridPlotter(
+        grid_points_file=grid_file,
+        site_location_lat=SITE_LOCATION_LAT,
+        site_location_lon=SITE_LOCATION_LON,
+        site_location_height=SITE_LOCATION_HEIGHT,
+        observation_time=observation_time,
+        output_path=output_path,
+    )
 
 
 def test_normalize_altaz_point_creates_radec_coordinates(tmp_test_directory):
@@ -35,11 +64,8 @@ def test_normalize_altaz_point_creates_radec_coordinates(tmp_test_directory):
         ],
     )
 
-    plotter = ProductionGridPlotter(
-        grid_points_file=grid_file,
-        site_location_lat=28.76,
-        site_location_lon=-17.89,
-        site_location_height=2200.0,
+    plotter = _create_plotter(
+        grid_file=grid_file,
         observation_time="2025-01-01 00:00:00",
         output_path=Path(tmp_test_directory) / "output",
     )
@@ -57,7 +83,11 @@ def test_normalize_altaz_point_creates_radec_coordinates(tmp_test_directory):
 
 def test_normalize_radec_point_projects_to_altaz(tmp_test_directory):
     """Test that native RA/Dec points are converted to Alt/Az for the local panel."""
-    location = EarthLocation(lat=28.76 * u.deg, lon=-17.89 * u.deg, height=2200.0 * u.m)
+    location = EarthLocation(
+        lat=SITE_LOCATION_LAT * u.deg,
+        lon=SITE_LOCATION_LON * u.deg,
+        height=SITE_LOCATION_HEIGHT * u.m,
+    )
     observation_time = Time("2025-01-01 00:00:00")
     source_altaz = SkyCoord(
         AltAz(
@@ -80,11 +110,8 @@ def test_normalize_radec_point_projects_to_altaz(tmp_test_directory):
         ],
     )
 
-    plotter = ProductionGridPlotter(
-        grid_points_file=grid_file,
-        site_location_lat=28.76,
-        site_location_lon=-17.89,
-        site_location_height=2200.0,
+    plotter = _create_plotter(
+        grid_file=grid_file,
         observation_time=str(observation_time.value),
         output_path=Path(tmp_test_directory) / "output",
     )
@@ -102,28 +129,17 @@ def test_normalize_radec_point_projects_to_altaz(tmp_test_directory):
 
 def test_infer_radec_grid_tracks_from_native_points(tmp_test_directory):
     """Infer RA and Dec grid tracks from a native RA/Dec mesh."""
-    location = EarthLocation(lat=28.76 * u.deg, lon=-17.89 * u.deg, height=2200.0 * u.m)
+    location = EarthLocation(
+        lat=SITE_LOCATION_LAT * u.deg,
+        lon=SITE_LOCATION_LON * u.deg,
+        height=SITE_LOCATION_HEIGHT * u.m,
+    )
     observation_time = Time("2025-01-01 00:00:00")
-    lst = observation_time.sidereal_time("apparent", longitude=location.lon).deg
-    ra_values = [(lst - 5.0) % 360.0, (lst + 5.0) % 360.0]
-    dec_values = [20.0, 30.0]
-
-    grid_points = []
-    for dec_value in dec_values:
-        for ra_value in ra_values:
-            grid_points.append(
-                {
-                    "ra": {"value": ra_value, "unit": "deg"},
-                    "dec": {"value": dec_value, "unit": "deg"},
-                }
-            )
+    grid_points = _build_radec_mesh_grid_points(location, observation_time)
 
     grid_file = _write_grid_file(tmp_test_directory, "grid_radec_mesh.json", grid_points)
-    plotter = ProductionGridPlotter(
-        grid_points_file=grid_file,
-        site_location_lat=28.76,
-        site_location_lon=-17.89,
-        site_location_height=2200.0,
+    plotter = _create_plotter(
+        grid_file=grid_file,
         observation_time=str(observation_time.value),
         output_path=Path(tmp_test_directory) / "output",
     )
@@ -156,11 +172,8 @@ def test_plot_sky_projection_creates_outputs(tmp_test_directory):
     )
     output_path = Path(tmp_test_directory) / "output"
 
-    plotter = ProductionGridPlotter(
-        grid_points_file=grid_file,
-        site_location_lat=28.76,
-        site_location_lon=-17.89,
-        site_location_height=2200.0,
+    plotter = _create_plotter(
+        grid_file=grid_file,
         observation_time="2025-01-01 00:00:00",
         output_path=output_path,
     )
@@ -172,29 +185,18 @@ def test_plot_sky_projection_creates_outputs(tmp_test_directory):
 
 def test_plot_sky_projection_infers_radec_grid_tracks(tmp_test_directory):
     """Plot inferred RA/Dec grid tracks."""
-    location = EarthLocation(lat=28.76 * u.deg, lon=-17.89 * u.deg, height=2200.0 * u.m)
+    location = EarthLocation(
+        lat=SITE_LOCATION_LAT * u.deg,
+        lon=SITE_LOCATION_LON * u.deg,
+        height=SITE_LOCATION_HEIGHT * u.m,
+    )
     observation_time = Time("2025-01-01 00:00:00")
-    lst = observation_time.sidereal_time("apparent", longitude=location.lon).deg
-    ra_values = [(lst - 5.0) % 360.0, (lst + 5.0) % 360.0]
-    dec_values = [20.0, 30.0]
-
-    grid_points = []
-    for dec_value in dec_values:
-        for ra_value in ra_values:
-            grid_points.append(
-                {
-                    "ra": {"value": ra_value, "unit": "deg"},
-                    "dec": {"value": dec_value, "unit": "deg"},
-                }
-            )
+    grid_points = _build_radec_mesh_grid_points(location, observation_time)
 
     grid_file = _write_grid_file(tmp_test_directory, "grid_radec_tracks.json", grid_points)
     output_path = Path(tmp_test_directory) / "output"
-    plotter = ProductionGridPlotter(
-        grid_points_file=grid_file,
-        site_location_lat=28.76,
-        site_location_lon=-17.89,
-        site_location_height=2200.0,
+    plotter = _create_plotter(
+        grid_file=grid_file,
         observation_time=str(observation_time.value),
         output_path=output_path,
     )
