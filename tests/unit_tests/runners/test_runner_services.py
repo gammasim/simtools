@@ -296,3 +296,39 @@ def test_get_file_base_name_from_core_config_none_values():
     )
     basename = runner_service._get_file_base_name_from_core_config()
     assert basename == "test_mode_1.0.0"
+
+
+def test_get_file_base_name_from_core_config_illuminator_with_light_source():
+    """Test illuminator filename base includes light source after site."""
+    config = {
+        "run_mode": "illuminator",
+        "light_source": "ILLN-01",
+        "site": "North",
+        "model_version": "7.0.0",
+    }
+    runner_service = runner_services.RunnerServices(
+        config=config,
+        label="simulate_illuminator_MSTN-04",
+        run_type="sim_telarray",
+    )
+
+    basename = runner_service._get_file_base_name_from_core_config()
+    assert basename == "illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-04"
+
+
+def test_get_file_base_name_from_core_config_non_illuminator_with_light_source():
+    """Test that light source is ignored for non-illuminator run modes."""
+    config = {
+        "run_mode": "test_mode",
+        "light_source": "ILLN-01",
+        "site": "North",
+        "model_version": "1.0.0",
+    }
+    runner_service = runner_services.RunnerServices(
+        config=config,
+        label=None,
+        run_type="corsika",
+    )
+
+    basename = runner_service._get_file_base_name_from_core_config()
+    assert basename == "test_mode_North_1.0.0"
