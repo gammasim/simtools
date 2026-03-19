@@ -192,15 +192,22 @@ class RunnerServices:
     def _get_file_base_name_from_core_config(self):
         """Get file base name from core configuration."""
         cfg = self.config
+        run_mode = cfg.get("run_mode")
         zenith_angle = cfg.get("zenith_angle")
         azimuth_angle = cfg.get("azimuth_angle")
+        light_source_suffix = (
+            f"{cfg['light_source']}_"
+            if run_mode == "illuminator" and cfg.get("light_source")
+            else ""
+        )
 
         parts = [
-            f"{cfg['run_mode']}_" if cfg.get("run_mode") else "",
+            f"{run_mode}_" if run_mode else "",
             f"{self._get_run_number_string(cfg.get('run_number'))}_" if "run_number" in cfg else "",
             f"za{round(zenith_angle):02}deg_" if isinstance(zenith_angle, (int, float)) else "",
             f"azm{round(azimuth_angle):03}deg_" if isinstance(azimuth_angle, (int, float)) else "",
             f"{cfg['site']}_" if cfg.get("site") else "",
+            light_source_suffix,
             f"{cfg['layout']}_" if cfg.get("layout") else "",
             cfg.get("model_version", ""),
             f"_{self.label}" if self.label else "",
