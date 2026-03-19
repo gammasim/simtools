@@ -1636,6 +1636,34 @@ def test__write_telescope_position_file(simulator_instance, tmp_test_directory):
     mock_radius.to.assert_called_once_with(u.cm)
 
 
+def test__write_telescope_position_file_with_quantity_array(simulator_instance, tmp_test_directory):
+    """Quantity-array illuminator position should not trigger ambiguous truth-value checks."""
+    simulator_instance.output_directory = Path("/output")
+
+    def mock_get_param_with_unit(name):
+        if name == "array_element_position_ground":
+            return [1.0 * u.m, 2.0 * u.m, 3.0 * u.m]
+        if name == "axes_offsets":
+            return [0.0 * u.m, 0.0 * u.m]
+        if name == "telescope_sphere_radius":
+            return 15.0 * u.m
+        return None
+
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_param_with_unit
+    )
+
+    mock_output_dir = Path(tmp_test_directory)
+    mock_output_dir.mkdir(parents=True, exist_ok=True)
+    simulator_instance.io_handler.get_output_directory.return_value = mock_output_dir
+
+    illuminator_position = np.array([0.0, 0.0, 1000.0]) * u.m
+    result = simulator_instance._write_telescope_position_file(illuminator_position)
+
+    assert result.exists()
+    assert result.read_text(encoding="utf-8") == "100.0 200.0 300.0 1500.0\n"
+
+
 def test__get_telescope_position_ground_with_axis_offset_rotates_with_azimuth(simulator_instance):
     """Horizontal axis offset should rotate with telescope azimuth pointing."""
 
