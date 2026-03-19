@@ -276,14 +276,7 @@ class SimulatorLightEmission(SimtelRunner):
         delta_y = y_cal_m - y_tel_m
         delta_z = z_cal_m - z_tel_m
 
-        source_direction = np.array([delta_x, delta_y, delta_z], dtype=float)
-        norm_source = np.linalg.norm(source_direction)
-        if np.isclose(norm_source, 0.0):
-            return x_tel, y_tel, z_tel
-
         norm_horizontal = np.hypot(delta_x, delta_y)
-        if np.isclose(norm_horizontal, 0.0):
-            return x_tel, y_tel, z_tel
 
         phi = np.arctan2(delta_x, delta_y)
         el = np.arctan2(delta_z, norm_horizontal)
@@ -302,8 +295,6 @@ class SimulatorLightEmission(SimtelRunner):
 
         v_perpendicular = np.cross(altitude_axis, u_pointing)
         norm_v = np.linalg.norm(v_perpendicular)
-        if np.isclose(norm_v, 0.0):
-            return x_tel, y_tel, z_tel
         v_perpendicular /= norm_v
 
         corrected_position = np.array([x_tel_m, y_tel_m, z_tel_m], dtype=float)
