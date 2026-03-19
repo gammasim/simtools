@@ -326,7 +326,9 @@ class SimulatorLightEmission(SimtelRunner):
         Path
             The path to the generated telescope_position file.
         """
-        x_cal, y_cal, z_cal = illuminator_position or self._get_illuminator_position()
+        if illuminator_position is None:
+            illuminator_position = self._get_illuminator_position()
+        x_cal, y_cal, z_cal = illuminator_position
         x_tel, y_tel, z_tel = self._get_telescope_position_ground_with_axis_offset(
             x_cal=x_cal,
             y_cal=y_cal,
