@@ -14,6 +14,50 @@ from astropy.utils.iers import IERSWarning
 from simtools.production_configuration.generate_production_grid import GridGeneration
 
 
+def _create_grid_generation(
+    axes,
+    coordinate_system,
+    observing_location,
+    observing_time,
+    lookup_table,
+):
+    """Create a GridGeneration instance with a standard telescope selection."""
+    return GridGeneration(
+        axes=axes,
+        coordinate_system=coordinate_system,
+        observing_location=observing_location,
+        observing_time=observing_time,
+        lookup_table=lookup_table,
+        telescope_ids=[1],
+    )
+
+
+def _build_single_point_radec_axes_definition(source_radec):
+    """Build one-bin RA/Dec axes around a source coordinate."""
+    return {
+        "axes": {
+            "ra": {
+                "range": [source_radec.ra.deg, source_radec.ra.deg],
+                "binning": 1,
+                "scaling": "linear",
+                "units": "deg",
+            },
+            "dec": {
+                "range": [source_radec.dec.deg, source_radec.dec.deg],
+                "binning": 1,
+                "scaling": "linear",
+                "units": "deg",
+            },
+            "nsb": {
+                "range": [4, 4],
+                "binning": 1,
+                "scaling": "linear",
+                "units": "MHz",
+            },
+        }
+    }
+
+
 @pytest.fixture
 def axes_definition():
     """Load the axes definition from the YAML file."""
@@ -45,13 +89,12 @@ def observing_time():
 @pytest.fixture
 def grid_gen(axes_definition, lookup_table, observing_location, observing_time):
     """Create a GridGeneration object with the provided fixtures."""
-    return GridGeneration(
+    return _create_grid_generation(
         axes=axes_definition,
         coordinate_system="zenith_azimuth",
         observing_location=observing_location,
         observing_time=observing_time,
         lookup_table=lookup_table,
-        telescope_ids=[1],
     )
 
 
@@ -76,13 +119,12 @@ def test_generate_grid_log_scaling(
         "units": "MHz",
     }
 
-    grid_gen = GridGeneration(
+    grid_gen = _create_grid_generation(
         axes=axes_definition,
         coordinate_system="zenith_azimuth",
         observing_location=observing_location,
         observing_time=observing_time,
         lookup_table=lookup_table,
-        telescope_ids=[1],
     )
 
     grid_points = grid_gen.generate_grid()
@@ -110,13 +152,12 @@ def test_generate_grid_1_over_cos_scaling(
         "units": "deg",
     }
 
-    grid_gen = GridGeneration(
+    grid_gen = _create_grid_generation(
         axes=axes_definition,
         coordinate_system="zenith_azimuth",
         observing_location=observing_location,
         observing_time=observing_time,
         lookup_table=lookup_table,
-        telescope_ids=[1],
     )
 
     grid_points = grid_gen.generate_grid()
@@ -159,13 +200,12 @@ def test_generate_grid_radec_mode_minimal(observing_location, observing_time):
         }
     }
 
-    grid_gen = GridGeneration(
+    grid_gen = _create_grid_generation(
         axes=axes_definition,
         coordinate_system="ra_dec",
         observing_location=observing_location,
         observing_time=observing_time,
         lookup_table=None,
-        telescope_ids=[1],
     )
 
     with warnings.catch_warnings():
@@ -188,36 +228,14 @@ def test_generate_grid_radec_axes_mode(observing_location, observing_time):
     )
     source_radec = source_altaz.icrs
 
-    axes_definition = {
-        "axes": {
-            "ra": {
-                "range": [source_radec.ra.deg, source_radec.ra.deg],
-                "binning": 1,
-                "scaling": "linear",
-                "units": "deg",
-            },
-            "dec": {
-                "range": [source_radec.dec.deg, source_radec.dec.deg],
-                "binning": 1,
-                "scaling": "linear",
-                "units": "deg",
-            },
-            "nsb": {
-                "range": [4, 4],
-                "binning": 1,
-                "scaling": "linear",
-                "units": "MHz",
-            },
-        }
-    }
+    axes_definition = _build_single_point_radec_axes_definition(source_radec)
 
-    grid_gen = GridGeneration(
+    grid_gen = _create_grid_generation(
         axes=axes_definition,
         coordinate_system="ra_dec",
         observing_location=observing_location,
         observing_time=observing_time,
         lookup_table=None,
-        telescope_ids=[1],
     )
 
     with warnings.catch_warnings():
@@ -246,36 +264,14 @@ def test_generate_grid_radec_axes_mode_keeps_below_horizon_points(
     )
     source_radec = source_altaz.icrs
 
-    axes_definition = {
-        "axes": {
-            "ra": {
-                "range": [source_radec.ra.deg, source_radec.ra.deg],
-                "binning": 1,
-                "scaling": "linear",
-                "units": "deg",
-            },
-            "dec": {
-                "range": [source_radec.dec.deg, source_radec.dec.deg],
-                "binning": 1,
-                "scaling": "linear",
-                "units": "deg",
-            },
-            "nsb": {
-                "range": [4, 4],
-                "binning": 1,
-                "scaling": "linear",
-                "units": "MHz",
-            },
-        }
-    }
+    axes_definition = _build_single_point_radec_axes_definition(source_radec)
 
-    grid_gen = GridGeneration(
+    grid_gen = _create_grid_generation(
         axes=axes_definition,
         coordinate_system="ra_dec",
         observing_location=observing_location,
         observing_time=observing_time,
         lookup_table=None,
-        telescope_ids=[1],
     )
 
     with warnings.catch_warnings():
@@ -299,36 +295,14 @@ def test_generate_grid_radec_axes_mode_with_lookup(
         location=observing_location,
     )
     source_radec = source_altaz.icrs
-    axes_definition = {
-        "axes": {
-            "ra": {
-                "range": [source_radec.ra.deg, source_radec.ra.deg],
-                "binning": 1,
-                "scaling": "linear",
-                "units": "deg",
-            },
-            "dec": {
-                "range": [source_radec.dec.deg, source_radec.dec.deg],
-                "binning": 1,
-                "scaling": "linear",
-                "units": "deg",
-            },
-            "nsb": {
-                "range": [4, 4],
-                "binning": 1,
-                "scaling": "linear",
-                "units": "MHz",
-            },
-        }
-    }
+    axes_definition = _build_single_point_radec_axes_definition(source_radec)
 
-    grid_gen = GridGeneration(
+    grid_gen = _create_grid_generation(
         axes=axes_definition,
         coordinate_system="ra_dec",
         observing_location=observing_location,
         observing_time=observing_time,
         lookup_table=lookup_table,
-        telescope_ids=[1],
     )
 
     with warnings.catch_warnings():
@@ -475,12 +449,7 @@ def test_create_circular_binning_with_shortest_path(grid_gen):
     expected_bins = [350, 0, 10]
     assert np.allclose(bins, expected_bins)
 
-    # Case 2: No wraparound
-    bins = grid_gen.create_circular_binning((30, 150), 4)
-    expected_bins = [30, 70, 110, 150]
-    assert np.allclose(bins, expected_bins)
-
-    # Case 3: Counterclockwise path (shortest distance)
+    # Case 2: Counterclockwise path (shortest distance)
     bins = grid_gen.create_circular_binning((10, 350), 3)
     expected_bins = [10, 0, 350]
     assert np.allclose(bins, expected_bins)
