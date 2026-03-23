@@ -4,8 +4,9 @@ Simulation model parameters and production configurations are stored in database
 The simtools package uses a MongoDB database to store production tables and simulation model parameters.
 
 ```{important}
-No direct write access to the simulation model database is allowed.
+No direct write access to the simulation model database is allowed to general users.
 Updates to the simulation models should be done via merge requests to the [CTAO model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models).
+New releases of the model repository will automatically trigger an update of the database with the new model parameters.
 ```
 
 ## Simulation Models Database
@@ -63,6 +64,13 @@ Be careful of the settings described below to avoid accidental overwriting of th
 
 The script [setup_local_db.sh](../../database_scripts/setup_local_db.sh) generates a local database instance in a container:
 
+```bash
+cd database_scripts
+./setup_local_db.sh
+```
+
+This script:
+
 * downloads a MongoDB container image
 * starts a container with the image and initialize a new database
 * add a user with `readWrite` role
@@ -74,6 +82,31 @@ The script [setup_local_db.sh](../../database_scripts/setup_local_db.sh) generat
 
 The simtools package includes the application `simtools-db-upload-model-repository` to upload the model parameters from a
 local clone of the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) to a local database instance.
+The repository is cloned by the application to a temporary directory (`--tmp_dir`).
+
+To upload the model parameters, follow these steps:
+
+1. Startup a container and connect to the local network adding `--network simtools-mongo-network` to the `podman run` command, e.g,:
+
+```bash
+podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash
+```
+
+2. Modify the environment file `.env` to set the simulation model version. Best practice is to used a released version of the model repository, e.g.,:
+
+```console
+# Version of the simulation model database (adjust accordingly)
+SIMTOOLS_DB_SIMULATION_MODEL_VERSION=v0.12.0
+SIMTOOLS_DB_SIMULATION_MODEL=CTAO-Simulation-Model
+```
+
+3. Fill the model parameter database from the model repository (parameters must match the version defined in the `.env` file):
+
+```console
+simtools-db-upload-model-repository --db_simulation_model_version v0.12.0
+```
+
+For development purposes, a specific branch of the model repository can be used by providing the `--branch` argument to the upload application.
 
 #### Option 2: Fill local database from remote DB dump
 
@@ -86,38 +119,10 @@ Use then the `upload_dump_to_local_db.sh` to upload this dump to the local datab
 
 Note that database names are hardcoded in the scripts and need to be adjusted accordingly.
 
-### Upload to and download from the local database instance
-
-Startup a container and connect to the local network adding `--network simtools-mongo-network` to the `podman run` command, e.g,:
-
-```bash
-podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash
-```
-
-Modify the environment file `.env` to be used with a container:
-
-```console
-# Environment variables
-SIMTOOLS_DB_API_PORT=27017 # Port on the database server
-SIMTOOLS_DB_SERVER='simtools-MongoDB'
-SIMTOOLS_DB_API_USER='api' # username for database
-SIMTOOLS_DB_API_PW='password' # Password for database
-SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
-SIMTOOLS_DB_SIMULATION_MODEL_VERSION='v0.9.0' # Version of the simulation model database (adjust accordingly)
-SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model'
-```
-
-Fill the model parameter database from the model repository (parameters must match the version defined in the `.env` file):
-
-```console
-cd /workdir/external/database_scripts
-./upload_from_model_repository_to_db.sh CTAO-Simulation-Model v20.9.0
-```
-
 ### Purge the local database instance
 
 The script `purge_local_db.sh` stops and removes the container and deletes all networks, images, and containers.
 
-:::{Danger}
+```{danger}
 Attention: this script removes all local containers, images, and networks without awaiting confirmation.
-:::
+```
