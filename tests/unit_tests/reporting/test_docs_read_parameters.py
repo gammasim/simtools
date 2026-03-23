@@ -113,7 +113,9 @@ def test_produce_model_parameter_reports(tmp_test_directory, mocker):
         }
     }
     mocker.patch.object(
-        read_parameters.db, "get_model_parameters_for_all_model_versions", return_value=mock_data
+        read_parameters.db,
+        "get_model_parameters_for_all_model_versions",
+        return_value=mock_data,
     )
 
     read_parameters.produce_model_parameter_reports()
@@ -269,7 +271,7 @@ def test__format_parameter_value(tmp_path):
 
     mock_data_6 = [[{"a": 1}, {"b": 2}, {"c": 3}], "m", False, "1.0.0"]
     result_6 = read_parameters._format_parameter_value(parameter_name, *mock_data_6)
-    assert result_6 == "{'a': 1} m, {'b': 2} m, {'c': 3} m"
+    assert result_6 == "[View Test](#test)"
 
 
 def test__group_model_versions_by_parameter_version(tmp_path):
@@ -312,12 +314,16 @@ def test__group_model_versions_by_parameter_version(tmp_path):
                 "value": "all: 0.233591 GHz",
                 "parameter_version": "2.0.0",
                 "file_flag": False,
+                "dict_table": None,
+                "dict_unit": None,
                 "model_version": "6.0.0",
             },
             {
                 "value": "all: 0.238006 GHz",
                 "parameter_version": "1.0.0",
                 "file_flag": False,
+                "dict_table": None,
+                "dict_unit": None,
                 "model_version": "5.0.0",
             },
         ],
@@ -326,6 +332,8 @@ def test__group_model_versions_by_parameter_version(tmp_path):
                 "value": "4.5",
                 "parameter_version": "1.0.0",
                 "file_flag": False,
+                "dict_table": None,
+                "dict_unit": None,
                 "model_version": "5.0.0, 6.0.0",
             }
         ],
@@ -517,7 +525,7 @@ def test_get_array_element_parameter_data_none_value(mocker, tmp_path):
         ),
     )
 
-    result = read_parameters.get_array_element_parameter_data(mock_telescope_model)
+    result, _dict_tables = read_parameters.get_array_element_parameter_data(mock_telescope_model)
 
     # Assert result is empty (parameter was skipped due to None value)
     assert len(result) == 0
@@ -695,6 +703,11 @@ def test__write_parameters_table(tmp_path):
         "site_elevation": {"value": 2200, "unit": "m", "parameter_version": "1.0.0"},
         "array_layouts": {"value": [], "unit": None, "parameter_version": "2.0.0"},
         "array_triggers": {"value": [], "unit": None, "parameter_version": "3.0.0"},
+        "dict_param": {
+            "value": [{"a": "A", "b": "B", "value": 1}, {"a": "X", "b": "Y", "value": 2}],
+            "unit": "m",
+            "parameter_version": "4.0.0",
+        },
     }
 
     with StringIO() as file:
@@ -713,6 +726,13 @@ def test__write_parameters_table(tmp_path):
         "| array_triggers | [View Trigger Configurations](#array-trigger-configurations) | 3.0.0 |"
         in output
     )
+
+    # Verify list-of-dicts parameter is linked and table is written below
+    assert "| dict_param | [View Dict Param](#dict-param) | 4.0.0 |" in output
+    assert "## Dict Param" in output
+    assert "| a | b | value |" in output
+    assert "| A | B | 1 m |" in output
+    assert "| X | Y | 2 m |" in output
 
 
 def test_model_version_setter_with_valid_string(tmp_path):
@@ -828,9 +848,10 @@ def test_get_simulation_configuration_data(simulation_software, param_dict, desc
             read_parameters.db, "get_simulation_configuration_parameters", return_value=param_dict
         ),
     ):
-        data = read_parameters.get_simulation_configuration_data()
+        data, dict_tables = read_parameters.get_simulation_configuration_data()
 
         assert isinstance(data, list)
+        assert isinstance(dict_tables, list)
 
         if simulation_software == "corsika":
             assert len(data) == 2
@@ -840,6 +861,7 @@ def test_get_simulation_configuration_data(simulation_software, param_dict, desc
             assert data[0][5] == "Bunch size"  # Short description
             assert data[1][3] == "0.3 GeV, 0.1 GeV, 0.02 GeV, 0.02 GeV"
             mock_export.assert_called_once()
+            assert dict_tables == []
 
         elif simulation_software == "sim_telarray":
             assert len(data) > 0  # Ensure data is not empty
@@ -850,6 +872,7 @@ def test_get_simulation_configuration_data(simulation_software, param_dict, desc
             assert data[0][5] == "Short description 1"  # Short description
             assert data[1][3] == "0.3 GeV, 0.1 GeV, 0.02 GeV, 0.02 GeV"
             assert data[1][5] == "Short description 2"  # Short description
+            assert dict_tables == []
 
 
 def test__write_to_file(telescope_model_lst, tmp_path):
@@ -914,7 +937,9 @@ def test_produce_simulation_configuration_report(tmp_path):
         ),
     ]
 
-    with patch.object(read_parameters, "get_simulation_configuration_data", return_value=mock_data):
+    with patch.object(
+        read_parameters, "get_simulation_configuration_data", return_value=(mock_data, [])
+    ):
         read_parameters.produce_simulation_configuration_report()
 
         report_file = tmp_path / f"configuration_{read_parameters.software}.md"
@@ -931,13 +956,41 @@ def test_produce_simulation_configuration_report(tmp_path):
     args["simulation_software"] = "corsika"
     read_parameters_corsika = ReadParameters(args=args, output_path=tmp_path)
 
+    mock_data_corsika = [
+        (
+            "LSTN-01",
+            "corsika_starting_grammage",
+            "1.0.0",
+            "[View Corsika Starting Grammage](#corsika-starting-grammage)",
+            "Description",
+            "Short",
+        )
+    ]
+    mock_dict_tables = [
+        (
+            "LSTN-01",
+            "corsika_starting_grammage",
+            [{"instrument": "LSTN-design", "primary_particle": "muon+", "value": 580.0}],
+            "g/cm2",
+        )
+    ]
+
     with patch.object(
-        read_parameters_corsika, "get_simulation_configuration_data", return_value=mock_data
+        read_parameters_corsika,
+        "get_simulation_configuration_data",
+        return_value=(mock_data_corsika, mock_dict_tables),
     ):
         read_parameters_corsika.produce_simulation_configuration_report()
 
-        report_file_corsika = tmp_path / f"configuration_{read_parameters.software}.md"
+        report_file_corsika = tmp_path / f"configuration_{read_parameters_corsika.software}.md"
         assert report_file_corsika.exists()
+
+        content = report_file_corsika.read_text()
+        assert "# configuration_corsika" in content
+        assert "[View Corsika Starting Grammage](#corsika-starting-grammage)" in content
+        assert "## Corsika Starting Grammage" in content
+        assert "| instrument | primary_particle | value |" in content
+        assert "| LSTN-design | muon+ | 580.0 g/cm2 |" in content
 
 
 def test_produce_calibration_reports(mocker, tmp_path):
@@ -1025,6 +1078,7 @@ def test_produce_calibration_reports(mocker, tmp_path):
         assert mock_desc.call_count == 2
 
         # Verify the structure and ordering of the result
+        result, _dict_tables = result
         assert len(result) == 3
 
         # Verify the content of a specific entry
@@ -1112,7 +1166,7 @@ def test_get_calibration_data(tmp_path):
     # Mock descriptions using patch
     with patch.object(read_parameters, "get_all_parameter_descriptions") as mock_desc:
         mock_desc.return_value = mock_descriptions
-        result = read_parameters.get_calibration_data(mock_data, "ILLN-01")
+        result, _dict_tables = read_parameters.get_calibration_data(mock_data, "ILLN-01")
 
     # Assert the result contains the expected data
     assert result[0][0] == "Camera"
@@ -1179,6 +1233,7 @@ def test_get_array_element_parameter_data_simple(tmp_test_directory, monkeypatch
     monkeypatch.setattr(names, "is_design_type", lambda _name: False)
 
     data = rp.get_array_element_parameter_data(telescope_model=tel, collection="telescopes")
+    data, _dict_tables = data
 
     # Expect one row with formatted value '42 m'
     assert data == [["Telescope", "test_param", "1.0.0", "42 m", DESCRIPTION, "Short"]]
@@ -1197,6 +1252,7 @@ def test_get_array_element_parameter_data_simple(tmp_test_directory, monkeypatch
     rp.db.get_model_parameters.return_value = all_parameter_data
 
     data = rp.get_array_element_parameter_data(telescope_model=tel, collection="telescopes")
+    data, _dict_tables = data
 
     assert data == [
         [
@@ -1259,6 +1315,7 @@ def test_get_array_element_parameter_data_file_parameter(tmp_test_directory, mon
     monkeypatch.setattr(names, "is_design_type", lambda _name: False)
 
     data = rp.get_array_element_parameter_data(telescope_model=tel, collection="telescopes")
+    data, _dict_tables = data
 
     # Expect the value to be a markdown link using the returned relative path
     assert data == [
