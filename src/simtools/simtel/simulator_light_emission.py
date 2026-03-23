@@ -277,14 +277,11 @@ class SimulatorLightEmission(SimtelRunner):
         delta_z = z_cal_m - z_tel_m
 
         norm_horizontal = np.hypot(delta_x, delta_y)
-        # angle from North (y-axis) towards East (x-axis)
+        # Angle from North (y-axis) towards East (x-axis)
         phi = np.arctan2(delta_x, delta_y)
         el = np.arctan2(delta_z, norm_horizontal)
 
         # Unit vectors in telescope-pointing convention (phi, el).
-        # Azimuth φ:
-        # - measured from North (y-axis)
-        # - increasing toward East (x-axis)
         u_pointing = np.array(
             [
                 np.cos(el) * np.sin(phi),
