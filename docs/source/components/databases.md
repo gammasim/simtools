@@ -27,7 +27,7 @@ Collections:
 
 ### Browse the database
 
-The MongoDB database can be accessed via the command-line interface `mongo` or via a GUI tool like `Robo 3T` or `Studio 3T`.
+The MongoDB database can be accessed via the `mongosh` command-line interface (or the legacy `mongo` CLI) or via a GUI tool like `Robo 3T` or `Studio 3T`.
 
 ### Update the Simulation Models Database
 
@@ -75,7 +75,7 @@ This script:
 
 * downloads a MongoDB container image
 * starts a container with the image and initializes a new database
-* adds a user with `readWrite` role
+* creates an API user with read/write access
 * defines a container network called `simtools-mongo-network` (check with `podman network ls`)
 
 ### Fill the local database instance
@@ -100,6 +100,13 @@ podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-netw
 # Version of the simulation model database (adjust accordingly)
 SIMTOOLS_DB_SIMULATION_MODEL_VERSION=v0.12.0
 SIMTOOLS_DB_SIMULATION_MODEL=CTAO-Simulation-Model
+
+# Local MongoDB connection created by setup_local_db.sh
+SIMTOOLS_DB_SERVER=simtools-mongodb
+SIMTOOLS_DB_API_USER=api
+SIMTOOLS_DB_API_PW=password
+SIMTOOLS_DB_API_PORT=27017
+SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=admin
 ```
 
 3. Fill the model parameter database from the model repository (parameters must match the version defined in the `.env` file):
@@ -113,7 +120,7 @@ For development purposes, a specific branch of the model repository can be used 
 #### Option 2: Fill local database from remote DB dump
 
 Access to a database dump of the production database is required. It is assumed that the dumps
-are located in the directory `database_scripts/dumps`.
+are located in the directory `database_scripts/dump`.
 
 The script `./dump_remote_db.sh` can be used to create a dump of the production database (requires access to this DB and the `mongodump` tool).
 
