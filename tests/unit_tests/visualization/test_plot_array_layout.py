@@ -27,13 +27,6 @@ from simtools.visualization.plot_array_layout import (
 )
 
 
-@pytest.fixture(autouse=True)
-def close_figures():
-    """Automatically close all matplotlib figures after each test."""
-    yield
-    plt.close("all")
-
-
 @pytest.fixture
 def telescopes():
     return QTable(

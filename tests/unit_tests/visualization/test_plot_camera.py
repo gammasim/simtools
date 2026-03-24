@@ -19,13 +19,6 @@ from simtools.visualization.plot_camera import (
 )
 
 
-@pytest.fixture(autouse=True)
-def close_open_figures():
-    """Close matplotlib figures after each test to avoid open-figure warnings."""
-    yield
-    plt.close("all")
-
-
 @pytest.fixture
 def simple_camera():
     """Create a mock camera with basic properties."""
