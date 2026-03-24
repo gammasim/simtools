@@ -5,12 +5,12 @@ import logging
 from pathlib import Path
 
 import numpy as np
-from astropy.table import Table
 
 import simtools.utils.general as gen
 from simtools.constants import SCHEMA_PATH
 from simtools.db import db_handler
 from simtools.io import ascii_handler, legacy_data_handler
+from simtools.simtel.simtel_table_reader import read_simtel_table
 from simtools.visualization import visualize
 
 _logger = logging.getLogger(__name__)
@@ -68,10 +68,11 @@ def read_table_data(config, data_path=None):
                 else Path(data_path) / _config["file_name"]
             )
             _logger.info(f"Reading tabular data from {file_name}")
+
             if "legacy" in _config.get("type", ""):
                 table = legacy_data_handler.read_legacy_data_as_table(file_name, _config["type"])
             else:
-                table = Table.read(file_name, format="ascii.ecsv")
+                table = read_simtel_table(_config.get("parameter"), file_name)
         else:
             raise ValueError("No table data defined in configuration.")
 
