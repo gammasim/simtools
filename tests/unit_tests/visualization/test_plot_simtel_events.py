@@ -24,13 +24,6 @@ import pytest
 from simtools.visualization import plot_simtel_events
 
 
-@pytest.fixture(autouse=True)
-def close_all_figures():
-    """Automatically close all matplotlib figures after each test."""
-    yield
-    plt.close("all")
-
-
 @pytest.fixture
 def mock_event_data():
     """Create minimal mock event data."""
