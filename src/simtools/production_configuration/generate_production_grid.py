@@ -349,29 +349,11 @@ class GridGeneration:
 
     def _interpolate_limits_for_point(self, zenith, azimuth, nsb):
         """Interpolate lookup-table limits for a single point."""
-        target = np.array([[zenith, azimuth % 360.0, nsb]])
+        target = np.array([[zenith, azimuth % 360.0, nsb]], dtype=float)
         return {
-            "energy": griddata(
-                self.lookup_points_for_interpolation,
-                self.lookup_values_for_interpolation["energy"],
-                target,
-                method="linear",
-                fill_value=np.nan,
-            )[0],
-            "radius": griddata(
-                self.lookup_points_for_interpolation,
-                self.lookup_values_for_interpolation["radius"],
-                target,
-                method="linear",
-                fill_value=np.nan,
-            )[0],
-            "viewcone": griddata(
-                self.lookup_points_for_interpolation,
-                self.lookup_values_for_interpolation["viewcone"],
-                target,
-                method="linear",
-                fill_value=np.nan,
-            )[0],
+            "energy": float(self.lookup_interpolators_for_point["energy"](target)[0]),
+            "radius": float(self.lookup_interpolators_for_point["radius"](target)[0]),
+            "viewcone": float(self.lookup_interpolators_for_point["viewcone"](target)[0]),
         }
 
     def _generate_grid_radec_mode(self):
