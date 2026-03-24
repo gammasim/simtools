@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
@@ -265,13 +266,10 @@ def test_plot_layout_with_image_figsize(camera_hexagon):
 
 def test_plot_layout_with_image_axes(camera_square):
     """Test pixel layout on existing axes."""
-    import matplotlib.pyplot as plt
-
     _, ax = plt.subplots()
     image = np.array([0.0, 0.5, 1.0])
     fig = plot_pixel_layout_with_image(camera_square, image=image, ax=ax)
     assert fig is not None
-    plt.close("all")
 
 
 def test_plot_layout_with_image_hex(camera_hexagon):
