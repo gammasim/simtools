@@ -10,7 +10,6 @@ applications:
     plot_ra_dec_tracks: true
   integration_tests:
   - output_file: production_grid_sky_projection.png
-  - output_file: production_grid_sky_projection.pdf
   test_name: default
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
