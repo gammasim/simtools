@@ -46,7 +46,7 @@ SIMTOOLS_DB_SERVER='cta-simpipe-protodb.zeuthen.desy.de' # MongoDB server
 SIMTOOLS_DB_API_USER=YOUR_USERNAME # username for database: ask the responsible person
 SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for database: ask the responsible person
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
-SIMTOOLS_DB_SIMULATION_MODEL_VERSION='v0.9.0' # Version of the simulation model database (adjust accordingly)
+SIMTOOLS_DB_SIMULATION_MODEL_VERSION='v0.12.0' # Version of the simulation model database (adjust accordingly)
 SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model'
 ```
 
@@ -133,5 +133,5 @@ Note that database names are hardcoded in the scripts and need to be adjusted ac
 The script `purge_local_db.sh` stops and removes the container and deletes all networks, images, and containers.
 
 ```{danger}
-Attention: this script removes all local containers, images, and networks without asking for confirmation.
+Attention: this script removes all local containers, images, and networks.
 ```
