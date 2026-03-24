@@ -268,13 +268,10 @@ class SimulatorLightEmission(SimtelRunner):
         x_tel_m = x_tel.to(u.m).value
         y_tel_m = y_tel.to(u.m).value
         z_tel_m = z_tel.to(u.m).value
-        x_cal_m = x_cal.to(u.m).value
-        y_cal_m = y_cal.to(u.m).value
-        z_cal_m = z_cal.to(u.m).value
 
-        delta_x = x_cal_m - x_tel_m
-        delta_y = y_cal_m - y_tel_m
-        delta_z = z_cal_m - z_tel_m
+        delta_x = x_cal.to(u.m).value - x_tel_m
+        delta_y = y_cal.to(u.m).value - y_tel_m
+        delta_z = z_cal.to(u.m).value - z_tel_m
 
         norm_horizontal = np.hypot(delta_x, delta_y)
         # Angle from North (y-axis) towards East (x-axis)
