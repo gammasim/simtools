@@ -16,7 +16,7 @@ from astropy import units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.table import Table
 from astropy.units import Quantity
-from scipy.interpolate import griddata
+from scipy.interpolate import LinearNDInterpolator, griddata
 
 from simtools.io import ascii_handler
 
@@ -132,6 +132,14 @@ class GridGeneration:
             "energy": repeat_3(lookup_arrays["energy"]),
             "radius": repeat_3(lookup_arrays["radius"]),
             "viewcone": repeat_3(lookup_arrays["viewcone"]),
+        }
+        self.lookup_interpolators_for_point = {
+            key: LinearNDInterpolator(
+                self.lookup_points_for_interpolation,
+                self.lookup_values_for_interpolation[key],
+                fill_value=np.nan,
+            )
+            for key in ("energy", "radius", "viewcone")
         }
 
     def _has_radec_axes(self):
@@ -270,12 +278,6 @@ class GridGeneration:
                     }
                 )
         return direction_points
-
-    def _get_radec_grid_filter_limits(self):
-        """Return zenith limits to apply for native RA/Dec axes."""
-        if "zenith_angle" in self.axes:
-            return self.axes["zenith_angle"].get("range", [0, 90])
-        return [0, 90]
 
     def _generate_extra_axis_combinations(self, excluded_keys):
         """Generate combinations for all axes except the excluded ones."""

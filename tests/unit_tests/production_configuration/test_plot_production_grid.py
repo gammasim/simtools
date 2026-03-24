@@ -13,6 +13,8 @@ from simtools.production_configuration.plot_production_grid import (
     ProductionGridPlotter,
 )
 
+pytestmark = pytest.mark.filterwarnings("ignore::astropy.utils.iers.IERSWarning")
+
 SITE_LOCATION_LAT = 28.76
 SITE_LOCATION_LON = -17.89
 SITE_LOCATION_HEIGHT = 2200.0
