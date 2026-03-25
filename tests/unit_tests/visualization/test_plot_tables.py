@@ -59,6 +59,43 @@ def test_read_astropy_table_data_from_file(mock_read_simtel_table):
     np.testing.assert_array_equal(result["test_table"]["y"], np.array([2.0]))
 
 
+def test_read_simtel_table_data_from_file():
+    config = {
+        "tables": [
+            {
+                "label": "test_table",
+                "file_name": "spe_LST_2022-04-27_AP2.0e-4.dat",
+                "parameter": "pm_photoelectron_spectrum",
+                "column_x": "amplitude",
+                "column_y": "response",
+            },
+        ]
+    }
+
+    result = plot_tables.read_table_data(config, Path("tests/resources"))
+
+    assert len(result["test_table"]) == 2101
+    assert result["test_table"].dtype.names == ("amplitude", "response")
+
+
+def test_read_simtel_table_data_from_file_without_parameter_raises():
+    config = {
+        "tables": [
+            {
+                "label": "test_table",
+                "file_name": "spe_LST_2022-04-27_AP2.0e-4.dat",
+                "column_x": "amplitude",
+                "column_y": "response",
+            },
+        ]
+    }
+
+    with pytest.raises(
+        ValueError, match=r"Parameter name must be provided for sim_telarray table reading\."
+    ):
+        plot_tables.read_table_data(config, Path("tests/resources"))
+
+
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
 @mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
 @mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
