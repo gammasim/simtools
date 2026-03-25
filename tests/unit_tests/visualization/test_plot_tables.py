@@ -37,10 +37,8 @@ def test_plot(mock_read_table_data, mock_visualize):
     mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file)
 
 
-@mock.patch("simtools.simtel.simtel_table_reader.Table.read")
-def test_read_astropy_table_data_from_file(
-    mock_table_read,
-):
+@mock.patch("simtools.visualization.plot_tables.read_simtel_table")
+def test_read_astropy_table_data_from_file(mock_read_simtel_table):
     config = {
         "tables": [
             {
@@ -52,11 +50,13 @@ def test_read_astropy_table_data_from_file(
             },
         ]
     }
-    mock_table = mock.MagicMock()
-    mock_table_read.return_value = mock_table
+    mock_read_simtel_table.return_value = Table({"x": [41, 42], "y": [1.0, 2.0]})
 
-    plot_tables.read_table_data(config, None)
-    mock_table_read.assert_called_once_with("test_file.ecsv", format="ascii.ecsv")
+    result = plot_tables.read_table_data(config, None)
+
+    mock_read_simtel_table.assert_called_once_with(None, "test_file.ecsv")
+    np.testing.assert_array_equal(result["test_table"]["x"], np.array([42]))
+    np.testing.assert_array_equal(result["test_table"]["y"], np.array([2.0]))
 
 
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
