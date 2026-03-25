@@ -59,9 +59,7 @@ def read_table_data(config, data_path=None):
     data = {}
 
     for _config in config["tables"]:
-        if "parameter" in _config:
-            table = _read_table_from_model_database(_config)
-        elif "file_name" in _config:
+        if "file_name" in _config:
             file_name = (
                 _config["file_name"]
                 if data_path is None or _config.get("ignore_table_data_path", False)
@@ -73,6 +71,8 @@ def read_table_data(config, data_path=None):
                 table = legacy_data_handler.read_legacy_data_as_table(file_name, _config["type"])
             else:
                 table = read_simtel_table(_config.get("parameter"), file_name)
+        elif "parameter" in _config:
+            table = _read_table_from_model_database(_config)
         else:
             raise ValueError("No table data defined in configuration.")
 
