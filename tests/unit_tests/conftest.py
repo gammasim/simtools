@@ -35,33 +35,61 @@ logger = logging.getLogger()
 UNIT_TEST_DB = "unit_tests/db/"
 
 
+def pytest_collection_modifyitems(items):
+    """Tag db unit tests with a stable keyword for fixture routing."""
+    for item in items:
+        nodeid = str(getattr(item, "nodeid", "")).replace("\\", "/")
+        if "/unit_tests/db/" in f"/{nodeid}":
+            item.keywords["db_unit_test"] = True
+
+
 def _is_db_unit_test(request):
     """Return True for tests under tests/unit_tests/db across path styles."""
+
+    node = getattr(request, "node", None)
+    nodeid = str(getattr(node, "nodeid", "")).replace("\\", "/")
+    if nodeid.startswith("tests/unit_tests/db/"):
+        return True
+
+    def _contains_db_test_path(value):
+        normalized = str(value).replace("\\", "/").strip("/") if value else ""
+        if not normalized:
+            return False
+        return (
+            UNIT_TEST_DB in normalized
+            or normalized.startswith("tests/unit_tests/db/")
+            or "tests.unit_tests.db" in normalized
+        )
+
+    # Most robust execution-time signal during fixture setup.
+    if _contains_db_test_path(os.environ.get("PYTEST_CURRENT_TEST", "")):
+        return True
+
+    if _contains_db_test_path(getattr(getattr(request, "module", None), "__file__", "")):
+        return True
+
+    if node is None:
+        return False
+
+    if "db_unit_test" in getattr(node, "keywords", {}):
+        return True
 
     def _normalize(value):
         return str(value).replace("\\", "/") if value else ""
 
-    node = getattr(request, "node", None)
-    if node is None:
-        return False
-
     candidates = [
         _normalize(getattr(node, "path", "")),
         _normalize(getattr(node, "fspath", "")),
+        _normalize(getattr(node, "location", [""])[0] if getattr(node, "location", None) else ""),
         _normalize(getattr(getattr(node, "module", None), "__file__", "")),
         _normalize(getattr(node, "nodeid", "")),
         _normalize(getattr(getattr(node, "module", None), "__name__", "")),
+        _normalize(getattr(request, "fspath", "")),
+        _normalize(getattr(request, "nodeid", "")),
     ]
 
     for candidate in candidates:
-        if not candidate:
-            continue
-        normalized = candidate.strip("/")
-        if UNIT_TEST_DB in normalized:
-            return True
-        if normalized.startswith("tests/unit_tests/db/"):
-            return True
-        if "tests.unit_tests.db" in normalized:
+        if _contains_db_test_path(candidate):
             return True
 
     return False
