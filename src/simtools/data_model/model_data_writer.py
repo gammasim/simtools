@@ -139,11 +139,11 @@ class ModelDataWriter:
             writer.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
 
         unique_id = None
+        metadata = None
         if metadata_input_dict is not None:
             metadata_input_dict["output_file"] = output_file
             metadata_input_dict["output_file_format"] = Path(output_file).suffix.lstrip(".")
             metadata = MetadataCollector(args_dict=metadata_input_dict)
-            metadata.write(output_path / Path(output_file))
             unique_id = (
                 metadata.get_top_level_metadata().get("cta", {}).get("product", {}).get("id")
             )
@@ -159,6 +159,8 @@ class ModelDataWriter:
             meta_parameter=meta_parameter,
         )
         writer.write_dict_to_model_parameter_json(output_file, _json_dict)
+        if metadata is not None:
+            metadata.write(output_path / Path(output_file))
         return _json_dict
 
     def check_db_for_existing_parameter(self, parameter_name, instrument, parameter_version):
@@ -316,6 +318,16 @@ class ModelDataWriter:
         except TypeError as exc:
             raise TypeError("No valid schema versions found in the list.") from exc
         return max(valid_entries, key=lambda e: packaging.version.Version(e["schema_version"]))
+
+    def get_parameter_type_for_schema(self, parameter_name, model_parameter_schema_version=None):
+        """Return the parameter type defined by the selected model-parameter schema."""
+        schema_dict, _ = self._read_schema_dict(parameter_name, model_parameter_schema_version)
+        parameter_types = [data["type"] for data in schema_dict["data"]]
+        return (
+            parameter_types[0]
+            if all(data_type == parameter_types[0] for data_type in parameter_types)
+            else parameter_types
+        )
 
     def _get_parameter_type(self):
         """

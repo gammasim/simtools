@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 
 import logging
+from pathlib import Path
 from unittest import mock
 
 import astropy.units as u
 import pytest
+from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.simtel.simtel_table_reader as simtel_table_reader
@@ -98,6 +100,67 @@ def test_read_simtel_table_to_table(spe_test_file, spe_meta_test_comment):
     ) as mock_read:
         simtel_table_reader.read_simtel_table("atmospheric_transmission", "test_file")
         mock_read.assert_called_once()
+
+
+def test_read_simtel_table_as_column_data():
+    table = Table(
+        {
+            "time": [0.0, 0.12],
+            "amplitude": [0.0, 0.01323],
+            "amplitude (low gain)": [0.0, 0.000945],
+        }
+    )
+    table["time"].unit = u.ns
+    table["amplitude"].unit = u.dimensionless_unscaled
+    table["amplitude (low gain)"].unit = u.dimensionless_unscaled
+
+    with mock.patch("simtools.simtel.simtel_table_reader.read_simtel_table", return_value=table):
+        result = simtel_table_reader.read_simtel_table_as_column_data(
+            "fadc_pulse_shape", "dummy.dat"
+        )
+
+    assert result == {
+        "columns": ["time", "amplitude", "amplitude (low gain)"],
+        "dtype": ["float64", "float64", "float64"],
+        "unit": ["ns", "dimensionless", "dimensionless"],
+        "data": {
+            "time": [0.0, 0.12],
+            "amplitude": [0.0, 0.01323],
+            "amplitude (low gain)": [0.0, 0.000945],
+        },
+    }
+
+
+def test_resolve_dict_parameter_value_from_inline_json():
+    value = '{"columns": ["time"], "dtype": ["float64"], "unit": ["ns"], "data": {"time": [0.0]}}'
+
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_column_data"
+    ) as read_mock:
+        result = simtel_table_reader.resolve_dict_parameter_value(
+            value,
+            "fadc_pulse_shape",
+            "/tmp/data",
+        )
+
+    read_mock.assert_not_called()
+    assert isinstance(result, dict)
+    assert result["columns"] == ["time"]
+
+
+def test_resolve_dict_parameter_value_from_file_path():
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_column_data",
+        return_value={"columns": ["time"]},
+    ) as read_mock:
+        result = simtel_table_reader.resolve_dict_parameter_value(
+            "pulse.dat",
+            "fadc_pulse_shape",
+            "/tmp/data",
+        )
+
+    read_mock.assert_called_once_with("fadc_pulse_shape", Path("/tmp/data") / "pulse.dat")
+    assert result == {"columns": ["time"]}
 
 
 def test_data_simple_columns():
