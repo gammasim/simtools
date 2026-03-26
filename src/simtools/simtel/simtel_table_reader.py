@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Read tabular data in sim_telarray format and return as astropy table."""
 
+import json
 import logging
 import re
 from pathlib import Path
@@ -292,6 +293,61 @@ def read_simtel_table(parameter_name, file_path):
     table.meta.update(metadata)
 
     return table
+
+
+def read_simtel_table_as_column_data(parameter_name, file_path):
+    """Read sim_telarray table file and serialize it as column-oriented data."""
+    table = read_simtel_table(parameter_name, file_path)
+
+    columns = list(table.colnames)
+
+    def _serialize_unit(column_name):
+        unit = table[column_name].unit
+        if unit is None:
+            return "dimensionless"
+        unit_string = str(unit)
+        return unit_string if unit_string else "dimensionless"
+
+    return {
+        "columns": columns,
+        "dtype": [str(table[column].dtype) for column in columns],
+        "unit": [_serialize_unit(column) for column in columns],
+        "data": {column: table[column].value.tolist() for column in columns},
+    }
+
+
+def _resolve_input_file_path(file_name, data_path=None):
+    """Resolve an input file using data_path for relative paths."""
+    file_name = Path(file_name)
+    if file_name.is_absolute():
+        return file_name
+
+    return Path(data_path) / file_name if data_path else file_name
+
+
+def resolve_dict_parameter_value(value, parameter_name, data_path=None):
+    """Resolve dict-typed value from inline JSON or from a table file path."""
+    if isinstance(value, dict):
+        return value
+
+    if isinstance(value, str):
+        stripped_value = value.strip()
+        # e.g., given as inline JSON in the command line, so try to parse it directly
+        if stripped_value.startswith("{"):
+            try:
+                parsed_value = json.loads(stripped_value)
+                if isinstance(parsed_value, dict):
+                    return parsed_value
+            except json.JSONDecodeError:
+                logger.debug(
+                    f"Value for '{parameter_name}' starts with '{{' but is not valid JSON; "
+                    "falling back to file-path reading."
+                )
+
+    return read_simtel_table_as_column_data(
+        parameter_name,
+        _resolve_input_file_path(value, data_path),
+    )
 
 
 def _adjust_columns_length(rows, n_columns):

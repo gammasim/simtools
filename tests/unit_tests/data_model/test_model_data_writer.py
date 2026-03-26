@@ -8,6 +8,7 @@ import astropy.units as u
 import pytest
 from astropy.io.registry.base import IORegistryError
 from astropy.table import Table
+from jsonschema.exceptions import ValidationError
 
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.data_model.model_data_writer as writer
@@ -224,6 +225,25 @@ def test_dump_model_parameter(tmp_test_directory):
         mock_db_check.assert_called_once_with(num_gains_name, instrument, parameter_version)
 
 
+def test_dump_model_parameter_does_not_write_metadata_on_validation_failure(tmp_test_directory):
+    output_file = "num_gains.json"
+
+    with pytest.raises(ValueError, match=r"^Value for column '0' out of range."):
+        writer.ModelDataWriter.dump_model_parameter(
+            parameter_name="num_gains",
+            value=25,
+            instrument="LSTN-01",
+            parameter_version="1.1.0",
+            output_file=output_file,
+            output_path=tmp_test_directory,
+            metadata_input_dict={"name": "test_metadata"},
+            check_db_for_existing_parameter=False,
+        )
+
+    assert not (Path(tmp_test_directory) / output_file).exists()
+    assert not Path(tmp_test_directory / "num_gains.meta.yml").exists()
+
+
 def test_get_validated_parameter_dict():
     w1 = writer.ModelDataWriter()
     assert w1.get_validated_parameter_dict(
@@ -282,6 +302,79 @@ def test_get_validated_parameter_dict():
         "meta_parameter": False,
         "model_parameter_schema_version": "0.1.0",
     }
+
+
+def test_get_validated_parameter_dict_fadc_pulse_shape_embedded():
+    w1 = writer.ModelDataWriter()
+    embedded_value = {
+        "columns": ["time", "amplitude", "amplitude (low gain)"],
+        "dtype": ["float64", "float64", "float64"],
+        "unit": ["ns", "dimensionless", "dimensionless"],
+        "data": {
+            "time": [0.0, 0.12, 0.25],
+            "amplitude": [0.0, 0.0, 0.01323],
+            "amplitude (low gain)": [0.0, 0.0, 0.000945],
+        },
+    }
+
+    validated_dict = w1.get_validated_parameter_dict(
+        parameter_name="fadc_pulse_shape",
+        value=embedded_value,
+        instrument="LSTN-01",
+        parameter_version="0.0.1",
+        model_parameter_schema_version="0.2.0",
+    )
+
+    assert validated_dict["type"] == "dict"
+    assert not validated_dict["file"]
+    assert validated_dict["model_parameter_schema_version"] == "0.2.0"
+    assert validated_dict["value"] == embedded_value
+
+
+def test_get_parameter_type_for_schema_uses_selected_schema_version():
+    writer_instance = writer.ModelDataWriter()
+
+    assert writer_instance.get_parameter_type_for_schema("fadc_pulse_shape", "0.2.0") == "dict"
+    assert writer_instance.get_parameter_type_for_schema("fadc_pulse_shape", "0.1.0") == "file"
+
+
+def test_get_validated_parameter_dict_fadc_pulse_shape_file_legacy():
+    w1 = writer.ModelDataWriter()
+
+    validated_dict = w1.get_validated_parameter_dict(
+        parameter_name="fadc_pulse_shape",
+        value="pulse_shape.dat",
+        instrument="LSTN-01",
+        parameter_version="0.0.1",
+        model_parameter_schema_version="0.1.0",
+    )
+
+    assert validated_dict["type"] == "file"
+    assert validated_dict["file"]
+    assert validated_dict["model_parameter_schema_version"] == "0.1.0"
+    assert validated_dict["value"] == "pulse_shape.dat"
+
+
+def test_get_validated_parameter_dict_fadc_pulse_shape_embedded_invalid_columns():
+    w1 = writer.ModelDataWriter()
+    invalid_embedded_value = {
+        "columns": ["time", "HG"],
+        "dtype": ["float64", "float64"],
+        "unit": ["ns", "dimensionless"],
+        "data": {
+            "time": [0.0, 0.12],
+            "HG": [0.0, 0.01],
+        },
+    }
+
+    with pytest.raises(ValidationError):
+        w1.get_validated_parameter_dict(
+            parameter_name="fadc_pulse_shape",
+            value=invalid_embedded_value,
+            instrument="LSTN-01",
+            parameter_version="0.0.1",
+            model_parameter_schema_version="0.2.0",
+        )
 
 
 def test_prepare_data_dict_for_writing():
