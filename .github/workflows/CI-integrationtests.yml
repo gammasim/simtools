@@ -195,6 +195,7 @@ jobs:
       - name: Install Python dependencies (dev container)
         if: ${{ !contains(inputs.container_image, 'simtools-prod') }}
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           pip install --no-cache-dir -e '.[tests,dev,doc]'
 
       - name: Upload data to MongoDB
