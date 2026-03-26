@@ -32,7 +32,39 @@ from simtools.runners.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
 
-UNIT_TEST_DB = "unit_tests/db"
+UNIT_TEST_DB = "unit_tests/db/"
+
+
+def _is_db_unit_test(request):
+    """Return True for tests under tests/unit_tests/db across path styles."""
+
+    def _normalize(value):
+        return str(value).replace("\\", "/") if value else ""
+
+    node = getattr(request, "node", None)
+    if node is None:
+        return False
+
+    candidates = [
+        _normalize(getattr(node, "path", "")),
+        _normalize(getattr(node, "fspath", "")),
+        _normalize(getattr(getattr(node, "module", None), "__file__", "")),
+        _normalize(getattr(node, "nodeid", "")),
+        _normalize(getattr(getattr(node, "module", None), "__name__", "")),
+    ]
+
+    for candidate in candidates:
+        if not candidate:
+            continue
+        normalized = candidate.strip("/")
+        if UNIT_TEST_DB in normalized:
+            return True
+        if normalized.startswith("tests/unit_tests/db/"):
+            return True
+        if "tests.unit_tests.db" in normalized:
+            return True
+
+    return False
 
 
 @functools.lru_cache
@@ -355,8 +387,7 @@ def mock_db_handler(request):
     Returns a MagicMock configured with typical DatabaseHandler methods.
     Tests in tests/unit_tests/db/ receive a real DatabaseHandler instance.
     """
-    test_file_path = str(request.node.fspath)
-    if UNIT_TEST_DB in test_file_path:
+    if _is_db_unit_test(request):
         db_instance = request.getfixturevalue("db")
         db_instance.get_model_versions = MagicMock(return_value=["1.0.0", "5.0.0", "6.0.0"])
         return db_instance
@@ -442,10 +473,8 @@ def patch_database_handler(request, mocker):
     Tests in tests/unit_tests/db/ are excluded from this mocking.
     Also patches model parameter schema validation to avoid schema version mismatches.
     """
-    test_file_path = str(request.node.fspath)
-
     # Skip mocking for tests in db/ directory
-    if UNIT_TEST_DB in test_file_path:
+    if _is_db_unit_test(request):
         yield
         return
 
@@ -462,8 +491,7 @@ def patch_database_handler(request, mocker):
 def db(request):
     """Database object with configuration from settings.config.db_handler."""
 
-    test_file_path = str(request.node.fspath)
-    if UNIT_TEST_DB not in test_file_path:
+    if not _is_db_unit_test(request):
         db_instance = db_handler.DatabaseHandler()
         yield db_instance
         return
