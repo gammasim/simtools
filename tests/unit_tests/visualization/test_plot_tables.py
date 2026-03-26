@@ -37,27 +37,63 @@ def test_plot(mock_read_table_data, mock_visualize):
     mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file)
 
 
-@mock.patch("simtools.visualization.plot_tables.Table.read")
-def test_read_astropy_table_data_from_file(
-    mock_table_read,
-):
+@mock.patch("simtools.visualization.plot_tables.read_simtel_table")
+def test_read_astropy_table_data_from_file(mock_read_simtel_table):
     config = {
         "tables": [
             {
                 "label": "test_table",
-                "file_name": "test_file",
-                "type": "ascii.ecsv",
+                "file_name": "test_file.ecsv",
                 "column_x": "x",
                 "column_y": "y",
                 "select_values": {"column_name": "x", "value": 42},
             },
         ]
     }
-    mock_table = mock.MagicMock()
-    mock_table_read.return_value = mock_table
+    mock_read_simtel_table.return_value = Table({"x": [41, 42], "y": [1.0, 2.0]})
 
-    plot_tables.read_table_data(config, None)
-    mock_table_read.assert_called_once_with("test_file", format="ascii.ecsv")
+    result = plot_tables.read_table_data(config, None)
+
+    mock_read_simtel_table.assert_called_once_with(None, "test_file.ecsv")
+    np.testing.assert_array_equal(result["test_table"]["x"], np.array([42]))
+    np.testing.assert_array_equal(result["test_table"]["y"], np.array([2.0]))
+
+
+def test_read_simtel_table_data_from_file():
+    config = {
+        "tables": [
+            {
+                "label": "test_table",
+                "file_name": "spe_LST_2022-04-27_AP2.0e-4.dat",
+                "parameter": "pm_photoelectron_spectrum",
+                "column_x": "amplitude",
+                "column_y": "response",
+            },
+        ]
+    }
+
+    result = plot_tables.read_table_data(config, Path("tests/resources"))
+
+    assert len(result["test_table"]) == 2101
+    assert result["test_table"].dtype.names == ("amplitude", "response")
+
+
+def test_read_simtel_table_data_from_file_without_parameter_raises():
+    config = {
+        "tables": [
+            {
+                "label": "test_table",
+                "file_name": "spe_LST_2022-04-27_AP2.0e-4.dat",
+                "column_x": "amplitude",
+                "column_y": "response",
+            },
+        ]
+    }
+
+    with pytest.raises(
+        ValueError, match=r"Parameter name must be provided for sim_telarray table reading\."
+    ):
+        plot_tables.read_table_data(config, Path("tests/resources"))
 
 
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
