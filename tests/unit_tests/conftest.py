@@ -35,22 +35,36 @@ logger = logging.getLogger()
 UNIT_TEST_DB = "unit_tests/db/"
 
 
+def pytest_collection_modifyitems(items):
+    """Tag db unit tests with a stable keyword for fixture routing."""
+    for item in items:
+        nodeid = str(getattr(item, "nodeid", "")).replace("\\", "/")
+        if "/unit_tests/db/" in f"/{nodeid}":
+            item.keywords["db_unit_test"] = True
+
+
 def _is_db_unit_test(request):
     """Return True for tests under tests/unit_tests/db across path styles."""
-
-    def _normalize(value):
-        return str(value).replace("\\", "/") if value else ""
 
     node = getattr(request, "node", None)
     if node is None:
         return False
 
+    if "db_unit_test" in getattr(node, "keywords", {}):
+        return True
+
+    def _normalize(value):
+        return str(value).replace("\\", "/") if value else ""
+
     candidates = [
         _normalize(getattr(node, "path", "")),
         _normalize(getattr(node, "fspath", "")),
+        _normalize(getattr(node, "location", [""])[0] if getattr(node, "location", None) else ""),
         _normalize(getattr(getattr(node, "module", None), "__file__", "")),
         _normalize(getattr(node, "nodeid", "")),
         _normalize(getattr(getattr(node, "module", None), "__name__", "")),
+        _normalize(getattr(request, "fspath", "")),
+        _normalize(getattr(request, "nodeid", "")),
     ]
 
     for candidate in candidates:
