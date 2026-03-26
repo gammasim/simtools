@@ -265,6 +265,9 @@ def read_simtel_table(parameter_name, file_path):
     if Path(file_path).suffix == ".ecsv":  # table is already in correct format
         return Table.read(file_path, format="ascii.ecsv")
 
+    if parameter_name is None:
+        raise ValueError("Parameter name must be provided for sim_telarray table reading.")
+
     if parameter_name == "atmospheric_transmission":
         return _read_simtel_data_for_atmospheric_transmission(file_path)
     if parameter_name == "lightguide_efficiency_vs_wavelength":
