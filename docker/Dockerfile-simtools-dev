@@ -33,7 +33,8 @@ RUN microdnf update -y && microdnf install -y \
     python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
     microdnf clean all && \
     ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python && \
-    git config --global --add safe.directory /workdir/external/simtools
+    git config --global --add safe.directory /workdir/external/simtools && \
+    git config --system --add safe.directory '*'
 
 # Install simtools (main branch)
 WORKDIR /workdir
