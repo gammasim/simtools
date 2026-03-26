@@ -16,6 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Mark workspace as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       # make sure we have version info
       - run: git fetch --tags
 
