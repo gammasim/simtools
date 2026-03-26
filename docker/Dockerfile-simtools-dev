@@ -34,7 +34,13 @@ RUN microdnf update -y && microdnf install -y \
     microdnf clean all && \
     ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
 
-RUN echo 'git config --global --add safe.directory "*"' >> /etc/profile.d/git_safe_dir.sh
+RUN cat << 'EOF' > /etc/profile.d/git_safe_dir.sh
+if [ -n "${GITHUB_WORKSPACE:-}" ]; then
+    git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+fi
+git config --global --add safe.directory "/workdir"
+git config --global --add safe.directory "/workdir/external"
+EOF
 
 # Install simtools (main branch)
 WORKDIR /workdir
