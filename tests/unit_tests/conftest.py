@@ -35,13 +35,6 @@ logger = logging.getLogger()
 UNIT_TEST_DB = "unit_tests/db"
 
 
-def _is_db_unit_test(request):
-    """Return True for tests under tests/unit_tests/db across path styles."""
-    node_id = str(getattr(request.node, "nodeid", "")).replace("\\", "/")
-    file_path = str(getattr(request.node, "fspath", "")).replace("\\", "/")
-    return UNIT_TEST_DB in node_id or UNIT_TEST_DB in file_path
-
-
 @functools.lru_cache
 def _load_mock_db_json(file_name):
     mock_db_dir = Path(__file__).resolve().parent.parent / "resources" / "mock_db"
@@ -362,7 +355,8 @@ def mock_db_handler(request):
     Returns a MagicMock configured with typical DatabaseHandler methods.
     Tests in tests/unit_tests/db/ receive a real DatabaseHandler instance.
     """
-    if _is_db_unit_test(request):
+    test_file_path = str(request.node.fspath)
+    if UNIT_TEST_DB in test_file_path:
         db_instance = request.getfixturevalue("db")
         db_instance.get_model_versions = MagicMock(return_value=["1.0.0", "5.0.0", "6.0.0"])
         return db_instance
@@ -448,8 +442,10 @@ def patch_database_handler(request, mocker):
     Tests in tests/unit_tests/db/ are excluded from this mocking.
     Also patches model parameter schema validation to avoid schema version mismatches.
     """
+    test_file_path = str(request.node.fspath)
+
     # Skip mocking for tests in db/ directory
-    if _is_db_unit_test(request):
+    if UNIT_TEST_DB in test_file_path:
         yield
         return
 
@@ -466,7 +462,8 @@ def patch_database_handler(request, mocker):
 def db(request):
     """Database object with configuration from settings.config.db_handler."""
 
-    if not _is_db_unit_test(request):
+    test_file_path = str(request.node.fspath)
+    if UNIT_TEST_DB not in test_file_path:
         db_instance = db_handler.DatabaseHandler()
         yield db_instance
         return
