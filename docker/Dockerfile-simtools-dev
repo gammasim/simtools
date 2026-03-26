@@ -32,8 +32,9 @@ RUN microdnf update -y && microdnf install -y \
     bc bzip2 findutils gcc-c++ git gsl libgfortran procps wget zstd \
     python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
     microdnf clean all && \
-    ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python && \
-    git config --global --add safe.directory '*'
+    ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
+
+RUN echo 'git config --global --add safe.directory "*"' >> /etc/profile.d/git_safe_dir.sh
 
 # Install simtools (main branch)
 WORKDIR /workdir
