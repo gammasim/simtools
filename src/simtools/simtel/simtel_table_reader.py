@@ -339,7 +339,10 @@ def resolve_dict_parameter_value(value, parameter_name, data_path=None):
                 if isinstance(parsed_value, dict):
                     return parsed_value
             except json.JSONDecodeError:
-                pass
+                logger.debug(
+                    f"Value for '{parameter_name}' starts with '{{' but is not valid JSON; "
+                    "falling back to file-path reading."
+                )
 
     return read_simtel_table_as_column_data(
         parameter_name,

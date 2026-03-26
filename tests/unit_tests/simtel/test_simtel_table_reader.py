@@ -131,7 +131,7 @@ def test_read_simtel_table_as_column_data():
     }
 
 
-def test_resolve_dict_parameter_value_from_inline_json():
+def test_resolve_dict_parameter_value_from_inline_json(tmp_test_directory):
     value = '{"columns": ["time"], "dtype": ["float64"], "unit": ["ns"], "data": {"time": [0.0]}}'
 
     with mock.patch(
@@ -140,7 +140,7 @@ def test_resolve_dict_parameter_value_from_inline_json():
         result = simtel_table_reader.resolve_dict_parameter_value(
             value,
             "fadc_pulse_shape",
-            "/tmp/data",
+            str(tmp_test_directory),
         )
 
     read_mock.assert_not_called()
@@ -148,7 +148,7 @@ def test_resolve_dict_parameter_value_from_inline_json():
     assert result["columns"] == ["time"]
 
 
-def test_resolve_dict_parameter_value_from_file_path():
+def test_resolve_dict_parameter_value_from_file_path(tmp_test_directory):
     with mock.patch(
         "simtools.simtel.simtel_table_reader.read_simtel_table_as_column_data",
         return_value={"columns": ["time"]},
@@ -156,10 +156,10 @@ def test_resolve_dict_parameter_value_from_file_path():
         result = simtel_table_reader.resolve_dict_parameter_value(
             "pulse.dat",
             "fadc_pulse_shape",
-            "/tmp/data",
+            str(tmp_test_directory),
         )
 
-    read_mock.assert_called_once_with("fadc_pulse_shape", Path("/tmp/data") / "pulse.dat")
+    read_mock.assert_called_once_with("fadc_pulse_shape", Path(tmp_test_directory) / "pulse.dat")
     assert result == {"columns": ["time"]}
 
 
