@@ -295,24 +295,16 @@ def read_simtel_table(parameter_name, file_path):
     return table
 
 
-def read_simtel_table_as_column_data(parameter_name, file_path):
-    """Read sim_telarray table file and serialize it as column-oriented data."""
+def read_simtel_table_as_row_data(parameter_name, file_path):
+    """Read sim_telarray table file and serialize it as row-oriented data."""
     table = read_simtel_table(parameter_name, file_path)
 
     columns = list(table.colnames)
-
-    def _serialize_unit(column_name):
-        unit = table[column_name].unit
-        if unit is None:
-            return "dimensionless"
-        unit_string = str(unit)
-        return unit_string if unit_string else "dimensionless"
+    rows = [list(row) for row in table.as_array().tolist()]
 
     return {
         "columns": columns,
-        "dtype": [str(table[column].dtype) for column in columns],
-        "unit": [_serialize_unit(column) for column in columns],
-        "data": {column: table[column].value.tolist() for column in columns},
+        "rows": rows,
     }
 
 
@@ -344,7 +336,7 @@ def resolve_dict_parameter_value(value, parameter_name, data_path=None):
                     "falling back to file-path reading."
                 )
 
-    return read_simtel_table_as_column_data(
+    return read_simtel_table_as_row_data(
         parameter_name,
         _resolve_input_file_path(value, data_path),
     )
