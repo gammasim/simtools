@@ -102,7 +102,7 @@ def test_read_simtel_table_to_table(spe_test_file, spe_meta_test_comment):
         mock_read.assert_called_once()
 
 
-def test_read_simtel_table_as_column_data():
+def test_read_simtel_table_as_row_data():
     table = Table(
         {
             "time": [0.0, 0.12],
@@ -115,19 +115,14 @@ def test_read_simtel_table_as_column_data():
     table["amplitude (low gain)"].unit = u.dimensionless_unscaled
 
     with mock.patch("simtools.simtel.simtel_table_reader.read_simtel_table", return_value=table):
-        result = simtel_table_reader.read_simtel_table_as_column_data(
-            "fadc_pulse_shape", "dummy.dat"
-        )
+        result = simtel_table_reader.read_simtel_table_as_row_data("fadc_pulse_shape", "dummy.dat")
 
     assert result == {
         "columns": ["time", "amplitude", "amplitude (low gain)"],
-        "dtype": ["float64", "float64", "float64"],
-        "unit": ["ns", "dimensionless", "dimensionless"],
-        "data": {
-            "time": [0.0, 0.12],
-            "amplitude": [0.0, 0.01323],
-            "amplitude (low gain)": [0.0, 0.000945],
-        },
+        "rows": [
+            [0.0, 0.0, 0.0],
+            [0.12, 0.01323, 0.000945],
+        ],
     }
 
 
@@ -135,7 +130,7 @@ def test_resolve_dict_parameter_value_from_inline_json(tmp_test_directory):
     value = '{"columns": ["time"], "dtype": ["float64"], "unit": ["ns"], "data": {"time": [0.0]}}'
 
     with mock.patch(
-        "simtools.simtel.simtel_table_reader.read_simtel_table_as_column_data"
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data"
     ) as read_mock:
         result = simtel_table_reader.resolve_dict_parameter_value(
             value,
@@ -150,7 +145,7 @@ def test_resolve_dict_parameter_value_from_inline_json(tmp_test_directory):
 
 def test_resolve_dict_parameter_value_from_file_path(tmp_test_directory):
     with mock.patch(
-        "simtools.simtel.simtel_table_reader.read_simtel_table_as_column_data",
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data",
         return_value={"columns": ["time"]},
     ) as read_mock:
         result = simtel_table_reader.resolve_dict_parameter_value(

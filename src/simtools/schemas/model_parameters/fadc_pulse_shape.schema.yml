@@ -181,3 +181,74 @@ plot_configuration:
       - parameter: fadc_pulse_shape
         column_x: 'time'
         column_y: 'amplitude'
+---
+title: Schema for fadc_pulse_shape model parameter
+schema_version: 0.3.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: fadc_pulse_shape
+description: |-
+  (F)ADC pulse shape (amplitude vs time) for low and high gain
+  readout chain. The pulse amplitude scale is ignored and the pulses are
+  re-scaled to peak values of par:fadc-amplitude times par:fadc-sensitivity.
+short_description: (F)ADC pulse shape (amplitude vs time).
+data:
+  - type: dict
+    json_schema:
+      type: object
+      additionalProperties: false
+      required:
+        - columns
+        - rows
+      properties:
+        columns:
+          type: array
+          oneOf:
+            - type: array
+              items:
+                - const: time
+                - const: amplitude
+              additionalItems: false
+              minItems: 2
+              maxItems: 2
+            - type: array
+              items:
+                - const: time
+                - const: amplitude
+                - const: "amplitude (low gain)"
+              additionalItems: false
+              minItems: 3
+              maxItems: 3
+        rows:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+instrument:
+  class: Camera
+activity:
+  setting:
+    - SetReadoutPulseShape
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraChargeResponse
+    - ValidateCameraTimeResponse
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray
+plot_configuration:
+  - type: fadc_pulse_shape
+    title: 'FADC pulse shape'
+    xtitle: 'Time [ns]'
+    ytitle: 'Amplitude [a.u.]'
+    xscale: 'linear'
+    yscale: 'linear'
+    no_markers: true
+    tables:
+      - parameter: fadc_pulse_shape
+        column_x: 'time'
+        column_y: 'amplitude'
