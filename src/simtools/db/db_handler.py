@@ -326,7 +326,9 @@ class DatabaseHandler:
         Export single model file from the DB identified by the parameter name.
 
         The parameter can be identified by model or parameter version.
-        Files can be exported as astropy tables (ecsv format).
+        File-backed parameters can be exported as astropy tables (ecsv format).
+        Embedded dict-typed parameters are converted to an astropy table directly
+        from the stored row data.
 
         Parameters
         ----------
@@ -341,12 +343,13 @@ class DatabaseHandler:
         model_version: str
             Version of the model.
         export_file_as_table: bool
-            If True, export the file as an astropy table (ecsv format).
+            If True, export the parameter value as an astropy table.
 
         Returns
         -------
         astropy.table.Table or None
-            If export_file_as_table is True
+            Astropy table when export_file_as_table is True and the parameter
+            value is a table (file-backed or embedded dict), otherwise None.
         """
         parameters = self.get_model_parameter(
             parameter,
@@ -355,11 +358,18 @@ class DatabaseHandler:
             parameter_version=parameter_version,
             model_version=model_version,
         )
+        par_info = parameters[parameter]
+
+        if par_info.get("type") == "dict" and isinstance(par_info.get("value"), dict):
+            if export_file_as_table:
+                return simtel_table_reader.row_data_to_astropy_table(par_info["value"])
+            return None
+
         self.export_model_files(parameters=parameters, dest=self.io_handler.get_output_directory())
         if export_file_as_table:
             return simtel_table_reader.read_simtel_table(
                 parameter,
-                self.io_handler.get_output_directory().joinpath(parameters[parameter]["value"]),
+                self.io_handler.get_output_directory().joinpath(par_info["value"]),
             )
         return None
 
