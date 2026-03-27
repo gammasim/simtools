@@ -102,35 +102,6 @@ def _convert_column_data_to_row_data(value):
     }
 
 
-def _convert_row_data_to_column_data(value):
-    """Convert a row-oriented dict value to column-oriented table data."""
-    columns = value.get("columns")
-    rows = value.get("rows")
-
-    if not isinstance(columns, list) or not isinstance(rows, list):
-        raise ValueError("Embedded row data must contain 'columns' list and 'rows' list.")
-
-    if rows and any(not isinstance(row, list) for row in rows):
-        raise ValueError("Embedded row data must contain a list of row lists.")
-
-    transposed = list(zip(*rows, strict=False)) if rows else [[] for _ in columns]
-    data = {column: list(values) for column, values in zip(columns, transposed, strict=False)}
-
-    # fadc pulse-shape schemas define float64 and the following units for all allowed columns.
-    units_by_column = {
-        "time": "ns",
-        "amplitude": "dimensionless",
-        "amplitude (low gain)": "dimensionless",
-    }
-
-    return {
-        "columns": columns,
-        "dtype": ["float64"] * len(columns),
-        "unit": [units_by_column.get(column, "dimensionless") for column in columns],
-        "data": data,
-    }
-
-
 def _update_file_backed_table_parameter(
     parameter_name,
     parameters,
@@ -151,9 +122,7 @@ def _update_file_backed_table_parameter(
 
     return {
         para_data["parameter"]: {
-            "value": _convert_row_data_to_column_data(
-                value_resolver(parameter_name, para_data["value"])
-            ),
+            "value": value_resolver(parameter_name, para_data["value"]),
             "model_parameter_schema_version": schema_version,
             "type": "dict",
             "file": False,
@@ -234,7 +203,7 @@ def _update_fadc_pulse_shape(parameters, schema_version, value_resolver=None):
             value_resolver=value_resolver,
         )
 
-    # Dict values in 0.2.0 column-oriented representation: {columns, dtype, unit, data}.
+    # Legacy column-oriented representation {columns, data} — convert to {columns, rows}.
     if (
         para_data.get("type") == "dict"
         and isinstance(value, dict)
@@ -247,12 +216,12 @@ def _update_fadc_pulse_shape(parameters, schema_version, value_resolver=None):
         )
         return {
             para_data["parameter"]: {
-                "value": value,
+                "value": _convert_column_data_to_row_data(value),
                 "model_parameter_schema_version": schema_version,
             }
         }
 
-    # Backward compatibility for transitional row-oriented dict values.
+    # Already in canonical row-oriented format {columns, rows} — pass through.
     if (
         para_data.get("type") == "dict"
         and isinstance(value, dict)
@@ -265,7 +234,7 @@ def _update_fadc_pulse_shape(parameters, schema_version, value_resolver=None):
         )
         return {
             para_data["parameter"]: {
-                "value": _convert_row_data_to_column_data(value),
+                "value": value,
                 "model_parameter_schema_version": schema_version,
             }
         }

@@ -11,6 +11,7 @@ import numpy as np
 import simtools.utils.general as gen
 import simtools.version
 from simtools import dependencies, settings
+from simtools.simtel import simtel_table_writer
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 from simtools.utils import names
 
@@ -639,6 +640,9 @@ class SimtelConfigWriter:
         """
         conversion_dict = {
             "array_triggers": self._write_array_triggers_file,
+            "fadc_pulse_shape": lambda v, mp, tm: self._write_table_parameter_file(
+                "fadc_pulse_shape", v, mp, tm
+            ),
         }
         try:
             value = conversion_dict[simtel_name](value, model_path, telescope_model)
@@ -647,6 +651,34 @@ class SimtelConfigWriter:
         except AttributeError:  # covers cases where telescope_model is None
             return None, None
         return simtel_name, value
+
+    def _write_table_parameter_file(self, parameter_name, value, model_path, _telescope_model):
+        """
+        Write a dict-valued table parameter to an ASCII file for sim_telarray.
+
+        Parameters
+        ----------
+        parameter_name : str
+            Parameter name.
+        value : dict or str
+            Table data as ``{columns, rows}`` dict, or a filename string (passed through).
+        model_path : Path
+            Path to the telescope config file being written.
+        _telescope_model : ignored
+            Unused; present to match the conversion callback signature.
+
+        Returns
+        -------
+        str
+            Basename of the written file, or the original string value unchanged.
+        """
+        if not isinstance(value, dict):
+            return value
+        dest_dir = Path(model_path).parent
+        telescope_name = Path(model_path).stem
+        return simtel_table_writer.write_simtel_table(
+            parameter_name, value, dest_dir, telescope_name
+        )
 
     def _write_array_triggers_file(self, array_triggers, model_path, telescope_model):
         """
