@@ -13,8 +13,7 @@ from simtools.job_execution import job_manager
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
-from simtools.simtel import simtel_output_validator
-from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.simtel import simtel_output_validator, simtel_table_writer
 from simtools.utils import general
 from simtools.utils.geometry import fiducial_radius_from_shape
 
@@ -433,7 +432,7 @@ class SimulatorLightEmission(SimtelRunner):
                 table_path = self.io_handler.get_output_directory("light_emission") / fname
                 fadc_bins = self.telescope_model.get_parameter_value("fadc_sum_bins")
 
-                SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
+                simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
                     file_path=table_path,
                     width_ns=width_ns,
                     exp_decay_ns=exp_ns,
@@ -559,14 +558,14 @@ class SimulatorLightEmission(SimtelRunner):
         return focal_length - flasher_z
 
     def _generate_lambertian_angular_distribution_table(self):
-        """Generate Lambertian angular distribution table via config writer and return path.
+        """Generate Lambertian angular distribution table and return path.
 
         Uses a pure cosine profile normalized to 1 at 0 deg and spans 0..90 deg by default.
         """
         tel = self._sanitize_name(self.light_emission_config.get("telescope") or "telescope")
         cal = self._sanitize_name(self.light_emission_config.get("light_source") or "calibration")
         fname = f"flasher_angular_distribution_{tel}_{cal}.dat"
-        return SimtelConfigWriter.write_angular_distribution_table_lambertian(
+        return simtel_table_writer.write_angular_distribution_table_lambertian(
             file_path=self.io_handler.get_output_directory("light_emission") / fname,
             max_angle_deg=90.0,
             n_samples=100,

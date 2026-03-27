@@ -98,60 +98,6 @@ class SimtelConfigWriter:
             ):
                 file.write(f"{meta}\n")
 
-    @staticmethod
-    def write_light_pulse_table_gauss_exp_conv(
-        file_path,
-        width_ns,
-        exp_decay_ns,
-        fadc_sum_bins,
-        dt_ns=0.1,
-        rise_range=(0.1, 0.9),
-        fall_range=(0.9, 0.1),
-        time_margin_ns=10.0,
-    ):
-        """Write a pulse table for a Gaussian convolved with a causal exponential.
-
-        Delegates to
-        :func:`simtools.simtel.simtel_table_writer.write_light_pulse_table_gauss_exp_conv`.
-        """
-        return simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
-            file_path,
-            width_ns,
-            exp_decay_ns,
-            fadc_sum_bins,
-            dt_ns,
-            rise_range,
-            fall_range,
-            time_margin_ns,
-        )
-
-    @staticmethod
-    def write_angular_distribution_table_lambertian(
-        file_path,
-        max_angle_deg,
-        n_samples=100,
-    ):
-        """Write a Lambertian angular distribution table (I(t) ~ cos(t)).
-
-        Delegates to
-        :func:`simtools.simtel.simtel_table_writer.write_angular_distribution_table_lambertian`.
-        """
-        return simtel_table_writer.write_angular_distribution_table_lambertian(
-            file_path, max_angle_deg, n_samples
-        )
-
-    @staticmethod
-    def _write_ascii_pulse_table(file_path, t, y):
-        """Write two-column ASCII pulse table."""
-        return simtel_table_writer.write_ascii_pulse_table(file_path, t, y)
-
-    @staticmethod
-    def _write_ascii_angle_distribution_table(file_path, angles, intensities):
-        """Write two-column ASCII angular distribution table."""
-        return simtel_table_writer.write_ascii_angle_distribution_table(
-            file_path, angles, intensities
-        )
-
     def _get_parameters_for_sim_telarray(self, parameters, config_file_path):
         """
         Convert parameter dictionary to sim_telarray configuration file format.
