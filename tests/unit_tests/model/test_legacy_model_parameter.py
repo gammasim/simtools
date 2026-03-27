@@ -19,11 +19,11 @@ def test_register_update():
     """Test register_update decorator."""
 
     @register_update("test_parameter")
-    def test_handler(parameters, schema_version):
+    def test_handler(*_args, **_kwargs):
         return {"test": "value"}
 
     assert "test_parameter" in UPDATE_HANDLERS
-    assert UPDATE_HANDLERS["test_parameter"] == test_handler
+    assert UPDATE_HANDLERS["test_parameter"] is test_handler
 
     # Clean up
     del UPDATE_HANDLERS["test_parameter"]
@@ -205,65 +205,38 @@ def test_convert_column_data_to_row_data():
     }
 
 
-def test_update_fadc_pulse_shape_from_file_to_embedded_column_data(mocker):
-    """Test file-backed fadc_pulse_shape migration to 0.2.0 embedded row data."""
+@pytest.mark.parametrize("legacy_type", ["file", "string"])
+def test_update_fadc_pulse_shape_from_file_to_embedded_row_data(mocker, legacy_type):
+    """Test file-backed fadc_pulse_shape migration to embedded row data."""
+    expected_value = {
+        "columns": ["time", "amplitude"],
+        "rows": [[0.0, 0.1], [1.0, 0.2]],
+    }
     parameters = {
         "fadc_pulse_shape": {
             "parameter": "fadc_pulse_shape",
             "value": "pulse.dat",
             "model_parameter_schema_version": "0.1.0",
-            "type": "file",
+            "type": legacy_type,
             "file": True,
         }
     }
-    resolver = mocker.Mock(
-        return_value={
-            "columns": ["time", "amplitude"],
-            "rows": [[0.0, 0.1], [1.0, 0.2]],
-        }
-    )
+    resolver = mocker.Mock(return_value=expected_value)
 
     result = _update_fadc_pulse_shape(parameters, "0.2.0", value_resolver=resolver)
 
     resolver.assert_called_once_with("fadc_pulse_shape", "pulse.dat")
-    assert result["fadc_pulse_shape"]["value"] == {
-        "columns": ["time", "amplitude"],
-        "rows": [[0.0, 0.1], [1.0, 0.2]],
-    }
+    assert result["fadc_pulse_shape"]["value"] == expected_value
     assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
     assert result["fadc_pulse_shape"]["type"] == "dict"
     assert result["fadc_pulse_shape"]["file"] is False
 
 
-def test_update_fadc_pulse_shape_from_file_to_embedded_column_data_with_string_type(mocker):
-    """Test file-backed migration also accepts legacy entries with type string."""
-    parameters = {
-        "fadc_pulse_shape": {
-            "parameter": "fadc_pulse_shape",
-            "value": "pulse.dat",
-            "model_parameter_schema_version": "0.1.0",
-            "type": "string",
-            "file": True,
-        }
-    }
-    resolver = mocker.Mock(return_value={"columns": ["time", "amplitude"], "rows": [[0.0, 0.1]]})
-
-    result = _update_fadc_pulse_shape(parameters, "0.2.0", value_resolver=resolver)
-
-    resolver.assert_called_once_with("fadc_pulse_shape", "pulse.dat")
-    assert result["fadc_pulse_shape"]["value"] == {
-        "columns": ["time", "amplitude"],
-        "rows": [[0.0, 0.1]],
-    }
-    assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
-
-
-def test_update_fadc_pulse_shape_from_embedded_column_data():
-    """Test embedded {columns, data} fadc_pulse_shape is converted to {columns, rows} format."""
-    parameters = {
-        "fadc_pulse_shape": {
-            "parameter": "fadc_pulse_shape",
-            "value": {
+@pytest.mark.parametrize(
+    ("legacy_value", "expected_value"),
+    [
+        (
+            {
                 "columns": ["time", "amplitude", "amplitude (low gain)"],
                 "dtype": ["float64", "float64", "float64"],
                 "unit": ["ns", "dimensionless", "dimensionless"],
@@ -273,30 +246,29 @@ def test_update_fadc_pulse_shape_from_embedded_column_data():
                     "amplitude (low gain)": [0.01, 0.02],
                 },
             },
-            "model_parameter_schema_version": "0.2.0",
-            "type": "dict",
-            "file": False,
-        }
-    }
-
-    result = _update_fadc_pulse_shape(parameters, "0.2.0")
-
-    assert result["fadc_pulse_shape"]["value"] == {
-        "columns": ["time", "amplitude", "amplitude (low gain)"],
-        "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
-    }
-    assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
-
-
-def test_update_fadc_pulse_shape_from_embedded_row_data_passes_through():
-    """Test embedded {columns, rows} fadc_pulse_shape passes through unchanged."""
-    parameters = {
-        "fadc_pulse_shape": {
-            "parameter": "fadc_pulse_shape",
-            "value": {
+            {
                 "columns": ["time", "amplitude", "amplitude (low gain)"],
                 "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
             },
+        ),
+        (
+            {
+                "columns": ["time", "amplitude", "amplitude (low gain)"],
+                "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
+            },
+            {
+                "columns": ["time", "amplitude", "amplitude (low gain)"],
+                "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
+            },
+        ),
+    ],
+)
+def test_update_fadc_pulse_shape_embedded_formats(legacy_value, expected_value):
+    """Test embedded fadc_pulse_shape migration for legacy and canonical dict layouts."""
+    parameters = {
+        "fadc_pulse_shape": {
+            "parameter": "fadc_pulse_shape",
+            "value": legacy_value,
             "model_parameter_schema_version": "0.2.0",
             "type": "dict",
             "file": False,
@@ -305,10 +277,7 @@ def test_update_fadc_pulse_shape_from_embedded_row_data_passes_through():
 
     result = _update_fadc_pulse_shape(parameters, "0.2.0")
 
-    assert result["fadc_pulse_shape"]["value"] == {
-        "columns": ["time", "amplitude", "amplitude (low gain)"],
-        "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
-    }
+    assert result["fadc_pulse_shape"]["value"] == expected_value
     assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
 
 

@@ -352,11 +352,12 @@ class ModelParameter:
         representation.
         """
         with TemporaryDirectory() as temp_dir:
-            self.db.export_model_files(file_names=[value], dest=Path(temp_dir))
+            temp_path = Path(temp_dir)
+            self.db.export_model_files(file_names=[value], dest=temp_path)
             return simtel_table_reader.resolve_dict_parameter_value(
                 value,
                 parameter_name,
-                data_path=temp_dir,
+                data_path=temp_path,
             )
 
     @staticmethod

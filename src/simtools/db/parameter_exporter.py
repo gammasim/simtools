@@ -7,6 +7,43 @@ from simtools.simtel import simtel_table_reader
 ECSV_SUFFIX = ".ecsv"
 
 
+def _is_dict_table_value(parameter_info):
+    """Return True if a parameter stores embedded row-oriented table data."""
+    return parameter_info.get("type") == "dict" and isinstance(parameter_info.get("value"), dict)
+
+
+def _get_parameter_info(
+    db,
+    parameter,
+    site,
+    array_element_name,
+    parameter_version=None,
+    model_version=None,
+):
+    """Fetch single-parameter metadata dict from DB."""
+    parameters = db.get_model_parameter(
+        parameter,
+        site,
+        array_element_name,
+        parameter_version=parameter_version,
+        model_version=model_version,
+    )
+    return parameters, parameters[parameter]
+
+
+def _normalize_file_names(file_names=None, parameters=None):
+    """Normalize file_names input or derive it from parameter metadata."""
+    if file_names:
+        return [file_names] if not isinstance(file_names, list) else file_names
+    if parameters:
+        return [
+            info["value"]
+            for info in parameters.values()
+            if info and info.get("file") and info["value"] is not None
+        ]
+    return []
+
+
 def write_file_from_db_to_disk(db, db_name, path, file):
     """Extract a file from MongoDB and write it to disk."""
     db.mongo_db_handler.write_file_from_db_to_disk(db_name, path, file)
@@ -15,15 +52,7 @@ def write_file_from_db_to_disk(db, db_name, path, file):
 def export_model_files(db, parameters=None, file_names=None, dest=None, db_name=None):
     """Export model files from DB to the given directory."""
     db_name = db_name or db.db_name
-
-    if file_names:
-        file_names = [file_names] if not isinstance(file_names, list) else file_names
-    elif parameters:
-        file_names = [
-            info["value"]
-            for info in parameters.values()
-            if info and info.get("file") and info["value"] is not None
-        ]
+    file_names = _normalize_file_names(file_names=file_names, parameters=parameters)
 
     instance_ids = {}
     for file_name in file_names:
@@ -46,16 +75,16 @@ def export_single_model_file(
     export_file_as_table=False,
 ):
     """Export a single model file from DB identified by a parameter name."""
-    parameters = db.get_model_parameter(
-        parameter,
-        site,
-        array_element_name,
+    parameters, par_info = _get_parameter_info(
+        db=db,
+        parameter=parameter,
+        site=site,
+        array_element_name=array_element_name,
         parameter_version=parameter_version,
         model_version=model_version,
     )
-    par_info = parameters[parameter]
 
-    if par_info.get("type") == "dict" and isinstance(par_info.get("value"), dict):
+    if _is_dict_table_value(par_info):
         if export_file_as_table:
             return simtel_table_reader.row_data_to_astropy_table(par_info["value"])
         return None
@@ -119,16 +148,16 @@ def export_parameter_data(
     if not (export_model_file or export_model_file_as_table):
         return []
 
-    pars = db.get_model_parameter(
+    _, par_info = _get_parameter_info(
+        db=db,
         parameter=parameter,
         site=site,
         array_element_name=array_element_name,
         parameter_version=parameter_version,
         model_version=model_version,
     )
-    par_info = pars[parameter]
 
-    if par_info.get("type") == "dict" and isinstance(par_info.get("value"), dict):
+    if _is_dict_table_value(par_info):
         if output_file is None:
             raise ValueError(
                 "Use --output_file when exporting dict-typed parameters with "

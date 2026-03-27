@@ -17,6 +17,14 @@ logger = logging.getLogger(__name__)
 UPDATE_HANDLERS = {}
 
 
+def _log_schema_update(parameter_name, from_schema_version, to_schema_version):
+    """Log schema migration for a legacy model parameter."""
+    logger.info(
+        f"Updating legacy model parameter {parameter_name} from schema version "
+        f"{from_schema_version} to {to_schema_version}"
+    )
+
+
 def register_update(name):
     """Register update handler for legacy model parameter."""
 
@@ -131,13 +139,15 @@ def _update_file_backed_table_parameter(
 
 
 @register_update("dsum_threshold")
-def _update_dsum_threshold(parameters, schema_version, **_):
+def _update_dsum_threshold(parameters, schema_version, value_resolver=None):
     """Update legacy dsum_threshold parameter."""
+    _ = value_resolver
     para_data = parameters["dsum_threshold"]
     if para_data["model_parameter_schema_version"] == "0.1.0" and schema_version == "0.2.0":
-        logger.info(
-            "Updating legacy model parameter dsum_threshold from schema version "
-            f"{para_data['model_parameter_schema_version']} to {schema_version}"
+        _log_schema_update(
+            para_data["parameter"],
+            para_data["model_parameter_schema_version"],
+            schema_version,
         )
         return {
             para_data["parameter"]: {
@@ -157,13 +167,15 @@ def _update_corsika_starting_grammage(parameters, schema_version, value_resolver
 
 
 @register_update("flasher_pulse_shape")
-def _update_flasher_pulse_shape(parameters, schema_version, **_):
+def _update_flasher_pulse_shape(parameters, schema_version, value_resolver=None):
     """Update legacy flasher_pulse_shape parameter."""
+    _ = value_resolver
     para_data = parameters["flasher_pulse_shape"]
     if para_data["model_parameter_schema_version"] == "0.1.0" and schema_version == "0.2.0":
-        logger.info(
-            f"Updating legacy model parameter flasher_pulse_shape from schema version "
-            f"{para_data['model_parameter_schema_version']} to {schema_version}"
+        _log_schema_update(
+            para_data["parameter"],
+            para_data["model_parameter_schema_version"],
+            schema_version,
         )
         return {
             para_data["parameter"]: {
@@ -189,13 +201,11 @@ def _update_fadc_pulse_shape(parameters, schema_version, value_resolver=None):
     para_data = parameters["fadc_pulse_shape"]
     current_schema_version = para_data["model_parameter_schema_version"]
     value = para_data.get("value")
+    parameter_name = para_data["parameter"]
 
     # Generic migration for legacy file-backed payloads.
     if para_data.get("file") and isinstance(value, str):
-        logger.info(
-            "Updating legacy model parameter fadc_pulse_shape from schema version "
-            f"{current_schema_version} to {schema_version}"
-        )
+        _log_schema_update(parameter_name, current_schema_version, schema_version)
         return _update_file_backed_table_parameter(
             "fadc_pulse_shape",
             parameters,
@@ -210,10 +220,7 @@ def _update_fadc_pulse_shape(parameters, schema_version, value_resolver=None):
         and "columns" in value
         and "data" in value
     ):
-        logger.info(
-            "Updating legacy model parameter fadc_pulse_shape from schema version "
-            f"{current_schema_version} to {schema_version}"
-        )
+        _log_schema_update(parameter_name, current_schema_version, schema_version)
         return {
             para_data["parameter"]: {
                 "value": _convert_column_data_to_row_data(value),
@@ -228,10 +235,7 @@ def _update_fadc_pulse_shape(parameters, schema_version, value_resolver=None):
         and "columns" in value
         and "rows" in value
     ):
-        logger.info(
-            "Updating legacy model parameter fadc_pulse_shape from schema version "
-            f"{current_schema_version} to {schema_version}"
-        )
+        _log_schema_update(parameter_name, current_schema_version, schema_version)
         return {
             para_data["parameter"]: {
                 "value": value,
