@@ -9,7 +9,7 @@ applications:
     energy_range: 150 GeV 400 GeV
     label: test
     log_level: DEBUG
-    model_version: 6.0.2
+    model_version: 7.0.0
     nshow: 5
     output_path: simtools-output
     pack_for_grid_register: simtools-grid-output
