@@ -308,6 +308,39 @@ def read_simtel_table_as_row_data(parameter_name, file_path):
     }
 
 
+def row_data_to_astropy_table(row_data):
+    """
+    Convert a row-oriented parameter value dict to an astropy Table.
+
+    Accepts dicts in the ``{columns, rows}`` format produced by
+    :func:`read_simtel_table_as_row_data` and stored as embedded ``dict``-typed
+    model parameter values in the database.
+
+    Parameters
+    ----------
+    row_data : dict
+        Dictionary with keys ``"columns"`` (list of str) and ``"rows"``
+        (list of lists of numbers).
+
+    Returns
+    -------
+    astropy.table.Table
+        Table with one column per entry in ``row_data["columns"]``.
+
+    Raises
+    ------
+    ValueError
+        If ``row_data`` does not contain the expected ``"columns"`` and
+        ``"rows"`` keys.
+    """
+    try:
+        columns = row_data["columns"]
+        rows = row_data["rows"]
+    except (KeyError, TypeError) as exc:
+        raise ValueError("row_data must be a dict with 'columns' and 'rows' keys.") from exc
+    return Table(rows=rows, names=columns)
+
+
 def _resolve_input_file_path(file_name, data_path=None):
     """Resolve an input file using data_path for relative paths."""
     file_name = Path(file_name)

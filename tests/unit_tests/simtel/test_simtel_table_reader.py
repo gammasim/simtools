@@ -158,6 +158,29 @@ def test_resolve_dict_parameter_value_from_file_path(tmp_test_directory):
     assert result == {"columns": ["time"]}
 
 
+def test_row_data_to_astropy_table_returns_correct_table():
+    row_data = {
+        "columns": ["time", "amplitude"],
+        "rows": [[0.0, 0.0], [0.5, 0.12], [1.0, 0.48]],
+    }
+    table = simtel_table_reader.row_data_to_astropy_table(row_data)
+
+    assert list(table.colnames) == ["time", "amplitude"]
+    assert len(table) == 3
+    assert table["time"][1] == pytest.approx(0.5)
+    assert table["amplitude"][2] == pytest.approx(0.48)
+
+
+def test_row_data_to_astropy_table_raises_on_missing_keys():
+    with pytest.raises(ValueError, match="'columns' and 'rows'"):
+        simtel_table_reader.row_data_to_astropy_table({"columns": ["time"]})
+
+
+def test_row_data_to_astropy_table_raises_on_wrong_type():
+    with pytest.raises(ValueError, match="'columns' and 'rows'"):
+        simtel_table_reader.row_data_to_astropy_table("not a dict")
+
+
 def test_data_simple_columns():
     columns = [
         "pm_photoelectron_spectrum",
