@@ -50,7 +50,7 @@ def mock_get_collection_name(mocker):
 @pytest.fixture
 def mock_read_simtel_table(mocker):
     return mocker.patch(
-        "simtools.db.db_handler.simtel_table_reader.read_simtel_table",
+        "simtools.db.parameter_exporter.simtel_table_reader.read_simtel_table",
         return_value="test_table",
     )
 
@@ -74,7 +74,7 @@ def export_files_setup(db, mocker):
     mock_get_file_mongo_db = mocker.patch.object(
         db.mongo_db_handler, "get_file_from_db", return_value=mocker.Mock(_id="file_id")
     )
-    mock_write_file = mocker.patch.object(db, "_write_file_from_db_to_disk")
+    mock_write_file = mocker.patch.object(db, "write_file_from_db_to_disk")
     return {"get_file_mongo_db": mock_get_file_mongo_db, "write_file": mock_write_file}
 
 
@@ -502,7 +502,7 @@ def test_export_model_files_with_parameters(
 def test_export_model_files_file_exists(db, mocker, tmp_test_directory, test_db, test_file):
     """Test export_model_files method when file already exists."""
     mock_get_file_mongo_db = mocker.patch.object(db.mongo_db_handler, "get_file_from_db")
-    mock_write_file = mocker.patch.object(db, "_write_file_from_db_to_disk")
+    mock_write_file = mocker.patch.object(db, "write_file_from_db_to_disk")
     mock_path_exists = mocker.patch("pathlib.Path.exists", return_value=True)
 
     file_names = [test_file]
@@ -519,7 +519,7 @@ def test_export_model_files_file_not_found(db, mocker, tmp_test_directory, test_
     mock_get_file_mongo_db = mocker.patch.object(
         db.mongo_db_handler, "get_file_from_db", side_effect=FileNotFoundError
     )
-    mock_write_file = mocker.patch.object(db, "_write_file_from_db_to_disk")
+    mock_write_file = mocker.patch.object(db, "write_file_from_db_to_disk")
 
     parameters = {"param1": {"file": True, "value": test_file}}
 
@@ -1274,7 +1274,7 @@ def test_write_file_from_db_to_disk_delegation(db, mocker, tmp_test_directory):
     """Test _write_file_from_db_to_disk delegates to mongo_db_handler."""
     mock_write = mocker.patch.object(db.mongo_db_handler, "write_file_from_db_to_disk")
     mock_file = mocker.Mock()
-    db._write_file_from_db_to_disk("test_db", tmp_test_directory, mock_file)
+    db.write_file_from_db_to_disk("test_db", tmp_test_directory, mock_file)
     mock_write.assert_called_once_with("test_db", tmp_test_directory, mock_file)
 
 
