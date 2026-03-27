@@ -155,6 +155,21 @@ def main():
 
     db = db_handler.DatabaseHandler()
 
+    if app_context.args["export_model_file"] or app_context.args["export_model_file_as_table"]:
+        output_files = db.export_parameter_data(
+            parameter=app_context.args["parameter"],
+            site=app_context.args["site"],
+            array_element_name=app_context.args.get("telescope"),
+            parameter_version=app_context.args.get("parameter_version"),
+            model_version=app_context.args.get("model_version"),
+            output_file=app_context.args.get("output_file"),
+            export_model_file=app_context.args["export_model_file"],
+            export_model_file_as_table=app_context.args["export_model_file_as_table"],
+        )
+        for output_file in output_files:
+            app_context.logger.info(f"Exported parameter output to {output_file}")
+        return
+
     pars = db.get_model_parameter(
         parameter=app_context.args["parameter"],
         site=app_context.args["site"],
@@ -162,57 +177,6 @@ def main():
         parameter_version=app_context.args.get("parameter_version"),
         model_version=app_context.args.get("model_version"),
     )
-
-    if app_context.args["export_model_file_as_table"] and not app_context.args["export_model_file"]:
-        raise ValueError("Use --export_model_file together with --export_model_file_as_table.")
-
-    if app_context.args["export_model_file"] or app_context.args["export_model_file_as_table"]:
-        par_info = pars[app_context.args["parameter"]]
-        if par_info.get("type") == "dict" and isinstance(par_info.get("value"), dict):
-            if app_context.args["output_file"] is None:
-                raise ValueError(
-                    "Use --output_file when exporting dict-typed parameters with "
-                    "--export_model_file or --export_model_file_as_table."
-                )
-
-            table = db.export_model_file(
-                parameter=app_context.args["parameter"],
-                site=app_context.args["site"],
-                array_element_name=app_context.args.get("telescope"),
-                parameter_version=app_context.args.get("parameter_version"),
-                model_version=app_context.args.get("model_version"),
-                export_file_as_table=True,
-            )
-            table_file = app_context.io_handler.get_output_file(
-                app_context.args["output_file"]
-            ).with_suffix(".ecsv")
-            table.write(table_file, format="ascii.ecsv", overwrite=True)
-            app_context.logger.info(f"Exported table to {table_file}")
-            return
-
-        if app_context.args["output_file"] is not None:
-            raise ValueError(
-                "Do not use --output_file when exporting file-backed parameters with "
-                "--export_model_file. The original database file name is used."
-            )
-
-        table = db.export_model_file(
-            parameter=app_context.args["parameter"],
-            site=app_context.args["site"],
-            array_element_name=app_context.args["telescope"],
-            parameter_version=app_context.args.get("parameter_version"),
-            model_version=app_context.args.get("model_version"),
-            export_file_as_table=app_context.args["export_model_file_as_table"],
-        )
-        param_value = pars[app_context.args["parameter"]]["value"]
-        table_file = app_context.io_handler.get_output_file(param_value)
-        app_context.logger.info(f"Exported model file {param_value} to {table_file}")
-        if table and table_file.suffix != ".ecsv":
-            table.write(table_file.with_suffix(".ecsv"), format="ascii.ecsv", overwrite=True)
-            app_context.logger.info(
-                f"Exported model file {param_value} to {table_file.with_suffix('.ecsv')}"
-            )
-        return
 
     if app_context.args["output_file"] is not None:
         pars[app_context.args["parameter"]].pop("_id")
