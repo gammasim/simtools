@@ -532,14 +532,17 @@ class SimulatorLightEmission(SimtelRunner):
     def _generate_lambertian_angular_distribution_table(self):
         """Generate Lambertian angular distribution table via config writer and return path.
 
-        Uses a pure cosine profile normalized to 1 at 0 deg and spans 0..90 deg by default.
+        Uses a pure cosine profile normalized to 1 at 0 deg and spans 0..max_angle_deg.
         """
         tel = self._sanitize_name(self.light_emission_config.get("telescope") or "telescope")
         cal = self._sanitize_name(self.light_emission_config.get("light_source") or "calibration")
         fname = f"flasher_angular_distribution_{tel}_{cal}.dat"
+        max_angle_deg = self.calibration_model.get_parameter_value(
+            "flasher_angular_distribution_width"
+        )
         return SimtelConfigWriter.write_angular_distribution_table_lambertian(
             file_path=self.io_handler.get_output_directory("light_emission") / fname,
-            max_angle_deg=90.0,
+            max_angle_deg=max_angle_deg,
             n_samples=100,
         )
 
