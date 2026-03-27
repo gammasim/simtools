@@ -49,7 +49,7 @@ def apply_legacy_updates_to_parameters(parameters, legacy_updates):
             parameters.pop(par_name)
 
 
-def update_parameter(par_name, parameters, schema_version):
+def update_parameter(par_name, parameters, schema_version, value_resolver=None):
     """Update legacy model parameters to recent formats.
 
     Parameters
@@ -60,6 +60,11 @@ def update_parameter(par_name, parameters, schema_version):
         Dictionary of model parameters (all parameters).
     schema_version: str
         Target schema version.
+    value_resolver: callable, optional
+        Callback used by handlers that need to normalize a stored legacy value
+        before it can be embedded in the updated parameter. The callback must
+        accept ``(parameter_name, value)`` and return the canonical in-memory
+        representation for that parameter value.
 
     Returns
     -------
@@ -69,11 +74,95 @@ def update_parameter(par_name, parameters, schema_version):
     handler = UPDATE_HANDLERS.get(par_name)
     if handler is None:
         raise ValueError(_get_unsupported_update_message(parameters[par_name], schema_version))
-    return handler(parameters, schema_version)
+    return handler(parameters, schema_version, value_resolver=value_resolver)
+
+
+def _convert_column_data_to_row_data(value):
+    """Convert a column-oriented dict value to row-oriented table data."""
+    columns = value.get("columns")
+    data = value.get("data")
+
+    if not isinstance(columns, list) or not isinstance(data, dict):
+        raise ValueError("Legacy embedded table data must contain 'columns' list and 'data' dict.")
+
+    column_values = []
+    for column in columns:
+        values = data.get(column)
+        if not isinstance(values, list):
+            raise ValueError(f"Missing or invalid legacy data column '{column}'.")
+        column_values.append(values)
+
+    expected_length = len(column_values[0]) if column_values else 0
+    if any(len(values) != expected_length for values in column_values):
+        raise ValueError("Legacy embedded table data columns must all have the same length.")
+
+    return {
+        "columns": columns,
+        "rows": [list(row) for row in zip(*column_values, strict=False)],
+    }
+
+
+def _convert_row_data_to_column_data(value):
+    """Convert a row-oriented dict value to column-oriented table data."""
+    columns = value.get("columns")
+    rows = value.get("rows")
+
+    if not isinstance(columns, list) or not isinstance(rows, list):
+        raise ValueError("Embedded row data must contain 'columns' list and 'rows' list.")
+
+    if rows and any(not isinstance(row, list) for row in rows):
+        raise ValueError("Embedded row data must contain a list of row lists.")
+
+    transposed = list(zip(*rows, strict=False)) if rows else [[] for _ in columns]
+    data = {column: list(values) for column, values in zip(columns, transposed, strict=False)}
+
+    # fadc pulse-shape schemas define float64 and the following units for all allowed columns.
+    units_by_column = {
+        "time": "ns",
+        "amplitude": "dimensionless",
+        "amplitude (low gain)": "dimensionless",
+    }
+
+    return {
+        "columns": columns,
+        "dtype": ["float64"] * len(columns),
+        "unit": [units_by_column.get(column, "dimensionless") for column in columns],
+        "data": data,
+    }
+
+
+def _update_file_backed_table_parameter(
+    parameter_name,
+    parameters,
+    schema_version,
+    value_resolver=None,
+):
+    """Update a legacy file-backed table parameter to embedded row data.
+
+    The ``value_resolver`` callback is expected to convert the stored legacy
+    value, typically a file name for a GridFS-backed table, into the canonical
+    embedded ``{"columns", "rows"}`` representation used in memory.
+    """
+    para_data = parameters[parameter_name]
+    if value_resolver is None:
+        raise ValueError(
+            f"A value_resolver is required to update legacy file-backed parameter {parameter_name}."
+        )
+
+    return {
+        para_data["parameter"]: {
+            "value": _convert_row_data_to_column_data(
+                value_resolver(parameter_name, para_data["value"])
+            ),
+            "model_parameter_schema_version": schema_version,
+            "type": "dict",
+            "file": False,
+        }
+    }
 
 
 @register_update("dsum_threshold")
-def _update_dsum_threshold(parameters, schema_version):
+def _update_dsum_threshold(parameters, schema_version, **_):
     """Update legacy dsum_threshold parameter."""
     para_data = parameters["dsum_threshold"]
     if para_data["model_parameter_schema_version"] == "0.1.0" and schema_version == "0.2.0":
@@ -91,7 +180,7 @@ def _update_dsum_threshold(parameters, schema_version):
 
 
 @register_update("corsika_starting_grammage")
-def _update_corsika_starting_grammage(parameters, schema_version):  # pylint: disable=unused-argument
+def _update_corsika_starting_grammage(parameters, schema_version, value_resolver=None):  # pylint: disable=unused-argument
     """Update legacy corsika_starting_grammage parameter (dummy function until model is updated)."""
     return {
         parameters["corsika_starting_grammage"]["parameter"]: None,
@@ -99,7 +188,7 @@ def _update_corsika_starting_grammage(parameters, schema_version):  # pylint: di
 
 
 @register_update("flasher_pulse_shape")
-def _update_flasher_pulse_shape(parameters, schema_version):
+def _update_flasher_pulse_shape(parameters, schema_version, **_):
     """Update legacy flasher_pulse_shape parameter."""
     para_data = parameters["flasher_pulse_shape"]
     if para_data["model_parameter_schema_version"] == "0.1.0" and schema_version == "0.2.0":
@@ -120,6 +209,65 @@ def _update_flasher_pulse_shape(parameters, schema_version):
             },
             "flasher_pulse_width": {"remove_parameter": True},
             "flasher_pulse_exp_decay": {"remove_parameter": True},
+        }
+
+    raise ValueError(_get_unsupported_update_message(para_data, schema_version))
+
+
+@register_update("fadc_pulse_shape")
+def _update_fadc_pulse_shape(parameters, schema_version, value_resolver=None):
+    """Update legacy fadc_pulse_shape parameter."""
+    para_data = parameters["fadc_pulse_shape"]
+    current_schema_version = para_data["model_parameter_schema_version"]
+    value = para_data.get("value")
+
+    # Generic migration for legacy file-backed payloads.
+    if para_data.get("file") and isinstance(value, str):
+        logger.info(
+            "Updating legacy model parameter fadc_pulse_shape from schema version "
+            f"{current_schema_version} to {schema_version}"
+        )
+        return _update_file_backed_table_parameter(
+            "fadc_pulse_shape",
+            parameters,
+            schema_version,
+            value_resolver=value_resolver,
+        )
+
+    # Dict values in 0.2.0 column-oriented representation: {columns, dtype, unit, data}.
+    if (
+        para_data.get("type") == "dict"
+        and isinstance(value, dict)
+        and "columns" in value
+        and "data" in value
+    ):
+        logger.info(
+            "Updating legacy model parameter fadc_pulse_shape from schema version "
+            f"{current_schema_version} to {schema_version}"
+        )
+        return {
+            para_data["parameter"]: {
+                "value": value,
+                "model_parameter_schema_version": schema_version,
+            }
+        }
+
+    # Backward compatibility for transitional row-oriented dict values.
+    if (
+        para_data.get("type") == "dict"
+        and isinstance(value, dict)
+        and "columns" in value
+        and "rows" in value
+    ):
+        logger.info(
+            "Updating legacy model parameter fadc_pulse_shape from schema version "
+            f"{current_schema_version} to {schema_version}"
+        )
+        return {
+            para_data["parameter"]: {
+                "value": _convert_row_data_to_column_data(value),
+                "model_parameter_schema_version": schema_version,
+            }
         }
 
     raise ValueError(_get_unsupported_update_message(para_data, schema_version))

@@ -4,8 +4,11 @@ import pytest
 
 from simtools.model.legacy_model_parameter import (
     UPDATE_HANDLERS,
+    _convert_column_data_to_row_data,
+    _convert_row_data_to_column_data,
     _get_unsupported_update_message,
     _update_dsum_threshold,
+    _update_fadc_pulse_shape,
     _update_flasher_pulse_shape,
     apply_legacy_updates_to_parameters,
     register_update,
@@ -182,3 +185,196 @@ def test_update_parameter_returns_handler_result():
     assert "flasher_pulse_shape" in result
     assert result["flasher_pulse_shape"]["value"] == ["gaussian", 5.0, 10.0]
     assert result["flasher_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
+
+
+def test_convert_column_data_to_row_data():
+    """Test conversion from column-oriented legacy data to row-oriented data."""
+    row_data = _convert_column_data_to_row_data(
+        {
+            "columns": ["time", "amplitude", "amplitude (low gain)"],
+            "data": {
+                "time": [0.0, 1.0],
+                "amplitude": [0.1, 0.2],
+                "amplitude (low gain)": [0.01, 0.02],
+            },
+        }
+    )
+
+    assert row_data == {
+        "columns": ["time", "amplitude", "amplitude (low gain)"],
+        "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
+    }
+
+
+def test_convert_row_data_to_column_data():
+    """Test conversion from row-oriented data to column-oriented embedded data."""
+    column_data = _convert_row_data_to_column_data(
+        {
+            "columns": ["time", "amplitude", "amplitude (low gain)"],
+            "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
+        }
+    )
+
+    assert column_data == {
+        "columns": ["time", "amplitude", "amplitude (low gain)"],
+        "dtype": ["float64", "float64", "float64"],
+        "unit": ["ns", "dimensionless", "dimensionless"],
+        "data": {
+            "time": [0.0, 1.0],
+            "amplitude": [0.1, 0.2],
+            "amplitude (low gain)": [0.01, 0.02],
+        },
+    }
+
+
+def test_update_fadc_pulse_shape_from_file_to_embedded_column_data(mocker):
+    """Test file-backed fadc_pulse_shape migration to 0.2.0 embedded dict data."""
+    parameters = {
+        "fadc_pulse_shape": {
+            "parameter": "fadc_pulse_shape",
+            "value": "pulse.dat",
+            "model_parameter_schema_version": "0.1.0",
+            "type": "file",
+            "file": True,
+        }
+    }
+    resolver = mocker.Mock(
+        return_value={
+            "columns": ["time", "amplitude"],
+            "rows": [[0.0, 0.1], [1.0, 0.2]],
+        }
+    )
+
+    result = _update_fadc_pulse_shape(parameters, "0.2.0", value_resolver=resolver)
+
+    resolver.assert_called_once_with("fadc_pulse_shape", "pulse.dat")
+    assert result["fadc_pulse_shape"]["value"] == {
+        "columns": ["time", "amplitude"],
+        "dtype": ["float64", "float64"],
+        "unit": ["ns", "dimensionless"],
+        "data": {
+            "time": [0.0, 1.0],
+            "amplitude": [0.1, 0.2],
+        },
+    }
+    assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
+    assert result["fadc_pulse_shape"]["type"] == "dict"
+    assert result["fadc_pulse_shape"]["file"] is False
+
+
+def test_update_fadc_pulse_shape_from_file_to_embedded_column_data_with_string_type(mocker):
+    """Test file-backed migration also accepts legacy entries with type string."""
+    parameters = {
+        "fadc_pulse_shape": {
+            "parameter": "fadc_pulse_shape",
+            "value": "pulse.dat",
+            "model_parameter_schema_version": "0.1.0",
+            "type": "string",
+            "file": True,
+        }
+    }
+    resolver = mocker.Mock(return_value={"columns": ["time", "amplitude"], "rows": [[0.0, 0.1]]})
+
+    result = _update_fadc_pulse_shape(parameters, "0.2.0", value_resolver=resolver)
+
+    resolver.assert_called_once_with("fadc_pulse_shape", "pulse.dat")
+    assert result["fadc_pulse_shape"]["value"] == {
+        "columns": ["time", "amplitude"],
+        "dtype": ["float64", "float64"],
+        "unit": ["ns", "dimensionless"],
+        "data": {
+            "time": [0.0],
+            "amplitude": [0.1],
+        },
+    }
+    assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
+
+
+def test_update_fadc_pulse_shape_from_embedded_column_data():
+    """Test embedded fadc_pulse_shape column data remains in 0.2.0 format."""
+    parameters = {
+        "fadc_pulse_shape": {
+            "parameter": "fadc_pulse_shape",
+            "value": {
+                "columns": ["time", "amplitude", "amplitude (low gain)"],
+                "dtype": ["float64", "float64", "float64"],
+                "unit": ["ns", "dimensionless", "dimensionless"],
+                "data": {
+                    "time": [0.0, 1.0],
+                    "amplitude": [0.1, 0.2],
+                    "amplitude (low gain)": [0.01, 0.02],
+                },
+            },
+            "model_parameter_schema_version": "0.2.0",
+            "type": "dict",
+            "file": False,
+        }
+    }
+
+    result = _update_fadc_pulse_shape(parameters, "0.2.0")
+
+    assert result["fadc_pulse_shape"]["value"] == {
+        "columns": ["time", "amplitude", "amplitude (low gain)"],
+        "dtype": ["float64", "float64", "float64"],
+        "unit": ["ns", "dimensionless", "dimensionless"],
+        "data": {
+            "time": [0.0, 1.0],
+            "amplitude": [0.1, 0.2],
+            "amplitude (low gain)": [0.01, 0.02],
+        },
+    }
+    assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
+
+
+def test_update_fadc_pulse_shape_from_embedded_row_data_to_column_data():
+    """Test transitional row-oriented dict migration to 0.2.0 column-oriented format."""
+    parameters = {
+        "fadc_pulse_shape": {
+            "parameter": "fadc_pulse_shape",
+            "value": {
+                "columns": ["time", "amplitude", "amplitude (low gain)"],
+                "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
+            },
+            "model_parameter_schema_version": "0.3.0",
+            "type": "dict",
+            "file": False,
+        }
+    }
+
+    result = _update_fadc_pulse_shape(parameters, "0.2.0")
+
+    assert result["fadc_pulse_shape"]["value"] == {
+        "columns": ["time", "amplitude", "amplitude (low gain)"],
+        "dtype": ["float64", "float64", "float64"],
+        "unit": ["ns", "dimensionless", "dimensionless"],
+        "data": {
+            "time": [0.0, 1.0],
+            "amplitude": [0.1, 0.2],
+            "amplitude (low gain)": [0.01, 0.02],
+        },
+    }
+    assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
+
+
+def test_update_parameter_passes_value_resolver(mocker):
+    """Test update_parameter forwards the optional value_resolver to the handler."""
+    parameters = {
+        "fadc_pulse_shape": {
+            "parameter": "fadc_pulse_shape",
+            "value": "pulse.dat",
+            "model_parameter_schema_version": "0.1.0",
+            "type": "file",
+            "file": True,
+        }
+    }
+    resolver = mocker.Mock(return_value={"columns": ["time", "amplitude"], "rows": [[0.0, 0.1]]})
+
+    result = update_parameter(
+        "fadc_pulse_shape",
+        parameters,
+        "0.2.0",
+        value_resolver=resolver,
+    )
+
+    resolver.assert_called_once_with("fadc_pulse_shape", "pulse.dat")
+    assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"

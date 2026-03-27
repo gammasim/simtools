@@ -614,5 +614,10 @@ def test_check_model_parameter_versions_triggers_legacy_update(mocker):
     _check_model_parameter_versions(parameters, ignore_software_version=False)
 
     # Legacy update triggered because schema version mismatch (0.9.0 != 1.0.0)
-    mock_update.assert_called_once_with("num_gains", parameters, "1.0.0")
+    mock_update.assert_called_once_with(
+        "num_gains",
+        parameters,
+        "1.0.0",
+        value_resolver=None,
+    )
     mock_apply.assert_called_once_with(parameters, {"num_gains": {"value": 99}})
