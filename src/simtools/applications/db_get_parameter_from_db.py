@@ -3,10 +3,20 @@
 r"""
     Get a parameter entry from DB for a specific telescope or a site.
 
-    The application receives a parameter name, a site, a telescope (if applicable) and
-    a version. Allow to print the parameter entry to screen or save it to a file.
-    Parameter describing a table file can be written to disk or exported as an astropy table
-    (if available).
+    The application receives a parameter name, a site, a telescope (if applicable), and
+    a version. It supports three output modes:
+
+    1. Print the database entry to stdout.
+    2. Write the database entry to a JSON or YAML file using output_file.
+    3. Export the parameter payload using export_model_file.
+
+    The export_model_file mode is type-dependent:
+
+    - File-backed parameters are exported with their original file name from the database.
+    - Dict-backed table parameters are exported as ECSV, using output_file as the base name.
+
+    For file-backed parameters, export_model_file_as_table can be added to also write an
+    ECSV representation next to the exported file.
 
     Command line arguments
     ----------------------
@@ -26,13 +36,16 @@ r"""
         Telescope model name (e.g. LST-1, SST-D, ...)
 
     output_file (str, optional)
-        Output file name. If not given, print to stdout.
+        Output file name for writing the database entry, or base file name for
+        exporting dict-backed tables as ECSV.
 
     export_model_file (bool, optional)
-        Export model file (if parameter describes a file).
+        Export parameter data. File-backed parameters are written as model files.
+        Embedded dict-typed table parameters are written as ECSV using output_file.
 
     export_model_file_as_table (bool, optional)
-        Export model file as astropy table (if parameter describes a file).
+        Export file-backed parameters as astropy tables in addition to the
+        original file export. Use together with export_model_file.
 
     Raises
     ------
@@ -40,7 +53,7 @@ r"""
 
     Example
     -------
-    Get the mirror_list parameter used for a given model_version from the DB.
+    Print the mirror_list parameter entry used for a given model_version.
 
     .. code-block:: console
 
@@ -48,8 +61,16 @@ r"""
                 --site North --telescope LSTN-01 \\
                 --model_version 5.0.0
 
-    Get the mirror_list parameter using the parameter_version from the DB.
-    Write the mirror list to disk.
+    Write the database entry for a parameter to a JSON file.
+
+    .. code-block:: console
+
+        simtools-db-get-parameter-from-db --parameter array_element_position_ground \\
+                --site North --telescope LSTN-01 \\
+                --parameter_version 6.0.0 \\
+                --output_file array_element_position_ground.json
+
+    Export a file-backed parameter using the original file name stored in the database.
 
     .. code-block:: console
 
@@ -57,6 +78,24 @@ r"""
                 --site North --telescope LSTN-01 \\
                 --parameter_version 1.0.0 \\
                 --export_model_file
+
+    Export a file-backed parameter and also write an ECSV table representation.
+
+    .. code-block:: console
+
+        simtools-db-get-parameter-from-db --parameter mirror_reflectivity \\
+                --site North --telescope LSTN-01 \\
+                --model_version 6.0.2 \\
+                --export_model_file --export_model_file_as_table
+
+    Export a dict-backed table parameter as ECSV. The .ecsv suffix is added automatically.
+
+    .. code-block:: console
+
+        simtools-db-get-parameter-from-db --parameter fadc_pulse_shape \\
+                --site North --telescope LSTN-01 \\
+                --parameter_version 2.0.0 \\
+                --export_model_file --output_file fadc_pulse_shape
 
 """
 
@@ -72,33 +111,39 @@ def _parse():
     """Parse command line configuration."""
     config = configurator.Configurator(
         label=get_application_label(__file__),
-        description=(
-            "Get a parameter entry from DB for a specific telescope or a site. "
-            "The application receives a parameter name, a site, a telescope (if applicable), "
-            "and a version. It then prints out the parameter entry. "
-        ),
+        description=("Export a parameter entry from model parameter database."),
     )
 
     config.parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
     config.parser.add_argument(
         "--output_file",
-        help="output file name (if not given: print to stdout)",
+        help=(
+            "Output file name for writing the DB entry, or base name for ECSV export of "
+            "dict-backed tables."
+        ),
         type=str,
         required=False,
     )
     config.parser.add_argument(
         "--export_model_file",
-        help="Export model file (if parameter describes a file)",
+        help=(
+            "Export parameter data. File-backed parameters are written as files; "
+            "embedded dict-typed table parameters are written as ECSV using --output_file."
+        ),
         action="store_true",
         required=False,
     )
     config.parser.add_argument(
         "--export_model_file_as_table",
-        help="Export model file as astropy table (if parameter describes a file)",
+        help=(
+            "Also export file-backed parameters as ECSV. Use together with "
+            "--export_model_file. "
+            "(legacy option; as file-backed parameters will be replaced by table-backed ones, "
+            "this option will be removed in the future)"
+        ),
         action="store_true",
         required=False,
     )
-
     return config.initialize(
         db_config=True, simulation_model=["telescope", "parameter_version", "model_version"]
     )
@@ -117,7 +162,40 @@ def main():
         parameter_version=app_context.args.get("parameter_version"),
         model_version=app_context.args.get("model_version"),
     )
+
+    if app_context.args["export_model_file_as_table"] and not app_context.args["export_model_file"]:
+        raise ValueError("Use --export_model_file together with --export_model_file_as_table.")
+
     if app_context.args["export_model_file"] or app_context.args["export_model_file_as_table"]:
+        par_info = pars[app_context.args["parameter"]]
+        if par_info.get("type") == "dict" and isinstance(par_info.get("value"), dict):
+            if app_context.args["output_file"] is None:
+                raise ValueError(
+                    "Use --output_file when exporting dict-typed parameters with "
+                    "--export_model_file or --export_model_file_as_table."
+                )
+
+            table = db.export_model_file(
+                parameter=app_context.args["parameter"],
+                site=app_context.args["site"],
+                array_element_name=app_context.args.get("telescope"),
+                parameter_version=app_context.args.get("parameter_version"),
+                model_version=app_context.args.get("model_version"),
+                export_file_as_table=True,
+            )
+            table_file = app_context.io_handler.get_output_file(
+                app_context.args["output_file"]
+            ).with_suffix(".ecsv")
+            table.write(table_file, format="ascii.ecsv", overwrite=True)
+            app_context.logger.info(f"Exported table to {table_file}")
+            return
+
+        if app_context.args["output_file"] is not None:
+            raise ValueError(
+                "Do not use --output_file when exporting file-backed parameters with "
+                "--export_model_file. The original database file name is used."
+            )
+
         table = db.export_model_file(
             parameter=app_context.args["parameter"],
             site=app_context.args["site"],
@@ -134,6 +212,7 @@ def main():
             app_context.logger.info(
                 f"Exported model file {param_value} to {table_file.with_suffix('.ecsv')}"
             )
+        return
 
     if app_context.args["output_file"] is not None:
         pars[app_context.args["parameter"]].pop("_id")
