@@ -350,29 +350,44 @@ def _resolve_input_file_path(file_name, data_path=None):
     return Path(data_path) / file_name if data_path else file_name
 
 
+def _parse_inline_json_dict(value, parameter_name):
+    """Parse inline JSON string value and return dict when valid."""
+    stripped_value = value.strip()
+    if not stripped_value.startswith("{"):
+        return None
+
+    try:
+        parsed_value = json.loads(stripped_value)
+    except json.JSONDecodeError:
+        logger.debug(
+            f"Value for '{parameter_name}' starts with '{{' but is not valid JSON; "
+            "falling back to file-path reading."
+        )
+        return None
+
+    return parsed_value if isinstance(parsed_value, dict) else None
+
+
+def _resolve_dict_parameter_from_string(value, parameter_name, data_path=None):
+    """Resolve dict-typed value from inline JSON or from table file path string."""
+    parsed_value = _parse_inline_json_dict(value, parameter_name)
+    if parsed_value is not None:
+        return parsed_value
+    return read_simtel_table_as_row_data(
+        parameter_name,
+        _resolve_input_file_path(value, data_path),
+    )
+
+
 def resolve_dict_parameter_value(value, parameter_name, data_path=None):
     """Resolve dict-typed value from inline JSON or from a table file path."""
     if isinstance(value, dict):
         return value
 
     if isinstance(value, str):
-        stripped_value = value.strip()
-        # e.g., given as inline JSON in the command line, so try to parse it directly
-        if stripped_value.startswith("{"):
-            try:
-                parsed_value = json.loads(stripped_value)
-                if isinstance(parsed_value, dict):
-                    return parsed_value
-            except json.JSONDecodeError:
-                logger.debug(
-                    f"Value for '{parameter_name}' starts with '{{' but is not valid JSON; "
-                    "falling back to file-path reading."
-                )
+        return _resolve_dict_parameter_from_string(value, parameter_name, data_path=data_path)
 
-    return read_simtel_table_as_row_data(
-        parameter_name,
-        _resolve_input_file_path(value, data_path),
-    )
+    return read_simtel_table_as_row_data(parameter_name, _resolve_input_file_path(value, data_path))
 
 
 def _adjust_columns_length(rows, n_columns):
