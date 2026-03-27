@@ -208,8 +208,8 @@ def test_overwrite_parameters(telescope_model_lst, mocker):
     telescope_copy.overwrite_parameters(
         {"camera_pixels": {"value": 9999}, "mirror_focal_length": {"value": 55}}, flat_dict=True
     )
-    mock_change.assert_any_call("camera_pixels", 9999, None)
-    mock_change.assert_any_call("mirror_focal_length", 55, None)
+    mock_change.assert_any_call("camera_pixels", 9999, None, None)
+    mock_change.assert_any_call("mirror_focal_length", 55, None, None)
 
 
 def test_flen_type(telescope_model_lst):
