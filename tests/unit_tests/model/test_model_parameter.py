@@ -212,6 +212,42 @@ def test_overwrite_parameters(telescope_model_lst, mocker):
     mock_change.assert_any_call("mirror_focal_length", 55, None, None)
 
 
+def test_overwrite_parameter_with_schema_metadata(telescope_model_lst, tmp_test_directory, mocker):
+    """Test that overwriting with model_parameter_schema_version preserves metadata."""
+    tel_model = copy.deepcopy(telescope_model_lst)
+
+    # Create mock schema file
+    schema_dir = Path(tmp_test_directory) / "schemas"
+    schema_dir.mkdir(parents=True, exist_ok=True)
+    schema_file = schema_dir / "mirror_focal_length.schema.yml"
+    schema_content = """---
+schema_version: "0.1.0"
+name: mirror_focal_length
+data:
+  - type: float64
+"""
+    schema_file.write_text(schema_content)
+
+    mocker.patch("simtools.utils.names.MODEL_PARAMETER_SCHEMA_PATH", str(schema_dir))
+
+    tel_model.overwrite_model_parameter(
+        "mirror_focal_length",
+        55.0,
+        metadata={
+            "unit": "m",
+            "model_parameter_schema_version": "0.1.0",
+        },
+    )
+
+    # Verify metadata was applied
+    param_dict = tel_model._get_parameter_dict("mirror_focal_length")
+    assert param_dict["value"] == 55.0
+    assert param_dict["unit"] == "m"
+    assert param_dict["model_parameter_schema_version"] == "0.1.0"
+    # Type should remain scalar (not converted to list)
+    assert isinstance(param_dict["type"], str)
+
+
 def test_flen_type(telescope_model_lst):
     tel_model = telescope_model_lst
     flen_info = tel_model._get_parameter_dict("focal_length")
