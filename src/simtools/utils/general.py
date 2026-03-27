@@ -689,6 +689,10 @@ def _is_valid_boolean_type(dtype, value):
 
 def _is_valid_numeric_type(dtype, reference_dtype):
     """Check if dtype is a valid numeric type compared to reference_dtype."""
+    # Handle string reference_dtype (not numeric types)
+    if reference_dtype in ("string", "str", "file"):
+        return False
+
     if np.issubdtype(dtype, np.integer):
         return np.issubdtype(reference_dtype, np.integer) or np.issubdtype(
             reference_dtype, np.floating
