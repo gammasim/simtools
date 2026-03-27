@@ -40,6 +40,15 @@ Support modules for running sim_telarray.
    :members:
 ```
 
+## simtel_table_writer
+
+(simtel-table-writer-1)=
+
+```{eval-rst}
+.. automodule:: simtel.simtel_table_writer
+   :members:
+```
+
 ## simtel_io_metadata
 
 (simtel-io-metadata-1)=
