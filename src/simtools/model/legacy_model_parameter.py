@@ -203,7 +203,7 @@ def _update_fadc_pulse_shape(parameters, schema_version, value_resolver=None):
             value_resolver=value_resolver,
         )
 
-    # Legacy column-oriented representation {columns, data} — convert to {columns, rows}.
+    # Legacy column-oriented representation {columns, data} - convert to {columns, rows}.
     if (
         para_data.get("type") == "dict"
         and isinstance(value, dict)
@@ -221,7 +221,7 @@ def _update_fadc_pulse_shape(parameters, schema_version, value_resolver=None):
             }
         }
 
-    # Already in canonical row-oriented format {columns, rows} — pass through.
+    # Already in canonical row-oriented format {columns, rows} - pass through.
     if (
         para_data.get("type") == "dict"
         and isinstance(value, dict)

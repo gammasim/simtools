@@ -11,20 +11,18 @@ logger = logging.getLogger(__name__)
 
 
 def write_simtel_table(parameter_name, value, dest_dir, telescope_name):
-    """
-    Write a table parameter to a space-separated ASCII file for sim_telarray.
+    """Write a table parameter to a space-separated ASCII file for sim_telarray.
 
     Parameters
     ----------
     parameter_name : str
-        Parameter name (used as filename prefix).
+        Parameter name, used as filename prefix.
     value : dict
-        Table data in row-oriented format with keys ``columns`` (list of str)
-        and ``rows`` (list of lists of float).
+        Table data with keys ``columns`` (list of str) and ``rows`` (list of lists).
     dest_dir : str or Path
         Directory to write the file into.
     telescope_name : str
-        Telescope name (used as filename suffix).
+        Telescope name, used as filename suffix.
 
     Returns
     -------
@@ -34,7 +32,7 @@ def write_simtel_table(parameter_name, value, dest_dir, telescope_name):
     Raises
     ------
     ValueError
-        If ``value`` is not a dict containing ``columns`` and ``rows``.
+        If ``value`` does not contain ``columns`` and ``rows`` keys.
     """
     if not isinstance(value, dict) or "columns" not in value or "rows" not in value:
         raise ValueError(
@@ -68,34 +66,32 @@ def write_light_pulse_table_gauss_exp_conv(
 
     Parameters
     ----------
-    file_path : str or pathlib.Path
-        Destination path of the ASCII pulse table to write. Parent directory must exist.
+    file_path : str or Path
+        Destination path of the ASCII pulse table. Parent directory must exist.
     width_ns : float
-        Target rise time in ns between the fractional levels defined by ``rise_range``.
+        Rise time in ns between the fractional levels defined by ``rise_range``.
     exp_decay_ns : float
-        Target fall time in ns between the fractional levels defined by ``fall_range``.
+        Fall time in ns between the fractional levels defined by ``fall_range``.
     fadc_sum_bins : int
-        Length of the FADC integration window (treated as ns here) used to derive
-        the internal time sampling window of the solver as [-(margin), bins + margin].
+        FADC integration window length in bins, used to set the time range.
     dt_ns : float, optional
-        Time sampling step in ns for the generated pulse table.
+        Time sampling step in ns.
     rise_range : tuple[float, float], optional
         Fractional amplitude bounds (low, high) for rise-time definition.
     fall_range : tuple[float, float], optional
         Fractional amplitude bounds (high, low) for fall-time definition.
     time_margin_ns : float, optional
-        Margin in ns to add to both ends of the FADC window when ``fadc_sum_bins`` is given.
+        Extra margin in ns added to both ends of the time window.
 
     Returns
     -------
-    pathlib.Path
-        The path to the created pulse table file.
+    Path
+        Path to the created pulse table file.
 
-    Notes
-    -----
-    The underlying model is a Gaussian convolved with a causal exponential. The model
-    parameters (sigma, tau) are solved such that the normalized pulse matches the requested
-    rise and fall times. The pulse is normalized to a peak amplitude of 1.
+    Raises
+    ------
+    ValueError
+        If ``width_ns`` or ``exp_decay_ns`` is None.
     """
     if width_ns is None or exp_decay_ns is None:
         raise ValueError("width_ns (rise 10-90) and exp_decay_ns (fall 90-10) are required")
@@ -127,21 +123,21 @@ def write_angular_distribution_table_lambertian(
     max_angle_deg,
     n_samples=100,
 ):
-    """Write a Lambertian angular distribution table (I(t) ~ cos(t)).
+    """Write a Lambertian angular distribution table (intensity ~ cos(angle)).
 
     Parameters
     ----------
-    file_path : str or pathlib.Path
-        Destination path of the ASCII table to write. Parent directory must exist.
+    file_path : str or Path
+        Destination path of the ASCII table. Parent directory must exist.
     max_angle_deg : float
-        Maximum angle (deg) for the distribution sampling range [0, max_angle_deg].
+        Upper bound of the angular range in degrees.
     n_samples : int, optional
-        Number of samples (including end point) from 0 to max_angle_deg. Default 100.
+        Number of equally spaced samples from 0 to ``max_angle_deg``.
 
     Returns
     -------
-    pathlib.Path
-        Path to created angular distribution table.
+    Path
+        Path to the created angular distribution table.
     """
     logger.info(
         f"Generating Lambertian angular distribution table up to {max_angle_deg} deg "
@@ -157,7 +153,22 @@ def write_angular_distribution_table_lambertian(
 
 
 def write_ascii_pulse_table(file_path, t, y):
-    """Write two-column ASCII pulse table."""
+    """Write a two-column (time, amplitude) ASCII pulse table.
+
+    Parameters
+    ----------
+    file_path : str or Path
+        Destination path.
+    t : array-like
+        Time values in ns.
+    y : array-like
+        Amplitude values.
+
+    Returns
+    -------
+    Path
+        Path to the written file.
+    """
     with open(file_path, "w", encoding="utf-8") as fh:
         fh.write("# time[ns] amplitude\n")
         for ti, yi in zip(t, y):
@@ -166,7 +177,22 @@ def write_ascii_pulse_table(file_path, t, y):
 
 
 def write_ascii_angle_distribution_table(file_path, angles, intensities):
-    """Write two-column ASCII angular distribution table."""
+    """Write a two-column (angle, relative intensity) ASCII angular distribution table.
+
+    Parameters
+    ----------
+    file_path : str or Path
+        Destination path.
+    angles : array-like
+        Angle values in degrees.
+    intensities : array-like
+        Relative intensity values.
+
+    Returns
+    -------
+    Path
+        Path to the written file.
+    """
     with open(file_path, "w", encoding="utf-8") as fh:
         fh.write("# angle[deg] relative_intensity\n")
         for a, i in zip(angles, intensities):
