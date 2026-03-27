@@ -4,6 +4,8 @@ from pathlib import Path
 
 from simtools.simtel import simtel_table_reader
 
+ECSV_SUFFIX = ".ecsv"
+
 
 def write_file_from_db_to_disk(db, db_name, path, file):
     """Extract a file from MongoDB and write it to disk."""
@@ -142,7 +144,7 @@ def export_parameter_data(
             model_version=model_version,
             export_file_as_table=True,
         )
-        table_file = db.io_handler.get_output_file(output_file).with_suffix(".ecsv")
+        table_file = db.io_handler.get_output_file(output_file).with_suffix(ECSV_SUFFIX)
         table.write(table_file, format="ascii.ecsv", overwrite=True)
         return [table_file]
 
@@ -164,8 +166,8 @@ def export_parameter_data(
     param_value = par_info["value"]
     table_file = db.io_handler.get_output_file(param_value)
     output_files = [table_file]
-    if table and table_file.suffix != ".ecsv":
-        table_output_file = table_file.with_suffix(".ecsv")
+    if table and table_file.suffix != ECSV_SUFFIX:
+        table_output_file = table_file.with_suffix(ECSV_SUFFIX)
         table.write(table_output_file, format="ascii.ecsv", overwrite=True)
         output_files.append(table_output_file)
 
