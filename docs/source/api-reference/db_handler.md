@@ -30,3 +30,12 @@ Modules for database access. See the databases sections for details.
 .. automodule:: db.db_model_upload
    :members:
 ```
+
+## parameter_exporter
+
+(db-parameter-exporter)=
+
+```{eval-rst}
+.. automodule:: db.parameter_exporter
+   :members:
+```
