@@ -308,13 +308,11 @@ def test_get_validated_parameter_dict_fadc_pulse_shape_embedded():
     w1 = writer.ModelDataWriter()
     embedded_value = {
         "columns": ["time", "amplitude", "amplitude (low gain)"],
-        "dtype": ["float64", "float64", "float64"],
-        "unit": ["ns", "dimensionless", "dimensionless"],
-        "data": {
-            "time": [0.0, 0.12, 0.25],
-            "amplitude": [0.0, 0.0, 0.01323],
-            "amplitude (low gain)": [0.0, 0.0, 0.000945],
-        },
+        "rows": [
+            [0.0, 0.0, 0.0],
+            [0.12, 0.0, 0.0],
+            [0.25, 0.01323, 0.000945],
+        ],
     }
 
     validated_dict = w1.get_validated_parameter_dict(
@@ -359,12 +357,7 @@ def test_get_validated_parameter_dict_fadc_pulse_shape_embedded_invalid_columns(
     w1 = writer.ModelDataWriter()
     invalid_embedded_value = {
         "columns": ["time", "HG"],
-        "dtype": ["float64", "float64"],
-        "unit": ["ns", "dimensionless"],
-        "data": {
-            "time": [0.0, 0.12],
-            "HG": [0.0, 0.01],
-        },
+        "rows": [[0.0, 0.0], [0.12, 0.01]],
     }
 
     with pytest.raises(ValidationError):
