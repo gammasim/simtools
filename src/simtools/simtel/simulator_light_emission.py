@@ -617,8 +617,9 @@ class SimulatorLightEmission(SimtelRunner):
                 )
                 return str(table_path)
             except (ValueError, OSError) as err:
-                self._logger.warning(f"Failed to write pulse shape table: {err}")
-                # Fall through to token-based representation
+                raise ValueError(
+                    f"Failed to write Gauss-Exponential pulse shape table: {err}"
+                ) from err
 
         # For other shapes, return token string
         return self._get_pulse_shape_string_token(shape_name, width_ns, exp_ns)
