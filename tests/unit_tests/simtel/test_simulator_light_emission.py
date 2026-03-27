@@ -109,13 +109,10 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian(
     }
 
     # Mock calibration model values
-    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda name: (
-        "Lambertian" if name == "flasher_angular_distribution" else None
-    )
-    # Width is ignored for Lambertian; no need to mock width conversion.
-    simulator_instance.calibration_model.get_parameter_value_with_unit.side_effect = lambda name: (
-        None
-    )
+    simulator_instance.calibration_model.get_parameter_value.side_effect = lambda name: {
+        "flasher_angular_distribution": "Lambertian",
+        "flasher_angular_distribution_width": 45.0,
+    }.get(name)
 
     result = simulator_instance._get_angular_distribution_string_for_sim_telarray()
 
@@ -127,8 +124,10 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian(
     assert content[0].startswith("# angle[deg] relative_intensity")
     # Expect 101 lines: header + 100 samples (0..max angle)
     assert len(content) == 101
-    # Width parameter should not have been requested for Lambertian
-    assert simulator_instance.calibration_model.get_parameter_value_with_unit.call_count == 0
+    # Verify that width parameter was requested for Lambertian
+    simulator_instance.calibration_model.get_parameter_value.assert_any_call(
+        "flasher_angular_distribution_width"
+    )
 
 
 def test__get_angular_distribution_string_for_sim_telarray_lambertian_failure(
