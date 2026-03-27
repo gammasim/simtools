@@ -265,8 +265,10 @@ class ModelParameter:
         # Extract type from data field
         data = matching_schema.get("data", [])
         if isinstance(data, list):
-            # Heterogeneous list - extract type from each element
-            return [item.get("type") for item in data]
+            # Extract type from each element
+            types = [item.get("type") for item in data]
+            # Return scalar type for single-element lists
+            return types[0] if len(types) == 1 else types
         # Simple type
         return data.get("type") if isinstance(data, dict) else None
 
