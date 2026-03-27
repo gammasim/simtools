@@ -50,7 +50,7 @@ def mock_get_collection_name(mocker):
 @pytest.fixture
 def mock_read_simtel_table(mocker):
     return mocker.patch(
-        "simtools.db.db_handler.simtel_table_reader.read_simtel_table",
+        "simtools.db.parameter_exporter.simtel_table_reader.read_simtel_table",
         return_value="test_table",
     )
 
