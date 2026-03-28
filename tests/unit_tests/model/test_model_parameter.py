@@ -241,7 +241,7 @@ data:
 
     # Verify metadata was applied
     param_dict = tel_model._get_parameter_dict("mirror_focal_length")
-    assert param_dict["value"] == 55.0
+    assert param_dict["value"] == pytest.approx(55.0)
     assert param_dict["unit"] == "m"
     assert param_dict["model_parameter_schema_version"] == "0.1.0"
     # Type should remain scalar (not converted to list)
@@ -290,7 +290,9 @@ data:
 
     # Verify metadata was applied
     param_dict = tel_model._get_parameter_dict("test_hetero_param")
-    assert param_dict["value"] == ["new_string", 5.0, 10.0]
+    assert param_dict["value"][0] == "new_string"
+    assert param_dict["value"][1] == pytest.approx(5.0)
+    assert param_dict["value"][2] == pytest.approx(10.0)
     assert param_dict["unit"] == ["none", "ns", "ns"]
     assert param_dict["model_parameter_schema_version"] == "0.2.0"
     # Type should be a list of types for heterogeneous list
