@@ -537,14 +537,19 @@ class SimulatorLightEmission(SimtelRunner):
         tel = self._sanitize_name(self.light_emission_config.get("telescope") or "telescope")
         cal = self._sanitize_name(self.light_emission_config.get("light_source") or "calibration")
         fname = f"flasher_angular_distribution_{tel}_{cal}.dat"
-        max_angle_deg = self.calibration_model.get_parameter_value(
-            "flasher_angular_distribution_width"
+        max_angle_deg = (
+            self.calibration_model.get_parameter_value_with_unit(
+                "flasher_angular_distribution_width"
+            )
+            .to(u.deg)
+            .value
         )
-        return SimtelConfigWriter.write_angular_distribution_table_lambertian(
+        path = SimtelConfigWriter.write_angular_distribution_table_lambertian(
             file_path=self.io_handler.get_output_directory("light_emission") / fname,
             max_angle_deg=max_angle_deg,
             n_samples=100,
         )
+        return str(path)
 
     def _get_angular_distribution_string_for_sim_telarray(self):
         """

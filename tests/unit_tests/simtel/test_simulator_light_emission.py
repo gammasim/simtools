@@ -109,12 +109,14 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian(
     # Mock calibration model values
     simulator_instance.calibration_model.get_parameter_value.side_effect = lambda name: {
         "flasher_angular_distribution": "Lambertian",
-        "flasher_angular_distribution_width": 45.0,
     }.get(name)
+
+    # Mock the unit-aware method for width parameter
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = 45.0 * u.deg
 
     result = simulator_instance._get_angular_distribution_string_for_sim_telarray()
 
-    # Result should be a path to the generated table
+    # Result should be a string path to the generated table
     table_path = Path(result)
     assert str(table_path).endswith(".dat")
     assert table_path.exists()
@@ -123,7 +125,7 @@ def test__get_angular_distribution_string_for_sim_telarray_lambertian(
     # Expect 101 lines: header + 100 samples (0..max angle)
     assert len(content) == 101
     # Verify that width parameter was requested for Lambertian
-    simulator_instance.calibration_model.get_parameter_value.assert_any_call(
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_once_with(
         "flasher_angular_distribution_width"
     )
 
