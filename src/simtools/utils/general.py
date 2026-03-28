@@ -215,7 +215,7 @@ def ensure_iterable(value):
     list or tuple
         Converted value as list or tuple.
     """
-    if not value:
+    if value is None:
         return []
     return value if isinstance(value, list | tuple) else [value]
 
