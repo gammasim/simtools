@@ -248,6 +248,56 @@ data:
     assert isinstance(param_dict["type"], str)
 
 
+def test_overwrite_heterogeneous_list_with_schema_metadata(
+    telescope_model_lst, tmp_test_directory, mocker
+):
+    """Test overwriting heterogeneous list parameter with schema metadata and per-element types."""
+    tel_model = copy.deepcopy(telescope_model_lst)
+
+    # Add a mock heterogeneous list parameter to the telescope model
+    tel_model.parameters["test_hetero_param"] = {
+        "value": ["old", 1.0, 2.0],
+        "type": "list",
+        "unit": ["none", "m", "m"],
+        "model_parameter_schema_version": "0.1.0",
+    }
+
+    # Create mock schema file for heterogeneous list parameter
+    schema_dir = Path(tmp_test_directory) / "schemas"
+    schema_dir.mkdir(parents=True, exist_ok=True)
+    schema_file = schema_dir / "test_hetero_param.schema.yml"
+    schema_content = """---
+schema_version: "0.2.0"
+name: test_hetero_param
+data:
+  - type: str
+  - type: float64
+  - type: float64
+"""
+    schema_file.write_text(schema_content)
+
+    mocker.patch("simtools.utils.names.MODEL_PARAMETER_SCHEMA_PATH", str(schema_dir))
+
+    # Overwrite with heterogeneous list value and schema metadata
+    tel_model.overwrite_model_parameter(
+        "test_hetero_param",
+        ["new_string", 5.0, 10.0],
+        metadata={
+            "unit": ["none", "ns", "ns"],
+            "model_parameter_schema_version": "0.2.0",
+        },
+    )
+
+    # Verify metadata was applied
+    param_dict = tel_model._get_parameter_dict("test_hetero_param")
+    assert param_dict["value"] == ["new_string", 5.0, 10.0]
+    assert param_dict["unit"] == ["none", "ns", "ns"]
+    assert param_dict["model_parameter_schema_version"] == "0.2.0"
+    # Type should be a list of types for heterogeneous list
+    assert isinstance(param_dict["type"], list)
+    assert param_dict["type"] == ["str", "float64", "float64"]
+
+
 def test_flen_type(telescope_model_lst):
     tel_model = telescope_model_lst
     flen_info = tel_model._get_parameter_dict("focal_length")
