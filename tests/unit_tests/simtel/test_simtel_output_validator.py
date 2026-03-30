@@ -7,12 +7,12 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-import simtools.simtel.simtel_output_validator as simtel_output_validator
 from simtools.simtel.simtel_output_validator import (
     _assert_model_parameters,
     _assert_sim_telarray_seed,
     _is_equal_floats_or_ints,
     _item_to_check_from_sim_telarray,
+    _resolve_dict_parameter_metadata_value,
     _sim_telarray_name_from_parameter_name,
     assert_events_of_type,
     assert_expected_sim_telarray_metadata,
@@ -262,7 +262,7 @@ def test_resolve_dict_parameter_metadata_value_returns_input_for_non_dict_type()
     model = MagicMock()
     value = "fadc_pulse_shape.dat"
 
-    result = simtel_output_validator._resolve_dict_parameter_metadata_value(
+    result = _resolve_dict_parameter_metadata_value(
         value=value,
         model_value={"columns": ["time"], "rows": [[0.0]]},
         parameter_type="string",
@@ -278,7 +278,7 @@ def test_resolve_dict_parameter_metadata_value_returns_input_for_non_string_valu
     model = MagicMock()
     value = {"columns": ["time"], "rows": [[0.0]]}
 
-    result = simtel_output_validator._resolve_dict_parameter_metadata_value(
+    result = _resolve_dict_parameter_metadata_value(
         value=value,
         model_value={"columns": ["time"], "rows": [[0.0]]},
         parameter_type="dict",
@@ -301,7 +301,7 @@ def test_resolve_dict_parameter_metadata_value_returns_input_when_resolution_fai
         "simtools.simtel.simtel_output_validator.simtel_table_reader.resolve_dict_parameter_value"
     ) as resolve_mock:
         resolve_mock.side_effect = FileNotFoundError("missing")
-        result = simtel_output_validator._resolve_dict_parameter_metadata_value(
+        result = _resolve_dict_parameter_metadata_value(
             value=value,
             model_value={"columns": ["time"], "rows": [[0.0]]},
             parameter_type="dict",
