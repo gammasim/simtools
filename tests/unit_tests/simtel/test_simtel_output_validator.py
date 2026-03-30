@@ -224,6 +224,37 @@ def test_missing_parameter_in_metadata():
     assert len(result) == 0
 
 
+def test_assert_model_parameters_resolves_dict_metadata_file():
+    """Resolve dict-valued metadata filenames before comparing to model values."""
+    metadata = {"fadc_pulse_shape": "fadc_pulse_shape-LSTN-01.dat"}
+    model_mock = MagicMock()
+    model_mock.parameters = {
+        "fadc_pulse_shape": {
+            "value": {
+                "columns": ["time", "amplitude"],
+                "column_units": ["ns", "dimensionless"],
+                "rows": [[0.0, 0.0], [0.1, 0.2]],
+            },
+            "type": "dict",
+        },
+    }
+    model_mock.config_file_directory = Path("/tmp/model")
+
+    with patch(
+        "simtools.simtel.simtel_output_validator.simtel_table_reader.resolve_dict_parameter_value"
+    ) as resolve_mock:
+        resolve_mock.return_value = model_mock.parameters["fadc_pulse_shape"]["value"]
+
+        result = _assert_model_parameters(metadata, model_mock)
+
+    resolve_mock.assert_called_once_with(
+        "fadc_pulse_shape-LSTN-01.dat",
+        "fadc_pulse_shape",
+        data_path=Path("/tmp/model"),
+    )
+    assert len(result) == 0
+
+
 def test_telescope_count_mismatch(tmp_path):
     """Test error when telescope count mismatches."""
     sim_file = tmp_path / "test.simtel.zst"
