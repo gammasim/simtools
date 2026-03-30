@@ -1,8 +1,0 @@
-# %ECSV 1.0
-# ---
-# datatype:
-# - {name: time, datatype: float64}
-# - {name: amplitude, datatype: float64}
-# schema: astropy-2.0
-time amplitude
-1.0 2.0
