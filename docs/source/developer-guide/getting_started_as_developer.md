@@ -34,7 +34,7 @@ The following steps outline how to set up the development environment using cont
     ```bash
     podman run --rm -it -v "$(pwd)/external:/workdir/external" \
         ghcr.io/gammasim/simtools-dev:latest \
-        bash -c "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
+        bash -lc "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
     ```
 
     The container includes a CORSIKA and sim_telarray installation;
