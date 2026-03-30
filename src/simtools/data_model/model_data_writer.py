@@ -350,6 +350,39 @@ class ModelDataWriter:
             else parameter_types
         )
 
+    def parameter_uses_row_table_schema(self, parameter_name, model_parameter_schema_version=None):
+        """Return True if selected schema defines row-oriented table dict payload.
+
+        Parameters
+        ----------
+        parameter_name: str
+            Name of the model parameter.
+        model_parameter_schema_version: str or None
+            Explicit model-parameter schema version to use. If None, the newest
+            available schema version is selected.
+
+        Returns
+        -------
+        bool
+            True when a dict-typed schema entry requires the row-table keys
+            ``columns``, ``rows`` and ``column_units``.
+        """
+        schema_dict, _ = self._read_schema_dict(parameter_name, model_parameter_schema_version)
+        required_row_keys = {"columns", "rows", "column_units"}
+
+        for data_entry in schema_dict.get("data", []):
+            if data_entry.get("type") != "dict":
+                continue
+
+            json_schema = data_entry.get("json_schema", {})
+            required = set(json_schema.get("required", []))
+            properties = set(json_schema.get("properties", {}).keys())
+
+            if required_row_keys.issubset(required) and required_row_keys.issubset(properties):
+                return True
+
+        return False
+
     def _get_parameter_type(self):
         """
         Return normalized parameter type(s) from the currently loaded schema.

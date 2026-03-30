@@ -60,9 +60,22 @@ data:
         rows:
           type: array
           items:
-            type: array
-            items:
-              type: number
+            oneOf:
+              - type: array
+                items:
+                  - type: number
+                  - type: number
+                additionalItems: false
+                minItems: 2
+                maxItems: 2
+              - type: array
+                items:
+                  - type: number
+                  - type: number
+                  - type: number
+                additionalItems: false
+                minItems: 3
+                maxItems: 3
 instrument:
   class: Camera
 activity:

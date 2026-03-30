@@ -105,7 +105,10 @@ def main():
         model_parameter_schema_version,
     )
 
-    if parameter_type == "dict":
+    if parameter_type == "dict" and data_writer.parameter_uses_row_table_schema(
+        app_context.args["parameter"],
+        model_parameter_schema_version,
+    ):
         value = simtel_table_reader.resolve_dict_parameter_value(
             value,
             app_context.args["parameter"],
