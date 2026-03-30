@@ -7,7 +7,10 @@ import pytest
 
 from simtools.db import mongo_db
 
-pytestmark = pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+pytestmark = [
+    pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning"),
+    pytest.mark.db_unit_test,
+]
 
 
 @pytest.fixture(autouse=True)

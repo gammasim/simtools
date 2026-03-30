@@ -1503,16 +1503,20 @@ def test__get_telescope_pointing(simulator_instance):
     result = simulator_instance._get_telescope_pointing()
     assert result == (0.0, 0.0)
 
-    # Test with light_source_position returns (0.0, 0.0) and logs info message
+    # Test with light_source_position keeps fixed vertical-up telescope pointing
     simulator_instance.light_emission_config = {
         "light_source_type": "illuminator",
-        "light_source_position": [1.0, 2.0, 3.0],
+        "light_source_position": [1.0 * u.m, 2.0 * u.m, 3.0 * u.m],
     }
-    result = simulator_instance._get_telescope_pointing()
-    assert result == (0.0, 0.0)
-    simulator_instance._logger.info.assert_called_with(
-        "Using fixed (vertical up) telescope pointing."
-    )
+    with patch.object(
+        simulator_instance, "_calibration_pointing_direction"
+    ) as mock_pointing_for_pos:
+        result = simulator_instance._get_telescope_pointing()
+        assert result == (0.0, 0.0)
+        mock_pointing_for_pos.assert_not_called()
+        simulator_instance._logger.info.assert_called_with(
+            "Using fixed (vertical up) telescope pointing."
+        )
 
     # Test default case uses _calibration_pointing_direction
     simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
@@ -1546,10 +1550,18 @@ def test__write_telescope_position_file(simulator_instance, tmp_test_directory):
     mock_radius = Mock()
     mock_radius.to.return_value.value = 1500.0
 
-    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = [
-        [mock_x, mock_y, mock_z],  # array_element_position_ground
-        mock_radius,  # telescope_sphere_radius
-    ]
+    def mock_get_param_with_unit(name):
+        if name == "array_element_position_ground":
+            return [mock_x, mock_y, mock_z]
+        if name == "axes_offsets":
+            return [0.0 * u.m, 0.0 * u.m]
+        if name == "telescope_sphere_radius":
+            return mock_radius
+        return None
+
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_param_with_unit
+    )
 
     # Use real temporary directory for file writing
     mock_output_dir = Path(tmp_test_directory)
@@ -1558,7 +1570,9 @@ def test__write_telescope_position_file(simulator_instance, tmp_test_directory):
     expected_file = mock_output_dir / "telescope_position.dat"
 
     # Call the method
-    result = simulator_instance._write_telescope_position_file()
+    result = simulator_instance._write_telescope_position_file(
+        illuminator_position=[0.0 * u.m, 0.0 * u.m, 1000.0 * u.m]
+    )
 
     # Should return the telescope position file path
     assert result == expected_file
@@ -1576,6 +1590,135 @@ def test__write_telescope_position_file(simulator_instance, tmp_test_directory):
     mock_radius.to.assert_called_once_with(u.cm)
 
 
+def test__write_telescope_position_file_with_quantity_array(simulator_instance, tmp_test_directory):
+    """Quantity-array illuminator position should not trigger ambiguous truth-value checks."""
+    simulator_instance.output_directory = Path("/output")
+
+    def mock_get_param_with_unit(name):
+        if name == "array_element_position_ground":
+            return [1.0 * u.m, 2.0 * u.m, 3.0 * u.m]
+        if name == "axes_offsets":
+            return [0.0 * u.m, 0.0 * u.m]
+        if name == "telescope_sphere_radius":
+            return 15.0 * u.m
+        return None
+
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_param_with_unit
+    )
+
+    mock_output_dir = Path(tmp_test_directory)
+    mock_output_dir.mkdir(parents=True, exist_ok=True)
+    simulator_instance.io_handler.get_output_directory.return_value = mock_output_dir
+
+    illuminator_position = np.array([0.0, 0.0, 1000.0]) * u.m
+    result = simulator_instance._write_telescope_position_file(illuminator_position)
+
+    assert result.exists()
+    assert result.read_text(encoding="utf-8") == "100.0 200.0 300.0 1500.0\n"
+
+
+def test__get_telescope_position_ground_with_axis_offset_rotates_with_azimuth(simulator_instance):
+    """Horizontal axis offset should rotate with telescope azimuth pointing."""
+
+    def mock_get_param_with_unit(name):
+        if name == "array_element_position_ground":
+            return [0.0 * u.m, 0.0 * u.m, 0.0 * u.m]
+        if name == "axes_offsets":
+            return [1.0 * u.m, 0.0 * u.m]
+        return None
+
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_param_with_unit
+    )
+
+    x_tel, y_tel, _ = simulator_instance._get_telescope_position_ground_with_axis_offset(
+        x_cal=100.0 * u.m,
+        y_cal=0.0 * u.m,
+        z_cal=100.0 * u.m,
+    )
+    assert x_tel.to(u.m).value == pytest.approx(1.0, abs=1e-6)
+    assert y_tel.to(u.m).value == pytest.approx(0.0, abs=1e-6)
+
+    x_tel, y_tel, _ = simulator_instance._get_telescope_position_ground_with_axis_offset(
+        x_cal=0.0 * u.m,
+        y_cal=100.0 * u.m,
+        z_cal=100.0 * u.m,
+    )
+    assert x_tel.to(u.m).value == pytest.approx(0.0, abs=1e-6)
+    assert y_tel.to(u.m).value == pytest.approx(1.0, abs=1e-6)
+
+
+def test__get_telescope_position_ground_with_axis_offset_follows_trigonometric_projection(
+    simulator_instance,
+):
+    """Offset should follow direct horizontal trigonometric projection to source azimuth."""
+
+    base_x = 10.0
+    base_y = -5.0
+    horizontal_offset = 2.0
+
+    def mock_get_param_with_unit(name):
+        if name == "array_element_position_ground":
+            return [base_x * u.m, base_y * u.m, 1.5 * u.m]
+        if name == "axes_offsets":
+            return [horizontal_offset * u.m, 0.0 * u.m]
+        return None
+
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_param_with_unit
+    )
+
+    x_cal = 30.0
+    y_cal = 20.0
+    x_tel, y_tel, z_tel = simulator_instance._get_telescope_position_ground_with_axis_offset(
+        x_cal=x_cal * u.m,
+        y_cal=y_cal * u.m,
+        z_cal=100.0 * u.m,
+    )
+
+    corrected_xy = np.array([x_tel.to(u.m).value, y_tel.to(u.m).value])
+    base_xy = np.array([base_x, base_y])
+    source_xy = np.array([x_cal, y_cal])
+
+    offset_vector = corrected_xy - base_xy
+    assert np.linalg.norm(offset_vector) == pytest.approx(horizontal_offset, abs=1e-6)
+
+    source_direction_xy = source_xy - base_xy
+    source_direction_xy /= np.linalg.norm(source_direction_xy)
+    expected_offset_vector = horizontal_offset * source_direction_xy
+    assert offset_vector == pytest.approx(expected_offset_vector, abs=1e-6)
+    assert z_tel.to(u.m).value == pytest.approx(1.5)
+
+
+def test__get_telescope_position_ground_with_axis_offset_uses_second_offset_component(
+    simulator_instance,
+):
+    """Second axes_offsets component should be applied along perpendicular direction."""
+
+    def mock_get_param_with_unit(name):
+        if name == "array_element_position_ground":
+            return [0.0 * u.m, 0.0 * u.m, 0.0 * u.m]
+        if name == "axes_offsets":
+            return [0.0 * u.m, 1.0 * u.m]
+        return None
+
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_param_with_unit
+    )
+
+    # Source on +x axis: perpendicular direction from transformation points along +z.
+    x_tel, y_tel, z_tel = simulator_instance._get_telescope_position_ground_with_axis_offset(
+        x_cal=100.0 * u.m,
+        y_cal=0.0 * u.m,
+        z_cal=0.0 * u.m,
+    )
+
+    assert x_tel.to(u.m).value == pytest.approx(0.0, abs=1e-6)
+    assert y_tel.to(u.m).value == pytest.approx(0.0, abs=1e-6)
+    assert z_tel.to(u.m).value == pytest.approx(1.0, abs=1e-6)
+
+
 def test__calibration_pointing_direction(simulator_instance):
     """Test _calibration_pointing_direction method."""
     import numpy as np
@@ -1588,13 +1731,19 @@ def test__calibration_pointing_direction(simulator_instance):
         cal_z,
     ]
 
-    # Mock telescope position at (10, 0, 10) meters
+    # Mock telescope position at (10, 0, 10) meters and no horizontal offset
     tel_x, tel_y, tel_z = 10 * u.m, 0 * u.m, 10 * u.m
-    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = [
-        tel_x,
-        tel_y,
-        tel_z,
-    ]
+
+    def mock_get_telescope_param_with_unit(name):
+        if name == "array_element_position_ground":
+            return [tel_x, tel_y, tel_z]
+        if name == "axes_offsets":
+            return [0.0 * u.m, 0.0 * u.m]
+        return None
+
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_telescope_param_with_unit
+    )
 
     pointing_vector, angles = simulator_instance._calibration_pointing_direction()
 
@@ -1617,22 +1766,31 @@ def test__calibration_pointing_direction(simulator_instance):
     simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_with(
         "array_element_position_ground"
     )
-    simulator_instance.telescope_model.get_parameter_value_with_unit.assert_called_with(
-        "array_element_position_ground"
-    )
+    telescope_calls = [
+        call.args[0]
+        for call in simulator_instance.telescope_model.get_parameter_value_with_unit.call_args_list
+    ]
+    assert "array_element_position_ground" in telescope_calls
+    assert "axes_offsets" in telescope_calls
 
 
 def test__calibration_pointing_direction_with_custom_params(simulator_instance):
     """Test _calibration_pointing_direction method with custom position parameters."""
     import numpy as np
 
-    # Mock telescope position
+    # Mock telescope position and no horizontal offset
     tel_x, tel_y, tel_z = 5 * u.m, 5 * u.m, 0 * u.m
-    simulator_instance.telescope_model.get_parameter_value_with_unit.return_value = [
-        tel_x,
-        tel_y,
-        tel_z,
-    ]
+
+    def mock_get_telescope_param_with_unit(name):
+        if name == "array_element_position_ground":
+            return [tel_x, tel_y, tel_z]
+        if name == "axes_offsets":
+            return [0.0 * u.m, 0.0 * u.m]
+        return None
+
+    simulator_instance.telescope_model.get_parameter_value_with_unit.side_effect = (
+        mock_get_telescope_param_with_unit
+    )
 
     # Call with custom calibration position parameters
     custom_x = 0 * u.m
@@ -1656,9 +1814,12 @@ def test__calibration_pointing_direction_with_custom_params(simulator_instance):
     # Verify calibration model was NOT called (custom params provided)
     simulator_instance.calibration_model.get_parameter_value_with_unit.assert_not_called()
     # But telescope model should still be called
-    simulator_instance.telescope_model.get_parameter_value_with_unit.assert_called_with(
-        "array_element_position_ground"
-    )
+    telescope_calls = [
+        call.args[0]
+        for call in simulator_instance.telescope_model.get_parameter_value_with_unit.call_args_list
+    ]
+    assert "array_element_position_ground" in telescope_calls
+    assert "axes_offsets" in telescope_calls
 
 
 def test__get_angular_distribution_string_for_sim_telarray_isotropic(simulator_instance):
