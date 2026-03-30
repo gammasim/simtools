@@ -10,8 +10,11 @@ from simtools.db import db_handler
 from simtools.db.mongo_db import MongoDBHandler
 from simtools.utils import names
 
-# Suppress warnings
-pytestmark = pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+# Suppress warnings and mark this module as db unit tests.
+pytestmark = [
+    pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning"),
+    pytest.mark.db_unit_test,
+]
 
 logger = logging.getLogger()
 
