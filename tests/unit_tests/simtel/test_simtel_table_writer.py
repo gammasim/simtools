@@ -55,3 +55,39 @@ def test_write_simtel_table_raises_on_missing_rows_key(tmp_test_directory):
             tmp_test_directory,
             "LSTN-01",
         )
+
+
+def test_write_simtel_table_raises_on_row_length_mismatch(tmp_test_directory):
+    value = {
+        "columns": ["time", "amplitude"],
+        "rows": [[0.0], [1.0, 0.5]],
+    }
+
+    with pytest.raises(ValueError, match="invalid row length"):
+        simtel_table_writer.write_simtel_table(
+            "fadc_pulse_shape", value, tmp_test_directory, "LSTN-01"
+        )
+
+
+def test_write_simtel_table_raises_on_non_sequence_row(tmp_test_directory):
+    value = {
+        "columns": ["time", "amplitude"],
+        "rows": [0.0, [1.0, 0.5]],
+    }
+
+    with pytest.raises(ValueError, match="invalid row"):
+        simtel_table_writer.write_simtel_table(
+            "fadc_pulse_shape", value, tmp_test_directory, "LSTN-01"
+        )
+
+
+def test_write_simtel_table_raises_on_non_numeric_row_value(tmp_test_directory):
+    value = {
+        "columns": ["time", "amplitude"],
+        "rows": [[0.0, "bad_value"]],
+    }
+
+    with pytest.raises(ValueError, match="non-numeric value"):
+        simtel_table_writer.write_simtel_table(
+            "fadc_pulse_shape", value, tmp_test_directory, "LSTN-01"
+        )
