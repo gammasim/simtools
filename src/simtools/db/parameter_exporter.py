@@ -107,6 +107,83 @@ def export_model_files(db, parameters=None, file_names=None, dest=None, db_name=
     return instance_ids
 
 
+def _export_dict_table_parameter(
+    db,
+    parameter,
+    site,
+    array_element_name,
+    output_file,
+    par_info,
+    parameters,
+    parameter_version=None,
+    model_version=None,
+):
+    """
+    Export dict-typed (embedded table) parameter to ECSV file.
+
+    Returns the output file path.
+    """
+    if output_file is None:
+        raise ValueError(
+            "Use --output_file when exporting dict-typed parameters with "
+            "--export_model_file or --export_model_file_as_table."
+        )
+
+    table = export_single_model_file(
+        db=db,
+        parameter=parameter,
+        site=site,
+        array_element_name=array_element_name,
+        parameter_version=parameter_version,
+        model_version=model_version,
+        export_file_as_table=True,
+        parameters=parameters,
+        par_info=par_info,
+    )
+    table_file = db.io_handler.get_output_file(output_file).with_suffix(ECSV_SUFFIX)
+    table.write(table_file, format="ascii.ecsv", overwrite=True)
+    return [table_file]
+
+
+def _export_file_backed_parameter(
+    db,
+    parameter,
+    site,
+    array_element_name,
+    par_info,
+    parameters,
+    export_model_file_as_table,
+    parameter_version=None,
+    model_version=None,
+):
+    """
+    Export file-backed parameter to disk.
+
+    Exports the file and optionally also as an ECSV table.
+    """
+    table = export_single_model_file(
+        db=db,
+        parameter=parameter,
+        site=site,
+        array_element_name=array_element_name,
+        parameter_version=parameter_version,
+        model_version=model_version,
+        export_file_as_table=export_model_file_as_table,
+        parameters=parameters,
+        par_info=par_info,
+    )
+    param_value = par_info["value"]
+    table_file = db.io_handler.get_output_file(param_value)
+    output_files = [table_file]
+
+    if table and table_file.suffix != ECSV_SUFFIX:
+        table_output_file = table_file.with_suffix(ECSV_SUFFIX)
+        table.write(table_output_file, format="ascii.ecsv", overwrite=True)
+        output_files.append(table_output_file)
+
+    return output_files
+
+
 def export_single_model_file(
     db,
     parameter,
@@ -231,51 +308,35 @@ def export_parameter_data(
         model_version=model_version,
     )
 
+    # Dispatch to appropriate export handler based on parameter type
     if _is_dict_table_value(par_info):
-        if output_file is None:
-            raise ValueError(
-                "Use --output_file when exporting dict-typed parameters with "
-                "--export_model_file or --export_model_file_as_table."
-            )
-
-        table = export_single_model_file(
+        return _export_dict_table_parameter(
             db=db,
             parameter=parameter,
             site=site,
             array_element_name=array_element_name,
+            output_file=output_file,
+            par_info=par_info,
+            parameters=parameters,
             parameter_version=parameter_version,
             model_version=model_version,
-            export_file_as_table=True,
-            parameters=parameters,
-            par_info=par_info,
         )
-        table_file = db.io_handler.get_output_file(output_file).with_suffix(ECSV_SUFFIX)
-        table.write(table_file, format="ascii.ecsv", overwrite=True)
-        return [table_file]
 
+    # File-backed parameter
     if output_file is not None:
         raise ValueError(
             "Do not use --output_file when exporting file-backed parameters with "
             "--export_model_file. The original database file name is used."
         )
 
-    table = export_single_model_file(
+    return _export_file_backed_parameter(
         db=db,
         parameter=parameter,
         site=site,
         array_element_name=array_element_name,
+        par_info=par_info,
+        parameters=parameters,
+        export_model_file_as_table=export_model_file_as_table,
         parameter_version=parameter_version,
         model_version=model_version,
-        export_file_as_table=export_model_file_as_table,
-        parameters=parameters,
-        par_info=par_info,
     )
-    param_value = par_info["value"]
-    table_file = db.io_handler.get_output_file(param_value)
-    output_files = [table_file]
-    if table and table_file.suffix != ECSV_SUFFIX:
-        table_output_file = table_file.with_suffix(ECSV_SUFFIX)
-        table.write(table_output_file, format="ascii.ecsv", overwrite=True)
-        output_files.append(table_output_file)
-
-    return output_files

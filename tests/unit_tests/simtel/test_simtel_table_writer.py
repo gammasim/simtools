@@ -87,7 +87,7 @@ def test_write_simtel_table_raises_on_non_numeric_row_value(tmp_test_directory):
         "rows": [[0.0, "bad_value"]],
     }
 
-    with pytest.raises(ValueError, match="non-numeric value"):
+    with pytest.raises(ValueError, match="non-real-numeric value"):
         simtel_table_writer.write_simtel_table(
             "fadc_pulse_shape", value, tmp_test_directory, "LSTN-01"
         )

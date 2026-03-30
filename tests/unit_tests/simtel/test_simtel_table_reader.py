@@ -193,31 +193,6 @@ def test_resolve_dict_parameter_value_raises_without_column_units():
         )
 
 
-def test_normalize_column_unit_handles_none_empty_and_dimensionless():
-    """Normalize missing/empty unit representations to schema-compatible strings."""
-    assert simtel_table_reader._normalize_column_unit(None) == "dimensionless"
-    assert simtel_table_reader._normalize_column_unit("") == "dimensionless"
-    assert simtel_table_reader._normalize_column_unit(u.dimensionless_unscaled) == "dimensionless"
-
-
-def test_validate_row_data_dict_returns_non_dict_inputs_unchanged():
-    """Keep non-dict values unchanged in row-data validation helper."""
-    value = ["not", "a", "dict"]
-    assert simtel_table_reader._validate_row_data_dict(value) == value
-
-
-def test_validate_row_data_dict_raises_on_column_unit_length_mismatch():
-    """Raise when row-data column_units length does not match columns length."""
-    with pytest.raises(ValueError, match="column_units' length"):
-        simtel_table_reader._validate_row_data_dict(
-            {
-                "columns": ["time", "amplitude"],
-                "column_units": ["ns"],
-                "rows": [[0.0, 1.0]],
-            }
-        )
-
-
 def test_resolve_dict_parameter_value_invalid_inline_json_falls_back_to_file(
     tmp_test_directory,
 ):

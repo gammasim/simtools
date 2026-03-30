@@ -11,6 +11,7 @@ import numpy as np
 from astropy.table import Table
 
 from simtools.io import ascii_handler
+from simtools.simtel import row_table_utils
 
 logger = logging.getLogger(__name__)
 
@@ -300,7 +301,7 @@ def read_simtel_table_as_row_data(parameter_name, file_path):
     table = read_simtel_table(parameter_name, file_path)
 
     columns = list(table.colnames)
-    column_units = [_normalize_column_unit(table[col].unit) for col in columns]
+    column_units = [row_table_utils.normalize_column_unit(table[col].unit) for col in columns]
     rows = [list(row) for row in table.as_array().tolist()]
 
     return {
@@ -308,37 +309,6 @@ def read_simtel_table_as_row_data(parameter_name, file_path):
         "column_units": column_units,
         "rows": rows,
     }
-
-
-def _normalize_column_unit(unit_value):
-    """Normalize astropy/table unit representation to schema unit strings."""
-    if unit_value is None:
-        return "dimensionless"
-
-    if isinstance(unit_value, str):
-        return unit_value if unit_value else "dimensionless"
-
-    if unit_value == u.dimensionless_unscaled:
-        return "dimensionless"
-
-    unit_as_string = str(unit_value)
-    return unit_as_string if unit_as_string else "dimensionless"
-
-
-def _validate_row_data_dict(value):
-    """Validate row-data dict shape and required per-column units metadata."""
-    if not isinstance(value, dict):
-        return value
-
-    if "columns" in value and "rows" in value:
-        if "column_units" not in value:
-            raise ValueError(
-                "row_data must contain 'column_units' when using 'columns' and 'rows'."
-            )
-        if len(value["columns"]) != len(value["column_units"]):
-            raise ValueError("row_data 'column_units' length must match the number of 'columns'.")
-
-    return value
 
 
 def row_data_to_astropy_table(row_data):
@@ -415,7 +385,13 @@ def _resolve_dict_parameter_from_string(value, parameter_name, data_path=None):
     """Resolve dict-typed value from inline JSON or from table file path string."""
     parsed_value = _parse_inline_json_dict(value, parameter_name)
     if parsed_value is not None:
-        return _validate_row_data_dict(parsed_value)
+        # Validate that row-table-like dicts (with columns and rows) also have column_units
+        if "columns" in parsed_value and "rows" in parsed_value:
+            if "column_units" not in parsed_value:
+                raise ValueError(
+                    "row_data must contain 'column_units' when using 'columns' and 'rows'."
+                )
+        return parsed_value
     return read_simtel_table_as_row_data(
         parameter_name,
         _resolve_input_file_path(value, data_path),
@@ -425,7 +401,13 @@ def _resolve_dict_parameter_from_string(value, parameter_name, data_path=None):
 def resolve_dict_parameter_value(value, parameter_name, data_path=None):
     """Resolve dict-typed value from inline JSON or from a table file path."""
     if isinstance(value, dict):
-        return _validate_row_data_dict(value)
+        # Validate that row-table-like dicts (with columns and rows) also have column_units
+        if "columns" in value and "rows" in value:
+            if "column_units" not in value:
+                raise ValueError(
+                    "row_data must contain 'column_units' when using 'columns' and 'rows'."
+                )
+        return value
 
     if isinstance(value, str):
         return _resolve_dict_parameter_from_string(value, parameter_name, data_path=data_path)
