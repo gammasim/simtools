@@ -121,3 +121,12 @@ Support modules for running sim_telarray.
 .. automodule:: simtel.pulse_shapes
    :members:
 ```
+
+## row_table_utils
+
+(row-table-utils-1)=
+
+```{eval-rst}
+.. automodule:: simtel.row_table_utils
+   :members:
+```
