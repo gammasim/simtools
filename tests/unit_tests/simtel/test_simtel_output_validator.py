@@ -224,7 +224,7 @@ def test_missing_parameter_in_metadata():
     assert len(result) == 0
 
 
-def test_assert_model_parameters_resolves_dict_metadata_file():
+def test_assert_model_parameters_resolves_dict_metadata_file(tmp_test_directory):
     """Resolve dict-valued metadata filenames before comparing to model values."""
     metadata = {"fadc_pulse_shape": "fadc_pulse_shape-LSTN-01.dat"}
     model_mock = MagicMock()
@@ -238,7 +238,8 @@ def test_assert_model_parameters_resolves_dict_metadata_file():
             "type": "dict",
         },
     }
-    model_mock.config_file_directory = Path("/tmp/model")
+    model_directory = Path(tmp_test_directory) / "model"
+    model_mock.config_file_directory = model_directory
 
     with patch(
         "simtools.simtel.simtel_output_validator.simtel_table_reader.resolve_dict_parameter_value"
@@ -250,7 +251,7 @@ def test_assert_model_parameters_resolves_dict_metadata_file():
     resolve_mock.assert_called_once_with(
         "fadc_pulse_shape-LSTN-01.dat",
         "fadc_pulse_shape",
-        data_path=Path("/tmp/model"),
+        data_path=model_directory,
     )
     assert len(result) == 0
 
