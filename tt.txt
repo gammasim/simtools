@@ -1,0 +1,3 @@
+pytest --no-cov -n auto --model_version 6.0.2 tests/integration_tests/test_applications_from_config.py::test_applications_from_config[simtools-convert-geo-coordinates-of-array-elements_utm_to_ground_json]
+
+python src/simtools/applications/db_get_parameter_from_db.py --parameter fadc_pulse_shape --site North --telescope LSTN-01 --parameter_version 1.0.0
