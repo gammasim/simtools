@@ -11,6 +11,8 @@ this module.
 
 import logging
 
+from simtools.simtel import row_table_utils
+
 logger = logging.getLogger(__name__)
 
 
@@ -189,13 +191,7 @@ def _update_fadc_pulse_shape(parameters, schema_version, value_resolver=None):
         )
 
     # Already in canonical row-oriented format {columns, rows} - pass through.
-    if (
-        para_data.get("type") == "dict"
-        and isinstance(value, dict)
-        and "columns" in value
-        and "column_units" in value
-        and "rows" in value
-    ):
+    if para_data.get("type") == "dict" and row_table_utils.is_row_table_dict(value):
         _log_schema_update(parameter_name, current_schema_version, schema_version)
         return {
             para_data["parameter"]: {

@@ -5,44 +5,10 @@ from pathlib import Path
 
 import numpy as np
 
+from simtools.simtel import row_table_utils
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 
 logger = logging.getLogger(__name__)
-
-
-def _validate_simtel_table_rows(parameter_name, columns, rows):
-    """Validate row shape and value types for sim_telarray table writing."""
-    n_columns = len(columns)
-    for row_index, row in enumerate(rows):
-        if not isinstance(row, (list, tuple, np.ndarray)):
-            raise ValueError(
-                f"Table value for '{parameter_name}' has invalid row at index {row_index}: "
-                "each row must be a sequence with one numeric value per column."
-            )
-
-        if len(row) != n_columns:
-            raise ValueError(
-                f"Table value for '{parameter_name}' has invalid row length at index {row_index}: "
-                f"expected {n_columns} values (matching columns), got {len(row)}."
-            )
-
-        for col_index, value in enumerate(row):
-            if not np.isscalar(value):
-                raise ValueError(
-                    f"Table value for '{parameter_name}' has non-numeric value at row "
-                    f"{row_index}, column {col_index} ('{columns[col_index]}'): "
-                    f"{value!r}."
-                )
-
-            value_dtype = np.asarray(value).dtype
-            is_numeric_scalar = np.issubdtype(value_dtype, np.number)
-            is_real_scalar = not np.issubdtype(value_dtype, np.complexfloating)
-            if not (is_numeric_scalar and is_real_scalar):
-                raise ValueError(
-                    f"Table value for '{parameter_name}' has non-numeric value at row "
-                    f"{row_index}, column {col_index} ('{columns[col_index]}'): "
-                    f"{value!r}."
-                )
 
 
 def write_simtel_table(parameter_name, value, dest_dir, telescope_name):
@@ -75,7 +41,7 @@ def write_simtel_table(parameter_name, value, dest_dir, telescope_name):
             f"got {type(value).__name__}."
         )
 
-    _validate_simtel_table_rows(parameter_name, value["columns"], value["rows"])
+    row_table_utils.validate_row_table_structure(parameter_name, value, require_column_units=False)
 
     file_name = f"{parameter_name}-{telescope_name}.dat"
     file_path = Path(dest_dir) / file_name

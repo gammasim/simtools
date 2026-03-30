@@ -12,6 +12,7 @@ from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
+from simtools.simtel import row_table_utils
 from simtools.utils import names, value_conversion
 
 
@@ -368,17 +369,13 @@ class ModelDataWriter:
             ``columns``, ``rows`` and ``column_units``.
         """
         schema_dict, _ = self._read_schema_dict(parameter_name, model_parameter_schema_version)
-        required_row_keys = {"columns", "rows", "column_units"}
 
         for data_entry in schema_dict.get("data", []):
             if data_entry.get("type") != "dict":
                 continue
 
             json_schema = data_entry.get("json_schema", {})
-            required = set(json_schema.get("required", []))
-            properties = set(json_schema.get("properties", {}).keys())
-
-            if required_row_keys.issubset(required) and required_row_keys.issubset(properties):
+            if row_table_utils.is_row_table_schema(json_schema):
                 return True
 
         return False
