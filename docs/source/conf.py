@@ -184,7 +184,7 @@ myst_enable_extensions = [
 ]
 
 
-suppress_warnings = ["myst.*", "myst.duplicate_def"]
+suppress_warnings = ["myst.*", "myst.duplicate_def", "intersphinx.external"]
 
 # Links to be ignored by linkcheck
 linkcheck_ignore = [
