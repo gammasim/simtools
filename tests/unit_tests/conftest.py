@@ -40,7 +40,10 @@ def pytest_collection_modifyitems(items):
     def _is_db_item(item):
         path = getattr(item, "path", None)
         if path is None:
-            return False
+            fspath = getattr(item, "fspath", None)
+            if fspath is None:
+                return False
+            path = Path(str(fspath))
         parts = tuple(path.parts)
         db_parts = ("tests", "unit_tests", "db")
         return any(parts[idx : idx + 3] == db_parts for idx in range(max(len(parts) - 2, 0)))
