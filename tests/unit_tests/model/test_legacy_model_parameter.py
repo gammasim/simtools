@@ -4,7 +4,6 @@ import pytest
 
 from simtools.model.legacy_model_parameter import (
     UPDATE_HANDLERS,
-    _convert_column_data_to_row_data,
     _get_unsupported_update_message,
     _update_dsum_threshold,
     _update_fadc_pulse_shape,
@@ -186,30 +185,12 @@ def test_update_parameter_returns_handler_result():
     assert result["flasher_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
 
 
-def test_convert_column_data_to_row_data():
-    """Test conversion from column-oriented legacy data to row-oriented data."""
-    row_data = _convert_column_data_to_row_data(
-        {
-            "columns": ["time", "amplitude", "amplitude (low gain)"],
-            "data": {
-                "time": [0.0, 1.0],
-                "amplitude": [0.1, 0.2],
-                "amplitude (low gain)": [0.01, 0.02],
-            },
-        }
-    )
-
-    assert row_data == {
-        "columns": ["time", "amplitude", "amplitude (low gain)"],
-        "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
-    }
-
-
 @pytest.mark.parametrize("legacy_type", ["file", "string"])
 def test_update_fadc_pulse_shape_from_file_to_embedded_row_data(mocker, legacy_type):
     """Test file-backed fadc_pulse_shape migration to embedded row data."""
     expected_value = {
         "columns": ["time", "amplitude"],
+        "column_units": ["ns", "dimensionless"],
         "rows": [[0.0, 0.1], [1.0, 0.2]],
     }
     parameters = {
@@ -238,26 +219,12 @@ def test_update_fadc_pulse_shape_from_file_to_embedded_row_data(mocker, legacy_t
         (
             {
                 "columns": ["time", "amplitude", "amplitude (low gain)"],
-                "dtype": ["float64", "float64", "float64"],
-                "unit": ["ns", "dimensionless", "dimensionless"],
-                "data": {
-                    "time": [0.0, 1.0],
-                    "amplitude": [0.1, 0.2],
-                    "amplitude (low gain)": [0.01, 0.02],
-                },
-            },
-            {
-                "columns": ["time", "amplitude", "amplitude (low gain)"],
-                "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
-            },
-        ),
-        (
-            {
-                "columns": ["time", "amplitude", "amplitude (low gain)"],
+                "column_units": ["ns", "dimensionless", "dimensionless"],
                 "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
             },
             {
                 "columns": ["time", "amplitude", "amplitude (low gain)"],
+                "column_units": ["ns", "dimensionless", "dimensionless"],
                 "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
             },
         ),
@@ -281,6 +248,34 @@ def test_update_fadc_pulse_shape_embedded_formats(legacy_value, expected_value):
     assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
 
 
+def test_update_fadc_pulse_shape_embedded_column_data_is_unsupported():
+    """Reject legacy embedded column-data representation for fadc_pulse_shape."""
+    parameters = {
+        "fadc_pulse_shape": {
+            "parameter": "fadc_pulse_shape",
+            "value": {
+                "columns": ["time", "amplitude", "amplitude (low gain)"],
+                "dtype": ["float64", "float64", "float64"],
+                "unit": ["ns", "dimensionless", "dimensionless"],
+                "data": {
+                    "time": [0.0, 1.0],
+                    "amplitude": [0.1, 0.2],
+                    "amplitude (low gain)": [0.01, 0.02],
+                },
+            },
+            "model_parameter_schema_version": "0.2.0",
+            "type": "dict",
+            "file": False,
+        }
+    }
+
+    with pytest.raises(
+        ValueError,
+        match=r"Unsupported update for legacy parameter fadc_pulse_shape.*0.2.0 to 0.2.0",
+    ):
+        _update_fadc_pulse_shape(parameters, "0.2.0")
+
+
 def test_update_parameter_passes_value_resolver(mocker):
     """Test update_parameter forwards the optional value_resolver to the handler."""
     parameters = {
@@ -292,7 +287,13 @@ def test_update_parameter_passes_value_resolver(mocker):
             "file": True,
         }
     }
-    resolver = mocker.Mock(return_value={"columns": ["time", "amplitude"], "rows": [[0.0, 0.1]]})
+    resolver = mocker.Mock(
+        return_value={
+            "columns": ["time", "amplitude"],
+            "column_units": ["ns", "dimensionless"],
+            "rows": [[0.0, 0.1]],
+        }
+    )
 
     result = update_parameter(
         "fadc_pulse_shape",

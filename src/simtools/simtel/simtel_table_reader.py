@@ -300,12 +300,45 @@ def read_simtel_table_as_row_data(parameter_name, file_path):
     table = read_simtel_table(parameter_name, file_path)
 
     columns = list(table.colnames)
+    column_units = [_normalize_column_unit(table[col].unit) for col in columns]
     rows = [list(row) for row in table.as_array().tolist()]
 
     return {
         "columns": columns,
+        "column_units": column_units,
         "rows": rows,
     }
+
+
+def _normalize_column_unit(unit_value):
+    """Normalize astropy/table unit representation to schema unit strings."""
+    if unit_value is None:
+        return "dimensionless"
+
+    if isinstance(unit_value, str):
+        return unit_value if unit_value else "dimensionless"
+
+    if unit_value == u.dimensionless_unscaled:
+        return "dimensionless"
+
+    unit_as_string = str(unit_value)
+    return unit_as_string if unit_as_string else "dimensionless"
+
+
+def _validate_row_data_dict(value):
+    """Validate row-data dict shape and required per-column units metadata."""
+    if not isinstance(value, dict):
+        return value
+
+    if "columns" in value and "rows" in value:
+        if "column_units" not in value:
+            raise ValueError(
+                "row_data must contain 'column_units' when using 'columns' and 'rows'."
+            )
+        if len(value["columns"]) != len(value["column_units"]):
+            raise ValueError("row_data 'column_units' length must match the number of 'columns'.")
+
+    return value
 
 
 def row_data_to_astropy_table(row_data):
@@ -338,7 +371,17 @@ def row_data_to_astropy_table(row_data):
         rows = row_data["rows"]
     except (KeyError, TypeError) as exc:
         raise ValueError("row_data must be a dict with 'columns' and 'rows' keys.") from exc
-    return Table(rows=rows, names=columns)
+
+    table = Table(rows=rows, names=columns)
+    column_units = row_data.get("column_units")
+    if column_units is not None:
+        if len(column_units) != len(columns):
+            raise ValueError("row_data 'column_units' length must match the number of 'columns'.")
+        for col_name, unit_name in zip(columns, column_units):
+            table[col_name].unit = (
+                u.dimensionless_unscaled if unit_name == "dimensionless" else unit_name
+            )
+    return table
 
 
 def _resolve_input_file_path(file_name, data_path=None):
@@ -372,7 +415,7 @@ def _resolve_dict_parameter_from_string(value, parameter_name, data_path=None):
     """Resolve dict-typed value from inline JSON or from table file path string."""
     parsed_value = _parse_inline_json_dict(value, parameter_name)
     if parsed_value is not None:
-        return parsed_value
+        return _validate_row_data_dict(parsed_value)
     return read_simtel_table_as_row_data(
         parameter_name,
         _resolve_input_file_path(value, data_path),
@@ -382,7 +425,7 @@ def _resolve_dict_parameter_from_string(value, parameter_name, data_path=None):
 def resolve_dict_parameter_value(value, parameter_name, data_path=None):
     """Resolve dict-typed value from inline JSON or from a table file path."""
     if isinstance(value, dict):
-        return value
+        return _validate_row_data_dict(value)
 
     if isinstance(value, str):
         return _resolve_dict_parameter_from_string(value, parameter_name, data_path=data_path)

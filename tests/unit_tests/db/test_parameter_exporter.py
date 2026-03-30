@@ -51,6 +51,8 @@ def test_export_parameter_data_writes_ecsv_for_dict_parameter(mocker, db_handler
         parameter_version="2.0.0",
         model_version=None,
         export_file_as_table=True,
+        parameters=db_handler_mock.get_model_parameter.return_value,
+        par_info=db_handler_mock.get_model_parameter.return_value["fadc_pulse_shape"],
     )
     table.write.assert_called_once_with(
         "fadc_pulse_shape.ecsv", format="ascii.ecsv", overwrite=True
@@ -151,8 +153,20 @@ def test_export_parameter_data_returns_file_and_table_outputs(mocker, db_handler
         parameter_version=None,
         model_version="6.0.2",
         export_file_as_table=True,
+        parameters=db_handler_mock.get_model_parameter.return_value,
+        par_info=db_handler_mock.get_model_parameter.return_value["mirror_reflectivity"],
     )
     table.write.assert_called_once_with(
         "ref_LST1_2022_04_01.ecsv", format="ascii.ecsv", overwrite=True
     )
     assert output_files == [file_path, "ref_LST1_2022_04_01.ecsv"]
+
+
+def test_export_model_files_requires_destination(db_handler_mock):
+    """Require destination path for exporting files from DB."""
+    with pytest.raises(ValueError, match="Destination path is required"):
+        parameter_exporter.export_model_files(
+            db=db_handler_mock,
+            parameters={"mirror_reflectivity": {"file": True, "value": "test.dat"}},
+            dest=None,
+        )

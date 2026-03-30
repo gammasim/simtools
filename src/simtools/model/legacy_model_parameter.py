@@ -85,31 +85,6 @@ def update_parameter(par_name, parameters, schema_version, value_resolver=None):
     return handler(parameters, schema_version, value_resolver=value_resolver)
 
 
-def _convert_column_data_to_row_data(value):
-    """Convert a column-oriented dict value to row-oriented table data."""
-    columns = value.get("columns")
-    data = value.get("data")
-
-    if not isinstance(columns, list) or not isinstance(data, dict):
-        raise ValueError("Legacy embedded table data must contain 'columns' list and 'data' dict.")
-
-    column_values = []
-    for column in columns:
-        values = data.get(column)
-        if not isinstance(values, list):
-            raise ValueError(f"Missing or invalid legacy data column '{column}'.")
-        column_values.append(values)
-
-    expected_length = len(column_values[0]) if column_values else 0
-    if any(len(values) != expected_length for values in column_values):
-        raise ValueError("Legacy embedded table data columns must all have the same length.")
-
-    return {
-        "columns": columns,
-        "rows": [list(row) for row in zip(*column_values, strict=False)],
-    }
-
-
 def _update_file_backed_table_parameter(
     parameter_name,
     parameters,
@@ -213,26 +188,12 @@ def _update_fadc_pulse_shape(parameters, schema_version, value_resolver=None):
             value_resolver=value_resolver,
         )
 
-    # Legacy column-oriented representation {columns, data} - convert to {columns, rows}.
-    if (
-        para_data.get("type") == "dict"
-        and isinstance(value, dict)
-        and "columns" in value
-        and "data" in value
-    ):
-        _log_schema_update(parameter_name, current_schema_version, schema_version)
-        return {
-            para_data["parameter"]: {
-                "value": _convert_column_data_to_row_data(value),
-                "model_parameter_schema_version": schema_version,
-            }
-        }
-
     # Already in canonical row-oriented format {columns, rows} - pass through.
     if (
         para_data.get("type") == "dict"
         and isinstance(value, dict)
         and "columns" in value
+        and "column_units" in value
         and "rows" in value
     ):
         _log_schema_update(parameter_name, current_schema_version, schema_version)

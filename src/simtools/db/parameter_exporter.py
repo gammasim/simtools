@@ -1,4 +1,4 @@
-"""Utilities for exporting model parameter payloads."""
+"""Utilities for exporting model parameter values / files from the database."""
 
 from pathlib import Path
 
@@ -45,18 +45,60 @@ def _normalize_file_names(file_names=None, parameters=None):
 
 
 def write_file_from_db_to_disk(db, db_name, path, file):
-    """Extract a file from MongoDB and write it to disk."""
+    """
+    Write one file object from GridFS to disk.
+
+    Parameters
+    ----------
+    db : DatabaseHandler
+        Database handler wrapper.
+    db_name : str
+        Database name.
+    path : str or Path
+        Output directory.
+    file : gridfs.grid_file.GridOut
+        File object returned by GridFS.
+    """
     db.mongo_db_handler.write_file_from_db_to_disk(db_name, path, file)
 
 
 def export_model_files(db, parameters=None, file_names=None, dest=None, db_name=None):
-    """Export model files from DB to the given directory."""
+    """
+    Export model files from DB to a destination directory.
+
+    Parameters
+    ----------
+    db : DatabaseHandler
+        Database handler wrapper.
+    parameters : dict, optional
+        Parameter metadata dictionary used to derive file names.
+    file_names : str or list[str], optional
+        File name or list of file names to export.
+    dest : str or Path
+        Output directory.
+    db_name : str, optional
+        Database name. Uses ``db.db_name`` when omitted.
+
+    Returns
+    -------
+    dict
+        Mapping of file name to GridFS id or ``"file exists"``.
+
+    Raises
+    ------
+    ValueError
+        If ``dest`` is not provided.
+    """
+    if dest is None:
+        raise ValueError("Destination path is required to export model files.")
+
     db_name = db_name or db.db_name
     file_names = _normalize_file_names(file_names=file_names, parameters=parameters)
+    destination = Path(dest)
 
     instance_ids = {}
     for file_name in file_names:
-        if Path(dest).joinpath(file_name).exists():
+        if destination.joinpath(file_name).exists():
             instance_ids[file_name] = "file exists"
         else:
             file_path_instance = db.mongo_db_handler.get_file_from_db(db_name, file_name)
@@ -73,16 +115,47 @@ def export_single_model_file(
     model_version=None,
     parameter_version=None,
     export_file_as_table=False,
+    parameters=None,
+    par_info=None,
 ):
-    """Export a single model file from DB identified by a parameter name."""
-    parameters, par_info = _get_parameter_info(
-        db=db,
-        parameter=parameter,
-        site=site,
-        array_element_name=array_element_name,
-        parameter_version=parameter_version,
-        model_version=model_version,
-    )
+    """
+    Export one parameter payload and optionally return it as a table.
+
+    Parameters
+    ----------
+    db : DatabaseHandler
+        Database handler wrapper.
+    parameter : str
+        Parameter name.
+    site : str
+        Site name.
+    array_element_name : str
+        Array element name.
+    model_version : str, optional
+        Model version.
+    parameter_version : str, optional
+        Parameter version.
+    export_file_as_table : bool, optional
+        If True, return an ``astropy.table.Table`` when possible.
+    parameters : dict, optional
+        Prefetched parameter dictionary.
+    par_info : dict, optional
+        Prefetched single-parameter entry.
+
+    Returns
+    -------
+    astropy.table.Table or None
+        Exported table when requested and available, otherwise None.
+    """
+    if parameters is None or par_info is None:
+        parameters, par_info = _get_parameter_info(
+            db=db,
+            parameter=parameter,
+            site=site,
+            array_element_name=array_element_name,
+            parameter_version=parameter_version,
+            model_version=model_version,
+        )
 
     if _is_dict_table_value(par_info):
         if export_file_as_table:
@@ -109,33 +182,34 @@ def export_parameter_data(
     export_model_file=False,
     export_model_file_as_table=False,
 ):
-    """Export model parameter payload based on parameter type and export flags.
+    """
+    Export parameter payload based on type and export flags.
 
     Parameters
     ----------
-    db: DatabaseHandler
+    db : DatabaseHandler
         DatabaseHandler instance used for DB access and file output.
-    parameter: str
+    parameter : str
         Name of the parameter.
-    site: str
+    site : str
         Site name.
-    array_element_name: str
+    array_element_name : str
         Name of the array element model (e.g. LSTN-01).
-    parameter_version: str
+    parameter_version : str, optional
         Version of the parameter.
-    model_version: str
+    model_version : str, optional
         Version of the model.
-    output_file: str
+    output_file : str, optional
         Output file name for dict-backed table exports.
-    export_model_file: bool
+    export_model_file : bool, optional
         Export payload to files.
-    export_model_file_as_table: bool
+    export_model_file_as_table : bool, optional
         Also export file-backed payload as ECSV table.
 
     Returns
     -------
-    list
-        List of output file paths.
+    list[Path]
+        Output file paths.
 
     Raises
     ------
@@ -148,7 +222,7 @@ def export_parameter_data(
     if not (export_model_file or export_model_file_as_table):
         return []
 
-    _, par_info = _get_parameter_info(
+    parameters, par_info = _get_parameter_info(
         db=db,
         parameter=parameter,
         site=site,
@@ -172,6 +246,8 @@ def export_parameter_data(
             parameter_version=parameter_version,
             model_version=model_version,
             export_file_as_table=True,
+            parameters=parameters,
+            par_info=par_info,
         )
         table_file = db.io_handler.get_output_file(output_file).with_suffix(ECSV_SUFFIX)
         table.write(table_file, format="ascii.ecsv", overwrite=True)
@@ -191,6 +267,8 @@ def export_parameter_data(
         parameter_version=parameter_version,
         model_version=model_version,
         export_file_as_table=export_model_file_as_table,
+        parameters=parameters,
+        par_info=par_info,
     )
     param_value = par_info["value"]
     table_file = db.io_handler.get_output_file(param_value)
