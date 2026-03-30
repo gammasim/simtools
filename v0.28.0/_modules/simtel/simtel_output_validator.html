@@ -1,0 +1,1159 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simtel.simtel_output_validator &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=8d643f27"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_output_validator';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.28.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtel.simtel_output_validator</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for simtel.simtel_output_validator</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Validation of sim_telarray data, log, and metadata.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eventio.simtel.simtelfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimTelFile</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.sim_events</span><span class="w"> </span><span class="kn">import</span> <span class="n">file_info</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.sim_events.file_info</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_corsika_run_number</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_config_reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelConfigReader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_sim_telarray_telescope_id</span><span class="p">,</span>
+    <span class="n">read_sim_telarray_metadata</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.testing.log_inspector</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_plain_logs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">general</span><span class="p">,</span> <span class="n">random</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="validate_sim_telarray">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_output_validator.validate_sim_telarray">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_sim_telarray</span><span class="p">(</span>
+    <span class="n">data_files</span><span class="p">,</span>
+    <span class="n">log_files</span><span class="p">,</span>
+    <span class="n">array_models</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">expected_mc_events</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">expected_shower_events</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">curved_atmo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">allow_for_changes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate sim_telarray output files and metadata.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_files: list of Path</span>
+<span class="sd">        List of sim_telarray output files.</span>
+<span class="sd">    log_files: list of Path</span>
+<span class="sd">        List of sim_telarray log files.</span>
+<span class="sd">    array_models: list of ArrayModel</span>
+<span class="sd">        List of array models to compare with.</span>
+<span class="sd">    expected_mc_events: int</span>
+<span class="sd">        Expected number of MC events in the sim_telarray output files.</span>
+<span class="sd">    expected_shower_events: int</span>
+<span class="sd">        Expected number of shower events in the sim_telarray output files.</span>
+<span class="sd">    curved_atmo: bool</span>
+<span class="sd">        CORSIKA executable compiled with curved atmosphere option.</span>
+<span class="sd">    allow_for_changes: list</span>
+<span class="sd">        List of model parameters that are changed using the command line (&#39;-C&#39;)</span>
+<span class="sd">        Metadata checks allows these values to be different than expected from model.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the sim_telarray output files or metadata are not consistent with the array models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_files</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">ensure_iterable</span><span class="p">(</span><span class="n">data_files</span><span class="p">)</span>
+    <span class="n">log_files</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">ensure_iterable</span><span class="p">(</span><span class="n">log_files</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">array_models</span><span class="p">:</span>
+        <span class="n">validate_metadata</span><span class="p">(</span><span class="n">data_files</span><span class="p">,</span> <span class="n">array_models</span><span class="p">,</span> <span class="n">allow_for_changes</span><span class="p">)</span>
+
+    <span class="n">validate_log_files</span><span class="p">(</span><span class="n">log_files</span><span class="p">,</span> <span class="n">expected_mc_events</span><span class="p">,</span> <span class="n">expected_shower_events</span><span class="p">,</span> <span class="n">curved_atmo</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">expected_mc_events</span> <span class="ow">and</span> <span class="n">expected_shower_events</span><span class="p">:</span>
+        <span class="n">validate_event_numbers</span><span class="p">(</span><span class="n">data_files</span><span class="p">,</span> <span class="n">expected_mc_events</span><span class="p">,</span> <span class="n">expected_shower_events</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_metadata">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_output_validator.validate_metadata">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_metadata</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">array_models</span><span class="p">,</span> <span class="n">allow_for_changes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate metadata in the sim_telarray output files.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">array_models</span><span class="p">:</span>
+        <span class="n">output_file</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">model_version</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="p">)),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">output_file</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validating metadata for </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">assert_sim_telarray_metadata</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">allow_for_changes</span><span class="p">)</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metadata for sim_telarray file </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2"> is valid.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;No sim_telarray file found for model version </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">files</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_log_files">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_output_validator.validate_log_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_log_files</span><span class="p">(</span>
+    <span class="n">log_files</span><span class="p">,</span> <span class="n">expected_mc_events</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">expected_shower_events</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">curved_atmo</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate sim_telarray log files.&quot;&quot;&quot;</span>
+    <span class="n">patterns</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;Finished.&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Sim_telarray finished at&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">forbidden</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">expected_mc_events</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">expected_shower_events</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Run(s) completed as expected after </span><span class="si">{</span><span class="n">expected_mc_events</span><span class="si">}</span><span class="s2"> events &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">expected_shower_events</span><span class="si">}</span><span class="s2"> showers).&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">curved_msg</span> <span class="o">=</span> <span class="s2">&quot;CORSIKA was compiled with CURVED option.&quot;</span>
+    <span class="k">if</span> <span class="n">curved_atmo</span><span class="p">:</span>
+        <span class="n">patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curved_msg</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">forbidden</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curved_msg</span><span class="p">)</span>
+
+    <span class="n">ok</span> <span class="o">=</span> <span class="n">check_plain_logs</span><span class="p">(</span>
+        <span class="n">log_files</span><span class="p">,</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;pattern&quot;</span><span class="p">:</span> <span class="n">patterns</span><span class="p">,</span>
+            <span class="s2">&quot;forbidden_pattern&quot;</span><span class="p">:</span> <span class="n">forbidden</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ok</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sim_telarray log files validation failed for </span><span class="si">{</span><span class="n">log_files</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Sim_telarray log files validation passed: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">log_files</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="assert_sim_telarray_metadata">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_output_validator.assert_sim_telarray_metadata">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">assert_sim_telarray_metadata</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">array_model</span><span class="p">,</span> <span class="n">allow_for_changes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assert consistency of sim_telarray metadata with given array model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file: Path</span>
+<span class="sd">        Path to the sim_telarray file.</span>
+<span class="sd">    array_model: ArrayModel</span>
+<span class="sd">        Array model to compare with.</span>
+<span class="sd">    allow_for_changes: list</span>
+<span class="sd">        List of model parameters that are changed from command line (&#39;-C&#39;)</span>
+<span class="sd">        Metadata checks allows these values to be different than expected from model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">global_meta</span><span class="p">,</span> <span class="n">telescope_meta</span> <span class="o">=</span> <span class="n">read_sim_telarray_metadata</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found metadata in sim_telarray file for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">telescope_meta</span><span class="p">)</span><span class="si">}</span><span class="s2"> telescopes&quot;</span><span class="p">)</span>
+    <span class="n">site_parameter_mismatch</span> <span class="o">=</span> <span class="n">_assert_model_parameters</span><span class="p">(</span>
+        <span class="n">global_meta</span><span class="p">,</span> <span class="n">array_model</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span> <span class="n">allow_for_changes</span>
+    <span class="p">)</span>
+    <span class="n">sim_telarray_seed_mismatch</span> <span class="o">=</span> <span class="n">_assert_sim_telarray_seed</span><span class="p">(</span>
+        <span class="n">global_meta</span><span class="p">,</span> <span class="n">array_model</span><span class="o">.</span><span class="n">sim_telarray_seed</span><span class="p">,</span> <span class="n">file</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">sim_telarray_seed_mismatch</span><span class="p">:</span>
+        <span class="n">site_parameter_mismatch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sim_telarray_seed_mismatch</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">telescope_meta</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">array_model</span><span class="o">.</span><span class="n">telescope_models</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Number of telescopes in sim_telarray file (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">telescope_meta</span><span class="p">)</span><span class="si">}</span><span class="s2">) does not match &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;number of telescopes in array model (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">array_model</span><span class="o">.</span><span class="n">telescope_models</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">telescope_name</span> <span class="ow">in</span> <span class="n">array_model</span><span class="o">.</span><span class="n">telescope_models</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">get_sim_telarray_telescope_id</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Telescope </span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2"> not found in sim_telarray file metadata&quot;</span><span class="p">)</span>
+
+    <span class="n">telescope_parameter_mismatch</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_assert_model_parameters</span><span class="p">(</span><span class="n">telescope_meta</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">model</span><span class="p">,</span> <span class="n">allow_for_changes</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">array_model</span><span class="o">.</span><span class="n">telescope_models</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="c1"># ensure printout of all mismatches, not only those found first</span>
+    <span class="n">telescope_parameter_mismatch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">site_parameter_mismatch</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">telescope_parameter_mismatch</span><span class="p">):</span>
+        <span class="n">mismatches</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">telescope_parameter_mismatch</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Telescope or site model parameters do not match sim_telarray metadata: </span><span class="si">{</span><span class="n">mismatches</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_extract_parameter_value</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">sim_telarray_name</span><span class="p">,</span> <span class="n">parameter_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract parameter value from metadata based on type.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    metadata: dict</span>
+<span class="sd">        Metadata dictionary.</span>
+<span class="sd">    sim_telarray_name: str</span>
+<span class="sd">        Name of the parameter in sim_telarray.</span>
+<span class="sd">    parameter_type: str</span>
+<span class="sd">        Type of the parameter.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    any</span>
+<span class="sd">        Extracted parameter value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">parameter_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;dict&quot;</span><span class="p">,</span> <span class="s2">&quot;boolean&quot;</span><span class="p">):</span>
+        <span class="n">config_reader</span> <span class="o">=</span> <span class="n">SimtelConfigReader</span><span class="p">()</span>
+        <span class="n">value</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">config_reader</span><span class="o">.</span><span class="n">extract_value_from_sim_telarray_column</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">metadata</span><span class="p">[</span><span class="n">sim_telarray_name</span><span class="p">]],</span> <span class="n">parameter_type</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">sim_telarray_name</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">)(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">()</span> <span class="k">else</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_parameter_validity</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">model_value</span><span class="p">,</span> <span class="n">parameter_type</span><span class="p">,</span> <span class="n">allow_for_changes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if parameter value matches model value and log discrepancies.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    param: str</span>
+<span class="sd">        Parameter name.</span>
+<span class="sd">    value: any</span>
+<span class="sd">        Extracted value from metadata.</span>
+<span class="sd">    model_value: any</span>
+<span class="sd">        Expected value from model.</span>
+<span class="sd">    parameter_type: str</span>
+<span class="sd">        Type of the parameter.</span>
+<span class="sd">    allow_for_changes: list</span>
+<span class="sd">        List of parameters allowed to change.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or None</span>
+<span class="sd">        Error message if parameter doesn&#39;t match, None otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">is_equal</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">model_value</span><span class="p">,</span> <span class="n">parameter_type</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">allow_for_changes</span> <span class="ow">and</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">allow_for_changes</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2"> mismatch between sim_telarray file: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;and model: </span><span class="si">{</span><span class="n">model_value</span><span class="si">}</span><span class="s2">, but allowed for changes.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2"> mismatch between sim_telarray file: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">, and model: </span><span class="si">{</span><span class="n">model_value</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_assert_model_parameters</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">allow_for_changes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assert that model parameter values matches the values in the sim_telarray metadata.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    metadata: dict</span>
+<span class="sd">        Metadata dictionary.</span>
+<span class="sd">    model: SiteModel, TelescopeModel</span>
+<span class="sd">        Model to compare with.</span>
+<span class="sd">    allow_for_changes: list</span>
+<span class="sd">        List of model parameters that are changed from command line (&#39;-C&#39;)</span>
+<span class="sd">        Metadata checks allows these values to be different than expected from model.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    invalid_parameter_list: list</span>
+<span class="sd">        List of parameters that do not match.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">invalid_parameter_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+        <span class="n">sim_telarray_name</span> <span class="o">=</span> <span class="n">_sim_telarray_name_from_parameter_name</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sim_telarray_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">continue</span>
+
+        <span class="n">parameter_type</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">_extract_parameter_value</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">sim_telarray_name</span><span class="p">,</span> <span class="n">parameter_type</span><span class="p">)</span>
+        <span class="n">model_value</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+
+        <span class="n">error</span> <span class="o">=</span> <span class="n">_check_parameter_validity</span><span class="p">(</span>
+            <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">model_value</span><span class="p">,</span> <span class="n">parameter_type</span><span class="p">,</span> <span class="n">allow_for_changes</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">error</span><span class="p">:</span>
+            <span class="n">invalid_parameter_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">invalid_parameter_list</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_assert_sim_telarray_seed</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">sim_telarray_seed</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assert that sim_telarray seed matches the values in the sim_telarray metadata.</span>
+
+<span class="sd">    Regenerate seeds using the sim_telarray_random_seeds function and compare with the metadata.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    metadata: dict</span>
+<span class="sd">        Metadata dictionary.</span>
+<span class="sd">    sim_telarray_seed: SimtelSeeds</span>
+<span class="sd">        sim_telarray seed.</span>
+<span class="sd">    file : Path</span>
+<span class="sd">        Path to the sim_telarray file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    invalid_parameter_list: list</span>
+<span class="sd">        Error message if sim_telarray seeds do not match.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">sim_telarray_seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="s2">&quot;instrument_seed&quot;</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">&quot;instrument_instances&quot;</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;instrument_seed&quot;</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sim_telarray_seed</span><span class="o">.</span><span class="n">instrument_seed</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="s2">&quot;Parameter instrument_seed mismatch between sim_telarray file: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;instrument_seed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, and model: </span><span class="si">{</span><span class="n">sim_telarray_seed</span><span class="o">.</span><span class="n">instrument_seed</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;sim_telarray_seed in sim_telarray file: </span><span class="si">{</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;instrument_seed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;and model: </span><span class="si">{</span><span class="n">sim_telarray_seed</span><span class="o">.</span><span class="n">instrument_seed</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">run_number_modified</span> <span class="o">=</span> <span class="n">get_corsika_run_number</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">test_seeds</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">seeds</span><span class="p">(</span>
+                <span class="n">n_seeds</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;instrument_instances&quot;</span><span class="p">]),</span>
+                <span class="n">max_seed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
+                <span class="n">fixed_seed</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;instrument_seed&quot;</span><span class="p">]),</span>
+            <span class="p">)</span>
+            <span class="c1"># no +1 as in sim_telarray (as we count from 0)</span>
+            <span class="n">seed_used</span> <span class="o">=</span> <span class="n">run_number_modified</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;instrument_instances&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rng_select_seed&quot;</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">(</span><span class="n">test_seeds</span><span class="p">[</span><span class="n">seed_used</span><span class="p">]):</span>
+                <span class="k">return</span> <span class="p">(</span>
+                    <span class="s2">&quot;Parameter rng_select_seed mismatch between sim_telarray file: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;rng_select_seed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, and model: </span><span class="si">{</span><span class="n">test_seeds</span><span class="p">[</span><span class="n">seed_used</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sim_telarray_name_from_parameter_name</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return sim_telarray parameter name. Some specific fine tuning.&quot;&quot;&quot;</span>
+    <span class="c1"># parameters like &quot;reference_point_latitude&quot;</span>
+    <span class="n">sim_telarray_name</span> <span class="o">=</span> <span class="n">parameter_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;reference_point_&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sim_telarray_name</span> <span class="o">==</span> <span class="s2">&quot;altitude&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;corsika_observation_level&quot;</span>
+    <span class="k">if</span> <span class="n">sim_telarray_name</span> <span class="o">==</span> <span class="s2">&quot;array_triggers&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">sim_telarray_name</span>
+
+
+<div class="viewcode-block" id="is_equal">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_output_validator.is_equal">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_equal</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="n">value2</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if two values are equal based on their type.</span>
+
+<span class="sd">    The complexity of this function reflects the complexity of the sim_telarray</span>
+<span class="sd">    metadata output.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value1: any</span>
+<span class="sd">        First value to compare.</span>
+<span class="sd">    value2: any</span>
+<span class="sd">        Second value to compare.</span>
+<span class="sd">    value_type: str</span>
+<span class="sd">        Type of the values (&#39;string&#39;, &#39;dict&#39;, etc.).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the values are equal, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value1</span> <span class="o">=</span> <span class="n">value1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">value1</span>
+    <span class="n">value2</span> <span class="o">=</span> <span class="n">value2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value2</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">value2</span>
+    <span class="k">if</span> <span class="n">value1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">value2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">value1</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value2</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="n">value_type</span> <span class="o">==</span> <span class="s2">&quot;string&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">value2</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">value_type</span> <span class="o">==</span> <span class="s2">&quot;dict&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value1</span> <span class="o">==</span> <span class="n">value2</span>
+    <span class="k">if</span> <span class="n">value_type</span> <span class="o">==</span> <span class="s2">&quot;boolean&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">value1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">bool</span><span class="p">(</span><span class="n">value2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_is_equal_floats_or_ints</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="n">value2</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_equal_floats_or_ints</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="n">value2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if floats and ints are equal.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value2</span><span class="p">),</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value2</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="n">value1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">value1</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value1</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">value2</span><span class="p">),</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value2</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value1</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="n">value2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">value2</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value1</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">value2</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value1</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">value2</span><span class="p">),</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="validate_event_numbers">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_output_validator.validate_event_numbers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_event_numbers</span><span class="p">(</span><span class="n">data_files</span><span class="p">,</span> <span class="n">expected_mc_events</span><span class="p">,</span> <span class="n">expected_shower_events</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Verify the number of simulated events. Loops over all events in sim_telarray output files.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_files: list of Path</span>
+<span class="sd">        List of sim_telarray output files.</span>
+<span class="sd">    expected_mc_events: int</span>
+<span class="sd">        Expected number of simulated MC events.</span>
+<span class="sd">    expected_shower_events: int</span>
+<span class="sd">        Expected number of simulated shower events.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the number of simulated events does not match the expected number.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">event_errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">general</span><span class="o">.</span><span class="n">ensure_iterable</span><span class="p">(</span><span class="n">data_files</span><span class="p">):</span>
+        <span class="n">shower_events</span><span class="p">,</span> <span class="n">mc_events</span> <span class="o">=</span> <span class="n">file_info</span><span class="o">.</span><span class="n">get_simulated_events</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">shower_events</span><span class="p">,</span> <span class="n">mc_events</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">expected_shower_events</span><span class="p">,</span> <span class="n">expected_mc_events</span><span class="p">):</span>
+            <span class="n">event_errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Event mismatch: shower/MC events in </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">shower_events</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">mc_events</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; (expected: </span><span class="si">{</span><span class="n">expected_shower_events</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">expected_mc_events</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Consistent number of events in sim_telarray output: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;shower events: </span><span class="si">{</span><span class="n">shower_events</span><span class="si">}</span><span class="s2"> (expected </span><span class="si">{</span><span class="n">expected_shower_events</span><span class="si">}</span><span class="s2">), &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;MC events: </span><span class="si">{</span><span class="n">mc_events</span><span class="si">}</span><span class="s2"> (expected </span><span class="si">{</span><span class="n">expected_mc_events</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; (file: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">event_errors</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Inconsistent event counts found:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">event_errors</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; - </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="s2">&quot;Inconsistent event counts found:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot; - </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">event_errors</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="assert_n_showers_and_energy_range">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_output_validator.assert_n_showers_and_energy_range">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">assert_n_showers_and_energy_range</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assert the number of showers and the energy range.</span>
+
+<span class="sd">    The number of showers should be consistent with the required one (up to 1% tolerance)</span>
+<span class="sd">    and the energies simulated are required to be within the configured ones.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file: Path</span>
+<span class="sd">        Path to the sim_telarray file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">simulated_energies</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">simulation_config</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="n">SimTelFile</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">skip_non_triggered</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">simulation_config</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mc_run_headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">simulated_energies</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">&quot;mc_shower&quot;</span><span class="p">][</span><span class="s2">&quot;energy&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Expected &#39;mc_shower&#39; information in sim_telarray file </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> for checking &quot;</span>
+                <span class="s2">&quot;number of showers and energy range, but it was not found.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+    <span class="c1"># Inconsistent filling of run header depending on how simulations are run</span>
+    <span class="c1"># The relative tolerance is set to 1% because ~0.5% shower simulations do not</span>
+    <span class="c1"># succeed, without resulting in an error. This tolerance therefore is not an issue.</span>
+    <span class="n">consistent_n_showers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">simulated_energies</span><span class="p">),</span> <span class="n">simulation_config</span><span class="p">[</span><span class="s2">&quot;n_showers&quot;</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-2</span>
+    <span class="p">)</span>
+    <span class="n">consistent_n_showers_unique</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">simulated_energies</span><span class="p">)),</span> <span class="n">simulation_config</span><span class="p">[</span><span class="s2">&quot;n_showers&quot;</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-2</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">consistent_n_showers</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">consistent_n_showers_unique</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Number of showers in sim_telarray file </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> does not match the configuration. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Simulated showers: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">simulated_energies</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Unique simulated showers: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">simulated_energies</span><span class="p">))</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Configuration: </span><span class="si">{</span><span class="n">simulation_config</span><span class="p">[</span><span class="s1">&#39;n_showers&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">consistent_energy_range</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span>
+        <span class="n">simulation_config</span><span class="p">[</span><span class="s2">&quot;E_range&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">energy</span> <span class="o">&lt;=</span> <span class="n">simulation_config</span><span class="p">[</span><span class="s2">&quot;E_range&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">energy</span> <span class="ow">in</span> <span class="n">simulated_energies</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">consistent_energy_range</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Energy range in sim_telarray file </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> does not match &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;the configuration. Simulated energies: </span><span class="si">{</span><span class="n">simulated_energies</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;configuration: </span><span class="si">{</span><span class="n">simulation_config</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="assert_expected_sim_telarray_output">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_output_validator.assert_expected_sim_telarray_output">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">assert_expected_sim_telarray_output</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">expected_sim_telarray_output</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assert that the expected output is present in the sim_telarray file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file: Path</span>
+<span class="sd">        Path to the sim_telarray file.</span>
+<span class="sd">    expected_sim_telarray_output: dict</span>
+<span class="sd">        Expected output values.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">expected_sim_telarray_output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">item_to_check</span> <span class="o">=</span> <span class="n">_item_to_check_from_sim_telarray</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">expected_sim_telarray_output</span><span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">&quot;Extracted event numbers from sim_telarray file: &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;telescope events: </span><span class="si">{</span><span class="n">item_to_check</span><span class="p">[</span><span class="s1">&#39;n_telescope_events&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;calibration events: </span><span class="si">{</span><span class="n">item_to_check</span><span class="p">[</span><span class="s1">&#39;n_calibration_events&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">expected_sim_telarray_output</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;event_type&quot;</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">item_to_check</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No data found for </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">item_to_check</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Mean of </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> is not in the expected range, got </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">item_to_check</span><span class="p">[</span><span class="n">key</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_trigger_time</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">item_to_check</span><span class="p">,</span> <span class="n">expected_sim_telarray_output</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Process trigger_time data from event if expected.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;trigger_time&quot;</span> <span class="ow">in</span> <span class="n">expected_sim_telarray_output</span><span class="p">:</span>
+        <span class="n">item_to_check</span><span class="p">[</span><span class="s2">&quot;trigger_time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">&quot;trigger_information&quot;</span><span class="p">][</span><span class="s2">&quot;trigger_times&quot;</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_shower_event_data</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">item_to_check</span><span class="p">,</span> <span class="n">expected_sim_telarray_output</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Process data event (non-calibration) photoelectron data if expected.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;pe_sum&quot;</span> <span class="ow">in</span> <span class="n">expected_sim_telarray_output</span><span class="p">:</span>
+        <span class="n">item_to_check</span><span class="p">[</span><span class="s2">&quot;pe_sum&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">event</span><span class="p">[</span><span class="s2">&quot;photoelectron_sums&quot;</span><span class="p">][</span><span class="s2">&quot;n_pe&quot;</span><span class="p">][</span><span class="n">event</span><span class="p">[</span><span class="s2">&quot;photoelectron_sums&quot;</span><span class="p">][</span><span class="s2">&quot;n_pe&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;photons&quot;</span> <span class="ow">in</span> <span class="n">expected_sim_telarray_output</span><span class="p">:</span>
+        <span class="n">item_to_check</span><span class="p">[</span><span class="s2">&quot;photons&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">event</span><span class="p">[</span><span class="s2">&quot;photoelectron_sums&quot;</span><span class="p">][</span><span class="s2">&quot;photons_atm_qe&quot;</span><span class="p">][</span>
+                <span class="n">event</span><span class="p">[</span><span class="s2">&quot;photoelectron_sums&quot;</span><span class="p">][</span><span class="s2">&quot;photons&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_telescope_events</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">item_to_check</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Process telescope event count.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;telescope_events&quot;</span> <span class="ow">in</span> <span class="n">event</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">&quot;telescope_events&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">item_to_check</span><span class="p">[</span><span class="s2">&quot;n_telescope_events&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_item_to_check_from_sim_telarray</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">expected_sim_telarray_output</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read the relevant items from the sim_telarray file for checking against expected output.&quot;&quot;&quot;</span>
+    <span class="n">item_to_check</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;n_telescope_events&quot;</span><span class="p">,</span> <span class="s2">&quot;n_calibration_events&quot;</span><span class="p">):</span>
+        <span class="n">item_to_check</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">with</span> <span class="n">SimTelFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">_process_trigger_time</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">item_to_check</span><span class="p">,</span> <span class="n">expected_sim_telarray_output</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;calibration&quot;</span><span class="p">:</span>
+                <span class="n">item_to_check</span><span class="p">[</span><span class="s2">&quot;n_calibration_events&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_process_shower_event_data</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">item_to_check</span><span class="p">,</span> <span class="n">expected_sim_telarray_output</span><span class="p">)</span>
+            <span class="n">_process_telescope_events</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">item_to_check</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">item_to_check</span>
+
+
+<div class="viewcode-block" id="assert_expected_sim_telarray_metadata">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_output_validator.assert_expected_sim_telarray_metadata">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">assert_expected_sim_telarray_metadata</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">expected_sim_telarray_metadata</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assert that expected metadata is present in the sim_telarray file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file: Path</span>
+<span class="sd">        Path to the sim_telarray file.</span>
+<span class="sd">    expected_sim_telarray_metadata: dict</span>
+<span class="sd">        Expected metadata values.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">expected_sim_telarray_metadata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="n">global_meta</span><span class="p">,</span> <span class="n">telescope_meta</span> <span class="o">=</span> <span class="n">read_sim_telarray_metadata</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">expected_sim_telarray_metadata</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">global_meta</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">telescope_meta</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metadata key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> not found in sim_telarray file </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">global_meta</span> <span class="ow">and</span> <span class="n">global_meta</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Metadata key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> has value </span><span class="si">{</span><span class="n">global_meta</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2"> instead of expected </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metadata key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> matches expected value </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="assert_events_of_type">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_output_validator.assert_events_of_type">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">assert_events_of_type</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">event_type</span><span class="o">=</span><span class="s2">&quot;shower&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assert that events of the expected type are present in the sim_telarray file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file: Path</span>
+<span class="sd">        Path to the sim_telarray file.</span>
+<span class="sd">    event_type: str</span>
+<span class="sd">        Expected event type (e.g., &quot;shower&quot;, &quot;flasher&quot;, etc.).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">expected_event_type</span> <span class="o">=</span> <span class="s2">&quot;data&quot;</span>
+    <span class="k">if</span> <span class="n">event_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;pedestal&quot;</span><span class="p">,</span> <span class="s2">&quot;direct_injection&quot;</span><span class="p">):</span>
+        <span class="n">expected_event_type</span> <span class="o">=</span> <span class="s2">&quot;calibration&quot;</span>
+    <span class="k">with</span> <span class="n">SimTelFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">expected_event_type</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No events of type </span><span class="si">{</span><span class="n">event_type</span><span class="si">}</span><span class="s2"> found in sim_telarray file </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
