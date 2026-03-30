@@ -323,11 +323,12 @@ class MirrorPanelPSF:
         """
         Optimize all mirrors in parallel using process pool.
 
-        Sets
-        ----
-        self.per_mirror_results : list of dict
-        self.rnda_opt : list of float
-        self.final_percentage_diff : float
+        Notes
+        -----
+        This method updates these instance attributes:
+        - per_mirror_results (list of MirrorOptimizationResult)
+        - rnda_opt (list of float)
+        - final_percentage_diff (float)
         """
         n_mirrors = len(self.measured_data)
         if self.args_dict.get("test"):
