@@ -5,8 +5,10 @@ import pytest
 from simtools.model.legacy_model_parameter import (
     UPDATE_HANDLERS,
     _get_unsupported_update_message,
+    _update_corsika_starting_grammage,
     _update_dsum_threshold,
     _update_fadc_pulse_shape,
+    _update_file_backed_table_parameter,
     _update_flasher_pulse_shape,
     apply_legacy_updates_to_parameters,
     register_update,
@@ -304,3 +306,38 @@ def test_update_parameter_passes_value_resolver(mocker):
 
     resolver.assert_called_once_with("fadc_pulse_shape", "pulse.dat")
     assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
+
+
+def test_update_file_backed_table_parameter_requires_value_resolver():
+    """Raise when updating file-backed table parameter without value_resolver."""
+    parameters = {
+        "fadc_pulse_shape": {
+            "parameter": "fadc_pulse_shape",
+            "value": "pulse.dat",
+            "model_parameter_schema_version": "0.1.0",
+            "type": "file",
+            "file": True,
+        }
+    }
+
+    with pytest.raises(ValueError, match="value_resolver is required"):
+        _update_file_backed_table_parameter(
+            parameter_name="fadc_pulse_shape",
+            parameters=parameters,
+            schema_version="0.2.0",
+        )
+
+
+def test_update_corsika_starting_grammage_returns_remove_placeholder():
+    """Return None placeholder update for legacy corsika_starting_grammage."""
+    parameters = {
+        "corsika_starting_grammage": {
+            "parameter": "corsika_starting_grammage",
+            "value": 1.0,
+            "model_parameter_schema_version": "0.1.0",
+        }
+    }
+
+    result = _update_corsika_starting_grammage(parameters, "0.2.0")
+
+    assert result == {"corsika_starting_grammage": None}

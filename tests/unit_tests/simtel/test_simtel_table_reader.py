@@ -193,6 +193,68 @@ def test_resolve_dict_parameter_value_raises_without_column_units():
         )
 
 
+def test_normalize_column_unit_handles_none_empty_and_dimensionless():
+    """Normalize missing/empty unit representations to schema-compatible strings."""
+    assert simtel_table_reader._normalize_column_unit(None) == "dimensionless"
+    assert simtel_table_reader._normalize_column_unit("") == "dimensionless"
+    assert simtel_table_reader._normalize_column_unit(u.dimensionless_unscaled) == "dimensionless"
+
+
+def test_validate_row_data_dict_returns_non_dict_inputs_unchanged():
+    """Keep non-dict values unchanged in row-data validation helper."""
+    value = ["not", "a", "dict"]
+    assert simtel_table_reader._validate_row_data_dict(value) == value
+
+
+def test_validate_row_data_dict_raises_on_column_unit_length_mismatch():
+    """Raise when row-data column_units length does not match columns length."""
+    with pytest.raises(ValueError, match="column_units' length"):
+        simtel_table_reader._validate_row_data_dict(
+            {
+                "columns": ["time", "amplitude"],
+                "column_units": ["ns"],
+                "rows": [[0.0, 1.0]],
+            }
+        )
+
+
+def test_resolve_dict_parameter_value_invalid_inline_json_falls_back_to_file(
+    tmp_test_directory,
+):
+    """Fallback to file-path resolution if inline JSON parsing fails."""
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data",
+        return_value={"columns": ["time"], "column_units": ["ns"], "rows": [[0.0]]},
+    ) as read_mock:
+        result = simtel_table_reader.resolve_dict_parameter_value(
+            "{not valid json}",
+            "fadc_pulse_shape",
+            data_path=tmp_test_directory,
+        )
+
+    read_mock.assert_called_once_with(
+        "fadc_pulse_shape",
+        Path(tmp_test_directory) / "{not valid json}",
+    )
+    assert result["columns"] == ["time"]
+
+
+def test_resolve_dict_parameter_value_non_string_non_dict_uses_file_reader(tmp_test_directory):
+    """Resolve Path-like input values through table-file reader path."""
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data",
+        return_value={"columns": ["time"], "column_units": ["ns"], "rows": [[0.0]]},
+    ) as read_mock:
+        result = simtel_table_reader.resolve_dict_parameter_value(
+            Path("pulse.dat"),
+            "fadc_pulse_shape",
+            data_path=tmp_test_directory,
+        )
+
+    read_mock.assert_called_once_with("fadc_pulse_shape", Path(tmp_test_directory) / "pulse.dat")
+    assert result["rows"] == [[0.0]]
+
+
 def test_data_simple_columns():
     columns = [
         "pm_photoelectron_spectrum",

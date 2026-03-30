@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
+import simtools.simtel.simtel_output_validator as simtel_output_validator
 from simtools.simtel.simtel_output_validator import (
     _assert_model_parameters,
     _assert_sim_telarray_seed,
@@ -254,6 +255,61 @@ def test_assert_model_parameters_resolves_dict_metadata_file(tmp_test_directory)
         data_path=model_directory,
     )
     assert len(result) == 0
+
+
+def test_resolve_dict_parameter_metadata_value_returns_input_for_non_dict_type():
+    """Keep metadata value unchanged when parameter type is not dict."""
+    model = MagicMock()
+    value = "fadc_pulse_shape.dat"
+
+    result = simtel_output_validator._resolve_dict_parameter_metadata_value(
+        value=value,
+        model_value={"columns": ["time"], "rows": [[0.0]]},
+        parameter_type="string",
+        param="fadc_pulse_shape",
+        model=model,
+    )
+
+    assert result == value
+
+
+def test_resolve_dict_parameter_metadata_value_returns_input_for_non_string_value():
+    """Keep metadata value unchanged for dict parameters with non-string metadata values."""
+    model = MagicMock()
+    value = {"columns": ["time"], "rows": [[0.0]]}
+
+    result = simtel_output_validator._resolve_dict_parameter_metadata_value(
+        value=value,
+        model_value={"columns": ["time"], "rows": [[0.0]]},
+        parameter_type="dict",
+        param="fadc_pulse_shape",
+        model=model,
+    )
+
+    assert result == value
+
+
+def test_resolve_dict_parameter_metadata_value_returns_input_when_resolution_fails(
+    tmp_test_directory,
+):
+    """Return original metadata value when table resolution raises expected exceptions."""
+    model = MagicMock()
+    model.config_file_directory = Path(tmp_test_directory)
+    value = "missing_file.dat"
+
+    with patch(
+        "simtools.simtel.simtel_output_validator.simtel_table_reader.resolve_dict_parameter_value"
+    ) as resolve_mock:
+        resolve_mock.side_effect = FileNotFoundError("missing")
+        result = simtel_output_validator._resolve_dict_parameter_metadata_value(
+            value=value,
+            model_value={"columns": ["time"], "rows": [[0.0]]},
+            parameter_type="dict",
+            param="fadc_pulse_shape",
+            model=model,
+        )
+
+    assert result == value
 
 
 def test_telescope_count_mismatch(tmp_path):
