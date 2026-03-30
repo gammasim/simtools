@@ -31,68 +31,42 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.runners.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
-
-UNIT_TEST_DB = "unit_tests/db/"
+REAL_DATABASE_HANDLER_CLASS = db_handler.DatabaseHandler
 
 
 def pytest_collection_modifyitems(items):
-    """Tag db unit tests with a stable keyword for fixture routing."""
+    """Tag db unit tests with a stable marker for fixture routing."""
+
+    def _is_db_item(item):
+        path = getattr(item, "path", None)
+        if path is None:
+            fspath = getattr(item, "fspath", None)
+            if fspath is None:
+                return False
+            path = Path(str(fspath))
+        parts = tuple(path.parts)
+        db_parts = ("tests", "unit_tests", "db")
+        return any(parts[idx : idx + 3] == db_parts for idx in range(max(len(parts) - 2, 0)))
+
     for item in items:
-        nodeid = str(getattr(item, "nodeid", "")).replace("\\", "/")
-        if "/unit_tests/db/" in f"/{nodeid}":
-            item.keywords["db_unit_test"] = True
+        if _is_db_item(item):
+            item.add_marker("db_unit_test")
 
 
 def _is_db_unit_test(request):
-    """Return True for tests under tests/unit_tests/db across path styles."""
-
+    """Return True when the current test carries the db_unit_test marker."""
     node = getattr(request, "node", None)
-    nodeid = str(getattr(node, "nodeid", "")).replace("\\", "/")
-    if nodeid.startswith("tests/unit_tests/db/"):
-        return True
-
-    def _contains_db_test_path(value):
-        normalized = str(value).replace("\\", "/").strip("/") if value else ""
-        if not normalized:
-            return False
-        return (
-            UNIT_TEST_DB in normalized
-            or normalized.startswith("tests/unit_tests/db/")
-            or "tests.unit_tests.db" in normalized
-        )
-
-    # Most robust execution-time signal during fixture setup.
-    if _contains_db_test_path(os.environ.get("PYTEST_CURRENT_TEST", "")):
-        return True
-
-    if _contains_db_test_path(getattr(getattr(request, "module", None), "__file__", "")):
-        return True
-
     if node is None:
         return False
 
-    if "db_unit_test" in getattr(node, "keywords", {}):
+    if node.get_closest_marker("db_unit_test") is not None:
         return True
 
-    def _normalize(value):
-        return str(value).replace("\\", "/") if value else ""
-
-    candidates = [
-        _normalize(getattr(node, "path", "")),
-        _normalize(getattr(node, "fspath", "")),
-        _normalize(getattr(node, "location", [""])[0] if getattr(node, "location", None) else ""),
-        _normalize(getattr(getattr(node, "module", None), "__file__", "")),
-        _normalize(getattr(node, "nodeid", "")),
-        _normalize(getattr(getattr(node, "module", None), "__name__", "")),
-        _normalize(getattr(request, "fspath", "")),
-        _normalize(getattr(request, "nodeid", "")),
-    ]
-
-    for candidate in candidates:
-        if _contains_db_test_path(candidate):
-            return True
-
-    return False
+    test_file = ""
+    location = getattr(node, "location", None)
+    if location:
+        test_file = str(location[0]).replace("\\", "/")
+    return test_file.startswith("tests/unit_tests/db/")
 
 
 @functools.lru_cache
@@ -416,9 +390,7 @@ def mock_db_handler(request):
     Tests in tests/unit_tests/db/ receive a real DatabaseHandler instance.
     """
     if _is_db_unit_test(request):
-        db_instance = request.getfixturevalue("db")
-        db_instance.get_model_versions = MagicMock(return_value=["1.0.0", "5.0.0", "6.0.0"])
-        return db_instance
+        return request.getfixturevalue("db")
 
     # Load mock data from JSON files
     mock_parameters = _apply_mock_param_defaults(_load_mock_db_json("mock_parameters.json"))
@@ -503,7 +475,11 @@ def patch_database_handler(request, mocker):
     """
     # Skip mocking for tests in db/ directory
     if _is_db_unit_test(request):
-        yield
+        with mock.patch(
+            "simtools.db.db_handler.DatabaseHandler",
+            new=REAL_DATABASE_HANDLER_CLASS,
+        ):
+            yield
         return
 
     mock_db_handler = request.getfixturevalue("mock_db_handler")
@@ -559,7 +535,7 @@ def db(request):
     mock_mongo_client.close = MagicMock()
 
     with patch("simtools.db.mongo_db.MongoClient", return_value=mock_mongo_client):
-        db_instance = db_handler.DatabaseHandler()
+        db_instance = REAL_DATABASE_HANDLER_CLASS()
         MongoDBHandler.db_client = MongoDBHandler.db_client or mock_mongo_client
         yield db_instance
         # Explicitly close the mock client to avoid un-raisable exception warnings
