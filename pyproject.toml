@@ -280,6 +280,7 @@ ignore-words-list = "chec,arrang,livetime"
 [tool.pytest]
 ini_options.markers = [
   "uses_model_database: test uses model parameter database.",
+  "db_unit_test: test belongs to unit_tests/db and must not use global DatabaseHandler patching.",
 ]
 ini_options.minversion = "6.0"
 ini_options.norecursedirs = [
