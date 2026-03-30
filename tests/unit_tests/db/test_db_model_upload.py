@@ -8,6 +8,8 @@ from packaging.version import InvalidVersion
 
 import simtools.db.db_model_upload as db_model_upload
 
+pytestmark = pytest.mark.db_unit_test
+
 
 @patch("simtools.db.db_model_upload.ascii_handler.collect_data_from_file")
 def test_add_values_from_json_to_db(mock_collect_data_from_file):
