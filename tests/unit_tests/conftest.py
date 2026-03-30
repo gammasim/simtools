@@ -31,26 +31,7 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.runners.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
-REAL_DATABASE_HANDLER_CLASS = db_handler.DatabaseHandler
-
-
-def pytest_collection_modifyitems(items):
-    """Tag db unit tests with a stable marker for fixture routing."""
-
-    def _is_db_item(item):
-        path = getattr(item, "path", None)
-        if path is None:
-            fspath = getattr(item, "fspath", None)
-            if fspath is None:
-                return False
-            path = Path(str(fspath))
-        parts = tuple(path.parts)
-        db_parts = ("tests", "unit_tests", "db")
-        return any(parts[idx : idx + 3] == db_parts for idx in range(max(len(parts) - 2, 0)))
-
-    for item in items:
-        if _is_db_item(item):
-            item.add_marker("db_unit_test")
+DATABASE_HANDLER_CLASS = db_handler.DatabaseHandler
 
 
 def _is_db_unit_test(request):
@@ -477,7 +458,7 @@ def patch_database_handler(request, mocker):
     if _is_db_unit_test(request):
         with mock.patch(
             "simtools.db.db_handler.DatabaseHandler",
-            new=REAL_DATABASE_HANDLER_CLASS,
+            new=DATABASE_HANDLER_CLASS,
         ):
             yield
         return
@@ -535,7 +516,7 @@ def db(request):
     mock_mongo_client.close = MagicMock()
 
     with patch("simtools.db.mongo_db.MongoClient", return_value=mock_mongo_client):
-        db_instance = REAL_DATABASE_HANDLER_CLASS()
+        db_instance = DATABASE_HANDLER_CLASS()
         MongoDBHandler.db_client = MongoDBHandler.db_client or mock_mongo_client
         yield db_instance
         # Explicitly close the mock client to avoid un-raisable exception warnings
