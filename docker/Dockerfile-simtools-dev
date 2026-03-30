@@ -34,6 +34,15 @@ RUN microdnf update -y && microdnf install -y \
     microdnf clean all && \
     ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
 
+RUN { \
+    printf '%s\n' "if [ -n \"\${GITHUB_WORKSPACE:-}\" ]; then"; \
+    printf '%s\n' "    git config --global --add safe.directory \"\${GITHUB_WORKSPACE}\""; \
+    printf '%s\n' "fi"; \
+    printf '%s\n' "git config --global --add safe.directory \"/workdir\""; \
+    printf '%s\n' "git config --global --add safe.directory \"/workdir/external\""; \
+    printf '%s\n' "git config --global --add safe.directory \"/workdir/external/simtools\""; \
+} > /etc/profile.d/git_safe_dir.sh
+
 # Install simtools (main branch)
 WORKDIR /workdir
 RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproject.toml && \
