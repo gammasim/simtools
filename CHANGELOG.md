@@ -24,7 +24,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Fixed camera-efficiency unit tests to write temporary outputs instead of modifying committed files in tests/resources. ([#2067](https://github.com/gammasim/simtools/pull/2067))
 - Fixes a bug in CORSIKA starting grammage code accessing telescope_model instead of telescope_models. ([#2076](https://github.com/gammasim/simtools/pull/2076))
 - Add matplotlib figure cleanup in camera plotting unit tests. ([#2082](https://github.com/gammasim/simtools/pull/2082))
-- Fixed CI-only DB unit-test flakiness by hardening conftest.py database-test detection so DatabaseHandler is no longer accidentally globally mocked for tests/unit_tests/db/*. ([#2089](https://github.com/gammasim/simtools/pull/2089))
+- Fixed CI-only DB unit-test flakiness by hardening conftest.py database-test detection so DatabaseHandler is no longer accidentally globally mocked for `tests/unit_tests/db/*`. ([#2089](https://github.com/gammasim/simtools/pull/2089))
 
 ### Documentation
 
@@ -35,7 +35,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 ### New Features
 
 - Add checks for simulation software executable paths and existence of corsika interaction paths.
-  Remove unused `general.is_exeucutable` (which can be replaced by `shutil.which`). ([#2030](https://github.com/gammasim/simtools/pull/2030))
+  Remove unused `general.is_executable` (which can be replaced by `shutil.which`). ([#2030](https://github.com/gammasim/simtools/pull/2030))
 - Improve testing of simulation output files (CORSIKA, sim_telarray, light source simulations).
   Test now after the simulation the data, log, and metadata output for expected content.
   Allows to simplify integration tests, as most tests are already done when running the application.
