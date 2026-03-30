@@ -308,6 +308,7 @@ def test_get_validated_parameter_dict_fadc_pulse_shape_embedded():
     w1 = writer.ModelDataWriter()
     embedded_value = {
         "columns": ["time", "amplitude", "amplitude (low gain)"],
+        "column_units": ["ns", "dimensionless", "dimensionless"],
         "rows": [
             [0.0, 0.0, 0.0],
             [0.12, 0.0, 0.0],
@@ -357,6 +358,7 @@ def test_get_validated_parameter_dict_fadc_pulse_shape_embedded_invalid_columns(
     w1 = writer.ModelDataWriter()
     invalid_embedded_value = {
         "columns": ["time", "HG"],
+        "column_units": ["ns", "dimensionless"],
         "rows": [[0.0, 0.0], [0.12, 0.01]],
     }
 

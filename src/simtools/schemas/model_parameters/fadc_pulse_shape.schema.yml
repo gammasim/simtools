@@ -18,6 +18,7 @@ data:
       additionalProperties: false
       required:
         - columns
+        - column_units
         - rows
       properties:
         columns:
@@ -35,6 +36,24 @@ data:
                 - const: time
                 - const: amplitude
                 - const: "amplitude (low gain)"
+              additionalItems: false
+              minItems: 3
+              maxItems: 3
+        column_units:
+          type: array
+          oneOf:
+            - type: array
+              items:
+                - const: ns
+                - const: dimensionless
+              additionalItems: false
+              minItems: 2
+              maxItems: 2
+            - type: array
+              items:
+                - const: ns
+                - const: dimensionless
+                - const: dimensionless
               additionalItems: false
               minItems: 3
               maxItems: 3
