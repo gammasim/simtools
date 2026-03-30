@@ -7,6 +7,108 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.28.0](https://github.com/gammasim/simtools/releases/tag/v0.28.0) - 2026-03-30
+
+### API Changes
+
+- Update command to run development container: **use bash -lc** (related to updates to git safedir). ([#2091](https://github.com/gammasim/simtools/pull/2091))
+
+### Bugfixes
+
+- Fix direct-injection type flasher runs, which did not produce any calibration events.
+  Fix bug in pedestal calculation setting: sim_telarray requires `none` (and not `None`) for the stars option. ([#2029](https://github.com/gammasim/simtools/pull/2029))
+- Increase number of flasher photons for test cases from 1e5 to 1e6 to ensure light in MSTs. ([#2045](https://github.com/gammasim/simtools/pull/2045))
+- Increase number of flasher photons for tests and use a new flag to overwrite the model parameter.
+  Skip telescope position file when illuminator has default downward pointing (0, 0, -1). ([#2052](https://github.com/gammasim/simtools/pull/2052))
+- Fix reference frame of photons obtained from sim_telarray ray tracing from pixel (rotated) to non-rotated camera frame. ([#2054](https://github.com/gammasim/simtools/pull/2054))
+- Fixed camera-efficiency unit tests to write temporary outputs instead of modifying committed files in tests/resources. ([#2067](https://github.com/gammasim/simtools/pull/2067))
+- Fixes a bug in CORSIKA starting grammage code accessing telescope_model instead of telescope_models. ([#2076](https://github.com/gammasim/simtools/pull/2076))
+- Add matplotlib figure cleanup in camera plotting unit tests. ([#2082](https://github.com/gammasim/simtools/pull/2082))
+- Fixed CI-only DB unit-test flakiness by hardening conftest.py database-test detection so DatabaseHandler is no longer accidentally globally mocked for tests/unit_tests/db/*. ([#2089](https://github.com/gammasim/simtools/pull/2089))
+
+### Documentation
+
+- Add step-by-step guide to run productions in an HT Condor environment. ([#2024](https://github.com/gammasim/simtools/pull/2024))
+- Add documentation on coordinate systems used in simtools. ([#2051](https://github.com/gammasim/simtools/pull/2051))
+- Improve documentation on setting up a local model parameter database. ([#2080](https://github.com/gammasim/simtools/pull/2080))
+
+### New Features
+
+- Add checks for simulation software executable paths and existence of corsika interaction paths.
+  Remove unused `general.is_exeucutable` (which can be replaced by `shutil.which`). ([#2030](https://github.com/gammasim/simtools/pull/2030))
+- Improve testing of simulation output files (CORSIKA, sim_telarray, light source simulations).
+  Test now after the simulation the data, log, and metadata output for expected content.
+  Allows to simplify integration tests, as most tests are already done when running the application.
+  Add new keyword `skip_integration_test` to allow to skip temporarily certain tests. ([#2035](https://github.com/gammasim/simtools/pull/2035))
+- Write log output to a log file to improve reproducibility (keeping the stream to stderr).
+  The file can either be provided through the command line (via `--log_file`) or is
+  generated automatically in `output_path` with the pattern `application_label_%Y%m%dT%H%M%SZ.log`. ([#2039](https://github.com/gammasim/simtools/pull/2039))
+- Add simtools log file to grid output file tar package. ([#2040](https://github.com/gammasim/simtools/pull/2040))
+- Improve `simtools-plot-simtel-events` and add functionality to plot a number
+  of events for a given telescope (independent of event index). Plots are sorted
+  by plot type for easier comparison.
+  Minor optimization to plotting: i) solve issue with matplotlib warnings
+  ii) read calibration telescope data which is not from first telescope iii) reduce aspect ([#2041](https://github.com/gammasim/simtools/pull/2041))
+- Add functionality to plot tables in legacy sim_telarray format using the simtel table reader. ([#2048](https://github.com/gammasim/simtools/pull/2048))
+- Add simulation of point sources at different cardinal directions and the possibility of reading them from a file.
+  Improve PSF plotting. ([#2054](https://github.com/gammasim/simtools/pull/2054))
+- Add functionality to simulate flasher events (full ray tracing) for several telescopes.
+  For full simulations, there are now several options to select the telescopes to simulate:
+  - simulate a single telescope: `--telescopes MSTN-04`
+  - simulate several telescopes `--telescopes MSTN-04 MSTN-05`
+  - simulate all telescopes in an array `--layout_name alpha`
+  Recommended to use `light_source_type: flat_fielding`, which reads for a given telescopes the
+  defined flasher name from the model parameter database.
+
+  Similar functionality for direction injection flasher simulations: the main difference is that
+  in direct mode a single sim_telarray is written, while for full simulation there is one
+  sim_telarray per telescope.
+
+  ([#2056](https://github.com/gammasim/simtools/pull/2056))
+- Add support for flasher intensity sequences as in a filter wheel in `simtools-simulate-flasher`. ([#2062](https://github.com/gammasim/simtools/pull/2062))
+- Use telescope axes offsets in case of MSTs together with the illuminator. ([#2077](https://github.com/gammasim/simtools/pull/2077))
+
+### Maintenance
+
+- Update author list. ([#2019](https://github.com/gammasim/simtools/pull/2019))
+- Refactor visualization of flasher events to a more generic module (preparation for a long integration test). ([#2023](https://github.com/gammasim/simtools/pull/2023))
+- Reduce verbose debug messages:
+  - remove success message from `schema::validate_deprecation_and_version`
+  - remove `No fix applied to corsika_starting_grammage`. See issue #2025
+  - remove `calibration_model::__init__::Init CalibrationModel` (very little information)
+  - remove `corsika_runner(l37)::__init__::Init CorsikaRunner` (very little information)
+  - remove `simtel_config_writer(l815)::write_dummy_telescope_configuration_file::Writing InvalidTelescope telescope config file` (duplicated)
+  Add a filter to avoid passwords leaking into log output.
+
+  ([#2026](https://github.com/gammasim/simtools/pull/2026))
+- Ensure that all integration test configuration files are consistently lower case. ([#2027](https://github.com/gammasim/simtools/pull/2027))
+- Update and replace flasher simulations test file. ([#2033](https://github.com/gammasim/simtools/pull/2033))
+- Do not include mirror_reflection_random_angle in derivation of mirror alignment parameters. ([#2034](https://github.com/gammasim/simtools/pull/2034))
+- Improve testing of simulation output files (CORSIKA, sim_telarray, light source simulations).
+  Test now after the simulation the data, log, and metadata output for expected content.
+  Allows to simplify integration tests, as most tests are already done when running the application. ([#2035](https://github.com/gammasim/simtools/pull/2035))
+- Modify pre-commit codespell to pass on test files in resources directory. ([#2037](https://github.com/gammasim/simtools/pull/2037))
+- Remove duplication between plot_pixel and camera modules. ([#2046](https://github.com/gammasim/simtools/pull/2046))
+- Improve copilot instructions. ([#2048](https://github.com/gammasim/simtools/pull/2048))
+- Update model parameter repository functionality to allow to update `configuration_corsika` parameters. ([#2060](https://github.com/gammasim/simtools/pull/2060))
+- Remove dependency of unit tests on model-parameter database.
+  Separate pytest fixture definitions for unit- and integration tests to increase robustness
+  and avoid fixture leakage. ([#2061](https://github.com/gammasim/simtools/pull/2061))
+- Parameter values that are a list of dictionaries are now shown in a separate table in the reports. ([#2073](https://github.com/gammasim/simtools/pull/2073))
+- Change the reports for patch versions to only show differences between patch and minor versions. ([#2074](https://github.com/gammasim/simtools/pull/2074))
+- Add illuminator name to output filenames. ([#2078](https://github.com/gammasim/simtools/pull/2078))
+- Fix CI failure by setting safe Git directory to accommodate stricter ownership checks in newer Git versions. ([#2085](https://github.com/gammasim/simtools/pull/2085))
+
+### Simulation model
+
+- Add new model parameters to describe:
+  - number of photons emitted by flasher devices (`flasher_photons` and `flasher_var_photons`); used by light emission package
+  - number of flasher photons at each pixel (`flasher_photons_at_pixel` and `flasher_var_photons_at_pixel`); used by flasher simulations of sim_telarray ("direct_injection")
+
+  ([#2043](https://github.com/gammasim/simtools/pull/2043))
+- Change default version for simulation model repository to v0.13.0. ([#2083](https://github.com/gammasim/simtools/pull/2083))
+
+
 ## [v0.27.1](https://github.com/gammasim/simtools/releases/tag/v0.27.1) - 2026-02-04
 
 ### Maintenance
