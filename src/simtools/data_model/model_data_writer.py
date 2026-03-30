@@ -320,7 +320,28 @@ class ModelDataWriter:
         return max(valid_entries, key=lambda e: packaging.version.Version(e["schema_version"]))
 
     def get_parameter_type_for_schema(self, parameter_name, model_parameter_schema_version=None):
-        """Return the parameter type defined by the selected model-parameter schema."""
+        """
+        Return normalized parameter type(s) from a selected model-parameter schema.
+
+        This method loads the schema for ``parameter_name`` and an optional
+        ``model_parameter_schema_version``, then extracts the ``type`` field from
+        each data entry. If all entries share the same type, a single string is
+        returned; otherwise a list of types is returned.
+
+        Parameters
+        ----------
+        parameter_name: str
+            Name of the model parameter.
+        model_parameter_schema_version: str or None
+            Explicit model-parameter schema version to use. If None, the newest
+            available schema version is selected.
+
+        Returns
+        -------
+        str or list[str]
+            Parameter type, reduced to a single value when all schema entries
+            have the same type.
+        """
         schema_dict, _ = self._read_schema_dict(parameter_name, model_parameter_schema_version)
         parameter_types = [data["type"] for data in schema_dict["data"]]
         return (
@@ -331,14 +352,17 @@ class ModelDataWriter:
 
     def _get_parameter_type(self):
         """
-        Return parameter type from schema.
+        Return normalized parameter type(s) from the currently loaded schema.
 
-        Reduce list of types to single type if all types are the same.
+        This helper reads ``self.schema_dict`` (expected to be populated by
+        ``_read_schema_dict`` beforehand), extracts ``type`` values from its
+        data entries, and reduces the result to a single string when all types
+        are identical.
 
         Returns
         -------
         str or list[str]
-            Parameter type
+            Parameter type derived from ``self.schema_dict``.
         """
         _parameter_type = [data["type"] for data in self.schema_dict["data"]]
         return (

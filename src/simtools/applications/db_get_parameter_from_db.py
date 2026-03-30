@@ -3,12 +3,11 @@
 r"""
     Get a parameter entry from DB for a specific telescope or a site.
 
-    The application receives a parameter name, a site, a telescope (if applicable), and
-    a version. It supports three output modes:
+    The application supports three output modes:
 
     1. Print the database entry to stdout.
     2. Write the database entry to a JSON or YAML file using output_file.
-    3. Export the parameter payload using export_model_file.
+    3. Export table-type model parameters using export_model_file.
 
     The export_model_file mode is type-dependent:
 
