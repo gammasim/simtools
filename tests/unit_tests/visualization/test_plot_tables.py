@@ -365,13 +365,17 @@ def test_generate_output_file_name(
 
 
 @mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
+@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_database")
 @mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
-def test_generate_plot_configurations(mock_collect_data, mock_read_table, tmp_test_directory):
+def test_generate_plot_configurations(
+    mock_collect_data, mock_read_parameter_dict, mock_read_table, tmp_test_directory
+):
     # Mock the table data
     mock_table = Table()
     mock_table["time"] = [1.0, 2.0, 3.0]
     mock_table["amplitude"] = [0.1, 0.2, 0.3]
     mock_read_table.return_value = mock_table
+    mock_read_parameter_dict.return_value = {"model_parameter_schema_version": "0.2.0"}
 
     # Test with parameter that has no plot configuration
     mock_collect_data.return_value = {}
@@ -473,8 +477,9 @@ def test_get_plotting_label_multiple_duplicates():
 
 @mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
 @mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
+@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_database")
 def test_generate_plot_configurations_with_nan_and_missing_columns(
-    mock_read_table, mock_collect_data, tmp_test_directory
+    mock_read_parameter_dict, mock_read_table, mock_collect_data, tmp_test_directory
 ):
     """Test handling of NaN values and missing columns in generate_plot_configurations."""
     # Create mock table with valid and NaN columns
@@ -484,6 +489,7 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
     mock_table["amplitude_low_gain"] = [np.nan, np.nan, np.nan]
 
     mock_read_table.return_value = mock_table
+    mock_read_parameter_dict.return_value = {"model_parameter_schema_version": "0.2.0"}
 
     # Mock schema with multiple table configs including one with missing column
     mock_schema = {
@@ -548,3 +554,48 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
 
     # Should return None since no valid configs were found for this plot type
     assert result is None
+
+
+@mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
+@mock.patch("simtools.visualization.plot_tables._read_parameter_dict_from_model_database")
+@mock.patch("simtools.visualization.plot_tables.ascii_handler.collect_data_from_file")
+def test_generate_plot_configurations_selects_schema_matching_parameter_version(
+    mock_collect_data, mock_read_parameter_dict, mock_read_table, tmp_test_directory
+):
+    """Select the schema entry matching model_parameter_schema_version from a list."""
+    mock_table = Table()
+    mock_table["time"] = [1.0, 2.0, 3.0]
+    mock_table["amplitude"] = [0.1, 0.2, 0.3]
+    mock_read_table.return_value = mock_table
+    mock_read_parameter_dict.return_value = {"model_parameter_schema_version": "0.1.0"}
+
+    mock_collect_data.return_value = [
+        {
+            "schema_version": "0.1.0",
+            "plot_configuration": [
+                {"type": "legacy_plot", "tables": [{"column_x": "time", "column_y": "amplitude"}]}
+            ],
+        },
+        {
+            "schema_version": "0.2.0",
+            "plot_configuration": [
+                {
+                    "type": "fadc_pulse_shape",
+                    "tables": [{"column_x": "time", "column_y": "amplitude"}],
+                }
+            ],
+        },
+    ]
+
+    configs, output_files = plot_tables.generate_plot_configurations(
+        parameter="fadc_pulse_shape",
+        parameter_version="1.0.0",
+        site="South",
+        telescope="SSTS-design",
+        output_path=tmp_test_directory,
+        plot_type="legacy_plot",
+    )
+
+    assert len(configs) == 1
+    assert configs[0]["type"] == "legacy_plot"
+    assert len(output_files) == 1
