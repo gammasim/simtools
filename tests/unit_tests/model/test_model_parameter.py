@@ -621,3 +621,34 @@ def test_check_model_parameter_versions_triggers_legacy_update(mocker):
         value_resolver=None,
     )
     mock_apply.assert_called_once_with(parameters, {"num_gains": {"value": 99}})
+
+
+def test_resolve_legacy_table_parameter_value_exports_and_resolves(mocker):
+    """Export legacy table file to temp dir and resolve to row-data dict."""
+    model_parameter = ModelParameter.__new__(ModelParameter)
+    model_parameter.db = mocker.Mock()
+    expected = {
+        "columns": ["time", "amplitude"],
+        "column_units": ["ns", "dimensionless"],
+        "rows": [[0.0, 0.0], [0.1, 0.2]],
+    }
+    resolve_mock = mocker.patch(
+        "simtools.model.model_parameter.simtel_table_reader.resolve_dict_parameter_value",
+        return_value=expected,
+    )
+
+    result = model_parameter._resolve_legacy_table_parameter_value(
+        "fadc_pulse_shape",
+        "pulse.dat",
+    )
+
+    assert result == expected
+    model_parameter.db.export_model_files.assert_called_once()
+    export_kwargs = model_parameter.db.export_model_files.call_args.kwargs
+    assert export_kwargs["file_names"] == ["pulse.dat"]
+    assert isinstance(export_kwargs["dest"], Path)
+    resolve_mock.assert_called_once_with(
+        "pulse.dat",
+        "fadc_pulse_shape",
+        data_path=export_kwargs["dest"],
+    )

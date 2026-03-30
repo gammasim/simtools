@@ -533,6 +533,39 @@ def test_export_model_files_file_not_found(db, mocker, tmp_test_directory, test_
     mock_write_file.assert_not_called()
 
 
+def test_export_parameter_data_delegates_to_parameter_exporter(db, mocker):
+    """Delegate parameter payload export to parameter_exporter helper."""
+    expected = ["output.dat"]
+    export_mock = mocker.patch(
+        "simtools.db.db_handler.parameter_exporter.export_parameter_data",
+        return_value=expected,
+    )
+
+    result = db.export_parameter_data(
+        parameter="mirror_reflectivity",
+        site="North",
+        array_element_name="LSTN-01",
+        parameter_version="1.0.0",
+        model_version="6.0.2",
+        output_file=None,
+        export_model_file=True,
+        export_model_file_as_table=False,
+    )
+
+    assert result == expected
+    export_mock.assert_called_once_with(
+        db=db,
+        parameter="mirror_reflectivity",
+        site="North",
+        array_element_name="LSTN-01",
+        parameter_version="1.0.0",
+        model_version="6.0.2",
+        output_file=None,
+        export_model_file=True,
+        export_model_file_as_table=False,
+    )
+
+
 def test_get_query_from_parameter_version_table(db):
     """Test _get_query_from_parameter_version_table method."""
     or_list = [

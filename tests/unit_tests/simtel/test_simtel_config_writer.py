@@ -326,6 +326,38 @@ def test_convert_model_parameters_to_simtel_format_hard_stereo_false(
         assert "width 10" in content
 
 
+def test_convert_model_parameters_to_simtel_format_returns_none_on_attribute_error(
+    simtel_config_writer, tmp_test_directory
+):
+    """Return (None, None) when conversion needs telescope model but model is missing."""
+    model_path = Path(tmp_test_directory) / "model"
+    model_path.mkdir(exist_ok=True)
+
+    simtel_name, value = simtel_config_writer._convert_model_parameters_to_simtel_format(
+        "array_triggers",
+        [{"name": "LSTS_single_telescope", "multiplicity": {"value": 1}}],
+        model_path,
+        None,
+    )
+
+    assert simtel_name is None
+    assert value is None
+
+
+def test_write_table_parameter_file_passes_through_non_dict_value(
+    simtel_config_writer, tmp_test_directory
+):
+    """Keep string values unchanged in table-parameter file conversion helper."""
+    result = simtel_config_writer._write_table_parameter_file(
+        "fadc_pulse_shape",
+        "already_a_file.dat",
+        Path(tmp_test_directory) / "dummy.cfg",
+        None,
+    )
+
+    assert result == "already_a_file.dat"
+
+
 def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
     model_parameters = {"test_param": {"value": 42, "meta_parameter": True}}
 

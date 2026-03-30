@@ -170,3 +170,38 @@ def test_export_model_files_requires_destination(db_handler_mock):
             parameters={"mirror_reflectivity": {"file": True, "value": "test.dat"}},
             dest=None,
         )
+
+
+def test_normalize_file_names_returns_empty_list_for_no_inputs():
+    """Return empty file list when neither file_names nor parameters are provided."""
+    assert parameter_exporter._normalize_file_names() == []
+
+
+def test_export_parameter_data_file_parameter_ecsv_suffix_skips_table_conversion(
+    mocker, db_handler_mock
+):
+    """Skip creating an extra ECSV file when exported model file is already .ecsv."""
+    db_handler_mock.get_model_parameter.return_value = {
+        "mirror_reflectivity": {"type": "file", "value": "mirror_reflectivity.ecsv"}
+    }
+    table = mocker.Mock()
+    mocker.patch.object(parameter_exporter, "export_single_model_file", return_value=table)
+
+    output_file = mocker.MagicMock()
+    output_file.suffix = ".ecsv"
+    db_handler_mock.io_handler.get_output_file.return_value = output_file
+
+    output_files = parameter_exporter.export_parameter_data(
+        db=db_handler_mock,
+        parameter="mirror_reflectivity",
+        site="North",
+        array_element_name="LSTN-01",
+        parameter_version=None,
+        model_version="6.0.2",
+        output_file=None,
+        export_model_file=True,
+        export_model_file_as_table=True,
+    )
+
+    assert output_files == [output_file]
+    table.write.assert_not_called()

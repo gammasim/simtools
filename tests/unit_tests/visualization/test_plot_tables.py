@@ -599,3 +599,20 @@ def test_generate_plot_configurations_selects_schema_matching_parameter_version(
     assert len(configs) == 1
     assert configs[0]["type"] == "legacy_plot"
     assert len(output_files) == 1
+
+
+def test_select_schema_entry_returns_latest_when_version_not_found():
+    """Fall back to newest schema entry when requested version is unavailable."""
+    schema_data = [
+        {"schema_version": "0.1.0", "plot_configuration": [{"type": "old"}]},
+        {"schema_version": "0.3.0", "plot_configuration": [{"type": "new"}]},
+    ]
+
+    result = plot_tables._select_schema_entry(schema_data, schema_version="0.2.0")
+
+    assert result["schema_version"] == "0.3.0"
+
+
+def test_select_schema_entry_returns_empty_dict_for_empty_input():
+    """Return an empty dict when schema input is empty/invalid."""
+    assert plot_tables._select_schema_entry([], schema_version="0.2.0") == {}
