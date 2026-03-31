@@ -77,20 +77,16 @@ run_number (int, optional)
     Run number to use (default: 1, required for direct injection mode).
 """
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.model.model_utils import get_array_elements_for_layout
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.simulator import Simulator
 from simtools.utils import general
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__), description="Simulate flasher devices."
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--run_mode",
         help="Flasher simulation run mode",
         type=str,
@@ -98,7 +94,7 @@ def _parse():
         required=True,
         default="direct_injection",
     )
-    group = config.parser.add_mutually_exclusive_group(required=True)
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--light_source",
         help="Flasher device associated with a specific telescope, i.e. MSFx-FlashCam",
@@ -109,11 +105,11 @@ def _parse():
         help="Type of the light source (e.g. flat_fielding)",
         type=str,
     )
-    target_group = config.parser.add_mutually_exclusive_group(required=True)
+    target_group = parser.add_mutually_exclusive_group(required=True)
     target_group.add_argument(
         "--telescopes",
         help="One or more telescopes (e.g. LSTN-01, MSTN-04, SSTS-04)",
-        type=config.parser.telescope,
+        type=parser.telescope,
         nargs="+",
     )
     target_group.add_argument(
@@ -122,7 +118,7 @@ def _parse():
         nargs="+",
         type=str,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--number_of_events",
         help="Number of flasher events to simulate",
         type=int,
@@ -130,29 +126,33 @@ def _parse():
         nargs="+",
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--flasher_photons",
         help=(
             "Override flasher photon yield (single value for all telescopes). "
             "Accepts integers including scientific notation, e.g. 1e6."
         ),
-        type=config.parser.scientific_int,
+        type=parser.scientific_int,
         nargs="+",
         required=False,
-    )
-    return config.initialize(
-        db_config=True,
-        simulation_model=["site", "model_version"],
-        simulation_configuration={
-            "corsika_configuration": ["run_number"],
-            "sim_telarray_configuration": ["all"],
-        },
     )
 
 
 def main():
     """Simulate flasher devices."""
-    app_context = build_application(__file__, parse_function=_parse)
+    app_context = build_application(
+        __file__,
+        description="Simulate flasher devices.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["site", "model_version"],
+            "simulation_configuration": {
+                "corsika_configuration": ["run_number"],
+                "sim_telarray_configuration": ["all"],
+            },
+        },
+    )
 
     tel_string = (
         f"telescope(s) {app_context.args['telescopes']}"

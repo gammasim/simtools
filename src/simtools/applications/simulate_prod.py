@@ -56,18 +56,15 @@ r"""
         --zenith_angle 20 --start_run 0 --run 1
 """
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import commandline_parser, configurator
+from simtools.application_control import build_application
+from simtools.configuration import commandline_parser
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.simulator import Simulator
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__), description="Run simulations for productions"
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--corsika_file",
         help=(
             "Path to the CORSIKA input file (only relevant for simulation software 'sim_telarray')."
@@ -75,21 +72,21 @@ def _parse():
         type=str,
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--pack_for_grid_register",
         help="Directory for a tarball for registering the output files on the grid.",
         type=str,
         required=False,
         default=None,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--save_file_lists",
         help="Save lists of output and log files.",
         action="store_true",
         required=False,
         default=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--save_reduced_event_lists",
         help=(
             "Save reduced event lists with event data on simulated and triggered events. "
@@ -99,14 +96,14 @@ def _parse():
         required=False,
         default=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--corsika_seeds",
         help="Use fixed random seeds for CORSIKA for testing purposes.",
         nargs=4,
         type=commandline_parser.CommandLineParser.bounded_int(1, CORSIKA_MAX_SEED),
         metavar=("S1", "S2", "S3", "S4"),
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--sequential",
         help=(
             "Enables single-core mode (as far as possible); "
@@ -115,22 +112,23 @@ def _parse():
         action="store_true",
         default=False,
     )
-    return config.initialize(
-        db_config=True,
-        simulation_model=["site", "layout", "telescope", "model_version"],
-        simulation_configuration={
-            "software": None,
-            "corsika_configuration": ["all"],
-            "sim_telarray_configuration": ["all"],
-        },
-    )
 
 
 def main():
     """Run simulations for productions."""
     app_context = build_application(
         __file__,
-        parse_function=_parse,
+        description="Run simulations for productions",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["site", "layout", "telescope", "model_version"],
+            "simulation_configuration": {
+                "software": None,
+                "corsika_configuration": ["all"],
+                "sim_telarray_configuration": ["all"],
+            },
+        },
         startup_kwargs={"setup_io_handler": False},
     )
 

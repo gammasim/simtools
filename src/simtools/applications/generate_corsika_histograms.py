@@ -69,40 +69,35 @@ r"""
 
 from astropy import units as u
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.corsika.corsika_histograms import CorsikaHistograms
 from simtools.visualization import plot_corsika_histograms
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file.",
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--input_files",
         help="Name(s) of the CORSIKA IACT file(s) to process",
         type=str,
         nargs="+",
         required=True,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--file_labels",
         help="Labels for the input files (in the same order as input_files)",
         type=str,
         nargs="+",
         required=None,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--normalization",
         help="Normalization method for histograms. Options: 'per-telescope', 'per-bin'",
         type=str,
         choices=["per-telescope", "per-bin"],
         default="per-telescope",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--axis_distance",
         help=(
             "Distance from x/y axes to consider when calculating "
@@ -111,18 +106,22 @@ def _parse():
         type=float,
         default=1000.0,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--pdf_file_name",
         help="Save histograms into a pdf file.",
         type=str,
         required=None,
     )
-    return config.initialize(db_config=False, paths=True)
 
 
 def main():
     """Generate a set of histograms for the Cherenkov photons from CORSIKA IACT file(s)."""
-    app_context = build_application(__file__, parse_function=_parse)
+    app_context = build_application(
+        __file__,
+        description="Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={"db_config": False, "paths": True},
+    )
 
     all_histograms = []
     for input_file in app_context.args["input_files"]:

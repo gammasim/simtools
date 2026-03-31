@@ -62,20 +62,13 @@ step 2 and 3 (useful for debugging):
 
 """
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.runners import simtools_runner
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Run simtools applications using a configuration file.",
-        usage="simtools-run-application --config_file config_file_name",
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--config_file",
         dest="configuration_file",
         help="Application configuration.",
@@ -83,26 +76,28 @@ def _parse():
         required=True,
         default=None,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--steps",
         type=int,
         nargs="+",
         help="List of steps to be execution (e.g., '--steps 7 8 9'; do not specify to run all).",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--ignore_runtime_environment",
         action="store_true",
         help="Ignore the runtime environment and run the application in the current environment.",
         default=False,
     )
-    return config.initialize(db_config=True)
 
 
 def main():
     """Run several simtools applications using a configuration file."""
     app_context = build_application(
         __file__,
-        parse_function=_parse,
+        description="Run simtools applications using a configuration file.",
+        usage="simtools-run-application --config_file config_file_name",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={"db_config": True},
         startup_kwargs={"setup_io_handler": False},
     )
 

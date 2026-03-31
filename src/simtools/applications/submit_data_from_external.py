@@ -37,49 +37,47 @@ r"""
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Submit and validate data (e.g., input data to tools, model parameters).",
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--input_meta",
         help="meta data file associated to input data",
         type=str,
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--input",
         help="input data file",
         type=str,
         required=True,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--schema",
         help="schema file describing input data",
         type=str,
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--ignore_metadata",
         help="Ignore metadata",
         action="store_true",
         required=False,
     )
-    return config.initialize(output=True)
 
 
 def main():
     """Submit and validate data (e.g., input data to tools, model parameters)."""
-    app_context = build_application(__file__, parse_function=_parse)
+    app_context = build_application(
+        __file__,
+        description="Submit and validate data (e.g., input data to tools, model parameters).",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={"output": True},
+    )
 
     _metadata = (
         None if app_context.args.get("ignore_metadata") else MetadataCollector(app_context.args)

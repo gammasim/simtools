@@ -42,8 +42,7 @@ r"""
             --updated_parameter_version 3.0.0
 """
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.db import db_handler
 from simtools.layout.array_layout_utils import (
     merge_array_layouts,
@@ -52,39 +51,41 @@ from simtools.layout.array_layout_utils import (
 )
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Derive CTAO array layouts from CTAO common identifiers repository.",
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--repository_url",
         help="URL or path of the CTAO common identifiers repository.",
         type=str,
         default="https://gitlab.cta-observatory.org/cta-computing/common/identifiers/-/raw/",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--repository_branch",
         help="Repository branch to use for CTAO common identifiers.",
         type=str,
         default="main",
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--updated_parameter_version",
         help="Updated parameter version.",
         type=str,
         required=False,
     )
-    return config.initialize(
-        db_config=True, output=True, simulation_model=["site", "parameter_version", "model_version"]
-    )
 
 
 def main():
     """Derive CTAO array layouts from CTAO common identifiers repository."""
-    app_context = build_application(__file__, parse_function=_parse)
+    app_context = build_application(
+        __file__,
+        description="Derive CTAO array layouts from CTAO common identifiers repository.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "output": True,
+            "simulation_model": ["site", "parameter_version", "model_version"],
+        },
+    )
 
     ctao_array_layouts = retrieve_ctao_array_layouts(
         site=app_context.args["site"],
