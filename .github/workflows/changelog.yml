@@ -23,8 +23,29 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check for at least one changelog fragment
+      - name: Validate changelog fragments
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-changelog-needed') && !contains(github.event.pull_request.labels.*.name, 'dependencies') }}
+        shell: bash
         run: |
-          find docs/changes -type f | \
-          grep -P "${FRAGMENT_NAME_PREFIX}\.(feature|bugfix|api|maintenance|doc|model)\.md"
+          set -euo pipefail
+
+          valid_pattern="^${FRAGMENT_NAME_PREFIX}\.(feature|bugfix|api|maintenance|doc|model)\.md$"
+
+          # Collect changelog files and ignore housekeeping file.
+          files=$(find docs/changes -maxdepth 1 -type f ! -name ".gitkeep" | sort || true)
+
+          # Ensure there is at least one valid fragment for this PR.
+          if ! echo "${files}" | grep -Pq "${valid_pattern}"; then
+            echo "ERROR: No valid changelog fragment found."
+            echo "Expected: ${FRAGMENT_NAME_PREFIX}.(feature|bugfix|api|maintenance|doc|model).md"
+            exit 1
+          fi
+
+          # Fail if any file in docs/changes does not match the expected naming.
+          invalid_files=$(echo "${files}" | grep -Pv "${valid_pattern}" || true)
+          if [ -n "${invalid_files}" ]; then
+            echo "ERROR: Invalid changelog fragment filename(s) found:"
+            echo "${invalid_files}"
+            echo "Expected: ${FRAGMENT_NAME_PREFIX}.(feature|bugfix|api|maintenance|doc|model).md"
+            exit 1
+          fi
