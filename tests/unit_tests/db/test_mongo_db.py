@@ -16,8 +16,14 @@ pytestmark = [
 @pytest.fixture(autouse=True)
 def reset_db_client():
     """Reset db_client before each test."""
+    existing_client = mongo_db.MongoDBHandler.db_client
+    if existing_client is not None and hasattr(existing_client, "close"):
+        existing_client.close()
     mongo_db.MongoDBHandler.db_client = None
     yield
+    existing_client = mongo_db.MongoDBHandler.db_client
+    if existing_client is not None and hasattr(existing_client, "close"):
+        existing_client.close()
     mongo_db.MongoDBHandler.db_client = None
 
 
@@ -36,8 +42,9 @@ def valid_db_config():
 
 
 @pytest.fixture
-def mongo_handler(valid_db_config):
+def mongo_handler(mocker, valid_db_config):
     """Create a MongoDBHandler instance."""
+    mocker.patch("simtools.db.mongo_db.MongoClient", return_value=mocker.MagicMock())
     return mongo_db.MongoDBHandler(valid_db_config)
 
 
@@ -113,8 +120,9 @@ def test_get_db_name_incomplete():
     assert result is None
 
 
-def test_init_with_valid_config(valid_db_config):
+def test_init_with_valid_config(mocker, valid_db_config):
     """Test initialization with valid configuration."""
+    mocker.patch("simtools.db.mongo_db.MongoClient", return_value=mocker.MagicMock())
     handler = mongo_db.MongoDBHandler(valid_db_config)
     assert handler.db_config == valid_db_config
     assert handler.list_of_collections == {}
@@ -240,16 +248,18 @@ def test_idle_connection_monitor(mocker):
     assert monitor.open_connections == 0
 
 
-def test_is_remote_database_true(valid_db_config):
+def test_is_remote_database_true(mocker, valid_db_config):
     """Test is_remote_database with remote server."""
     valid_db_config["db_server"] = "cta-simpipe-protodb.zeuthen.desy.de"
+    mocker.patch("simtools.db.mongo_db.MongoClient", return_value=mocker.MagicMock())
     handler = mongo_db.MongoDBHandler(valid_db_config)
     assert handler.is_remote_database() is True
 
 
-def test_is_remote_database_false_localhost(valid_db_config):
+def test_is_remote_database_false_localhost(mocker, valid_db_config):
     """Test is_remote_database with localhost."""
     valid_db_config["db_server"] = "localhost"
+    mocker.patch("simtools.db.mongo_db.MongoClient", return_value=mocker.MagicMock())
     handler = mongo_db.MongoDBHandler(valid_db_config)
     assert handler.is_remote_database() is False
 
@@ -260,8 +270,9 @@ def test_is_remote_database_false_no_config():
     assert handler.is_remote_database() is False
 
 
-def test_print_connection_info(valid_db_config, caplog):
+def test_print_connection_info(mocker, valid_db_config, caplog):
     """Test print_connection_info."""
+    mocker.patch("simtools.db.mongo_db.MongoClient", return_value=mocker.MagicMock())
     handler = mongo_db.MongoDBHandler(valid_db_config)
     with caplog.at_level(logging.INFO):
         handler.print_connection_info("test_db")

@@ -40,14 +40,7 @@ def _is_db_unit_test(request):
     if node is None:
         return False
 
-    if node.get_closest_marker("db_unit_test") is not None:
-        return True
-
-    test_file = ""
-    location = getattr(node, "location", None)
-    if location:
-        test_file = str(location[0]).replace("\\", "/")
-    return test_file.startswith("tests/unit_tests/db/")
+    return node.get_closest_marker("db_unit_test") is not None
 
 
 @functools.lru_cache
