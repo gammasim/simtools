@@ -84,12 +84,7 @@ from simtools.visualization import visualize
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.initialize_application_arguments(["source_distance", "zenith_angle"])
-    parser.add_argument(
-        "--data",
-        help="Data file name with the measured PSF vs radius [cm]",
-        type=str,
-    )
+    parser.initialize_application_arguments(["source_distance", "zenith_angle", "data"])
 
 
 def load_data(datafile):
