@@ -31,8 +31,23 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.runners.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
+DATABASE_HANDLER_CLASS = db_handler.DatabaseHandler
 
-UNIT_TEST_DB = "unit_tests/db"
+
+def _is_db_unit_test(request):
+    """Return True when the current test carries the db_unit_test marker."""
+    node = getattr(request, "node", None)
+    if node is None:
+        return False
+
+    if node.get_closest_marker("db_unit_test") is not None:
+        return True
+
+    test_file = ""
+    location = getattr(node, "location", None)
+    if location:
+        test_file = str(location[0]).replace("\\", "/")
+    return test_file.startswith("tests/unit_tests/db/")
 
 
 @functools.lru_cache
@@ -355,11 +370,8 @@ def mock_db_handler(request):
     Returns a MagicMock configured with typical DatabaseHandler methods.
     Tests in tests/unit_tests/db/ receive a real DatabaseHandler instance.
     """
-    test_file_path = str(request.node.fspath)
-    if UNIT_TEST_DB in test_file_path:
-        db_instance = request.getfixturevalue("db")
-        db_instance.get_model_versions = MagicMock(return_value=["1.0.0", "5.0.0", "6.0.0"])
-        return db_instance
+    if _is_db_unit_test(request):
+        return request.getfixturevalue("db")
 
     # Load mock data from JSON files
     mock_parameters = _apply_mock_param_defaults(_load_mock_db_json("mock_parameters.json"))
@@ -442,11 +454,13 @@ def patch_database_handler(request, mocker):
     Tests in tests/unit_tests/db/ are excluded from this mocking.
     Also patches model parameter schema validation to avoid schema version mismatches.
     """
-    test_file_path = str(request.node.fspath)
-
     # Skip mocking for tests in db/ directory
-    if UNIT_TEST_DB in test_file_path:
-        yield
+    if _is_db_unit_test(request):
+        with mock.patch(
+            "simtools.db.db_handler.DatabaseHandler",
+            new=DATABASE_HANDLER_CLASS,
+        ):
+            yield
         return
 
     mock_db_handler = request.getfixturevalue("mock_db_handler")
@@ -462,8 +476,7 @@ def patch_database_handler(request, mocker):
 def db(request):
     """Database object with configuration from settings.config.db_handler."""
 
-    test_file_path = str(request.node.fspath)
-    if UNIT_TEST_DB not in test_file_path:
+    if not _is_db_unit_test(request):
         db_instance = db_handler.DatabaseHandler()
         yield db_instance
         return
@@ -503,7 +516,7 @@ def db(request):
     mock_mongo_client.close = MagicMock()
 
     with patch("simtools.db.mongo_db.MongoClient", return_value=mock_mongo_client):
-        db_instance = db_handler.DatabaseHandler()
+        db_instance = DATABASE_HANDLER_CLASS()
         MongoDBHandler.db_client = MongoDBHandler.db_client or mock_mongo_client
         yield db_instance
         # Explicitly close the mock client to avoid un-raisable exception warnings
