@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-from simtools.simtel import row_table_utils
+from simtools.data_model import row_table_utils
 from simtools.simtel.pulse_shapes import generate_pulse_from_rise_fall_times
 
 logger = logging.getLogger(__name__)

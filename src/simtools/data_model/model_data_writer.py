@@ -8,11 +8,10 @@ from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
 from simtools import settings
-from simtools.data_model import schema, validate_data
+from simtools.data_model import row_table_utils, schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
-from simtools.simtel import row_table_utils
 from simtools.utils import names, value_conversion
 
 
@@ -322,7 +321,7 @@ class ModelDataWriter:
 
     def get_parameter_type_for_schema(self, parameter_name, model_parameter_schema_version=None):
         """
-        Return normalized parameter type(s) from a selected model-parameter schema.
+        Return parameter type(s) from a selected model-parameter schema.
 
         This method loads the schema for ``parameter_name`` and an optional
         ``model_parameter_schema_version``, then extracts the ``type`` field from
@@ -382,7 +381,7 @@ class ModelDataWriter:
 
     def _get_parameter_type(self):
         """
-        Return normalized parameter type(s) from the currently loaded schema.
+        Return parameter type(s) from the currently loaded schema.
 
         This helper reads ``self.schema_dict`` (expected to be populated by
         ``_read_schema_dict`` beforehand), extracts ``type`` values from its

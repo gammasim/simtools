@@ -10,8 +10,8 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
+from simtools.data_model import row_table_utils
 from simtools.io import ascii_handler
-from simtools.simtel import row_table_utils
 
 logger = logging.getLogger(__name__)
 
