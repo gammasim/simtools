@@ -170,7 +170,7 @@ def test_get_application_label(file_path, expected):
     assert result == expected
 
 
-def test_build_application(mocker):
+def test_build_application(mocker, tmp_test_directory):
     """Test build_application wraps Configurator and startup_application."""
     startup_mock = mocker.patch(
         "simtools.application_control.startup_application",
@@ -182,7 +182,7 @@ def test_build_application(mocker):
     add_arguments = MagicMock()
 
     result = build_application(
-        "/tmp/test_application.py",
+        str(tmp_test_directory / "test_application.py"),
         description="Test description",
         add_arguments_function=add_arguments,
         initialization_kwargs={"output": True},
