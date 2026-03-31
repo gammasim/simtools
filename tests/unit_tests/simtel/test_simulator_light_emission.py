@@ -227,8 +227,8 @@ def test__get_pulse_shape_argument_for_sim_telarray_gauss_exp_dat_file(
         # Should call the writer with correct params
         assert mock_writer.called
         kwargs = mock_writer.call_args.kwargs
-        assert kwargs["width_ns"] == 2.0
-        assert kwargs["exp_decay_ns"] == 6.0
+        assert kwargs["width_ns"] == pytest.approx(2.0)
+        assert kwargs["exp_decay_ns"] == pytest.approx(6.0)
         assert kwargs["fadc_sum_bins"] == 40
 
         # Should return path to DAT file
