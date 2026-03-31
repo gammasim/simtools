@@ -7,6 +7,7 @@ import astropy.units as u
 import pytest
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.time import Time
+from astropy.utils import iers
 
 from simtools.production_configuration.plot_production_grid import (
     DEFAULT_OUTPUT_FILE_STEM,
@@ -14,6 +15,18 @@ from simtools.production_configuration.plot_production_grid import (
 )
 
 pytestmark = pytest.mark.filterwarnings("ignore::astropy.utils.iers.IERSWarning")
+
+
+@pytest.fixture(autouse=True, scope="module")
+def disable_iers_auto_download():
+    """Disable IERS auto-download during tests to avoid network dependency."""
+    previous_auto_download = iers.conf.auto_download
+    iers.conf.auto_download = False
+    try:
+        yield
+    finally:
+        iers.conf.auto_download = previous_auto_download
+
 
 SITE_LOCATION_LAT = 28.76
 SITE_LOCATION_LON = -17.89

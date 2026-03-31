@@ -9,9 +9,21 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
+from astropy.utils import iers
 from astropy.utils.iers import IERSWarning
 
 from simtools.production_configuration.generate_production_grid import GridGeneration
+
+
+@pytest.fixture(autouse=True, scope="module")
+def disable_iers_auto_download():
+    """Disable IERS auto-download during tests to avoid network dependency."""
+    previous_auto_download = iers.conf.auto_download
+    iers.conf.auto_download = False
+    try:
+        yield
+    finally:
+        iers.conf.auto_download = previous_auto_download
 
 
 def _create_grid_generation(
