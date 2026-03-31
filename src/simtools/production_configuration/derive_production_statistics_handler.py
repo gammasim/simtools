@@ -65,22 +65,27 @@ class ProductionStatisticsHandler:
             and self.args["zeniths"]
             and self.args["azimuths"]
             and self.args["nsb"]
-            and self.args["offsets"]
+            and self.args["off_axis_angles"]
         ):
             self.logger.warning("No files read")
             self.logger.warning(f"Base Path: {self.args['base_path']}")
             self.logger.warning(f"Zeniths: {self.args['zeniths']}")
-            self.logger.warning(f"Camera offsets: {self.args['offsets']}")
+            self.logger.warning(f"Camera offsets: {self.args['off_axis_angles']}")
             return
 
-        for zenith, azimuth, nsb, offset in itertools.product(
-            self.args["zeniths"], self.args["azimuths"], self.args["nsb"], self.args["offsets"]
+        for zenith, azimuth, nsb, off_axis_angle in itertools.product(
+            self.args["zeniths"],
+            self.args["azimuths"],
+            self.args["nsb"],
+            self.args["off_axis_angles"],
         ):
+            off_axis_angle = u.Quantity(off_axis_angle, u.deg)
+            offset_value = off_axis_angle.to_value(u.deg)
             file_name = self.args["file_name_template"].format(
                 zenith=int(zenith),
                 azimuth=azimuth,
                 nsb=nsb,
-                offset=offset,
+                offset=offset_value,
             )
             file_path = Path(self.args["base_path"]).joinpath(file_name)
 
@@ -91,7 +96,7 @@ class ProductionStatisticsHandler:
             evaluator = StatisticalUncertaintyEvaluator(
                 file_path,
                 metrics=self.metrics,
-                grid_point=(None, azimuth, zenith, nsb, offset * u.deg),
+                grid_point=(None, azimuth, zenith, nsb, off_axis_angle),
             )
             evaluator.calculate_metrics()
             self.evaluator_instances.append(evaluator)

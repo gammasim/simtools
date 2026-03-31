@@ -142,7 +142,7 @@ Plot layout with some telescopes grayed out and others highlighted:
 """
 
 import simtools.layout.array_layout_utils as layout_utils
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.visualization.plot_array_layout import plot_array_layouts
 
@@ -276,7 +276,7 @@ def _parse():
 
 def main():
     """Plot array layout application."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     layouts, background_layout = layout_utils.read_layouts(app_context.args)
     plot_array_layouts(

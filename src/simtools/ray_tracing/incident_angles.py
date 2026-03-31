@@ -188,14 +188,22 @@ class IncidentAnglesCalculator:
             pf.write(
                 f"# off_axis_angle [deg] = {self.config_data['off_axis_angle'].to_value(u.deg)}\n"
             )
-            pf.write(f"# source_distance [km] = {self.config_data['source_distance']}\n")
+            distance_km = self._source_distance_km()
+            pf.write(f"# source_distance [km] = {distance_km}\n")
 
         with stars_file.open("w", encoding="utf-8") as sf:
             zen = self.ZENITH_ANGLE_DEG
-            dist = float(self.config_data["source_distance"])
-            sf.write(f"0. {90.0 - zen} 1.0 {dist}\n")
+            distance_km = self._source_distance_km()
+            sf.write(f"0. {90.0 - zen} 1.0 {distance_km}\n")
 
         return photons_file, stars_file, log_file
+
+    def _source_distance_km(self):
+        """Return source distance as a scalar value in km."""
+        source_distance = self.config_data["source_distance"]
+        if isinstance(source_distance, u.Quantity):
+            return source_distance.to_value(u.km)
+        return float(source_distance)
 
     def _write_run_script(self, photons_file, stars_file, log_file):
         """Generate a run script for sim_telarray with the provided configuration and inputs.

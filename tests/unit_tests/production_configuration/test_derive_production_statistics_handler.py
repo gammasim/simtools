@@ -61,7 +61,7 @@ def args_dict(tmp_path, metrics_file, grid_points_file):
         "zeniths": [20, 40],
         "azimuths": [180],
         "nsb": [0.005],
-        "offsets": [0.5, 1.0],
+        "off_axis_angles": [0.5, 1.0],
         "query_point": [1.0, 180.0, 20.0, 4.0, 0.5],
         "output_file": "production_statistics.json",
         "output_path": str(tmp_path),
@@ -137,7 +137,7 @@ def test_no_base_path(mock_handler):
 
 def test_empty_offsets(mock_handler):
     """Test behavior when offsets are empty."""
-    mock_handler.args["offsets"] = []  # Empty offsets
+    mock_handler.args["off_axis_angles"] = []  # Empty offsets
 
     mock_handler.initialize_evaluators()
 
@@ -272,7 +272,7 @@ def test_handler_with_grid_points_from_file(grid_points_file, metrics_file, tmp_
     args_dict = {
         "base_path": BASE_PATH,
         "zeniths": [20, 40],
-        "offsets": [0.5],
+        "off_axis_angles": [0.5],
         "azimuths": [0],
         "nsb": [0.005],
         "grid_points_production_file": str(grid_points_file),
@@ -311,7 +311,7 @@ def test_empty_grid_points_production_file(metrics_file, tmp_path):
     args_dict = {
         "base_path": BASE_PATH,
         "zeniths": [20, 40],
-        "offsets": [0.5],
+        "off_axis_angles": [0.5],
         "azimuths": [0],
         "nsb": [0.005],
         "grid_points_production_file": str(grid_points_file),
@@ -337,7 +337,7 @@ def test_grid_points_with_incorrect_format(metrics_file, tmp_path):
     args_dict = {
         "base_path": BASE_PATH,
         "zeniths": [20, 40],
-        "offsets": [0.5],
+        "off_axis_angles": [0.5],
         "azimuths": [0],
         "nsb": [0.005],
         "grid_points_production_file": str(grid_points_file),
@@ -360,7 +360,7 @@ def test_initialize_evaluators_with_valid_files(mock_handler):
     mock_handler.args["zeniths"] = [20, 40]
     mock_handler.args["azimuths"] = [0]
     mock_handler.args["nsb"] = [0.005]
-    mock_handler.args["offsets"] = [0.5, 1.0]
+    mock_handler.args["off_axis_angles"] = [0.5, 1.0]
     mock_handler.args["base_path"] = "test/path"
     mock_handler.args["file_name_template"] = "test_{zenith}.fits"
     mock_handler.evaluator_instances = []
@@ -384,7 +384,7 @@ def test_initialize_evaluators_with_valid_files(mock_handler):
             len(mock_handler.args["zeniths"])
             * len(mock_handler.args["azimuths"])
             * len(mock_handler.args["nsb"])
-            * len(mock_handler.args["offsets"])
+            * len(mock_handler.args["off_axis_angles"])
         )
         assert len(mock_handler.evaluator_instances) == expected_count
 

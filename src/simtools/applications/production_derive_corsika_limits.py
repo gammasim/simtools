@@ -82,7 +82,7 @@ Derive limits for a given file for custom defined array layouts:
         --output_file corsika_simulation_limits_lookup.ecsv
 """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.production_configuration.derive_corsika_limits import (
     generate_corsika_limits_grid,
@@ -132,7 +132,7 @@ def _parse():
 
 def main():
     """Derive limits for energy, radial distance, and viewcone."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     generate_corsika_limits_grid(app_context.args)
 

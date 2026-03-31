@@ -79,7 +79,7 @@ Examples
 
 from pathlib import Path
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.data_model import data_reader
 from simtools.io import ascii_handler
@@ -140,7 +140,7 @@ def _parse():
 
 def main():
     """Merge CORSIKA limit tables and check grid completeness."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     merger = CorsikaMergeLimits()
     grid_definition = (

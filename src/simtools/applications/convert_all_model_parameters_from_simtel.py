@@ -65,7 +65,7 @@ from pathlib import Path
 import numpy as np
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.data_model import schema
 from simtools.io import ascii_handler
@@ -311,7 +311,7 @@ def print_list_of_files(args_dict, logger):
 
 def main():
     """Convert all simulation model parameters exported from sim_telarray format."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     _parameters_not_in_simtel, _simtel_parameters = read_and_export_parameters(
         app_context.args, app_context.logger, app_context.io_handler

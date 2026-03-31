@@ -649,20 +649,26 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
     tel_model.overwrite_parameters(best_pars, flat_dict=True)
 
     # Create off-axis angle array
-    max_offset = args_dict.get("max_offset", MAX_OFFSET_DEFAULT)
-    offset_steps = args_dict.get("offset_steps", OFFSET_STEPS_DEFAULT)
+    max_offset = args_dict.get("max_offset", MAX_OFFSET_DEFAULT * u.deg)
+    offset_step = args_dict.get("offset_step", OFFSET_STEPS_DEFAULT * u.deg)
+    max_offset_deg = (
+        max_offset.to_value(u.deg) if isinstance(max_offset, u.Quantity) else max_offset
+    )
+    offset_step_deg = (
+        offset_step.to_value(u.deg) if isinstance(offset_step, u.Quantity) else offset_step
+    )
     off_axis_angles = np.linspace(
         0,
-        max_offset,
-        int(max_offset / offset_steps) + 1,
+        max_offset_deg,
+        int(max_offset_deg / offset_step_deg) + 1,
     )
 
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
         label=args_dict.get("label") or getattr(tel_model, "label", None),
-        zenith_angle=args_dict["zenith"] * u.deg,
-        source_distance=args_dict["src_distance"] * u.km,
+        zenith_angle=args_dict["zenith_angle"],
+        source_distance=args_dict["source_distance"],
         off_axis_angle=off_axis_angles * u.deg,
     )
 
@@ -687,7 +693,7 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
         plt.ylabel(psf_label_cm if "_cm" in key else psf_label_deg)
         plt.ylim(bottom=0)
         plt.xticks(rotation=45)
-        plt.xlim(0, max_offset)
+        plt.xlim(0, max_offset_deg)
         plt.grid(True, alpha=0.3)
 
         # Create dynamic file name based on fraction

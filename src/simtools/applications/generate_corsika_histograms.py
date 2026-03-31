@@ -69,7 +69,7 @@ r"""
 
 from astropy import units as u
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.corsika.corsika_histograms import CorsikaHistograms
 from simtools.visualization import plot_corsika_histograms
@@ -122,7 +122,7 @@ def _parse():
 
 def main():
     """Generate a set of histograms for the Cherenkov photons from CORSIKA IACT file(s)."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     all_histograms = []
     for input_file in app_context.args["input_files"]:

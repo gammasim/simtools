@@ -25,7 +25,7 @@ North - 5.0.0:
 The output is saved in simtools-output/test/model.
 """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.model.array_model import ArrayModel
 
@@ -41,7 +41,7 @@ def _parse():
 
 def main():
     """Generate sim_telarray configuration files for a given array."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     array_model = ArrayModel(
         label=app_context.args["label"],

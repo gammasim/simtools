@@ -21,7 +21,7 @@ r"""
 
     """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.data_model import metadata_model
 from simtools.io import ascii_handler
@@ -52,7 +52,7 @@ def _parse():
 
 def main():
     """Generate a default simtools metadata file from a json schema."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     default_values = metadata_model.get_default_metadata_dict(app_context.args["schema"])
 

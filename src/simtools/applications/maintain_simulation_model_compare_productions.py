@@ -16,7 +16,7 @@ Example
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.io import ascii_handler
 
@@ -87,7 +87,11 @@ def _compare_json_dirs(dir1, dir2, ignore_key="model_version"):
 
 def main():
     """Compare two directories with model production tables in JSON format."""
-    app_context = startup_application(_parse, setup_io_handler=False)
+    app_context = build_application(
+        __file__,
+        parse_function=_parse,
+        startup_kwargs={"setup_io_handler": False},
+    )
 
     _compare_json_dirs(Path(app_context.args["directory_1"]), Path(app_context.args["directory_2"]))
 

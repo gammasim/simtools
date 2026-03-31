@@ -61,7 +61,7 @@ light_source_pointing (float, float, float, optional)
     Light source pointing direction. If not set, the pointing from the simulation model is used.
 """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 
@@ -126,7 +126,7 @@ def _parse():
 
 def main():
     """Simulate light emission from illuminator."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     light_source = SimulatorLightEmission(
         light_emission_config={**app_context.args, "run_mode": "illuminator"},

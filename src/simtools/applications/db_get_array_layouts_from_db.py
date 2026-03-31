@@ -52,7 +52,7 @@ Retrieve telescope positions from database (utm coordinate system) and write to 
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
@@ -112,7 +112,7 @@ def _layout_from_db(args_dict):
 
 def main():
     """Get list of array layouts or list of elements for a given layout as defined in the db."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     if app_context.args.get("list_available_layouts", False):
         if app_context.args.get("site", None) is None:

@@ -37,7 +37,7 @@ Derive trigger rates for the South Alpha layout:
 
 """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.telescope_trigger_rates import telescope_trigger_rates
 
@@ -79,7 +79,7 @@ def _parse():
 
 def main():
     """Derive trigger rates for a single telescope or an array of telescopes."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     telescope_trigger_rates(app_context.args)
 
