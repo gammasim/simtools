@@ -4,7 +4,7 @@
 import pytest
 from astropy.units import dimensionless_unscaled, ns
 
-from simtools.simtel import row_table_utils
+from simtools.data_model import row_table_utils
 
 
 class TestIsRowTableDict:
@@ -96,7 +96,6 @@ class TestValidateRowTableStructure:
             "column_units": ["ns", "dimensionless"],
             "rows": [[0.0, 0.1], [1.0, 0.2]],
         }
-        # Should not raise
         row_table_utils.validate_row_table_structure("test_param", payload)
 
     def test_validate_row_table_structure_missing_columns(self):
@@ -139,8 +138,8 @@ class TestValidateRowTableStructure:
     @pytest.mark.parametrize(
         "invalid_rows",
         [
-            [[0.0]],  # Too few values
-            [[0.0, 0.1, 0.2]],  # Too many values
+            [[0.0]],
+            [[0.0, 0.1, 0.2]],
         ],
     )
     def test_validate_row_table_structure_row_length_mismatch(self, invalid_rows):
@@ -178,7 +177,7 @@ class TestValidateRowTableStructure:
         payload = {
             "columns": ["time", "amplitude"],
             "column_units": ["ns", "dimensionless"],
-            "rows": [5.0],  # Scalar instead of sequence
+            "rows": [5.0],
         }
         with pytest.raises(ValueError, match="must be a sequence"):
             row_table_utils.validate_row_table_structure("test_param", payload)

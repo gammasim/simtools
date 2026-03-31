@@ -11,7 +11,7 @@ this module.
 
 import logging
 
-from simtools.simtel import row_table_utils
+from simtools.data_model import row_table_utils
 
 logger = logging.getLogger(__name__)
 
