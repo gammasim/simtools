@@ -6,6 +6,8 @@ import pytest
 
 from simtools.db import parameter_exporter
 
+pytestmark = pytest.mark.db_unit_test
+
 
 @pytest.fixture
 def db_handler_mock(mocker):
