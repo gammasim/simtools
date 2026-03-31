@@ -81,7 +81,16 @@ extensions = [
     "sphinx.ext.mathjax",
 ]
 
-nitpicky = False
+nitpicky = True
+nitpick_ignore = [
+    ("py:class", "astropy.table.table.Table"),
+    ("py:class", "astropy.units.quantity.Quantity"),
+    ("py:class", "logging.Logger"),
+    ("py:class", "numpy.float64"),
+    ("py:class", "numpy.ndarray"),
+    ("py:class", "numpy.uint32"),
+    ("py:class", "pathlib.Path"),
+]
 
 
 # Display todos by setting to True
@@ -136,7 +145,10 @@ html_theme_options = {
     ],
     "navigation_with_keys": False,
     "switcher": {
-        "json_url": "https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json",
+        "json_url": (
+            "https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/"
+            "docs/_static/switcher.json"
+        ),
         "version_match": "latest",
     },
     "check_switcher": True,
@@ -171,7 +183,7 @@ myst_enable_extensions = [
 ]
 
 
-suppress_warnings = ["myst.*", "myst.duplicate_def", "ref"]
+suppress_warnings = ["myst.*", "myst.duplicate_def"]
 
 # Links to be ignored by linkcheck
 linkcheck_ignore = [
