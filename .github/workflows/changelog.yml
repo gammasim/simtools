@@ -32,10 +32,14 @@ jobs:
           current_pr_pattern="^${FRAGMENT_NAME_PREFIX}\.(feature|bugfix|api|maintenance|doc|model)\.md$"
           any_pr_pattern="^docs/changes/[0-9]+\.(feature|bugfix|api|maintenance|doc|model)\.md$"
 
-          # Collect changelog files and ignore housekeeping file.
-          files=$(find docs/changes -maxdepth 1 -type f ! -name ".gitkeep" | sort || true)
+          # Compare against the PR base branch and validate only changed changelog files.
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          files=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" \
+            | grep -P '^docs/changes/.*\.md$' \
+            | grep -Pv '^docs/changes/\.gitkeep$' \
+            | sort || true)
 
-          # Ensure there is at least one valid fragment for this PR.
+          # Ensure there is at least one valid fragment for this PR in changed files.
           if ! echo "${files}" | grep -Pq "${current_pr_pattern}"; then
             echo "ERROR: No valid changelog fragment found."
             echo "Expected: ${FRAGMENT_NAME_PREFIX}.(feature|bugfix|api|maintenance|doc|model).md"
