@@ -72,7 +72,6 @@ release = version
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
@@ -83,11 +82,16 @@ extensions = [
 ]
 
 nitpicky = True
-
-nitpick_ignore = {
+nitpick_ignore = [
+    ("py:class", "astropy.table.table.Table"),
+    ("py:class", "astropy.units.quantity.Quantity"),
+    ("py:class", "logging.Logger"),
     ("py:class", "numpy.float64"),
+    ("py:class", "numpy.ndarray"),
     ("py:class", "numpy.uint32"),
-}
+    ("py:class", "pathlib.Path"),
+]
+
 
 # Display todos by setting to True
 todo_include_todos = True
@@ -141,7 +145,10 @@ html_theme_options = {
     ],
     "navigation_with_keys": False,
     "switcher": {
-        "json_url": "https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json",
+        "json_url": (
+            "https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/"
+            "docs/_static/switcher.json"
+        ),
         "version_match": "latest",
     },
     "check_switcher": True,
@@ -157,14 +164,6 @@ html_static_path = []
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "simtoolsdoc"
-
-# -- Options for intersphinx extension ---------------------------------------
-intersphinx_mapping = {
-    "python": (f"https://docs.python.org/{python_requires}", None),
-    "numpy": ("https://numpy.org/doc/stable", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy", None),
-    "astropy": ("https://docs.astropy.org/en/latest", None),
-}
 
 # local dir
 locale_dirs = []
@@ -184,7 +183,7 @@ myst_enable_extensions = [
 ]
 
 
-suppress_warnings = ["myst.*", "myst.duplicate_def", "intersphinx.external"]
+suppress_warnings = ["myst.*", "myst.duplicate_def"]
 
 # Links to be ignored by linkcheck
 linkcheck_ignore = [
