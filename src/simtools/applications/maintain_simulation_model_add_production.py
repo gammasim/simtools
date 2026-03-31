@@ -40,17 +40,11 @@ from simtools.application_control import build_application
 from simtools.model import model_repository
 
 
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    del parser
-
-
 def main():
     """Generate a new simulation model production."""
     app_context = build_application(
         __file__,
         description="Generate a new simulation model production",
-        add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": False,
             "output": False,

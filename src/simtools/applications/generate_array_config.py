@@ -29,17 +29,11 @@ from simtools.application_control import build_application
 from simtools.model.array_model import ArrayModel
 
 
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    del parser
-
-
 def main():
     """Generate sim_telarray configuration files for a given array."""
     app_context = build_application(
         __file__,
         description="Generate sim_telarray configuration files for a given array.",
-        add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,
             "simulation_model": ["site", "layout", "model_version"],
