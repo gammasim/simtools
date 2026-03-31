@@ -253,7 +253,15 @@ def test_initialize_default_arguments():
 def test_initialize_application_arguments():
     app_parser = parser.CommandLineParser()
     app_parser.initialize_application_arguments(
-        ["source_distance", "zenith_angle", "number_of_photons", "off_axis_angles"]
+        [
+            "source_distance",
+            "zenith_angle",
+            "number_of_photons",
+            "off_axis_angles",
+            "all_model_versions",
+            "data",
+            "telescope_ids",
+        ]
     )
 
     args = app_parser.parse_args(
@@ -267,6 +275,11 @@ def test_initialize_application_arguments():
             "--off_axis_angles",
             "0.5",
             "1 deg",
+            "--all_model_versions",
+            "--data",
+            "psf_data.ecsv",
+            "--telescope_ids",
+            "layout_ids.txt",
         ]
     )
 
@@ -276,6 +289,9 @@ def test_initialize_application_arguments():
     assert len(args.off_axis_angles) == 2
     assert_quantity_allclose(args.off_axis_angles[0], 0.5 * u.deg)
     assert_quantity_allclose(args.off_axis_angles[1], 1 * u.deg)
+    assert args.all_model_versions is True
+    assert args.data == "psf_data.ecsv"
+    assert args.telescope_ids == "layout_ids.txt"
 
     job_groups = app_parser._action_groups
     assert "application" in [str(group.title) for group in job_groups]
@@ -428,7 +444,6 @@ def test_get_dictionary_with_corsika_configuration(mocker):
     assert "primary_id_type" in corsika_config
     assert corsika_config["primary_id_type"]["help"] == "Primary particle ID type"
     assert corsika_config["primary_id_type"]["type"] is str
-    assert corsika_config["primary_id_type"]["required"] is False
     assert corsika_config["primary_id_type"]["choices"] == ["common_name", "corsika7_id", "pdg_id"]
     assert corsika_config["primary_id_type"]["default"] == "common_name"
 
@@ -450,7 +465,6 @@ def test_get_dictionary_with_corsika_configuration(mocker):
     assert "nshow" in corsika_config
     assert corsika_config["nshow"]["help"] == "Number of showers per run to simulate."
     assert corsika_config["nshow"]["type"] is int
-    assert corsika_config["nshow"]["required"] is False
 
     # Test the "run_number_offset" key
     assert "run_number_offset" in corsika_config
@@ -459,7 +473,6 @@ def test_get_dictionary_with_corsika_configuration(mocker):
         == "An offset for the run number to be simulated."
     )
     assert corsika_config["run_number_offset"]["type"] is int
-    assert corsika_config["run_number_offset"]["required"] is False
     assert corsika_config["run_number_offset"]["default"] == 0
 
     # Test the "run_number" key
@@ -473,7 +486,6 @@ def test_get_dictionary_with_corsika_configuration(mocker):
     assert "event_number_first_shower" in corsika_config
     assert corsika_config["event_number_first_shower"]["help"] == "Event number of first shower"
     assert corsika_config["event_number_first_shower"]["type"] is int
-    assert corsika_config["event_number_first_shower"]["required"] is False
     assert corsika_config["event_number_first_shower"]["default"] == 1
 
     # Test the "correct_for_b_field_alignment" key
@@ -482,7 +494,6 @@ def test_get_dictionary_with_corsika_configuration(mocker):
         corsika_config["correct_for_b_field_alignment"]["help"] == "Correct for B-field alignment"
     )
     assert corsika_config["correct_for_b_field_alignment"]["action"] == "store_true"
-    assert corsika_config["correct_for_b_field_alignment"]["required"] is False
     assert corsika_config["correct_for_b_field_alignment"]["default"] is True
 
 

@@ -8,11 +8,7 @@ from simtools.reporting.docs_auto_report_generator import ReportGenerator
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--all_model_versions",
-        action="store_true",
-        help="Produce reports for all model versions.",
-    )
+    parser.initialize_application_arguments(["all_model_versions"])
 
 
 def main():

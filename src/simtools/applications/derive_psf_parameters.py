@@ -114,10 +114,7 @@ from simtools.ray_tracing import psf_parameter_optimisation as psf_opt
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.initialize_application_arguments(["source_distance", "zenith_angle"])
-    parser.add_argument(
-        "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
-    )
+    parser.initialize_application_arguments(["source_distance", "zenith_angle", "data"])
     parser.add_argument(
         "--plot_all",
         help=(

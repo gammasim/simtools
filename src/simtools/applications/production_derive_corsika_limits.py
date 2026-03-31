@@ -90,17 +90,12 @@ from simtools.production_configuration.derive_corsika_limits import (
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
+    parser.initialize_application_arguments(["telescope_ids"])
     parser.add_argument(
         "--event_data_file",
         type=str,
         required=True,
         help="Event data file containing reduced event data.",
-    )
-    parser.add_argument(
-        "--telescope_ids",
-        type=str,
-        required=False,
-        help="Path to a file containing telescope configurations.",
     )
     parser.add_argument(
         "--loss_fraction",
