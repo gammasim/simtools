@@ -2,7 +2,7 @@
 
 r"""Produces a markdown file for a given simulation configuration."""
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 
@@ -29,7 +29,7 @@ def _parse():
 
 def main():
     """Produce a markdown file for a given simulation configuration."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     output_path = app_context.io_handler.get_output_directory()
 

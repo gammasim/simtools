@@ -51,18 +51,18 @@ Run the application with the configuration file ``config_file_name``:
 
 .. code-block:: console
 
-     simtools-run-application --configuration_file config_file_name
+    simtools-run-application --config_file config_file_name
 
 Run the application with the configuration file ``config_file_name``, but skipping all steps except
 step 2 and 3 (useful for debugging):
 
 .. code-block:: console
 
-     simtools-run-application --configuration_file config_file_name --steps 2 3
+    simtools-run-application --config_file config_file_name --steps 2 3
 
 """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.runners import simtools_runner
 
@@ -76,7 +76,8 @@ def _parse():
     )
 
     config.parser.add_argument(
-        "--configuration_file",
+        "--config_file",
+        dest="configuration_file",
         help="Application configuration.",
         type=str,
         required=True,
@@ -99,7 +100,11 @@ def _parse():
 
 def main():
     """Run several simtools applications using a configuration file."""
-    app_context = startup_application(_parse, setup_io_handler=False)
+    app_context = build_application(
+        __file__,
+        parse_function=_parse,
+        startup_kwargs={"setup_io_handler": False},
+    )
 
     simtools_runner.run_applications(app_context.args, app_context.logger)
 

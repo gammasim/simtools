@@ -126,7 +126,7 @@ To read a reduced event data file, use the following command reading on of the t
 
 from pathlib import Path
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import io_handler, table_handler
@@ -163,7 +163,11 @@ def _parse():
 
 def main():
     """Generate a reduced dataset of event data from output of telescope simulations."""
-    app_context = startup_application(_parse, setup_io_handler=False)
+    app_context = build_application(
+        __file__,
+        parse_function=_parse,
+        startup_kwargs={"setup_io_handler": False},
+    )
     app_context.logger.info(f"Loading input files from: {app_context.args['input']}")
 
     input_pattern = Path(app_context.args["input"])

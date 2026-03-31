@@ -44,7 +44,7 @@ r"""
     The output is saved in simtools-output/validate_camera_efficiency.
 """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.configuration import configurator
 from simtools.io.ascii_handler import write_data_to_file
@@ -103,7 +103,7 @@ def _parse():
 
 def main():
     """Calculate the camera efficiency and NSB pixel rates."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     results = {}
     for efficiency_type in ["Shower", "NSB", "Muon"]:

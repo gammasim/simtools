@@ -46,7 +46,7 @@ Plot tabular data for all types defined in the schema file:
 
 """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.visualization import plot_tables
@@ -72,7 +72,7 @@ def _parse():
 
 def main():
     """Plot tabular data."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     plot_configs, output_files = plot_tables.generate_plot_configurations(
         parameter=app_context.args["parameter"],

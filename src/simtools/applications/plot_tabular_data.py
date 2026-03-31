@@ -24,7 +24,7 @@ Plot tabular data using a configuration file.
 """
 
 import simtools.utils.general as gen
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.constants import PLOT_CONFIG_SCHEMA
 from simtools.data_model import schema
@@ -66,7 +66,7 @@ def _parse():
 
 def main():
     """Plot tabular data."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     plot_config = gen.convert_keys_in_dict_to_lowercase(
         schema.validate_dict_using_schema(

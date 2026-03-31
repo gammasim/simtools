@@ -43,7 +43,7 @@
 
 """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.layout.array_layout_utils import write_array_elements_from_file_to_repository
 
@@ -73,7 +73,7 @@ def _parse():
 
 def main():
     """Application main."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     write_array_elements_from_file_to_repository(
         coordinate_system=app_context.args["coordinate_system"],

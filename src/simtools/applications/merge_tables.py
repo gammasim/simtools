@@ -36,12 +36,10 @@ Merge tables from two files generated with 'simtools-generate-simtel-event-data'
 
 """
 
-from pathlib import Path
-
 import simtools.utils.general as gen
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
-from simtools.io import io_handler, table_handler
+from simtools.io import table_handler
 
 
 def _parse():
@@ -70,7 +68,7 @@ def _parse():
 
 def main():
     """Merge tables from multiple input files into single tables."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     app_context.logger.info(f"Loading input files: {app_context.args['input_files']}")
 
@@ -79,8 +77,7 @@ def main():
         app_context.args["input_files"], [".hdf5", ".gz"]
     )
 
-    output_path = io_handler.IOHandler().get_output_directory()
-    output_filepath = Path(output_path).joinpath(f"{app_context.args['output_file']}")
+    output_filepath = app_context.io_handler.get_output_file(app_context.args["output_file"])
 
     table_handler.merge_tables(
         input_files,

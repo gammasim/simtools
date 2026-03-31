@@ -36,7 +36,7 @@ The following example applies a patch update with changes defined in a YAML file
 
 from pathlib import Path
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.model import model_repository
 
@@ -52,7 +52,7 @@ def _parse():
 
 def main():
     """Generate a new simulation model production."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     model_repository.generate_new_production(
         model_version=app_context.args["model_version"],

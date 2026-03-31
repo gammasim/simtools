@@ -56,7 +56,7 @@ r"""
         --zenith_angle 20 --start_run 0 --run 1
 """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import commandline_parser, configurator
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.simulator import Simulator
@@ -128,7 +128,11 @@ def _parse():
 
 def main():
     """Run simulations for productions."""
-    app_context = startup_application(_parse, setup_io_handler=False)
+    app_context = build_application(
+        __file__,
+        parse_function=_parse,
+        startup_kwargs={"setup_io_handler": False},
+    )
 
     simulator = Simulator(label=app_context.args.get("label"))
 

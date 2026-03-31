@@ -343,6 +343,26 @@ class CommandLineParser(argparse.ArgumentParser):
                 available_parameters=self._get_dictionary_with_sim_telarray_configuration(),
             )
 
+    def initialize_application_arguments(self, selected_parameters, group_name="application"):
+        """
+        Initialize reusable application-specific arguments.
+
+        Parameters
+        ----------
+        selected_parameters : list
+            List of application argument names to initialize.
+        group_name : str, optional
+            Name of the argument group.
+        """
+        if selected_parameters is None:
+            return
+
+        self._initialize_argument_group(
+            group_name=group_name,
+            selected_parameters=selected_parameters,
+            available_parameters=self._get_dictionary_with_application_arguments(),
+        )
+
     def _initialize_simulation_software(self):
         """Initialize simulation software arguments."""
         _software_group = self.add_argument_group("simulation software")
@@ -503,6 +523,67 @@ class CommandLineParser(argparse.ArgumentParser):
             },
         }
 
+    @staticmethod
+    def _get_dictionary_with_application_arguments():
+        """Return dictionary with reusable application argument definitions."""
+        return {
+            "source_distance": {
+                "help": "Source distance in km (unitless values are interpreted as km).",
+                "type": CommandLineParser.quantity("km"),
+                "required": False,
+                "default": 10 * u.km,
+            },
+            "zenith_angle": {
+                "help": "Zenith angle in degrees (between 0 and 180).",
+                "type": CommandLineParser.zenith_angle,
+                "required": False,
+                "default": 20 * u.deg,
+            },
+            "off_axis_angles": {
+                "help": (
+                    "One or more off-axis angles in degrees "
+                    "(unitless values are interpreted as degrees)."
+                ),
+                "type": CommandLineParser.quantity("deg"),
+                "nargs": "+",
+                "required": False,
+                "default": [0.0 * u.deg],
+            },
+            "number_of_photons": {
+                "help": "Number of star photons to trace (per run).",
+                "type": CommandLineParser.scientific_int,
+                "required": False,
+                "default": 10000,
+            },
+            "max_offset": {
+                "help": "Maximum offset angle in degrees (unitless values are interpreted as deg).",
+                "type": CommandLineParser.quantity("deg"),
+                "required": False,
+                "default": 4 * u.deg,
+            },
+            "offset_step": {
+                "help": (
+                    "Offset angle step size in degrees (unitless values are interpreted as deg)."
+                ),
+                "type": CommandLineParser.quantity("deg"),
+                "required": False,
+                "default": 0.25 * u.deg,
+            },
+        }
+
+    def _initialize_argument_group(self, group_name, selected_parameters, available_parameters):
+        """Initialize a group of arguments from a parameter-definition dictionary."""
+        configuration_group = self.add_argument_group(group_name)
+
+        if "all" in selected_parameters:
+            selected_parameters = available_parameters.keys()
+
+        for param in selected_parameters:
+            try:
+                configuration_group.add_argument(f"--{param}", **available_parameters[param])
+            except KeyError:
+                pass
+
     def _initialize_simulation_configuration(
         self, group_name, selected_parameters, available_parameters
     ):
@@ -518,16 +599,7 @@ class CommandLineParser(argparse.ArgumentParser):
         available_parameters : dict
             Dictionary with available parameters and their configuration.
         """
-        configuration_group = self.add_argument_group(group_name)
-
-        if "all" in selected_parameters:
-            selected_parameters = available_parameters.keys()
-
-        for param in selected_parameters:
-            try:
-                configuration_group.add_argument(f"--{param}", **available_parameters[param])
-            except KeyError:
-                pass
+        self._initialize_argument_group(group_name, selected_parameters, available_parameters)
 
     @staticmethod
     def _add_model_option_layout(job_group, model_options, required=True):
@@ -705,6 +777,36 @@ class CommandLineParser(argparse.ArgumentParser):
             raise argparse.ArgumentTypeError(f"{value} outside of allowed [0,1] interval")
 
         return fvalue
+
+    @staticmethod
+    def quantity(target_unit):
+        """
+        Build an argument parser type for quantities convertible to a target unit.
+
+        Parameters
+        ----------
+        target_unit : str or astropy.units.UnitBase
+            Unit to convert the parsed quantity to.
+
+        Returns
+        -------
+        callable
+            Parser callable returning an ``astropy.units.Quantity``.
+        """
+        target = u.Unit(target_unit)
+
+        def quantity_type(value):
+            try:
+                try:
+                    return float(value) * target
+                except (TypeError, ValueError):
+                    return u.Quantity(value).to(target)
+            except (TypeError, ValueError, u.UnitConversionError) as exc:
+                raise argparse.ArgumentTypeError(
+                    f"Invalid quantity value: '{value}'. Expected a value convertible to {target}."
+                ) from exc
+
+        return quantity_type
 
     @staticmethod
     def zenith_angle(angle):

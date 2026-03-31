@@ -78,7 +78,7 @@ Examples
 """
 
 import simtools.utils.general as gen
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.visualization.plot_simtel_events import PLOT_CHOICES, generate_and_save_plots
 
@@ -174,7 +174,7 @@ def _parse():
 
 def main():
     """Generate plots from sim_telarray file."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     plots = list(gen.ensure_iterable(app_context.args.get("plots")))
     generate_and_save_plots(plots=plots, args=app_context.args, ioh=app_context.io_handler)

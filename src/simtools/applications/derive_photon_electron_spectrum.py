@@ -36,7 +36,7 @@ r"""
 
 from pathlib import Path
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.camera.single_photon_electron_spectrum import SinglePhotonElectronSpectrum
 from simtools.configuration import configurator
 
@@ -113,7 +113,7 @@ def _parse():
 
 def main():
     """Derive single photon electron spectrum from a given amplitude spectrum."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     single_pe = SinglePhotonElectronSpectrum(app_context.args)
     single_pe.derive_single_pe_spectrum()

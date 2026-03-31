@@ -25,7 +25,7 @@ Generate plots from a given input file:
 
 """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.visualization import plot_simtel_event_histograms
@@ -43,7 +43,7 @@ def _parse():
 
 def main():
     """Plot simulated event distributions."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
     app_context.logger.info(f"Loading input file from: {app_context.args['input_file']}")
 
     histograms = EventDataHistograms(app_context.args["input_file"])

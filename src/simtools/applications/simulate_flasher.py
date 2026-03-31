@@ -77,7 +77,7 @@ run_number (int, optional)
     Run number to use (default: 1, required for direct injection mode).
 """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.model.model_utils import get_array_elements_for_layout
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
@@ -152,7 +152,7 @@ def _parse():
 
 def main():
     """Simulate flasher devices."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
 
     tel_string = (
         f"telescope(s) {app_context.args['telescopes']}"

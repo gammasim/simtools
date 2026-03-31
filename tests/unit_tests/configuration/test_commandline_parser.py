@@ -5,6 +5,7 @@ import logging
 
 import astropy.units as u
 import pytest
+from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.configuration.commandline_parser as parser
 
@@ -214,6 +215,19 @@ def test_azimuth_angle(caplog):
     assert "The azimuth angle provided is not a valid numerical or string value." in caplog.text
 
 
+def test_quantity():
+    quantity_parser = parser.CommandLineParser.quantity("km")
+
+    assert quantity_parser("10") == 10 * u.km
+    assert_quantity_allclose(quantity_parser("1500 m"), 1.5 * u.km)
+
+    with pytest.raises(
+        argparse.ArgumentTypeError,
+        match=r"Invalid quantity value: 'invalid'. Expected a value convertible to km.",
+    ):
+        quantity_parser("invalid")
+
+
 def test_initialize_default_arguments():
     # default arguments
     _parser_1 = parser.CommandLineParser()
@@ -234,6 +248,37 @@ def test_initialize_default_arguments():
     _parser_2.initialize_default_arguments(output=True)
     job_groups = _parser_2._action_groups
     assert "output" in [str(group.title) for group in job_groups]
+
+
+def test_initialize_application_arguments():
+    app_parser = parser.CommandLineParser()
+    app_parser.initialize_application_arguments(
+        ["source_distance", "zenith_angle", "number_of_photons", "off_axis_angles"]
+    )
+
+    args = app_parser.parse_args(
+        [
+            "--source_distance",
+            "1500 m",
+            "--zenith_angle",
+            "25 deg",
+            "--number_of_photons",
+            "1e6",
+            "--off_axis_angles",
+            "0.5",
+            "1 deg",
+        ]
+    )
+
+    assert_quantity_allclose(args.source_distance, 1.5 * u.km)
+    assert_quantity_allclose(args.zenith_angle, 25 * u.deg)
+    assert args.number_of_photons == 1_000_000
+    assert len(args.off_axis_angles) == 2
+    assert_quantity_allclose(args.off_axis_angles[0], 0.5 * u.deg)
+    assert_quantity_allclose(args.off_axis_angles[1], 1 * u.deg)
+
+    job_groups = app_parser._action_groups
+    assert "application" in [str(group.title) for group in job_groups]
 
 
 def test_simulation_model():

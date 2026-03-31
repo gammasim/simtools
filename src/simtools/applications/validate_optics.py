@@ -32,13 +32,13 @@ r"""
         Telescope model name (e.g. LST-1, SST-D, ...).
     model_version (str, optional)
         Model version.
-    src_distance (float, optional)
+    source_distance (float or quantity, optional)
         Source distance in km.
-    zenith (float, optional)
+    zenith_angle (float or quantity, optional)
         Zenith angle in deg.
-    max_offset (float, optional)
+    max_offset (float or quantity, optional)
         Maximum offset angle in deg.
-    offset_steps (float, optional)
+    offset_step (float or quantity, optional)
         Offset angle step size.
     plot_images (activation mode, optional)
         Produce a multiple pages pdf file with the image plots.
@@ -52,7 +52,7 @@ r"""
     .. code-block:: console
 
         simtools-validate-optics --site North --telescope LST-1 --max_offset 1.0 \\
-        --zenith 20 --src_distance 10 --test
+        --zenith_angle 20 --source_distance 10 --test
 
     The output is saved in simtools-output/validate_optics
 
@@ -72,67 +72,52 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=(
-            "Calculate and plot the PSF and effective mirror area as a function of off-axis angle "
-            "of the telescope requested."
-        ),
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.initialize_application_arguments(
+        ["source_distance", "zenith_angle", "max_offset", "offset_step"]
     )
-
-    config.parser.add_argument(
-        "--src_distance",
-        help="Source distance in km",
-        type=float,
-        default=10,
-    )
-    config.parser.add_argument("--zenith", help="Zenith angle in deg", type=float, default=20)
-    config.parser.add_argument(
-        "--max_offset",
-        help="Maximum offset angle in deg",
-        type=float,
-        default=4,
-    )
-    config.parser.add_argument(
-        "--offset_steps",
-        help="Offset angle step size",
-        type=float,
-        default=0.25,
-    )
-    config.parser.add_argument(
+    parser.add_argument(
         "--offset_file",
         help="Path to ECSV file with x, y offset columns (in degrees). "
-        "If provided, overrides max_offset and offset_steps.",
+        "If provided, overrides max_offset and offset_step.",
         type=str,
         default=None,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--offset_directions",
         help="Cardinal directions for offset generation (comma-separated): N,S,E,W. "
         "Only used with max_offset. Default: all four directions.",
         type=str,
         default="N,S,E,W",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--plot_images",
         help="Produce a multiple pages pdf file with the image plots.",
         action="store_true",
     )
-    return config.initialize(db_config=True, simulation_model=["telescope", "model_version"])
 
 
 def main():
     """Validate the optical model parameters through ray tracing simulations."""
-    app_context = startup_application(_parse, setup_io_handler=True)
+    app_context = build_application(
+        __file__,
+        description=(
+            "Calculate and plot the PSF and effective mirror area as a function of off-axis angle "
+            "of the telescope requested."
+        ),
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["telescope", "model_version"],
+        },
+    )
 
     tel_model, site_model, _ = initialize_simulation_models(
         label=Path(__file__).stem,
@@ -151,16 +136,19 @@ def main():
             d.strip().upper() for d in app_context.args["offset_directions"].split(",")
         ]
 
+    max_offset = app_context.args["max_offset"].to_value(u.deg)
+    offset_step = app_context.args["offset_step"].to_value(u.deg)
+
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
         label=app_context.args.get("label") or Path(__file__).stem,
-        zenith_angle=app_context.args["zenith"] * u.deg,
-        source_distance=app_context.args["src_distance"] * u.km,
+        zenith_angle=app_context.args["zenith_angle"],
+        source_distance=app_context.args["source_distance"],
         off_axis_angle=np.linspace(
             0,
-            app_context.args["max_offset"],
-            int(app_context.args["max_offset"] / app_context.args["offset_steps"]) + 1,
+            max_offset,
+            int(max_offset / offset_step) + 1,
         )
         * u.deg,
         offset_file=app_context.args.get("offset_file"),

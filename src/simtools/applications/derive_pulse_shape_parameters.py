@@ -52,7 +52,7 @@ Derive parameters for a pulse with 2.5 ns rise (10-90%) and
 import logging
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.pulse_shapes import solve_sigma_tau_from_rise_fall
@@ -122,7 +122,7 @@ def _parse():
 
 def main():
     """Run parameter derivation and write results."""
-    app_context = startup_application(_parse)
+    app_context = build_application(__file__, parse_function=_parse)
     log = logging.getLogger(__name__)
 
     rise_width_ns = app_context.args["rise_width_ns"]

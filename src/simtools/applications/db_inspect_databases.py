@@ -9,7 +9,7 @@ db_name (str, optional)
     Database name (use "all" for all databases)
 """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application, get_application_label
 from simtools.configuration import configurator
 from simtools.db import db_handler
 
@@ -30,7 +30,11 @@ def _parse():
 
 def main():
     """Inspect databases."""
-    app_context = startup_application(_parse, setup_io_handler=False)
+    app_context = build_application(
+        __file__,
+        parse_function=_parse,
+        startup_kwargs={"setup_io_handler": False},
+    )
 
     db = db_handler.DatabaseHandler()
     # databases without internal databases we don't have rights to modify

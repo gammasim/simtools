@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from astropy import units as u
 
 from simtools.visualization import plot_psf
 
@@ -287,8 +288,8 @@ def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
     mock_site_model = MagicMock()
     args_dict = {
         "fraction": 0.8,
-        "zenith": 20,
-        "src_distance": 10,
+        "zenith_angle": 20 * u.deg,
+        "source_distance": 10 * u.km,
     }
 
     # Mock RayTracing and its methods
