@@ -83,10 +83,6 @@ extensions = [
 
 nitpicky = False
 
-nitpick_ignore = {
-    ("py:class", "numpy.float64"),
-    ("py:class", "numpy.uint32"),
-}
 
 # Display todos by setting to True
 todo_include_todos = True
