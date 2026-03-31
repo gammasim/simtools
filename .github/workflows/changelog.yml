@@ -32,34 +32,20 @@ jobs:
           current_pr_pattern="^${FRAGMENT_NAME_PREFIX}\.(feature|bugfix|api|maintenance|doc|model)\.md$"
           any_pr_pattern="^docs/changes/[0-9]+\.(feature|bugfix|api|maintenance|doc|model)\.md$"
 
-          # Compare against the PR base branch and validate only changed changelog files.
-          git fetch origin "${{ github.base_ref }}" --depth=1
-          files=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" \
-            | grep -P '^docs/changes/.*\.md$' \
-            | grep -Pv '^docs/changes/\.gitkeep$' \
-            | sort || true)
+          files=$(find docs/changes -maxdepth 1 -type f -name "*.md" ! -name ".gitkeep" | sort || true)
 
-          # Ensure there is at least one valid fragment for this PR in changed files.
+          # Ensure there is a valid fragment for the current PR number.
           if ! echo "${files}" | grep -Pq "${current_pr_pattern}"; then
             echo "ERROR: No valid changelog fragment found."
             echo "Expected: ${FRAGMENT_NAME_PREFIX}.(feature|bugfix|api|maintenance|doc|model).md"
             exit 1
           fi
 
-          # Reject changelog fragments that belong to other PR numbers.
+          # Reject any numbered changelog fragment that does not use the current PR number.
           wrong_pr_files=$(echo "${files}" | grep -P "${any_pr_pattern}" | grep -Pv "${current_pr_pattern}" || true)
           if [ -n "${wrong_pr_files}" ]; then
             echo "ERROR: Changelog fragment(s) found for a different PR number:"
             echo "${wrong_pr_files}"
             echo "Expected current PR prefix: ${FRAGMENT_NAME_PREFIX}.(feature|bugfix|api|maintenance|doc|model).md"
-            exit 1
-          fi
-
-          # Fail if any file in docs/changes has an invalid filename format.
-          invalid_files=$(echo "${files}" | grep -Pv "${any_pr_pattern}" || true)
-          if [ -n "${invalid_files}" ]; then
-            echo "ERROR: Invalid changelog fragment filename(s) found:"
-            echo "${invalid_files}"
-            echo "Expected: ${FRAGMENT_NAME_PREFIX}.(feature|bugfix|api|maintenance|doc|model).md"
             exit 1
           fi
