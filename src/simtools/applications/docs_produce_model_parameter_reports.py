@@ -8,35 +8,30 @@ comparing their values over various model versions.
 Currently only implemented for telescopes.
 """
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.reporting.docs_read_parameters import ReadParameters
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=("Produce a markdown report for model parameters."),
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--all_telescopes",
         action="store_true",
         help="Produce reports for all telescopes.",
     )
 
-    config.parser.add_argument(
-        "--all_sites", action="store_true", help="Produce reports for all sites."
-    )
-
-    return config.initialize(db_config=True, simulation_model=["site", "telescope"])
+    parser.add_argument("--all_sites", action="store_true", help="Produce reports for all sites.")
 
 
 def main():
     """Produce a model parameter report per array element."""
-    app_context = build_application(__file__, parse_function=_parse)
+    app_context = build_application(
+        __file__,
+        description="Produce a markdown report for model parameters.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={"db_config": True, "simulation_model": ["site", "telescope"]},
+    )
     output_path = app_context.io_handler.get_output_directory()
 
     if any([app_context.args.get("all_telescopes"), app_context.args.get("all_sites")]):

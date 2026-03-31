@@ -2,34 +2,31 @@
 
 r"""Produces a markdown file for a given simulation configuration."""
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=("Produce a markdown report for model parameters."),
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--all_model_versions",
         action="store_true",
         help="Produce reports for all model versions.",
     )
 
-    return config.initialize(
-        db_config=True,
-        simulation_model=["model_version"],
-        simulation_configuration=["software"],
-    )
-
 
 def main():
     """Produce a markdown file for a given simulation configuration."""
-    app_context = build_application(__file__, parse_function=_parse)
+    app_context = build_application(
+        __file__,
+        description="Produce a markdown report for model parameters.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["model_version"],
+            "simulation_configuration": ["software"],
+        },
+    )
 
     output_path = app_context.io_handler.get_output_directory()
 

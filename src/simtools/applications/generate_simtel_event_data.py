@@ -126,46 +126,39 @@ To read a reduced event data file, use the following command reading on of the t
 
 from pathlib import Path
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import io_handler, table_handler
 from simtools.sim_events.writer import EventDataWriter
 
 
-def _parse():
-    """Parse command line arguments."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=(
-            "Process files and store reduced dataset with event information, "
-            "array information and triggered telescopes."
-        ),
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--input",
         type=str,
         required=True,
         help="Input file path (wildcards allowed; e.g., '/data_path/gamma_*dark*.simtel.zst')",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--max_files", type=int, default=100, help="Maximum number of input files to process."
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--print_dataset_information",
         type=int,
         help="Print data set information for the given number of events.",
         default=0,
     )
-    return config.initialize(db_config=False, output=True)
 
 
 def main():
     """Generate a reduced dataset of event data from output of telescope simulations."""
     app_context = build_application(
         __file__,
-        parse_function=_parse,
+        description="Process files and store reduced dataset with event information, "
+        "array information and triggered telescopes.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={"db_config": False, "output": True},
         startup_kwargs={"setup_io_handler": False},
     )
     app_context.logger.info(f"Loading input files from: {app_context.args['input']}")

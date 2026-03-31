@@ -9,49 +9,45 @@ such as the parameter name, value, unit, description, and short description.
 
 from pathlib import Path
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.reporting.docs_read_parameters import ReadParameters
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=("Produce a markdown report for model parameters."),
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--all_telescopes",
         action="store_true",
         help="Produce reports for all telescopes.",
     )
 
-    config.parser.add_argument(
+    parser.add_argument(
         "--all_model_versions",
         action="store_true",
         help="Produce reports for all model versions.",
     )
 
-    config.parser.add_argument(
-        "--all_sites", action="store_true", help="Produce reports for all sites."
-    )
+    parser.add_argument("--all_sites", action="store_true", help="Produce reports for all sites.")
 
-    config.parser.add_argument(
+    parser.add_argument(
         "--observatory",
         action="store_true",
         help="Produce reports for an observatory at a given site.",
     )
 
-    return config.initialize(
-        db_config=True, simulation_model=["site", "telescope", "model_version"]
-    )
-
 
 def main():
     """Produce a markdown file for a given array element, site, and model version."""
-    app_context = build_application(__file__, parse_function=_parse)
+    app_context = build_application(
+        __file__,
+        description="Produce a markdown report for model parameters.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["site", "telescope", "model_version"],
+        },
+    )
     output_path = app_context.io_handler.get_output_directory()
 
     if any(

@@ -21,38 +21,35 @@ r"""
 
     """
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.data_model import metadata_model
 from simtools.io import ascii_handler
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Generate a default simtools metadata file from a json schema.",
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--schema",
         help="schema file describing input data",
         type=str,
         required=True,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--output_file",
         help="output file name (if not given: print to stdout)",
         type=str,
         required=False,
     )
 
-    return config.initialize(output=False, require_command_line=True)
-
 
 def main():
     """Generate a default simtools metadata file from a json schema."""
-    app_context = build_application(__file__, parse_function=_parse)
+    app_context = build_application(
+        __file__,
+        description="Generate a default simtools metadata file from a json schema.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={"output": False, "require_command_line": True},
+    )
 
     default_values = metadata_model.get_default_metadata_dict(app_context.args["schema"])
 

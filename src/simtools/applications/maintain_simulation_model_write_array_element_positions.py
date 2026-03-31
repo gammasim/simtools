@@ -43,23 +43,18 @@
 
 """
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.layout.array_layout_utils import write_array_elements_from_file_to_repository
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Add array element positions to model parameter repository",
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--input",
         help="File containing a table of array element positions.",
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--coordinate_system",
         help="Coordinate system of array element positions (utm or ground).",
         default="ground",
@@ -68,12 +63,19 @@ def _parse():
         choices=["ground", "utm"],
     )
 
-    return config.initialize(db_config=True, output=True, simulation_model=["parameter_version"])
-
 
 def main():
     """Application main."""
-    app_context = build_application(__file__, parse_function=_parse)
+    app_context = build_application(
+        __file__,
+        description="Add array element positions to model parameter repository",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "output": True,
+            "simulation_model": ["parameter_version"],
+        },
+    )
 
     write_array_elements_from_file_to_repository(
         coordinate_system=app_context.args["coordinate_system"],

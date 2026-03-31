@@ -54,30 +54,26 @@ azimuth_angle (float, optional)
     Azimuth angle in degrees.
 """
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.simulator import Simulator
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__), description="Simulate calibration events."
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--run_mode",
         help="Calibration run mode",
         type=str,
         required=True,
         choices=["pedestals", "pedestals_dark", "pedestals_nsb_only"],
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--number_of_events",
         help="Number of pedestal events to simulate",
         type=int,
         required=True,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--nsb_scaling_factor",
         help=(
             "Scaling factor for the NSB rate. "
@@ -87,26 +83,29 @@ def _parse():
         required=False,
         default=1.0,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--stars",
         help="List of stars (azimuth, zenith, weighting factor).",
         type=str,
         default=None,
     )
 
-    return config.initialize(
-        db_config=True,
-        simulation_model=["site", "layout", "telescope", "model_version"],
-        simulation_configuration={
-            "corsika_configuration": ["run_number", "azimuth_angle", "zenith_angle"],
-            "sim_telarray_configuration": ["all"],
-        },
-    )
-
 
 def main():
     """Simulate pedestal events."""
-    app_context = build_application(__file__, parse_function=_parse)
+    app_context = build_application(
+        __file__,
+        description="Simulate calibration events.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["site", "layout", "telescope", "model_version"],
+            "simulation_configuration": {
+                "corsika_configuration": ["run_number", "azimuth_angle", "zenith_angle"],
+                "sim_telarray_configuration": ["all"],
+            },
+        },
+    )
 
     simulator = Simulator(label=app_context.args.get("label"))
     simulator.simulate()

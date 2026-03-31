@@ -40,9 +40,9 @@ used to name the database, but no tag checkout is done):
 
 """
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.db import db_handler, db_model_upload
+from simtools.settings import config
 
 DEFAULT_REPOSITORY_URL = (
     "https://gitlab.cta-observatory.org/cta-science/simulations/"
@@ -50,19 +50,15 @@ DEFAULT_REPOSITORY_URL = (
 )
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Upload model parameters from repository to database",
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--branch",
         help="Repository branch to clone (optional, defaults to using version tag).",
         type=str,
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--tmp_dir",
         help="Temporary directory for cloning the repository (default: ./tmp_model_parameters).",
         type=str,
@@ -70,22 +66,30 @@ def _parse():
         required=False,
     )
 
-    args_dict, db_config = config.initialize(output=True, require_command_line=True, db_config=True)
-
-    if args_dict.get("db_simulation_model_version"):
-        db_config["db_simulation_model"] = args_dict.get(
-            "db_simulation_model", "CTAO-Simulation-Model"
-        )
-        db_config["db_simulation_model_version"] = args_dict["db_simulation_model_version"]
-    else:
-        raise ValueError("Setting of db_simulation_model_version is required.")
-
-    return args_dict, db_config
-
 
 def main():
     """Application main."""
-    app_context = build_application(__file__, parse_function=_parse)
+    app_context = build_application(
+        __file__,
+        description="Upload model parameters from repository to database",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "output": True,
+            "require_command_line": True,
+            "db_config": True,
+        },
+    )
+
+    if app_context.args.get("db_simulation_model_version"):
+        app_context.db_config["db_simulation_model"] = app_context.args.get(
+            "db_simulation_model", "CTAO-Simulation-Model"
+        )
+        app_context.db_config["db_simulation_model_version"] = app_context.args[
+            "db_simulation_model_version"
+        ]
+        config.load(app_context.args, app_context.db_config)
+    else:
+        raise ValueError("Setting of db_simulation_model_version is required.")
 
     db = db_handler.DatabaseHandler()
     db.print_connection_info()

@@ -62,51 +62,47 @@ r"""
 
 from pprint import pprint
 
-from simtools.application_control import build_application, get_application_label
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.db import db_handler
 from simtools.io import ascii_handler
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=(
-            "Get a parameter entry from DB for a specific telescope or a site. "
-            "The application receives a parameter name, a site, a telescope (if applicable), "
-            "and a version. It then prints out the parameter entry. "
-        ),
-    )
-
-    config.parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
+    parser.add_argument(
         "--output_file",
         help="output file name (if not given: print to stdout)",
         type=str,
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--export_model_file",
         help="Export model file (if parameter describes a file)",
         action="store_true",
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--export_model_file_as_table",
         help="Export model file as astropy table (if parameter describes a file)",
         action="store_true",
         required=False,
     )
 
-    return config.initialize(
-        db_config=True, simulation_model=["telescope", "parameter_version", "model_version"]
-    )
-
 
 def main():
     """Get a parameter entry from DB for a specific telescope or a site."""
-    app_context = build_application(__file__, parse_function=_parse)
+    app_context = build_application(
+        __file__,
+        description="Get a parameter entry from DB for a specific telescope or a site. "
+        "The application receives a parameter name, a site, a telescope (if applicable), "
+        "and a version. It then prints out the parameter entry. ",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["telescope", "parameter_version", "model_version"],
+        },
+    )
 
     db = db_handler.DatabaseHandler()
 
