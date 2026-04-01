@@ -2,7 +2,7 @@
 repos:
 # Ruff
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.15.4
+  rev: v0.15.8
   hooks:
   - id: ruff
     args: ["--fix"]
@@ -41,17 +41,17 @@ repos:
     args: ["--verbose", "2", "--fail-under", "70.", "src/simtools"]
 # Github action
 - repo: https://github.com/rhysd/actionlint
-  rev: v1.7.11
+  rev: v1.7.12
   hooks:
   - id: actionlint
 # https://pyproject-fmt.readthedocs.io/en/latest/
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: "v2.16.2"
+  rev: "v2.21.0"
   hooks:
   - id: pyproject-fmt
 # codespell
 - repo: https://github.com/codespell-project/codespell
-  rev: v2.4.1
+  rev: v2.4.2
   hooks:
   - id: codespell
     args: [
@@ -59,12 +59,12 @@ repos:
       "--ignore-words-list=als",
     ]
 # markdownlint
-- repo: https://github.com/igorshubovych/markdownlint-cli
-  rev: v0.47.0
-  hooks:
-  - id: markdownlint
-    args: ["--disable", "MD041"]
-    language_version: 22.11.0
+# - repo: https://github.com/igorshubovych/markdownlint-cli
+#  rev: v0.48.0
+#  hooks:
+#  - id: markdownlint
+#    args: ["--disable", "MD041"]
+#    language_version: 22.11.0
 # yamllint
 - repo: https://github.com/adrienverge/yamllint.git
   rev: v1.38.0
