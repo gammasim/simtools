@@ -45,12 +45,12 @@ dependencies = [
   "scipy",
   "toml",
 ]
-optional-dependencies."dev" = [
+optional-dependencies.dev = [
   "pre-commit",
   "pylint",
   "ruff",
 ]
-optional-dependencies."doc" = [
+optional-dependencies.doc = [
   "myst-parser",
   "numpydoc",
   "pydata-sphinx-theme",
@@ -58,7 +58,7 @@ optional-dependencies."doc" = [
   "sphinx-design",
   "towncrier",
 ]
-optional-dependencies."tests" = [
+optional-dependencies.tests = [
   "pytest",
   "pytest-cov",
   "pytest-mock",
@@ -70,8 +70,8 @@ optional-dependencies."tests" = [
   "pytest-xdist",
 ]
 urls."bug tracker" = "https://github.com/gammasim/simtools/issues"
-urls."documentation" = "https://gammasim.github.io/simtools/"
-urls."repository" = "https://github.com/gammasim/simtools"
+urls.documentation = "https://gammasim.github.io/simtools/"
+urls.repository = "https://github.com/gammasim/simtools"
 scripts.simtools-convert-all-model-parameters-from-simtel = "simtools.applications.convert_all_model_parameters_from_simtel:main"
 scripts.simtools-convert-geo-coordinates-of-array-elements = "simtools.applications.convert_geo_coordinates_of_array_elements:main"
 scripts.simtools-convert-model-parameter-from-simtel = "simtools.applications.convert_model_parameter_from_simtel:main"
