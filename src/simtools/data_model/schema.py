@@ -67,6 +67,26 @@ def get_model_parameter_schema_file(parameter):
     return schema_file
 
 
+def get_model_parameter_schema(parameter, schema_version=None):
+    """
+    Return schema dictionary for a given model parameter and schema version.
+
+    Parameters
+    ----------
+    parameter: str
+        Model parameter name.
+    schema_version: str, optional
+        Schema version. If not provided, the latest version is used.
+
+    Returns
+    -------
+    dict
+        Schema dictionary.
+    """
+    schema_file = get_model_parameter_schema_file(parameter)
+    return load_schema(schema_file, schema_version=schema_version)
+
+
 def get_model_parameter_schema_version(schema_version=None):
     """
     Validate and return schema versions.
@@ -460,3 +480,30 @@ def _extract_schema_from_file(file_name, observatory="cta"):
         return None
 
     return _extract_schema_url_from_metadata_dict(metadata, observatory)
+
+
+def get_parameter_type_from_schema(par_name, schema_version):
+    """
+    Get parameter type from schema file for a specific schema version.
+
+    Parameters
+    ----------
+    par_name: str
+        Name of the parameter.
+    schema_version: str
+        Schema version to look up.
+
+    Returns
+    -------
+    str or list
+        Type of the parameter (string for simple types, list for heterogeneous types).
+    """
+    schema_dict = get_model_parameter_schema(par_name, schema_version)
+    data = schema_dict.get("data", [])
+    if isinstance(data, list):
+        # Extract type from each element
+        types = [item.get("type") for item in data]
+        # Return scalar type for single-element lists
+        return types[0] if len(types) == 1 else types
+    # Simple type
+    return data.get("type") if isinstance(data, dict) else None
