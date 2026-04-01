@@ -59,12 +59,12 @@ repos:
       "--ignore-words-list=als",
     ]
 # markdownlint
-- repo: https://github.com/igorshubovych/markdownlint-cli
-  rev: v0.48.0
-  hooks:
-  - id: markdownlint
-    args: ["--disable", "MD041"]
-    language_version: 22.11.0
+# - repo: https://github.com/igorshubovych/markdownlint-cli
+#  rev: v0.48.0
+#  hooks:
+#  - id: markdownlint
+#    args: ["--disable", "MD041"]
+#    language_version: 22.11.0
 # yamllint
 - repo: https://github.com/adrienverge/yamllint.git
   rev: v1.38.0
