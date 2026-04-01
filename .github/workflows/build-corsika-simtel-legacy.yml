@@ -125,7 +125,7 @@ jobs:
 
       - name: Extract metadata for CORSIKA/sim_telarray base image (tags, labels)
         id: meta-base
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           tags: |
             type=ref,event=pr
