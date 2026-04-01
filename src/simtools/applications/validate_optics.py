@@ -104,6 +104,28 @@ def _add_arguments(parser):
     )
 
 
+def _validate_offset_parameters(max_offset, offset_step):
+    """
+    Validate offset sampling parameters before calling np.linspace.
+
+    Parameters
+    ----------
+    max_offset : float
+        Maximum off-axis angle in degrees.
+    offset_step : float
+        Step size between off-axis angles in degrees.
+
+    Raises
+    ------
+    ValueError
+        If offset_step is not positive or max_offset is negative.
+    """
+    if offset_step <= 0:
+        raise ValueError(f"offset_step must be positive, got {offset_step} deg.")
+    if max_offset < 0:
+        raise ValueError(f"max_offset must be non-negative, got {max_offset} deg.")
+
+
 def main():
     """Validate the optical model parameters through ray tracing simulations."""
     app_context = build_application(
@@ -138,6 +160,8 @@ def main():
 
     max_offset = app_context.args["max_offset"].to_value(u.deg)
     offset_step = app_context.args["offset_step"].to_value(u.deg)
+
+    _validate_offset_parameters(max_offset, offset_step)
 
     ray = RayTracing(
         telescope_model=tel_model,

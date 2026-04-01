@@ -657,6 +657,10 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
     offset_step_deg = (
         offset_step.to_value(u.deg) if isinstance(offset_step, u.Quantity) else offset_step
     )
+    if offset_step_deg <= 0:
+        raise ValueError(f"offset_step must be positive, got {offset_step_deg} deg.")
+    if max_offset_deg < 0:
+        raise ValueError(f"max_offset must be non-negative, got {max_offset_deg} deg.")
     off_axis_angles = np.linspace(
         0,
         max_offset_deg,

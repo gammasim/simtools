@@ -5,7 +5,7 @@ Inspect databases and print (available database names and collections).
 
 Command line arguments
 ----------------------
-db_name (str, optional)
+db_name (str)
     Database name (use "all" for all databases)
 """
 

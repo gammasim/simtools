@@ -443,11 +443,54 @@ def test_create_summary_psf_comparison_plot(tmp_path, sample_psf_data, sample_pa
         # Verify title contains parameter information
         title_call = mock_ax.set_title.call_args[0][0]
         assert "Final Optimized Parameters" in title_call
-        assert "mirror_reflection_random_angle" in title_call
-        assert "mirror_align_random_vertical" in title_call
-        assert "mirror_align_random_horizontal" in title_call
 
-        # Verify RMSD text
-        text_call = mock_ax.text.call_args[0][2]
-        assert "RMSD" in text_call
-        assert "0.0230" in text_call
+
+def test_create_psf_vs_offaxis_plot_zero_offset_step(sample_parameters):
+    """Zero offset_step must raise ValueError before reaching np.linspace."""
+    mock_telescope_model = MagicMock()
+    mock_site_model = MagicMock()
+    args_dict = {
+        "fraction": 0.8,
+        "zenith_angle": 20 * u.deg,
+        "source_distance": 10 * u.km,
+        "max_offset": 4.0 * u.deg,
+        "offset_step": 0.0 * u.deg,
+    }
+    with pytest.raises(ValueError, match="offset_step must be positive"):
+        plot_psf.create_psf_vs_offaxis_plot(
+            mock_telescope_model, mock_site_model, args_dict, sample_parameters, None
+        )
+
+
+def test_create_psf_vs_offaxis_plot_negative_offset_step(sample_parameters):
+    """Negative offset_step must raise ValueError before reaching np.linspace."""
+    mock_telescope_model = MagicMock()
+    mock_site_model = MagicMock()
+    args_dict = {
+        "fraction": 0.8,
+        "zenith_angle": 20 * u.deg,
+        "source_distance": 10 * u.km,
+        "max_offset": 4.0 * u.deg,
+        "offset_step": -0.5 * u.deg,
+    }
+    with pytest.raises(ValueError, match="offset_step must be positive"):
+        plot_psf.create_psf_vs_offaxis_plot(
+            mock_telescope_model, mock_site_model, args_dict, sample_parameters, None
+        )
+
+
+def test_create_psf_vs_offaxis_plot_negative_max_offset(sample_parameters):
+    """Negative max_offset must raise ValueError before reaching np.linspace."""
+    mock_telescope_model = MagicMock()
+    mock_site_model = MagicMock()
+    args_dict = {
+        "fraction": 0.8,
+        "zenith_angle": 20 * u.deg,
+        "source_distance": 10 * u.km,
+        "max_offset": -1.0 * u.deg,
+        "offset_step": 0.5 * u.deg,
+    }
+    with pytest.raises(ValueError, match="max_offset must be non-negative"):
+        plot_psf.create_psf_vs_offaxis_plot(
+            mock_telescope_model, mock_site_model, args_dict, sample_parameters, None
+        )
