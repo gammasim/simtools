@@ -482,9 +482,9 @@ def _extract_schema_from_file(file_name, observatory="cta"):
     return _extract_schema_url_from_metadata_dict(metadata, observatory)
 
 
-def get_parameter_type_from_schema(par_name, schema_version):
+def get_parameter_attribute_from_schema(par_name, schema_version, attribute_name):
     """
-    Get parameter type from schema file for a specific schema version.
+    Return one attribute from model-parameter schema data entries.
 
     Parameters
     ----------
@@ -492,37 +492,15 @@ def get_parameter_type_from_schema(par_name, schema_version):
         Name of the parameter.
     schema_version: str
         Schema version to look up.
-
-    Returns
-    -------
-    str or list
-        Type of the parameter (string for simple types, list for heterogeneous types).
-    """
-    return _get_parameter_attribute_from_schema(par_name, schema_version, "type")
-
-
-def get_parameter_unit_from_schema(par_name, schema_version):
-    """
-    Get parameter unit from schema file for a specific schema version.
-
-    Parameters
-    ----------
-    par_name: str
-        Name of the parameter.
-    schema_version: str
-        Schema version to look up.
+    attribute_name: str
+        Attribute to read from data entries (e.g. "type", "unit").
 
     Returns
     -------
     str or list or None
-        Unit of the parameter (string for simple types, list for heterogeneous types,
-        None for dimensionless parameters).
+        Attribute value as scalar for single-entry schemas, list for multi-entry schemas,
+        or None for unsupported schema data structures.
     """
-    return _get_parameter_attribute_from_schema(par_name, schema_version, "unit")
-
-
-def _get_parameter_attribute_from_schema(par_name, schema_version, attribute_name):
-    """Return one attribute from model-parameter schema data entries."""
     schema_dict = get_model_parameter_schema(par_name, schema_version)
     data = schema_dict.get("data", [])
     if isinstance(data, list):

@@ -14,12 +14,36 @@ _DIMENSIONLESS_UNITS = (None, "", "dimensionless", "null")
 
 
 def is_dimensionless_unit(unit):
-    """Return True if unit encodes a dimensionless quantity."""
+    """
+    Return True if unit encodes a dimensionless quantity.
+
+    Parameters
+    ----------
+    unit: str or None
+        Unit to be checked.
+
+    Returns
+    -------
+    bool        True if the unit encodes a dimensionless quantity, False otherwise.
+    """
     return unit in _DIMENSIONLESS_UNITS
 
 
 def normalize_dimensionless_unit(unit):
-    """Normalize dimensionless unit markers to None."""
+    """
+    Normalize dimensionless unit markers to None.
+
+    Parameters
+    ----------
+    unit: str or None
+        Unit to be normalized.
+
+    Returns
+    -------
+    str or None
+        Normalized unit, where dimensionless units are converted to None.
+
+    """
     if isinstance(unit, list | np.ndarray):
         return [normalize_dimensionless_unit(entry) for entry in unit]
     return None if is_dimensionless_unit(unit) else unit
