@@ -203,6 +203,27 @@ def test_overwrite_model_parameter(telescope_model_lst):
         tel_model.overwrite_model_parameter("bla_bla", 9999.9)
 
 
+def test_resolve_schema_version_raises_for_invalid_version(telescope_model_lst, mocker):
+    """Test _resolve_schema_version raises for invalid schema version requests."""
+    tel_model = copy.deepcopy(telescope_model_lst)
+    mocker.patch(
+        "simtools.model.model_parameter.schema.get_model_parameter_schema",
+        side_effect=ValueError("Schema lookup failed"),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"Schema version 'invalid\.version' not available "
+            r"for parameter 'mirror_focal_length'"
+        ),
+    ):
+        tel_model._resolve_schema_version(
+            "mirror_focal_length",
+            {"model_parameter_schema_version": "invalid.version"},
+        )
+
+
 def test_overwrite_parameters(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_change = mocker.patch.object(TelescopeModel, "overwrite_model_parameter")
