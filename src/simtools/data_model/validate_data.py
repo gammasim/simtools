@@ -470,7 +470,7 @@ class DataValidator:
         if not isinstance(target_unit, list | np.ndarray):
             target_unit = [target_unit] * len(value)
 
-        target_unit = [None if unit == "null" else unit for unit in target_unit]
+        target_unit = value_conversion.normalize_dimensionless_unit(target_unit)
         conversion_factor = [
             1 if v is None else u.Unit(v).to(u.Unit(t)) for v, t in zip(unit, target_unit)
         ]
@@ -650,7 +650,7 @@ class DataValidator:
 
         """
         reference_unit = self._get_data_description(column_name).get("unit", None)
-        if reference_unit in ("dimensionless", None, ""):
+        if value_conversion.is_dimensionless_unit(reference_unit):
             return u.dimensionless_unscaled
 
         return u.Unit(reference_unit)
@@ -744,7 +744,7 @@ class DataValidator:
         bool
             True if unit is dimensionless, None, or empty
         """
-        return unit in ("dimensionless", None, "")
+        return value_conversion.is_dimensionless_unit(unit)
 
     def _check_and_convert_units(self, data, unit, col_name):
         """
@@ -837,7 +837,7 @@ class DataValidator:
         return [
             (
                 u.Unit(_to_unit).to(reference_unit) * d
-                if _to_unit not in (None, "dimensionless", "")
+                if not value_conversion.is_dimensionless_unit(_to_unit)
                 else d
             )
             for d, _to_unit in zip(data, column_unit)
