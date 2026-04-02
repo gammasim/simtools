@@ -63,7 +63,7 @@ jobs:
 
       - name: Extract metadata for simtools image (tags, labels)
         id: meta-simtools
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           tags: |
             type=ref,event=pr
