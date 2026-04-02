@@ -80,6 +80,10 @@ class DataValidator:
         """
         if self.data_file_name:
             self.validate_data_file(is_model_parameter)
+        return self._validate_loaded_data(is_model_parameter, lists_as_strings)
+
+    def _validate_loaded_data(self, is_model_parameter, lists_as_strings):
+        """Dispatch validation based on whether input is dict or table."""
         if isinstance(self.data_dict, dict):
             return self._validate_data_dict(is_model_parameter, lists_as_strings)
         if isinstance(self.data_table, Table):
@@ -98,6 +102,12 @@ class DataValidator:
         is_model_parameter: bool
             This is a model parameter file.
         """
+        self._load_data_from_file()
+        if is_model_parameter:
+            self.validate_parameter_and_file_name()
+
+    def _load_data_from_file(self):
+        """Read data from file into data_dict or data_table based on suffix."""
         try:
             if Path(self.data_file_name).suffix in (".yml", ".yaml", ".json"):
                 self.data_dict = ascii_handler.collect_data_from_file(self.data_file_name)
@@ -107,8 +117,6 @@ class DataValidator:
                 self.logger.info(f"Validating tabled data from: {self.data_file_name}")
         except (AttributeError, TypeError):
             pass
-        if is_model_parameter:
-            self.validate_parameter_and_file_name()
 
     def validate_parameter_and_file_name(self):
         """
@@ -257,23 +265,25 @@ class DataValidator:
         """Validate and assign values/units for heterogeneous lists."""
         value_as_list, _ = self._get_value_and_units_as_lists()
         type_list = self._data_description[0].get("type")
-        try:
-            self._validate_heterogeneous_list(value_as_list, type_list)
-        except (ValueError, TypeError) as ex:
-            raise TypeError(
-                f"Error validating heterogeneous list using {self.schema_file_name}"
-            ) from ex
+        self._wrap_validation_error(
+            self._validate_heterogeneous_list,
+            value_as_list,
+            type_list,
+            message=f"Error validating heterogeneous list using {self.schema_file_name}",
+            catch_exceptions=(ValueError, TypeError),
+        )
 
         unit_as_list = self._get_unit_list_for_values(value_as_list)
         for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
-            try:
-                value_as_list[index], unit_as_list[index] = self._validate_value_and_unit(
-                    value, unit, index
-                )
-            except TypeError as ex:
-                raise TypeError(
+            value_as_list[index], unit_as_list[index] = self._wrap_validation_error(
+                self._validate_value_and_unit,
+                value,
+                unit,
+                index,
+                message=(
                     f"Error validating heterogeneous element {index} using {self.schema_file_name}"
-                ) from ex
+                ),
+            )
 
         self._assign_validated_values(value_as_list, unit_as_list)
 
@@ -287,22 +297,21 @@ class DataValidator:
             expected_type,
             value_as_list,
         ):
-            try:
-                self._validate_homogeneous_list(value_as_list, expected_type)
-            except TypeError as ex:
-                raise TypeError(
-                    f"Error validating dictionary using {self.schema_file_name}"
-                ) from ex
+            self._wrap_validation_error(
+                self._validate_homogeneous_list,
+                value_as_list,
+                expected_type,
+                message=f"Error validating dictionary using {self.schema_file_name}",
+            )
 
         for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
-            try:
-                value_as_list[index], unit_as_list[index] = self._validate_value_and_unit(
-                    value, unit, index
-                )
-            except TypeError as ex:
-                raise TypeError(
-                    f"Error validating dictionary using {self.schema_file_name}"
-                ) from ex
+            value_as_list[index], unit_as_list[index] = self._wrap_validation_error(
+                self._validate_value_and_unit,
+                value,
+                unit,
+                index,
+                message=f"Error validating dictionary using {self.schema_file_name}",
+            )
 
         self._assign_validated_values(value_as_list, unit_as_list)
 
@@ -327,6 +336,19 @@ class DataValidator:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
             return
         self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
+
+    @staticmethod
+    def _wrap_validation_error(
+        func,
+        *args,
+        message,
+        catch_exceptions=(TypeError,),
+    ):
+        """Execute a validation callable and wrap selected exceptions as TypeError."""
+        try:
+            return func(*args)
+        except catch_exceptions as ex:
+            raise TypeError(message) from ex
 
     def _validate_value_and_unit(self, value, unit, index):
         """
@@ -462,16 +484,17 @@ class DataValidator:
             target_unit = [target_unit] * len(value)
 
         target_unit = [None if unit == "null" else unit for unit in target_unit]
-        conversion_factor = [
-            1 if v is None else u.Unit(v).to(u.Unit(t)) for v, t in zip(unit, target_unit)
-        ]
+        conversion_factor = [self._unit_conversion_factor(v, t) for v, t in zip(unit, target_unit)]
         try:
             return [
-                v * c if not isinstance(v, bool) and not isinstance(v, dict) else v
+                v if v is None or isinstance(v, (bool, dict)) else v * c
                 for v, c in zip(value, conversion_factor)
             ], target_unit
-        except TypeError:
-            return [None], target_unit
+        except TypeError as exc:
+            raise TypeError(
+                "Failed to normalize value/unit pairs in _get_value_and_units_as_lists: "
+                f"value={value}, unit={unit}, target_unit={target_unit}"
+            ) from exc
 
     def _validate_data_table(self):
         """Validate tabulated data."""
@@ -735,7 +758,34 @@ class DataValidator:
         bool
             True if unit is dimensionless, None, or empty
         """
-        return unit in ("dimensionless", None, "")
+        if unit in ("dimensionless", None, ""):
+            return True
+        if hasattr(unit, "to_string") and unit.to_string() in ("", "dimensionless"):
+            return True
+        try:
+            return u.Unit(unit) == u.dimensionless_unscaled
+        except (TypeError, ValueError):
+            return False
+
+    @staticmethod
+    def _normalize_unit(unit):
+        """Normalize unit input to an astropy unit object."""
+        if DataValidator._is_dimensionless(unit):
+            return u.dimensionless_unscaled
+        return u.Unit(unit)
+
+    @staticmethod
+    def _unit_to_string(unit):
+        """Convert an astropy unit to canonical output string."""
+        return "dimensionless" if unit == u.dimensionless_unscaled else unit.to_string()
+
+    def _unit_conversion_factor(self, from_unit, to_unit):
+        """Return conversion factor between two units with dimensionless handling."""
+        if self._is_dimensionless(from_unit):
+            return 1
+        from_u = self._normalize_unit(from_unit)
+        to_u = self._normalize_unit(to_unit)
+        return from_u.to(to_u)
 
     def _check_and_convert_units(self, data, unit, col_name):
         """
@@ -768,38 +818,57 @@ class DataValidator:
         """
         self._rate_limited_logger(col_name, f"Checking data column '{col_name}'")
 
-        reference_unit = (self._get_reference_unit(col_name)).to_string()
-        if self._is_dimensionless(reference_unit):
-            reference_unit = "dimensionless"
+        reference_unit = self._normalize_unit(self._get_reference_unit(col_name))
         try:
             column_unit = data.unit
         except AttributeError:
             column_unit = unit
 
-        if self._is_dimensionless(column_unit):
-            column_unit = "dimensionless"
+        if isinstance(data, u.Quantity | Column):
+            if self._is_dimensionless(column_unit) and reference_unit == u.dimensionless_unscaled:
+                return data, "dimensionless"
+            column_unit = self._normalize_unit(column_unit)
+            self._rate_limited_logger(
+                col_name,
+                f"Data column '{col_name}' with reference unit "
+                f"'{self._unit_to_string(reference_unit)}' and "
+                f"data unit '{self._unit_to_string(column_unit)}'",
+            )
+            try:
+                return data.to(reference_unit), self._unit_to_string(reference_unit)
+            except (u.core.UnitConversionError, ValueError) as exc:
+                self.logger.error(
+                    f"Invalid unit in data column '{col_name}'. "
+                    f"Expected type '{self._unit_to_string(reference_unit)}', "
+                    f"found '{self._unit_to_string(column_unit)}'"
+                )
+                raise u.core.UnitConversionError from exc
 
-        if self._is_dimensionless(column_unit) and self._is_dimensionless(reference_unit):
+        if isinstance(data, list | np.ndarray):
+            return self._check_and_convert_units_for_list(data, column_unit, reference_unit)
+
+        column_unit = self._normalize_unit(column_unit)
+
+        if column_unit == u.dimensionless_unscaled and reference_unit == u.dimensionless_unscaled:
             return data, "dimensionless"
 
         self._rate_limited_logger(
             col_name,
             f"Data column '{col_name}' with reference unit "
-            f"'{reference_unit}' and data unit '{column_unit}'",
+            f"'{self._unit_to_string(reference_unit)}' and "
+            f"data unit '{self._unit_to_string(column_unit)}'",
         )
         try:
-            if isinstance(data, u.Quantity | Column):
-                return data.to(reference_unit), reference_unit
-
-            if isinstance(data, list | np.ndarray):
-                return self._check_and_convert_units_for_list(data, column_unit, reference_unit)
-
             # ensure that the data type is preserved (e.g., integers)
-            return (type(data)(u.Unit(column_unit).to(reference_unit) * data), reference_unit)
+            return (
+                type(data)(column_unit.to(reference_unit) * data),
+                self._unit_to_string(reference_unit),
+            )
         except (u.core.UnitConversionError, ValueError) as exc:
             self.logger.error(
                 f"Invalid unit in data column '{col_name}'. "
-                f"Expected type '{reference_unit}', found '{column_unit}'"
+                f"Expected type '{self._unit_to_string(reference_unit)}', "
+                f"found '{self._unit_to_string(column_unit)}'"
             )
             raise u.core.UnitConversionError from exc
 
@@ -825,14 +894,18 @@ class DataValidator:
             converted data
 
         """
+        column_units = column_unit
+        if not isinstance(column_units, list | np.ndarray):
+            column_units = [column_units] * len(data)
+
         return [
             (
-                u.Unit(_to_unit).to(reference_unit) * d
-                if _to_unit not in (None, "dimensionless", "")
+                self._normalize_unit(_to_unit).to(reference_unit) * d
+                if self._normalize_unit(_to_unit) != u.dimensionless_unscaled
                 else d
             )
-            for d, _to_unit in zip(data, column_unit)
-        ], reference_unit
+            for d, _to_unit in zip(data, column_units)
+        ], self._unit_to_string(reference_unit)
 
     def _check_range(self, col_name, col_min, col_max, range_type="allowed_range"):
         """
@@ -1009,35 +1082,46 @@ class DataValidator:
             column_name,
             f"Getting reference data column {column_name} from schema {self._data_description}",
         )
+        direct_lookup_result = self._get_data_description_direct(column_name, status_test)
+        if direct_lookup_result is not None:
+            return direct_lookup_result
+
+        return self._get_data_description_by_name(column_name, status_test)
+
+    def _get_data_description_direct(self, column_name, status_test):
+        """Try direct data description lookup by index/key."""
         try:
-            return (
-                self._data_description[column_name]
-                if not status_test
-                else (
+            if status_test:
+                return (
                     self._data_description[column_name] is not None
                     and len(self._data_description) > 0
                 )
-            )
+            return self._data_description[column_name]
         except IndexError as exc:
-            if len(self._data_description) == 1:  # all columns are described by the same schema
+            if len(self._data_description) == 1:
                 return self._data_description[0]
             self.logger.error(
                 f"Data column '{column_name}' not found in reference column definition"
             )
             raise exc
         except TypeError:
-            pass  # column_name is not an integer
+            # column_name is not suitable for direct indexing
+            return None
 
-        _index = 0
+    def _get_data_description_by_name(self, column_name, status_test):
+        """Return data description by column name or by col-index shorthand."""
+        index = 0
         if bool(re.match(r"^col\d$", column_name)):
-            _index = int(column_name[3:])
-            _entry = self._data_description
+            index = int(column_name[3:])
+            entries = self._data_description
         else:
-            _entry = [item for item in self._data_description if item["name"] == column_name]
+            entries = [item for item in self._data_description if item["name"] == column_name]
+
         if status_test:
-            return len(_entry) > 0
+            return len(entries) > 0
+
         try:
-            return _entry[_index]
+            return entries[index]
         except IndexError:
             self.logger.error(
                 f"Data column '{column_name}' not found in reference column definition"
