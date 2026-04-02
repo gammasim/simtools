@@ -952,6 +952,36 @@ def test_validate_heterogeneous_list(mocker):
     assert validated_data["value"][2] == "text"
 
 
+def test_validate_heterogeneous_list_from_multi_entry_schema(mocker):
+    """Test heterogeneous validation for schema style with one scalar type per data entry."""
+    mocker.patch(
+        "simtools.data_model.schema.get_model_parameter_schema_file",
+        return_value="/mock/schema.yml",
+    )
+    mocker.patch(
+        "simtools.data_model.validate_data.DataValidator._read_validation_schema",
+        return_value=[
+            {"name": "flasher_shape", "type": "string", "unit": None},
+            {"name": "width", "type": "float64", "unit": "ns"},
+            {"name": "decay", "type": "float64", "unit": "ns"},
+        ],
+    )
+    mocker.patch(
+        "simtools.data_model.validate_data.DataValidator._validate_value_and_unit",
+        side_effect=lambda value, unit, index: (value, unit),
+    )
+
+    par_dict = {
+        "parameter": "flasher_pulse_shape",
+        "type": ["string", "float64", "float64"],
+        "value": ["Gauss", 0.0, 0.0],
+        "unit": [None, "ns", "ns"],
+    }
+
+    validated_data = validate_data.DataValidator.validate_model_parameter(par_dict)
+    assert validated_data["value"] == ["Gauss", 0.0, 0.0]
+
+
 def test_validate_heterogeneous_list_length_mismatch(mocker):
     """Test that heterogeneous list validation fails on length mismatch."""
     mocker.patch(
