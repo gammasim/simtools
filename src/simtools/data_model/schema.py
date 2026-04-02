@@ -1,7 +1,6 @@
 """Module providing functionality to read and validate dictionaries using schema."""
 
 import logging
-from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 
@@ -85,13 +84,7 @@ def get_model_parameter_schema(parameter, schema_version=None):
         Schema dictionary.
     """
     schema_file = get_model_parameter_schema_file(parameter)
-    return deepcopy(_load_model_parameter_schema_cached(schema_file, schema_version or "latest"))
-
-
-@lru_cache
-def _load_model_parameter_schema_cached(schema_file, schema_version):
-    """Load and cache a model parameter schema by resolved file path and version."""
-    return load_schema(schema_file, schema_version=schema_version)
+    return load_schema(schema_file, schema_version=schema_version or "latest")
 
 
 def get_model_parameter_schema_version(schema_version=None):
