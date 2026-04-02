@@ -16,7 +16,7 @@
     "file": false
   },
   "mirror_reflection_random_angle": {
-    "value": [0.0066, 0.0],
+    "value": [0.0066, 0.0, 0.0],
     "type": "float64",
     "unit": ["deg", null, "deg"],
     "file": false

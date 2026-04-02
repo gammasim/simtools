@@ -712,9 +712,8 @@ class DataValidator:
         -------
         data: astropy.column, Quantity, list, value
             unit-converted data
-        unit: str
-            Converted unit as a string. For None, no unit, or empty unit values,
-            "dimensionless" is returned.
+        unit: str or None
+            Converted unit as a string. Dimensionless units are normalized to None.
 
         Raises
         ------
@@ -724,19 +723,19 @@ class DataValidator:
         """
         self._rate_limited_logger(col_name, f"Checking data column '{col_name}'")
 
-        reference_unit = (self._get_reference_unit(col_name)).to_string()
-        if self._is_dimensionless(reference_unit):
-            reference_unit = "dimensionless"
+        reference_unit = value_conversion.normalize_dimensionless_unit(
+            (self._get_reference_unit(col_name)).to_string()
+        )
+        conversion_reference_unit = reference_unit or u.dimensionless_unscaled
         try:
             column_unit = data.unit
         except AttributeError:
             column_unit = unit
 
-        if self._is_dimensionless(column_unit):
-            column_unit = "dimensionless"
+        column_unit = value_conversion.normalize_dimensionless_unit(column_unit)
 
         if self._is_dimensionless(column_unit) and self._is_dimensionless(reference_unit):
-            return data, "dimensionless"
+            return data, None
 
         self._rate_limited_logger(
             col_name,
@@ -745,13 +744,17 @@ class DataValidator:
         )
         try:
             if isinstance(data, u.Quantity | Column):
-                return data.to(reference_unit), reference_unit
+                return data.to(conversion_reference_unit), reference_unit
 
             if isinstance(data, list | np.ndarray):
                 return self._check_and_convert_units_for_list(data, column_unit, reference_unit)
 
             # ensure that the data type is preserved (e.g., integers)
-            return (type(data)(u.Unit(column_unit).to(reference_unit) * data), reference_unit)
+            conversion_column_unit = column_unit or u.dimensionless_unscaled
+            return (
+                type(data)(u.Unit(conversion_column_unit).to(conversion_reference_unit) * data),
+                reference_unit,
+            )
         except (u.core.UnitConversionError, ValueError) as exc:
             self.logger.error(
                 f"Invalid unit in data column '{col_name}'. "
@@ -781,9 +784,10 @@ class DataValidator:
             converted data
 
         """
+        conversion_reference_unit = reference_unit or u.dimensionless_unscaled
         return [
             (
-                u.Unit(_to_unit).to(reference_unit) * d
+                u.Unit(_to_unit).to(conversion_reference_unit) * d
                 if not value_conversion.is_dimensionless_unit(_to_unit)
                 else d
             )

@@ -464,19 +464,19 @@ def test_check_and_convert_units_dimensionless(reference_columns, caplog):
 
     assert data_validator._check_and_convert_units(0.1, unit="dimensionless", col_name="qe") == (
         0.1,
-        "dimensionless",
+        None,
     )
     assert data_validator._check_and_convert_units(0.1, unit=None, col_name="qe") == (
         0.1,
-        "dimensionless",
+        None,
     )
     assert data_validator._check_and_convert_units(0.1, unit="", col_name="qe") == (
         0.1,
-        "dimensionless",
+        None,
     )
     assert data_validator._check_and_convert_units([0.1, 0.2], unit=[None, ""], col_name="qe") == (
         [0.1, 0.2],
-        "dimensionless",
+        None,
     )
 
     # reference column requires a unit, give no unit
