@@ -53,40 +53,45 @@ def test_get_model_parameter_schema_returns_independent_copies():
 
 
 def test_get_parameter_type_and_unit_from_schema():
-    assert schema.get_parameter_type_from_schema("mirror_focal_length", "0.1.0") == "float64"
-    assert schema.get_parameter_unit_from_schema("mirror_focal_length", "0.1.0") == "cm"
+    assert (
+        schema.get_parameter_attribute_from_schema("mirror_focal_length", "0.1.0", "type")
+        == "float64"
+    )
+    assert (
+        schema.get_parameter_attribute_from_schema("mirror_focal_length", "0.1.0", "unit") == "cm"
+    )
 
-    assert schema.get_parameter_type_from_schema("flasher_pulse_shape", "0.2.0") == [
+    assert schema.get_parameter_attribute_from_schema("flasher_pulse_shape", "0.2.0", "type") == [
         "string",
         "float64",
         "float64",
     ]
-    assert schema.get_parameter_unit_from_schema("flasher_pulse_shape", "0.2.0") == [
+    assert schema.get_parameter_attribute_from_schema("flasher_pulse_shape", "0.2.0", "unit") == [
         None,
         "ns",
         "ns",
     ]
 
 
-def test_get_parameter_attribute_from_schema_with_dict_data(mocker):
+def testget_parameter_attribute_from_schema_with_dict_data(mocker):
     """Test helper handles schema entries where data is represented as a dict."""
     mocker.patch(
         "simtools.data_model.schema.get_model_parameter_schema",
         return_value={"data": {"type": "float64", "unit": "dimensionless"}},
     )
 
-    assert schema._get_parameter_attribute_from_schema("dummy", "0.1.0", "type") == "float64"
-    assert schema._get_parameter_attribute_from_schema("dummy", "0.1.0", "unit") is None
+    assert schema.get_parameter_attribute_from_schema("dummy", "0.1.0", "type") == "float64"
+    assert schema.get_parameter_attribute_from_schema("dummy", "0.1.0", "unit") is None
 
 
-def test_get_parameter_attribute_from_schema_with_invalid_data_type(mocker):
+def testget_parameter_attribute_from_schema_with_invalid_data_type(mocker):
     """Test helper returns None for unsupported data structures."""
     mocker.patch(
         "simtools.data_model.schema.get_model_parameter_schema",
         return_value={"data": "invalid"},
     )
 
-    assert schema._get_parameter_attribute_from_schema("dummy", "0.1.0", "type") is None
+    assert schema.get_parameter_attribute_from_schema("dummy", "0.1.0", "type") is None
 
 
 def test_get_model_parameter_schema_version():

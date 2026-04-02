@@ -424,11 +424,8 @@ class ModelParameter:
                 ),
                 par_name=par_name,
             )
-        except FileNotFoundError:
-            self._logger.warning(
-                f"Schema file for parameter {par_name} not found. "
-                "Using existing type/unit metadata without schema validation."
-            )
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Schema file for parameter {par_name} not found.") from exc
 
     def _resolve_schema_version(self, par_name, metadata):
         """Resolve to an available schema version for a model parameter."""
@@ -443,13 +440,8 @@ class ModelParameter:
             return schema.get_model_parameter_schema(par_name, requested_version).get(
                 "schema_version"
             )
-        except FileNotFoundError:
-            fallback_version = par_dict.get("model_parameter_schema_version") or requested_version
-            self._logger.warning(
-                f"Schema file for parameter {par_name} not found; "
-                f"using existing schema version {fallback_version}."
-            )
-            return fallback_version
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Schema file for parameter {par_name} not found.") from exc
         except ValueError as exc:
             raise ValueError(
                 f"Schema version '{requested_version}' not available for parameter '{par_name}'"
@@ -472,16 +464,8 @@ class ModelParameter:
             par_dict["parameter_version"] = parameter_version
 
         schema_version = self._resolve_schema_version(par_name, metadata)
-        try:
-            par_type = schema.get_parameter_type_from_schema(par_name, schema_version)
-            schema_unit = schema.get_parameter_unit_from_schema(par_name, schema_version)
-        except FileNotFoundError:
-            self._logger.warning(
-                f"Schema file for parameter {par_name} not found; "
-                "using existing type/unit metadata."
-            )
-            par_type = par_dict.get("type")
-            schema_unit = par_dict.get("unit")
+        par_type = schema.get_parameter_attribute_from_schema(par_name, schema_version, "type")
+        schema_unit = schema.get_parameter_attribute_from_schema(par_name, schema_version, "unit")
 
         if metadata:
             for key in ["unit", "model_parameter_schema_version"]:

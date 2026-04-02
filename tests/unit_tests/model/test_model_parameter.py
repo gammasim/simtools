@@ -597,11 +597,11 @@ def test_overwrite_parameters_with_simple_value(telescope_model_lst):
     tel_model = copy.deepcopy(telescope_model_lst)
 
     # Simple value (not a dict with 'value' or 'version' keys)
-    changes = {"num_gains": 2}
+    changes = {"num_gains": 1}
 
     tel_model.overwrite_parameters(changes, flat_dict=True)
 
-    assert tel_model.parameters["num_gains"]["value"] == 2
+    assert tel_model.parameters["num_gains"]["value"] == 1
 
 
 def test_overwrite_parameters_raises_for_unknown_parameter(telescope_model_lst):
@@ -615,46 +615,6 @@ def test_overwrite_parameters_raises_for_unknown_parameter(telescope_model_lst):
         tel_model.overwrite_parameters({"unknown_parameter": 1}, flat_dict=True)
 
 
-def test_overwrite_model_parameter_without_schema_file_uses_existing_metadata(
-    telescope_model_lst, mocker
-):
-    """Test overwrite fallback to existing metadata when schema file is missing."""
-    tel_model = copy.deepcopy(telescope_model_lst)
-
-    original_type = tel_model.parameters["num_gains"]["type"]
-    original_unit = tel_model.parameters["num_gains"].get("unit")
-    original_schema_version = tel_model.parameters["num_gains"].get(
-        "model_parameter_schema_version"
-    )
-
-    mocker.patch(
-        "simtools.model.model_parameter.schema.get_model_parameter_schema",
-        side_effect=FileNotFoundError("schema file missing"),
-    )
-    mocker.patch(
-        "simtools.model.model_parameter.schema.get_parameter_type_from_schema",
-        side_effect=FileNotFoundError("schema file missing"),
-    )
-    mocker.patch(
-        "simtools.model.model_parameter.schema.get_parameter_unit_from_schema",
-        side_effect=FileNotFoundError("schema file missing"),
-    )
-    mocker.patch(
-        "simtools.model.model_parameter.DataValidator.validate_model_parameter",
-        side_effect=FileNotFoundError("schema file missing"),
-    )
-
-    tel_model.overwrite_model_parameter("num_gains", 2)
-
-    assert tel_model.parameters["num_gains"]["value"] == 2
-    assert tel_model.parameters["num_gains"]["type"] == original_type
-    assert tel_model.parameters["num_gains"].get("unit") == original_unit
-    assert (
-        tel_model.parameters["num_gains"]["model_parameter_schema_version"]
-        == original_schema_version
-    )
-
-
 def test_overwrite_parameters_with_changes(telescope_model_lst):
     """Test overwrite_parameters when changes exist."""
     tel_model = copy.deepcopy(telescope_model_lst)
@@ -663,7 +623,7 @@ def test_overwrite_parameters_with_changes(telescope_model_lst):
         tel_model.name: {
             "num_gains": {
                 "version": "1.0.0",
-                "value": 2,
+                "value": 1,
             }
         }
     }
@@ -671,7 +631,7 @@ def test_overwrite_parameters_with_changes(telescope_model_lst):
     tel_model.overwrite_parameters(changes)
 
     # Parameter should be changed
-    assert tel_model.parameters["num_gains"]["value"] == 2
+    assert tel_model.parameters["num_gains"]["value"] == 1
 
 
 def test_check_model_parameter_with_overwrite(model_version):
@@ -681,7 +641,7 @@ def test_check_model_parameter_with_overwrite(model_version):
         "LSTN-01": {
             "num_gains": {
                 "version": "1.0.0",
-                "value": 2,
+                "value": 1,
             }
         }
     }
@@ -696,7 +656,7 @@ def test_check_model_parameter_with_overwrite(model_version):
     )
 
     # The overwrite should have been applied during initialization
-    assert tel_model.parameters["num_gains"]["value"] == 2
+    assert tel_model.parameters["num_gains"]["value"] == 1
 
 
 def test__get_key_for_parameter_changes(telescope_model_lst):
@@ -727,7 +687,7 @@ def test_check_model_parameter_versions(mocker):
     """
     parameters = {
         "num_gains": {
-            "value": 2,
+            "value": 1,
             "model_parameter_schema_version": "1.0.0",
         },
         "unknown_param": {  # Not in schema - should be silently skipped
@@ -763,7 +723,7 @@ def test_check_model_parameter_versions_triggers_legacy_update(mocker):
     """Test _check_model_parameter_versions triggers legacy update for outdated schema version."""
     parameters = {
         "num_gains": {
-            "value": 2,
+            "value": 1,
             "model_parameter_schema_version": "0.9.0",  # Outdated - does not match schema
         }
     }

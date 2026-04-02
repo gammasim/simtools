@@ -252,13 +252,13 @@ class DataValidator:
     def _validate_and_assign_values(self, is_model_parameter):
         """Validate and assign values/units for homogeneous and heterogeneous lists."""
         value_as_list, unit_as_list = self._get_value_and_units_as_lists()
-        is_heterogeneous = self._is_heterogeneous_list(is_model_parameter)
+        use_per_element_validation = self._uses_per_element_type_validation(is_model_parameter)
         expected_types = self._get_expected_types_for_values(value_as_list, is_model_parameter)
 
         try:
             self._validate_list_types(value_as_list, expected_types)
         except (TypeError, ValueError) as ex:
-            if is_heterogeneous:
+            if use_per_element_validation:
                 raise TypeError(
                     f"Error validating heterogeneous list using {self.schema_file_name}"
                 ) from ex
@@ -270,7 +270,7 @@ class DataValidator:
                     value, unit, index
                 )
             except TypeError as ex:
-                if is_heterogeneous:
+                if use_per_element_validation:
                     raise TypeError(
                         f"Error validating heterogeneous element {index} "
                         f"using {self.schema_file_name}"
@@ -315,7 +315,7 @@ class DataValidator:
             and value_as_list[0] is not None
         )
 
-        if should_validate and self._is_heterogeneous_list(is_model_parameter):
+        if should_validate and self._uses_per_element_type_validation(is_model_parameter):
             expected_types = self._get_schema_type_list()
         elif should_validate and len(value_as_list) > 1:
             expected_type = self._data_description[0].get("type")
@@ -358,12 +358,15 @@ class DataValidator:
                 self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
         return value, unit
 
-    def _is_heterogeneous_list(self, is_model_parameter=False):
+    def _uses_per_element_type_validation(self, is_model_parameter=False):
         """
-        Check if the parameter specification describes a heterogeneous list.
+        Check if list validation should use per-element type specifications.
 
-        A heterogeneous list has different types for each element,
-        indicated by explicit type list in schema (only for model parameters).
+        For model parameters, an explicit list in the ``type`` field is treated as
+        positional type information. This can represent truly heterogeneous content,
+        but it may also represent homogeneous content where all listed types are equal.
+        In both cases, this method returns ``True`` so validation follows the
+        per-element checks.
 
         Parameters
         ----------
@@ -373,7 +376,7 @@ class DataValidator:
         Returns
         -------
         bool
-            True if parameter is a heterogeneous list, False otherwise.
+            True if per-element list typing applies, False otherwise.
         """
         if not is_model_parameter or not isinstance(self._data_description, list):
             return False
