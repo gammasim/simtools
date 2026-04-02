@@ -18,7 +18,7 @@ from simtools.constants import (
 from simtools.data_model import format_checkers
 from simtools.dependencies import get_software_version
 from simtools.io import ascii_handler
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 from simtools.version import check_version_constraint
 
 _logger = logging.getLogger(__name__)
@@ -545,6 +545,6 @@ def _get_parameter_attribute_from_schema(par_name, schema_version, attribute_nam
 
 def _normalize_parameter_schema_attribute(attribute_name, value):
     """Normalize schema attribute values for public helper functions."""
-    if attribute_name == "unit" and value == "dimensionless":
-        return None
+    if attribute_name == "unit":
+        return value_conversion.normalize_dimensionless_unit(value)
     return value
