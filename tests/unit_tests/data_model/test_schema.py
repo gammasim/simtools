@@ -68,6 +68,27 @@ def test_get_parameter_type_and_unit_from_schema():
     ]
 
 
+def test_get_parameter_attribute_from_schema_with_dict_data(mocker):
+    """Test helper handles schema entries where data is represented as a dict."""
+    mocker.patch(
+        "simtools.data_model.schema.get_model_parameter_schema",
+        return_value={"data": {"type": "float64", "unit": "dimensionless"}},
+    )
+
+    assert schema._get_parameter_attribute_from_schema("dummy", "0.1.0", "type") == "float64"
+    assert schema._get_parameter_attribute_from_schema("dummy", "0.1.0", "unit") is None
+
+
+def test_get_parameter_attribute_from_schema_with_invalid_data_type(mocker):
+    """Test helper returns None for unsupported data structures."""
+    mocker.patch(
+        "simtools.data_model.schema.get_model_parameter_schema",
+        return_value={"data": "invalid"},
+    )
+
+    assert schema._get_parameter_attribute_from_schema("dummy", "0.1.0", "type") is None
+
+
 def test_get_model_parameter_schema_version():
     most_recent = schema.get_model_parameter_schema_version()
     assert most_recent == "0.3.0"
