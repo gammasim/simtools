@@ -228,11 +228,7 @@ class DataValidator:
             self.data_dict.get("model_parameter_schema_version", "0.1.0"),
         )
 
-        # Validate heterogeneous lists (different type per element)
-        if self._is_heterogeneous_list(is_model_parameter):
-            self._validate_and_assign_heterogeneous_values()
-        else:
-            self._validate_and_assign_homogeneous_values(is_model_parameter)
+        self._validate_and_assign_values(is_model_parameter)
 
         if self.data_dict.get("instrument"):
             if self.data_dict["instrument"] == self.data_dict["site"]:  # site parameters
@@ -253,46 +249,20 @@ class DataValidator:
 
         return self.data_dict
 
-    def _validate_and_assign_heterogeneous_values(self):
-        """Validate and assign values/units for heterogeneous lists."""
-        value_as_list, _ = self._get_value_and_units_as_lists()
-        type_list = self._get_schema_type_list()
-        try:
-            self._validate_heterogeneous_list(value_as_list, type_list)
-        except (ValueError, TypeError) as ex:
-            raise TypeError(
-                f"Error validating heterogeneous list using {self.schema_file_name}"
-            ) from ex
-
-        unit_as_list = self._get_unit_list_for_values(value_as_list)
-        for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
-            try:
-                value_as_list[index], unit_as_list[index] = self._validate_value_and_unit(
-                    value, unit, index
-                )
-            except TypeError as ex:
-                raise TypeError(
-                    f"Error validating heterogeneous element {index} using {self.schema_file_name}"
-                ) from ex
-
-        self._assign_validated_values(value_as_list, unit_as_list)
-
-    def _validate_and_assign_homogeneous_values(self, is_model_parameter):
-        """Validate and assign values/units for homogeneous lists."""
+    def _validate_and_assign_values(self, is_model_parameter):
+        """Validate and assign values/units for homogeneous and heterogeneous lists."""
         value_as_list, unit_as_list = self._get_value_and_units_as_lists()
-        expected_type = self._data_description[0].get("type") if self._data_description else None
+        is_heterogeneous = self._is_heterogeneous_list(is_model_parameter)
+        expected_types = self._get_expected_types_for_values(value_as_list, is_model_parameter)
 
-        if self._should_validate_homogeneous_list(
-            is_model_parameter,
-            expected_type,
-            value_as_list,
-        ):
-            try:
-                self._validate_homogeneous_list(value_as_list, expected_type)
-            except TypeError as ex:
+        try:
+            self._validate_list_types(value_as_list, expected_types)
+        except (TypeError, ValueError) as ex:
+            if is_heterogeneous:
                 raise TypeError(
-                    f"Error validating dictionary using {self.schema_file_name}"
+                    f"Error validating heterogeneous list using {self.schema_file_name}"
                 ) from ex
+            raise TypeError(f"Error validating dictionary using {self.schema_file_name}") from ex
 
         for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
             try:
@@ -300,6 +270,11 @@ class DataValidator:
                     value, unit, index
                 )
             except TypeError as ex:
+                if is_heterogeneous:
+                    raise TypeError(
+                        f"Error validating heterogeneous element {index} "
+                        f"using {self.schema_file_name}"
+                    ) from ex
                 raise TypeError(
                     f"Error validating dictionary using {self.schema_file_name}"
                 ) from ex
@@ -307,13 +282,47 @@ class DataValidator:
         self._assign_validated_values(value_as_list, unit_as_list)
 
     @staticmethod
-    def _should_validate_homogeneous_list(is_model_parameter, expected_type, value_as_list):
-        """Return True when homogeneous list type checks should be applied."""
-        if not is_model_parameter or not expected_type or isinstance(expected_type, list):
-            return False
-        if not isinstance(value_as_list, list) or len(value_as_list) <= 1:
-            return False
-        return value_as_list[0] is not None
+    def _validate_list_types(value_list, expected_types):
+        """Validate list elements against per-element expected data types."""
+        if not expected_types:
+            return
+
+        if len(value_list) != len(expected_types):
+            raise ValueError(
+                f"Length mismatch: parameter has {len(value_list)} elements "
+                f"but type specification has {len(expected_types)} elements."
+            )
+
+        for i, (value, expected_type) in enumerate(zip(value_list, expected_types)):
+            if not gen.validate_data_type(
+                reference_dtype=expected_type,
+                value=value,
+                dtype=None,
+                allow_subtypes=True,
+            ):
+                raise TypeError(
+                    f"Element {i}: expected type '{expected_type}', got {type(value).__name__}"
+                )
+
+    def _get_expected_types_for_values(self, value_as_list, is_model_parameter):
+        """Return expected per-element data types for list validation."""
+        expected_types = []
+        should_validate = (
+            is_model_parameter
+            and self._data_description
+            and isinstance(value_as_list, list)
+            and len(value_as_list) > 0
+            and value_as_list[0] is not None
+        )
+
+        if should_validate and self._is_heterogeneous_list(is_model_parameter):
+            expected_types = self._get_schema_type_list()
+        elif should_validate and len(value_as_list) > 1:
+            expected_type = self._data_description[0].get("type")
+            if expected_type and not isinstance(expected_type, list):
+                expected_types = [expected_type] * len(value_as_list)
+
+        return expected_types
 
     def _get_unit_list_for_values(self, value_as_list):
         """Return a per-value unit list from current data dict unit entry."""
@@ -385,68 +394,6 @@ class DataValidator:
             return first_item_type
 
         return [item.get("type") for item in self._data_description]
-
-    def _validate_heterogeneous_list(self, value_list, type_list):
-        """
-        Validate list where each element has a specific expected type.
-
-        Parameters
-        ----------
-        value_list: list
-            List of values to validate.
-        type_list: list
-            List of expected types, one per element.
-
-        Raises
-        ------
-        ValueError
-            If length of value_list does not match type_list.
-        TypeError
-            If any element's type is invalid.
-        """
-        if len(value_list) != len(type_list):
-            raise ValueError(
-                f"Length mismatch: parameter has {len(value_list)} elements "
-                f"but type specification has {len(type_list)} elements."
-            )
-
-        for i, (value, expected_type) in enumerate(zip(value_list, type_list)):
-            if not gen.validate_data_type(
-                reference_dtype=expected_type,
-                value=value,
-                dtype=None,
-                allow_subtypes=True,
-            ):
-                raise TypeError(
-                    f"Element {i}: expected type '{expected_type}', got {type(value).__name__}"
-                )
-
-    def _validate_homogeneous_list(self, value_list, expected_type):
-        """
-        Validate list where all elements must match the same type.
-
-        Parameters
-        ----------
-        value_list: list
-            List of values to validate.
-        expected_type: str
-            Expected type for all elements.
-
-        Raises
-        ------
-        TypeError
-            If any element fails type validation.
-        """
-        for i, value in enumerate(value_list):
-            if not gen.validate_data_type(
-                reference_dtype=expected_type,
-                value=value,
-                dtype=None,
-                allow_subtypes=True,
-            ):
-                raise TypeError(
-                    f"Element {i}: expected type '{expected_type}', got {type(value).__name__}"
-                )
 
     def _get_value_and_units_as_lists(self):
         """
