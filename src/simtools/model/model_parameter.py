@@ -412,81 +412,65 @@ class ModelParameter:
         if self.get_parameter_file_flag(par_name):
             self._is_exported_model_files_up_to_date = False
 
-    def _overwrite_model_parameter_from_value(
-        self, par_name, value, parameter_version=None, metadata=None
-    ):
+    def _overwrite_model_parameter_from_value(self, par_name, value, parameter_version, metadata):
         """Overwrite model parameter from provided value only."""
-        value = gen.convert_string_to_list(value) if isinstance(value, str) else value
-        par_type = self._get_parameter_type_for_validation(par_name, metadata)
-        self._update_parameter_dict(par_name, value, parameter_version, metadata, par_type)
-        self._fill_missing_parameter_fields_from_schema(par_name, metadata, par_type)
-        DataValidator.validate_model_parameter(self.parameters[par_name], par_name=par_name)
+        DataValidator.validate_model_parameter(
+            self._update_parameter_dict(
+                par_name,
+                gen.convert_string_to_list(value) if isinstance(value, str) else value,
+                parameter_version,
+                metadata,
+            ),
+            par_name=par_name,
+        )
 
-    def _get_parameter_type_for_validation(self, par_name, metadata):
-        """Get the parameter type to use for validation."""
-        if metadata and "type" in metadata:
-            return metadata.get("type")
-        if metadata and "model_parameter_schema_version" in metadata:
-            schema_version = self._resolve_schema_version(
-                par_name, metadata["model_parameter_schema_version"]
-            )
-            return schema.get_parameter_type_from_schema(par_name, schema_version)
-        par_type = self.get_parameter_type(par_name)
-        if par_type is not None:
-            return par_type
-        schema_version = self.parameters.get(par_name, {}).get("model_parameter_schema_version")
-        schema_version = self._resolve_schema_version(par_name, schema_version)
-        return schema.get_parameter_type_from_schema(par_name, schema_version)
-
-    def _resolve_schema_version(self, par_name, schema_version=None):
+    def _resolve_schema_version(self, par_name, metadata):
         """Resolve to an available schema version for a model parameter."""
-        try:
-            requested_version = schema_version or "latest"
-            return schema.get_model_parameter_schema(par_name, requested_version).get(
-                "schema_version"
-            )
-        except ValueError:
-            latest_version = schema.get_model_parameter_schema(par_name, "latest").get(
-                "schema_version"
-            )
-            self._logger.warning(
-                f"Schema version {schema_version} for parameter {par_name} not found; "
-                f"using latest available schema version {latest_version}."
-            )
-            return latest_version
-
-    def _fill_missing_parameter_fields_from_schema(self, par_name, metadata, par_type):
-        """Fill missing parameter metadata from schema for robust overwrite handling."""
-        par_dict = self.parameters[par_name]
         schema_version = (
             metadata.get("model_parameter_schema_version")
             if metadata and "model_parameter_schema_version" in metadata
-            else par_dict.get("model_parameter_schema_version")
+            else self.parameters.get(par_name, {}).get("model_parameter_schema_version")
         )
-        schema_version = self._resolve_schema_version(par_name, schema_version)
-        par_dict["model_parameter_schema_version"] = schema_version
+        requested_version = schema_version or "latest"
+        try:
+            return schema.get_model_parameter_schema(par_name, requested_version).get(
+                "schema_version"
+            )
+        except ValueError as exc:
+            raise ValueError(
+                f"Schema version '{requested_version}' not available for parameter '{par_name}'"
+            ) from exc
 
-        if "type" not in par_dict and par_type is not None:
-            par_dict["type"] = par_type
+    def _update_parameter_dict(self, par_name, value, parameter_version, metadata):
+        """
+        Update parameter dictionary with value/metadata and fill schema-derived defaults.
 
-        if "unit" not in par_dict:
-            par_dict["unit"] = schema.get_parameter_unit_from_schema(par_name, schema_version)
-
-    def _update_parameter_dict(self, par_name, value, parameter_version, metadata, par_type):
-        """Update the parameter dictionary with new values and metadata."""
+        This keeps overwrite behavior robust when metadata dictionaries are incomplete
+        (e.g. missing type or unit).
+        """
         self._logger.debug(
             f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} to {value}"
         )
+        par_dict = self.parameters[par_name]
+        par_dict["value"] = value
 
-        self.parameters[par_name]["value"] = value
         if parameter_version:
-            self.parameters[par_name]["parameter_version"] = parameter_version
+            par_dict["parameter_version"] = parameter_version
+
+        schema_version = self._resolve_schema_version(par_name, metadata)
+        par_type = schema.get_parameter_type_from_schema(par_name, schema_version)
         if metadata:
             for key in ["unit", "model_parameter_schema_version"]:
                 if key in metadata:
-                    self.parameters[par_name][key] = metadata[key]
+                    par_dict[key] = metadata[key]
             if "model_parameter_schema_version" in metadata and isinstance(par_type, list):
-                self.parameters[par_name]["type"] = par_type
+                par_dict["type"] = par_type
+
+        par_dict["model_parameter_schema_version"] = schema_version
+        if par_type is not None:
+            par_dict.setdefault("type", par_type)
+        par_dict.setdefault("unit", schema.get_parameter_unit_from_schema(par_name, schema_version))
+        return par_dict
 
     def _overwrite_model_parameter_from_db(self, par_name, parameter_version):
         """Overwrite model parameter from DB for a specific version."""
