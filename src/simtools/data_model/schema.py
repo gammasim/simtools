@@ -1,6 +1,7 @@
 """Module providing functionality to read and validate dictionaries using schema."""
 
 import logging
+from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 
@@ -84,6 +85,12 @@ def get_model_parameter_schema(parameter, schema_version=None):
         Schema dictionary.
     """
     schema_file = get_model_parameter_schema_file(parameter)
+    return deepcopy(_load_model_parameter_schema_cached(schema_file, schema_version or "latest"))
+
+
+@lru_cache
+def _load_model_parameter_schema_cached(schema_file, schema_version):
+    """Load and cache a model parameter schema by resolved file path and version."""
     return load_schema(schema_file, schema_version=schema_version)
 
 
@@ -498,15 +505,7 @@ def get_parameter_type_from_schema(par_name, schema_version):
     str or list
         Type of the parameter (string for simple types, list for heterogeneous types).
     """
-    schema_dict = get_model_parameter_schema(par_name, schema_version)
-    data = schema_dict.get("data", [])
-    if isinstance(data, list):
-        # Extract type from each element
-        types = [item.get("type") for item in data]
-        # Return scalar type for single-element lists
-        return types[0] if len(types) == 1 else types
-    # Simple type
-    return data.get("type") if isinstance(data, dict) else None
+    return _get_parameter_attribute_from_schema(par_name, schema_version, "type")
 
 
 def get_parameter_unit_from_schema(par_name, schema_version):
@@ -526,11 +525,26 @@ def get_parameter_unit_from_schema(par_name, schema_version):
         Unit of the parameter (string for simple types, list for heterogeneous types,
         None for dimensionless parameters).
     """
+    return _get_parameter_attribute_from_schema(par_name, schema_version, "unit")
+
+
+def _get_parameter_attribute_from_schema(par_name, schema_version, attribute_name):
+    """Return one attribute from model-parameter schema data entries."""
     schema_dict = get_model_parameter_schema(par_name, schema_version)
     data = schema_dict.get("data", [])
     if isinstance(data, list):
-        units = [item.get("unit") for item in data]
-        units = [None if unit == "dimensionless" else unit for unit in units]
-        return units[0] if len(units) == 1 else units
-    unit = data.get("unit") if isinstance(data, dict) else None
-    return None if unit == "dimensionless" else unit
+        values = [
+            _normalize_parameter_schema_attribute(attribute_name, item.get(attribute_name))
+            for item in data
+        ]
+        return values[0] if len(values) == 1 else values
+    if isinstance(data, dict):
+        return _normalize_parameter_schema_attribute(attribute_name, data.get(attribute_name))
+    return None
+
+
+def _normalize_parameter_schema_attribute(attribute_name, value):
+    """Normalize schema attribute values for public helper functions."""
+    if attribute_name == "unit" and value == "dimensionless":
+        return None
+    return value
