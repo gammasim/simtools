@@ -604,6 +604,17 @@ def test_overwrite_parameters_with_simple_value(telescope_model_lst):
     assert tel_model.parameters["num_gains"]["value"] == 2
 
 
+def test_overwrite_parameters_raises_for_unknown_parameter(telescope_model_lst):
+    """Test overwrite_parameters raises when attempting to overwrite unknown parameter."""
+    tel_model = copy.deepcopy(telescope_model_lst)
+
+    with pytest.raises(
+        ValueError,
+        match=r"Parameter unknown_parameter not found in model .* cannot overwrite it.",
+    ):
+        tel_model.overwrite_parameters({"unknown_parameter": 1}, flat_dict=True)
+
+
 def test_overwrite_parameters_with_changes(telescope_model_lst):
     """Test overwrite_parameters when changes exist."""
     tel_model = copy.deepcopy(telescope_model_lst)

@@ -561,10 +561,9 @@ class ModelParameter:
 
         for par_name, par_value in changes.items():
             if par_name not in self.parameters:
-                self._logger.warning(
+                raise ValueError(
                     f"Parameter {par_name} not found in model {self.name}, cannot overwrite it."
                 )
-                continue
 
             if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
                 # Extract metadata fields that should be applied
