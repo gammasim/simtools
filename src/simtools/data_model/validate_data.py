@@ -256,7 +256,7 @@ class DataValidator:
     def _validate_and_assign_heterogeneous_values(self):
         """Validate and assign values/units for heterogeneous lists."""
         value_as_list, _ = self._get_value_and_units_as_lists()
-        type_list = self._data_description[0].get("type")
+        type_list = self._get_schema_type_list()
         try:
             self._validate_heterogeneous_list(value_as_list, type_list)
         except (ValueError, TypeError) as ex:
@@ -369,13 +369,22 @@ class DataValidator:
         if not is_model_parameter or not isinstance(self._data_description, list):
             return False
 
-        # For model parameters, check if the first item's type is a list
-        # (indicating different types per element)
-        if len(self._data_description) > 0:
-            first_item_type = self._data_description[0].get("type")
-            return isinstance(first_item_type, list)
+        if isinstance(self.data_dict.get("type"), list):
+            return True
 
-        return False
+        type_list = self._get_schema_type_list()
+        return len(set(type_list)) > 1
+
+    def _get_schema_type_list(self):
+        """Return schema types as a flat list for model parameter validation."""
+        if not self._data_description:
+            return []
+
+        first_item_type = self._data_description[0].get("type")
+        if isinstance(first_item_type, list):
+            return first_item_type
+
+        return [item.get("type") for item in self._data_description]
 
     def _validate_heterogeneous_list(self, value_list, type_list):
         """
