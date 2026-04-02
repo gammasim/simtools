@@ -89,7 +89,7 @@ jobs:
           flavor: latest=false
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           # Build multi-platform only for generic (non-optimized) variant, others are x86-specific
