@@ -414,28 +414,42 @@ class ModelParameter:
 
     def _overwrite_model_parameter_from_value(self, par_name, value, parameter_version, metadata):
         """Overwrite model parameter from provided value only."""
-        DataValidator.validate_model_parameter(
-            self._update_parameter_dict(
-                par_name,
-                gen.convert_string_to_list(value) if isinstance(value, str) else value,
-                parameter_version,
-                metadata,
-            ),
-            par_name=par_name,
-        )
+        try:
+            DataValidator.validate_model_parameter(
+                self._update_parameter_dict(
+                    par_name,
+                    gen.convert_string_to_list(value) if isinstance(value, str) else value,
+                    parameter_version,
+                    metadata,
+                ),
+                par_name=par_name,
+            )
+        except FileNotFoundError:
+            self._logger.warning(
+                f"Schema file for parameter {par_name} not found. "
+                "Using existing type/unit metadata without schema validation."
+            )
 
     def _resolve_schema_version(self, par_name, metadata):
         """Resolve to an available schema version for a model parameter."""
+        par_dict = self.parameters.get(par_name, {})
         schema_version = (
             metadata.get("model_parameter_schema_version")
             if metadata and "model_parameter_schema_version" in metadata
-            else self.parameters.get(par_name, {}).get("model_parameter_schema_version")
+            else par_dict.get("model_parameter_schema_version")
         )
         requested_version = schema_version or "latest"
         try:
             return schema.get_model_parameter_schema(par_name, requested_version).get(
                 "schema_version"
             )
+        except FileNotFoundError:
+            fallback_version = par_dict.get("model_parameter_schema_version") or requested_version
+            self._logger.warning(
+                f"Schema file for parameter {par_name} not found; "
+                f"using existing schema version {fallback_version}."
+            )
+            return fallback_version
         except ValueError as exc:
             raise ValueError(
                 f"Schema version '{requested_version}' not available for parameter '{par_name}'"
@@ -458,7 +472,17 @@ class ModelParameter:
             par_dict["parameter_version"] = parameter_version
 
         schema_version = self._resolve_schema_version(par_name, metadata)
-        par_type = schema.get_parameter_type_from_schema(par_name, schema_version)
+        try:
+            par_type = schema.get_parameter_type_from_schema(par_name, schema_version)
+            schema_unit = schema.get_parameter_unit_from_schema(par_name, schema_version)
+        except FileNotFoundError:
+            self._logger.warning(
+                f"Schema file for parameter {par_name} not found; "
+                "using existing type/unit metadata."
+            )
+            par_type = par_dict.get("type")
+            schema_unit = par_dict.get("unit")
+
         if metadata:
             for key in ["unit", "model_parameter_schema_version"]:
                 if key in metadata:
@@ -469,7 +493,7 @@ class ModelParameter:
         par_dict["model_parameter_schema_version"] = schema_version
         if par_type is not None:
             par_dict.setdefault("type", par_type)
-        par_dict.setdefault("unit", schema.get_parameter_unit_from_schema(par_name, schema_version))
+        par_dict.setdefault("unit", schema_unit)
         return par_dict
 
     def _overwrite_model_parameter_from_db(self, par_name, parameter_version):
