@@ -445,16 +445,16 @@ def test_check_and_convert_units_simple_numbers(reference_columns):
     # convert numbers and quantities
     assert data_validator._check_and_convert_units(300.0, unit="nm", col_name="wavelength") == (
         300.0,
-        u.nm,
+        "nm",
     )
     assert data_validator._check_and_convert_units(300.0, unit="mm", col_name="wavelength") == (
         300000000.0,
-        u.nm,
+        "nm",
     )
     data_validator._data_description[0]["type"] = "int"
     assert data_validator._check_and_convert_units(300, unit="nm", col_name="wavelength") == (
         300,
-        u.nm,
+        "nm",
     )
 
 
@@ -464,7 +464,19 @@ def test_check_and_convert_units_dimensionless(reference_columns, caplog):
 
     assert data_validator._check_and_convert_units(0.1, unit="dimensionless", col_name="qe") == (
         0.1,
-        u.dimensionless_unscaled,
+        "dimensionless",
+    )
+    assert data_validator._check_and_convert_units(0.1, unit=None, col_name="qe") == (
+        0.1,
+        "dimensionless",
+    )
+    assert data_validator._check_and_convert_units(0.1, unit="", col_name="qe") == (
+        0.1,
+        "dimensionless",
+    )
+    assert data_validator._check_and_convert_units([0.1, 0.2], unit=[None, ""], col_name="qe") == (
+        [0.1, 0.2],
+        "dimensionless",
     )
 
     # reference column requires a unit, give no unit
@@ -483,11 +495,11 @@ def test_check_and_convert_units_integer_arrays(reference_columns):
     data_validator._data_description[0]["type"] = ["int", "int"]
     assert data_validator._check_and_convert_units(
         [300, 350], unit=["nm", "nm"], col_name="wavelength"
-    ) == ([300, 350], u.nm)
+    ) == ([300, 350], "nm")
     data_validator._data_description[0]["type"] = ["int", "int"]
     assert data_validator._check_and_convert_units(
         [300, 350], unit=["nm", None], col_name="wavelength"
-    ) == ([300, 350], u.nm)
+    ) == ([300, 350], "nm")
 
 
 def test_check_required_columns(reference_columns):
@@ -902,6 +914,149 @@ def test_validate_model_parameter(mocker):
     validated_data = validate_data.DataValidator.validate_model_parameter(par_dict)
     assert validated_data["value"] == pytest.approx(1000.0)
     assert validated_data["unit"] == "km"
+
+
+def test_validate_heterogeneous_list(mocker):
+    """Test validation of parameters with heterogeneous list types (different type per element)."""
+    # Mock schema with heterogeneous type specification
+    mocker.patch(
+        "simtools.data_model.schema.get_model_parameter_schema_file",
+        return_value="/mock/schema.yml",
+    )
+    mocker.patch(
+        "simtools.data_model.validate_data.DataValidator._read_validation_schema",
+        return_value=[
+            {
+                "name": "heterogeneous_param",
+                "type": ["int64", "float64", "string"],
+                "unit": [None, "km", None],
+            }
+        ],
+    )
+    # Mock _validate_value_and_unit to just return the value unchanged
+    mocker.patch(
+        "simtools.data_model.validate_data.DataValidator._validate_value_and_unit",
+        side_effect=lambda value, unit, index: (value, unit),
+    )
+
+    # Valid heterogeneous list: [int, float, string]
+    par_dict = {
+        "parameter": "heterogeneous_param",
+        "value": [10, 20.5, "text"],
+        "unit": [None, "km", None],
+    }
+
+    validated_data = validate_data.DataValidator.validate_model_parameter(par_dict)
+    assert validated_data["value"][0] == 10
+    assert validated_data["value"][1] == pytest.approx(20.5)
+    assert validated_data["value"][2] == "text"
+
+
+def test_validate_heterogeneous_list_length_mismatch(mocker):
+    """Test that heterogeneous list validation fails on length mismatch."""
+    mocker.patch(
+        "simtools.data_model.schema.get_model_parameter_schema_file",
+        return_value="/mock/schema.yml",
+    )
+    mocker.patch(
+        "simtools.data_model.validate_data.DataValidator._read_validation_schema",
+        return_value=[
+            {
+                "name": "heterogeneous_param",
+                "type": ["int64", "float64"],
+                "unit": [None, "km"],
+            }
+        ],
+    )
+
+    # Invalid: only 1 value for 2 expected types
+    par_dict = {
+        "parameter": "heterogeneous_param",
+        "value": [10],
+        "unit": [None],
+    }
+
+    with pytest.raises(TypeError, match=r"Error validating heterogeneous list"):
+        validate_data.DataValidator.validate_model_parameter(par_dict)
+
+
+def test_validate_heterogeneous_list_type_mismatch(mocker):
+    """Test that heterogeneous list validation fails on element type mismatch."""
+    mocker.patch(
+        "simtools.data_model.schema.get_model_parameter_schema_file",
+        return_value="/mock/schema.yml",
+    )
+    mocker.patch(
+        "simtools.data_model.validate_data.DataValidator._read_validation_schema",
+        return_value=[
+            {
+                "name": "heterogeneous_param",
+                "type": ["int64", "float64"],
+                "unit": [None, "km"],
+            }
+        ],
+    )
+
+    # Invalid: second element should be float but is string
+    par_dict = {
+        "parameter": "heterogeneous_param",
+        "value": [10, "invalid"],
+        "unit": [None, "km"],
+    }
+
+    with pytest.raises(TypeError, match=r"Error validating heterogeneous list"):
+        validate_data.DataValidator.validate_model_parameter(par_dict)
+
+
+def test_validate_homogeneous_list(mocker):
+    """Test validation of homogeneous lists (all elements same type)."""
+    mocker.patch(
+        "simtools.data_model.schema.get_model_parameter_schema_file",
+        return_value="/mock/schema.yml",
+    )
+    mocker.patch(
+        "simtools.data_model.validate_data.DataValidator._read_validation_schema",
+        return_value=[{"name": "homogeneous_param", "type": "float64", "unit": "km"}],
+    )
+    # Mock _validate_value_and_unit to just return the value unchanged
+    mocker.patch(
+        "simtools.data_model.validate_data.DataValidator._validate_value_and_unit",
+        side_effect=lambda value, unit, index: (value, unit),
+    )
+
+    # Valid homogeneous list: all floats
+    par_dict = {
+        "parameter": "homogeneous_param",
+        "value": [1.0, 2.0, 3.0],
+        "unit": ["km", "km", "km"],
+    }
+
+    validated_data = validate_data.DataValidator.validate_model_parameter(par_dict)
+    assert isinstance(validated_data["value"], list)
+    assert len(validated_data["value"]) == 3
+    assert all(isinstance(v, (int, float)) for v in validated_data["value"])
+
+
+def test_validate_homogeneous_list_type_mismatch(mocker):
+    """Test that homogeneous list validation fails when elements have different types."""
+    mocker.patch(
+        "simtools.data_model.schema.get_model_parameter_schema_file",
+        return_value="/mock/schema.yml",
+    )
+    mocker.patch(
+        "simtools.data_model.validate_data.DataValidator._read_validation_schema",
+        return_value=[{"name": "homogeneous_param", "type": "float64", "unit": "km"}],
+    )
+
+    # Invalid: mixed types (float and string)
+    par_dict = {
+        "parameter": "homogeneous_param",
+        "value": [1.0, "invalid", 3.0],
+        "unit": ["km", "km", "km"],
+    }
+
+    with pytest.raises(TypeError, match=r"Error validating dictionary using"):
+        validate_data.DataValidator.validate_model_parameter(par_dict)
 
 
 def test_rate_limited_logger(caplog):

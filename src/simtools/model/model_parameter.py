@@ -7,10 +7,10 @@ from copy import copy, deepcopy
 from pathlib import Path
 
 import astropy.units as u
-import yaml
 
 import simtools.utils.general as gen
 from simtools.data_model import schema
+from simtools.data_model.validate_data import DataValidator
 from simtools.db import db_handler
 from simtools.io import io_handler
 from simtools.model import legacy_model_parameter
@@ -224,54 +224,6 @@ class ModelParameter:
             self._logger.debug(f"Parameter {par_name} does not have a type.")
         return None
 
-    def _get_type_from_schema(self, par_name, schema_version):
-        """
-        Get parameter type from schema file for a specific schema version.
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the parameter.
-        schema_version: str
-            Schema version to look up.
-
-        Returns
-        -------
-        str or list
-            Type of the parameter (string for simple types, list for heterogeneous types).
-        """
-        schema_file = Path(names.MODEL_PARAMETER_SCHEMA_PATH) / f"{par_name}.schema.yml"
-        if not schema_file.exists():
-            self._logger.warning(f"Schema file not found for parameter {par_name}, using DB type.")
-            return self.get_parameter_type(par_name)
-
-        # Load all schemas from file (may contain multiple versions)
-        with open(schema_file, encoding="utf-8") as f:
-            schemas = list(yaml.safe_load_all(f))
-
-        # Find schema matching the version
-        matching_schema = None
-        for schema_data in schemas:
-            if schema_data.get("schema_version") == schema_version:
-                matching_schema = schema_data
-                break
-
-        if not matching_schema:
-            self._logger.warning(
-                f"Schema version {schema_version} not found for {par_name}, using DB type."
-            )
-            return self.get_parameter_type(par_name)
-
-        # Extract type from data field
-        data = matching_schema.get("data", [])
-        if isinstance(data, list):
-            # Extract type from each element
-            types = [item.get("type") for item in data]
-            # Return scalar type for single-element lists
-            return types[0] if len(types) == 1 else types
-        # Simple type
-        return data.get("type") if isinstance(data, dict) else None
-
     def get_parameter_file_flag(self, par_name):
         """
         Get value of parameter file flag of this database entry (boolean 'file' field of DB entry).
@@ -466,71 +418,66 @@ class ModelParameter:
         """Overwrite model parameter from provided value only."""
         value = gen.convert_string_to_list(value) if isinstance(value, str) else value
         par_type = self._get_parameter_type_for_validation(par_name, metadata)
-        self._validate_parameter_value(value, par_type)
         self._update_parameter_dict(par_name, value, parameter_version, metadata, par_type)
+        self._fill_missing_parameter_fields_from_schema(par_name, metadata, par_type)
+        DataValidator.validate_model_parameter(self.parameters[par_name], par_name=par_name)
 
     def _get_parameter_type_for_validation(self, par_name, metadata):
         """Get the parameter type to use for validation."""
         if metadata and "type" in metadata:
             return metadata.get("type")
         if metadata and "model_parameter_schema_version" in metadata:
-            return self._get_type_from_schema(par_name, metadata["model_parameter_schema_version"])
-        return self.get_parameter_type(par_name)
-
-    def _validate_parameter_value(self, value, par_type):
-        """Validate parameter value against its type specification."""
-        if par_type in ("list", "dict"):
-            self._validate_simple_type(value, par_type)
-        elif isinstance(par_type, list):
-            self._validate_heterogeneous_list(value, par_type)
-        else:
-            self._validate_homogeneous_list(value, par_type)
-
-    def _validate_simple_type(self, value, par_type):
-        """Validate simple list or dict type."""
-        if not gen.validate_data_type(
-            reference_dtype=par_type, value=value, dtype=None, allow_subtypes=True
-        ):
-            raise ValueError(f"Could not cast {value} of type {type(value)} to {par_type}.")
-
-    def _validate_heterogeneous_list(self, value, par_type):
-        """Validate heterogeneous list with per-element types."""
-        value_list = gen.ensure_iterable(value)
-        if len(value_list) != len(par_type):
-            raise ValueError(
-                f"Length mismatch: value has {len(value_list)} elements "
-                f"but type specification has {len(par_type)} elements."
+            schema_version = self._resolve_schema_version(
+                par_name, metadata["model_parameter_schema_version"]
             )
-        for i, (value_element, element_type) in enumerate(zip(value_list, par_type)):
-            if not gen.validate_data_type(
-                reference_dtype=element_type,
-                value=value_element,
-                dtype=None,
-                allow_subtypes=True,
-            ):
-                raise ValueError(
-                    f"Could not cast element {i} ({value_element}) of type "
-                    f"{type(value_element)} to {element_type}."
-                )
+            return schema.get_parameter_type_from_schema(par_name, schema_version)
+        par_type = self.get_parameter_type(par_name)
+        if par_type is not None:
+            return par_type
+        schema_version = self.parameters.get(par_name, {}).get("model_parameter_schema_version")
+        schema_version = self._resolve_schema_version(par_name, schema_version)
+        return schema.get_parameter_type_from_schema(par_name, schema_version)
 
-    def _validate_homogeneous_list(self, value, par_type):
-        """Validate homogeneous list where all elements have the same type."""
-        for value_element in gen.ensure_iterable(value):
-            if not gen.validate_data_type(
-                reference_dtype=par_type,
-                value=value_element,
-                dtype=None,
-                allow_subtypes=True,
-            ):
-                raise ValueError(
-                    f"Could not cast {value_element} of type {type(value_element)} to {par_type}."
-                )
+    def _resolve_schema_version(self, par_name, schema_version=None):
+        """Resolve to an available schema version for a model parameter."""
+        try:
+            requested_version = schema_version or "latest"
+            return schema.get_model_parameter_schema(par_name, requested_version).get(
+                "schema_version"
+            )
+        except ValueError:
+            latest_version = schema.get_model_parameter_schema(par_name, "latest").get(
+                "schema_version"
+            )
+            self._logger.warning(
+                f"Schema version {schema_version} for parameter {par_name} not found; "
+                f"using latest available schema version {latest_version}."
+            )
+            return latest_version
+
+    def _fill_missing_parameter_fields_from_schema(self, par_name, metadata, par_type):
+        """Fill missing parameter metadata from schema for robust overwrite handling."""
+        par_dict = self.parameters[par_name]
+        schema_version = (
+            metadata.get("model_parameter_schema_version")
+            if metadata and "model_parameter_schema_version" in metadata
+            else par_dict.get("model_parameter_schema_version")
+        )
+        schema_version = self._resolve_schema_version(par_name, schema_version)
+        par_dict["model_parameter_schema_version"] = schema_version
+
+        if "type" not in par_dict and par_type is not None:
+            par_dict["type"] = par_type
+
+        if "unit" not in par_dict:
+            par_dict["unit"] = schema.get_parameter_unit_from_schema(par_name, schema_version)
 
     def _update_parameter_dict(self, par_name, value, parameter_version, metadata, par_type):
         """Update the parameter dictionary with new values and metadata."""
         self._logger.debug(
             f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} to {value}"
         )
+
         self.parameters[par_name]["value"] = value
         if parameter_version:
             self.parameters[par_name]["parameter_version"] = parameter_version

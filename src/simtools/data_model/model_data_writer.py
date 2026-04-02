@@ -400,7 +400,22 @@ class ModelDataWriter:
             data_dict=product_data_dict,
             check_exact_data_type=False,
         )
-        return _validator.validate_and_transform(is_model_parameter)
+        validated = _validator.validate_and_transform(is_model_parameter)
+
+        if is_model_parameter and isinstance(validated, dict):
+            validated["unit"] = self._normalize_model_parameter_unit(validated.get("unit"))
+
+        return validated
+
+    @staticmethod
+    def _normalize_model_parameter_unit(unit):
+        """Normalize model-parameter units so dimensionless values are stored as None."""
+        if isinstance(unit, list):
+            return [
+                None if u_value in (None, "", "dimensionless", "null") else u_value
+                for u_value in unit
+            ]
+        return None if unit in (None, "", "dimensionless", "null") else unit
 
     def write(self, product_data=None, metadata=None):
         """
@@ -488,6 +503,7 @@ class ModelDataWriter:
 
         """
         try:
+            data_dict["unit"] = ModelDataWriter._normalize_model_parameter_unit(data_dict["unit"])
             if isinstance(data_dict["unit"], str):
                 data_dict["unit"] = data_dict["unit"].replace("None", "null")
             elif isinstance(data_dict["unit"], list):
