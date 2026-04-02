@@ -43,6 +43,31 @@ def test_get_model_parameter_schema_file():
         schema.get_model_parameter_schema_file("not_a_parameter")
 
 
+def test_get_model_parameter_schema_returns_independent_copies():
+    schema_1 = schema.get_model_parameter_schema("mirror_focal_length", "0.1.0")
+    schema_2 = schema.get_model_parameter_schema("mirror_focal_length", "0.1.0")
+
+    schema_1["data"][0]["unit"] = "m"
+
+    assert schema_2["data"][0]["unit"] == "cm"
+
+
+def test_get_parameter_type_and_unit_from_schema():
+    assert schema.get_parameter_type_from_schema("mirror_focal_length", "0.1.0") == "float64"
+    assert schema.get_parameter_unit_from_schema("mirror_focal_length", "0.1.0") == "cm"
+
+    assert schema.get_parameter_type_from_schema("flasher_pulse_shape", "0.2.0") == [
+        "string",
+        "float64",
+        "float64",
+    ]
+    assert schema.get_parameter_unit_from_schema("flasher_pulse_shape", "0.2.0") == [
+        None,
+        "ns",
+        "ns",
+    ]
+
+
 def test_get_model_parameter_schema_version():
     most_recent = schema.get_model_parameter_schema_version()
     assert most_recent == "0.3.0"
