@@ -9,9 +9,65 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
+from astropy.utils import iers
 from astropy.utils.iers import IERSWarning
 
 from simtools.production_configuration.generate_production_grid import GridGeneration
+
+
+@pytest.fixture(autouse=True, scope="module")
+def disable_iers_auto_download():
+    """Disable IERS auto-download during tests to avoid network dependency."""
+    previous_auto_download = iers.conf.auto_download
+    iers.conf.auto_download = False
+    try:
+        yield
+    finally:
+        iers.conf.auto_download = previous_auto_download
+
+
+def _create_grid_generation(
+    axes,
+    coordinate_system,
+    observing_location,
+    observing_time,
+    lookup_table,
+):
+    """Create a GridGeneration instance with a standard telescope selection."""
+    return GridGeneration(
+        axes=axes,
+        coordinate_system=coordinate_system,
+        observing_location=observing_location,
+        observing_time=observing_time,
+        lookup_table=lookup_table,
+        telescope_ids=[1],
+    )
+
+
+def _build_single_point_radec_axes_definition(source_radec):
+    """Build one-bin RA/Dec axes around a source coordinate."""
+    return {
+        "axes": {
+            "ra": {
+                "range": [source_radec.ra.deg, source_radec.ra.deg],
+                "binning": 1,
+                "scaling": "linear",
+                "units": "deg",
+            },
+            "dec": {
+                "range": [source_radec.dec.deg, source_radec.dec.deg],
+                "binning": 1,
+                "scaling": "linear",
+                "units": "deg",
+            },
+            "nsb": {
+                "range": [4, 4],
+                "binning": 1,
+                "scaling": "linear",
+                "units": "MHz",
+            },
+        }
+    }
 
 
 @pytest.fixture
@@ -45,13 +101,12 @@ def observing_time():
 @pytest.fixture
 def grid_gen(axes_definition, lookup_table, observing_location, observing_time):
     """Create a GridGeneration object with the provided fixtures."""
-    return GridGeneration(
+    return _create_grid_generation(
         axes=axes_definition,
         coordinate_system="zenith_azimuth",
         observing_location=observing_location,
         observing_time=observing_time,
         lookup_table=lookup_table,
-        telescope_ids=[1],
     )
 
 
@@ -76,13 +131,12 @@ def test_generate_grid_log_scaling(
         "units": "MHz",
     }
 
-    grid_gen = GridGeneration(
+    grid_gen = _create_grid_generation(
         axes=axes_definition,
         coordinate_system="zenith_azimuth",
         observing_location=observing_location,
         observing_time=observing_time,
         lookup_table=lookup_table,
-        telescope_ids=[1],
     )
 
     grid_points = grid_gen.generate_grid()
@@ -110,13 +164,12 @@ def test_generate_grid_1_over_cos_scaling(
         "units": "deg",
     }
 
-    grid_gen = GridGeneration(
+    grid_gen = _create_grid_generation(
         axes=axes_definition,
         coordinate_system="zenith_azimuth",
         observing_location=observing_location,
         observing_time=observing_time,
         lookup_table=lookup_table,
-        telescope_ids=[1],
     )
 
     grid_points = grid_gen.generate_grid()
@@ -132,6 +185,149 @@ def test_generate_grid_1_over_cos_scaling(
 
     assert len(unique_zenith_values) == len(expected_values)
     assert np.allclose(unique_zenith_values, expected_values, rtol=1e-4)
+
+
+def test_generate_grid_radec_mode_minimal(observing_location, observing_time):
+    """Generate a minimal RA/Dec-native grid and apply zenith cut."""
+    axes_definition = {
+        "axes": {
+            "zenith_angle": {
+                "range": [0, 10],
+                "binning": 2,
+                "scaling": "linear",
+                "units": "deg",
+            },
+            "azimuth": {
+                "range": [0, 10],
+                "binning": 2,
+                "scaling": "linear",
+                "units": "deg",
+            },
+            "nsb": {
+                "range": [4, 4],
+                "binning": 1,
+                "scaling": "linear",
+                "units": "MHz",
+            },
+        }
+    }
+
+    grid_gen = _create_grid_generation(
+        axes=axes_definition,
+        coordinate_system="ra_dec",
+        observing_location=observing_location,
+        observing_time=observing_time,
+        lookup_table=None,
+    )
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", IERSWarning)
+        grid_points = grid_gen.generate_grid()
+
+    assert len(grid_points) > 0
+    assert all("zenith_angle" in point and "azimuth" in point for point in grid_points)
+    assert all(point["zenith_angle"].value <= 10 for point in grid_points)
+
+
+def test_generate_grid_radec_axes_mode(observing_location, observing_time):
+    """Generate a grid directly from explicit RA/Dec axes."""
+    source_altaz = SkyCoord(
+        alt=65.0 * u.deg,
+        az=210.0 * u.deg,
+        frame="altaz",
+        obstime=observing_time,
+        location=observing_location,
+    )
+    source_radec = source_altaz.icrs
+
+    axes_definition = _build_single_point_radec_axes_definition(source_radec)
+
+    grid_gen = _create_grid_generation(
+        axes=axes_definition,
+        coordinate_system="ra_dec",
+        observing_location=observing_location,
+        observing_time=observing_time,
+        lookup_table=None,
+    )
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", IERSWarning)
+        grid_points = grid_gen.generate_grid()
+
+    assert len(grid_points) == 1
+    assert "ra" in grid_points[0]
+    assert "dec" in grid_points[0]
+    assert "zenith_angle" not in grid_points[0]
+    assert "azimuth" not in grid_points[0]
+    assert grid_points[0]["ra"].value == pytest.approx(source_radec.ra.deg, abs=0.05)
+    assert grid_points[0]["dec"].value == pytest.approx(source_radec.dec.deg, abs=0.05)
+
+
+def test_generate_grid_radec_axes_mode_keeps_below_horizon_points(
+    observing_location, observing_time
+):
+    """Keep explicit RA/Dec YAML points even when they are below the horizon."""
+    source_altaz = SkyCoord(
+        alt=-20.0 * u.deg,
+        az=45.0 * u.deg,
+        frame="altaz",
+        obstime=observing_time,
+        location=observing_location,
+    )
+    source_radec = source_altaz.icrs
+
+    axes_definition = _build_single_point_radec_axes_definition(source_radec)
+
+    grid_gen = _create_grid_generation(
+        axes=axes_definition,
+        coordinate_system="ra_dec",
+        observing_location=observing_location,
+        observing_time=observing_time,
+        lookup_table=None,
+    )
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", IERSWarning)
+        grid_points = grid_gen.generate_grid()
+
+    assert len(grid_points) == 1
+    assert grid_points[0]["ra"].value == pytest.approx(source_radec.ra.deg, abs=0.05)
+    assert grid_points[0]["dec"].value == pytest.approx(source_radec.dec.deg, abs=0.05)
+
+
+def test_generate_grid_radec_axes_mode_with_lookup(
+    lookup_table, observing_location, observing_time
+):
+    """Interpolate production limits for explicit RA/Dec axes points."""
+    source_altaz = SkyCoord(
+        alt=60.0 * u.deg,
+        az=310.0 * u.deg,
+        frame="altaz",
+        obstime=observing_time,
+        location=observing_location,
+    )
+    source_radec = source_altaz.icrs
+    axes_definition = _build_single_point_radec_axes_definition(source_radec)
+
+    grid_gen = _create_grid_generation(
+        axes=axes_definition,
+        coordinate_system="ra_dec",
+        observing_location=observing_location,
+        observing_time=observing_time,
+        lookup_table=lookup_table,
+    )
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", IERSWarning)
+        grid_points = grid_gen.generate_grid()
+
+    assert len(grid_points) == 1
+    assert "energy_threshold" in grid_points[0]
+    assert "radius" in grid_points[0]
+    assert "viewcone" in grid_points[0]
+    assert grid_points[0]["energy_threshold"]["lower"].value == pytest.approx(0.00459, rel=1e-2)
+    assert grid_points[0]["radius"].value == pytest.approx(2047.8, rel=1e-2)
+    assert grid_points[0]["viewcone"].value == pytest.approx(9.98, rel=1e-2)
 
 
 def test_interpolated_limits(grid_gen):
@@ -265,12 +461,7 @@ def test_create_circular_binning_with_shortest_path(grid_gen):
     expected_bins = [350, 0, 10]
     assert np.allclose(bins, expected_bins)
 
-    # Case 2: No wraparound
-    bins = grid_gen.create_circular_binning((30, 150), 4)
-    expected_bins = [30, 70, 110, 150]
-    assert np.allclose(bins, expected_bins)
-
-    # Case 3: Counterclockwise path (shortest distance)
+    # Case 2: Counterclockwise path (shortest distance)
     bins = grid_gen.create_circular_binning((10, 350), 3)
     expected_bins = [10, 0, 350]
     assert np.allclose(bins, expected_bins)

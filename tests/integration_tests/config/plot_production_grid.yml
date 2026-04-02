@@ -1,0 +1,15 @@
+---
+applications:
+- application: simtools-plot-production-grid
+  configuration:
+    grid_points_file: tests/resources/production_grid_points.json
+    output_path: simtools-output
+    site: North
+    model_version: 6.0.0
+    observation_time: '2025-01-01 00:00:00'
+    plot_ra_dec_tracks: true
+  integration_tests:
+  - output_file: production_grid_sky_projection.png
+  test_name: default
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

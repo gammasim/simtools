@@ -1,0 +1,18 @@
+---
+applications:
+- application: simtools-production-generate-grid
+  configuration:
+    axes: tests/resources/production_grid_generation_axes_definition_radec.yml
+    coordinate_system: ra_dec
+    lookup_table: tests/resources/corsika_simulation_limits_lookup.ecsv
+    model_version: 6.0.2
+    observing_time: '2017-09-16 00:00:00'
+    output_file: grid_output_radec.json
+    output_path: simtools-output
+    site: North
+    telescope_ids: []
+  integration_tests:
+  - output_file: grid_output_radec.json
+  test_name: production_generate_grid_radec
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

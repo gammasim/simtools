@@ -12,14 +12,23 @@ The generated grid points are saved to a file.
 It can also convert the generated points to RA/Dec coordinates if the selected
 coordinate system is 'ra_dec'.
 
+For ``coordinate_system='ra_dec'``, the underlying grid generation supports a
+native all-sky direction sampling mode (declination lines with hour-angle spacing)
+and applies zenith-angle filtering based on the configured zenith range in that mode.
+When explicit ``ra`` / ``dec`` axes are provided, all YAML-defined grid points are
+preserved in the serialized output.
+
 Command line arguments
 ----------------------
 axes (str, required)
     Path to a YAML or JSON file defining the axes of the grid.
 coordinate_system (str, optional, default='zenith_azimuth')
     The coordinate system for the grid generation ('zenith_azimuth' or 'ra_dec').
+    In ``ra_dec`` mode, observing location/time are used to build sky directions and
+    derive corresponding zenith/azimuth values for interpolation.
 observing_time (str, optional, default=now)
     Time of the observation (format: 'YYYY-MM-DD HH:MM:SS').
+    In ``ra_dec`` mode, this defines the Local Sidereal Time used for sampling.
 lookup_table (str, required)
     Path to the lookup table for simulation limits. The table should contain
     varying azimuth and/or zenith angles.
@@ -31,15 +40,26 @@ output_file (str, optional, default='grid_output.json')
 
 Example
 -------
-To generate a grid of simulation points, execute the script as follows:
+To generate a standard zenith/azimuth grid of simulation points, execute:
+
+.. code-block:: console
+
+        simtools-production-generate-grid --site North --model_version 6.0.0 \
+            --axes tests/resources/production_grid_generation_axes_definition.yml \
+            --coordinate_system zenith_azimuth \
+            --lookup_table tests/resources/corsika_simulation_limits_lookup.ecsv \
+            --telescope_ids 1
+
+To generate a RA/Dec-based all-sky direction grid and serialize output in RA/Dec,
+execute:
 
 .. code-block:: console
 
     simtools-production-generate-grid --site North --model_version 6.0.0 \
-      --axes  tests/resources/production_grid_generation_axes_definition.yml \
+            --axes tests/resources/production_grid_generation_axes_definition_radec.yml \
       --coordinate_system ra_dec --observing_time "2017-09-16 00:00:00" \
       --lookup_table tests/resources/corsika_simulation_limits_lookup.ecsv \
-        --telescope_ids 1
+            --telescope_ids 1
 """
 
 from pathlib import Path
@@ -71,7 +91,11 @@ def _parse():
         "--coordinate_system",
         type=str,
         default="zenith_azimuth",
-        help="Coordinate system ('zenith_azimuth' or 'ra_dec').",
+        help=(
+            "Coordinate system ('zenith_azimuth' or 'ra_dec'). "
+            "In 'ra_dec' mode, sky directions are generated using observing"
+            " location/time and converted to zenith/azimuth for interpolation."
+        ),
     )
     config.parser.add_argument(
         "--observing_time",
