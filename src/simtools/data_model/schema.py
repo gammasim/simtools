@@ -507,3 +507,30 @@ def get_parameter_type_from_schema(par_name, schema_version):
         return types[0] if len(types) == 1 else types
     # Simple type
     return data.get("type") if isinstance(data, dict) else None
+
+
+def get_parameter_unit_from_schema(par_name, schema_version):
+    """
+    Get parameter unit from schema file for a specific schema version.
+
+    Parameters
+    ----------
+    par_name: str
+        Name of the parameter.
+    schema_version: str
+        Schema version to look up.
+
+    Returns
+    -------
+    str or list or None
+        Unit of the parameter (string for simple types, list for heterogeneous types,
+        None for dimensionless parameters).
+    """
+    schema_dict = get_model_parameter_schema(par_name, schema_version)
+    data = schema_dict.get("data", [])
+    if isinstance(data, list):
+        units = [item.get("unit") for item in data]
+        units = [None if unit == "dimensionless" else unit for unit in units]
+        return units[0] if len(units) == 1 else units
+    unit = data.get("unit") if isinstance(data, dict) else None
+    return None if unit == "dimensionless" else unit

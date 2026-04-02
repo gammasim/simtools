@@ -138,7 +138,8 @@ def test_handling_parameters(telescope_model_lst):
     )
 
     tel_model.overwrite_model_parameter(
-        "mirror_reflection_random_angle", gen.convert_string_to_list(new_mrra)
+        "mirror_reflection_random_angle",
+        gen.convert_string_to_list(new_mrra),
     )
     assert tel_model.get_parameter_value("mirror_reflection_random_angle")[0] == pytest.approx(
         0.0080
@@ -178,11 +179,11 @@ def test_overwrite_model_parameter(telescope_model_lst):
     assert tel_model.get_parameter_value("camera_pixels") == 9999
 
     logger.info("Testing changing camera_pixels to a float (now allowed)")
-    with pytest.raises(ValueError, match=r"^Could not cast 9999.9 of type"):
+    with pytest.raises(TypeError, match=r"^Error validating dictionary"):
         tel_model.overwrite_model_parameter("camera_pixels", 9999.9)
 
     logger.info("Testing changing camera_pixels to a nonsense string")
-    with pytest.raises(ValueError, match=r"^Could not cast bla_bla of type"):
+    with pytest.raises(TypeError, match=r"^Error validating dictionary"):
         tel_model.overwrite_model_parameter("camera_pixels", "bla_bla")
 
     logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('mirror_focal_length')}")
@@ -195,7 +196,7 @@ def test_overwrite_model_parameter(telescope_model_lst):
     assert pytest.approx(9999.9) == tel_model.get_parameter_value("mirror_focal_length")[0]
 
     logger.info("Testing changing mirror_focal_length to a nonsense string")
-    with pytest.raises(ValueError, match=r"^Could not cast bla_bla of type"):
+    with pytest.raises(TypeError, match=r"^Error validating dictionary using"):
         tel_model.overwrite_model_parameter("mirror_focal_length", "bla_bla")
 
     with pytest.raises(InvalidModelParameterError, match="Parameter bla_bla not in the model"):
@@ -225,10 +226,11 @@ schema_version: "0.1.0"
 name: mirror_focal_length
 data:
   - type: float64
+    unit: m
 """
     schema_file.write_text(schema_content)
 
-    mocker.patch("simtools.utils.names.MODEL_PARAMETER_SCHEMA_PATH", str(schema_dir))
+    mocker.patch("simtools.data_model.schema.MODEL_PARAMETER_SCHEMA_PATH", schema_dir)
 
     tel_model.overwrite_model_parameter(
         "mirror_focal_length",
@@ -276,7 +278,11 @@ data:
 """
     schema_file.write_text(schema_content)
 
-    mocker.patch("simtools.utils.names.MODEL_PARAMETER_SCHEMA_PATH", str(schema_dir))
+    mocker.patch("simtools.data_model.schema.MODEL_PARAMETER_SCHEMA_PATH", schema_dir)
+    mocker.patch(
+        "simtools.model.model_parameter.DataValidator.validate_model_parameter",
+        side_effect=lambda par_dict, par_name=None: par_dict,
+    )
 
     # Overwrite with heterogeneous list value and schema metadata
     tel_model.overwrite_model_parameter(
@@ -332,7 +338,11 @@ def test_updating_export_model_files(model_version):
 
     # Changing a non-file parameter
     logger.info("Changing a parameter that IS NOT a file - mirror_reflection_random_angle")
-    tel.overwrite_model_parameter("mirror_reflection_random_angle", "0.0080 0 0")
+    tel.overwrite_model_parameter(
+        "mirror_reflection_random_angle",
+        "0.0080 0 0",
+        metadata={"unit": ["deg", "dimensionless", "deg"]},
+    )
     logger.debug(
         "tel._is_exported_model_files should still be True because the changed "
         "parameter was not a file"
@@ -553,11 +563,11 @@ def test_overwrite_parameters_with_version_dict(telescope_model_lst):
     """Test overwrite_parameters with dict containing version key."""
     tel_model = copy.deepcopy(telescope_model_lst)
 
-    changes = {"num_gains": {"value": 4, "version": "2.0.0"}}
+    changes = {"num_gains": {"value": 2, "version": "2.0.0"}}
 
     tel_model.overwrite_parameters(changes, flat_dict=True)
 
-    assert tel_model.parameters["num_gains"]["value"] == 4
+    assert tel_model.parameters["num_gains"]["value"] == 2
     assert tel_model.parameters["num_gains"]["parameter_version"] == "2.0.0"
 
 
@@ -566,11 +576,11 @@ def test_overwrite_parameters_with_simple_value(telescope_model_lst):
     tel_model = copy.deepcopy(telescope_model_lst)
 
     # Simple value (not a dict with 'value' or 'version' keys)
-    changes = {"num_gains": 5}
+    changes = {"num_gains": 2}
 
     tel_model.overwrite_parameters(changes, flat_dict=True)
 
-    assert tel_model.parameters["num_gains"]["value"] == 5
+    assert tel_model.parameters["num_gains"]["value"] == 2
 
 
 def test_overwrite_parameters_with_changes(telescope_model_lst):
@@ -581,7 +591,7 @@ def test_overwrite_parameters_with_changes(telescope_model_lst):
         tel_model.name: {
             "num_gains": {
                 "version": "1.0.0",
-                "value": 999,
+                "value": 2,
             }
         }
     }
@@ -589,7 +599,7 @@ def test_overwrite_parameters_with_changes(telescope_model_lst):
     tel_model.overwrite_parameters(changes)
 
     # Parameter should be changed
-    assert tel_model.parameters["num_gains"]["value"] == 999
+    assert tel_model.parameters["num_gains"]["value"] == 2
 
 
 def test_check_model_parameter_with_overwrite(model_version):
@@ -599,7 +609,7 @@ def test_check_model_parameter_with_overwrite(model_version):
         "LSTN-01": {
             "num_gains": {
                 "version": "1.0.0",
-                "value": 10,
+                "value": 2,
             }
         }
     }
@@ -614,7 +624,7 @@ def test_check_model_parameter_with_overwrite(model_version):
     )
 
     # The overwrite should have been applied during initialization
-    assert tel_model.parameters["num_gains"]["value"] == 10
+    assert tel_model.parameters["num_gains"]["value"] == 2
 
 
 def test__get_key_for_parameter_changes(telescope_model_lst):

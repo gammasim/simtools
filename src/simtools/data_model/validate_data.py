@@ -133,7 +133,7 @@ class DataValidator:
             self.logger.warning(f"File '{file_stem}' has no parameter version defined.")
 
     @staticmethod
-    def validate_model_parameter(par_dict):
+    def validate_model_parameter(par_dict, par_name=None):
         """
         Validate a simulation model parameter (static method).
 
@@ -141,14 +141,19 @@ class DataValidator:
         ----------
         par_dict: dict
             Data dictionary
+        par_name: str
+            Parameter name (optional, needed when not given in par_dict)
 
         Returns
         -------
         dict
             Validated data dictionary
         """
+        if par_name is None:
+            par_name = par_dict.get("parameter")
+
         data_validator = DataValidator(
-            schema_file=schema.get_model_parameter_schema_file(f"{par_dict['parameter']}"),
+            schema_file=schema.get_model_parameter_schema_file(f"{par_name}"),
             data_dict=par_dict,
             check_exact_data_type=False,
         )
@@ -223,22 +228,11 @@ class DataValidator:
             self.data_dict.get("model_parameter_schema_version", "0.1.0"),
         )
 
-        value_as_list, unit_as_list = self._get_value_and_units_as_lists()
-
-        for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
-            try:
-                value_as_list[index], unit_as_list[index] = self._validate_value_and_unit(
-                    value, unit, index
-                )
-            except TypeError as ex:
-                raise TypeError(
-                    f"Error validating dictionary using {self.schema_file_name}"
-                ) from ex
-
-        if len(value_as_list) == 1:
-            self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
+        # Validate heterogeneous lists (different type per element)
+        if self._is_heterogeneous_list(is_model_parameter):
+            self._validate_and_assign_heterogeneous_values()
         else:
-            self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
+            self._validate_and_assign_homogeneous_values(is_model_parameter)
 
         if self.data_dict.get("instrument"):
             if self.data_dict["instrument"] == self.data_dict["site"]:  # site parameters
@@ -258,6 +252,81 @@ class DataValidator:
             self._convert_results_to_model_format()
 
         return self.data_dict
+
+    def _validate_and_assign_heterogeneous_values(self):
+        """Validate and assign values/units for heterogeneous lists."""
+        value_as_list, _ = self._get_value_and_units_as_lists()
+        type_list = self._data_description[0].get("type")
+        try:
+            self._validate_heterogeneous_list(value_as_list, type_list)
+        except (ValueError, TypeError) as ex:
+            raise TypeError(
+                f"Error validating heterogeneous list using {self.schema_file_name}"
+            ) from ex
+
+        unit_as_list = self._get_unit_list_for_values(value_as_list)
+        for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
+            try:
+                value_as_list[index], unit_as_list[index] = self._validate_value_and_unit(
+                    value, unit, index
+                )
+            except TypeError as ex:
+                raise TypeError(
+                    f"Error validating heterogeneous element {index} using {self.schema_file_name}"
+                ) from ex
+
+        self._assign_validated_values(value_as_list, unit_as_list)
+
+    def _validate_and_assign_homogeneous_values(self, is_model_parameter):
+        """Validate and assign values/units for homogeneous lists."""
+        value_as_list, unit_as_list = self._get_value_and_units_as_lists()
+        expected_type = self._data_description[0].get("type") if self._data_description else None
+
+        if self._should_validate_homogeneous_list(
+            is_model_parameter,
+            expected_type,
+            value_as_list,
+        ):
+            try:
+                self._validate_homogeneous_list(value_as_list, expected_type)
+            except TypeError as ex:
+                raise TypeError(
+                    f"Error validating dictionary using {self.schema_file_name}"
+                ) from ex
+
+        for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
+            try:
+                value_as_list[index], unit_as_list[index] = self._validate_value_and_unit(
+                    value, unit, index
+                )
+            except TypeError as ex:
+                raise TypeError(
+                    f"Error validating dictionary using {self.schema_file_name}"
+                ) from ex
+
+        self._assign_validated_values(value_as_list, unit_as_list)
+
+    @staticmethod
+    def _should_validate_homogeneous_list(is_model_parameter, expected_type, value_as_list):
+        """Return True when homogeneous list type checks should be applied."""
+        if not is_model_parameter or not expected_type or isinstance(expected_type, list):
+            return False
+        if not isinstance(value_as_list, list) or len(value_as_list) <= 1:
+            return False
+        return value_as_list[0] is not None
+
+    def _get_unit_list_for_values(self, value_as_list):
+        """Return a per-value unit list from current data dict unit entry."""
+        if isinstance(self.data_dict.get("unit"), list):
+            return self.data_dict.get("unit", [])
+        return [self.data_dict.get("unit")] * len(value_as_list)
+
+    def _assign_validated_values(self, value_as_list, unit_as_list):
+        """Assign validated value/unit as scalar or list depending on list length."""
+        if len(value_as_list) == 1:
+            self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
+            return
+        self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
 
     def _validate_value_and_unit(self, value, unit, index):
         """
@@ -279,6 +348,96 @@ class DataValidator:
             for range_type in ("allowed_range", "required_range"):
                 self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
         return value, unit
+
+    def _is_heterogeneous_list(self, is_model_parameter=False):
+        """
+        Check if the parameter specification describes a heterogeneous list.
+
+        A heterogeneous list has different types for each element,
+        indicated by explicit type list in schema (only for model parameters).
+
+        Parameters
+        ----------
+        is_model_parameter: bool
+            True if this is a model parameter validation.
+
+        Returns
+        -------
+        bool
+            True if parameter is a heterogeneous list, False otherwise.
+        """
+        if not is_model_parameter or not isinstance(self._data_description, list):
+            return False
+
+        # For model parameters, check if the first item's type is a list
+        # (indicating different types per element)
+        if len(self._data_description) > 0:
+            first_item_type = self._data_description[0].get("type")
+            return isinstance(first_item_type, list)
+
+        return False
+
+    def _validate_heterogeneous_list(self, value_list, type_list):
+        """
+        Validate list where each element has a specific expected type.
+
+        Parameters
+        ----------
+        value_list: list
+            List of values to validate.
+        type_list: list
+            List of expected types, one per element.
+
+        Raises
+        ------
+        ValueError
+            If length of value_list does not match type_list.
+        TypeError
+            If any element's type is invalid.
+        """
+        if len(value_list) != len(type_list):
+            raise ValueError(
+                f"Length mismatch: parameter has {len(value_list)} elements "
+                f"but type specification has {len(type_list)} elements."
+            )
+
+        for i, (value, expected_type) in enumerate(zip(value_list, type_list)):
+            if not gen.validate_data_type(
+                reference_dtype=expected_type,
+                value=value,
+                dtype=None,
+                allow_subtypes=True,
+            ):
+                raise TypeError(
+                    f"Element {i}: expected type '{expected_type}', got {type(value).__name__}"
+                )
+
+    def _validate_homogeneous_list(self, value_list, expected_type):
+        """
+        Validate list where all elements must match the same type.
+
+        Parameters
+        ----------
+        value_list: list
+            List of values to validate.
+        expected_type: str
+            Expected type for all elements.
+
+        Raises
+        ------
+        TypeError
+            If any element fails type validation.
+        """
+        for i, value in enumerate(value_list):
+            if not gen.validate_data_type(
+                reference_dtype=expected_type,
+                value=value,
+                dtype=None,
+                allow_subtypes=True,
+            ):
+                raise TypeError(
+                    f"Element {i}: expected type '{expected_type}', got {type(value).__name__}"
+                )
 
     def _get_value_and_units_as_lists(self):
         """
@@ -584,12 +743,6 @@ class DataValidator:
 
         Convert to reference unit (e.g., Angstrom to nm).
 
-        Note on dimensionless columns:
-
-        - should be given in unit descriptor as unit: ''
-        - be forgiving and assume that in cases no unit is given in the data files
-          means that it should be dimensionless (e.g., for a efficiency)
-
         Parameters
         ----------
         data: astropy.column, Quantity, list, value
@@ -603,6 +756,9 @@ class DataValidator:
         -------
         data: astropy.column, Quantity, list, value
             unit-converted data
+        unit: str
+            Converted unit as a string. For None, no unit, or empty unit values,
+            "dimensionless" is returned.
 
         Raises
         ------
@@ -612,14 +768,19 @@ class DataValidator:
         """
         self._rate_limited_logger(col_name, f"Checking data column '{col_name}'")
 
-        reference_unit = self._get_reference_unit(col_name)
+        reference_unit = (self._get_reference_unit(col_name)).to_string()
+        if self._is_dimensionless(reference_unit):
+            reference_unit = "dimensionless"
         try:
             column_unit = data.unit
         except AttributeError:
             column_unit = unit
 
+        if self._is_dimensionless(column_unit):
+            column_unit = "dimensionless"
+
         if self._is_dimensionless(column_unit) and self._is_dimensionless(reference_unit):
-            return data, u.dimensionless_unscaled
+            return data, "dimensionless"
 
         self._rate_limited_logger(
             col_name,
