@@ -400,7 +400,12 @@ class ModelDataWriter:
             data_dict=product_data_dict,
             check_exact_data_type=False,
         )
-        return _validator.validate_and_transform(is_model_parameter)
+        validated = _validator.validate_and_transform(is_model_parameter)
+
+        if is_model_parameter and isinstance(validated, dict):
+            validated["unit"] = value_conversion.normalize_dimensionless_unit(validated.get("unit"))
+
+        return validated
 
     def write(self, product_data=None, metadata=None):
         """
@@ -488,6 +493,7 @@ class ModelDataWriter:
 
         """
         try:
+            data_dict["unit"] = value_conversion.normalize_dimensionless_unit(data_dict["unit"])
             if isinstance(data_dict["unit"], str):
                 data_dict["unit"] = data_dict["unit"].replace("None", "null")
             elif isinstance(data_dict["unit"], list):
