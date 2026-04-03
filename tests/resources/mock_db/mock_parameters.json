@@ -10,15 +10,15 @@
     "file": false
   },
   "mirror_focal_length": {
-    "value": 28.0,
+    "value": 2800.0,
     "type": "float64",
-    "unit": "m",
+    "unit": "cm",
     "file": false
   },
   "mirror_reflection_random_angle": {
-    "value": [0.0066, 0.0],
+    "value": [0.0066, 0.0, 0.0],
     "type": "float64",
-    "unit": "deg",
+    "unit": ["deg", null, "deg"],
     "file": false
   },
   "telescope_axis_height": {
