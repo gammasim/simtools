@@ -18,6 +18,7 @@ data:
       - Cone
       - FilledCone
       - Parallel
+      - Lambertian
 instrument:
   class: Calibration
 activity:

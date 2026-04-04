@@ -179,7 +179,7 @@ def test_dump_model_parameter(tmp_test_directory):
     assert (Path(tmp_test_directory) / "num_gains.json").is_file()
     assert isinstance(num_gains_dict, dict)
     assert num_gains_dict["value"] == 2
-    assert num_gains_dict["unit"] == u.dimensionless_unscaled
+    assert num_gains_dict["unit"] is None
 
     # list of value, with unit
     position_dict = writer.ModelDataWriter.dump_model_parameter(
@@ -256,7 +256,7 @@ def test_get_validated_parameter_dict():
         "parameter_version": "0.0.1",
         "unique_id": None,
         "value": 2,
-        "unit": u.Unit(""),
+        "unit": None,
         "type": "int64",
         "file": False,
         "meta_parameter": False,
