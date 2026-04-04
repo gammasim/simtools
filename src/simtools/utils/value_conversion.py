@@ -10,6 +10,44 @@ import simtools.utils.general as gen
 
 _logger = logging.getLogger(__name__)
 
+_DIMENSIONLESS_UNITS = (None, "", "dimensionless", "null")
+
+
+def is_dimensionless_unit(unit):
+    """
+    Return True if unit encodes a dimensionless quantity.
+
+    Parameters
+    ----------
+    unit: str or None
+        Unit to be checked.
+
+    Returns
+    -------
+    bool        True if the unit encodes a dimensionless quantity, False otherwise.
+    """
+    return unit in _DIMENSIONLESS_UNITS
+
+
+def normalize_dimensionless_unit(unit):
+    """
+    Normalize dimensionless unit markers to None.
+
+    Parameters
+    ----------
+    unit: str or None
+        Unit to be normalized.
+
+    Returns
+    -------
+    str or None
+        Normalized unit, where dimensionless units are converted to None.
+
+    """
+    if isinstance(unit, list | np.ndarray):
+        return [normalize_dimensionless_unit(entry) for entry in unit]
+    return None if is_dimensionless_unit(unit) else unit
+
 
 def extract_type_of_value(value) -> str:
     """
@@ -181,7 +219,7 @@ def get_value_as_quantity(value, unit):
     elif not isinstance(value, int | float):
         return value
 
-    if unit is None or unit == "null":
+    if is_dimensionless_unit(unit):
         return value * u.dimensionless_unscaled
 
     return value * u.Unit(unit)
