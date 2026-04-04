@@ -743,7 +743,7 @@ class DatabaseHandler:
         par_dict["value"], _base_unit, _ = value_conversion.get_value_unit_type(
             value=par_dict["value"], unit_str=par_dict.get("unit", None)
         )
-        par_dict["unit"] = _base_unit if _base_unit else None
+        par_dict["unit"] = value_conversion.normalize_dimensionless_unit(_base_unit)
 
         files_to_add_to_db = set()
         if par_dict["file"] and par_dict["value"]:

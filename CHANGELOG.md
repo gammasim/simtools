@@ -70,6 +70,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 ### Maintenance
 
+- Switch to 'trigger manually only' for legacy build workflows for CORSIKA, sim_telarray and simtools.  ([#1993](https://github.com/gammasim/simtools/pull/1993))
 - Update author list. ([#2019](https://github.com/gammasim/simtools/pull/2019))
 - Refactor visualization of flasher events to a more generic module (preparation for a long integration test). ([#2023](https://github.com/gammasim/simtools/pull/2023))
 - Reduce verbose debug messages:
