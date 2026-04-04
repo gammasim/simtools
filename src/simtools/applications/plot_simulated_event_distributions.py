@@ -25,25 +25,24 @@ Generate plots from a given input file:
 
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.visualization import plot_simtel_event_histograms
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Plot simulated event distributions for shower and/or triggered event data.",
-    )
-    config.parser.add_argument("--input_file", type=str, required=True, help="Input file path")
-    return config.initialize(db_config=False, output=True)
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument("--input_file", type=str, required=True, help="Input file path")
 
 
 def main():
     """Plot simulated event distributions."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description="Plot simulated event distributions for shower and/or triggered event data.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={"db_config": False, "output": True},
+    )
     app_context.logger.info(f"Loading input file from: {app_context.args['input_file']}")
 
     histograms = EventDataHistograms(app_context.args["input_file"])

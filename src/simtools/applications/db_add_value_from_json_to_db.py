@@ -29,38 +29,38 @@ import uuid
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.db import db_handler
 from simtools.io import ascii_handler
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__), description="Add a new parameter to the DB."
-    )
-    group = config.parser.add_mutually_exclusive_group(required=True)
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--file_name", help="file to be added", type=str)
     group.add_argument(
         "--input_path",
         help="A directory with json files to upload to the DB.",
         type=Path,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--db_collection", help="DB collection to which to add new values.", required=True
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--test_db",
         help="Use sandbox database. Drop all data after the operation.",
         action="store_true",
     )
-    return config.initialize(db_config=True)
 
 
 def main():
     """Add value from JSON to database."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description="Add a new parameter to the DB.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={"db_config": True},
+    )
 
     if app_context.args.get("test_db", False):
         app_context.db_config["db_simulation_model_version"] = str(uuid.uuid4())

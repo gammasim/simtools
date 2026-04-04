@@ -53,24 +53,20 @@ r"""
 
 from pathlib import Path
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.db import db_handler, db_model_upload
+from simtools.settings import config
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Add or update a model parameter database to the DB",
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--input_path",
         help="Path to simulation model repository.",
         type=Path,
         required=True,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--type",
         help="Type of data to be uploaded to the database.",
         type=str,
@@ -79,19 +75,31 @@ def _parse():
         choices=["model_parameters", "production_tables"],
     )
 
-    args_dict, db_config = config.initialize(output=True, require_command_line=True, db_config=True)
-    if args_dict.get("db_simulation_model") and args_dict.get("db_simulation_model_version"):
-        # overwrite explicitly DB configuration
-        db_config["db_simulation_model"] = args_dict["db_simulation_model"]
-        db_config["db_simulation_model_version"] = args_dict["db_simulation_model_version"]
-    else:
-        raise ValueError("Both db_simulation_model and db_simulation_model_version are required.")
-    return args_dict, db_config
-
 
 def main():
     """Add or update a model parameter database to the DB."""
-    app_context = startup_application(_parse, setup_io_handler=False)
+    app_context = build_application(
+        __file__,
+        description="Add or update a model parameter database to the DB",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "output": True,
+            "require_command_line": True,
+            "db_config": True,
+        },
+        startup_kwargs={"setup_io_handler": False},
+    )
+
+    if app_context.args.get("db_simulation_model") and app_context.args.get(
+        "db_simulation_model_version"
+    ):
+        app_context.db_config["db_simulation_model"] = app_context.args["db_simulation_model"]
+        app_context.db_config["db_simulation_model_version"] = app_context.args[
+            "db_simulation_model_version"
+        ]
+        config.load(app_context.args, app_context.db_config)
+    else:
+        raise ValueError("Both db_simulation_model and db_simulation_model_version are required.")
 
     db = db_handler.DatabaseHandler()
 

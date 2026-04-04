@@ -859,8 +859,8 @@ def _run_ray_tracing_simulation(tel_model, site_model, args_dict, pars):
         telescope_model=tel_model,
         site_model=site_model,
         label=args_dict.get("label") or getattr(tel_model, "label", None),
-        zenith_angle=args_dict["zenith"] * u.deg,
-        source_distance=args_dict["src_distance"] * u.km,
+        zenith_angle=args_dict["zenith_angle"],
+        source_distance=args_dict["source_distance"],
         off_axis_angle=[0.0] * u.deg,
     )
     ray.simulate(test=args_dict.get("test", False), force=True)

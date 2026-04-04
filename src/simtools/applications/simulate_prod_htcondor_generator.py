@@ -45,47 +45,46 @@ priority (int, optional)
 
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.job_execution import htcondor_script_generator
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Prepare simulations production for HT Condor job submission",
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--number_of_runs",
         help="Number of runs to be simulated.",
         type=int,
         required=True,
         default=1,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--apptainer_image",
         help="Apptainer image to use for the simulation (full path).",
         type=str,
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--priority",
         help="Job priority.",
         type=int,
         required=False,
         default=1,
     )
-    return config.initialize(
-        db_config=False,
-        simulation_model=["site", "layout", "telescope", "model_version"],
-        simulation_configuration={"software": None, "corsika_configuration": ["all"]},
-    )
 
 
 def main():
     """Generate HT Condor submission script and submit file."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description="Prepare simulations production for HT Condor job submission",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": False,
+            "simulation_model": ["site", "layout", "telescope", "model_version"],
+            "simulation_configuration": {"software": None, "corsika_configuration": ["all"]},
+        },
+    )
 
     htcondor_script_generator.generate_submission_script(app_context.args)
 

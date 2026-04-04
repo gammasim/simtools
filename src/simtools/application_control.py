@@ -9,6 +9,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools import dependencies, version
+from simtools.configuration import configurator
 from simtools.db import db_handler
 from simtools.io import io_handler
 from simtools.settings import config
@@ -138,6 +139,66 @@ class ApplicationContext:
     db_config: dict
     logger: logging.Logger
     io_handler: io_handler.IOHandler | None
+
+
+def build_application(
+    application_path,
+    description=None,
+    add_arguments_function=None,
+    initialization_kwargs=None,
+    startup_kwargs=None,
+    usage=None,
+    epilog=None,
+    parse_function=None,
+):
+    """
+    Build and start an application using the standard simtools startup flow.
+
+    Parameters
+    ----------
+    application_path : str
+        Application file path, typically ``__file__``.
+    description : str, optional
+        Application description shown in the CLI help.
+    add_arguments_function : callable, optional
+        Function receiving the application's ``CommandLineParser`` instance to register
+        application-specific arguments.
+    initialization_kwargs : dict, optional
+        Keyword arguments forwarded to ``Configurator.initialize``.
+    startup_kwargs : dict, optional
+        Keyword arguments forwarded to ``startup_application``.
+    usage : str, optional
+        CLI usage string.
+    epilog : str, optional
+        CLI epilog.
+    parse_function : callable, optional
+        Existing parser function returning ``(args_dict, db_config)``. If provided,
+        ``build_application`` delegates directly to ``startup_application`` with this
+        parser function.
+
+    Returns
+    -------
+    ApplicationContext
+        Application context returned by ``startup_application``.
+    """
+    initialization_kwargs = initialization_kwargs or {}
+    startup_kwargs = startup_kwargs or {}
+
+    if parse_function is not None:
+        return startup_application(parse_function, **startup_kwargs)
+
+    def _parse():
+        config_builder = configurator.Configurator(
+            label=get_application_label(application_path),
+            usage=usage,
+            description=description,
+            epilog=epilog,
+        )
+        if add_arguments_function is not None:
+            add_arguments_function(config_builder.parser)
+        return config_builder.initialize(**initialization_kwargs)
+
+    return startup_application(_parse, **startup_kwargs)
 
 
 def startup_application(parse_function, setup_io_handler=True, logger_name=None):

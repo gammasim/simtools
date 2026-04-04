@@ -142,44 +142,34 @@ Plot layout with some telescopes grayed out and others highlighted:
 """
 
 import simtools.layout.array_layout_utils as layout_utils
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.visualization.plot_array_layout import plot_array_layouts
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Plots array layout.",
-        usage=(
-            "Use '--array_layout_name plot_all' to plot all layouts for the given site "
-            "and model version."
-        ),
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--figure_name",
         help="Name of the output figure to be saved into as a pdf.",
         type=str,
         required=False,
         default=None,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--show_labels",
         help="Plot array element labels.",
         action="store_true",
         required=False,
         default=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--marker_scaling",
         help="Scaling factor for the markers.",
         type=float,
         required=False,
         default=1.0,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--coordinate_system",
         help="Coordinate system for the array layout.",
         type=str,
@@ -187,14 +177,14 @@ def _parse():
         default="ground",
         choices=["ground", "utm"],
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--axes_range",
         help="Range of the both axes in meters.",
         type=float,
         required=False,
         default=None,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--x_lim",
         help="Explicit x-axis limits [xmin xmax] in meters.",
         type=float,
@@ -203,7 +193,7 @@ def _parse():
         default=None,
         metavar=("XMIN", "XMAX"),
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--y_lim",
         help="Explicit y-axis limits [ymin ymax] in meters.",
         type=float,
@@ -212,14 +202,14 @@ def _parse():
         default=None,
         metavar=("YMIN", "YMAX"),
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--array_layout_name_background",
         help="Name of the background layout array (e.g., test_layout, alpha, 4mst, etc.).",
         type=str,
         required=False,
         default=None,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--grayed_out_array_elements",
         help="List of array elements to plot as gray circles.",
         type=str,
@@ -227,7 +217,7 @@ def _parse():
         required=False,
         default=None,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--highlighted_array_elements",
         help="List of array elements to plot with red circles around them.",
         type=str,
@@ -235,7 +225,7 @@ def _parse():
         required=False,
         default=None,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--legend_location",
         help=(
             "Location of the legend (e.g., 'best', 'upper right', 'upper left', "
@@ -246,7 +236,7 @@ def _parse():
         required=False,
         default="best",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--bounds",
         help=("Axis bounds mode: 'symmetric' uses +-R with padding, 'exact' uses per-axis min/max"),
         type=str,
@@ -254,29 +244,35 @@ def _parse():
         required=False,
         default="symmetric",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--padding",
         help=("Fractional padding applied around computed extents (used for both modes)."),
         type=float,
         required=False,
         default=0.1,
     )
-    return config.initialize(
-        db_config=True,
-        simulation_model=[
-            "site",
-            "model_version",
-            "layout",
-            "layout_file",
-            "plot_all_layouts",
-            "layout_parameter_file",
-        ],
-    )
 
 
 def main():
     """Plot array layout application."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description="Plots array layout.",
+        usage="Use '--array_layout_name plot_all' to plot all layouts for the given site "
+        "and model version.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": [
+                "site",
+                "model_version",
+                "layout",
+                "layout_file",
+                "plot_all_layouts",
+                "layout_parameter_file",
+            ],
+        },
+    )
 
     layouts, background_layout = layout_utils.read_layouts(app_context.args)
     plot_array_layouts(

@@ -33,32 +33,30 @@
 
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.db import db_handler
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Get file(s) from the DB.",
-        usage="simtools-get-file-from-db --file_name mirror_CTA-S-LST_v2020-04-07.dat",
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--file_name",
         help="The name of the file(s) to be downloaded (single file or space-separated list).",
         type=str,
         nargs="+",
         required=True,
     )
-    return config.initialize(db_config=True, output=True)
 
 
 def main():
     """Get file from database."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description="Get file(s) from the DB.",
+        usage="simtools-get-file-from-db --file_name mirror_CTA-S-LST_v2020-04-07.dat",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={"db_config": True, "output": True},
+    )
 
     db = db_handler.DatabaseHandler()
     file_id = db.export_model_files(

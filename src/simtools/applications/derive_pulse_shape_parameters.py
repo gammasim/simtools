@@ -52,34 +52,26 @@ Derive parameters for a pulse with 2.5 ns rise (10-90%) and
 import logging
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.pulse_shapes import solve_sigma_tau_from_rise_fall
 
 
-def _parse():
-    """Parse command line configuration for parameter derivation."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=(
-            "Derive Gaussian sigma and exponential tau from rise/fall width specifications."
-        ),
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--rise_width_ns",
         help="Wdth on the rising edge in ns between rise_range fractions.",
         type=float,
         required=True,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--fall_width_ns",
         help="Width on the falling edge in ns between fall_range fractions.",
         type=float,
         required=True,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--rise_range",
         help="Fractional amplitudes (low high) for rise width, e.g. 0.1 0.9",
         type=float,
@@ -87,7 +79,7 @@ def _parse():
         default=[0.1, 0.9],
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--fall_range",
         help="Fractional amplitudes (high low) for fall width, e.g. 0.9 0.1",
         type=float,
@@ -95,14 +87,14 @@ def _parse():
         default=[0.9, 0.1],
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--dt_ns",
         help="Time sampling step in ns used by the solver.",
         type=float,
         default=0.1,
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--time_margin_ns",
         help=(
             "Margin (ns) added to both ends of the instrument readout window when deriving the "
@@ -113,16 +105,21 @@ def _parse():
         required=False,
     )
 
-    return config.initialize(
-        db_config=True,
-        simulation_model=["site", "telescope", "model_version", "parameter_version"],
-        output=True,
-    )
-
 
 def main():
     """Run parameter derivation and write results."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description=(
+            "Derive Gaussian sigma and exponential tau from rise/fall width specifications."
+        ),
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["site", "telescope", "model_version", "parameter_version"],
+            "output": True,
+        },
+    )
     log = logging.getLogger(__name__)
 
     rise_width_ns = app_context.args["rise_width_ns"]
@@ -132,7 +129,7 @@ def main():
     dt_ns = app_context.args["dt_ns"]
     time_margin_ns = app_context.args["time_margin_ns"]
     site = app_context.args["site"]
-    label = app_context.args.get("label") or get_application_label(__file__)
+    label = app_context.args.get("label") or app_context.args["application_label"]
     telescope_model, _, _ = initialize_simulation_models(
         label=label,
         model_version=app_context.args["model_version"],

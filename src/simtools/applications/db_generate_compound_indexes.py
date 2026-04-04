@@ -13,29 +13,29 @@ db_name (str, optional)
     Database name (use "all" for all databases)
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.db import db_handler
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        description="Generate compound indexes for a specific database",
-        label=get_application_label(__file__),
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--db_name",
         help="Database name",
         default=None,
         required=False,
     )
-    return config.initialize(db_config=True)
 
 
 def main():
     """Generate compound indexes for the specified database."""
-    app_context = startup_application(_parse, setup_io_handler=False)
+    app_context = build_application(
+        __file__,
+        description="Generate compound indexes for a specific database",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={"db_config": True},
+        startup_kwargs={"setup_io_handler": False},
+    )
 
     db = db_handler.DatabaseHandler()
 

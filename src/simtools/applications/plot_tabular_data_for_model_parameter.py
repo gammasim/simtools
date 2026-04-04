@@ -46,33 +46,34 @@ Plot tabular data for all types defined in the schema file:
 
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.visualization import plot_tables
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Plots tabular data for a model parameter.",
-    )
-
-    config.parser.add_argument("--parameter", type=str, required=True, help="Parameter name.")
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument("--parameter", type=str, required=True, help="Parameter name.")
+    parser.add_argument(
         "--plot_type",
         help="Plot type as defined in the schema file.",
         type=str,
         required=True,
         default=None,
     )
-    return config.initialize(db_config=True, simulation_model=["telescope", "parameter_version"])
 
 
 def main():
     """Plot tabular data."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description="Plots tabular data for a model parameter.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["telescope", "parameter_version"],
+        },
+    )
 
     plot_configs, output_files = plot_tables.generate_plot_configurations(
         parameter=app_context.args["parameter"],

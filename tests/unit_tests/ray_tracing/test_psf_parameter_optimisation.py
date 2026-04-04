@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+from astropy import units as u
 
 import simtools.ray_tracing.psf_parameter_optimisation as psf_opt
 
@@ -55,8 +56,8 @@ def mock_args_dict():
         "learning_rate": 0.1,
         "test": True,
         "plot_all": False,
-        "zenith": 20.0,
-        "src_distance": 10.0,
+        "zenith_angle": 20.0 * u.deg,
+        "source_distance": 10.0 * u.km,
         "monte_carlo_analysis": False,
         "rmsd_threshold": 0.01,
         "fraction": 0.8,

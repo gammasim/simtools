@@ -23,7 +23,7 @@ def config_data():
         "site": "North",
         "model_version": "prod6",
         "off_axis_angle": 0.0 * u.deg,
-        "source_distance": 10.0,  # km
+        "source_distance": 10.0 * u.km,
         "number_of_photons": 1000,
     }
 

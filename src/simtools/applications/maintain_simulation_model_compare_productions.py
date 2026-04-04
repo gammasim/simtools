@@ -16,30 +16,24 @@ Example
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.io import ascii_handler
 
 
-def _parse():
-    """Parse command line arguments."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Compare two directories with model production tables in JSON format.",
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--directory_1",
         type=str,
         required=True,
         help="Path to the first directory containing JSON files.",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--directory_2",
         type=str,
         required=True,
         help="Path to the second directory containing JSON files.",
     )
-    return config.initialize(db_config=False, output=False)
 
 
 def _print_differences(differences, rel_path):
@@ -87,7 +81,13 @@ def _compare_json_dirs(dir1, dir2, ignore_key="model_version"):
 
 def main():
     """Compare two directories with model production tables in JSON format."""
-    app_context = startup_application(_parse, setup_io_handler=False)
+    app_context = build_application(
+        __file__,
+        description="Compare two directories with model production tables in JSON format.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={"db_config": False, "output": False},
+        startup_kwargs={"setup_io_handler": False},
+    )
 
     _compare_json_dirs(Path(app_context.args["directory_1"]), Path(app_context.args["directory_2"]))
 

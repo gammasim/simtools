@@ -44,23 +44,15 @@ r"""
     The output is saved in simtools-output/validate_camera_efficiency.
 """
 
-from simtools.application_control import get_application_label, startup_application
+from simtools.application_control import build_application
 from simtools.camera.camera_efficiency import CameraEfficiency
-from simtools.configuration import configurator
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.utils import names
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=(
-            "Calculate the camera efficiency and NSB pixel rates. "
-            "Plot the camera efficiency vs wavelength for Cherenkov and NSB light."
-        ),
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--nsb_spectrum",
         help=(
             "File with NSB spectrum to use for the efficiency simulation."
@@ -73,7 +65,7 @@ def _parse():
         default=None,
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--skip_correction_to_nsb_spectrum",
         help=(
             "Skip correction to the NSB spectrum to account for the "
@@ -83,27 +75,38 @@ def _parse():
         required=False,
         action="store_true",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--write_reference_nsb_rate_as_parameter",
         help=("Write the NSB pixel rate obtained for reference conditions as a model parameter "),
         action="store_true",
         required=False,
     )
-    args_dict, db_config = config.initialize(
-        db_config=True,
-        simulation_model=["telescope", "model_version", "parameter_version"],
-        simulation_configuration={"corsika_configuration": ["zenith_angle", "azimuth_angle"]},
-    )
+
+
+def _validate_required_args(args_dict):
+    """Validate required arguments that must be explicitly provided."""
     if args_dict["site"] is None or args_dict["telescope"] is None:
-        config.parser.print_help()
-        print("\n\nSite and telescope must be provided\n\n")
         raise RuntimeError("Site and telescope must be provided")
-    return args_dict, db_config
 
 
 def main():
     """Calculate the camera efficiency and NSB pixel rates."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description=(
+            "Calculate the camera efficiency and NSB pixel rates. "
+            "Plot the camera efficiency vs wavelength for Cherenkov and NSB light."
+        ),
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["telescope", "model_version", "parameter_version"],
+            "simulation_configuration": {
+                "corsika_configuration": ["zenith_angle", "azimuth_angle"]
+            },
+        },
+    )
+    _validate_required_args(app_context.args)
 
     results = {}
     for efficiency_type in ["Shower", "NSB", "Muon"]:

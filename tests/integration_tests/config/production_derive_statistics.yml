@@ -10,7 +10,7 @@ applications:
     metrics_file: tests/resources/production_simulation_config_metrics.yml
     nsb:
     - 1
-    offsets:
+    off_axis_angles:
     - 0
     output_file: interpolated_production_statistics.json
     output_path: simtools-output

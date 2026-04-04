@@ -11,6 +11,7 @@ import pytest
 from simtools.application_control import (
     _resolve_model_version_to_latest_patch,
     _version_info,
+    build_application,
     get_application_label,
     get_log_file,
     setup_logging,
@@ -167,6 +168,43 @@ def test_get_application_label(file_path, expected):
     """Test get_application_label function."""
     result = get_application_label(file_path)
     assert result == expected
+
+
+def test_build_application(mocker, tmp_test_directory):
+    """Test build_application wraps Configurator and startup_application."""
+    startup_mock = mocker.patch(
+        "simtools.application_control.startup_application",
+        return_value="app_context",
+    )
+    configurator_class = mocker.patch("simtools.application_control.configurator.Configurator")
+    configurator_instance = configurator_class.return_value
+    configurator_instance.initialize.return_value = ({"log_level": "info"}, {})
+    add_arguments = MagicMock()
+
+    result = build_application(
+        str(tmp_test_directory / "test_application.py"),
+        description="Test description",
+        add_arguments_function=add_arguments,
+        initialization_kwargs={"output": True},
+        startup_kwargs={"setup_io_handler": False},
+    )
+
+    assert result == "app_context"
+    startup_mock.assert_called_once()
+
+    parse_function = startup_mock.call_args.args[0]
+    startup_kwargs = startup_mock.call_args.kwargs
+
+    assert startup_kwargs == {"setup_io_handler": False}
+    assert parse_function() == ({"log_level": "info"}, {})
+    configurator_class.assert_called_once_with(
+        label="test_application",
+        usage=None,
+        description="Test description",
+        epilog=None,
+    )
+    add_arguments.assert_called_once_with(configurator_instance.parser)
+    configurator_instance.initialize.assert_called_once_with(output=True)
 
 
 def test_startup_application_basic():

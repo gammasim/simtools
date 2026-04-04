@@ -72,14 +72,12 @@ class CommandLineParser(argparse.ArgumentParser):
             help="simtools configuration file",
             default=None,
             type=str,
-            required=False,
         )
         _job_group.add_argument(
             "--env_file",
             help="file with environment variables",
             default=".env",
             type=str,
-            required=False,
         )
 
     def initialize_path_arguments(self):
@@ -90,27 +88,23 @@ class CommandLineParser(argparse.ArgumentParser):
             help="path pointing towards data directory",
             type=Path,
             default="./data/",
-            required=False,
         )
         _job_group.add_argument(
             "--output_path",
             help="path pointing towards output directory",
             type=Path,
             default="./simtools-output/",
-            required=False,
         )
         _job_group.add_argument(
             "--model_path",
             help="path pointing towards simulation model file directory",
             type=Path,
             default="./",
-            required=False,
         )
         _job_group.add_argument(
             "--sim_telarray_path",
             help="path pointing to sim_telarray installation",
             type=Path,
-            required=False,
         )
 
     def initialize_output_arguments(self):
@@ -120,20 +114,16 @@ class CommandLineParser(argparse.ArgumentParser):
             "--output_file",
             help="output data file",
             type=str,
-            required=False,
         )
         _job_group.add_argument(
             "--output_file_format",
             help="file format of output data",
             type=str,
             default="ecsv",
-            required=False,
         )
         _job_group.add_argument(
             "--skip_output_validation",
             help="skip output data validation against schema",
-            default=False,
-            required=False,
             action="store_true",
         )
 
@@ -144,24 +134,20 @@ class CommandLineParser(argparse.ArgumentParser):
             "--test",
             help="test option for faster execution during development",
             action="store_true",
-            required=False,
         )
         _job_group.add_argument(
             "--label",
             help="job label",
-            required=False,
         )
         _job_group.add_argument(
             "--log_level",
             action="store",
             default="info",
             help="log level to print",
-            required=False,
         )
         _job_group.add_argument(
             "--log_file",
             help="log file path",
-            required=False,
             type=Path,
         )
         _job_group.add_argument(
@@ -176,68 +162,33 @@ class CommandLineParser(argparse.ArgumentParser):
         _job_group.add_argument(
             "--export_build_info",
             help="export build information to file",
-            required=False,
             type=str,
         )
 
     def initialize_user_arguments(self):
         """Initialize user arguments."""
         _job_group = self.add_argument_group("user")
-        _job_group.add_argument(
-            "--user_name",
-            help="user name",
-            type=str,
-            required=False,
-        )
-        _job_group.add_argument(
-            "--user_organization",
-            help="user organization",
-            type=str,
-            required=False,
-        )
-        _job_group.add_argument(
-            "--user_email",
-            help="user email",
-            type=str,
-            required=False,
-        )
-        _job_group.add_argument(
-            "--user_orcid",
-            help="user ORCID",
-            type=str,
-            required=False,
-        )
+        for flag, help_text in [
+            ("user_name", "user name"),
+            ("user_organization", "user organization"),
+            ("user_email", "user email"),
+            ("user_orcid", "user ORCID"),
+        ]:
+            _job_group.add_argument(f"--{flag}", help=help_text, type=str)
 
     def initialize_db_config_arguments(self):
         """Initialize DB configuration parameters."""
         _job_group = self.add_argument_group("database configuration")
-        _job_group.add_argument("--db_api_user", help="database user", type=str, required=False)
-        _job_group.add_argument("--db_api_pw", help="database password", type=str, required=False)
-        _job_group.add_argument("--db_api_port", help="database port", type=int, required=False)
-        _job_group.add_argument(
-            "--db_server", help="database server address", type=str, required=False
-        )
-        _job_group.add_argument(
-            "--db_api_authentication_database",
-            help="database  with user info (optional)",
-            type=str,
-            required=False,
-            default=None,
-        )
-        _job_group.add_argument(
-            "--db_simulation_model",
-            help="name of simulation model database",
-            type=str.strip,
-            required=False,
-            default=None,
-        )
-        _job_group.add_argument(
-            "--db_simulation_model_version",
-            help="version of simulation model database",
-            type=str.strip,
-            required=False,
-            default=None,
-        )
+        for flag, help_text, arg_type in [
+            ("db_api_user", "database user", str),
+            ("db_api_pw", "database password", str),
+            ("db_api_port", "database port", int),
+            ("db_server", "database server address", str),
+            ("db_api_authentication_database", "database with user info (optional)", str),
+            ("db_simulation_model", "name of simulation model database", str.strip),
+            ("db_simulation_model_version", "version of simulation model database", str.strip),
+        ]:
+            _job_group.add_argument(f"--{flag}", help=help_text, type=arg_type)
 
     def initialize_simulation_model_arguments(self, model_options):
         """
@@ -273,7 +224,6 @@ class CommandLineParser(argparse.ArgumentParser):
             "--overwrite_model_parameters",
             help="File name to overwrite model parameters from DB with provided values",
             type=str,
-            required=False,
         )
 
         if any(
@@ -308,7 +258,6 @@ class CommandLineParser(argparse.ArgumentParser):
             "--ignore_missing_design_model",
             help="Ignore missing design model definition of DB",
             action="store_true",
-            required=False,
         )
 
     def initialize_simulation_configuration_arguments(self, simulation_configuration):
@@ -324,36 +273,48 @@ class CommandLineParser(argparse.ArgumentParser):
             return
 
         if "software" in simulation_configuration:
-            self._initialize_simulation_software()
-        if "corsika_configuration" in simulation_configuration:
-            self._initialize_simulation_configuration(
-                group_name="simulation configuration",
-                selected_parameters=simulation_configuration["corsika_configuration"],
-                available_parameters=self._get_dictionary_with_corsika_configuration(),
+            _grp = self.add_argument_group("simulation software")
+            _grp.add_argument(
+                "--simulation_software",
+                help="Simulation software steps.",
+                type=str,
+                choices=["corsika", "sim_telarray", "corsika_sim_telarray"],
+                required=True,
+                default="corsika_sim_telarray",
             )
-            self._initialize_simulation_configuration(
-                group_name="shower parameters",
-                selected_parameters=simulation_configuration["corsika_configuration"],
-                available_parameters=self._get_dictionary_with_shower_configuration(),
+        if "corsika_configuration" in simulation_configuration:
+            self._initialize_argument_group(
+                "simulation configuration",
+                simulation_configuration["corsika_configuration"],
+                self._get_dictionary_with_corsika_configuration(),
+            )
+            self._initialize_argument_group(
+                "shower parameters",
+                simulation_configuration["corsika_configuration"],
+                _SHOWER_ARGS,
             )
         if "sim_telarray_configuration" in simulation_configuration:
-            self._initialize_simulation_configuration(
-                group_name="sim_telarray configuration",
-                selected_parameters=simulation_configuration["sim_telarray_configuration"],
-                available_parameters=self._get_dictionary_with_sim_telarray_configuration(),
+            self._initialize_argument_group(
+                "sim_telarray configuration",
+                simulation_configuration["sim_telarray_configuration"],
+                _SIMTEL_ARGS,
             )
 
-    def _initialize_simulation_software(self):
-        """Initialize simulation software arguments."""
-        _software_group = self.add_argument_group("simulation software")
-        _software_group.add_argument(
-            "--simulation_software",
-            help="Simulation software steps.",
-            type=str,
-            choices=["corsika", "sim_telarray", "corsika_sim_telarray"],
-            required=True,
-            default="corsika_sim_telarray",
-        )
+    def initialize_application_arguments(self, selected_parameters, group_name="application"):
+        """
+        Initialize reusable application-specific arguments.
+
+        Parameters
+        ----------
+        selected_parameters : list
+            List of application argument names to initialize.
+        group_name : str, optional
+            Name of the argument group.
+        """
+        if selected_parameters is None:
+            return
+
+        self._initialize_argument_group(group_name, selected_parameters, _APPLICATION_ARGS)
 
     @staticmethod
     def _get_dictionary_with_corsika_configuration():
@@ -374,7 +335,6 @@ class CommandLineParser(argparse.ArgumentParser):
             "primary_id_type": {
                 "help": "Primary particle ID type",
                 "type": str,
-                "required": False,
                 "choices": ["common_name", "corsika7_id", "pdg_id"],
                 "default": "common_name",
             },
@@ -397,12 +357,10 @@ class CommandLineParser(argparse.ArgumentParser):
             "nshow": {
                 "help": "Number of showers per run to simulate.",
                 "type": int,
-                "required": False,
             },
             "run_number_offset": {
                 "help": "An offset for the run number to be simulated.",
                 "type": int,
-                "required": False,
                 "default": 0,
             },
             "run_number": {
@@ -414,13 +372,11 @@ class CommandLineParser(argparse.ArgumentParser):
             "event_number_first_shower": {
                 "help": "Event number of first shower",
                 "type": int,
-                "required": False,
                 "default": 1,
             },
             "correct_for_b_field_alignment": {
                 "help": "Correct for B-field alignment",
                 "action": "store_true",
-                "required": False,
                 "default": True,
             },
             "curved_atmosphere_min_zenith_angle": {
@@ -428,96 +384,12 @@ class CommandLineParser(argparse.ArgumentParser):
                     "Minimum zenith angle (deg) for using curved-atmosphere CORSIKA binaries. "
                 ),
                 "type": CommandLineParser.zenith_angle,
-                "required": False,
                 "default": 65 * u.deg,
             },
         }
 
-    @staticmethod
-    def _get_dictionary_with_shower_configuration():
-        """Return dictionary with shower configuration parameters."""
-        return {
-            "eslope": {
-                "help": "Slope of the energy spectrum.",
-                "type": float,
-                "required": False,
-                "default": -2.0,
-            },
-            "energy_range": {
-                "help": (
-                    "Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV')."
-                ),
-                "type": CommandLineParser.parse_quantity_pair,
-                "required": False,
-                "default": ["3 GeV 330 TeV"],
-            },
-            "view_cone": {
-                "help": (
-                    "View cone radius for primary arrival directions "
-                    "(min/max value, e.g. '0 deg 10 deg')."
-                ),
-                "type": CommandLineParser.parse_quantity_pair,
-                "required": False,
-                "default": ["0 deg 0 deg"],
-            },
-            "core_scatter": {
-                "help": "Scatter radius for shower cores (number of use; scatter radius).",
-                "type": CommandLineParser.parse_integer_and_quantity,
-                "required": False,
-                "default": ["10 1400 m"],
-            },
-        }
-
-    @staticmethod
-    def _get_dictionary_with_sim_telarray_configuration():
-        """Return dictionary with sim_telarray configuration parameters."""
-        return {
-            "sim_telarray_instrument_seed": {
-                "help": "Random seed used for sim_telarray instrument setup.",
-                "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
-                "required": False,
-            },
-            "sim_telarray_random_instrument_instances": {
-                "help": "Number of random instrument instances initialized in sim_telarray.",
-                "type": CommandLineParser.bounded_int(1, 1024),
-                "required": False,
-                "default": 1,
-            },
-            "sim_telarray_seed": {
-                "help": (
-                    "Random seed used for sim_telarray simulation. "
-                    "Single value: seed for event simulation. "
-                    "Two values: [instrument_seed, simulation_seed] (use for testing only)."
-                ),
-                "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
-                "nargs": "+",
-                "required": False,
-            },
-            # hidden argument to specify the sim_telarray seeds file name
-            # (defined it here for convenience)
-            "sim_telarray_seed_file": {
-                "help": argparse.SUPPRESS,
-                "type": str,
-                "required": False,
-                "default": "sim_telarray_instrument_seeds.txt",
-            },
-        }
-
-    def _initialize_simulation_configuration(
-        self, group_name, selected_parameters, available_parameters
-    ):
-        """
-        Initialize simulation configuration arguments.
-
-        Parameters
-        ----------
-        group_name : str
-            Name of the group of arguments.
-        selected_parameters : list
-            List of selected parameters to be added to the group.
-        available_parameters : dict
-            Dictionary with available parameters and their configuration.
-        """
+    def _initialize_argument_group(self, group_name, selected_parameters, available_parameters):
+        """Initialize a group of arguments from a parameter-definition dictionary."""
         configuration_group = self.add_argument_group(group_name)
 
         if "all" in selected_parameters:
@@ -551,14 +423,12 @@ class CommandLineParser(argparse.ArgumentParser):
             help="array layout name(s) (e.g., alpha, subsystem_msts)",
             nargs="+",
             type=str,
-            required=False,
         )
         _layout_group.add_argument(
             "--array_element_list",
             help="list of array elements (e.g., LSTN-01, LSTN-02, MSTN).",
             nargs="+",
             type=str,
-            required=False,
             default=None,
         )
         if "layout_file" in model_options:
@@ -567,7 +437,6 @@ class CommandLineParser(argparse.ArgumentParser):
                 help="file(s) with the list of array elements (astropy table format).",
                 nargs="+",
                 type=str,
-                required=False,
                 default=None,
             )
         if "layout_parameter_file" in model_options:
@@ -575,7 +444,6 @@ class CommandLineParser(argparse.ArgumentParser):
                 "--array_layout_parameter_file",
                 help="Array layout model parameter file (typically in JSON format).",
                 type=str,
-                required=False,
                 default=None,
             )
         if "plot_all_layouts" in model_options:
@@ -583,7 +451,6 @@ class CommandLineParser(argparse.ArgumentParser):
                 "--plot_all_layouts",
                 help="plot all available layouts",
                 action="store_true",
-                required=False,
             )
         return job_group
 
@@ -600,9 +467,7 @@ class CommandLineParser(argparse.ArgumentParser):
         -------
         argparse.ArgumentParser
         """
-        job_group.add_argument(
-            "--site", help="site (e.g., North, South)", type=self.site, required=False
-        )
+        job_group.add_argument("--site", help="site (e.g., North, South)", type=self.site)
         return job_group
 
     @staticmethod
@@ -705,6 +570,36 @@ class CommandLineParser(argparse.ArgumentParser):
             raise argparse.ArgumentTypeError(f"{value} outside of allowed [0,1] interval")
 
         return fvalue
+
+    @staticmethod
+    def quantity(target_unit):
+        """
+        Build an argument parser type for quantities convertible to a target unit.
+
+        Parameters
+        ----------
+        target_unit : str or astropy.units.UnitBase
+            Unit to convert the parsed quantity to.
+
+        Returns
+        -------
+        callable
+            Parser callable returning an ``astropy.units.Quantity``.
+        """
+        target = u.Unit(target_unit)
+
+        def quantity_type(value):
+            try:
+                try:
+                    return float(value) * target
+                except (TypeError, ValueError):
+                    return u.Quantity(value).to(target)
+            except (TypeError, ValueError, u.UnitConversionError) as exc:
+                raise argparse.ArgumentTypeError(
+                    f"Invalid quantity value: '{value}'. Expected a value convertible to {target}."
+                ) from exc
+
+        return quantity_type
 
     @staticmethod
     def zenith_angle(angle):
@@ -886,6 +781,108 @@ class CommandLineParser(argparse.ArgumentParser):
             raise ValueError(f"{int_value} not in [{min_value},{max_value}]")
 
         return bounded_int_type
+
+
+_SHOWER_ARGS = {
+    "eslope": {
+        "help": "Slope of the energy spectrum.",
+        "type": float,
+        "default": -2.0,
+    },
+    "energy_range": {
+        "help": "Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV').",
+        "type": CommandLineParser.parse_quantity_pair,
+        "default": ["3 GeV 330 TeV"],
+    },
+    "view_cone": {
+        "help": (
+            "View cone radius for primary arrival directions (min/max value, e.g. '0 deg 10 deg')."
+        ),
+        "type": CommandLineParser.parse_quantity_pair,
+        "default": ["0 deg 0 deg"],
+    },
+    "core_scatter": {
+        "help": "Scatter radius for shower cores (number of use; scatter radius).",
+        "type": CommandLineParser.parse_integer_and_quantity,
+        "default": ["10 1400 m"],
+    },
+}
+
+_SIMTEL_ARGS = {
+    "sim_telarray_instrument_seed": {
+        "help": "Random seed used for sim_telarray instrument setup.",
+        "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
+    },
+    "sim_telarray_random_instrument_instances": {
+        "help": "Number of random instrument instances initialized in sim_telarray.",
+        "type": CommandLineParser.bounded_int(1, 1024),
+        "default": 1,
+    },
+    "sim_telarray_seed": {
+        "help": (
+            "Random seed used for sim_telarray simulation. "
+            "Single value: seed for event simulation. "
+            "Two values: [instrument_seed, simulation_seed] (use for testing only)."
+        ),
+        "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
+        "nargs": "+",
+    },
+    # hidden argument to specify the sim_telarray seeds file name
+    # (defined it here for convenience)
+    "sim_telarray_seed_file": {
+        "help": argparse.SUPPRESS,
+        "type": str,
+        "default": "sim_telarray_instrument_seeds.txt",
+    },
+}
+
+_APPLICATION_ARGS = {
+    "source_distance": {
+        "help": "Source distance in km (unitless values are interpreted as km).",
+        "type": CommandLineParser.quantity("km"),
+        "default": 10 * u.km,
+    },
+    "zenith_angle": {
+        "help": "Zenith angle in degrees (between 0 and 180).",
+        "type": CommandLineParser.zenith_angle,
+        "default": 20 * u.deg,
+    },
+    "off_axis_angles": {
+        "help": (
+            "One or more off-axis angles in degrees (unitless values are interpreted as degrees)."
+        ),
+        "type": CommandLineParser.quantity("deg"),
+        "nargs": "+",
+        "default": [0.0 * u.deg],
+    },
+    "number_of_photons": {
+        "help": "Number of star photons to trace (per run).",
+        "type": CommandLineParser.scientific_int,
+        "default": 10000,
+    },
+    "max_offset": {
+        "help": "Maximum offset angle in degrees (unitless values are interpreted as deg).",
+        "type": CommandLineParser.quantity("deg"),
+        "default": 4 * u.deg,
+    },
+    "offset_step": {
+        "help": "Offset angle step size in degrees (unitless values are interpreted as deg).",
+        "type": CommandLineParser.quantity("deg"),
+        "default": 0.25 * u.deg,
+    },
+    "all_model_versions": {
+        "help": "Produce reports for all model versions.",
+        "action": "store_true",
+    },
+    "data": {
+        "help": "Data file name.",
+        "type": str,
+    },
+    "telescope_ids": {
+        "help": "Path to a file containing telescope configurations.",
+        "type": str,
+    },
+}
 
 
 class BuildInfoAction(argparse.Action):

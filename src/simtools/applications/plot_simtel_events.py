@@ -78,103 +78,97 @@ Examples
 """
 
 import simtools.utils.general as gen
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.visualization.plot_simtel_events import PLOT_CHOICES, generate_and_save_plots
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=(
-            "Create diagnostic plots from sim_telarray files using simtools visualization."
-        ),
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--simtel_file",
         help="Input sim_telarray file (.simtel.zst)",
         required=True,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--plots",
         help=f"Plots to generate. Choices: {', '.join(sorted(PLOT_CHOICES))}",
         nargs="+",
         default=["all"],
         choices=sorted(PLOT_CHOICES),
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--n_pixels", type=int, default=3, help="For time_traces: number of pixel traces"
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--pixel_step", type=int, default=10, help="Step between pixel ids for step plots"
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--max_pixels", type=int, default=None, help="Cap number of pixels for step traces"
     )
-    config.parser.add_argument("--vmax", type=float, default=None, help="Color scale vmax")
-    config.parser.add_argument(
+    parser.add_argument("--vmax", type=float, default=None, help="Color scale vmax")
+    parser.add_argument(
         "--half_width", type=int, default=8, help="Half window width for integrated images"
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--offset",
         type=int,
         default=16,
         help="offset between pedestal and peak windows (integrated_pedestal_image)",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--sum_threshold",
         type=float,
         default=10.0,
         help="Minimum pixel sum to consider in peak timing",
     )
-    config.parser.add_argument(
-        "--peak_width", type=int, default=8, help="Expected peak width in samples"
-    )
-    config.parser.add_argument(
-        "--examples", type=int, default=3, help="Number of example traces to draw"
-    )
-    config.parser.add_argument(
+    parser.add_argument("--peak_width", type=int, default=8, help="Expected peak width in samples")
+    parser.add_argument("--examples", type=int, default=3, help="Number of example traces to draw")
+    parser.add_argument(
         "--timing_bins",
         type=int,
         default=None,
         help="Number of bins for timing histogram (contiguous if not set)",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--distance",
         type=float,
         default=None,
         help="Optional distance annotation for event_image (same units as input expects)",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--event_id",
         type=int,
         nargs="+",
         default=None,
         help="Event ID(s) of the events to be plotted",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--max_events",
         type=int,
         default=1,
         help="Maximum number of events to process",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--save_pngs",
         action="store_true",
         help="Also save individual PNG images per plot",
     )
-    config.parser.add_argument("--dpi", type=int, default=300, help="PNG dpi")
-
-    return config.initialize(
-        db_config=False, simulation_model=["telescope"], output=True, require_command_line=True
-    )
+    parser.add_argument("--dpi", type=int, default=300, help="PNG dpi")
 
 
 def main():
     """Generate plots from sim_telarray file."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description="Create diagnostic plots from sim_telarray files using simtools visualization.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": False,
+            "simulation_model": ["telescope"],
+            "output": True,
+            "require_command_line": True,
+        },
+    )
 
     plots = list(gen.ensure_iterable(app_context.args.get("plots")))
     generate_and_save_plots(plots=plots, args=app_context.args, ioh=app_context.io_handler)

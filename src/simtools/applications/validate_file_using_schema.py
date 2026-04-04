@@ -48,24 +48,19 @@ r"""
 
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import metadata_collector, schema, validate_data
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Validate a file (metadata, schema, or data file) using a schema.",
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--file_name",
         help="File to be validated (full path or name pattern, e.g., '*.json')",
         default="*.json",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--file_directory",
         help=(
             "Directory with files to be validated. "
@@ -74,29 +69,33 @@ def _parse():
             f"{MODEL_PARAMETER_SCHEMA_PATH}."
         ),
     )
-    config.parser.add_argument("--schema", help="Schema file", required=False)
-    config.parser.add_argument(
+    parser.add_argument("--schema", help="Schema file", required=False)
+    parser.add_argument(
         "--data_type",
         help="Type of input data",
         choices=["metadata", "schema", "data", "model_parameter"],
         default="data",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--check_exact_data_type",
         help="Require exact data type for validation",
         action="store_true",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--ignore_software_version",
         help="Ignore software version check.",
         action="store_true",
     )
-    return config.initialize(paths=False)
 
 
 def main():
     """Validate a file or files in a directory using a schema."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description="Validate a file (metadata, schema, or data file) using a schema.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={"paths": False},
+    )
 
     file_name = app_context.args.get("file_name")
     file_directory = app_context.args.get("file_directory")

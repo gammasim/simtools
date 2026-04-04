@@ -41,26 +41,18 @@ r"""
 from pathlib import Path
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Submit and validate a model parameter.",
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--parameter", type=str, required=True, help="Parameter for simulation model"
     )
-    config.parser.add_argument("--instrument", type=str, required=True, help="Instrument name")
-    config.parser.add_argument("--site", type=str, required=True, help="Site location")
-    config.parser.add_argument(
-        "--parameter_version", type=str, required=True, help="Parameter version"
-    )
-    config.parser.add_argument(
+    parser.add_argument("--instrument", type=str, required=True, help="Instrument name")
+    parser.add_argument("--site", type=str, required=True, help="Site location")
+    parser.add_argument("--parameter_version", type=str, required=True, help="Parameter version")
+    parser.add_argument(
         "--value",
         type=str,
         required=True,
@@ -70,24 +62,28 @@ def _parse():
             'Examples: "--value=5", "--value=\'5 km\'", "--value=\'5 cm, 0.5 deg\'"'
         ),
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--input_meta",
         help="meta data file(s) associated to input data (wildcards or list of files allowed)",
         type=str,
         nargs="+",
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--check_parameter_version",
         help="Check if the parameter version exists in the database",
         action="store_true",
     )
-    return config.initialize(output=True, db_config=True)
 
 
 def main():
     """Submit and validate a model parameter value and metadata."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description="Submit and validate a model parameter.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={"output": True, "db_config": True},
+    )
 
     if app_context.args.get("output_path"):
         output_path = app_context.io_handler.get_output_directory(

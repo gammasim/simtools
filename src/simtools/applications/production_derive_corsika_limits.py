@@ -82,57 +82,51 @@ Derive limits for a given file for custom defined array layouts:
         --output_file corsika_simulation_limits_lookup.ecsv
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.production_configuration.derive_corsika_limits import (
     generate_corsika_limits_grid,
 )
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Derive limits for energy, radial distance, and viewcone.",
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.initialize_application_arguments(["telescope_ids"])
+    parser.add_argument(
         "--event_data_file",
         type=str,
         required=True,
         help="Event data file containing reduced event data.",
     )
-    config.parser.add_argument(
-        "--telescope_ids",
-        type=str,
-        required=False,
-        help="Path to a file containing telescope configurations.",
-    )
-    config.parser.add_argument(
+    parser.add_argument(
         "--loss_fraction",
         type=float,
         required=True,
         help="Maximum event-loss fraction for limit computation.",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--plot_histograms",
         help="Plot histograms of the event data.",
         action="store_true",
         default=False,
     )
-    return config.initialize(
-        db_config=True,
-        output=True,
-        simulation_model=[
-            "site",
-            "model_version",
-            "layout",
-        ],
-    )
 
 
 def main():
     """Derive limits for energy, radial distance, and viewcone."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description="Derive limits for energy, radial distance, and viewcone.",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "output": True,
+            "simulation_model": [
+                "site",
+                "model_version",
+                "layout",
+            ],
+        },
+    )
 
     generate_corsika_limits_grid(app_context.args)
 

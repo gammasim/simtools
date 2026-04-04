@@ -29,9 +29,9 @@
         Telescope model name (e.g. LST-1, SST-D, ...).
     model_version (str, optional)
         Model version.
-    src_distance (float, optional)
+    source_distance (float or quantity, optional)
         Source distance in km.
-    zenith (float, optional)
+    zenith_angle (float or quantity, optional)
         Zenith angle in deg.
     data (str, optional)
         Name of the data file with the measured cumulative PSF.
@@ -76,40 +76,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import simtools.utils.general as gen
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=(
-            "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
-            "of the telescope requested."
-        ),
-    )
-    config.parser.add_argument(
-        "--src_distance",
-        help="Source distance in km",
-        type=float,
-        default=10,
-    )
-    config.parser.add_argument(
-        "--zenith",
-        help="Zenith angle in deg",
-        type=float,
-        default=20.0,
-    )
-    config.parser.add_argument(
-        "--data",
-        help="Data file name with the measured PSF vs radius [cm]",
-        type=str,
-    )
-    return config.initialize(db_config=True, simulation_model=["telescope", "model_version"])
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.initialize_application_arguments(["source_distance", "zenith_angle", "data"])
 
 
 def load_data(datafile):
@@ -126,7 +101,18 @@ def load_data(datafile):
 
 def main():
     """Validate the cumulative PSF of a telescope model against data."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description=(
+            "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
+            "of the telescope requested."
+        ),
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["telescope", "model_version"],
+        },
+    )
 
     tel_model, site_model, _ = initialize_simulation_models(
         label=app_context.args.get("label"),
@@ -139,8 +125,8 @@ def main():
         telescope_model=tel_model,
         site_model=site_model,
         label=app_context.args.get("label"),
-        zenith_angle=app_context.args["zenith"] * u.deg,
-        source_distance=app_context.args["src_distance"] * u.km,
+        zenith_angle=app_context.args["zenith_angle"],
+        source_distance=app_context.args["source_distance"],
         off_axis_angle=[0.0] * u.deg,
     )
 

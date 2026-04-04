@@ -55,31 +55,25 @@ Expected output is a ecsv file in the directory printed to the screen.
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.layout import array_layout
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Print a list of array element positions",
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--input",
         help="list of array element positions",
         required=True,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--input_meta",
         help="meta data file associated to input data",
         type=str,
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--print",
         help="print list of positions in requested coordinate system",
         required=False,
@@ -90,7 +84,7 @@ def _parse():
             "mercator",
         ],
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--export",
         help="export array element list to file (in requested coordinate system)",
         required=False,
@@ -101,31 +95,35 @@ def _parse():
             "mercator",
         ],
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--select_assets",
         help="select a subset of assets (e.g., MSTN, LSTN)",
         required=False,
         default=None,
         nargs="+",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--skip_input_validation",
         help="skip input data validation against schema",
         default=False,
         required=False,
         action="store_true",
     )
-    return config.initialize(
-        db_config=True,
-        output=True,
-        require_command_line=True,
-        simulation_model=["model_version", "parameter_version", "site"],
-    )
 
 
 def main():
     """Print a list of array elements."""
-    app_context = startup_application(_parse)
+    app_context = build_application(
+        __file__,
+        description="Print a list of array element positions",
+        add_arguments_function=_add_arguments,
+        initialization_kwargs={
+            "db_config": True,
+            "output": True,
+            "require_command_line": True,
+            "simulation_model": ["model_version", "parameter_version", "site"],
+        },
+    )
 
     if app_context.args.get("input", "").endswith(".json"):
         site = app_context.args.get("site", None)
