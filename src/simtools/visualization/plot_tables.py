@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 import numpy as np
+import packaging.version
 
 import simtools.utils.general as gen
 from simtools.constants import SCHEMA_PATH
@@ -139,6 +140,19 @@ def _read_table_from_model_database(table_config):
     )
 
 
+def _read_parameter_dict_from_model_database(table_config):
+    """Read a model parameter dictionary from the model parameter database."""
+    db = db_handler.DatabaseHandler()
+    parameter_dict = db.get_model_parameter(
+        parameter=table_config["parameter"],
+        site=table_config["site"],
+        array_element_name=table_config.get("telescope"),
+        parameter_version=table_config.get("parameter_version"),
+        model_version=table_config.get("model_version"),
+    )
+    return parameter_dict[table_config["parameter"]]
+
+
 def _select_values_from_table(table, column_name, value):
     """Return a table with only the rows where column_name == value."""
     return table[np.isclose(table[column_name], value)]
@@ -170,6 +184,25 @@ def _get_valid_columns(table):
     return [col for col in table.colnames if not all(np.isnan(table[col]))]
 
 
+def _select_schema_entry(schema_data, schema_version=None):
+    """Return the schema dict matching schema_version or the newest available one."""
+    if isinstance(schema_data, dict):
+        return schema_data
+
+    if isinstance(schema_data, list) and schema_data:
+        if schema_version is not None:
+            for entry in schema_data:
+                if entry.get("schema_version") == schema_version:
+                    return entry
+
+        return max(
+            schema_data,
+            key=lambda entry: packaging.version.Version(entry.get("schema_version", "0.0.0")),
+        )
+
+    return {}
+
+
 def generate_plot_configurations(
     parameter, parameter_version, site, telescope, output_path, plot_type
 ):
@@ -198,11 +231,21 @@ def generate_plot_configurations(
         Return None, if no plot configurations are found.
     """
     logger = logging.getLogger(__name__)
+    table_config = {
+        "parameter": parameter,
+        "site": site,
+        "telescope": telescope,
+        "parameter_version": parameter_version,
+    }
+    parameter_dict = _read_parameter_dict_from_model_database(table_config)
 
     # Get schema configuration
     schema = gen.change_dict_keys_case(
-        ascii_handler.collect_data_from_file(
-            file_name=SCHEMA_PATH / "model_parameters" / f"{parameter}.schema.yml"
+        _select_schema_entry(
+            ascii_handler.collect_data_from_file(
+                file_name=SCHEMA_PATH / "model_parameters" / f"{parameter}.schema.yml"
+            ),
+            parameter_dict.get("model_parameter_schema_version"),
         )
     )
     configs = schema.get("plot_configuration")
@@ -210,14 +253,7 @@ def generate_plot_configurations(
         return None
 
     # Get data table and determine valid columns
-    table = _read_table_from_model_database(
-        {
-            "parameter": parameter,
-            "site": site,
-            "telescope": telescope,
-            "parameter_version": parameter_version,
-        },
-    )
+    table = _read_table_from_model_database(table_config)
     valid_columns = _get_valid_columns(table)
 
     # Filter configs based on plot type and column validity

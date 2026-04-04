@@ -8,7 +8,7 @@ from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
 from simtools import settings
-from simtools.data_model import schema, validate_data
+from simtools.data_model import row_table_utils, schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
@@ -139,11 +139,11 @@ class ModelDataWriter:
             writer.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
 
         unique_id = None
+        metadata = None
         if metadata_input_dict is not None:
             metadata_input_dict["output_file"] = output_file
             metadata_input_dict["output_file_format"] = Path(output_file).suffix.lstrip(".")
             metadata = MetadataCollector(args_dict=metadata_input_dict)
-            metadata.write(output_path / Path(output_file))
             unique_id = (
                 metadata.get_top_level_metadata().get("cta", {}).get("product", {}).get("id")
             )
@@ -159,6 +159,8 @@ class ModelDataWriter:
             meta_parameter=meta_parameter,
         )
         writer.write_dict_to_model_parameter_json(output_file, _json_dict)
+        if metadata is not None:
+            metadata.write(output_path / Path(output_file))
         return _json_dict
 
     def check_db_for_existing_parameter(self, parameter_name, instrument, parameter_version):
@@ -317,16 +319,79 @@ class ModelDataWriter:
             raise TypeError("No valid schema versions found in the list.") from exc
         return max(valid_entries, key=lambda e: packaging.version.Version(e["schema_version"]))
 
-    def _get_parameter_type(self):
+    def get_parameter_type_for_schema(self, parameter_name, model_parameter_schema_version=None):
         """
-        Return parameter type from schema.
+        Return parameter type(s) from a selected model-parameter schema.
 
-        Reduce list of types to single type if all types are the same.
+        This method loads the schema for ``parameter_name`` and an optional
+        ``model_parameter_schema_version``, then extracts the ``type`` field from
+        each data entry. If all entries share the same type, a single string is
+        returned; otherwise a list of types is returned.
+
+        Parameters
+        ----------
+        parameter_name: str
+            Name of the model parameter.
+        model_parameter_schema_version: str or None
+            Explicit model-parameter schema version to use. If None, the newest
+            available schema version is selected.
 
         Returns
         -------
         str or list[str]
-            Parameter type
+            Parameter type, reduced to a single value when all schema entries
+            have the same type.
+        """
+        schema_dict, _ = self._read_schema_dict(parameter_name, model_parameter_schema_version)
+        parameter_types = [data["type"] for data in schema_dict["data"]]
+        return (
+            parameter_types[0]
+            if all(data_type == parameter_types[0] for data_type in parameter_types)
+            else parameter_types
+        )
+
+    def parameter_uses_row_table_schema(self, parameter_name, model_parameter_schema_version=None):
+        """Return True if selected schema defines row-oriented table dict payload.
+
+        Parameters
+        ----------
+        parameter_name: str
+            Name of the model parameter.
+        model_parameter_schema_version: str or None
+            Explicit model-parameter schema version to use. If None, the newest
+            available schema version is selected.
+
+        Returns
+        -------
+        bool
+            True when a dict-typed schema entry requires the row-table keys
+            ``columns``, ``rows`` and ``column_units``.
+        """
+        schema_dict, _ = self._read_schema_dict(parameter_name, model_parameter_schema_version)
+
+        for data_entry in schema_dict.get("data", []):
+            if data_entry.get("type") != "dict":
+                continue
+
+            json_schema = data_entry.get("json_schema", {})
+            if row_table_utils.is_row_table_schema(json_schema):
+                return True
+
+        return False
+
+    def _get_parameter_type(self):
+        """
+        Return parameter type(s) from the currently loaded schema.
+
+        This helper reads ``self.schema_dict`` (expected to be populated by
+        ``_read_schema_dict`` beforehand), extracts ``type`` values from its
+        data entries, and reduces the result to a single string when all types
+        are identical.
+
+        Returns
+        -------
+        str or list[str]
+            Parameter type derived from ``self.schema_dict``.
         """
         _parameter_type = [data["type"] for data in self.schema_dict["data"]]
         return (

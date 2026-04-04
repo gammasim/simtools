@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 
 import logging
+from pathlib import Path
 from unittest import mock
 
 import astropy.units as u
 import pytest
+from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.simtel.simtel_table_reader as simtel_table_reader
@@ -98,6 +100,134 @@ def test_read_simtel_table_to_table(spe_test_file, spe_meta_test_comment):
     ) as mock_read:
         simtel_table_reader.read_simtel_table("atmospheric_transmission", "test_file")
         mock_read.assert_called_once()
+
+
+def test_read_simtel_table_as_row_data():
+    table = Table(
+        {
+            "time": [0.0, 0.12],
+            "amplitude": [0.0, 0.01323],
+            "amplitude (low gain)": [0.0, 0.000945],
+        }
+    )
+    table["time"].unit = u.ns
+    table["amplitude"].unit = u.dimensionless_unscaled
+    table["amplitude (low gain)"].unit = u.dimensionless_unscaled
+
+    with mock.patch("simtools.simtel.simtel_table_reader.read_simtel_table", return_value=table):
+        result = simtel_table_reader.read_simtel_table_as_row_data("fadc_pulse_shape", "dummy.dat")
+
+    assert result == {
+        "columns": ["time", "amplitude", "amplitude (low gain)"],
+        "column_units": ["ns", "dimensionless", "dimensionless"],
+        "rows": [
+            [0.0, 0.0, 0.0],
+            [0.12, 0.01323, 0.000945],
+        ],
+    }
+
+
+def test_resolve_dict_parameter_value_from_inline_json(tmp_test_directory):
+    value = '{"columns": ["time"], "dtype": ["float64"], "unit": ["ns"], "data": {"time": [0.0]}}'
+
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data"
+    ) as read_mock:
+        result = simtel_table_reader.resolve_dict_parameter_value(
+            value,
+            "fadc_pulse_shape",
+            str(tmp_test_directory),
+        )
+
+    read_mock.assert_not_called()
+    assert isinstance(result, dict)
+    assert result["columns"] == ["time"]
+
+
+def test_resolve_dict_parameter_value_from_file_path(tmp_test_directory):
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data",
+        return_value={"columns": ["time"]},
+    ) as read_mock:
+        result = simtel_table_reader.resolve_dict_parameter_value(
+            "pulse.dat",
+            "fadc_pulse_shape",
+            str(tmp_test_directory),
+        )
+
+    read_mock.assert_called_once_with("fadc_pulse_shape", Path(tmp_test_directory) / "pulse.dat")
+    assert result == {"columns": ["time"]}
+
+
+def test_row_data_to_astropy_table_returns_correct_table():
+    row_data = {
+        "columns": ["time", "amplitude"],
+        "column_units": ["ns", "dimensionless"],
+        "rows": [[0.0, 0.0], [0.5, 0.12], [1.0, 0.48]],
+    }
+    table = simtel_table_reader.row_data_to_astropy_table(row_data)
+
+    assert list(table.colnames) == ["time", "amplitude"]
+    assert len(table) == 3
+    assert table["time"][1] == pytest.approx(0.5)
+    assert table["amplitude"][2] == pytest.approx(0.48)
+    assert str(table["time"].unit) == "ns"
+    assert table["amplitude"].unit == u.dimensionless_unscaled
+
+
+def test_row_data_to_astropy_table_raises_on_missing_keys():
+    with pytest.raises(ValueError, match="'columns' and 'rows'"):
+        simtel_table_reader.row_data_to_astropy_table({"columns": ["time"]})
+
+
+def test_row_data_to_astropy_table_raises_on_wrong_type():
+    with pytest.raises(ValueError, match="'columns' and 'rows'"):
+        simtel_table_reader.row_data_to_astropy_table("not a dict")
+
+
+def test_resolve_dict_parameter_value_raises_without_column_units():
+    with pytest.raises(ValueError, match="column_units"):
+        simtel_table_reader.resolve_dict_parameter_value(
+            {"columns": ["time"], "rows": [[0.0]]},
+            "fadc_pulse_shape",
+        )
+
+
+def test_resolve_dict_parameter_value_invalid_inline_json_falls_back_to_file(
+    tmp_test_directory,
+):
+    """Fallback to file-path resolution if inline JSON parsing fails."""
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data",
+        return_value={"columns": ["time"], "column_units": ["ns"], "rows": [[0.0]]},
+    ) as read_mock:
+        result = simtel_table_reader.resolve_dict_parameter_value(
+            "{not valid json}",
+            "fadc_pulse_shape",
+            data_path=tmp_test_directory,
+        )
+
+    read_mock.assert_called_once_with(
+        "fadc_pulse_shape",
+        Path(tmp_test_directory) / "{not valid json}",
+    )
+    assert result["columns"] == ["time"]
+
+
+def test_resolve_dict_parameter_value_non_string_non_dict_uses_file_reader(tmp_test_directory):
+    """Resolve Path-like input values through table-file reader path."""
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data",
+        return_value={"columns": ["time"], "column_units": ["ns"], "rows": [[0.0]]},
+    ) as read_mock:
+        result = simtel_table_reader.resolve_dict_parameter_value(
+            Path("pulse.dat"),
+            "fadc_pulse_shape",
+            data_path=tmp_test_directory,
+        )
+
+    read_mock.assert_called_once_with("fadc_pulse_shape", Path(tmp_test_directory) / "pulse.dat")
+    assert result["rows"] == [[0.0]]
 
 
 def test_data_simple_columns():
