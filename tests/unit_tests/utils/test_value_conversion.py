@@ -178,3 +178,25 @@ def test_unit_as_string():
     assert value_conversion._unit_as_string(u.Unit("m")) == "m"
     assert value_conversion._unit_as_string([u.Unit("m")]) == "m"
     assert value_conversion._unit_as_string([u.Unit("m"), u.Unit("cm")]) == ["m", "cm"]
+
+
+def test_is_dimensionless_unit():
+    assert value_conversion.is_dimensionless_unit(None)
+    assert value_conversion.is_dimensionless_unit("")
+    assert value_conversion.is_dimensionless_unit("dimensionless")
+    assert value_conversion.is_dimensionless_unit("null")
+    assert not value_conversion.is_dimensionless_unit("m")
+
+
+def test_normalize_dimensionless_unit():
+    assert value_conversion.normalize_dimensionless_unit(None) is None
+    assert value_conversion.normalize_dimensionless_unit("") is None
+    assert value_conversion.normalize_dimensionless_unit("dimensionless") is None
+    assert value_conversion.normalize_dimensionless_unit("null") is None
+    assert value_conversion.normalize_dimensionless_unit("m") == "m"
+    assert value_conversion.normalize_dimensionless_unit(["m", "dimensionless", "null", None]) == [
+        "m",
+        None,
+        None,
+        None,
+    ]
