@@ -40,7 +40,7 @@ def _create_grid_generation(
         observing_location=observing_location,
         observing_time=observing_time,
         lookup_table=lookup_table,
-        telescope_ids=[1],
+        telescope_ids=["LSTN-01"],
     )
 
 
@@ -60,7 +60,7 @@ def _build_single_point_radec_axes_definition(source_radec):
                 "scaling": "linear",
                 "units": "deg",
             },
-            "nsb": {
+            "nsb_level": {
                 "range": [4, 4],
                 "binning": 1,
                 "scaling": "linear",
@@ -81,7 +81,9 @@ def axes_definition():
 @pytest.fixture
 def lookup_table():
     """Load the lookup table from the resources directory."""
-    return str(Path("tests/resources/corsika_simulation_limits_lookup.ecsv"))
+    return str(
+        Path("tests/resources/corsika_simulation_limits/merged_corsika_limits_for_test.ecsv")
+    )
 
 
 @pytest.fixture
@@ -117,14 +119,14 @@ def test_generate_grid(grid_gen):
     assert all(isinstance(point, dict) for point in grid_points)
     assert all("zenith_angle" in point for point in grid_points)
     assert all("azimuth" in point for point in grid_points)
-    assert all("nsb" in point for point in grid_points)
+    assert all("nsb_level" in point for point in grid_points)
 
 
 def test_generate_grid_log_scaling(
     axes_definition, lookup_table, observing_location, observing_time
 ):
-    """Test grid generation with logarithmic scaling for nsb axis."""
-    axes_definition["axes"]["nsb"] = {
+    """Test grid generation with logarithmic scaling for nsb_level axis."""
+    axes_definition["axes"]["nsb_level"] = {
         "range": [2, 5],
         "binning": 4,
         "scaling": "log",
@@ -140,13 +142,13 @@ def test_generate_grid_log_scaling(
     )
 
     grid_points = grid_gen.generate_grid()
-    nsb_values = [point["nsb"].value for point in grid_points]
+    nsb_values = [point["nsb_level"].value for point in grid_points]
     unique_nsb_values = np.unique(nsb_values)
 
     expected_values = np.logspace(
-        np.log10(axes_definition["axes"]["nsb"]["range"][0]),
-        np.log10(axes_definition["axes"]["nsb"]["range"][1]),
-        axes_definition["axes"]["nsb"]["binning"],
+        np.log10(axes_definition["axes"]["nsb_level"]["range"][0]),
+        np.log10(axes_definition["axes"]["nsb_level"]["range"][1]),
+        axes_definition["axes"]["nsb_level"]["binning"],
     )
 
     assert len(unique_nsb_values) == len(expected_values)
@@ -203,7 +205,7 @@ def test_generate_grid_radec_mode_minimal(observing_location, observing_time):
                 "scaling": "linear",
                 "units": "deg",
             },
-            "nsb": {
+            "nsb_level": {
                 "range": [4, 4],
                 "binning": 1,
                 "scaling": "linear",
@@ -300,14 +302,15 @@ def test_generate_grid_radec_axes_mode_with_lookup(
 ):
     """Interpolate production limits for explicit RA/Dec axes points."""
     source_altaz = SkyCoord(
-        alt=60.0 * u.deg,
-        az=310.0 * u.deg,
+        alt=50.0 * u.deg,
+        az=0.0 * u.deg,
         frame="altaz",
         obstime=observing_time,
         location=observing_location,
     )
     source_radec = source_altaz.icrs
     axes_definition = _build_single_point_radec_axes_definition(source_radec)
+    axes_definition["axes"]["nsb_level"]["range"] = [1, 1]
 
     grid_gen = _create_grid_generation(
         axes=axes_definition,
@@ -322,23 +325,23 @@ def test_generate_grid_radec_axes_mode_with_lookup(
         grid_points = grid_gen.generate_grid()
 
     assert len(grid_points) == 1
-    assert "energy_threshold" in grid_points[0]
-    assert "radius" in grid_points[0]
-    assert "viewcone" in grid_points[0]
-    assert grid_points[0]["energy_threshold"]["lower"].value == pytest.approx(0.00459, rel=1e-2)
-    assert grid_points[0]["radius"].value == pytest.approx(2047.8, rel=1e-2)
-    assert grid_points[0]["viewcone"].value == pytest.approx(9.98, rel=1e-2)
+    assert "lower_energy_threshold" in grid_points[0]
+    assert "scatter_radius" in grid_points[0]
+    assert "viewcone_radius" in grid_points[0]
+    assert grid_points[0]["lower_energy_threshold"].value == pytest.approx(0.007, rel=1e-2)
+    assert grid_points[0]["scatter_radius"].value == pytest.approx(1100.0, rel=1e-2)
+    assert grid_points[0]["viewcone_radius"].value == pytest.approx(7.0, rel=1e-2)
 
 
 def test_interpolated_limits(grid_gen):
     grid_gen.interpolated_limits = {
-        "energy": np.array(
+        "lower_energy_threshold": np.array(
             [[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]], [[0.7, 0.8], [0.9, 1.0], [1.1, 1.2]]]
         ),
-        "radius": np.array(
+        "upper_scatter_radius": np.array(
             [[[100, 200], [300, 400], [500, 600]], [[700, 800], [900, 1000], [1100, 1200]]]
         ),
-        "viewcone": np.array([[[1, 2], [3, 4], [5, 6]], [[7, 8], [9, 10], [11, 12]]]),
+        "viewcone_radius": np.array([[[1, 2], [3, 4], [5, 6]], [[7, 8], [9, 10], [11, 12]]]),
         "target_zeniths": np.array([30, 40]),
         "target_azimuths": np.array([310, 345, 20]),
         "target_nsb": np.array([4, 5]),
@@ -348,12 +351,12 @@ def test_interpolated_limits(grid_gen):
 
     # Check that interpolated values are correctly assigned
     for point in grid_points:
-        assert "energy_threshold" in point
-        assert "radius" in point
-        assert "viewcone" in point
-        assert isinstance(point["energy_threshold"]["lower"], Quantity)
-        assert isinstance(point["radius"], Quantity)
-        assert isinstance(point["viewcone"], Quantity)
+        assert "lower_energy_threshold" in point
+        assert "scatter_radius" in point
+        assert "viewcone_radius" in point
+        assert isinstance(point["lower_energy_threshold"], Quantity)
+        assert isinstance(point["scatter_radius"], Quantity)
+        assert isinstance(point["viewcone_radius"], Quantity)
 
 
 def test_serialize_grid_points_with_output_file(grid_gen, tmp_test_directory, caplog):
@@ -362,18 +365,18 @@ def test_serialize_grid_points_with_output_file(grid_gen, tmp_test_directory, ca
         {
             "zenith_angle": 30 * u.deg,
             "azimuth": 310 * u.deg,
-            "nsb": 4,
-            "energy_threshold": {"lower": 0.1 * u.TeV},
-            "radius": 100 * u.m,
-            "viewcone": 1 * u.deg,
+            "nsb_level": 4,
+            "lower_energy_threshold": 0.1 * u.TeV,
+            "scatter_radius": 100 * u.m,
+            "viewcone_radius": 1 * u.deg,
         },
         {
             "zenith_angle": 40 * u.deg,
             "azimuth": 345 * u.deg,
-            "nsb": 5,
-            "energy_threshold": {"lower": 0.2 * u.TeV},
-            "radius": 200 * u.m,
-            "viewcone": 2 * u.deg,
+            "nsb_level": 5,
+            "lower_energy_threshold": 0.2 * u.TeV,
+            "scatter_radius": 200 * u.m,
+            "viewcone_radius": 2 * u.deg,
         },
     ]
 
@@ -383,14 +386,16 @@ def test_serialize_grid_points_with_output_file(grid_gen, tmp_test_directory, ca
     assert output_file.exists()
 
     with open(output_file, encoding="utf-8") as f:
-        file_content = f.read()
-        assert '"zenith_angle"' in file_content
-        assert '"energy_threshold"' in file_content
+        output_data = yaml.safe_load(f)
+        assert "metadata" in output_data
+        assert "grid_points" in output_data
+        assert "zenith_angle" in output_data["grid_points"][0]
+        assert "lower_energy_threshold" in output_data["grid_points"][0]
 
     assert f"Output saved to {output_file}" in caplog.text
 
 
-def test_serialize_quantity(grid_gen, caplog):
+def test_serialize_quantity(grid_gen):
     # Case 1: Value is a Quantity (single value)
     quantity = 5 * u.m
     serialized = grid_gen.serialize_quantity(quantity)
@@ -398,12 +403,8 @@ def test_serialize_quantity(grid_gen, caplog):
 
     # Case 2: Value is not a Quantity (single value)
     value = 5
-
-    with caplog.at_level(logging.WARNING):
-        grid_gen.serialize_quantity(value)
-
-    assert "Unsupported type" in caplog.text
-    assert str(type(value)) in caplog.text
+    serialized_value = grid_gen.serialize_quantity(value)
+    assert serialized_value == value
 
 
 @pytest.mark.xfail(reason="May fail due to IERS data download timeout", strict=False)
@@ -467,18 +468,51 @@ def test_create_circular_binning_with_shortest_path(grid_gen):
     assert np.allclose(bins, expected_bins)
 
 
-def test_apply_lookup_table_limits(grid_gen):
-    grid_gen._apply_lookup_table_limits()
-    assert "energy" in grid_gen.interpolated_limits
-    assert "radius" in grid_gen.interpolated_limits
-    assert "viewcone" in grid_gen.interpolated_limits
-    assert np.isclose(grid_gen.interpolated_limits["energy"][0][0][0], 0.00459, rtol=1e-2)
-    assert np.isclose(grid_gen.interpolated_limits["radius"][0][0][0], 2047.8, rtol=1e-2)
-    assert np.isclose(grid_gen.interpolated_limits["viewcone"][0][0][0], 9.98, rtol=1e-2)
+def test_apply_lookup_table_limits(lookup_table, observing_location, observing_time):
+    axes_definition = {
+        "axes": {
+            "azimuth": {
+                "range": [0, 180],
+                "binning": 2,
+                "scaling": "linear",
+                "units": "deg",
+            },
+            "zenith_angle": {
+                "range": [20, 40],
+                "binning": 2,
+                "scaling": "linear",
+                "units": "deg",
+            },
+            "nsb_level": {
+                "range": [1, 1],
+                "binning": 1,
+                "scaling": "linear",
+                "units": "MHz",
+            },
+        }
+    }
+    grid_gen = _create_grid_generation(
+        axes=axes_definition,
+        coordinate_system="zenith_azimuth",
+        observing_location=observing_location,
+        observing_time=observing_time,
+        lookup_table=lookup_table,
+    )
 
-    assert np.shape(grid_gen.interpolated_limits["energy"]) == (2, 3, 2)
-    assert np.shape(grid_gen.interpolated_limits["radius"]) == (2, 3, 2)
-    assert np.shape(grid_gen.interpolated_limits["viewcone"]) == (2, 3, 2)
+    assert "lower_energy_threshold" in grid_gen.interpolated_limits
+    assert "upper_scatter_radius" in grid_gen.interpolated_limits
+    assert "viewcone_radius" in grid_gen.interpolated_limits
+    assert np.isclose(
+        grid_gen.interpolated_limits["lower_energy_threshold"][0][0][0], 0.007, rtol=1e-2
+    )
+    assert np.isclose(
+        grid_gen.interpolated_limits["upper_scatter_radius"][0][0][0], 925.0, rtol=1e-2
+    )
+    assert np.isclose(grid_gen.interpolated_limits["viewcone_radius"][0][0][0], 9.25, rtol=1e-2)
+
+    assert np.shape(grid_gen.interpolated_limits["lower_energy_threshold"]) == (2, 2, 1)
+    assert np.shape(grid_gen.interpolated_limits["upper_scatter_radius"]) == (2, 2, 1)
+    assert np.shape(grid_gen.interpolated_limits["viewcone_radius"]) == (2, 2, 1)
 
 
 def test_no_matching_rows_in_lookup_table(axes_definition, observing_location, observing_time):
@@ -491,9 +525,26 @@ def test_no_matching_rows_in_lookup_table(axes_definition, observing_location, o
             coordinate_system="zenith_azimuth",
             observing_location=observing_location,
             observing_time=observing_time,
-            lookup_table="tests/resources/corsika_simulation_limits_lookup.ecsv",
+            lookup_table="tests/resources/corsika_simulation_limits/merged_corsika_limits_for_test.ecsv",
             telescope_ids=[999],
         )
+
+
+def test_matching_rows_with_string_telescope_id(
+    axes_definition, lookup_table, observing_location, observing_time
+):
+    """Match legacy numeric lookup-table rows using string telescope IDs."""
+    grid_gen = GridGeneration(
+        axes=axes_definition,
+        coordinate_system="zenith_azimuth",
+        observing_location=observing_location,
+        observing_time=observing_time,
+        lookup_table=lookup_table,
+        telescope_ids=["LSTN-01"],
+    )
+
+    lookup_arrays = grid_gen._load_matching_lookup_arrays()
+    assert lookup_arrays["points"].shape[0] > 0
 
 
 def test_missing_observing_time(grid_gen):
