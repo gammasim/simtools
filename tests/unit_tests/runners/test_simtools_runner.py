@@ -195,10 +195,8 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     )
 
     # Patch dependencies.get_version_string
-    monkeypatch.setattr(
-        "simtools.dependencies.get_version_string",
-        mock.Mock(return_value="simtools version: 1.2.3\n"),
-    )
+    version_string_mock = mock.Mock(return_value="simtools version: 1.2.3\n")
+    monkeypatch.setattr("simtools.dependencies.get_version_string", version_string_mock)
 
     # Patch job_manager.submit
     def mock_submit(app, out_file, err_file, configuration=None, runtime_environment=None):
@@ -228,6 +226,7 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     mock_logger.info.assert_any_call("Running application: app1")
     mock_logger.info.assert_any_call("Skipping application: app2")
     mock_logger.info.assert_any_call("Running application: app3")
+    version_string_mock.assert_called_once_with([], include_software_versions=False)
 
 
 def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_directory):
