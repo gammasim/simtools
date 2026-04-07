@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import astropy.units as u
+import matplotlib.pyplot as plt
 import pytest
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.table import Table
@@ -261,3 +262,144 @@ def test_load_grid_points_from_ecsv(tmp_test_directory):
     normalized_points = plotter.normalize_grid_points()
     assert len(normalized_points) == 1
     assert normalized_points[0]["native_frame"] == "altaz"
+
+
+def test_load_grid_points_file_not_found(tmp_test_directory):
+    """Raise when the grid points file does not exist."""
+    missing_file = Path(tmp_test_directory) / "does_not_exist.ecsv"
+
+    with pytest.raises(FileNotFoundError, match="Grid points file not found"):
+        _create_plotter(
+            grid_file=missing_file,
+            observation_time="2025-01-01 00:00:00",
+            output_path=Path(tmp_test_directory) / "output",
+        )
+
+
+def test_load_grid_points_wrong_suffix(tmp_test_directory):
+    """Raise when the grid points file is not ECSV."""
+    wrong_file = Path(tmp_test_directory) / "grid_points.txt"
+    wrong_file.write_text("dummy", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must be ECSV"):
+        _create_plotter(
+            grid_file=wrong_file,
+            observation_time="2025-01-01 00:00:00",
+            output_path=Path(tmp_test_directory) / "output",
+        )
+
+
+def test_extract_quantity_value_dict_branches():
+    """Cover value/lower/None extraction paths."""
+    point_with_value = {"x": {"value": 12.3, "unit": "deg"}}
+    assert ProductionGridPlotter._extract_quantity_value(point_with_value, "x") == 12.3
+
+    point_with_lower = {"x": {"lower": {"value": 7.5, "unit": "deg"}}}
+    assert ProductionGridPlotter._extract_quantity_value(point_with_lower, "x") == 7.5
+
+    point_without_value = {"x": {"unit": "deg"}}
+    assert ProductionGridPlotter._extract_quantity_value(point_without_value, "x") is None
+
+
+def test_configure_radec_axis_expands_flat_ranges(tmp_test_directory):
+    """Expand axis limits by +/-5 deg when computed min and max are equal."""
+    grid_file = _write_grid_file(
+        tmp_test_directory,
+        "grid_single_radec.ecsv",
+        [{"ra": {"value": 40.0, "unit": "deg"}, "dec": {"value": 20.0, "unit": "deg"}}],
+    )
+    plotter = _create_plotter(
+        grid_file=grid_file,
+        observation_time="2025-01-01 00:00:00",
+        output_path=Path(tmp_test_directory) / "output",
+    )
+
+    figure, axis = plt.subplots()
+    try:
+        plotter._configure_radec_axis(axis, [{"ra": 40.0, "dec": 20.0}])
+        xlim = axis.get_xlim()
+        ylim = axis.get_ylim()
+        assert xlim == pytest.approx((45.0, 35.0))
+        assert ylim == pytest.approx((15.0, 25.0))
+    finally:
+        plt.close(figure)
+
+
+def test_plot_frame_points_logs_no_valid_points(tmp_test_directory, caplog):
+    """Log warning and return zero when no points can be plotted."""
+    grid_file = _write_grid_file(tmp_test_directory, "grid_empty.ecsv", [])
+    plotter = _create_plotter(
+        grid_file=grid_file,
+        observation_time="2025-01-01 00:00:00",
+        output_path=Path(tmp_test_directory) / "output",
+    )
+
+    figure, axis = plt.subplots()
+    try:
+        with caplog.at_level("WARNING"):
+            plotted = plotter._plot_frame_points(
+                axis=axis,
+                plot_points=[],
+                primary_frame="altaz",
+                secondary_frame="radec",
+                primary_label="A",
+                secondary_label="B",
+                primary_color="tab:blue",
+                secondary_color="tab:orange",
+                x_key="azimuth",
+                y_key="zenith",
+                panel_name="Alt/Az",
+            )
+        assert plotted == 0
+        assert "No valid grid points found for Alt/Az plotting" in caplog.text
+    finally:
+        plt.close(figure)
+
+
+def test_plot_altaz_points_logs_hidden_radec_points(tmp_test_directory, caplog):
+    """Log info when RA/Dec points are below horizon and skipped in Alt/Az panel."""
+    grid_file = _write_grid_file(tmp_test_directory, "grid_empty_altaz.ecsv", [])
+    plotter = _create_plotter(
+        grid_file=grid_file,
+        observation_time="2025-01-01 00:00:00",
+        output_path=Path(tmp_test_directory) / "output",
+    )
+
+    figure = plt.figure()
+    axis = figure.add_subplot(1, 1, 1, projection="polar")
+    try:
+        plot_points = [
+            {
+                "native_frame": "radec",
+                "azimuth": None,
+                "zenith": None,
+                "ra": 10.0,
+                "dec": -80.0,
+                "visible_in_altaz": False,
+            }
+        ]
+        with caplog.at_level("INFO"):
+            plotter._plot_altaz_points(axis, plot_points)
+        assert "Skipping 1 RA/Dec points below the horizon in Alt/Az panel" in caplog.text
+    finally:
+        plt.close(figure)
+
+
+def test_plot_inferred_radec_grid_logs_no_tracks(tmp_test_directory, caplog):
+    """Log info when no inferred RA/Dec tracks can be plotted."""
+    grid_file = _write_grid_file(tmp_test_directory, "grid_empty_tracks.ecsv", [])
+    plotter = _create_plotter(
+        grid_file=grid_file,
+        observation_time="2025-01-01 00:00:00",
+        output_path=Path(tmp_test_directory) / "output",
+    )
+
+    figure = plt.figure()
+    axis = figure.add_subplot(1, 1, 1, projection="polar")
+    try:
+        with caplog.at_level("INFO"):
+            plotted = plotter._plot_inferred_radec_grid(axis, plot_points=[])
+        assert plotted == 0
+        assert "No inferred RA/Dec grid tracks available for plotting" in caplog.text
+    finally:
+        plt.close(figure)
