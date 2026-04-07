@@ -25,13 +25,13 @@ def grid_points_content():
             {
                 "azimuth": {"value": 0, "unit": "deg"},
                 "zenith_angle": {"value": 20, "unit": "deg"},
-                "nsb": {"value": 0.005, "unit": "MHz"},
+                "nsb_level": {"value": 0.005, "unit": "MHz"},
                 "offset": {"value": 0.5, "unit": "deg"},
             },
             {
                 "azimuth": {"value": 0, "unit": "deg"},
                 "zenith_angle": {"value": 40, "unit": "deg"},
-                "nsb": {"value": 0.005, "unit": "MHz"},
+                "nsb_level": {"value": 0.005, "unit": "MHz"},
                 "offset": {"value": 0.5, "unit": "deg"},
             },
         ]
@@ -88,7 +88,8 @@ def test_init_with_required_arguments(args_dict, tmp_path, grid_points_content):
         handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
         assert handler.args == args_dict
         assert handler.output_path == tmp_path
-        assert isinstance(handler.grid_points_production, dict)
+        assert isinstance(handler.grid_points_production, list)
+        assert len(handler.grid_points_production) == 2
 
 
 def test_no_evaluators_initialized(mock_handler):
@@ -162,7 +163,7 @@ def test_perform_interpolation_not_initialized(mock_handler):
 def test_perform_interpolation_with_evaluators(mock_interpolate, mock_handler):
     """Test perform_interpolation with valid evaluators."""
     mock_handler.evaluator_instances = [MagicMock()]
-    mock_handler.grid_points_production = {"grid_points": [{"test": "value1"}, {"test": "value2"}]}
+    mock_handler.grid_points_production = [{"test": "value1"}, {"test": "value2"}]
 
     mock_interp_handler = MagicMock()
     mock_interp_handler.interpolate.return_value = np.array([100, 200])
@@ -177,7 +178,7 @@ def test_perform_interpolation_with_evaluators(mock_interpolate, mock_handler):
 
         interpolated_stats = mock_handler.interpolation_handler.interpolate()
 
-        grid_points = mock_handler.grid_points_production.get("grid_points", [])
+        grid_points = mock_handler.grid_points_production
         result = []
         for i, grid_point in enumerate(grid_points):
             if i < len(interpolated_stats):
@@ -288,9 +289,8 @@ def test_handler_with_grid_points_from_file(grid_points_file, metrics_file, tmp_
             handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
             # Check grid_points_production was loaded correctly
-            assert isinstance(handler.grid_points_production, dict)
-            assert "grid_points" in handler.grid_points_production
-            assert len(handler.grid_points_production["grid_points"]) == 2
+            assert isinstance(handler.grid_points_production, list)
+            assert len(handler.grid_points_production) == 2
 
 
 def test_load_grid_points_production_file_not_found(args_dict, tmp_path):
@@ -323,9 +323,8 @@ def test_empty_grid_points_production_file(metrics_file, tmp_path):
     with patch(COLLECT_DATA_PATH, return_value={"grid_points": []}):
         handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
-        # It should load the dict with an empty grid_points list
-        assert "grid_points" in handler.grid_points_production
-        assert len(handler.grid_points_production["grid_points"]) == 0
+        assert isinstance(handler.grid_points_production, list)
+        assert len(handler.grid_points_production) == 0
 
 
 def test_grid_points_with_incorrect_format(metrics_file, tmp_path):
@@ -349,9 +348,8 @@ def test_grid_points_with_incorrect_format(metrics_file, tmp_path):
     with patch(COLLECT_DATA_PATH, return_value={"wrong_key": []}):
         handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
-        # It should load the dict with the wrong key
+        assert isinstance(handler.grid_points_production, dict)
         assert "wrong_key" in handler.grid_points_production
-        assert "grid_points" not in handler.grid_points_production
 
 
 def test_initialize_evaluators_with_valid_files(mock_handler):
@@ -400,12 +398,10 @@ def test_perform_interpolation_with_grid_points(mock_handler):
     }
     mock_handler.evaluator_instances = [mock_evaluator]
 
-    mock_handler.grid_points_production = {
-        "grid_points": [
-            {"azimuth": {"value": 0}, "zenith_angle": {"value": 20}},
-            {"azimuth": {"value": 0}, "zenith_angle": {"value": 40}},
-        ]
-    }
+    mock_handler.grid_points_production = [
+        {"azimuth": {"value": 0}, "zenith_angle": {"value": 20}},
+        {"azimuth": {"value": 0}, "zenith_angle": {"value": 40}},
+    ]
 
     mock_interp = MagicMock()
     mock_interp.interpolate.return_value = np.array([100])
