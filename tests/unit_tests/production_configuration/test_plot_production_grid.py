@@ -292,10 +292,14 @@ def test_load_grid_points_wrong_suffix(tmp_test_directory):
 def test_extract_quantity_value_dict_branches():
     """Cover value/lower/None extraction paths."""
     point_with_value = {"x": {"value": 12.3, "unit": "deg"}}
-    assert ProductionGridPlotter._extract_quantity_value(point_with_value, "x") == 12.3
+    assert ProductionGridPlotter._extract_quantity_value(point_with_value, "x") == pytest.approx(
+        12.3
+    )
 
     point_with_lower = {"x": {"lower": {"value": 7.5, "unit": "deg"}}}
-    assert ProductionGridPlotter._extract_quantity_value(point_with_lower, "x") == 7.5
+    assert ProductionGridPlotter._extract_quantity_value(point_with_lower, "x") == pytest.approx(
+        7.5
+    )
 
     point_without_value = {"x": {"unit": "deg"}}
     assert ProductionGridPlotter._extract_quantity_value(point_without_value, "x") is None
