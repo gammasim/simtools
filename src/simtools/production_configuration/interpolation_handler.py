@@ -218,7 +218,7 @@ class InterpolationHandler:
             [
                 point["azimuth"]["value"],
                 point["zenith_angle"]["value"],
-                point["nsb"]["value"],
+                point["nsb_level"]["value"],
                 point["offset"]["value"],
             ]
             for point in self.grid_points_production

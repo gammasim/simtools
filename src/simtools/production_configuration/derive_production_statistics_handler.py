@@ -56,7 +56,10 @@ class ProductionStatisticsHandler:
     def _load_grid_points_production(self):
         """Load grid points from the JSON file."""
         grid_points_production_file = self.args["grid_points_production_file"]
-        return ascii_handler.collect_data_from_file(grid_points_production_file)
+        grid_data = ascii_handler.collect_data_from_file(grid_points_production_file)
+        if isinstance(grid_data, dict) and "grid_points" in grid_data:
+            return grid_data["grid_points"]
+        return grid_data
 
     def initialize_evaluators(self):
         """Initialize StatisticalUncertaintyEvaluator instances for the given grid point."""
