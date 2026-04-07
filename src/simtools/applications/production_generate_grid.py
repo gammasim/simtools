@@ -12,9 +12,9 @@ The generated grid points are saved to a file.
 It can also convert the generated points to RA/Dec coordinates if the selected
 coordinate system is 'ra_dec'.
 
-For ``coordinate_system='ra_dec'``, the underlying grid generation supports a
-native all-sky direction sampling mode (declination lines with hour-angle spacing)
-and applies zenith-angle filtering based on the configured zenith range in that mode.
+For ``coordinate_system='ra_dec'``, the underlying grid generation supports
+declination-line sampling with hour-angle spacing and applies zenith-angle
+filtering based on the configured zenith range in that mode.
 When explicit ``ra`` / ``dec`` axes are provided, all YAML-defined grid points are
 preserved in the serialized output.
 
@@ -25,15 +25,17 @@ axes (str, required)
 coordinate_system (str, optional, default='zenith_azimuth')
     The coordinate system for the grid generation ('zenith_azimuth' or 'ra_dec').
     In ``ra_dec`` mode, observing location/time are used to build sky directions and
-    derive corresponding zenith/azimuth values for interpolation.
-observing_time (str, optional, default=now)
-    Time of the observation (format: 'YYYY-MM-DD HH:MM:SS').
-    In ``ra_dec`` mode, this defines the Local Sidereal Time used for sampling.
+    derive corresponding zenith/azimuth values for interpolation (ICRS/J2000 frame).
+observing_time (str, optional)
+    Time of the observation in UTC (format: 'YYYY-MM-DD HH:MM:SS').
+    Used only in ``ra_dec`` mode (for coordinate transforms and sidereal-time
+    sampling). Ignored in ``zenith_azimuth`` mode.
 lookup_table (str, required)
     Path to the lookup table for simulation limits. The table should contain
     varying azimuth and/or zenith angles.
-telescope_ids (list of int, optional)
-    List of telescope IDs as used in sim_telarray to filter the events.
+telescope_ids (list of str, optional)
+    List of telescope IDs as used in sim_telarray to filter the events
+    (e.g. ``MSTN-15``).
 output_file (str, optional, default='grid_output.json')
     Output file for the generated grid points (default: 'grid_output.json').
 
@@ -44,22 +46,24 @@ To generate a standard zenith/azimuth grid of simulation points, execute:
 
 .. code-block:: console
 
-        simtools-production-generate-grid --site North --model_version 6.0.0 \
+        simtools-production-generate-grid --site North --model_version 6.0.2 \
             --axes tests/resources/production_grid_generation_axes_definition.yml \
             --coordinate_system zenith_azimuth \
-            --lookup_table tests/resources/corsika_simulation_limits_lookup.ecsv \
-            --telescope_ids 1
+            --lookup_table tests/resources/corsika_simulation_limits/
+                corsika_simulation_limits_lookup_grid_test.ecsv \
+            --telescope_ids MSTN-15
 
 To generate a RA/Dec-based all-sky direction grid and serialize output in RA/Dec,
 execute:
 
 .. code-block:: console
 
-    simtools-production-generate-grid --site North --model_version 6.0.0 \
+        simtools-production-generate-grid --site North --model_version 6.0.2 \
             --axes tests/resources/production_grid_generation_axes_definition_radec.yml \
-      --coordinate_system ra_dec --observing_time "2017-09-16 00:00:00" \
-      --lookup_table tests/resources/corsika_simulation_limits_lookup.ecsv \
-            --telescope_ids 1
+            --coordinate_system ra_dec --observing_time "2017-09-16 00:00:00" \
+            --lookup_table tests/resources/corsika_simulation_limits/
+                corsika_simulation_limits_lookup_01.ecsv \
+            --telescope_ids MSTN-15
 """
 
 from pathlib import Path
@@ -101,7 +105,9 @@ def _parse():
         "--observing_time",
         type=str,
         required=False,
-        help="Time of the observation (format: 'YYYY-MM-DD HH:MM:SS').",
+        help=(
+            "Observation time in UTC (format: 'YYYY-MM-DD HH:MM:SS'). Used only in 'ra_dec' mode."
+        ),
     )
     config.parser.add_argument(
         "--output_file",
@@ -111,11 +117,13 @@ def _parse():
     )
     config.parser.add_argument(
         "--telescope_ids",
-        type=int,
+        type=str,
         nargs="*",
         default=None,
-        help="List of telescope IDs as used in sim_telarray to get the specific limits from the "
-        "lookup table.",
+        help=(
+            "List of telescope IDs as used in sim_telarray to get the specific limits from "
+            "the lookup table (e.g. MSTN-15)."
+        ),
     )
     config.parser.add_argument(
         "--lookup_table",
@@ -166,15 +174,16 @@ def main():
 
     observing_location = EarthLocation(lat=ref_lat, lon=ref_long, height=altitude)
 
-    observing_time = (
-        Time(app_context.args["observing_time"])
-        if app_context.args.get("observing_time")
-        else Time.now()
-    )
+    coordinate_system = app_context.args["coordinate_system"]
+    observing_time = None
+    if app_context.args.get("observing_time"):
+        observing_time = Time(app_context.args["observing_time"], scale="utc")
+    elif coordinate_system == "ra_dec":
+        observing_time = Time.now()
 
     grid_gen = GridGeneration(
         axes=axes,
-        coordinate_system=app_context.args["coordinate_system"],
+        coordinate_system=coordinate_system,
         observing_location=observing_location,
         observing_time=observing_time,
         lookup_table=app_context.args["lookup_table"],
@@ -183,7 +192,7 @@ def main():
 
     grid_points = grid_gen.generate_grid()
 
-    if app_context.args["coordinate_system"] == "ra_dec":
+    if coordinate_system == "ra_dec":
         grid_points = grid_gen.convert_coordinates(grid_points)
     grid_gen.serialize_grid_points(grid_points, output_file=output_filepath)
 
