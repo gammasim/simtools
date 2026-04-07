@@ -19,7 +19,6 @@ from astropy.table import Table
 from astropy.units import Quantity
 from scipy.interpolate import LinearNDInterpolator, griddata
 
-from simtools.io import ascii_handler
 from simtools.utils.names import normalize_array_element_identifier_container
 
 DEFAULT_SERIALIZATION_ROUND_DECIMALS = 6
@@ -574,37 +573,53 @@ class GridGeneration:
         return grid_points
 
     def serialize_grid_points(self, grid_points, output_file):
-        """Serialize the grid output and save to a file or print to the console."""
-        cleaned_points = []
+        """Serialize the grid output and save to an ECSV table file."""
+        if Path(output_file).suffix.lower() != ".ecsv":
+            raise ValueError("Grid output file must use '.ecsv' extension.")
 
+        all_keys = []
         for point in grid_points:
-            cleaned_point = {}
-            for key, value in point.items():
-                if isinstance(value, dict):
-                    # Nested dictionaries
-                    cleaned_point[key] = {k: self.serialize_quantity(v) for k, v in value.items()}
+            for key in point:
+                if key not in all_keys:
+                    all_keys.append(key)
+
+        rows = []
+        units = {}
+        for point in grid_points:
+            row = {}
+            for key in all_keys:
+                value = point.get(key)
+                if isinstance(value, u.Quantity):
+                    row[key] = round(float(value.value), self.serialization_round_decimals)
+                    units.setdefault(key, str(value.unit))
+                elif isinstance(value, dict) and "value" in value:
+                    row[key] = value["value"]
+                    if "unit" in value:
+                        units.setdefault(key, value["unit"])
+                elif value is None:
+                    row[key] = np.nan
+                elif isinstance(value, (np.floating, float)):
+                    row[key] = round(float(value), self.serialization_round_decimals)
+                elif isinstance(value, (np.integer, int)):
+                    row[key] = int(value)
                 else:
-                    cleaned_point[key] = self.serialize_quantity(value)
+                    row[key] = value
+            rows.append(row)
 
-            cleaned_points.append(cleaned_point)
+        output_table = Table(rows=rows, names=all_keys)
+        for column_name, unit in units.items():
+            output_table[column_name].unit = u.Unit(unit)
 
-        output_data = {
-            "metadata": {
-                "coordinate_system": self.coordinate_system,
-                "reference_frame": "ICRS (J2000)",
-                "observing_time_utc": self.observing_time.isot if self.observing_time else None,
-                "observing_time_scale": self.observing_time.scale if self.observing_time else None,
-                "telescope_ids": self.telescope_ids,
-                "lookup_table": str(Path(self.lookup_table)) if self.lookup_table else None,
-            },
-            "grid_points": cleaned_points,
+        output_table.meta = {
+            "coordinate_system": self.coordinate_system,
+            "reference_frame": "ICRS (J2000)",
+            "observing_time_utc": self.observing_time.isot if self.observing_time else None,
+            "observing_time_scale": self.observing_time.scale if self.observing_time else None,
+            "telescope_ids": self.telescope_ids,
+            "lookup_table": str(Path(self.lookup_table)) if self.lookup_table else None,
         }
 
-        ascii_handler.write_data_to_file(
-            data=output_data,
-            output_file=output_file,
-            sort_keys=False,
-        )
+        output_table.write(output_file, format="ascii.ecsv", overwrite=True)
         self._logger.info(f"Output saved to {output_file}")
 
     def serialize_quantity(self, value):

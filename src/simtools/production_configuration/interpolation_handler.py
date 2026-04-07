@@ -4,6 +4,7 @@ import logging
 
 import astropy.units as u
 import numpy as np
+from astropy.table import Table
 from scipy.interpolate import griddata
 
 from simtools.production_configuration.derive_production_statistics import (
@@ -214,12 +215,29 @@ class InterpolationHandler:
         np.ndarray
             Reduced production grid points.
         """
+        if isinstance(self.grid_points_production, Table):
+            production_grid_points = np.column_stack(
+                (
+                    np.asarray(self.grid_points_production["azimuth"], dtype=float),
+                    np.asarray(self.grid_points_production["zenith_angle"], dtype=float),
+                    np.asarray(self.grid_points_production["nsb_level"], dtype=float),
+                    np.asarray(self.grid_points_production["offset"], dtype=float),
+                )
+            )
+            return production_grid_points[:, self._non_flat_mask]
+
+        def point_value(point, key):
+            value = point[key]
+            if isinstance(value, dict):
+                return value["value"]
+            return value
+
         production_grid_points = [
             [
-                point["azimuth"]["value"],
-                point["zenith_angle"]["value"],
-                point["nsb_level"]["value"],
-                point["offset"]["value"],
+                point_value(point, "azimuth"),
+                point_value(point, "zenith_angle"),
+                point_value(point, "nsb_level"),
+                point_value(point, "offset"),
             ]
             for point in self.grid_points_production
         ]

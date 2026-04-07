@@ -33,7 +33,7 @@ To evaluate statistical uncertainties and perform interpolation, run the command
 .. code-block:: console
 
     simtools-production-derive-statistics \\
-        --grid_points_production_file path/to/grid_points_production.json \\
+        --grid_points_production_file path/to/grid_points_production.ecsv \\
         --metrics_file "path/to/metrics.yaml" \\
         --base_path path/to/production_event_files/ \\
         --file_name_template "prod6_LaPalma-{zenith}deg\\
@@ -70,7 +70,7 @@ def _parse():
         "--grid_points_production_file",
         type=str,
         required=True,
-        help="Path to the JSON file containing grid points for a production.",
+        help="Path to the ECSV file containing grid points for a production.",
     )
     config.parser.add_argument(
         "--metrics_file",
