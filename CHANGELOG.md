@@ -7,6 +7,29 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.29.0](https://github.com/gammasim/simtools/releases/tag/v0.29.0) - 2026-04-07
+
+### Bugfixes
+
+- Set correct env variable `SIMTOOLS_SIM_TELARRAY_PATH` in production image. ([#2109](https://github.com/gammasim/simtools/pull/2109))
+
+### New Features
+
+- Add support for Gauss-Exponential pulse shape in illuminator simulations (previously only available for flashers).
+  Add Lambertian angular distribution support for illuminators and allow to set the maximum angle when using Lambertian distribution. ([#2092](https://github.com/gammasim/simtools/pull/2092))
+
+### Maintenance
+
+- Standardized dimensionless-unit handling via `value_conversion.is_dimensionless_unit()` / `normalize_dimensionless_unit()` and updated unit-conversion behavior/tests accordingly ([#2092](https://github.com/gammasim/simtools/pull/2092))
+- Moved/centralized overwrite-time model-parameter validation to `DataValidator.validate_model_parameter()` and added schema helpers to fetch per-parameter type/unit by schema version.
+  ([#2092](https://github.com/gammasim/simtools/pull/2092))
+- Disable markdownlint in pre-commit because it is incompatible with the Node.js version used. Update pyproject.toml to reflect changes made by pyproject-fmt. ([#2100](https://github.com/gammasim/simtools/pull/2100))
+
+### Simulation model
+
+- Update default simulation models version used in CI to v0.14.0. ([#2108](https://github.com/gammasim/simtools/pull/2108))
+
+
 ## [v0.28.0](https://github.com/gammasim/simtools/releases/tag/v0.28.0) - 2026-03-30
 
 ### API Changes
