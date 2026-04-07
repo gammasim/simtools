@@ -7,6 +7,7 @@ import pytest
 import yaml
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
+from astropy.table import Table
 from astropy.time import Time
 from astropy.units import Quantity
 from astropy.utils import iers
@@ -380,17 +381,16 @@ def test_serialize_grid_points_with_output_file(grid_gen, tmp_test_directory, ca
         },
     ]
 
-    output_file = tmp_test_directory / "grid_output.json"
+    output_file = tmp_test_directory / "grid_output.ecsv"
     with caplog.at_level(logging.INFO):
         grid_gen.serialize_grid_points(grid_points, output_file=output_file)
     assert output_file.exists()
 
-    with open(output_file, encoding="utf-8") as f:
-        output_data = yaml.safe_load(f)
-        assert "metadata" in output_data
-        assert "grid_points" in output_data
-        assert "zenith_angle" in output_data["grid_points"][0]
-        assert "lower_energy_threshold" in output_data["grid_points"][0]
+    output_data = Table.read(output_file, format="ascii.ecsv")
+    assert "zenith_angle" in output_data.colnames
+    assert "lower_energy_threshold" in output_data.colnames
+    assert output_data.meta["coordinate_system"] == grid_gen.coordinate_system
+    assert output_data.meta["reference_frame"] == "ICRS (J2000)"
 
     assert f"Output saved to {output_file}" in caplog.text
 
