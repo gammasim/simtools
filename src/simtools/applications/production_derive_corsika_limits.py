@@ -68,7 +68,7 @@ Derive limits for a list of array layouts (use 'all' to derive limits for all la
         --array_layout_name alpha,beta \\
         --loss_fraction 1e-6 \\
         --plot_histograms \\
-        --output_file corsika_simulation_limits_lookup.ecsv
+        --output_file corsika_simulation_limits.ecsv
 
 Derive limits for a given file for custom defined array layouts:
 
@@ -79,7 +79,7 @@ Derive limits for a given file for custom defined array layouts:
         --telescope_ids path/to/telescope_configs.yaml \\
         --loss_fraction 1e-6 \\
         --plot_histograms \\
-        --output_file corsika_simulation_limits_lookup.ecsv
+        --output_file corsika_simulation_limits.ecsv
 """
 
 from simtools.application_control import get_application_label, startup_application
