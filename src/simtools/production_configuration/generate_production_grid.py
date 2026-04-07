@@ -577,40 +577,67 @@ class GridGeneration:
         if Path(output_file).suffix.lower() != ".ecsv":
             raise ValueError("Grid output file must use '.ecsv' extension.")
 
-        all_keys = []
-        for point in grid_points:
-            for key in point:
-                if key not in all_keys:
-                    all_keys.append(key)
-
-        rows = []
-        units = {}
-        for point in grid_points:
-            row = {}
-            for key in all_keys:
-                value = point.get(key)
-                if isinstance(value, u.Quantity):
-                    row[key] = round(float(value.value), self.serialization_round_decimals)
-                    units.setdefault(key, str(value.unit))
-                elif isinstance(value, dict) and "value" in value:
-                    row[key] = value["value"]
-                    if "unit" in value:
-                        units.setdefault(key, value["unit"])
-                elif value is None:
-                    row[key] = np.nan
-                elif isinstance(value, (np.floating, float)):
-                    row[key] = round(float(value), self.serialization_round_decimals)
-                elif isinstance(value, (np.integer, int)):
-                    row[key] = int(value)
-                else:
-                    row[key] = value
-            rows.append(row)
+        all_keys = self._collect_point_keys(grid_points)
+        rows, units = self._build_serialized_rows(grid_points, all_keys)
 
         output_table = Table(rows=rows, names=all_keys)
         for column_name, unit in units.items():
             output_table[column_name].unit = u.Unit(unit)
 
-        output_table.meta = {
+        output_table.meta = self._build_grid_metadata()
+
+        output_table.write(output_file, format="ascii.ecsv", overwrite=True)
+        self._logger.info(f"Output saved to {output_file}")
+
+    @staticmethod
+    def _collect_point_keys(grid_points):
+        """Collect all grid-point keys while preserving first-seen order."""
+        all_keys = []
+        for point in grid_points:
+            for key in point:
+                if key not in all_keys:
+                    all_keys.append(key)
+        return all_keys
+
+    def _serialize_grid_value(self, value):
+        """Serialize one grid value and return (value, unit)."""
+        if isinstance(value, u.Quantity):
+            serialized = round(float(value.value), self.serialization_round_decimals)
+            return serialized, str(value.unit)
+
+        if isinstance(value, dict) and "value" in value:
+            return value["value"], value.get("unit")
+
+        if value is None:
+            return np.nan, None
+
+        if isinstance(value, (np.floating, float)):
+            return round(float(value), self.serialization_round_decimals), None
+
+        if isinstance(value, (np.integer, int)):
+            return int(value), None
+
+        return value, None
+
+    def _build_serialized_rows(self, grid_points, all_keys):
+        """Build serialized row dictionaries and collect units."""
+        rows = []
+        units = {}
+
+        for point in grid_points:
+            row = {}
+            for key in all_keys:
+                serialized_value, unit = self._serialize_grid_value(point.get(key))
+                row[key] = serialized_value
+                if unit is not None:
+                    units.setdefault(key, unit)
+            rows.append(row)
+
+        return rows, units
+
+    def _build_grid_metadata(self):
+        """Build metadata for the output grid table."""
+        return {
             "coordinate_system": self.coordinate_system,
             "reference_frame": "ICRS (J2000)",
             "observing_time_utc": self.observing_time.isot if self.observing_time else None,
@@ -618,9 +645,6 @@ class GridGeneration:
             "telescope_ids": self.telescope_ids,
             "lookup_table": str(Path(self.lookup_table)) if self.lookup_table else None,
         }
-
-        output_table.write(output_file, format="ascii.ecsv", overwrite=True)
-        self._logger.info(f"Output saved to {output_file}")
 
     def serialize_quantity(self, value):
         """Serialize Quantity."""
