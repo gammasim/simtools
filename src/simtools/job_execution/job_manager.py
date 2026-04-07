@@ -67,6 +67,7 @@ def submit(
     runtime_environment=None,
     env=None,
     test=False,
+    check=True,
 ):
     """
     Submit a job described by a command or a shell script.
@@ -94,11 +95,15 @@ def submit(
         Provided in order to print the log excerpt in case of run time error.
     test: bool
         Testing mode without sub submission.
+    check: bool
+        If True, raise JobExecutionError on non-zero return code.
+        If False, return process result even on non-zero return code.
     """
     command = _build_command(command, configuration, runtime_environment)
 
     logger.info(f"Submitting command {command}")
-    logger.info(f"Job output/error streams {out_file} / {err_file}")
+    if out_file or err_file:
+        logger.info(f"Job output/error streams {out_file} / {err_file}")
 
     if test:
         logger.info("Testing mode enabled")
@@ -118,7 +123,7 @@ def submit(
         result = subprocess.run(
             command,
             shell=isinstance(command, str),
-            check=True,
+            check=check,
             text=True,
             stdin=stdin,
             stdout=stdout,
