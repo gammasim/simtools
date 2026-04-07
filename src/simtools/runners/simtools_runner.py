@@ -216,13 +216,11 @@ def _pull_image(engine, image):
     image : str
         Image to pull.
     """
-    try:
-        job_manager.submit(f"{engine} image inspect {image}", test=True)
+    inspect_result = job_manager.submit(f"{engine} image inspect {image}", check=False)
+    if inspect_result and inspect_result.returncode == 0:
         return
-    except job_manager.JobExecutionError:
-        pass
 
     try:
-        job_manager.submit(f"{engine} pull {image}", test=True)
+        job_manager.submit(f"{engine} pull {image}")
     except job_manager.JobExecutionError as exc:
         raise RuntimeError(f"Failed to pull image '{image}' using '{engine}': {exc}") from exc

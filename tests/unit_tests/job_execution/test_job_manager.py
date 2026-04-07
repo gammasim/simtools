@@ -75,6 +75,29 @@ def test_submit_test_mode(mocker, tmp_path):
     mock_run.assert_not_called()
 
 
+def test_submit_check_false_returns_result_on_nonzero(mocker):
+    mock_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
+    mock_result = MagicMock()
+    mock_result.returncode = 125
+    mock_result.stdout = ""
+    mock_result.stderr = "image not known"
+    mock_run.return_value = mock_result
+
+    result = jm.submit("podman image inspect some/image:tag", check=False)
+
+    assert result.returncode == 125
+    call_kwargs = mock_run.call_args[1]
+    assert call_kwargs["check"] is False
+
+
+def test_submit_check_true_raises_on_nonzero(mocker):
+    mock_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
+    mock_run.side_effect = subprocess.CalledProcessError(125, "inspect")
+
+    with pytest.raises(jm.JobExecutionError):
+        jm.submit("podman image inspect some/image:tag", check=True)
+
+
 @pytest.mark.parametrize(
     ("config", "runtime_env", "expected_in_command"),
     [

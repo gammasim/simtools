@@ -477,3 +477,38 @@ def test_run_applications_with_empty_configuration_list(monkeypatch, tmp_test_di
 
     # Verify no applications were submitted
     mock_submit.assert_not_called()
+
+
+def test_pull_image_skips_pull_if_image_exists(monkeypatch):
+    image = "ghcr.io/gammasim/simtools-prod:test"
+    inspect_result = mock.Mock(returncode=0)
+    submit_mock = mock.Mock(return_value=inspect_result)
+    monkeypatch.setattr("simtools.job_execution.job_manager.submit", submit_mock)
+
+    simtools_runner._pull_image("podman", image)
+
+    submit_mock.assert_called_once_with(f"podman image inspect {image}", check=False)
+
+
+def test_pull_image_pulls_if_image_missing(monkeypatch):
+    image = "ghcr.io/gammasim/simtools-prod:test"
+    inspect_result = mock.Mock(returncode=125)
+    pull_result = mock.Mock(returncode=0)
+    submit_mock = mock.Mock(side_effect=[inspect_result, pull_result])
+    monkeypatch.setattr("simtools.job_execution.job_manager.submit", submit_mock)
+
+    simtools_runner._pull_image("podman", image)
+
+    assert submit_mock.call_count == 2
+    submit_mock.assert_any_call(f"podman image inspect {image}", check=False)
+    submit_mock.assert_any_call(f"podman pull {image}")
+
+
+def test_pull_image_raises_if_pull_fails(monkeypatch):
+    image = "ghcr.io/gammasim/simtools-prod:test"
+    inspect_result = mock.Mock(returncode=125)
+    submit_mock = mock.Mock(side_effect=[inspect_result, JobExecutionError("pull failed")])
+    monkeypatch.setattr("simtools.job_execution.job_manager.submit", submit_mock)
+
+    with pytest.raises(RuntimeError, match="Failed to pull image"):
+        simtools_runner._pull_image("podman", image)
