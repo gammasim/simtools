@@ -1,11 +1,11 @@
 """Tests for production grid plotting in production_configuration."""
 
-import json
 from pathlib import Path
 
 import astropy.units as u
 import pytest
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
+from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import iers
 
@@ -34,9 +34,33 @@ SITE_LOCATION_HEIGHT = 2200.0
 
 
 def _write_grid_file(tmp_test_directory, file_name, grid_points):
-    """Write grid points to a temporary JSON file."""
+    """Write grid points to a temporary ECSV file."""
     file_path = Path(tmp_test_directory) / file_name
-    file_path.write_text(json.dumps(grid_points), encoding="utf-8")
+    rows = []
+    for point in grid_points:
+        row = {}
+        for key, value in point.items():
+            if isinstance(value, dict) and "value" in value:
+                row[key] = value["value"]
+            else:
+                row[key] = value
+        rows.append(row)
+
+    table = Table(rows=rows)
+    if "azimuth" in table.colnames:
+        table["azimuth"].unit = "deg"
+    if "zenith_angle" in table.colnames:
+        table["zenith_angle"].unit = "deg"
+    if "ra" in table.colnames:
+        table["ra"].unit = "deg"
+    if "dec" in table.colnames:
+        table["dec"].unit = "deg"
+    if "nsb_level" in table.colnames:
+        table["nsb_level"].unit = "MHz"
+    if "offset" in table.colnames:
+        table["offset"].unit = "deg"
+    table.meta["observing_time_utc"] = "2025-01-01T00:00:00.000"
+    table.write(file_path, format="ascii.ecsv", overwrite=True)
     return file_path
 
 
@@ -69,7 +93,7 @@ def test_normalize_altaz_point_creates_radec_coordinates(tmp_test_directory):
     """Test that native Alt/Az points are converted to RA/Dec for the equatorial panel."""
     grid_file = _write_grid_file(
         tmp_test_directory,
-        "grid_altaz.json",
+        "grid_altaz.ecsv",
         [
             {
                 "azimuth": {"value": 180.0, "unit": "deg"},
@@ -116,7 +140,7 @@ def test_normalize_radec_point_projects_to_altaz(tmp_test_directory):
 
     grid_file = _write_grid_file(
         tmp_test_directory,
-        "grid_radec.json",
+        "grid_radec.ecsv",
         [
             {
                 "ra": {"value": source_radec.ra.deg, "unit": "deg"},
@@ -152,7 +176,7 @@ def test_infer_radec_grid_tracks_from_native_points(tmp_test_directory):
     observation_time = Time("2025-01-01 00:00:00")
     grid_points = _build_radec_mesh_grid_points(location, observation_time)
 
-    grid_file = _write_grid_file(tmp_test_directory, "grid_radec_mesh.json", grid_points)
+    grid_file = _write_grid_file(tmp_test_directory, "grid_radec_mesh.ecsv", grid_points)
     plotter = _create_plotter(
         grid_file=grid_file,
         observation_time=str(observation_time.value),
@@ -172,16 +196,13 @@ def test_plot_sky_projection_creates_outputs(tmp_test_directory):
     """Test that the sky projection plot is written to disk."""
     grid_file = _write_grid_file(
         tmp_test_directory,
-        "grid_wrapped.json",
+        "grid_wrapped.ecsv",
         [
             {
-                "grid_point": {
-                    "azimuth": {"value": 310.0, "unit": "deg"},
-                    "zenith_angle": {"value": 30.0, "unit": "deg"},
-                    "nsb_level": {"value": 4.0, "unit": "MHz"},
-                    "offset": {"value": 0.0, "unit": "deg"},
-                },
-                "interpolated_production_statistics": 1234.0,
+                "azimuth": {"value": 310.0, "unit": "deg"},
+                "zenith_angle": {"value": 30.0, "unit": "deg"},
+                "nsb_level": {"value": 4.0, "unit": "MHz"},
+                "offset": {"value": 0.0, "unit": "deg"},
             }
         ],
     )
@@ -208,7 +229,7 @@ def test_plot_sky_projection_infers_radec_grid_tracks(tmp_test_directory):
     observation_time = Time("2025-01-01 00:00:00")
     grid_points = _build_radec_mesh_grid_points(location, observation_time)
 
-    grid_file = _write_grid_file(tmp_test_directory, "grid_radec_tracks.json", grid_points)
+    grid_file = _write_grid_file(tmp_test_directory, "grid_radec_tracks.ecsv", grid_points)
     output_path = Path(tmp_test_directory) / "output"
     plotter = _create_plotter(
         grid_file=grid_file,
@@ -219,3 +240,24 @@ def test_plot_sky_projection_infers_radec_grid_tracks(tmp_test_directory):
     plotter.plot_sky_projection(plot_ra_dec_tracks=True)
 
     assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM}.png").exists()
+
+
+def test_load_grid_points_from_ecsv(tmp_test_directory):
+    """Test that ECSV grid-point files are loaded and normalized."""
+    grid_file = Path(tmp_test_directory) / "grid_points.ecsv"
+    table = Table(rows=[{"azimuth": 180.0, "zenith_angle": 20.0, "nsb_level": 1.0}])
+    table["azimuth"].unit = "deg"
+    table["zenith_angle"].unit = "deg"
+    table["nsb_level"].unit = "MHz"
+    table.meta["observing_time_utc"] = "2025-01-01T00:00:00.000"
+    table.write(grid_file, format="ascii.ecsv", overwrite=True)
+
+    plotter = _create_plotter(
+        grid_file=grid_file,
+        observation_time=None,
+        output_path=Path(tmp_test_directory) / "output",
+    )
+
+    normalized_points = plotter.normalize_grid_points()
+    assert len(normalized_points) == 1
+    assert normalized_points[0]["native_frame"] == "altaz"
