@@ -5,8 +5,8 @@ applications:
     grid_points_file: tests/resources/production_grid_points.json
     output_path: simtools-output
     site: North
-    model_version: 6.0.0
-    observation_time: '2025-01-01 00:00:00'
+    model_version: 6.0.2
+    observation_time: '2017-09-16 00:00:00'
     plot_ra_dec_tracks: true
   integration_tests:
   - output_file: production_grid_sky_projection.png

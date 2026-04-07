@@ -4,13 +4,13 @@ applications:
   configuration:
     event_data_file: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.fits.gz
     loss_fraction: 0.001
-    output_file: corsika_simulation_limits_lookup.ecsv
+    output_file: corsika_simulation_limits.ecsv
     output_path: simtools-output
     plot_histograms: true
     telescope_ids: tests/resources/production_layouts_telescope_ids.yml
   integration_tests:
-  - output_file: corsika_simulation_limits_lookup.ecsv
-  - output_file: corsika_simulation_limits_lookup.meta.yml
+  - output_file: corsika_simulation_limits.ecsv
+  - output_file: corsika_simulation_limits.meta.yml
   test_name: fits
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

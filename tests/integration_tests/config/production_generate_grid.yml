@@ -4,13 +4,13 @@ applications:
   configuration:
     axes: tests/resources/production_grid_generation_axes_definition.yml
     coordinate_system: zenith_azimuth
-    lookup_table: tests/resources/corsika_simulation_limits_lookup.ecsv
+    lookup_table: tests/resources/corsika_simulation_limits/merged_corsika_limits_for_test.ecsv
     model_version: 6.0.2
     observing_time: '2017-09-16 00:00:00'
     output_file: grid_output.json
     output_path: simtools-output
     site: North
-    telescope_ids: []
+    telescope_ids: [LSTN-01]
   integration_tests:
   - output_file: grid_output.json
   test_name: production_generate_grid
