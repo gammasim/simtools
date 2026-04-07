@@ -36,8 +36,8 @@ lookup_table (str, required)
 telescope_ids (list of str, optional)
     List of telescope IDs as used in sim_telarray to filter the events
     (e.g. ``MSTN-15``).
-output_file (str, optional, default='grid_output.json')
-    Output file for the generated grid points (default: 'grid_output.json').
+output_file (str, optional, default='grid_output.ecsv')
+    Output file for the generated grid points (default: 'grid_output.ecsv').
 
 
 Example
@@ -112,8 +112,8 @@ def _parse():
     config.parser.add_argument(
         "--output_file",
         type=str,
-        default="grid_output.json",
-        help="Output file for the generated grid points (default: 'grid_output.json').",
+        default="grid_output.ecsv",
+        help="Output file for the generated grid points (default: 'grid_output.ecsv').",
     )
     config.parser.add_argument(
         "--telescope_ids",

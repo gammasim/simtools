@@ -7,9 +7,8 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
+from astropy.table import Table
 from astropy.time import Time
-
-from simtools.io import ascii_handler
 
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
@@ -26,7 +25,7 @@ class ProductionGridPlotter:
     Parameters
     ----------
     grid_points_file : str or Path
-        Path to the JSON file containing grid points.
+        Path to the ECSV file containing grid points.
     site_location_lat : float or astropy.units.Quantity
         Site latitude in degrees.
     site_location_lon : float or astropy.units.Quantity
@@ -79,7 +78,7 @@ class ProductionGridPlotter:
 
     def _load_grid_points(self):
         """
-        Load grid points from JSON file.
+        Load grid points from ECSV file.
 
         Returns
         -------
@@ -90,30 +89,37 @@ class ProductionGridPlotter:
         ------
         FileNotFoundError
             If the grid points file does not exist.
-        json.JSONDecodeError
-            If the file is not valid JSON.
         ValueError
-            If the file content cannot be interpreted as production grid points.
+            If the grid points file is not ECSV.
         """
         if not self.grid_points_file.exists():
             msg = f"Grid points file not found: {self.grid_points_file}"
             logger.error(msg)
             raise FileNotFoundError(msg)
+        if self.grid_points_file.suffix.lower() != ".ecsv":
+            msg = f"Grid points file must be ECSV: {self.grid_points_file}"
+            logger.error(msg)
+            raise ValueError(msg)
 
-        data = ascii_handler.collect_data_from_file(self.grid_points_file)
+        grid_table = Table.read(self.grid_points_file, format="ascii.ecsv")
+        self.grid_metadata = dict(grid_table.meta)
+        return self._convert_ecsv_table_to_grid_points(grid_table)
 
-        if isinstance(data, dict) and "grid_points" in data:
-            self.grid_metadata = data.get("metadata", {})
-            return data["grid_points"]
-
-        if isinstance(data, (list, tuple)):
-            if data and isinstance(data[0], dict) and "grid_point" in data[0]:
-                return [entry["grid_point"] for entry in data]
-            return list(data)
-
-        msg = f"Unexpected JSON structure in {self.grid_points_file}"
-        logger.error(msg)
-        raise ValueError(msg)
+    @staticmethod
+    def _convert_ecsv_table_to_grid_points(grid_table):
+        """Convert an ECSV grid-point table to plain dictionaries."""
+        return [
+            {
+                column_name: (
+                    row[column_name].item()
+                    if isinstance(row[column_name], np.generic)
+                    else row[column_name]
+                )
+                for column_name in grid_table.colnames
+                if not np.ma.is_masked(row[column_name])
+            }
+            for row in grid_table
+        ]
 
     @staticmethod
     def _extract_quantity_value(point, key):

@@ -17,6 +17,7 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
+from astropy.table import Table
 
 from simtools.io import ascii_handler
 from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
@@ -54,12 +55,11 @@ class ProductionStatisticsHandler:
         self.grid_points_production = self._load_grid_points_production()
 
     def _load_grid_points_production(self):
-        """Load grid points from the JSON file."""
+        """Load grid points from an ECSV file as an astropy table."""
         grid_points_production_file = self.args["grid_points_production_file"]
-        grid_data = ascii_handler.collect_data_from_file(grid_points_production_file)
-        if isinstance(grid_data, dict) and "grid_points" in grid_data:
-            return grid_data["grid_points"]
-        return grid_data
+        if Path(grid_points_production_file).suffix.lower() != ".ecsv":
+            raise ValueError("grid_points_production_file must be an ECSV file.")
+        return Table.read(grid_points_production_file, format="ascii.ecsv")
 
     def initialize_evaluators(self):
         """Initialize StatisticalUncertaintyEvaluator instances for the given grid point."""
@@ -100,7 +100,7 @@ class ProductionStatisticsHandler:
             self.evaluator_instances.append(evaluator)
 
     def perform_interpolation(self):
-        """Perform interpolation for the query point."""
+        """Perform interpolation for the query point and return an output table."""
         if not self.evaluator_instances:
             self.logger.error("No evaluators initialized. Cannot perform interpolation.")
             return None
@@ -110,30 +110,23 @@ class ProductionStatisticsHandler:
             metrics=self.metrics,
             grid_points_production=self.grid_points_production,
         )
-        qrid_points_with_statistics = []
-
         interpolated_production_statistics = self.interpolation_handler.interpolate()
-        for grid_point, statistics in zip(
-            self.grid_points_production, interpolated_production_statistics
-        ):
-            qrid_points_with_statistics.append(
-                {
-                    "grid_point": grid_point,
-                    "interpolated_production_statistics": float(np.asarray(statistics).item()),
-                }
-            )
-        return qrid_points_with_statistics
+        statistics_array = np.asarray(interpolated_production_statistics, dtype=float).reshape(-1)
+        number_of_rows = min(len(self.grid_points_production), len(statistics_array))
+
+        output_table = self.grid_points_production[:number_of_rows].copy(copy_data=True)
+        output_table["interpolated_production_statistics"] = statistics_array[:number_of_rows]
+        return output_table
 
     def write_output(self, production_statistics):
-        """Write the derived event statistics to a file."""
-        output_data = (production_statistics,)
+        """Write the derived event statistics table to an ECSV file."""
         output_filename = self.args["output_file"]
         self.output_path.mkdir(parents=True, exist_ok=True)
         output_file_path = self.output_path.joinpath(output_filename)
-        ascii_handler.write_data_to_file(
-            data=output_data,
-            output_file=output_file_path,
-        )
+        if output_file_path.suffix.lower() != ".ecsv":
+            raise ValueError("output_file must be an ECSV file.")
+
+        production_statistics.write(output_file_path, format="ascii.ecsv", overwrite=True)
         self.logger.info(f"Output saved to {self.output_path}")
 
     def plot_production_statistics_comparison(self):
