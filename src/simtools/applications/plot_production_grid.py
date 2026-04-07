@@ -18,7 +18,9 @@ site (str, required)
 model_version (str, required)
     Model version used to read the site reference coordinates.
 observation_time (str, optional)
-    Observation time in ISO format. Default: "2025-01-01 00:00:00".
+    Observation time in UTC ISO format used for Alt/Az <-> RA/Dec transformations.
+    If omitted, the application uses ``metadata.observing_time_utc`` from the
+    grid file when available.
 plot_ra_dec_tracks (flag, optional)
     If provided, plot RA/Dec guide tracks on top of the sky projection. When native
     RA/Dec grid points are present, thin grid lines are inferred automatically.
@@ -37,13 +39,14 @@ To plot grid points on a sky projection:
     simtools-plot-production-grid \
         --grid_points_file path/to/grid_points_production.json \
         --site North \
-        --model_version 6.0.0 \
+        --model_version 6.0.2 \
         --observation_time "2025-06-01 00:00:00" \
         --plot_ra_dec_tracks
 
 Output
 ------
-The output plot showing the grid points on a polar sky projection.
+The output figure shows both local Alt/Az (polar projection) and equatorial
+RA/Dec panels.
 """
 
 import logging
@@ -72,8 +75,11 @@ def _parse():
     config.parser.add_argument(
         "--observation_time",
         type=str,
-        default="2025-01-01 00:00:00",
-        help="Observation time in ISO format (default: 2025-01-01 00:00:00).",
+        default=None,
+        help=(
+            "Observation time in UTC ISO format for coordinate transforms. "
+            "If not provided, uses observing time stored in the grid file metadata when present."
+        ),
     )
     config.parser.add_argument(
         "--plot_ra_dec_tracks",
