@@ -8,7 +8,7 @@ import astropy.units as u
 import numpy as np
 
 from simtools.io import ascii_handler
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 
 
 def get_list_of_simtel_parameters(simtel_config_file):
@@ -335,13 +335,13 @@ class SimtelConfigReader:
             unit = self._get_schema_values("unit")
         except TypeError:  # no schema defined
             return column
-        if unit is None or unit == "dimensionless":
+        if value_conversion.is_dimensionless_unit(unit):
             return column
 
         if isinstance(column, np.ndarray) and len(column) == len(unit):
             return np.array(
                 [
-                    col * u.Unit(un) if un != "dimensionless" else col
+                    col * u.Unit(un) if not value_conversion.is_dimensionless_unit(un) else col
                     for col, un in zip(column, unit)
                 ],
                 dtype=object,

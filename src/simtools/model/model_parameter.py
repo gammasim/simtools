@@ -10,6 +10,7 @@ import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.data_model import schema
+from simtools.data_model.validate_data import DataValidator
 from simtools.db import db_handler
 from simtools.io import io_handler
 from simtools.model import legacy_model_parameter
@@ -373,7 +374,7 @@ class ModelParameter:
 
         legacy_model_parameter.apply_legacy_updates_to_parameters(parameters, _legacy_updates)
 
-    def overwrite_model_parameter(self, par_name, value, parameter_version=None):
+    def overwrite_model_parameter(self, par_name, value, parameter_version=None, metadata=None):
         """
         Overwrite the parameter dictionary for a specific parameter in the model.
 
@@ -391,6 +392,8 @@ class ModelParameter:
             New value for the parameter.
         parameter_version: str, optional
             New version for the parameter.
+        metadata: dict, optional
+            Additional metadata (type, unit, model_parameter_schema_version).
 
         Raises
         ------
@@ -403,44 +406,79 @@ class ModelParameter:
         if value is None and parameter_version:
             self._overwrite_model_parameter_from_db(par_name, parameter_version)
         else:
-            self._overwrite_model_parameter_from_value(par_name, value, parameter_version)
+            self._overwrite_model_parameter_from_value(par_name, value, parameter_version, metadata)
 
         # In case parameter is a file, the model files will be outdated
         if self.get_parameter_file_flag(par_name):
             self._is_exported_model_files_up_to_date = False
 
-    def _overwrite_model_parameter_from_value(self, par_name, value, parameter_version=None):
+    def _overwrite_model_parameter_from_value(self, par_name, value, parameter_version, metadata):
         """Overwrite model parameter from provided value only."""
-        value = gen.convert_string_to_list(value) if isinstance(value, str) else value
-        par_type = self.get_parameter_type(par_name)
+        try:
+            DataValidator.validate_model_parameter(
+                self._update_parameter_dict(
+                    par_name,
+                    gen.convert_string_to_list(value) if isinstance(value, str) else value,
+                    parameter_version,
+                    metadata,
+                ),
+                par_name=par_name,
+            )
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Schema file for parameter {par_name} not found.") from exc
 
-        if par_type in ("list", "dict"):
-            if not gen.validate_data_type(
-                reference_dtype=par_type,
-                value=value,
-                dtype=None,
-                allow_subtypes=True,
-            ):
-                raise ValueError(f"Could not cast {value} of type {type(value)} to {par_type}.")
-        else:
-            for value_element in gen.ensure_iterable(value):
-                if not gen.validate_data_type(
-                    reference_dtype=par_type,
-                    value=value_element,
-                    dtype=None,
-                    allow_subtypes=True,
-                ):
-                    raise ValueError(
-                        f"Could not cast {value_element} of type "
-                        f"{type(value_element)} to {par_type}."
-                    )
+    def _resolve_schema_version(self, par_name, metadata):
+        """Resolve to an available schema version for a model parameter."""
+        par_dict = self.parameters.get(par_name, {})
+        schema_version = (
+            metadata.get("model_parameter_schema_version")
+            if metadata and "model_parameter_schema_version" in metadata
+            else par_dict.get("model_parameter_schema_version")
+        )
+        requested_version = schema_version or "latest"
+        try:
+            return schema.get_model_parameter_schema(par_name, requested_version).get(
+                "schema_version"
+            )
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Schema file for parameter {par_name} not found.") from exc
+        except ValueError as exc:
+            raise ValueError(
+                f"Schema version '{requested_version}' not available for parameter '{par_name}'"
+            ) from exc
 
+    def _update_parameter_dict(self, par_name, value, parameter_version, metadata):
+        """
+        Update parameter dictionary with value/metadata and fill schema-derived defaults.
+
+        This keeps overwrite behavior robust when metadata dictionaries are incomplete
+        (e.g. missing type or unit).
+        """
         self._logger.debug(
             f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} to {value}"
         )
-        self.parameters[par_name]["value"] = value
+        par_dict = self.parameters[par_name]
+        par_dict["value"] = value
+
         if parameter_version:
-            self.parameters[par_name]["parameter_version"] = parameter_version
+            par_dict["parameter_version"] = parameter_version
+
+        schema_version = self._resolve_schema_version(par_name, metadata)
+        par_type = schema.get_parameter_attribute_from_schema(par_name, schema_version, "type")
+        schema_unit = schema.get_parameter_attribute_from_schema(par_name, schema_version, "unit")
+
+        if metadata:
+            for key in ["unit", "model_parameter_schema_version"]:
+                if key in metadata:
+                    par_dict[key] = metadata[key]
+            if "model_parameter_schema_version" in metadata and isinstance(par_type, list):
+                par_dict["type"] = par_type
+
+        par_dict["model_parameter_schema_version"] = schema_version
+        if par_type is not None:
+            par_dict.setdefault("type", par_type)
+        par_dict.setdefault("unit", schema_unit)
+        return par_dict
 
     def _overwrite_model_parameter_from_db(self, par_name, parameter_version):
         """Overwrite model parameter from DB for a specific version."""
@@ -531,14 +569,20 @@ class ModelParameter:
 
         for par_name, par_value in changes.items():
             if par_name not in self.parameters:
-                self._logger.warning(
+                raise ValueError(
                     f"Parameter {par_name} not found in model {self.name}, cannot overwrite it."
                 )
-                continue
 
             if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
+                # Extract metadata fields that should be applied
+                # Note: 'type' is derived from schema, not from overwrite file
+                metadata = {
+                    k: v
+                    for k, v in par_value.items()
+                    if k in ("unit", "model_parameter_schema_version")
+                }
                 self.overwrite_model_parameter(
-                    par_name, par_value.get("value"), par_value.get("version")
+                    par_name, par_value.get("value"), par_value.get("version"), metadata or None
                 )
             else:
                 self.overwrite_model_parameter(par_name, par_value)

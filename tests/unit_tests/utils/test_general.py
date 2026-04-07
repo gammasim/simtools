@@ -792,6 +792,11 @@ def test_ensure_iterable():
     assert gen.ensure_iterable([1, 2, 3]) == [1, 2, 3]
     assert gen.ensure_iterable(5) == [5]
     assert gen.ensure_iterable((1, 2, 3)) == (1, 2, 3)
+    # Test falsy values are correctly wrapped (not treated as None)
+    assert gen.ensure_iterable(0) == [0]
+    assert gen.ensure_iterable(0.0) == [0.0]
+    assert gen.ensure_iterable("") == [""]
+    assert gen.ensure_iterable(False) == [False]
 
 
 def test_parse_typed_sequence():

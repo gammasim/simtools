@@ -133,7 +133,7 @@ class DataValidator:
             self.logger.warning(f"File '{file_stem}' has no parameter version defined.")
 
     @staticmethod
-    def validate_model_parameter(par_dict):
+    def validate_model_parameter(par_dict, par_name=None):
         """
         Validate a simulation model parameter (static method).
 
@@ -141,14 +141,19 @@ class DataValidator:
         ----------
         par_dict: dict
             Data dictionary
+        par_name: str
+            Parameter name (optional, needed when not given in par_dict)
 
         Returns
         -------
         dict
             Validated data dictionary
         """
+        if par_name is None:
+            par_name = par_dict.get("parameter")
+
         data_validator = DataValidator(
-            schema_file=schema.get_model_parameter_schema_file(f"{par_dict['parameter']}"),
+            schema_file=schema.get_model_parameter_schema_file(f"{par_name}"),
             data_dict=par_dict,
             check_exact_data_type=False,
         )
@@ -223,22 +228,7 @@ class DataValidator:
             self.data_dict.get("model_parameter_schema_version", "0.1.0"),
         )
 
-        value_as_list, unit_as_list = self._get_value_and_units_as_lists()
-
-        for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
-            try:
-                value_as_list[index], unit_as_list[index] = self._validate_value_and_unit(
-                    value, unit, index
-                )
-            except TypeError as ex:
-                raise TypeError(
-                    f"Error validating dictionary using {self.schema_file_name}"
-                ) from ex
-
-        if len(value_as_list) == 1:
-            self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
-        else:
-            self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
+        self._validate_and_assign_values(is_model_parameter)
 
         if self.data_dict.get("instrument"):
             if self.data_dict["instrument"] == self.data_dict["site"]:  # site parameters
@@ -258,6 +248,94 @@ class DataValidator:
             self._convert_results_to_model_format()
 
         return self.data_dict
+
+    def _validate_and_assign_values(self, is_model_parameter):
+        """Validate and assign values/units for homogeneous and heterogeneous lists."""
+        value_as_list, unit_as_list = self._get_value_and_units_as_lists()
+        use_per_element_validation = self._uses_per_element_type_validation(is_model_parameter)
+        expected_types = self._get_expected_types_for_values(value_as_list, is_model_parameter)
+
+        try:
+            self._validate_list_types(value_as_list, expected_types)
+        except (TypeError, ValueError) as ex:
+            if use_per_element_validation:
+                raise TypeError(
+                    f"Error validating heterogeneous list using {self.schema_file_name}"
+                ) from ex
+            raise TypeError(f"Error validating dictionary using {self.schema_file_name}") from ex
+
+        for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
+            try:
+                value_as_list[index], unit_as_list[index] = self._validate_value_and_unit(
+                    value, unit, index
+                )
+            except TypeError as ex:
+                if use_per_element_validation:
+                    raise TypeError(
+                        f"Error validating heterogeneous element {index} "
+                        f"using {self.schema_file_name}"
+                    ) from ex
+                raise TypeError(
+                    f"Error validating dictionary using {self.schema_file_name}"
+                ) from ex
+
+        self._assign_validated_values(value_as_list, unit_as_list)
+
+    @staticmethod
+    def _validate_list_types(value_list, expected_types):
+        """Validate list elements against per-element expected data types."""
+        if not expected_types:
+            return
+
+        if len(value_list) != len(expected_types):
+            raise ValueError(
+                f"Length mismatch: parameter has {len(value_list)} elements "
+                f"but type specification has {len(expected_types)} elements."
+            )
+
+        for i, (value, expected_type) in enumerate(zip(value_list, expected_types)):
+            if not gen.validate_data_type(
+                reference_dtype=expected_type,
+                value=value,
+                dtype=None,
+                allow_subtypes=True,
+            ):
+                raise TypeError(
+                    f"Element {i}: expected type '{expected_type}', got {type(value).__name__}"
+                )
+
+    def _get_expected_types_for_values(self, value_as_list, is_model_parameter):
+        """Return expected per-element data types for list validation."""
+        expected_types = []
+        should_validate = (
+            is_model_parameter
+            and self._data_description
+            and isinstance(value_as_list, list)
+            and len(value_as_list) > 0
+            and value_as_list[0] is not None
+        )
+
+        if should_validate and self._uses_per_element_type_validation(is_model_parameter):
+            expected_types = self._get_schema_type_list()
+        elif should_validate and len(value_as_list) > 1:
+            expected_type = self._data_description[0].get("type")
+            if expected_type and not isinstance(expected_type, list):
+                expected_types = [expected_type] * len(value_as_list)
+
+        return expected_types
+
+    def _get_unit_list_for_values(self, value_as_list):
+        """Return a per-value unit list from current data dict unit entry."""
+        if isinstance(self.data_dict.get("unit"), list):
+            return self.data_dict.get("unit", [])
+        return [self.data_dict.get("unit")] * len(value_as_list)
+
+    def _assign_validated_values(self, value_as_list, unit_as_list):
+        """Assign validated value/unit as scalar or list depending on list length."""
+        if len(value_as_list) == 1:
+            self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
+            return
+        self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
 
     def _validate_value_and_unit(self, value, unit, index):
         """
@@ -279,6 +357,46 @@ class DataValidator:
             for range_type in ("allowed_range", "required_range"):
                 self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
         return value, unit
+
+    def _uses_per_element_type_validation(self, is_model_parameter=False):
+        """
+        Check if list validation should use per-element type specifications.
+
+        For model parameters, an explicit list in the ``type`` field is treated as
+        positional type information. This can represent truly heterogeneous content,
+        but it may also represent homogeneous content where all listed types are equal.
+        In both cases, this method returns ``True`` so validation follows the
+        per-element checks.
+
+        Parameters
+        ----------
+        is_model_parameter: bool
+            True if this is a model parameter validation.
+
+        Returns
+        -------
+        bool
+            True if per-element list typing applies, False otherwise.
+        """
+        if not is_model_parameter or not isinstance(self._data_description, list):
+            return False
+
+        if isinstance(self.data_dict.get("type"), list):
+            return True
+
+        type_list = self._get_schema_type_list()
+        return len(set(type_list)) > 1
+
+    def _get_schema_type_list(self):
+        """Return schema types as a flat list for model parameter validation."""
+        if not self._data_description:
+            return []
+
+        first_item_type = self._data_description[0].get("type")
+        if isinstance(first_item_type, list):
+            return first_item_type
+
+        return [item.get("type") for item in self._data_description]
 
     def _get_value_and_units_as_lists(self):
         """
@@ -302,7 +420,7 @@ class DataValidator:
         if not isinstance(target_unit, list | np.ndarray):
             target_unit = [target_unit] * len(value)
 
-        target_unit = [None if unit == "null" else unit for unit in target_unit]
+        target_unit = value_conversion.normalize_dimensionless_unit(target_unit)
         conversion_factor = [
             1 if v is None else u.Unit(v).to(u.Unit(t)) for v, t in zip(unit, target_unit)
         ]
@@ -482,7 +600,7 @@ class DataValidator:
 
         """
         reference_unit = self._get_data_description(column_name).get("unit", None)
-        if reference_unit in ("dimensionless", None, ""):
+        if value_conversion.is_dimensionless_unit(reference_unit):
             return u.dimensionless_unscaled
 
         return u.Unit(reference_unit)
@@ -576,19 +694,13 @@ class DataValidator:
         bool
             True if unit is dimensionless, None, or empty
         """
-        return unit in ("dimensionless", None, "")
+        return value_conversion.is_dimensionless_unit(unit)
 
     def _check_and_convert_units(self, data, unit, col_name):
         """
         Check that input data have an allowed unit.
 
         Convert to reference unit (e.g., Angstrom to nm).
-
-        Note on dimensionless columns:
-
-        - should be given in unit descriptor as unit: ''
-        - be forgiving and assume that in cases no unit is given in the data files
-          means that it should be dimensionless (e.g., for a efficiency)
 
         Parameters
         ----------
@@ -603,6 +715,8 @@ class DataValidator:
         -------
         data: astropy.column, Quantity, list, value
             unit-converted data
+        unit: str or None
+            Converted unit as a string. Dimensionless units are normalized to None.
 
         Raises
         ------
@@ -612,14 +726,19 @@ class DataValidator:
         """
         self._rate_limited_logger(col_name, f"Checking data column '{col_name}'")
 
-        reference_unit = self._get_reference_unit(col_name)
+        reference_unit = value_conversion.normalize_dimensionless_unit(
+            (self._get_reference_unit(col_name)).to_string()
+        )
+        conversion_reference_unit = reference_unit or u.dimensionless_unscaled
         try:
             column_unit = data.unit
         except AttributeError:
             column_unit = unit
 
+        column_unit = value_conversion.normalize_dimensionless_unit(column_unit)
+
         if self._is_dimensionless(column_unit) and self._is_dimensionless(reference_unit):
-            return data, u.dimensionless_unscaled
+            return data, None
 
         self._rate_limited_logger(
             col_name,
@@ -628,13 +747,17 @@ class DataValidator:
         )
         try:
             if isinstance(data, u.Quantity | Column):
-                return data.to(reference_unit), reference_unit
+                return data.to(conversion_reference_unit), reference_unit
 
             if isinstance(data, list | np.ndarray):
                 return self._check_and_convert_units_for_list(data, column_unit, reference_unit)
 
             # ensure that the data type is preserved (e.g., integers)
-            return (type(data)(u.Unit(column_unit).to(reference_unit) * data), reference_unit)
+            conversion_column_unit = column_unit or u.dimensionless_unscaled
+            return (
+                type(data)(u.Unit(conversion_column_unit).to(conversion_reference_unit) * data),
+                reference_unit,
+            )
         except (u.core.UnitConversionError, ValueError) as exc:
             self.logger.error(
                 f"Invalid unit in data column '{col_name}'. "
@@ -664,10 +787,11 @@ class DataValidator:
             converted data
 
         """
+        conversion_reference_unit = reference_unit or u.dimensionless_unscaled
         return [
             (
-                u.Unit(_to_unit).to(reference_unit) * d
-                if _to_unit not in (None, "dimensionless", "")
+                u.Unit(_to_unit).to(conversion_reference_unit) * d
+                if not value_conversion.is_dimensionless_unit(_to_unit)
                 else d
             )
             for d, _to_unit in zip(data, column_unit)

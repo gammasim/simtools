@@ -485,38 +485,7 @@ class SimulatorLightEmission(SimtelRunner):
         dist_cm = self.calculate_distance_focal_plane_calibration_device().to(u.cm).value
         angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
 
-        # Build pulse table for ff-1m using unified list parameter [shape, width, exp]
-        pulse_shape_value = self.calibration_model.get_parameter_value("flasher_pulse_shape")
-        shape_name = pulse_shape_value[0]
-        width_ns = pulse_shape_value[1]
-        exp_ns = pulse_shape_value[2]
-        pulse_arg = self._get_pulse_shape_string_for_sim_telarray()
-
-        if shape_name == "Gauss-Exponential":
-            if width_ns <= 0 or exp_ns <= 0:
-                raise ValueError(
-                    "Gauss-Exponential pulse shape requires positive width"
-                    " and exponential decay values"
-                )
-            try:
-                tel = self.light_emission_config.get("telescope") or "telescope"
-                cal = self.light_emission_config.get("light_source") or "calibration"
-                fname = (
-                    f"flasher_pulse_shape_{self._sanitize_name(tel)}_{self._sanitize_name(cal)}.dat"
-                )
-                table_path = self.io_handler.get_output_directory("light_emission") / fname
-                fadc_bins = self.telescope_model.get_parameter_value("fadc_sum_bins")
-
-                SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
-                    file_path=table_path,
-                    width_ns=width_ns,
-                    exp_decay_ns=exp_ns,
-                    fadc_sum_bins=fadc_bins,
-                    time_margin_ns=5.0,
-                )
-                pulse_arg = str(table_path)
-            except (ValueError, OSError) as err:
-                self._logger.warning(f"Failed to write pulse shape table, using token: {err}")
+        pulse_arg = self._get_pulse_shape_argument_for_sim_telarray()
 
         return [
             f"--events {','.join(str(event) for event in events)}",
@@ -544,6 +513,8 @@ class SimulatorLightEmission(SimtelRunner):
         )
         angular_distribution = self._get_angular_distribution_string_for_sim_telarray()
 
+        pulse_arg = self._get_pulse_shape_argument_for_sim_telarray()
+
         return [
             f"-x {x_cal.to(u.cm).value}",
             f"-y {y_cal.to(u.cm).value}",
@@ -551,7 +522,7 @@ class SimulatorLightEmission(SimtelRunner):
             f"-d {','.join(map(str, pointing_vector))}",
             f"-n {self.light_emission_config['flasher_photons']}",
             f"-s {int(flasher_wavelength.to(u.nm).value)}",
-            f"-p {self._get_pulse_shape_string_for_sim_telarray()}",
+            f"-p {pulse_arg}",
             f"-a {angular_distribution}",
         ]
 
@@ -635,16 +606,24 @@ class SimulatorLightEmission(SimtelRunner):
     def _generate_lambertian_angular_distribution_table(self):
         """Generate Lambertian angular distribution table via config writer and return path.
 
-        Uses a pure cosine profile normalized to 1 at 0 deg and spans 0..90 deg by default.
+        Uses a pure cosine profile normalized to 1 at 0 deg and spans 0..max_angle_deg.
         """
         tel = self._sanitize_name(self.light_emission_config.get("telescope") or "telescope")
         cal = self._sanitize_name(self.light_emission_config.get("light_source") or "calibration")
         fname = f"flasher_angular_distribution_{tel}_{cal}.dat"
-        return SimtelConfigWriter.write_angular_distribution_table_lambertian(
+        max_angle_deg = (
+            self.calibration_model.get_parameter_value_with_unit(
+                "flasher_angular_distribution_width"
+            )
+            .to(u.deg)
+            .value
+        )
+        path = SimtelConfigWriter.write_angular_distribution_table_lambertian(
             file_path=self.io_handler.get_output_directory("light_emission") / fname,
-            max_angle_deg=90.0,
+            max_angle_deg=max_angle_deg,
             n_samples=100,
         )
+        return str(path)
 
     def _get_angular_distribution_string_for_sim_telarray(self):
         """
@@ -675,31 +654,84 @@ class SimulatorLightEmission(SimtelRunner):
         )
         return f"{option_string}:{width.to(u.deg).value}" if width is not None else option_string
 
-    def _get_pulse_shape_string_for_sim_telarray(self):
+    def _get_pulse_shape_argument_for_sim_telarray(self):
         """
-        Get the pulse shape string for sim_telarray.
+        Get the pulse shape argument for sim_telarray.
+
+        For Gauss-Exponential shapes, writes a DAT file and returns the file path.
+        For other shapes, returns a string token representation.
 
         Returns
         -------
         str
-            The pulse shape string.
+            The pulse shape argument (either a file path or a token string).
         """
-        opt = self.calibration_model.get_parameter_value("flasher_pulse_shape")
-        shape = opt[0].lower()
+        pulse_shape_value = self.calibration_model.get_parameter_value("flasher_pulse_shape")
+        shape_name = pulse_shape_value[0]
+        width_ns = pulse_shape_value[1]
+        exp_ns = pulse_shape_value[2]
+
+        # Handle Gauss-Exponential by writing a DAT file
+        if shape_name == "Gauss-Exponential":
+            if width_ns <= 0 or exp_ns <= 0:
+                raise ValueError(
+                    "Gauss-Exponential pulse shape requires positive width"
+                    " and exponential decay values"
+                )
+            try:
+                tel = self.light_emission_config.get("telescope") or "telescope"
+                cal = self.light_emission_config.get("light_source") or "calibration"
+                fname = (
+                    f"flasher_pulse_shape_{self._sanitize_name(tel)}_{self._sanitize_name(cal)}.dat"
+                )
+                table_path = self.io_handler.get_output_directory("light_emission") / fname
+                fadc_bins = self.telescope_model.get_parameter_value("fadc_sum_bins")
+
+                SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
+                    file_path=table_path,
+                    width_ns=width_ns,
+                    exp_decay_ns=exp_ns,
+                    fadc_sum_bins=fadc_bins,
+                    time_margin_ns=5.0,
+                )
+                return str(table_path)
+            except (ValueError, OSError) as err:
+                raise ValueError(
+                    f"Failed to write Gauss-Exponential pulse shape table: {err}"
+                ) from err
+
+        # For other shapes, return token string
+        return self._get_pulse_shape_string_token(shape_name, width_ns, exp_ns)
+
+    def _get_pulse_shape_string_token(self, shape_name, width_ns, exp_ns):
+        """
+        Get the pulse shape string token for sim_telarray.
+
+        Parameters
+        ----------
+        shape_name : str
+            Name of the pulse shape.
+        width_ns : float
+            Width parameter in nanoseconds.
+        exp_ns : float
+            Exponential decay parameter in nanoseconds.
+
+        Returns
+        -------
+        str
+            The pulse shape token string.
+        """
+        shape = shape_name.lower()
         # Map internal shapes to sim_telarray expected tokens
-        # 'tophat' corresponds to a simple (flat) pulse in sim_telarray.
         shape_token_map = {
             "tophat": "simple",
         }
         shape_out = shape_token_map.get(shape, shape)
-        width = opt[1]
-        expv = opt[2]
-        if shape_out == "gauss-exponential" and width is not None and expv is not None:
-            return f"{shape_out}:{float(width)}:{float(expv)}"
-        if shape_out in ("gauss", "simple") and width is not None:
-            return f"{shape_out}:{float(width)}"
-        if shape_out == "exponential" and expv is not None:
-            return f"{shape_out}:{float(expv)}"
+
+        if shape_out in ("gauss", "simple") and width_ns is not None:
+            return f"{shape_out}:{float(width_ns)}"
+        if shape_out == "exponential" and exp_ns is not None:
+            return f"{shape_out}:{float(exp_ns)}"
         return shape_out
 
     def validate_simulations(self):
