@@ -74,7 +74,7 @@ def test_normalize_altaz_point_creates_radec_coordinates(tmp_test_directory):
             {
                 "azimuth": {"value": 180.0, "unit": "deg"},
                 "zenith_angle": {"value": 20.0, "unit": "deg"},
-                "nsb": {"value": 0.0, "unit": "MHz"},
+                "nsb_level": {"value": 0.0, "unit": "MHz"},
             }
         ],
     )
@@ -178,7 +178,7 @@ def test_plot_sky_projection_creates_outputs(tmp_test_directory):
                 "grid_point": {
                     "azimuth": {"value": 310.0, "unit": "deg"},
                     "zenith_angle": {"value": 30.0, "unit": "deg"},
-                    "nsb": {"value": 4.0, "unit": "MHz"},
+                    "nsb_level": {"value": 4.0, "unit": "MHz"},
                     "offset": {"value": 0.0, "unit": "deg"},
                 },
                 "interpolated_production_statistics": 1234.0,
