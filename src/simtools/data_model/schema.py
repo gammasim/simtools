@@ -17,7 +17,7 @@ from simtools.constants import (
 from simtools.data_model import format_checkers
 from simtools.dependencies import get_software_version
 from simtools.io import ascii_handler
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 from simtools.version import check_version_constraint
 
 _logger = logging.getLogger(__name__)
@@ -65,6 +65,26 @@ def get_model_parameter_schema_file(parameter):
     if not schema_file.exists():
         raise FileNotFoundError(f"Schema file not found: {schema_file}")
     return schema_file
+
+
+def get_model_parameter_schema(parameter, schema_version=None):
+    """
+    Return schema dictionary for a given model parameter and schema version.
+
+    Parameters
+    ----------
+    parameter: str
+        Model parameter name.
+    schema_version: str, optional
+        Schema version. If not provided, the latest version is used.
+
+    Returns
+    -------
+    dict
+        Schema dictionary.
+    """
+    schema_file = get_model_parameter_schema_file(parameter)
+    return load_schema(schema_file, schema_version=schema_version or "latest")
 
 
 def get_model_parameter_schema_version(schema_version=None):
@@ -460,3 +480,42 @@ def _extract_schema_from_file(file_name, observatory="cta"):
         return None
 
     return _extract_schema_url_from_metadata_dict(metadata, observatory)
+
+
+def get_parameter_attribute_from_schema(par_name, schema_version, attribute_name):
+    """
+    Return one attribute from model-parameter schema data entries.
+
+    Parameters
+    ----------
+    par_name: str
+        Name of the parameter.
+    schema_version: str
+        Schema version to look up.
+    attribute_name: str
+        Attribute to read from data entries (e.g. "type", "unit").
+
+    Returns
+    -------
+    str or list or None
+        Attribute value as scalar for single-entry schemas, list for multi-entry schemas,
+        or None for unsupported schema data structures.
+    """
+    schema_dict = get_model_parameter_schema(par_name, schema_version)
+    data = schema_dict.get("data", [])
+    if isinstance(data, list):
+        values = [
+            _normalize_parameter_schema_attribute(attribute_name, item.get(attribute_name))
+            for item in data
+        ]
+        return values[0] if len(values) == 1 else values
+    if isinstance(data, dict):
+        return _normalize_parameter_schema_attribute(attribute_name, data.get(attribute_name))
+    return None
+
+
+def _normalize_parameter_schema_attribute(attribute_name, value):
+    """Normalize schema attribute values for public helper functions."""
+    if attribute_name == "unit":
+        return value_conversion.normalize_dimensionless_unit(value)
+    return value
