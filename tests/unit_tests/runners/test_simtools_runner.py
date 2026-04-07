@@ -303,6 +303,7 @@ def test_read_runtime_environment_with_full_options(monkeypatch):
         simtools_runner.read_runtime_environment(runtime_environment, workdir)
 
     monkeypatch.setattr(shutil, "which", mock.Mock(return_value="podman"))
+    monkeypatch.setattr("simtools.runners.simtools_runner._pull_image", mock.Mock())
     result = simtools_runner.read_runtime_environment(runtime_environment, workdir)
 
     assert result == expected_command
@@ -314,6 +315,7 @@ def test_read_runtime_environment_with_minimal_options(monkeypatch):
         "container_engine": "docker",
     }
     monkeypatch.setattr(shutil, "which", mock.Mock(return_value="docker"))
+    monkeypatch.setattr("simtools.runners.simtools_runner._pull_image", mock.Mock())
     workdir = TEST_WORKDIR
     expected_command = [
         "docker",
@@ -343,6 +345,7 @@ def test_read_runtime_environment_with_missing_options(monkeypatch):
         "container_engine": "docker",
     }
     monkeypatch.setattr(shutil, "which", mock.Mock(return_value="docker"))
+    monkeypatch.setattr("simtools.runners.simtools_runner._pull_image", mock.Mock())
     workdir = TEST_WORKDIR
     expected_command = [
         "docker",
@@ -422,6 +425,7 @@ def test_read_runtime_environment_with_env_file_and_options(monkeypatch):
     }
 
     monkeypatch.setattr(shutil, "which", mock.Mock(return_value="podman"))
+    monkeypatch.setattr("simtools.runners.simtools_runner._pull_image", mock.Mock())
 
     result = simtools_runner.read_runtime_environment(runtime_environment)
 
