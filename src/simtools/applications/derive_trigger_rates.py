@@ -66,6 +66,15 @@ def _parse():
         action="store_true",
         default=False,
     )
+    config.parser.add_argument(
+        "--nsb",
+        help=(
+            "Restrict the cosmic-ray spectrum integration to 1-1.5 GeV to approximate "
+            "NSB/noise-dominated accidental trigger conditions in the derived rate estimate."
+        ),
+        action="store_true",
+        default=False,
+    )
     return config.initialize(
         db_config=True,
         output=True,

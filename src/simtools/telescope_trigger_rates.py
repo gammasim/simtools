@@ -12,6 +12,8 @@ from simtools.sim_events.histograms import EventDataHistograms
 from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
+NSB_CR_ENERGY_MIN = 0.001 * u.TeV
+NSB_CR_ENERGY_MAX = 0.0015 * u.TeV
 
 
 def telescope_trigger_rates(args_dict):
@@ -42,7 +44,7 @@ def telescope_trigger_rates(args_dict):
         )
         histograms.fill()
 
-        _calculate_trigger_rates(histograms, array_name)
+        _calculate_trigger_rates(histograms, array_name, nsb_mode=args_dict.get("nsb", False))
 
         if args_dict["plot_histograms"]:
             plot_simtel_event_histograms.plot(
@@ -52,7 +54,7 @@ def telescope_trigger_rates(args_dict):
             )
 
 
-def _calculate_trigger_rates(histograms, array_name):
+def _calculate_trigger_rates(histograms, array_name, nsb_mode=False):
     """
     Calculate trigger rates from the filled histograms.
 
@@ -79,6 +81,15 @@ def _calculate_trigger_rates(histograms, array_name):
         * histograms.file_info["solid_angle"].to("sr").value
         * u.Hz
     )
+    if nsb_mode:
+        # Keep only the low-energy range requested for NSB/noise-dominated rate studies.
+        nsb_mask = (e_min >= NSB_CR_ENERGY_MIN) & (e_max <= NSB_CR_ENERGY_MAX)
+        _logger.info(
+            f"Applying NSB-mode CR energy window: {NSB_CR_ENERGY_MIN.to('GeV')} - "
+            f"{NSB_CR_ENERGY_MAX.to('GeV')}"
+        )
+        cr_rates = cr_rates * nsb_mask
+
     trigger_rates = efficiency * cr_rates
     trigger_rate = np.sum(trigger_rates, axis=0)
 

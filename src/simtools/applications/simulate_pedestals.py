@@ -52,6 +52,9 @@ zenith_angle (float, optional)
     Zenith angle in degrees.
 azimuth_angle (float, optional)
     Azimuth angle in degrees.
+save_reduced_event_lists (bool, optional)
+    Save reduced event lists with event data on simulated and triggered events.
+    Saved with the same name as the sim_telarray output file (different extension).
 """
 
 from simtools.application_control import get_application_label, startup_application
@@ -93,6 +96,16 @@ def _parse():
         type=str,
         default=None,
     )
+    config.parser.add_argument(
+        "--save_reduced_event_lists",
+        help=(
+            "Save reduced event lists with event data on simulated and triggered events. "
+            "Saved with the same name as the sim_telarray output file (different extension). "
+        ),
+        action="store_true",
+        required=False,
+        default=False,
+    )
 
     return config.initialize(
         db_config=True,
@@ -110,6 +123,8 @@ def main():
 
     simulator = Simulator(label=app_context.args.get("label"))
     simulator.simulate()
+    if app_context.args["save_reduced_event_lists"]:
+        simulator.save_reduced_event_lists()
     simulator.validate_simulations()
 
 
