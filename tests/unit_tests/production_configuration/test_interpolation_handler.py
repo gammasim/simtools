@@ -52,7 +52,7 @@ def handler(test_fits_file, test_fits_file_2, metric):
         {
             "azimuth": {"value": 180, "unit": "deg"},
             "zenith_angle": {"value": 50, "unit": "deg"},
-            "nsb": {"value": 0, "unit": "MHz"},
+            "nsb_level": {"value": 0, "unit": "MHz"},
             "offset": {"value": 0.5, "unit": "deg"},
         }
     ]
@@ -204,7 +204,7 @@ def test_handling_of_nonuniform_energy_grids(test_fits_file, test_fits_file_2, m
         {
             "azimuth": {"value": 180, "unit": "deg"},
             "zenith_angle": {"value": 50, "unit": "deg"},
-            "nsb": {"value": 0, "unit": "MHz"},
+            "nsb_level": {"value": 0, "unit": "MHz"},
             "offset": {"value": 0.5, "unit": "deg"},
         }
     ]
