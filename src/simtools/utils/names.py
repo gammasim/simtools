@@ -472,6 +472,66 @@ def get_array_element_name_from_common_identifier(common_identifier):
         raise ValueError(f"Unknown common identifier {common_identifier}") from exc
 
 
+def normalize_array_element_identifier(array_element_identifier):
+    """
+    Normalize an array element identifier to an array element name when possible.
+
+    Parameters
+    ----------
+    array_element_identifier : str or int
+        Array element identifier. Can be a common identifier or already an
+        array element name.
+
+    Returns
+    -------
+    str
+        Normalized array element identifier.
+    """
+    identifier_str = str(array_element_identifier).strip()
+    try:
+        common_identifier = int(identifier_str)
+    except (TypeError, ValueError):
+        return identifier_str
+
+    try:
+        return get_array_element_name_from_common_identifier(common_identifier)
+    except ValueError:
+        return identifier_str
+
+
+def normalize_array_element_identifier_container(array_element_identifiers):
+    """
+    Normalize a container of array element identifiers.
+
+    Parameters
+    ----------
+    array_element_identifiers : str or list or tuple or set or None
+        Array element identifiers, possibly encoded as a JSON list string.
+
+    Returns
+    -------
+    list
+        List of normalized array element identifiers.
+    """
+    if array_element_identifiers is None:
+        return []
+
+    normalized_input = array_element_identifiers
+    if isinstance(array_element_identifiers, str):
+        identifiers_str = array_element_identifiers.strip()
+        if identifiers_str.startswith("[") and identifiers_str.endswith("]"):
+            try:
+                normalized_input = json.loads(identifiers_str)
+            except json.JSONDecodeError:
+                normalized_input = [array_element_identifiers]
+        else:
+            normalized_input = [array_element_identifiers]
+    elif not isinstance(array_element_identifiers, (list, tuple, set)):
+        normalized_input = [array_element_identifiers]
+
+    return [normalize_array_element_identifier(identifier) for identifier in normalized_input]
+
+
 def get_list_of_array_element_types(
     array_element_class="telescopes", site=None, observatory="CTAO"
 ):

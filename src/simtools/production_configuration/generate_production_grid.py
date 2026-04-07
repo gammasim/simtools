@@ -10,6 +10,7 @@ Declination coordinates. The resulting grid points are saved to a file.
 """
 
 import logging
+from pathlib import Path
 
 import numpy as np
 from astropy import units as u
@@ -19,6 +20,9 @@ from astropy.units import Quantity
 from scipy.interpolate import LinearNDInterpolator, griddata
 
 from simtools.io import ascii_handler
+from simtools.utils.names import normalize_array_element_identifier_container
+
+DEFAULT_SERIALIZATION_ROUND_DECIMALS = 6
 
 
 class GridGeneration:
@@ -56,7 +60,7 @@ class GridGeneration:
             The time of the observation. If None, coordinate conversion to RA/Dec not working.
         lookup_table : str, optional
             Path to the lookup table file (ECSV format).
-        telescope_ids : list of int, optional
+        telescope_ids : list of str, optional
             List of telescope IDs to get the limits for.
         """
         self._logger = logging.getLogger(__name__)
@@ -72,6 +76,7 @@ class GridGeneration:
         self.lookup_table = lookup_table
         self.telescope_ids = telescope_ids
         self.interpolated_limits = {}
+        self.serialization_round_decimals = DEFAULT_SERIALIZATION_ROUND_DECIMALS
 
         # Store target values for each axis
         self.target_values = self._generate_target_values()
@@ -86,8 +91,15 @@ class GridGeneration:
         """Load and filter lookup-table arrays for selected telescope IDs."""
         lookup_table = Table.read(self.lookup_table, format="ascii.ecsv")
 
+        selected_telescope_ids = set(
+            normalize_array_element_identifier_container(self.telescope_ids)
+        )
+
         matching_rows = [
-            row for row in lookup_table if set(self.telescope_ids) == set(row["telescope_ids"])
+            row
+            for row in lookup_table
+            if selected_telescope_ids
+            == set(normalize_array_element_identifier_container(row["telescope_ids"]))
         ]
 
         if not matching_rows:
@@ -100,14 +112,30 @@ class GridGeneration:
 
         zeniths = extract_array("zenith")
         azimuths = extract_array("azimuth", lambda x: x % 360)
-        nsb_values = extract_array("nsb", lambda x: 1 if x == "dark" else 5)
+        nsb_values = extract_array("nsb_level", float)
 
         return {
             "points": np.column_stack((zeniths, azimuths, nsb_values)),
-            "energy": extract_array("lower_energy_threshold"),
-            "radius": extract_array("upper_radius_threshold"),
-            "viewcone": extract_array("viewcone_radius"),
+            "lower_energy_threshold": extract_array("lower_energy_limit"),
+            "upper_scatter_radius": extract_array("upper_radius_limit"),
+            "viewcone_radius": extract_array("viewcone_radius"),
         }
+
+    def _require_observing_time(self):
+        """Return observing time if available, else raise a clear error."""
+        if self.observing_time is None:
+            raise ValueError("Observing time is required for ra_dec grid generation.")
+        return self.observing_time
+
+    def _get_max_zenith_for_radec_mode(self):
+        """Read maximum zenith from axes for RA/Dec direction sampling."""
+        zenith_axis = self.axes.get("zenith_angle")
+        if not zenith_axis or "range" not in zenith_axis or len(zenith_axis["range"]) != 2:
+            raise ValueError(
+                "RA/Dec direction sampling requires 'zenith_angle' axis with a valid "
+                "two-element 'range' in the axes definition."
+            )
+        return float(zenith_axis["range"][1])
 
     def _prepare_lookup_table_limits_for_point_interpolation(self):
         """Prepare lookup arrays for per-point interpolation in RA/Dec grid mode."""
@@ -129,9 +157,9 @@ class GridGeneration:
             )
         )
         self.lookup_values_for_interpolation = {
-            "energy": repeat_3(lookup_arrays["energy"]),
-            "radius": repeat_3(lookup_arrays["radius"]),
-            "viewcone": repeat_3(lookup_arrays["viewcone"]),
+            "lower_energy_threshold": repeat_3(lookup_arrays["lower_energy_threshold"]),
+            "upper_scatter_radius": repeat_3(lookup_arrays["upper_scatter_radius"]),
+            "viewcone_radius": repeat_3(lookup_arrays["viewcone_radius"]),
         }
         self.lookup_interpolators_for_point = {
             key: LinearNDInterpolator(
@@ -139,7 +167,7 @@ class GridGeneration:
                 self.lookup_values_for_interpolation[key],
                 fill_value=np.nan,
             )
-            for key in ("energy", "radius", "viewcone")
+            for key in ("lower_energy_threshold", "upper_scatter_radius", "viewcone_radius")
         }
 
     def _has_radec_axes(self):
@@ -189,9 +217,9 @@ class GridGeneration:
         """Apply limits from the lookup table and interpolate values."""
         lookup_arrays = self._load_matching_lookup_arrays()
         points_base = lookup_arrays["points"]
-        lower_energy_thresholds = lookup_arrays["energy"]
-        upper_radius_thresholds = lookup_arrays["radius"]
-        viewcone_radii = lookup_arrays["viewcone"]
+        lower_energy_thresholds = lookup_arrays["lower_energy_threshold"]
+        upper_scatter_radii = lookup_arrays["upper_scatter_radius"]
+        viewcone_radii = lookup_arrays["viewcone_radius"]
 
         zeniths = points_base[:, 0]
         azimuths = points_base[:, 1]
@@ -217,7 +245,7 @@ class GridGeneration:
                 np.meshgrid(
                     self.target_values["zenith_angle"].value,
                     self.target_values["azimuth"].value,
-                    self.target_values["nsb"].value,
+                    self.target_values["nsb_level"].value,
                     indexing="ij",
                 )
             )
@@ -231,28 +259,26 @@ class GridGeneration:
             ).reshape(
                 len(self.target_values["zenith_angle"]),
                 len(self.target_values["azimuth"]),
-                len(self.target_values["nsb"]),
+                len(self.target_values["nsb_level"]),
             )
 
         self.interpolated_limits = {
-            "energy": interpolate(lower_energy_thresholds),
-            "radius": interpolate(upper_radius_thresholds),
-            "viewcone": interpolate(viewcone_radii),
+            "lower_energy_threshold": interpolate(lower_energy_thresholds),
+            "upper_scatter_radius": interpolate(upper_scatter_radii),
+            "viewcone_radius": interpolate(viewcone_radii),
         }
 
     def _generate_radec_grid_direction_points(self):
         """Generate direction points from declination lines and hour-angle spacing."""
-        if self.observing_time is None:
-            raise ValueError("Observing time is required for ra_dec grid generation.")
-
-        max_zenith = self.axes.get("zenith_angle", {}).get("range", [0, 70])[1]
-        lst_deg = self.observing_time.sidereal_time(
+        observing_time = self._require_observing_time()
+        max_zenith = self._get_max_zenith_for_radec_mode()
+        lst_deg = observing_time.sidereal_time(
             "apparent", longitude=self.observing_location.lon
         ).deg
 
         direction_points = []
         for declination in np.arange(-90.0, 91.0, 1.0):
-            cos_dec = abs(np.cos(np.deg2rad(declination)))
+            cos_dec = np.cos(np.deg2rad(declination))
             step_ha = 1.0 / cos_dec if cos_dec > 1e-6 else 360.0
             n_ha = max(1, int(np.ceil(360.0 / step_ha)))
             hour_angles = np.linspace(-180.0, 180.0, n_ha, endpoint=False)
@@ -264,7 +290,7 @@ class GridGeneration:
                 frame="icrs",
             )
             altaz = skycoord.transform_to(
-                AltAz(location=self.observing_location, obstime=self.observing_time)
+                AltAz(location=self.observing_location, obstime=observing_time)
             )
 
             zenith_values = (90.0 * u.deg - altaz.alt).to(u.deg).value
@@ -298,7 +324,7 @@ class GridGeneration:
         if not self.lookup_table:
             return
 
-        nsb_value = point.get("nsb", 1)
+        nsb_value = point.get("nsb_level", 1)
         if isinstance(nsb_value, Quantity):
             nsb_value = nsb_value.value
         limits = self._interpolate_limits_for_point(
@@ -306,9 +332,9 @@ class GridGeneration:
             azimuth=azimuth,
             nsb=float(nsb_value),
         )
-        point["energy_threshold"] = {"lower": limits["energy"] * u.TeV}
-        point["radius"] = limits["radius"] * u.m
-        point["viewcone"] = limits["viewcone"] * u.deg
+        point["lower_energy_threshold"] = limits["lower_energy_threshold"] * u.TeV
+        point["scatter_radius"] = limits["upper_scatter_radius"] * u.m
+        point["viewcone_radius"] = limits["viewcone_radius"] * u.deg
 
     def _generate_grid_from_radec_axes(self):
         """Generate grid points from explicit RA/Dec axes definitions.
@@ -316,8 +342,7 @@ class GridGeneration:
         All explicit RA/Dec combinations defined by the input axes are preserved,
         even when their transformed Alt/Az coordinates fall below the local horizon.
         """
-        if self.observing_time is None:
-            raise ValueError("Observing time is required for ra_dec grid generation.")
+        observing_time = self._require_observing_time()
 
         axis_keys = [key for key in self.target_values if key not in ("zenith_angle", "azimuth")]
         value_arrays = [self.target_values[key].value for key in axis_keys]
@@ -337,7 +362,7 @@ class GridGeneration:
                 frame="icrs",
             )
             altaz = skycoord.transform_to(
-                AltAz(location=self.observing_location, obstime=self.observing_time)
+                AltAz(location=self.observing_location, obstime=observing_time)
             )
             zenith = (90.0 * u.deg - altaz.alt).to(u.deg).value
 
@@ -351,13 +376,19 @@ class GridGeneration:
         """Interpolate lookup-table limits for a single point."""
         target = np.array([[zenith, azimuth % 360.0, nsb]], dtype=float)
         return {
-            "energy": float(self.lookup_interpolators_for_point["energy"](target)[0]),
-            "radius": float(self.lookup_interpolators_for_point["radius"](target)[0]),
-            "viewcone": float(self.lookup_interpolators_for_point["viewcone"](target)[0]),
+            "lower_energy_threshold": float(
+                self.lookup_interpolators_for_point["lower_energy_threshold"](target)[0]
+            ),
+            "upper_scatter_radius": float(
+                self.lookup_interpolators_for_point["upper_scatter_radius"](target)[0]
+            ),
+            "viewcone_radius": float(
+                self.lookup_interpolators_for_point["viewcone_radius"](target)[0]
+            ),
         }
 
     def _generate_grid_radec_mode(self):
-        """Generate grid points for RA/Dec mode using uniform declination lines."""
+        """Generate grid points for RA/Dec mode using equal declination spacing."""
         if self._has_radec_axes():
             return self._generate_grid_from_radec_axes()
 
@@ -447,26 +478,33 @@ class GridGeneration:
                 for i, key in enumerate(self.target_values.keys())
             }
 
-            if "energy" in self.interpolated_limits:
+            if "lower_energy_threshold" in self.interpolated_limits:
                 zenith_idx = np.searchsorted(
                     self.target_values["zenith_angle"].value, grid_point["zenith_angle"].value
                 )
                 azimuth_idx = np.searchsorted(
                     self.target_values["azimuth"].value, grid_point["azimuth"].value
                 )
-                nsb_idx = np.searchsorted(self.target_values["nsb"].value, grid_point["nsb"].value)
-                energy_lower = self.interpolated_limits["energy"][zenith_idx, azimuth_idx, nsb_idx]
-                grid_point["energy_threshold"] = {"lower": energy_lower * u.TeV}
-
-            if "radius" in self.interpolated_limits:
-                radius_value = self.interpolated_limits["radius"][zenith_idx, azimuth_idx, nsb_idx]
-                grid_point["radius"] = radius_value * u.m
-
-            if "viewcone" in self.interpolated_limits:
-                viewcone_value = self.interpolated_limits["viewcone"][
+                nsb_idx = np.searchsorted(
+                    self.target_values["nsb_level"].value,
+                    grid_point["nsb_level"].value,
+                )
+                energy_lower = self.interpolated_limits["lower_energy_threshold"][
                     zenith_idx, azimuth_idx, nsb_idx
                 ]
-                grid_point["viewcone"] = viewcone_value * u.deg
+                grid_point["lower_energy_threshold"] = energy_lower * u.TeV
+
+            if "upper_scatter_radius" in self.interpolated_limits:
+                radius_value = self.interpolated_limits["upper_scatter_radius"][
+                    zenith_idx, azimuth_idx, nsb_idx
+                ]
+                grid_point["scatter_radius"] = radius_value * u.m
+
+            if "viewcone_radius" in self.interpolated_limits:
+                viewcone_value = self.interpolated_limits["viewcone_radius"][
+                    zenith_idx, azimuth_idx, nsb_idx
+                ]
+                grid_point["viewcone_radius"] = viewcone_value * u.deg
 
             grid_points.append(grid_point)
 
@@ -550,8 +588,20 @@ class GridGeneration:
 
             cleaned_points.append(cleaned_point)
 
+        output_data = {
+            "metadata": {
+                "coordinate_system": self.coordinate_system,
+                "reference_frame": "ICRS (J2000)",
+                "observing_time_utc": self.observing_time.isot if self.observing_time else None,
+                "observing_time_scale": self.observing_time.scale if self.observing_time else None,
+                "telescope_ids": self.telescope_ids,
+                "lookup_table": str(Path(self.lookup_table)) if self.lookup_table else None,
+            },
+            "grid_points": cleaned_points,
+        }
+
         ascii_handler.write_data_to_file(
-            data=cleaned_points,
+            data=output_data,
             output_file=output_file,
             sort_keys=False,
         )
@@ -560,6 +610,13 @@ class GridGeneration:
     def serialize_quantity(self, value):
         """Serialize Quantity."""
         if isinstance(value, u.Quantity):
-            return {"value": value.value, "unit": str(value.unit)}
-        self._logger.warning(f"Unsupported type {type(value)} for serialization. Returning as is.")
+            serialized_value = float(value.value)
+            rounded_value = round(serialized_value, self.serialization_round_decimals)
+            return {"value": rounded_value, "unit": str(value.unit)}
+        if isinstance(value, float):
+            return round(value, self.serialization_round_decimals)
+        if isinstance(value, np.floating):
+            return round(float(value), self.serialization_round_decimals)
+        if isinstance(value, np.integer):
+            return int(value)
         return value

@@ -33,8 +33,8 @@ class ProductionGridPlotter:
         Site longitude in degrees.
     site_location_height : float or astropy.units.Quantity
         Site height in meters.
-    observation_time : str
-        Observation time in ISO format.
+    observation_time : str, optional
+        Observation time in UTC ISO format. If None, metadata from the grid file is used.
     output_path : str or Path
         Path to save output plots.
     """
@@ -62,16 +62,20 @@ class ProductionGridPlotter:
             lon=longitude,
             height=height,
         )
-        self.time = Time(observation_time)
-
+        self.grid_metadata = {}
         self.grid_points = self._load_grid_points()
+
+        observation_time_utc = observation_time or self.grid_metadata.get("observing_time_utc")
+        if observation_time_utc is None:
+            observation_time_utc = "2025-01-01 00:00:00"
+        self.time = Time(observation_time_utc, scale="utc")
 
         logger.info(f"Loaded {len(self.grid_points)} grid points from {self.grid_points_file}")
         logger.info(
             f"Site location: lat={latitude.to_value(u.deg)} deg, "
             f"lon={longitude.to_value(u.deg)} deg"
         )
-        logger.info(f"Observation time: {observation_time}")
+        logger.info(f"Observation time (UTC): {self.time.isot}")
 
     def _load_grid_points(self):
         """
@@ -99,6 +103,7 @@ class ProductionGridPlotter:
         data = ascii_handler.collect_data_from_file(self.grid_points_file)
 
         if isinstance(data, dict) and "grid_points" in data:
+            self.grid_metadata = data.get("metadata", {})
             return data["grid_points"]
 
         if isinstance(data, (list, tuple)):
