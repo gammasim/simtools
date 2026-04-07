@@ -10,7 +10,7 @@ axes:
     binning: 2
     scaling: linear
     units: deg
-  nsb:
+  nsb_level:
     range: [4, 5]
     binning: 2
     scaling: linear
