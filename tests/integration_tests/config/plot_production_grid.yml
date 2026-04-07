@@ -2,7 +2,7 @@
 applications:
 - application: simtools-plot-production-grid
   configuration:
-    grid_points_file: tests/resources/production_grid_points.json
+    grid_points_file: tests/resources/production_grid_points.ecsv
     output_path: simtools-output
     site: North
     model_version: 6.0.2
