@@ -100,51 +100,58 @@ class GridGeneration:
             else:
                 self._apply_lookup_table_limits()
 
+    @staticmethod
+    def _coerce_identifier_container(value):
+        """Coerce identifier input into a list."""
+        if value is None:
+            return []
+        if isinstance(value, str):
+            stripped = value.strip()
+            return json.loads(stripped) if stripped.startswith("[") else [stripped]
+        if isinstance(value, (list, tuple, set)):
+            return list(value)
+        return [value]
+
+    def _normalize_lookup_identifier(self, identifier):
+        """Normalize one telescope identifier and report if it is numeric."""
+        if isinstance(identifier, (int, np.integer)):
+            return self._simtel_id_to_name.get(int(identifier), str(int(identifier))), True
+
+        text = str(identifier).strip()
+        if text.lstrip("+-").isdigit():
+            return self._simtel_id_to_name.get(int(text), text), True
+        return text, False
+
+    def _normalized_identifier_set(self, identifiers):
+        """Return normalized telescope identifiers as a set."""
+        return {
+            self._normalize_lookup_identifier(identifier)[0]
+            for identifier in self._coerce_identifier_container(identifiers)
+        }
+
+    def _lookup_contains_numeric_telescope_ids(self, lookup_table):
+        """Return True when any lookup-table telescope identifier is numeric."""
+        return any(
+            any(
+                self._normalize_lookup_identifier(identifier)[1]
+                for identifier in self._coerce_identifier_container(row["telescope_ids"])
+            )
+            for row in lookup_table
+        )
+
     def _load_matching_lookup_arrays(self):
         """Load and filter lookup-table arrays for selected telescope IDs."""
         lookup_table = Table.read(self.lookup_table, format="ascii.ecsv")
-
-        def _to_list(value):
-            if value is None:
-                return []
-            if isinstance(value, str):
-                stripped = value.strip()
-                return json.loads(stripped) if stripped.startswith("[") else [stripped]
-            if isinstance(value, (list, tuple, set)):
-                return list(value)
-            return [value]
-
-        def _normalize_identifier(identifier):
-            if isinstance(identifier, (int, np.integer)):
-                return self._simtel_id_to_name.get(int(identifier), str(int(identifier))), True
-
-            text = str(identifier).strip()
-            if text.lstrip("+-").isdigit():
-                return self._simtel_id_to_name.get(int(text), text), True
-            return text, False
-
-        selected_telescope_ids = {
-            _normalize_identifier(identifier)[0] for identifier in _to_list(self.telescope_ids)
-        }
+        selected_telescope_ids = self._normalized_identifier_set(self.telescope_ids)
 
         matching_rows = [
             row
             for row in lookup_table
-            if selected_telescope_ids
-            == {
-                _normalize_identifier(identifier)[0]
-                for identifier in _to_list(row["telescope_ids"])
-            }
+            if selected_telescope_ids == self._normalized_identifier_set(row["telescope_ids"])
         ]
 
         if not matching_rows:
-            has_numeric_lookup_ids = any(
-                any(
-                    _normalize_identifier(identifier)[1]
-                    for identifier in _to_list(row["telescope_ids"])
-                )
-                for row in lookup_table
-            )
+            has_numeric_lookup_ids = self._lookup_contains_numeric_telescope_ids(lookup_table)
 
             if has_numeric_lookup_ids and not self.simtel_file:
                 raise ValueError(
