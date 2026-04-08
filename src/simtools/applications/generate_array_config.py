@@ -30,10 +30,10 @@ from simtools.model.array_model import ArrayModel
 
 
 def main():
-    """Generate sim_telarray configuration files for a given array."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Generate sim_telarray configuration files for a given array.",
+        description=__doc__,
         initialization_kwargs={
             "db_config": True,
             "simulation_model": ["site", "layout", "model_version"],

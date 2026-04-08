@@ -127,13 +127,10 @@ def _validate_offset_parameters(max_offset, offset_step):
 
 
 def main():
-    """Validate the optical model parameters through ray tracing simulations."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description=(
-            "Calculate and plot the PSF and effective mirror area as a function of off-axis angle "
-            "of the telescope requested."
-        ),
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,

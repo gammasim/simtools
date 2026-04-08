@@ -14,6 +14,7 @@ from simtools.application_control import (
     build_application,
     get_application_label,
     get_log_file,
+    get_module_description_line,
     setup_logging,
     startup_application,
 )
@@ -168,6 +169,32 @@ def test_get_application_label(file_path, expected):
     """Test get_application_label function."""
     result = get_application_label(file_path)
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    ("docstring", "expected"),
+    [
+        ("Short description.\n\nMore details.\n", "Short description."),
+        ("    Short description.\n\nMore details.\n", "Short description."),
+        ("\nShort description on next line.\n\nMore details.\n", "Short description on next line."),
+        (
+            "    \n    Short description with indent.\n\n    More details.\n",
+            "Short description with indent.",
+        ),
+    ],
+)
+def test_get_module_description_line(docstring, expected):
+    """Test module description extraction from docstring."""
+    assert get_module_description_line(docstring) == expected
+
+
+def test_get_module_description_line_without_docstring():
+    """Test module description extraction error on missing or empty docstring."""
+    with pytest.raises(ValueError, match="Missing or empty docstring"):
+        get_module_description_line(None)
+
+    with pytest.raises(ValueError, match="Empty docstring"):
+        get_module_description_line("   \n   \n")
 
 
 def test_build_application(mocker, tmp_test_directory):

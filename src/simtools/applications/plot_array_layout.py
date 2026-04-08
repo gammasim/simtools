@@ -254,10 +254,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Plot array layout application."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Plots array layout.",
+        description=__doc__,
         usage="Use '--array_layout_name plot_all' to plot all layouts for the given site "
         "and model version.",
         add_arguments_function=_add_arguments,

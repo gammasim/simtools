@@ -41,10 +41,10 @@ from simtools.model import model_repository
 
 
 def main():
-    """Generate a new simulation model production."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Generate a new simulation model production",
+        description=__doc__,
         initialization_kwargs={
             "db_config": False,
             "output": False,

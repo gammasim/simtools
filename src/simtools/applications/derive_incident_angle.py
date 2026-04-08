@@ -106,10 +106,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Derive photon incident angles on focal plane and primary/secondary mirrors."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Derive photon incident angles on focal plane and primary/secondary mirrors.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,

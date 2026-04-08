@@ -102,10 +102,10 @@ def _layout_from_db(args_dict):
 
 
 def main():
-    """Get list of array layouts or list of elements for a given layout as defined in the db."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Get list of array elements as defined in the db (array layout).",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,

@@ -171,13 +171,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Derive PSF parameters."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description=(
-            "Derive mirror_align_random_horizontal and mirror_align_random_vertical "
-            "using cumulative PSF measurement."
-        ),
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,

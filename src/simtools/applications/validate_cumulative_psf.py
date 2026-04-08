@@ -100,13 +100,10 @@ def load_data(datafile):
 
 
 def main():
-    """Validate the cumulative PSF of a telescope model against data."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description=(
-            "Calculate and plot the PSF and eff. mirror area as a function of off-axis angle "
-            "of the telescope requested."
-        ),
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,

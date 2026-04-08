@@ -143,7 +143,7 @@ class ApplicationContext:
 
 def build_application(
     application_path,
-    description=None,
+    description,
     add_arguments_function=None,
     initialization_kwargs=None,
     startup_kwargs=None,
@@ -158,8 +158,8 @@ def build_application(
     ----------
     application_path : str
         Application file path, typically ``__file__``.
-    description : str, optional
-        Application description shown in the CLI help.
+    description : str
+        Application description shown in the CLI help (reduced to first line).
     add_arguments_function : callable, optional
         Function receiving the application's ``CommandLineParser`` instance to register
         application-specific arguments.
@@ -191,7 +191,7 @@ def build_application(
         config_builder = configurator.Configurator(
             label=get_application_label(application_path),
             usage=usage,
-            description=description,
+            description=get_module_description_line(description),
             epilog=epilog,
         )
         if add_arguments_function is not None:
@@ -300,6 +300,34 @@ def get_application_label(file_path):
             # label will be the filename without .py extension
     """
     return Path(file_path).stem
+
+
+def get_module_description_line(docstring):
+    """Return the first non-empty line from a docstring.
+
+    Parameters
+    ----------
+    docstring : str
+        Module docstring (typically from __doc__).
+
+    Returns
+    -------
+    str
+        First non-empty line from the docstring.
+
+    Raises
+    ------
+    ValueError
+        If docstring is None or empty.
+    """
+    if not docstring:
+        raise ValueError("Missing or empty docstring")
+
+    for line in docstring.splitlines():
+        if line.strip():
+            return line.strip()
+
+    raise ValueError("Empty docstring (only whitespace)")
 
 
 def _resolve_model_version_to_latest_patch(args_dict, logger):

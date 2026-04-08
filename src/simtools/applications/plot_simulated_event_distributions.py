@@ -36,10 +36,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Plot simulated event distributions."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Plot simulated event distributions for shower and/or triggered event data.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={"db_config": False, "output": True},
     )

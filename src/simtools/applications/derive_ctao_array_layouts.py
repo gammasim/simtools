@@ -75,10 +75,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Derive CTAO array layouts from CTAO common identifiers repository."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Derive CTAO array layouts from CTAO common identifiers repository.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,

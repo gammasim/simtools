@@ -133,10 +133,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Merge CORSIKA limit tables and check grid completeness."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Merge CORSIKA limit tables and check grid completeness.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={"output": True},
     )

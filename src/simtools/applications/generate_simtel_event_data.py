@@ -152,11 +152,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Generate a reduced dataset of event data from output of telescope simulations."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Process files and store reduced dataset with event information, "
-        "array information and triggered telescopes.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={"db_config": False, "output": True},
         startup_kwargs={"setup_io_handler": False},

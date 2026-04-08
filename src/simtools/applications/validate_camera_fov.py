@@ -75,11 +75,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Validate camera field of view."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Calculate the camera FoV of the telescope requested. "
-        "Plot the camera, as seen for an observer facing the camera.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,

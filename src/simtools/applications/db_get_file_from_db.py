@@ -49,10 +49,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Get file from database."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Get file(s) from the DB.",
+        description=__doc__,
         usage="simtools-get-file-from-db --file_name mirror_CTA-S-LST_v2020-04-07.dat",
         add_arguments_function=_add_arguments,
         initialization_kwargs={"db_config": True, "output": True},

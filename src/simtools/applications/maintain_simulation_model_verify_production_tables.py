@@ -32,14 +32,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Verify simulation model production tables."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description=(
-            "Verify simulation model production tables and model parameters for completeness. "
-            "This application checks that all model parameters defined in the production "
-            "tables exist in the simulation models repository."
-        ),
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={"db_config": False, "output": False, "paths": False},
     )

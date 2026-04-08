@@ -74,10 +74,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Generate HT Condor submission script and submit file."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Prepare simulations production for HT Condor job submission",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": False,

@@ -155,10 +155,10 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
 
 
 def main():
-    """Add files to the database."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Add file to the DB.",
+        description=__doc__,
         usage="simtools-add-file-to-db --file_name test_application.dat --db test-data",
         add_arguments_function=_add_arguments,
         initialization_kwargs={"paths": False, "db_config": True},

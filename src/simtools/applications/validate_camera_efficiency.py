@@ -90,13 +90,10 @@ def _validate_required_args(args_dict):
 
 
 def main():
-    """Calculate the camera efficiency and NSB pixel rates."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description=(
-            "Calculate the camera efficiency and NSB pixel rates. "
-            "Plot the camera efficiency vs wavelength for Cherenkov and NSB light."
-        ),
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,

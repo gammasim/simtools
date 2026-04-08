@@ -56,10 +56,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Plot tabular data."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Plots tabular data.",
+        description=__doc__,
         usage="""simtools-plot-tabular-data --plot_config config_file_name "
                  --output_file output_file_name""",
         add_arguments_function=_add_arguments,

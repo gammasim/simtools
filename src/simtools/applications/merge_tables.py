@@ -59,10 +59,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Merge tables from multiple input files into single tables."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Merge tables from multiple input files into single tables.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={"db_config": False, "output": True},
     )
