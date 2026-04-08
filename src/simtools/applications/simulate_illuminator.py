@@ -113,12 +113,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Simulate light emission from illuminator."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description=(
-            "Simulate light emission by a calibration light source (not attached to a telescope)."
-        ),
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,

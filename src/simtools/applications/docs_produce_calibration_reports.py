@@ -12,10 +12,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Produce a markdown file for calibration reports."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Produce a markdown report for calibration parameters.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={"db_config": True, "simulation_model": ["model_version"]},
     )

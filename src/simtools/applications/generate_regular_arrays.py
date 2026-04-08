@@ -73,10 +73,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Create layout array files of regular arrays."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Generate a regular array of telescope and save as astropy table.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": False,

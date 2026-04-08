@@ -117,10 +117,10 @@ def load_axes(file_path: str):
 
 
 def main():
-    """Run the Grid Generation application."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Generate a grid of simulation points using flexible axes definitions.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,

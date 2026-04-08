@@ -43,10 +43,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Generate a default simtools metadata file from a json schema."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Generate a default simtools metadata file from a json schema.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={"output": False, "require_command_line": True},
     )

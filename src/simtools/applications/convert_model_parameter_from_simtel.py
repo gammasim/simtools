@@ -60,10 +60,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Convert simulation model parameter from sim_telarray to simtools format."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Convert simulation model parameter from sim_telarray to simtools format.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "simulation_model": ["telescope", "parameter_version"],

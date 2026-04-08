@@ -115,10 +115,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Run simulations for productions."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Run simulations for productions",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,

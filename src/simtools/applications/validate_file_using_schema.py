@@ -89,10 +89,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Validate a file or files in a directory using a schema."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Validate a file (metadata, schema, or data file) using a schema.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={"paths": False},
     )

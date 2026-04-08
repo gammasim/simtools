@@ -91,10 +91,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Run several simtools applications using a configuration file."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Run simtools applications using a configuration file.",
+        description=__doc__,
         usage="simtools-run-application --config_file config_file_name",
         add_arguments_function=_add_arguments,
         initialization_kwargs={"db_config": True},

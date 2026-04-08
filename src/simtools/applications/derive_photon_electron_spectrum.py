@@ -105,10 +105,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Derive single photon electron spectrum from a given amplitude spectrum."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Derive single photon electron spectrum from a given amplitude spectrum.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": False,

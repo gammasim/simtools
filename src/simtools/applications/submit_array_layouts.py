@@ -64,10 +64,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Submit and validate array layouts."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Submit and validate array layouts.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "output": True,

@@ -68,10 +68,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Application main."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Upload model parameters from repository to database",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "output": True,

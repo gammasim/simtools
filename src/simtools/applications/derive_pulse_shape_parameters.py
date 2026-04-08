@@ -107,12 +107,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Run parameter derivation and write results."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description=(
-            "Derive Gaussian sigma and exponential tau from rise/fall width specifications."
-        ),
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,

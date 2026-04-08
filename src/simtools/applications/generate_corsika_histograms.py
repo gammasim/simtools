@@ -115,10 +115,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Generate a set of histograms for the Cherenkov photons from CORSIKA IACT file(s)."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Generate histograms for the Cherenkov photons saved in the CORSIKA IACT file.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={"db_config": False, "paths": True},
     )

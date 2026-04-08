@@ -64,10 +64,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Plot tabular data."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Plots tabular data for a model parameter.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,

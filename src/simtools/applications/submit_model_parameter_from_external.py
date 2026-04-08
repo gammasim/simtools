@@ -77,10 +77,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Submit and validate a model parameter value and metadata."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Submit and validate a model parameter.",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={"output": True, "db_config": True},
     )

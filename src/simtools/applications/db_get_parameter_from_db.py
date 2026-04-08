@@ -91,12 +91,10 @@ def _add_arguments(parser):
 
 
 def main():
-    """Get a parameter entry from DB for a specific telescope or a site."""
+    """See CLI description."""
     app_context = build_application(
         __file__,
-        description="Get a parameter entry from DB for a specific telescope or a site. "
-        "The application receives a parameter name, a site, a telescope (if applicable), "
-        "and a version. It then prints out the parameter entry. ",
+        description=__doc__,
         add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,
