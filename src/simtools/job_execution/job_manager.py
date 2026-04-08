@@ -113,20 +113,8 @@ def submit(
         logger.info("Testing mode enabled")
         return None
 
-    sub_process_env = os.environ.copy()
-    if env:
-        for key, value in env.items():
-            sub_process_env[key] = value
-    logger.debug(f"Setting environment variables for job execution: {sub_process_env}")
-
-    if out_file:
-        stdout = open(out_file, "w", encoding="utf-8")  # pylint: disable=consider-using-with
-    else:
-        stdout = subprocess.PIPE if capture_output else None
-    if err_file:
-        stderr = open(err_file, "w", encoding="utf-8")  # pylint: disable=consider-using-with
-    else:
-        stderr = subprocess.PIPE if capture_output else None
+    sub_process_env = _build_environment(env)
+    stdout, stderr = _prepare_streams(out_file, err_file, capture_output)
 
     try:
         result = subprocess.run(
@@ -148,6 +136,31 @@ def submit(
             stderr.close()
 
     return result
+
+
+def _build_environment(env):
+    """Build environment variables dict for subprocess execution."""
+    sub_process_env = os.environ.copy()
+    if env:
+        for key, value in env.items():
+            sub_process_env[key] = value
+    logger.debug(f"Setting environment variables for job execution: {sub_process_env}")
+    return sub_process_env
+
+
+def _prepare_streams(out_file, err_file, capture_output):
+    """Prepare stdout and stderr streams for subprocess execution."""
+    if out_file:
+        stdout = open(out_file, "w", encoding="utf-8")  # pylint: disable=consider-using-with
+    else:
+        stdout = subprocess.PIPE if capture_output else None
+
+    if err_file:
+        stderr = open(err_file, "w", encoding="utf-8")  # pylint: disable=consider-using-with
+    else:
+        stderr = subprocess.PIPE if capture_output else None
+
+    return stdout, stderr
 
 
 def _build_command(command, configuration=None, runtime_environment=None):
