@@ -34,8 +34,11 @@ lookup_table (str, required)
     Path to the lookup table for simulation limits. The table should contain
     varying azimuth and/or zenith angles.
 telescope_ids (list of str, optional)
-    List of telescope IDs as used in sim_telarray to filter the events
+    List of telescope names used to filter the lookup table rows
     (e.g. ``MSTN-15``).
+simtel_file (str, optional)
+    Path to a sim_telarray file used only when lookup-table telescope selections
+    are stored as numeric telescope IDs.
 output_file (str, optional, default='grid_output.ecsv')
     Output file for the generated grid points (default: 'grid_output.ecsv').
 
@@ -50,10 +53,10 @@ To generate a standard zenith/azimuth grid of simulation points, execute:
             --axes tests/resources/production_grid_generation_axes_definition.yml \
             --coordinate_system zenith_azimuth \
             --lookup_table tests/resources/corsika_simulation_limits/
-                corsika_simulation_limits_lookup_grid_test.ecsv \
+                merged_corsika_limits_for_test.ecsv \
             --telescope_ids MSTN-15
 
-To generate a RA/Dec-based all-sky direction grid and serialize output in RA/Dec,
+To generate an all-sky RA/Dec direction grid and serialize output in RA/Dec,
 execute:
 
 .. code-block:: console
@@ -62,7 +65,7 @@ execute:
             --axes tests/resources/production_grid_generation_axes_definition_radec.yml \
             --coordinate_system ra_dec --observing_time "2017-09-16 00:00:00" \
             --lookup_table tests/resources/corsika_simulation_limits/
-                corsika_simulation_limits_lookup_01.ecsv \
+                merged_corsika_limits_for_test.ecsv \
             --telescope_ids MSTN-15
 """
 
@@ -121,8 +124,8 @@ def _parse():
         nargs="*",
         default=None,
         help=(
-            "List of telescope IDs as used in sim_telarray to get the specific limits from "
-            "the lookup table (e.g. MSTN-15)."
+            "List of telescope names used to get specific limits from the lookup table "
+            "(e.g. MSTN-15)."
         ),
     )
     config.parser.add_argument(
@@ -131,6 +134,15 @@ def _parse():
         required=True,
         help="Path to the lookup table for simulation limits. "
         "Table required with varying azimuth and or zenith angle. ",
+    )
+    config.parser.add_argument(
+        "--simtel_file",
+        type=str,
+        required=False,
+        help=(
+            "Optional path to a sim_telarray file used to map sim_telarray telescope IDs "
+            "to telescope names when lookup-table selections are numeric IDs."
+        ),
     )
 
     return config.initialize(db_config=True, simulation_model=["version", "site", "model_version"])
@@ -188,6 +200,7 @@ def main():
         observing_time=observing_time,
         lookup_table=app_context.args["lookup_table"],
         telescope_ids=app_context.args["telescope_ids"],
+        simtel_file=app_context.args.get("simtel_file"),
     )
 
     grid_points = grid_gen.generate_grid()

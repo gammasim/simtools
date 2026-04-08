@@ -479,8 +479,8 @@ def normalize_array_element_identifier(array_element_identifier):
     Parameters
     ----------
     array_element_identifier : str or int
-        Array element identifier. Can be a common identifier or already an
-        array element name.
+        Array element identifier. Can be a CTAO common numerical identifier
+        (used by ACADA/DPPS) or already an array element name.
 
     Returns
     -------
@@ -488,10 +488,10 @@ def normalize_array_element_identifier(array_element_identifier):
         Normalized array element identifier.
     """
     identifier_str = str(array_element_identifier).strip()
-    try:
-        common_identifier = int(identifier_str)
-    except (TypeError, ValueError):
+    if not identifier_str.lstrip("+-").isdigit():
         return identifier_str
+
+    common_identifier = int(identifier_str)
 
     try:
         return get_array_element_name_from_common_identifier(common_identifier)
@@ -506,7 +506,8 @@ def normalize_array_element_identifier_container(array_element_identifiers):
     Parameters
     ----------
     array_element_identifiers : str or list or tuple or set or None
-        Array element identifiers, possibly encoded as a JSON list string.
+        Array element identifiers, possibly encoded as a JSON list string
+        (for example the serialized content of an ECSV ``subtype: json`` field).
 
     Returns
     -------
@@ -519,11 +520,19 @@ def normalize_array_element_identifier_container(array_element_identifiers):
     normalized_input = array_element_identifiers
     if isinstance(array_element_identifiers, str):
         identifiers_str = array_element_identifiers.strip()
-        if identifiers_str.startswith("[") and identifiers_str.endswith("]"):
+        if identifiers_str.startswith("[") or identifiers_str.endswith("]"):
             try:
                 normalized_input = json.loads(identifiers_str)
             except json.JSONDecodeError:
-                normalized_input = [array_element_identifiers]
+                raise ValueError(
+                    "Invalid JSON list string for array element identifiers: "
+                    f"{array_element_identifiers}"
+                ) from None
+            if not isinstance(normalized_input, list):
+                raise ValueError(
+                    "Invalid JSON list string for array element identifiers: "
+                    f"{array_element_identifiers}"
+                )
         else:
             normalized_input = [array_element_identifiers]
     elif not isinstance(array_element_identifiers, (list, tuple, set)):

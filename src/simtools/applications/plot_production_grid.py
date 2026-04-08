@@ -21,11 +21,12 @@ observation_time (str, optional)
     grid file when available.
 plot_ra_dec_tracks (flag, optional)
     If provided, plot RA/Dec guide tracks on top of the sky projection. When native
-    RA/Dec grid points are present, thin grid lines are inferred automatically.
+    RA/Dec grid points are present (grid file contains explicit ``ra`` and ``dec``
+    columns), thin grid lines are inferred automatically.
     Default: False.
 dec_values (list of float, optional)
     Optional list of declination values in degrees to plot as manual tracks. If not
-    provided, tracks are inferred from the native RA/Dec grid points when possible.
+    provided, tracks are inferred from native RA/Dec grid points when possible.
     Default: None.
 
 Example
