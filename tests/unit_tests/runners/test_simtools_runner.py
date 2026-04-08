@@ -491,7 +491,7 @@ def test_pull_image_skips_pull_if_image_exists(monkeypatch):
 
     simtools_runner._pull_image("podman", image)
 
-    submit_mock.assert_called_once_with(f"podman image inspect {image}", check=False)
+    submit_mock.assert_called_once_with(["podman", "image", "inspect", image], check=False)
 
 
 def test_pull_image_pulls_if_image_missing(monkeypatch):
@@ -504,8 +504,8 @@ def test_pull_image_pulls_if_image_missing(monkeypatch):
     simtools_runner._pull_image("podman", image)
 
     assert submit_mock.call_count == 2
-    submit_mock.assert_any_call(f"podman image inspect {image}", check=False)
-    submit_mock.assert_any_call(f"podman pull {image}")
+    submit_mock.assert_any_call(["podman", "image", "inspect", image], check=False)
+    submit_mock.assert_any_call(["podman", "pull", image])
 
 
 def test_pull_image_raises_if_pull_fails(monkeypatch):
