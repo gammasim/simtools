@@ -31,7 +31,7 @@ def run_applications(args_dict, logger):
 
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
-        file.write(dependencies.get_version_string(run_time))
+        file.write(dependencies.get_version_string(run_time, include_software_versions=False))
 
         for config in configurations:
             app = config.get("application")
@@ -200,4 +200,27 @@ def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
         cmd += ["--network", net]
 
     cmd.append(runtime_environment["image"])
+    _pull_image(engine, runtime_environment["image"])
+
     return cmd
+
+
+def _pull_image(engine, image):
+    """
+    Pull the specified image using the specified container engine.
+
+    Parameters
+    ----------
+    engine : str
+        Container engine to use (e.g., 'docker' or 'podman').
+    image : str
+        Image to pull.
+    """
+    inspect_result = job_manager.submit([engine, "image", "inspect", image], check=False)
+    if inspect_result and inspect_result.returncode == 0:
+        return
+
+    try:
+        job_manager.submit([engine, "pull", image], capture_output=False)
+    except job_manager.JobExecutionError as exc:
+        raise RuntimeError(f"Failed to pull image '{image}' using '{engine}': {exc}") from exc

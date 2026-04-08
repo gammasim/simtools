@@ -40,6 +40,64 @@ def test_get_version_string(mocker):
     assert "Runtime environment: ['docker']" in result
 
 
+def test_get_version_string_without_software_versions(mocker):
+    mock_simtel = mocker.patch("simtools.dependencies.get_sim_telarray_version")
+    mock_corsika = mocker.patch("simtools.dependencies.get_corsika_version")
+    mock_build_options = mocker.patch(
+        "simtools.dependencies.get_build_options",
+        return_value={"simtel_version": "master", "corsika_version": "78010"},
+    )
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.db_config = {
+        "db_simulation_model": "test_db",
+        "db_simulation_model_version": "1.2.3",
+    }
+    mock_config.sim_telarray_exe = None
+    mock_config.corsika_exe = None
+
+    result = get_version_string(run_time=["docker"], include_software_versions=False)
+
+    mock_simtel.assert_not_called()
+    mock_corsika.assert_not_called()
+    mock_build_options.assert_not_called()
+    assert "sim_telarray version: None" in result
+    assert "CORSIKA version: None" in result
+    assert "Build options: None" in result
+
+
+def test_get_version_string_without_software_versions_skips_executable_access(mocker):
+    class ConfigWithoutExecutables:
+        db_config = {
+            "db_simulation_model": "test_db",
+            "db_simulation_model_version": "1.2.3",
+        }
+
+        @property
+        def sim_telarray_exe(self):
+            raise FileNotFoundError("sim_telarray path not found")
+
+        @property
+        def corsika_exe(self):
+            raise FileNotFoundError("corsika path not found")
+
+    mocker.patch("simtools.dependencies.settings.config", new=ConfigWithoutExecutables())
+    mock_build_options = mocker.patch(
+        "simtools.dependencies.get_build_options",
+        return_value={"simtel_version": "master", "corsika_version": "78010"},
+    )
+    mock_simtel = mocker.patch("simtools.dependencies.get_sim_telarray_version")
+    mock_corsika = mocker.patch("simtools.dependencies.get_corsika_version")
+
+    result = get_version_string(run_time=["docker"], include_software_versions=False)
+
+    mock_simtel.assert_not_called()
+    mock_corsika.assert_not_called()
+    mock_build_options.assert_not_called()
+    assert "sim_telarray exe: None" in result
+    assert "CORSIKA exe: None" in result
+    assert "Build options: None" in result
+
+
 def test_get_software_version_simtools():
     assert get_software_version("simtools") == __version__
 
@@ -297,7 +355,8 @@ def test_get_build_options_debug_logging_on_exception(mocker, caplog):
     mock_config.sim_telarray_path = "/mocked/simtel"
     mock_ascii_handler = mocker.patch("simtools.dependencies.ascii_handler.collect_data_from_file")
     # First call raises FileNotFoundError, legacy fallback also raises
-    # Ensure all attempted reads fail: corsika new-style, sim_telarray new-style, sim_telarray legacy
+    # Ensure all attempted reads fail:
+    # corsika new-style, sim_telarray new-style, sim_telarray legacy.
     mock_ascii_handler.side_effect = [FileNotFoundError, FileNotFoundError, FileNotFoundError]
     caplog.set_level(logging.DEBUG)
     with pytest.raises(FileNotFoundError):
