@@ -221,6 +221,6 @@ def _pull_image(engine, image):
         return
 
     try:
-        job_manager.submit([engine, "pull", image])
+        job_manager.submit([engine, "pull", image], capture_output=False)
     except job_manager.JobExecutionError as exc:
         raise RuntimeError(f"Failed to pull image '{image}' using '{engine}': {exc}") from exc

@@ -67,6 +67,15 @@ def test_submit_with_pipes(mock_successful_run):
     assert call_args[1]["stderr"] == subprocess.PIPE
 
 
+def test_submit_without_capture_output_uses_inherited_streams(mock_successful_run):
+    result = jm.submit("echo test", None, None, capture_output=False)
+
+    assert result is not None
+    call_args = mock_successful_run.call_args
+    assert call_args[1]["stdout"] is None
+    assert call_args[1]["stderr"] is None
+
+
 def test_submit_test_mode(mocker, tmp_path):
     mock_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
     result = jm.submit("echo test", tmp_path / "out.log", tmp_path / "err.log", test=True)

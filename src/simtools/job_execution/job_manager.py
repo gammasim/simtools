@@ -68,6 +68,7 @@ def submit(
     env=None,
     test=False,
     check=True,
+    capture_output=True,
 ):
     """
     Submit a job described by a command or a shell script.
@@ -98,6 +99,9 @@ def submit(
     check: bool
         If True, raise JobExecutionError on non-zero return code.
         If False, return process result even on non-zero return code.
+    capture_output: bool
+        If True, capture stdout/stderr in pipes when no output files are provided.
+        If False, inherit parent stdout/stderr when no output files are provided.
     """
     command = _build_command(command, configuration, runtime_environment)
 
@@ -115,9 +119,14 @@ def submit(
             sub_process_env[key] = value
     logger.debug(f"Setting environment variables for job execution: {sub_process_env}")
 
-    # disable pylint warning about not closing files here (explicitly closed in finally block)
-    stdout = open(out_file, "w", encoding="utf-8") if out_file else subprocess.PIPE  # pylint: disable=consider-using-with
-    stderr = open(err_file, "w", encoding="utf-8") if err_file else subprocess.PIPE  # pylint: disable=consider-using-with
+    if out_file:
+        stdout = open(out_file, "w", encoding="utf-8")  # pylint: disable=consider-using-with
+    else:
+        stdout = subprocess.PIPE if capture_output else None
+    if err_file:
+        stderr = open(err_file, "w", encoding="utf-8")  # pylint: disable=consider-using-with
+    else:
+        stderr = subprocess.PIPE if capture_output else None
 
     try:
         result = subprocess.run(
@@ -130,13 +139,12 @@ def submit(
             stderr=stderr,
             env=sub_process_env,
         )
-
     except subprocess.CalledProcessError as exc:
         _raise_job_execution_error(exc, out_file, err_file, application_log)
     finally:
-        if stdout != subprocess.PIPE:
+        if out_file:
             stdout.close()
-        if stderr != subprocess.PIPE:
+        if err_file:
             stderr.close()
 
     return result

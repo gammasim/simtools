@@ -505,7 +505,7 @@ def test_pull_image_pulls_if_image_missing(monkeypatch):
 
     assert submit_mock.call_count == 2
     submit_mock.assert_any_call(["podman", "image", "inspect", image], check=False)
-    submit_mock.assert_any_call(["podman", "pull", image])
+    submit_mock.assert_any_call(["podman", "pull", image], capture_output=False)
 
 
 def test_pull_image_raises_if_pull_fails(monkeypatch):
