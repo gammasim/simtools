@@ -33,7 +33,10 @@ class ProductionGridPlotter:
     site_location_height : float or astropy.units.Quantity
         Site height in meters.
     observation_time : str, optional
-        Observation time in UTC ISO format. If None, metadata from the grid file is used.
+        Observation time in UTC ISO format used only for coordinate transformations
+        during plotting (e.g. RA/Dec <-> Alt/Az and horizon visibility). It does
+        not modify or re-generate the underlying grid points from the input file.
+        If None, metadata from the grid file is used.
     output_path : str or Path
         Path to save output plots.
     """
