@@ -195,10 +195,8 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     )
 
     # Patch dependencies.get_version_string
-    monkeypatch.setattr(
-        "simtools.dependencies.get_version_string",
-        mock.Mock(return_value="simtools version: 1.2.3\n"),
-    )
+    version_string_mock = mock.Mock(return_value="simtools version: 1.2.3\n")
+    monkeypatch.setattr("simtools.dependencies.get_version_string", version_string_mock)
 
     # Patch job_manager.submit
     def mock_submit(app, out_file, err_file, configuration=None, runtime_environment=None):
@@ -228,6 +226,7 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     mock_logger.info.assert_any_call("Running application: app1")
     mock_logger.info.assert_any_call("Skipping application: app2")
     mock_logger.info.assert_any_call("Running application: app3")
+    version_string_mock.assert_called_once_with([], include_software_versions=False)
 
 
 def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_directory):
@@ -304,6 +303,7 @@ def test_read_runtime_environment_with_full_options(monkeypatch):
         simtools_runner.read_runtime_environment(runtime_environment, workdir)
 
     monkeypatch.setattr(shutil, "which", mock.Mock(return_value="podman"))
+    monkeypatch.setattr("simtools.runners.simtools_runner._pull_image", mock.Mock())
     result = simtools_runner.read_runtime_environment(runtime_environment, workdir)
 
     assert result == expected_command
@@ -315,6 +315,7 @@ def test_read_runtime_environment_with_minimal_options(monkeypatch):
         "container_engine": "docker",
     }
     monkeypatch.setattr(shutil, "which", mock.Mock(return_value="docker"))
+    monkeypatch.setattr("simtools.runners.simtools_runner._pull_image", mock.Mock())
     workdir = TEST_WORKDIR
     expected_command = [
         "docker",
@@ -344,6 +345,7 @@ def test_read_runtime_environment_with_missing_options(monkeypatch):
         "container_engine": "docker",
     }
     monkeypatch.setattr(shutil, "which", mock.Mock(return_value="docker"))
+    monkeypatch.setattr("simtools.runners.simtools_runner._pull_image", mock.Mock())
     workdir = TEST_WORKDIR
     expected_command = [
         "docker",
@@ -423,6 +425,7 @@ def test_read_runtime_environment_with_env_file_and_options(monkeypatch):
     }
 
     monkeypatch.setattr(shutil, "which", mock.Mock(return_value="podman"))
+    monkeypatch.setattr("simtools.runners.simtools_runner._pull_image", mock.Mock())
 
     result = simtools_runner.read_runtime_environment(runtime_environment)
 
@@ -478,3 +481,38 @@ def test_run_applications_with_empty_configuration_list(monkeypatch, tmp_test_di
 
     # Verify no applications were submitted
     mock_submit.assert_not_called()
+
+
+def test_pull_image_skips_pull_if_image_exists(monkeypatch):
+    image = "ghcr.io/gammasim/simtools-prod:test"
+    inspect_result = mock.Mock(returncode=0)
+    submit_mock = mock.Mock(return_value=inspect_result)
+    monkeypatch.setattr("simtools.job_execution.job_manager.submit", submit_mock)
+
+    simtools_runner._pull_image("podman", image)
+
+    submit_mock.assert_called_once_with(["podman", "image", "inspect", image], check=False)
+
+
+def test_pull_image_pulls_if_image_missing(monkeypatch):
+    image = "ghcr.io/gammasim/simtools-prod:test"
+    inspect_result = mock.Mock(returncode=125)
+    pull_result = mock.Mock(returncode=0)
+    submit_mock = mock.Mock(side_effect=[inspect_result, pull_result])
+    monkeypatch.setattr("simtools.job_execution.job_manager.submit", submit_mock)
+
+    simtools_runner._pull_image("podman", image)
+
+    assert submit_mock.call_count == 2
+    submit_mock.assert_any_call(["podman", "image", "inspect", image], check=False)
+    submit_mock.assert_any_call(["podman", "pull", image], capture_output=False)
+
+
+def test_pull_image_raises_if_pull_fails(monkeypatch):
+    image = "ghcr.io/gammasim/simtools-prod:test"
+    inspect_result = mock.Mock(returncode=125)
+    submit_mock = mock.Mock(side_effect=[inspect_result, JobExecutionError("pull failed")])
+    monkeypatch.setattr("simtools.job_execution.job_manager.submit", submit_mock)
+
+    with pytest.raises(RuntimeError, match="Failed to pull image"):
+        simtools_runner._pull_image("podman", image)

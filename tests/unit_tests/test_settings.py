@@ -72,6 +72,17 @@ def test_load_with_env_vars(config_instance):
     assert config_instance._sim_telarray_path == "/env/simtel"
 
 
+@patch("pathlib.Path.is_dir", return_value=False)
+@patch.dict(os.environ, {}, clear=True)
+def test_load_without_resolving_sim_software_executables(mock_is_dir, config_instance):
+    config_instance.load(
+        args={"corsika_path": "/path/not/available"},
+        resolve_sim_software_executables=False,
+    )
+    assert config_instance._corsika_path == "/path/not/available"
+    assert config_instance._corsika_exe is None
+
+
 @patch.dict(os.environ, {}, clear=True)
 def test_args_property(config_instance):
     args = {"test": "value"}
