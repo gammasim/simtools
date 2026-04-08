@@ -9,6 +9,7 @@ Additionally, it allows for converting between Altitude/Azimuth and Right Ascens
 Declination coordinates. The resulting grid points are saved to a file.
 """
 
+import json
 import logging
 from pathlib import Path
 
@@ -18,8 +19,11 @@ from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.table import Table
 from astropy.units import Quantity
 from scipy.interpolate import LinearNDInterpolator, griddata
+from scipy.spatial import QhullError  # pylint: disable=no-name-in-module
 
-from simtools.utils.names import normalize_array_element_identifier_container
+from simtools.simtel.simtel_io_metadata import (
+    get_sim_telarray_telescope_id_to_telescope_name_mapping,
+)
 
 DEFAULT_SERIALIZATION_ROUND_DECIMALS = 6
 
@@ -42,6 +46,7 @@ class GridGeneration:
         observing_time=None,
         lookup_table: str | None = None,
         telescope_ids: list | None = None,
+        simtel_file: str | None = None,
     ):
         """
         Initialize the grid with the given axes and coordinate system.
@@ -61,6 +66,9 @@ class GridGeneration:
             Path to the lookup table file (ECSV format).
         telescope_ids : list of str, optional
             List of telescope IDs to get the limits for.
+        simtel_file : str, optional
+            Path to a sim_telarray file used to map sim_telarray telescope IDs to
+            telescope names when matching lookup-table telescope selections.
         """
         self._logger = logging.getLogger(__name__)
 
@@ -74,8 +82,14 @@ class GridGeneration:
         self.observing_time = observing_time
         self.lookup_table = lookup_table
         self.telescope_ids = telescope_ids
+        self.simtel_file = simtel_file
         self.interpolated_limits = {}
         self.serialization_round_decimals = DEFAULT_SERIALIZATION_ROUND_DECIMALS
+        self._simtel_id_to_name = (
+            get_sim_telarray_telescope_id_to_telescope_name_mapping(simtel_file)
+            if simtel_file
+            else {}
+        )
 
         # Store target values for each axis
         self.target_values = self._generate_target_values()
@@ -90,18 +104,54 @@ class GridGeneration:
         """Load and filter lookup-table arrays for selected telescope IDs."""
         lookup_table = Table.read(self.lookup_table, format="ascii.ecsv")
 
-        selected_telescope_ids = set(
-            normalize_array_element_identifier_container(self.telescope_ids)
-        )
+        def _to_list(value):
+            if value is None:
+                return []
+            if isinstance(value, str):
+                stripped = value.strip()
+                return json.loads(stripped) if stripped.startswith("[") else [stripped]
+            if isinstance(value, (list, tuple, set)):
+                return list(value)
+            return [value]
+
+        def _normalize_identifier(identifier):
+            if isinstance(identifier, (int, np.integer)):
+                return self._simtel_id_to_name.get(int(identifier), str(int(identifier))), True
+
+            text = str(identifier).strip()
+            if text.lstrip("+-").isdigit():
+                return self._simtel_id_to_name.get(int(text), text), True
+            return text, False
+
+        selected_telescope_ids = {
+            _normalize_identifier(identifier)[0] for identifier in _to_list(self.telescope_ids)
+        }
 
         matching_rows = [
             row
             for row in lookup_table
             if selected_telescope_ids
-            == set(normalize_array_element_identifier_container(row["telescope_ids"]))
+            == {
+                _normalize_identifier(identifier)[0]
+                for identifier in _to_list(row["telescope_ids"])
+            }
         ]
 
         if not matching_rows:
+            has_numeric_lookup_ids = any(
+                any(
+                    _normalize_identifier(identifier)[1]
+                    for identifier in _to_list(row["telescope_ids"])
+                )
+                for row in lookup_table
+            )
+
+            if has_numeric_lookup_ids and not self.simtel_file:
+                raise ValueError(
+                    "Lookup table telescope selections contain numeric IDs. "
+                    "Provide --simtel_file to map those IDs to telescope names."
+                )
+
             raise ValueError(
                 f"No matching rows in the lookup table for telescope_ids: {self.telescope_ids}"
             )
@@ -160,14 +210,21 @@ class GridGeneration:
             "upper_scatter_radius": repeat_3(lookup_arrays["upper_scatter_radius"]),
             "viewcone_radius": repeat_3(lookup_arrays["viewcone_radius"]),
         }
-        self.lookup_interpolators_for_point = {
-            key: LinearNDInterpolator(
-                self.lookup_points_for_interpolation,
-                self.lookup_values_for_interpolation[key],
-                fill_value=np.nan,
-            )
-            for key in ("lower_energy_threshold", "upper_scatter_radius", "viewcone_radius")
-        }
+        try:
+            self.lookup_interpolators_for_point = {
+                key: LinearNDInterpolator(
+                    self.lookup_points_for_interpolation,
+                    self.lookup_values_for_interpolation[key],
+                    fill_value=np.nan,
+                )
+                for key in ("lower_energy_threshold", "upper_scatter_radius", "viewcone_radius")
+            }
+        except QhullError as exc:
+            raise ValueError(
+                "Lookup table does not contain enough unique points for 3D interpolation "
+                "(zenith, azimuth, nsb_level). Provide a denser lookup table "
+                "or run without --lookup_table if limits are not required for this use case."
+            ) from exc
 
     def _has_radec_axes(self):
         """Return True if axes define a native RA/Dec grid."""
@@ -387,7 +444,12 @@ class GridGeneration:
         }
 
     def _generate_grid_radec_mode(self):
-        """Generate grid points for RA/Dec mode using equal declination spacing."""
+        """Generate grid points for RA/Dec mode.
+
+        If explicit ``ra``/``dec`` axes are provided, use those points directly.
+        Otherwise, sample directions along declination lines with hour-angle spacing
+        and keep only points that satisfy the configured zenith-angle limits.
+        """
         if self._has_radec_axes():
             return self._generate_grid_from_radec_axes()
 

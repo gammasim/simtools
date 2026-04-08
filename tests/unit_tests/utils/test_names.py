@@ -660,3 +660,6 @@ def test_normalize_array_element_identifier_container():
     ]
     assert names.normalize_array_element_identifier_container("[1, 12]") == ["LSTN-01", "MSTN-08"]
     assert names.normalize_array_element_identifier_container(None) == []
+
+    with pytest.raises(ValueError, match="Invalid JSON list string"):
+        names.normalize_array_element_identifier_container("[1, 12")

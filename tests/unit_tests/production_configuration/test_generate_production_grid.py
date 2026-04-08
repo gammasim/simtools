@@ -12,6 +12,7 @@ from astropy.time import Time
 from astropy.units import Quantity
 from astropy.utils import iers
 from astropy.utils.iers import IERSWarning
+from scipy.spatial import QhullError
 
 from simtools.production_configuration.generate_production_grid import GridGeneration
 
@@ -33,6 +34,7 @@ def _create_grid_generation(
     observing_location,
     observing_time,
     lookup_table,
+    simtel_file=None,
 ):
     """Create a GridGeneration instance with a standard telescope selection."""
     return GridGeneration(
@@ -42,6 +44,7 @@ def _create_grid_generation(
         observing_time=observing_time,
         lookup_table=lookup_table,
         telescope_ids=["LSTN-01"],
+        simtel_file=simtel_file,
     )
 
 
@@ -334,6 +337,38 @@ def test_generate_grid_radec_axes_mode_with_lookup(
     assert grid_points[0]["viewcone_radius"].value == pytest.approx(7.0, rel=1e-2)
 
 
+def test_generate_grid_radec_axes_mode_with_sparse_lookup_raises_clear_error(
+    lookup_table, observing_location, observing_time, monkeypatch
+):
+    """Raise a user-facing error when lookup points are too sparse for 3D interpolation."""
+    source_altaz = SkyCoord(
+        alt=50.0 * u.deg,
+        az=0.0 * u.deg,
+        frame="altaz",
+        obstime=observing_time,
+        location=observing_location,
+    )
+    source_radec = source_altaz.icrs
+    axes_definition = _build_single_point_radec_axes_definition(source_radec)
+
+    def _raise_qhull(*args, **kwargs):
+        raise QhullError("mocked sparse triangulation failure")
+
+    monkeypatch.setattr(
+        "simtools.production_configuration.generate_production_grid.LinearNDInterpolator",
+        _raise_qhull,
+    )
+
+    with pytest.raises(ValueError, match="does not contain enough unique points"):
+        _create_grid_generation(
+            axes=axes_definition,
+            coordinate_system="ra_dec",
+            observing_location=observing_location,
+            observing_time=observing_time,
+            lookup_table=lookup_table,
+        )
+
+
 def test_interpolated_limits(grid_gen):
     grid_gen.interpolated_limits = {
         "lower_energy_threshold": np.array(
@@ -358,6 +393,55 @@ def test_interpolated_limits(grid_gen):
         assert isinstance(point["lower_energy_threshold"], Quantity)
         assert isinstance(point["scatter_radius"], Quantity)
         assert isinstance(point["viewcone_radius"], Quantity)
+
+
+def test_load_matching_lookup_arrays_with_simtel_id_mapping(grid_gen, tmp_test_directory):
+    """Match lookup rows when telescope IDs are stored as sim_telarray numeric IDs."""
+    lookup_table_path = tmp_test_directory / "lookup_simtel_ids.ecsv"
+    Table(
+        {
+            "telescope_ids": ["[1]"],
+            "zenith": [20.0],
+            "azimuth": [0.0],
+            "nsb_level": [4.0],
+            "lower_energy_limit": [0.01],
+            "upper_radius_limit": [1200.0],
+            "viewcone_radius": [5.0],
+        }
+    ).write(lookup_table_path, format="ascii.ecsv", overwrite=True)
+
+    grid_gen.lookup_table = str(lookup_table_path)
+    grid_gen.telescope_ids = ["LSTN-01"]
+    grid_gen._simtel_id_to_name = {1: "LSTN-01"}
+
+    lookup_arrays = grid_gen._load_matching_lookup_arrays()
+
+    assert lookup_arrays["points"].shape[0] == 1
+    assert lookup_arrays["lower_energy_threshold"][0] == pytest.approx(0.01)
+
+
+def test_load_matching_lookup_arrays_numeric_ids_require_simtel_file(grid_gen, tmp_test_directory):
+    """Raise a clear error when numeric lookup telescope IDs are present without mapping input."""
+    lookup_table_path = tmp_test_directory / "lookup_simtel_ids_no_mapping.ecsv"
+    Table(
+        {
+            "telescope_ids": ["[1]"],
+            "zenith": [20.0],
+            "azimuth": [0.0],
+            "nsb_level": [4.0],
+            "lower_energy_limit": [0.01],
+            "upper_radius_limit": [1200.0],
+            "viewcone_radius": [5.0],
+        }
+    ).write(lookup_table_path, format="ascii.ecsv", overwrite=True)
+
+    grid_gen.lookup_table = str(lookup_table_path)
+    grid_gen.telescope_ids = ["LSTN-01"]
+    grid_gen.simtel_file = None
+    grid_gen._simtel_id_to_name = {}
+
+    with pytest.raises(ValueError, match="Provide --simtel_file"):
+        grid_gen._load_matching_lookup_arrays()
 
 
 def test_serialize_grid_points_with_output_file(grid_gen, tmp_test_directory, caplog):
