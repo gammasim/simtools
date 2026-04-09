@@ -72,12 +72,7 @@ def _add_arguments(parser):
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        __file__,
-        description=__doc__,
-        add_arguments_function=_add_arguments,
-        initialization_kwargs={"output": True},
-    )
+    app_context = build_application(initialization_kwargs={"output": True})
 
     _metadata = (
         None if app_context.args.get("ignore_metadata") else MetadataCollector(app_context.args)

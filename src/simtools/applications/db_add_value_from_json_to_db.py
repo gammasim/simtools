@@ -55,12 +55,7 @@ def _add_arguments(parser):
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        __file__,
-        description=__doc__,
-        add_arguments_function=_add_arguments,
-        initialization_kwargs={"db_config": True},
-    )
+    app_context = build_application(initialization_kwargs={"db_config": True})
 
     if app_context.args.get("test_db", False):
         app_context.db_config["db_simulation_model_version"] = str(uuid.uuid4())

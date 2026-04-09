@@ -234,6 +234,59 @@ def test_build_application(mocker, tmp_test_directory):
     configurator_instance.initialize.assert_called_once_with(output=True)
 
 
+def test_build_application_infers_caller_metadata(mocker):
+    """Test build_application infers file/doc/add_arguments from caller module."""
+    startup_mock = mocker.patch(
+        "simtools.application_control.startup_application",
+        return_value="app_context",
+    )
+    configurator_class = mocker.patch("simtools.application_control.configurator.Configurator")
+    configurator_instance = configurator_class.return_value
+    configurator_instance.initialize.return_value = ({"log_level": "info"}, {})
+    add_arguments = MagicMock()
+
+    globals()["_add_arguments"] = add_arguments
+    try:
+        result = build_application(
+            initialization_kwargs={"output": True},
+            startup_kwargs={"setup_io_handler": False},
+        )
+    finally:
+        del globals()["_add_arguments"]
+
+    assert result == "app_context"
+    startup_mock.assert_called_once()
+    parse_function = startup_mock.call_args.args[0]
+    startup_kwargs = startup_mock.call_args.kwargs
+
+    assert startup_kwargs == {"setup_io_handler": False}
+    assert parse_function() == ({"log_level": "info"}, {})
+    configurator_class.assert_called_once_with(
+        label="test_application_control",
+        usage=None,
+        description="Unit tests for application_control module.",
+        epilog=None,
+    )
+    add_arguments.assert_called_once_with(configurator_instance.parser)
+    configurator_instance.initialize.assert_called_once_with(output=True)
+
+
+def test_build_application_missing_metadata_raises(mocker):
+    """Test build_application raises if inference and explicit metadata are unavailable."""
+    startup_mock = mocker.patch("simtools.application_control.startup_application")
+
+    with patch("simtools.application_control.inspect.currentframe") as frame_mock:
+        frame_mock.return_value.f_back.f_globals = {}
+
+        with pytest.raises(ValueError, match="Missing application path"):
+            build_application(description="test")
+
+        with pytest.raises(ValueError, match="Missing description"):
+            build_application(application_path="/tmp/test.py")
+
+    startup_mock.assert_not_called()
+
+
 def test_startup_application_basic():
     """Test startup_application function with basic configuration."""
     # Mock parse function
