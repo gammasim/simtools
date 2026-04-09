@@ -21,7 +21,7 @@ def run_applications(args_dict, logger):
         Logger for logging application output.
     """
     configurations, runtime_environment, log_file = _read_application_configuration(
-        args_dict["configuration_file"], args_dict.get("steps"), logger
+        args_dict["config_file"], args_dict.get("steps"), logger
     )
     run_time = (
         read_runtime_environment(runtime_environment)

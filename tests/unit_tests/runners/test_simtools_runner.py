@@ -175,7 +175,7 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     # Prepare mocks
     mock_logger = mock.Mock()
     mock_args_dict = {
-        "configuration_file": "dummy_config.yml",
+        "config_file": "dummy_config.yml",
         "steps": None,
         "ignore_runtime_environment": False,
     }
@@ -232,7 +232,7 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
 def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_directory):
     mock_logger = mock.Mock()
     mock_args_dict = {
-        "configuration_file": "dummy_config.yml",
+        "config_file": "dummy_config.yml",
         "steps": None,
         "ignore_runtime_environment": False,
     }
@@ -370,7 +370,7 @@ def test_run_applications_with_runtime_environment_ignored(monkeypatch, tmp_test
     """Test that runtime environment is ignored when ignore_runtime_environment is True."""
     mock_logger = mock.Mock()
     mock_args_dict = {
-        "configuration_file": "dummy_config.yml",
+        "config_file": "dummy_config.yml",
         "steps": [1],
         "ignore_runtime_environment": True,
     }
@@ -451,7 +451,7 @@ def test_run_applications_with_empty_configuration_list(monkeypatch, tmp_test_di
     """Test run_applications with empty configuration list."""
     mock_logger = mock.Mock()
     mock_args_dict = {
-        "configuration_file": "empty_config.yml",
+        "config_file": "empty_config.yml",
         "steps": None,
         "ignore_runtime_environment": False,
     }
