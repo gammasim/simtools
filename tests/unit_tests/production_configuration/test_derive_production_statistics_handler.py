@@ -1,9 +1,9 @@
-import json
 from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+from astropy.table import Table
 
 from simtools.production_configuration.derive_production_statistics_handler import (
     ProductionStatisticsHandler,
@@ -12,38 +12,28 @@ from simtools.production_configuration.derive_production_statistics_handler impo
 # Define constants for frequently used literals
 BASE_PATH = "tests/resources/production_dl2_fits/"
 FILE_NAME_TEMPLATE = "prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
-MOCK_OPEN_PATH = "builtins.open"
-OUTPUT_FILE = "output.json"
-COLLECT_DATA_PATH = "simtools.io.ascii_handler.collect_data_from_file"
+OUTPUT_FILE = "output.ecsv"
 
 
 @pytest.fixture
 def grid_points_content():
     """Fixture to provide sample grid points content."""
-    return {
-        "grid_points": [
-            {
-                "azimuth": {"value": 0, "unit": "deg"},
-                "zenith_angle": {"value": 20, "unit": "deg"},
-                "nsb": {"value": 0.005, "unit": "MHz"},
-                "offset": {"value": 0.5, "unit": "deg"},
-            },
-            {
-                "azimuth": {"value": 0, "unit": "deg"},
-                "zenith_angle": {"value": 40, "unit": "deg"},
-                "nsb": {"value": 0.005, "unit": "MHz"},
-                "offset": {"value": 0.5, "unit": "deg"},
-            },
-        ]
-    }
+    return [
+        {"azimuth": 0.0, "zenith_angle": 20.0, "nsb_level": 0.005, "offset": 0.5},
+        {"azimuth": 0.0, "zenith_angle": 40.0, "nsb_level": 0.005, "offset": 0.5},
+    ]
 
 
 @pytest.fixture
 def grid_points_file(tmp_path, grid_points_content):
     """Fixture to create a temporary grid points file."""
-    grid_points_file_path = tmp_path / "grid_points.json"
-    with open(grid_points_file_path, "w") as f:
-        json.dump(grid_points_content, f)
+    grid_points_file_path = tmp_path / "grid_points.ecsv"
+    table = Table(rows=grid_points_content)
+    table["azimuth"].unit = "deg"
+    table["zenith_angle"].unit = "deg"
+    table["nsb_level"].unit = "MHz"
+    table["offset"].unit = "deg"
+    table.write(grid_points_file_path, format="ascii.ecsv", overwrite=True)
     return grid_points_file_path
 
 
@@ -63,7 +53,7 @@ def args_dict(tmp_path, metrics_file, grid_points_file):
         "nsb": [0.005],
         "off_axis_angles": [0.5, 1.0],
         "query_point": [1.0, 180.0, 20.0, 4.0, 0.5],
-        "output_file": "production_statistics.json",
+        "output_file": "production_statistics.ecsv",
         "output_path": str(tmp_path),
         "metrics_file": str(metrics_file),
         "grid_points_production_file": str(grid_points_file),
@@ -82,13 +72,13 @@ def mock_handler(args_dict, tmp_path):
         return ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
 
-def test_init_with_required_arguments(args_dict, tmp_path, grid_points_content):
+def test_init_with_required_arguments(args_dict, tmp_path):
     """Test initialization with required arguments."""
-    with patch(MOCK_OPEN_PATH, mock_open(read_data=json.dumps(grid_points_content))):
-        handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
-        assert handler.args == args_dict
-        assert handler.output_path == tmp_path
-        assert isinstance(handler.grid_points_production, dict)
+    handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
+    assert handler.args == args_dict
+    assert handler.output_path == tmp_path
+    assert isinstance(handler.grid_points_production, Table)
+    assert len(handler.grid_points_production) == 2
 
 
 def test_no_evaluators_initialized(mock_handler):
@@ -158,75 +148,46 @@ def test_perform_interpolation_not_initialized(mock_handler):
     assert result is None
 
 
-@patch("simtools.production_configuration.interpolation_handler.InterpolationHandler.interpolate")
-def test_perform_interpolation_with_evaluators(mock_interpolate, mock_handler):
+def test_perform_interpolation_with_evaluators(mock_handler):
     """Test perform_interpolation with valid evaluators."""
-    mock_handler.evaluator_instances = [MagicMock()]
-    mock_handler.grid_points_production = {"grid_points": [{"test": "value1"}, {"test": "value2"}]}
+    mock_handler.evaluator_instances = [MagicMock(), MagicMock()]
+    mock_handler.grid_points_production = Table(rows=[{"test": "value1"}, {"test": "value2"}])
 
     mock_interp_handler = MagicMock()
     mock_interp_handler.interpolate.return_value = np.array([100, 200])
-    mock_handler.interpolation_handler = mock_interp_handler
-    original_method = mock_handler.perform_interpolation
-
-    def simplified_perform_interpolation():
-        """A simplified version that skips actual InterpolationHandler initialization"""
-        if not mock_handler.evaluator_instances:
-            mock_handler.logger.error("No evaluators initialized. Cannot perform interpolation.")
-            return None
-
-        interpolated_stats = mock_handler.interpolation_handler.interpolate()
-
-        grid_points = mock_handler.grid_points_production.get("grid_points", [])
-        result = []
-        for i, grid_point in enumerate(grid_points):
-            if i < len(interpolated_stats):
-                stat_value = float(interpolated_stats[i])
-                result.append(
-                    {"grid_point": grid_point, "interpolated_production_statistics": stat_value}
-                )
-        return result
-
-    mock_handler.perform_interpolation = simplified_perform_interpolation
-
-    try:
+    with patch(
+        "simtools.production_configuration.derive_production_statistics_handler.InterpolationHandler",
+        return_value=mock_interp_handler,
+    ):
         result = mock_handler.perform_interpolation()
 
-        assert isinstance(result, list)
-        assert len(result) == 2
-        assert result[0]["interpolated_production_statistics"] == 100
-        assert result[1]["interpolated_production_statistics"] == 200
-    finally:
-        mock_handler.perform_interpolation = original_method
+    assert isinstance(result, Table)
+    assert len(result) == 2
+    assert result["interpolated_production_statistics"][0] == 100
+    assert result["interpolated_production_statistics"][1] == 200
 
 
-@patch(MOCK_OPEN_PATH, new_callable=mock_open)
-def test_write_output(mock_file_open, mock_handler):
+def test_write_output(mock_handler):
     """Test the write_output method."""
-    production_statistics = [
-        {"grid_point": {"test": "value"}, "interpolated_production_statistics": 10000}
-    ]
+    production_statistics = Table(
+        rows=[{"azimuth": 180.0, "zenith_angle": 20.0, "interpolated_production_statistics": 10000}]
+    )
+    production_statistics["azimuth"].unit = "deg"
+    production_statistics["zenith_angle"].unit = "deg"
 
     mock_handler.write_output(production_statistics)
 
     expected_path = Path(f"{mock_handler.output_path}/{mock_handler.args['output_file']}")
-    mock_file_open.assert_called_once_with(expected_path, "w", encoding="utf-8")
-
-    handle = mock_file_open()
-    assert handle.write.call_count > 0
-
-    written_data = "".join(call.args[0] for call in handle.write.call_args_list)
-
-    assert "grid_point" in written_data
-    assert "test" in written_data
-    assert "value" in written_data
-    assert "10000" in written_data
+    assert expected_path.exists()
+    written_table = Table.read(expected_path, format="ascii.ecsv")
+    assert "interpolated_production_statistics" in written_table.colnames
+    assert written_table["interpolated_production_statistics"][0] == 10000
 
 
 def test_run(mock_handler):
     """Test the run method."""
     mock_handler.initialize_evaluators = MagicMock()
-    mock_handler.perform_interpolation = MagicMock(return_value=[{"test": "value"}])
+    mock_handler.perform_interpolation = MagicMock(return_value=Table(rows=[{"test": "value"}]))
     mock_handler.write_output = MagicMock()
     mock_handler.logger = MagicMock()
 
@@ -234,7 +195,7 @@ def test_run(mock_handler):
 
     mock_handler.initialize_evaluators.assert_called_once()
     mock_handler.perform_interpolation.assert_called_once()
-    mock_handler.write_output.assert_called_once_with([{"test": "value"}])
+    mock_handler.write_output.assert_called_once()
 
 
 def test_plot_production_statistics_comparison(mock_handler):
@@ -255,7 +216,7 @@ def test_run_with_plot_production_statistics(mock_handler):
     """Test the run method when plot_production_statistics is enabled."""
     mock_handler.args["plot_production_statistics"] = True
     mock_handler.initialize_evaluators = MagicMock()
-    mock_handler.perform_interpolation = MagicMock(return_value=[{"test": "value"}])
+    mock_handler.perform_interpolation = MagicMock(return_value=Table(rows=[{"test": "value"}]))
     mock_handler.write_output = MagicMock()
     mock_handler.plot_production_statistics_comparison = MagicMock()
 
@@ -264,11 +225,11 @@ def test_run_with_plot_production_statistics(mock_handler):
     mock_handler.initialize_evaluators.assert_called_once()
     mock_handler.perform_interpolation.assert_called_once()
     mock_handler.plot_production_statistics_comparison.assert_called_once()
-    mock_handler.write_output.assert_called_once_with([{"test": "value"}])
+    mock_handler.write_output.assert_called_once()
 
 
 def test_handler_with_grid_points_from_file(grid_points_file, metrics_file, tmp_path):
-    """Test handler initialization with grid points from a file."""
+    """Test handler initialization with grid points from an ECSV file."""
     args_dict = {
         "base_path": BASE_PATH,
         "zeniths": [20, 40],
@@ -281,32 +242,26 @@ def test_handler_with_grid_points_from_file(grid_points_file, metrics_file, tmp_
         "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch(COLLECT_DATA_PATH, return_value={"grid_points": ["test1", "test2"]}):
-        with patch(
-            MOCK_OPEN_PATH, mock_open(read_data=json.dumps({"grid_points": ["test1", "test2"]}))
-        ):
-            handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
+    handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
-            # Check grid_points_production was loaded correctly
-            assert isinstance(handler.grid_points_production, dict)
-            assert "grid_points" in handler.grid_points_production
-            assert len(handler.grid_points_production["grid_points"]) == 2
+    assert isinstance(handler.grid_points_production, Table)
+    assert len(handler.grid_points_production) == 2
 
 
 def test_load_grid_points_production_file_not_found(args_dict, tmp_path):
     """Test behavior when grid_points_production_file is not found."""
-    args_dict["grid_points_production_file"] = "non_existent_file.json"
+    args_dict["grid_points_production_file"] = "non_existent_file.ecsv"
 
     with pytest.raises(FileNotFoundError):
-        with patch(MOCK_OPEN_PATH, side_effect=FileNotFoundError()):
-            ProductionStatisticsHandler(args_dict, output_path=tmp_path)
+        ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
 
 def test_empty_grid_points_production_file(metrics_file, tmp_path):
     """Test behavior when grid_points_production_file is empty."""
-    grid_points_file = tmp_path / "empty_grid_points.json"
-    with open(grid_points_file, "w") as f:
-        json.dump({"grid_points": []}, f)
+    grid_points_file = tmp_path / "empty_grid_points.ecsv"
+    Table(rows=[], names=["azimuth", "zenith_angle", "nsb_level", "offset"]).write(
+        grid_points_file, format="ascii.ecsv", overwrite=True
+    )
 
     args_dict = {
         "base_path": BASE_PATH,
@@ -320,19 +275,16 @@ def test_empty_grid_points_production_file(metrics_file, tmp_path):
         "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch(COLLECT_DATA_PATH, return_value={"grid_points": []}):
-        handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
+    handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
-        # It should load the dict with an empty grid_points list
-        assert "grid_points" in handler.grid_points_production
-        assert len(handler.grid_points_production["grid_points"]) == 0
+    assert isinstance(handler.grid_points_production, Table)
+    assert len(handler.grid_points_production) == 0
 
 
 def test_grid_points_with_incorrect_format(metrics_file, tmp_path):
-    """Test behavior when grid_points_production_file has incorrect format."""
+    """Test behavior when grid_points_production_file has unsupported format."""
     grid_points_file = tmp_path / "incorrect_format.json"
-    with open(grid_points_file, "w") as f:
-        json.dump({"wrong_key": []}, f)
+    grid_points_file.write_text("{}", encoding="utf-8")
 
     args_dict = {
         "base_path": BASE_PATH,
@@ -346,12 +298,8 @@ def test_grid_points_with_incorrect_format(metrics_file, tmp_path):
         "file_name_template": FILE_NAME_TEMPLATE,
     }
 
-    with patch(COLLECT_DATA_PATH, return_value={"wrong_key": []}):
-        handler = ProductionStatisticsHandler(args_dict, output_path=tmp_path)
-
-        # It should load the dict with the wrong key
-        assert "wrong_key" in handler.grid_points_production
-        assert "grid_points" not in handler.grid_points_production
+    with pytest.raises(ValueError, match="must be an ECSV file"):
+        ProductionStatisticsHandler(args_dict, output_path=tmp_path)
 
 
 def test_initialize_evaluators_with_valid_files(mock_handler):
@@ -400,12 +348,12 @@ def test_perform_interpolation_with_grid_points(mock_handler):
     }
     mock_handler.evaluator_instances = [mock_evaluator]
 
-    mock_handler.grid_points_production = {
-        "grid_points": [
-            {"azimuth": {"value": 0}, "zenith_angle": {"value": 20}},
-            {"azimuth": {"value": 0}, "zenith_angle": {"value": 40}},
+    mock_handler.grid_points_production = Table(
+        rows=[
+            {"azimuth": 0.0, "zenith_angle": 20.0, "nsb_level": 0.0, "offset": 0.5},
+            {"azimuth": 0.0, "zenith_angle": 40.0, "nsb_level": 0.0, "offset": 0.5},
         ]
-    }
+    )
 
     mock_interp = MagicMock()
     mock_interp.interpolate.return_value = np.array([100])
@@ -417,8 +365,8 @@ def test_perform_interpolation_with_grid_points(mock_handler):
     ):
         result = mock_handler.perform_interpolation()
 
-        assert isinstance(result, list)
+        assert isinstance(result, Table)
         assert len(result) == 1
-        assert result[0]["interpolated_production_statistics"] == 100
+        assert result["interpolated_production_statistics"][0] == 100
 
         assert mock_interp.interpolate.called

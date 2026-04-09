@@ -2,7 +2,9 @@
 applications:
 - application: simtools-production-merge-corsika-limits
   configuration:
-    input_files: tests/resources/corsika_simulation_limits/
+    input_files:
+    - tests/resources/corsika_simulation_limits/corsika_simulation_limits_lookup_01.ecsv
+    - tests/resources/corsika_simulation_limits/corsika_simulation_limits_lookup_02.ecsv
     grid_definition: tests/resources/corsika_simulation_limits/grid_definition.yaml
     output_file: merged_limits_merge_and_check.ecsv
     plot_grid_coverage: true

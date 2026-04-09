@@ -6,13 +6,13 @@ applications:
     - 180
     base_path: tests/resources/production_dl2_fits/
     file_name_template: prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits
-    grid_points_production_file: tests/resources/production_grid_points.json
+    grid_points_production_file: tests/resources/production_grid_points.ecsv
     metrics_file: tests/resources/production_simulation_config_metrics.yml
     nsb:
     - 1
     off_axis_angles:
     - 0
-    output_file: interpolated_production_statistics.json
+    output_file: interpolated_production_statistics.ecsv
     output_path: simtools-output
     zeniths:
     - 20
@@ -20,7 +20,7 @@ applications:
     - 52
     - 60
   integration_tests:
-  - output_file: interpolated_production_statistics.json
+  - output_file: interpolated_production_statistics.ecsv
   test_name: production_derive_statistics
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
