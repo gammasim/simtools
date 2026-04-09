@@ -271,7 +271,7 @@ def test_build_application_infers_caller_metadata(mocker):
     configurator_instance.initialize.assert_called_once_with(output=True)
 
 
-def test_build_application_missing_metadata_raises(mocker):
+def test_build_application_missing_metadata_raises(mocker, tmp_test_directory):
     """Test build_application raises if inference and explicit metadata are unavailable."""
     startup_mock = mocker.patch("simtools.application_control.startup_application")
 
@@ -282,7 +282,7 @@ def test_build_application_missing_metadata_raises(mocker):
             build_application(description="test")
 
         with pytest.raises(ValueError, match="Missing description"):
-            build_application(application_path="/tmp/test.py")
+            build_application(application_path=tmp_test_directory / "test.py")
 
     startup_mock.assert_not_called()
 
