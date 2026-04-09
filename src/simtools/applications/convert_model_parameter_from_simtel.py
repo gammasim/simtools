@@ -36,39 +36,38 @@ r"""
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Convert simulation model parameter from sim_telarray to simtools format.",
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--schema", help="Schema file for model parameter validation", required=True
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--simtel_cfg_file",
         help="File name for sim_telarray configuration",
         type=str,
         required=True,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--simtel_telescope_name",
         help="Name of the telescope in the sim_telarray configuration file",
         type=str,
         required=True,
     )
-    return config.initialize(simulation_model=["telescope", "parameter_version"], output=True)
 
 
 def main():
-    """Convert simulation model parameter from sim_telarray to simtools format."""
-    app_context = startup_application(_parse, setup_io_handler=False)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={
+            "simulation_model": ["telescope", "parameter_version"],
+            "output": True,
+        },
+        startup_kwargs={"setup_io_handler": False},
+    )
 
     simtel_config_reader = SimtelConfigReader(
         schema_file=app_context.args["schema"],

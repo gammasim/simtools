@@ -65,40 +65,33 @@ from pathlib import Path
 import numpy as np
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.simtel import simtel_config_reader
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Convert all model parameters from sim_telarray",
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--simtel_cfg_file",
         help="File name for sim_telarray configuration",
         type=str,
         required=True,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--simtel_telescope_name",
         help="Name of the telescope in the sim_telarray configuration file",
         type=str,
         required=True,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--skip_parameter",
         help="List of parameters to be skipped.",
         type=str,
         nargs="*",
         default=[],
     )
-    return config.initialize(simulation_model=["telescope", "parameter_version"])
 
 
 def read_simtel_config_file(args_dict, schema_file, camera_pixels=None):
@@ -310,8 +303,10 @@ def print_list_of_files(args_dict, logger):
 
 
 def main():
-    """Convert all simulation model parameters exported from sim_telarray format."""
-    app_context = startup_application(_parse)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={"simulation_model": ["telescope", "parameter_version"]},
+    )
 
     _parameters_not_in_simtel, _simtel_parameters = read_and_export_parameters(
         app_context.args, app_context.logger, app_context.io_handler

@@ -39,49 +39,48 @@ from pathlib import Path
 import astropy.units as u
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.layout.array_layout_utils import create_regular_array, write_array_elements_info_yaml
 
 
-def _parse():
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=("Generate a regular array of telescope and save as astropy table."),
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--telescope_type",
         help="Type of telescope (e.g., LST, MST, SST).",
         type=str,
         default="LST",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--n_telescopes",
         help="Number of telescopes in the array.",
         type=int,
         default=4,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--telescope_distance",
         help="Distance between telescopes in the array (in meters).",
         type=float,
         default=50.0,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--array_shape",
         help="Shape of the array (e.g., 'square', 'star').",
         type=str,
         default="square",
         choices=["square", "star"],
     )
-    return config.initialize(
-        db_config=False, simulation_model=["site", "model_version"], output=True
-    )
 
 
 def main():
-    """Create layout array files of regular arrays."""
-    app_context = startup_application(_parse)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={
+            "db_config": False,
+            "simulation_model": ["site", "model_version"],
+            "output": True,
+        },
+    )
 
     n_tel = app_context.args["n_telescopes"]
     tel_type = app_context.args["telescope_type"]

@@ -47,22 +47,14 @@ r"""
 
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.model.telescope_model import TelescopeModel
 from simtools.visualization import plot_camera, visualize
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=(
-            "Calculate the camera FoV of the telescope requested. "
-            "Plot the camera, as seen for an observer facing the camera."
-        ),
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--camera_in_sky_coor",
         help=(
             "Plot the camera layout in sky coordinates "
@@ -71,7 +63,7 @@ def _parse():
         action="store_true",
         default=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--print_pixels_id",
         help=(
             "Up to which pixel ID to print. "
@@ -80,12 +72,16 @@ def _parse():
         ),
         default=50,
     )
-    return config.initialize(db_config=True, simulation_model=["telescope", "model_version"])
 
 
 def main():
-    """Validate camera field of view."""
-    app_context = startup_application(_parse)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["telescope", "model_version"],
+        },
+    )
 
     label = "validate_camera_fov"
 

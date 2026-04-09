@@ -25,23 +25,18 @@ North - 5.0.0:
 The output is saved in simtools-output/test/model.
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.model.array_model import ArrayModel
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Generate sim_telarray configuration files for a given array.",
-    )
-    return config.initialize(db_config=True, simulation_model=["site", "layout", "model_version"])
-
-
 def main():
-    """Generate sim_telarray configuration files for a given array."""
-    app_context = startup_application(_parse)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["site", "layout", "model_version"],
+        },
+    )
 
     array_model = ArrayModel(
         label=app_context.args["label"],

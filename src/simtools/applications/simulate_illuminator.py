@@ -61,27 +61,20 @@ light_source_pointing (float, float, float, optional)
     Light source pointing direction. If not set, the pointing from the simulation model is used.
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=(
-            "Simulate light emission by a calibration light source (not attached to a telescope)."
-        ),
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--light_source",
         help="Illuminator name, i.e. ILLN-design",
         type=str,
         default=None,
         required=True,
     )
-    configurable_light_source_args = config.parser.add_argument_group(
+    configurable_light_source_args = parser.add_argument_group(
         "Configurable light source position and pointing (override simulation model values)"
     )
     configurable_light_source_args.add_argument(
@@ -101,32 +94,33 @@ def _parse():
         nargs=3,
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--number_of_events",
         help="Number of events to simulate",
         type=int,
         default=1,
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--flasher_photons",
         help=(
             "Override flasher photon yield. "
             "Accepts integers including scientific notation, e.g. 1e8."
         ),
-        type=config.parser.scientific_int,
+        type=parser.scientific_int,
         required=False,
-    )
-    return config.initialize(
-        db_config=True,
-        simulation_model=["telescope", "model_version"],
-        require_command_line=True,
     )
 
 
 def main():
-    """Simulate light emission from illuminator."""
-    app_context = startup_application(_parse)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["telescope", "model_version"],
+            "require_command_line": True,
+        },
+    )
 
     light_source = SimulatorLightEmission(
         light_emission_config={**app_context.args, "run_mode": "illuminator"},

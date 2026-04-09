@@ -79,20 +79,15 @@ Examples
 
 from pathlib import Path
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.data_model import data_reader
 from simtools.io import ascii_handler
 from simtools.production_configuration.merge_corsika_limits import CorsikaMergeLimits
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Merge CORSIKA limit tables and check grid completeness.",
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--input_files",
         type=str,
         default=None,
@@ -102,7 +97,7 @@ def _parse():
             "containing the files (*.ecsv)."
         ),
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--input_files_list",
         type=str,
         default=None,
@@ -111,36 +106,37 @@ def _parse():
             "to be merged."
         ),
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--merged_table",
         type=str,
         default=None,
         help="Path to an already merged table file.",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--grid_definition",
         type=str,
         default=None,
         help="Path to YAML file defining the expected grid points.",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--plot_grid_coverage",
         help="Generate plots showing grid coverage.",
         action="store_true",
         default=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--plot_limits",
         help="Generate plots showing the derived limits.",
         action="store_true",
         default=False,
     )
-    return config.initialize(output=True)
 
 
 def main():
-    """Merge CORSIKA limit tables and check grid completeness."""
-    app_context = startup_application(_parse)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={"output": True},
+    )
 
     merger = CorsikaMergeLimits()
     grid_definition = (

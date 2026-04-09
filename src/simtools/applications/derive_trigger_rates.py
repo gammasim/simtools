@@ -37,49 +37,40 @@ Derive trigger rates for the South Alpha layout:
 
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.telescope_trigger_rates import telescope_trigger_rates
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Derive trigger rates for a single telescope or an array of telescopes.",
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.initialize_application_arguments(["telescope_ids"])
+    parser.add_argument(
         "--event_data_file",
         type=str,
         required=True,
         help="Event data file containing reduced event data.",
     )
-    config.parser.add_argument(
-        "--telescope_ids",
-        type=str,
-        required=False,
-        help="Path to a file containing telescope configurations.",
-    )
-    config.parser.add_argument(
+    parser.add_argument(
         "--plot_histograms",
         help="Plot histograms of the event data.",
         action="store_true",
         default=False,
     )
-    return config.initialize(
-        db_config=True,
-        output=True,
-        simulation_model=[
-            "site",
-            "model_version",
-            "layout",
-        ],
-    )
 
 
 def main():
-    """Derive trigger rates for a single telescope or an array of telescopes."""
-    app_context = startup_application(_parse)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={
+            "db_config": True,
+            "output": True,
+            "simulation_model": [
+                "site",
+                "model_version",
+                "layout",
+            ],
+        },
+    )
 
     telescope_trigger_rates(app_context.args)
 

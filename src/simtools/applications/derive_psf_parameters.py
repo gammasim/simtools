@@ -45,9 +45,9 @@ r"""
         Model version.
     parameter_version (str, optional)
         Parameter version for model parameter file export.
-    src_distance (float, optional)
+    source_distance (float or quantity, optional)
         Source distance in km.
-    zenith (float, optional)
+    zenith_angle (float or quantity, optional)
         Zenith angle in deg.
     data (str, optional)
         Name of the data file with the measured cumulative PSF.
@@ -107,31 +107,15 @@ r"""
 
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing import psf_parameter_optimisation as psf_opt
 
 
-def _parse():
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=(
-            "Derive mirror_align_random_horizontal and mirror_align_random_vertical "
-            "using cumulative PSF measurement."
-        ),
-    )
-    config.parser.add_argument(
-        "--src_distance",
-        help="Source distance in km",
-        type=float,
-        default=10,
-    )
-    config.parser.add_argument("--zenith", help="Zenith angle in deg", type=float, default=20)
-    config.parser.add_argument(
-        "--data", help="Data file name with the measured PSF vs radius [cm]", type=str
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.initialize_application_arguments(["source_distance", "zenith_angle", "data"])
+    parser.add_argument(
         "--plot_all",
         help=(
             "On: plot cumulative PSF for all tested combinations, "
@@ -139,13 +123,13 @@ def _parse():
         ),
         action="store_true",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--write_psf_parameters",
         help=("Write the optimized PSF parameters as simulation model parameter files"),
         action="store_true",
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--rmsd_threshold",
         help=(
             "RMSD threshold for gradient descent convergence "
@@ -154,7 +138,7 @@ def _parse():
         type=float,
         default=0.01,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--learning_rate",
         help=(
             "Learning rate for gradient descent optimization "
@@ -163,36 +147,37 @@ def _parse():
         type=float,
         default=0.0001,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--monte_carlo_analysis",
         help="Run analysis to find monte carlo uncertainties.",
         action="store_true",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--ks_statistic",
         help="Use KS statistic for monte carlo uncertainty analysis.",
         action="store_true",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--fraction",
         help="PSF containment fraction for diameter calculation (e.g., 0.8 for D80, 0.95 for D95).",
         type=float,
         default=0.8,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--cleanup",
         help="Remove intermediate *.log and *.lis* files after optimization.",
         action="store_true",
     )
-    return config.initialize(
-        db_config=True,
-        simulation_model=["telescope", "model_version", "parameter_version"],
-    )
 
 
 def main():
-    """Derive PSF parameters."""
-    app_context = startup_application(_parse)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["telescope", "model_version", "parameter_version"],
+        },
+    )
 
     tel_model, site_model, _ = initialize_simulation_models(
         label=app_context.args.get("label"),

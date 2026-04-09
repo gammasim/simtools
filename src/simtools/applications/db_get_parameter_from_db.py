@@ -100,21 +100,15 @@ r"""
 
 from pprint import pprint
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.db import db_handler
 from simtools.io import ascii_handler
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=("Export a parameter entry from model parameter database."),
-    )
-
-    config.parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
+    parser.add_argument(
         "--output_file",
         help=(
             "Output file name for writing the DB entry, or base name for ECSV export of "
@@ -123,7 +117,7 @@ def _parse():
         type=str,
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--export_model_file",
         help=(
             "Export parameter data. File-backed parameters are written as files; "
@@ -132,7 +126,7 @@ def _parse():
         action="store_true",
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--export_model_file_as_table",
         help=(
             "Also export file-backed parameters as ECSV. Use together with "
@@ -143,14 +137,16 @@ def _parse():
         action="store_true",
         required=False,
     )
-    return config.initialize(
-        db_config=True, simulation_model=["telescope", "parameter_version", "model_version"]
-    )
 
 
 def main():
-    """Get a parameter entry from DB for a specific telescope or a site."""
-    app_context = startup_application(_parse)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["telescope", "parameter_version", "model_version"],
+        },
+    )
 
     db = db_handler.DatabaseHandler()
 
