@@ -38,9 +38,6 @@ def _add_arguments(parser):
 def main():
     """See CLI description."""
     app_context = build_application(
-        __file__,
-        description=__doc__,
-        add_arguments_function=_add_arguments,
         initialization_kwargs={"db_config": False, "output": True},
     )
     app_context.logger.info(f"Loading input file from: {app_context.args['input_file']}")

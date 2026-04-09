@@ -92,9 +92,6 @@ def _validate_required_args(args_dict):
 def main():
     """See CLI description."""
     app_context = build_application(
-        __file__,
-        description=__doc__,
-        add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,
             "simulation_model": ["telescope", "model_version", "parameter_version"],

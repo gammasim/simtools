@@ -79,9 +79,6 @@ def _add_arguments(parser):
 def main():
     """See CLI description."""
     app_context = build_application(
-        __file__,
-        description=__doc__,
-        add_arguments_function=_add_arguments,
         initialization_kwargs={
             "output": True,
             "require_command_line": True,

@@ -1,5 +1,6 @@
 """Application control utilities for startup and shutdown simtools applications."""
 
+import inspect
 import logging
 import os
 import re
@@ -142,8 +143,8 @@ class ApplicationContext:
 
 
 def build_application(
-    application_path,
-    description,
+    application_path=None,
+    description=None,
     add_arguments_function=None,
     initialization_kwargs=None,
     startup_kwargs=None,
@@ -156,13 +157,16 @@ def build_application(
 
     Parameters
     ----------
-    application_path : str
+    application_path : str, optional
         Application file path, typically ``__file__``.
-    description : str
+        If not provided, it is inferred from the caller module.
+    description : str, optional
         Application description shown in the CLI help (reduced to first line).
+        If not provided, it is inferred from the caller module docstring.
     add_arguments_function : callable, optional
         Function receiving the application's ``CommandLineParser`` instance to register
-        application-specific arguments.
+        application-specific arguments. If not provided, ``_add_arguments`` from the
+        caller module is used when available.
     initialization_kwargs : dict, optional
         Keyword arguments forwarded to ``Configurator.initialize``.
     startup_kwargs : dict, optional
@@ -183,6 +187,20 @@ def build_application(
     """
     initialization_kwargs = initialization_kwargs or {}
     startup_kwargs = startup_kwargs or {}
+
+    if application_path is None or description is None or add_arguments_function is None:
+        caller_globals = inspect.currentframe().f_back.f_globals
+        if application_path is None:
+            application_path = caller_globals.get("__file__")
+        if description is None:
+            description = caller_globals.get("__doc__")
+        if add_arguments_function is None:
+            add_arguments_function = caller_globals.get("_add_arguments")
+
+    if application_path is None:
+        raise ValueError("Missing application path; provide application_path explicitly.")
+    if description is None:
+        raise ValueError("Missing description; provide description explicitly.")
 
     if parse_function is not None:
         return startup_application(parse_function, **startup_kwargs)

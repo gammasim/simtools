@@ -256,11 +256,8 @@ def _add_arguments(parser):
 def main():
     """See CLI description."""
     app_context = build_application(
-        __file__,
-        description=__doc__,
         usage="Use '--array_layout_name plot_all' to plot all layouts for the given site "
         "and model version.",
-        add_arguments_function=_add_arguments,
         initialization_kwargs={
             "db_config": True,
             "simulation_model": [

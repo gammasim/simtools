@@ -305,9 +305,6 @@ def print_list_of_files(args_dict, logger):
 def main():
     """See CLI description."""
     app_context = build_application(
-        __file__,
-        description=__doc__,
-        add_arguments_function=_add_arguments,
         initialization_kwargs={"simulation_model": ["telescope", "parameter_version"]},
     )
 

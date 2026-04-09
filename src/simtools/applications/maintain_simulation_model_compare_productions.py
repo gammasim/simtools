@@ -82,9 +82,6 @@ def _compare_json_dirs(dir1, dir2, ignore_key="model_version"):
 def main():
     """See CLI description."""
     app_context = build_application(
-        __file__,
-        description=__doc__,
-        add_arguments_function=_add_arguments,
         initialization_kwargs={"db_config": False, "output": False},
         startup_kwargs={"setup_io_handler": False},
     )
