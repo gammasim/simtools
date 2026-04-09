@@ -11,6 +11,7 @@ from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
 from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
 from simtools.sim_events.histograms import EventDataHistograms
+from simtools.utils.names import normalize_array_element_identifier_container
 from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ def generate_corsika_limits_grid(args_dict):
 
     results = []
     for array_name, telescope_ids in telescope_configs.items():
+        telescope_ids = normalize_array_element_identifier_container(telescope_ids)
         _logger.info(
             f"Processing file: {args_dict['event_data_file']} with telescope config: {array_name}"
         )
@@ -49,6 +51,7 @@ def generate_corsika_limits_grid(args_dict):
             args_dict["plot_histograms"],
         )
         result["layout"] = array_name
+        result["telescope_ids"] = telescope_ids
         results.append(result)
 
     write_results(results, args_dict)
@@ -66,8 +69,8 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
         Path to the event data file.
     array_name : str
         Name of the telescope array configuration.
-    telescope_ids : list[int]
-        List of telescope IDs to filter the events.
+    telescope_ids : list[str]
+        List of telescope IDs (array-element names) to filter the events.
     loss_fraction : float
         Fraction of events to be lost.
     plot_histograms : bool
