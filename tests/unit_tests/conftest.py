@@ -40,14 +40,7 @@ def _is_db_unit_test(request):
     if node is None:
         return False
 
-    if node.get_closest_marker("db_unit_test") is not None:
-        return True
-
-    test_file = ""
-    location = getattr(node, "location", None)
-    if location:
-        test_file = str(location[0]).replace("\\", "/")
-    return test_file.startswith("tests/unit_tests/db/")
+    return node.get_closest_marker("db_unit_test") is not None
 
 
 @functools.lru_cache
@@ -824,3 +817,61 @@ def get_test_data_file():
         return _TEST_DATA_FILES[key]
 
     return _get_test_data_file
+
+
+# ============================================================================
+# Shared fixtures for row-table and export testing (Phase 3 consolidation)
+# ============================================================================
+
+
+@pytest.fixture
+def row_table_payload():
+    """Valid row-table dict with all required keys."""
+    return {
+        "columns": ["time", "amplitude"],
+        "column_units": ["ns", "dimensionless"],
+        "rows": [[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]],
+    }
+
+
+@pytest.fixture
+def row_table_payload_without_units():
+    """Row-table dict without column_units key."""
+    return {
+        "columns": ["time", "amplitude"],
+        "rows": [[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]],
+    }
+
+
+@pytest.fixture
+def invalid_row_table_payloads():
+    """Collection of invalid row-table payloads for parametrized testing."""
+    return {
+        "missing_columns": {
+            "column_units": ["ns", "dimensionless"],
+            "rows": [[0.0, 0.0]],
+        },
+        "missing_rows": {
+            "columns": ["time", "amplitude"],
+            "column_units": ["ns", "dimensionless"],
+        },
+        "missing_column_units": {
+            "columns": ["time", "amplitude"],
+            "rows": [[0.0, 0.0]],
+        },
+        "column_units_length_mismatch": {
+            "columns": ["time", "amplitude"],
+            "column_units": ["ns"],
+            "rows": [[0.0, 0.0]],
+        },
+        "row_length_mismatch": {
+            "columns": ["time", "amplitude"],
+            "column_units": ["ns", "dimensionless"],
+            "rows": [[0.0]],
+        },
+        "non_numeric_value": {
+            "columns": ["time", "amplitude"],
+            "column_units": ["ns", "dimensionless"],
+            "rows": [["not", "numeric"]],
+        },
+    }

@@ -18,6 +18,8 @@ r"""
         site location.
     parameter_version (str)
         Parameter version.
+    model_parameter_schema_version (str, optional)
+        Version of the model-parameter schema to use for validation and value interpretation.
     input_meta (str, optional)
         input meta data file (yml format)
 
@@ -42,6 +44,7 @@ from pathlib import Path
 
 import simtools.data_model.model_data_writer as writer
 from simtools.application_control import build_application
+from simtools.simtel import simtel_table_reader
 
 
 def _add_arguments(parser):
@@ -52,6 +55,12 @@ def _add_arguments(parser):
     parser.add_argument("--instrument", type=str, required=True, help="Instrument name")
     parser.add_argument("--site", type=str, required=True, help="Site location")
     parser.add_argument("--parameter_version", type=str, required=True, help="Parameter version")
+    parser.add_argument(
+        "--model_parameter_schema_version",
+        type=str,
+        required=False,
+        help="Model-parameter schema version to use for validation and value interpretation",
+    )
     parser.add_argument(
         "--value",
         type=str,
@@ -81,6 +90,23 @@ def main():
     app_context = build_application(
         initialization_kwargs={"output": True, "db_config": True},
     )
+    model_parameter_schema_version = app_context.args.get("model_parameter_schema_version")
+    value = app_context.args["value"]
+    data_writer = writer.ModelDataWriter()
+    parameter_type = data_writer.get_parameter_type_for_schema(
+        app_context.args["parameter"],
+        model_parameter_schema_version,
+    )
+
+    if parameter_type == "dict" and data_writer.parameter_uses_row_table_schema(
+        app_context.args["parameter"],
+        model_parameter_schema_version,
+    ):
+        value = simtel_table_reader.resolve_dict_parameter_value(
+            value,
+            app_context.args["parameter"],
+            app_context.args.get("data_path"),
+        )
 
     if app_context.args.get("output_path"):
         output_path = app_context.io_handler.get_output_directory(
@@ -91,7 +117,7 @@ def main():
 
     writer.ModelDataWriter.dump_model_parameter(
         parameter_name=app_context.args["parameter"],
-        value=app_context.args["value"],
+        value=value,
         instrument=app_context.args["instrument"],
         parameter_version=app_context.args["parameter_version"],
         output_file=Path(
@@ -100,6 +126,7 @@ def main():
         output_path=output_path,
         metadata_input_dict=app_context.args,
         check_db_for_existing_parameter=app_context.args.get("check_parameter_version", False),
+        model_parameter_schema_version=model_parameter_schema_version,
     )
 
 

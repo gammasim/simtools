@@ -5,6 +5,7 @@ import logging
 import shutil
 from copy import copy, deepcopy
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import astropy.units as u
 
@@ -14,6 +15,7 @@ from simtools.data_model.validate_data import DataValidator
 from simtools.db import db_handler
 from simtools.io import io_handler
 from simtools.model import legacy_model_parameter
+from simtools.simtel import simtel_table_reader
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names, value_conversion
 
@@ -326,7 +328,11 @@ class ModelParameter:
                 )
             )
             self.overwrite_parameters(self.overwrite_model_parameter_dict)
-            self._check_model_parameter_versions(self.parameters, self.ignore_software_version)
+            self._check_model_parameter_versions(
+                self.parameters,
+                self.ignore_software_version,
+                value_resolver=self._resolve_legacy_table_parameter_value,
+            )
 
         self._load_simulation_software_parameter()
         for software_name, parameters in self._simulation_config_parameters.items():
@@ -334,10 +340,34 @@ class ModelParameter:
                 parameters,
                 ignore_software_version=self.ignore_software_version,
                 software_name=software_name,
+                value_resolver=self._resolve_legacy_table_parameter_value,
+            )
+
+    def _resolve_legacy_table_parameter_value(self, parameter_name, value):
+        """Resolve a legacy stored table value to canonical row-oriented data.
+
+        This method is passed into ``legacy_model_parameter.update_parameter``
+        as ``value_resolver``. Legacy handlers use it when an old parameter
+        stores a table indirectly, e.g. as a GridFS-backed file name, and needs
+        to be normalized to the current in-memory ``{"columns", "rows"}``
+        representation.
+        """
+        with TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            self.db.export_model_files(file_names=[value], dest=temp_path)
+            return simtel_table_reader.resolve_dict_parameter_value(
+                value,
+                parameter_name,
+                data_path=temp_path,
             )
 
     @staticmethod
-    def _check_model_parameter_versions(parameters, ignore_software_version, software_name=None):
+    def _check_model_parameter_versions(
+        parameters,
+        ignore_software_version,
+        software_name=None,
+        value_resolver=None,
+    ):
         """
         Ensure parameters follow the latest schema and are compatible with installed software.
 
@@ -355,6 +385,11 @@ class ModelParameter:
             If True, ignore software version checks for deprecated parameters.
         software_name: str
             Name of the software for which the parameters are checked.
+        value_resolver: callable
+            Optional callback used by legacy updates to normalize parameter
+            values from older storage formats to the latest in-memory format.
+            It must accept ``(parameter_name, value)`` and return the
+            normalized value.
         """
         _legacy_updates = {}
         for par_name, par_data in parameters.items():
@@ -368,7 +403,10 @@ class ModelParameter:
                 if par_data["model_parameter_schema_version"] != _latest_schema_version:
                     _legacy_updates.update(
                         legacy_model_parameter.update_parameter(
-                            par_name, parameters, _latest_schema_version
+                            par_name,
+                            parameters,
+                            _latest_schema_version,
+                            value_resolver=value_resolver,
                         )
                     )
 

@@ -267,12 +267,13 @@ def _write_to_json(data, output_file, sort_keys, numpy_types):
         If True, convert numpy types to native Python types.
     """
     with open(output_file, "w", encoding="utf-8") as file:
-        json.dump(
-            data,
-            file,
-            indent=4,
-            sort_keys=sort_keys,
-            cls=JsonNumpyEncoder if numpy_types else None,
+        file.write(
+            json.dumps(
+                data,
+                indent=4,
+                sort_keys=sort_keys,
+                cls=JsonNumpyEncoder if numpy_types else None,
+            )
         )
         file.write("\n")
 
@@ -313,7 +314,13 @@ def _to_builtin(data):
 
 
 class JsonNumpyEncoder(json.JSONEncoder):
-    """Convert numpy to python types as accepted by json.dump."""
+    """Convert numpy to python types as accepted by json.dump.
+
+    Lists whose elements are all numbers (int or float) are serialized on a
+    single line regardless of the surrounding indentation level. This keeps
+    row-oriented table data human-readable without expanding every number onto
+    its own line.
+    """
 
     def default(self, o):
         """Return default encoder."""
@@ -328,3 +335,43 @@ class JsonNumpyEncoder(json.JSONEncoder):
         if np.issubdtype(type(o), np.bool_):
             return bool(o)
         return super().default(o)
+
+    def encode(self, o):
+        """Encode with compact inner numeric lists."""
+        # Convert numpy (and other custom) types to pure-Python types first so
+        # that _encode_compact_rows only needs to handle builtins.
+        native = json.loads(super().encode(o))
+        return _encode_compact_rows(native, indent=4, level=0)
+
+
+def _is_numeric_list(obj):
+    """Return True if obj is a list whose elements are all int or float."""
+    return isinstance(obj, list) and obj and all(isinstance(v, (int, float)) for v in obj)
+
+
+def _encode_compact_rows(obj, indent, level):
+    if _is_numeric_list(obj):
+        return "[" + ", ".join(json.dumps(v) for v in obj) + "]"
+
+    if isinstance(obj, (dict, list)):
+        if not obj:
+            return "{}" if isinstance(obj, dict) else "[]"
+
+        is_dict = isinstance(obj, dict)
+        items = obj.items() if is_dict else obj
+
+        pad = " " * indent * (level + 1)
+        close_pad = " " * indent * level
+
+        def fmt(item):
+            if is_dict:
+                k, v = item
+                return f"{json.dumps(k)}: {_encode_compact_rows(v, indent, level + 1)}"
+            return _encode_compact_rows(item, indent, level + 1)
+
+        body = (",\n" + pad).join(fmt(i) for i in items)
+        open_, close_ = ("{", "}") if is_dict else ("[", "]")
+
+        return f"{open_}\n{pad}{body}\n{close_pad}{close_}"
+
+    return json.dumps(obj)

@@ -9,6 +9,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
+import simtools.simtel.simtel_table_writer as simtel_table_writer
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 
 logger = logging.getLogger()
@@ -323,6 +324,38 @@ def test_convert_model_parameters_to_simtel_format_hard_stereo_false(
         assert "hardstereo" not in content
         assert "minsep 40" in content
         assert "width 10" in content
+
+
+def test_convert_model_parameters_to_simtel_format_returns_none_on_attribute_error(
+    simtel_config_writer, tmp_test_directory
+):
+    """Return (None, None) when conversion needs telescope model but model is missing."""
+    model_path = Path(tmp_test_directory) / "model"
+    model_path.mkdir(exist_ok=True)
+
+    simtel_name, value = simtel_config_writer._convert_model_parameters_to_simtel_format(
+        "array_triggers",
+        [{"name": "LSTS_single_telescope", "multiplicity": {"value": 1}}],
+        model_path,
+        None,
+    )
+
+    assert simtel_name is None
+    assert value is None
+
+
+def test_write_table_parameter_file_passes_through_non_dict_value(
+    simtel_config_writer, tmp_test_directory
+):
+    """Keep string values unchanged in table-parameter file conversion helper."""
+    result = simtel_config_writer._write_table_parameter_file(
+        "fadc_pulse_shape",
+        "already_a_file.dat",
+        Path(tmp_test_directory) / "dummy.cfg",
+        None,
+    )
+
+    assert result == "already_a_file.dat"
 
 
 def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
@@ -845,7 +878,7 @@ def _read_pulse_table(path: Path):
 def test_write_light_pulse_table_gauss_exp_conv_creates_normalized_file(tmp_test_directory):
     """Writer should create a pulse table with peak amplitude ~1 and expected window."""
     out = Path(tmp_test_directory) / "pulse_shape_test.dat"
-    result = SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
+    result = simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
         file_path=out,
         width_ns=2.5,
         exp_decay_ns=5.0,
@@ -876,7 +909,7 @@ def test_write_light_pulse_table_gauss_exp_conv_time_spacing(tmp_test_directory)
     """Time column should be spaced by dt_ns consistently."""
     out = Path(tmp_test_directory) / "pulse_shape_spacing.dat"
     dt = 0.5
-    SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
+    simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
         file_path=out,
         width_ns=3.0,
         exp_decay_ns=6.0,
@@ -892,7 +925,7 @@ def test_write_light_pulse_table_gauss_exp_conv_missing_params_raises(tmp_test_d
     """Missing width/decay should raise ValueError."""
     out = Path(tmp_test_directory) / "pulse_missing_params.dat"
     with pytest.raises(ValueError, match="width_ns"):
-        SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
+        simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
             file_path=out,
             width_ns=None,
             exp_decay_ns=5.0,
@@ -901,12 +934,12 @@ def test_write_light_pulse_table_gauss_exp_conv_missing_params_raises(tmp_test_d
 
 
 def test_write_ascii_pulse_table_writes_header_and_values(tmp_test_directory):
-    """_write_ascii_pulse_table should create a two-column file with a header and values."""
+    """write_ascii_pulse_table should create a two-column file with a header and values."""
     out = Path(tmp_test_directory) / "pulse_ascii.dat"
     t = np.array([0.0, 0.1, 0.2])
     y = np.array([0.25, 1.0, 0.5])
 
-    result = SimtelConfigWriter._write_ascii_pulse_table(out, t, y)
+    result = simtel_table_writer.write_ascii_pulse_table(out, t, y)
     assert result == out
     assert out.exists()
 
@@ -1091,7 +1124,7 @@ def test_write_angular_distribution_table_lambertian(tmp_test_directory):
     file_path = Path(tmp_test_directory) / "lambertian.dat"
 
     # Test default parameters
-    SimtelConfigWriter.write_angular_distribution_table_lambertian(
+    simtel_table_writer.write_angular_distribution_table_lambertian(
         file_path=file_path,
         max_angle_deg=90.0,
         n_samples=100,
@@ -1120,7 +1153,7 @@ def test_write_angular_distribution_table_lambertian(tmp_test_directory):
 
     # Test with max_angle > 90 (should be clipped to 0)
     file_path_large = Path(tmp_test_directory) / "lambertian_large.dat"
-    SimtelConfigWriter.write_angular_distribution_table_lambertian(
+    simtel_table_writer.write_angular_distribution_table_lambertian(
         file_path=file_path_large,
         max_angle_deg=180.0,
         n_samples=181,
