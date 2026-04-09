@@ -13,8 +13,7 @@ from simtools.job_execution import job_manager
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
-from simtools.simtel import simtel_output_validator
-from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.simtel import simtel_output_validator, simtel_table_writer
 from simtools.utils import general
 from simtools.utils.geometry import fiducial_radius_from_shape
 
@@ -604,7 +603,7 @@ class SimulatorLightEmission(SimtelRunner):
         return focal_length - flasher_z
 
     def _generate_lambertian_angular_distribution_table(self):
-        """Generate Lambertian angular distribution table via config writer and return path.
+        """Generate Lambertian angular distribution table and return path.
 
         Uses a pure cosine profile normalized to 1 at 0 deg and spans 0..max_angle_deg.
         """
@@ -618,7 +617,7 @@ class SimulatorLightEmission(SimtelRunner):
             .to(u.deg)
             .value
         )
-        path = SimtelConfigWriter.write_angular_distribution_table_lambertian(
+        path = simtel_table_writer.write_angular_distribution_table_lambertian(
             file_path=self.io_handler.get_output_directory("light_emission") / fname,
             max_angle_deg=max_angle_deg,
             n_samples=100,
@@ -687,7 +686,7 @@ class SimulatorLightEmission(SimtelRunner):
                 table_path = self.io_handler.get_output_directory("light_emission") / fname
                 fadc_bins = self.telescope_model.get_parameter_value("fadc_sum_bins")
 
-                SimtelConfigWriter.write_light_pulse_table_gauss_exp_conv(
+                simtel_table_writer.write_light_pulse_table_gauss_exp_conv(
                     file_path=table_path,
                     width_ns=width_ns,
                     exp_decay_ns=exp_ns,
@@ -696,9 +695,8 @@ class SimulatorLightEmission(SimtelRunner):
                 )
                 return str(table_path)
             except (ValueError, OSError) as err:
-                raise ValueError(
-                    f"Failed to write Gauss-Exponential pulse shape table: {err}"
-                ) from err
+                self._logger.warning(f"Failed to write pulse shape table, using token: {err}")
+                return self._get_pulse_shape_string_token(shape_name, width_ns, exp_ns)
 
         # For other shapes, return token string
         return self._get_pulse_shape_string_token(shape_name, width_ns, exp_ns)

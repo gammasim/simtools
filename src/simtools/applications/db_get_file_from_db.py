@@ -61,15 +61,16 @@ def main():
     app_context = startup_application(_parse)
 
     db = db_handler.DatabaseHandler()
-    file_id = db.export_model_files(
-        dest=app_context.io_handler.get_output_directory(),
-        file_names=app_context.args["file_name"],
-    )
-    if file_id is None:
-        app_context.logger.error(
-            f"The file {app_context.args['file_name']} was not found in {db.db_name}."
+    try:
+        db.export_model_files(
+            dest=app_context.io_handler.get_output_directory(),
+            file_names=app_context.args["file_name"],
         )
-        raise FileNotFoundError
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(
+            f"The file {app_context.args['file_name']} was not found in {db.db_name}."
+        ) from exc
+
     app_context.logger.info(
         f"Got file {app_context.args['file_name']} from DB {db.db_name} "
         f"and saved into {app_context.io_handler.get_output_directory()}"

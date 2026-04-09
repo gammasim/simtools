@@ -5,7 +5,10 @@ import pytest
 from simtools.model.legacy_model_parameter import (
     UPDATE_HANDLERS,
     _get_unsupported_update_message,
+    _update_corsika_starting_grammage,
     _update_dsum_threshold,
+    _update_fadc_pulse_shape,
+    _update_file_backed_table_parameter,
     _update_flasher_pulse_shape,
     apply_legacy_updates_to_parameters,
     register_update,
@@ -17,11 +20,11 @@ def test_register_update():
     """Test register_update decorator."""
 
     @register_update("test_parameter")
-    def test_handler(parameters, schema_version):
+    def test_handler(*_args, **_kwargs):
         return {"test": "value"}
 
     assert "test_parameter" in UPDATE_HANDLERS
-    assert UPDATE_HANDLERS["test_parameter"] == test_handler
+    assert UPDATE_HANDLERS["test_parameter"] is test_handler
 
     # Clean up
     del UPDATE_HANDLERS["test_parameter"]
@@ -182,3 +185,159 @@ def test_update_parameter_returns_handler_result():
     assert "flasher_pulse_shape" in result
     assert result["flasher_pulse_shape"]["value"] == ["gaussian", 5.0, 10.0]
     assert result["flasher_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
+
+
+@pytest.mark.parametrize("legacy_type", ["file", "string"])
+def test_update_fadc_pulse_shape_from_file_to_embedded_row_data(mocker, legacy_type):
+    """Test file-backed fadc_pulse_shape migration to embedded row data."""
+    expected_value = {
+        "columns": ["time", "amplitude"],
+        "column_units": ["ns", "dimensionless"],
+        "rows": [[0.0, 0.1], [1.0, 0.2]],
+    }
+    parameters = {
+        "fadc_pulse_shape": {
+            "parameter": "fadc_pulse_shape",
+            "value": "pulse.dat",
+            "model_parameter_schema_version": "0.1.0",
+            "type": legacy_type,
+            "file": True,
+        }
+    }
+    resolver = mocker.Mock(return_value=expected_value)
+
+    result = _update_fadc_pulse_shape(parameters, "0.2.0", value_resolver=resolver)
+
+    resolver.assert_called_once_with("fadc_pulse_shape", "pulse.dat")
+    assert result["fadc_pulse_shape"]["value"] == expected_value
+    assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
+    assert result["fadc_pulse_shape"]["type"] == "dict"
+    assert result["fadc_pulse_shape"]["file"] is False
+
+
+@pytest.mark.parametrize(
+    ("legacy_value", "expected_value"),
+    [
+        (
+            {
+                "columns": ["time", "amplitude", "amplitude (low gain)"],
+                "column_units": ["ns", "dimensionless", "dimensionless"],
+                "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
+            },
+            {
+                "columns": ["time", "amplitude", "amplitude (low gain)"],
+                "column_units": ["ns", "dimensionless", "dimensionless"],
+                "rows": [[0.0, 0.1, 0.01], [1.0, 0.2, 0.02]],
+            },
+        ),
+    ],
+)
+def test_update_fadc_pulse_shape_embedded_formats(legacy_value, expected_value):
+    """Test embedded fadc_pulse_shape migration for legacy and canonical dict layouts."""
+    parameters = {
+        "fadc_pulse_shape": {
+            "parameter": "fadc_pulse_shape",
+            "value": legacy_value,
+            "model_parameter_schema_version": "0.2.0",
+            "type": "dict",
+            "file": False,
+        }
+    }
+
+    result = _update_fadc_pulse_shape(parameters, "0.2.0")
+
+    assert result["fadc_pulse_shape"]["value"] == expected_value
+    assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
+
+
+def test_update_fadc_pulse_shape_embedded_column_data_is_unsupported():
+    """Reject legacy embedded column-data representation for fadc_pulse_shape."""
+    parameters = {
+        "fadc_pulse_shape": {
+            "parameter": "fadc_pulse_shape",
+            "value": {
+                "columns": ["time", "amplitude", "amplitude (low gain)"],
+                "dtype": ["float64", "float64", "float64"],
+                "unit": ["ns", "dimensionless", "dimensionless"],
+                "data": {
+                    "time": [0.0, 1.0],
+                    "amplitude": [0.1, 0.2],
+                    "amplitude (low gain)": [0.01, 0.02],
+                },
+            },
+            "model_parameter_schema_version": "0.2.0",
+            "type": "dict",
+            "file": False,
+        }
+    }
+
+    with pytest.raises(
+        ValueError,
+        match=r"Unsupported update for legacy parameter fadc_pulse_shape.*0.2.0 to 0.2.0",
+    ):
+        _update_fadc_pulse_shape(parameters, "0.2.0")
+
+
+def test_update_parameter_passes_value_resolver(mocker):
+    """Test update_parameter forwards the optional value_resolver to the handler."""
+    parameters = {
+        "fadc_pulse_shape": {
+            "parameter": "fadc_pulse_shape",
+            "value": "pulse.dat",
+            "model_parameter_schema_version": "0.1.0",
+            "type": "file",
+            "file": True,
+        }
+    }
+    resolver = mocker.Mock(
+        return_value={
+            "columns": ["time", "amplitude"],
+            "column_units": ["ns", "dimensionless"],
+            "rows": [[0.0, 0.1]],
+        }
+    )
+
+    result = update_parameter(
+        "fadc_pulse_shape",
+        parameters,
+        "0.2.0",
+        value_resolver=resolver,
+    )
+
+    resolver.assert_called_once_with("fadc_pulse_shape", "pulse.dat")
+    assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
+
+
+def test_update_file_backed_table_parameter_requires_value_resolver():
+    """Raise when updating file-backed table parameter without value_resolver."""
+    parameters = {
+        "fadc_pulse_shape": {
+            "parameter": "fadc_pulse_shape",
+            "value": "pulse.dat",
+            "model_parameter_schema_version": "0.1.0",
+            "type": "file",
+            "file": True,
+        }
+    }
+
+    with pytest.raises(ValueError, match="value_resolver is required"):
+        _update_file_backed_table_parameter(
+            parameter_name="fadc_pulse_shape",
+            parameters=parameters,
+            schema_version="0.2.0",
+        )
+
+
+def test_update_corsika_starting_grammage_returns_remove_placeholder():
+    """Return None placeholder update for legacy corsika_starting_grammage."""
+    parameters = {
+        "corsika_starting_grammage": {
+            "parameter": "corsika_starting_grammage",
+            "value": 1.0,
+            "model_parameter_schema_version": "0.1.0",
+        }
+    }
+
+    result = _update_corsika_starting_grammage(parameters, "0.2.0")
+
+    assert result == {"corsika_starting_grammage": None}
