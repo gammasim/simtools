@@ -23,7 +23,7 @@ class _Config:
         self.user = os.getenv("USER", "unknown")
         self.hostname = socket.gethostname()
 
-    def load(self, args=None, db_config=None):
+    def load(self, args=None, db_config=None, resolve_sim_software_executables=True):
         """
         Load configuration from command line arguments and environment variables.
 
@@ -35,6 +35,9 @@ class _Config:
             Command line arguments.
         db_config : dict, optional
             Database configuration.
+        resolve_sim_software_executables : bool, optional
+            Resolve simulation software executable paths during loading.
+            If False, skip resolving CORSIKA executable.
 
         """
         self._args = MappingProxyType(args) if args is not None else {}
@@ -63,7 +66,10 @@ class _Config:
             else os.getenv("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
         )
 
-        self._corsika_exe = self._get_corsika_exec() if self._corsika_path is not None else None
+        if resolve_sim_software_executables and self._corsika_path is not None:
+            self._corsika_exe = self._get_corsika_exec()
+        else:
+            self._corsika_exe = None
 
     def _get_corsika_exec(self):
         """
