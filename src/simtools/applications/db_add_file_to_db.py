@@ -41,19 +41,13 @@ import uuid
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.db import db_handler
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Add file to the DB.",
-        usage="simtools-add-file-to-db --file_name test_application.dat --db test-data",
-    )
-    group = config.parser.add_mutually_exclusive_group(required=True)
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--file_name",
         help=("The file name to upload. A list of files is also allowed."),
@@ -66,18 +60,16 @@ def _parse():
         type=Path,
     )
 
-    config.parser.add_argument(
+    parser.add_argument(
         "--db",
         type=str,
         help=("The database to insert the files to."),
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--test_db",
         help="Use sandbox database. Drop all data after the operation.",
         action="store_true",
     )
-
-    return config.initialize(paths=False, db_config=True)
 
 
 def collect_files_to_insert(args_dict, logger, db):
@@ -163,8 +155,11 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
 
 
 def main():
-    """Add files to the database."""
-    app_context = startup_application(_parse, setup_io_handler=False)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={"paths": False, "db_config": True},
+        startup_kwargs={"setup_io_handler": False},
+    )
 
     db = db_handler.DatabaseHandler()
 

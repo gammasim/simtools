@@ -52,36 +52,27 @@ Retrieve telescope positions from database (utm coordinate system) and write to 
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Get list of array elements as defined in the db (array layout).",
-    )
-
-    input_group = config.parser.add_mutually_exclusive_group()
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    input_group = parser.add_mutually_exclusive_group()
     input_group.add_argument(
         "--list_available_layouts",
         help="List available layouts in the database.",
         action="store_true",
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--coordinate_system",
         help="Coordinate system for the array layout.",
         type=str,
         required=False,
         default="ground",
         choices=["ground", "utm"],
-    )
-    return config.initialize(
-        db_config=True, simulation_model=["site", "layout", "model_version"], output=True
     )
 
 
@@ -111,8 +102,14 @@ def _layout_from_db(args_dict):
 
 
 def main():
-    """Get list of array layouts or list of elements for a given layout as defined in the db."""
-    app_context = startup_application(_parse)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["site", "layout", "model_version"],
+            "output": True,
+        },
+    )
 
     if app_context.args.get("list_available_layouts", False):
         if app_context.args.get("site", None) is None:

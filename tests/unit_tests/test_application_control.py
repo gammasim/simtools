@@ -11,8 +11,10 @@ import pytest
 from simtools.application_control import (
     _resolve_model_version_to_latest_patch,
     _version_info,
+    build_application,
     get_application_label,
     get_log_file,
+    get_module_description_line,
     setup_logging,
     startup_application,
 )
@@ -167,6 +169,122 @@ def test_get_application_label(file_path, expected):
     """Test get_application_label function."""
     result = get_application_label(file_path)
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    ("docstring", "expected"),
+    [
+        ("Short description.\n\nMore details.\n", "Short description."),
+        ("    Short description.\n\nMore details.\n", "Short description."),
+        ("\nShort description on next line.\n\nMore details.\n", "Short description on next line."),
+        (
+            "    \n    Short description with indent.\n\n    More details.\n",
+            "Short description with indent.",
+        ),
+    ],
+)
+def test_get_module_description_line(docstring, expected):
+    """Test module description extraction from docstring."""
+    assert get_module_description_line(docstring) == expected
+
+
+def test_get_module_description_line_without_docstring():
+    """Test module description extraction error on missing or empty docstring."""
+    with pytest.raises(ValueError, match="Missing or empty docstring"):
+        get_module_description_line(None)
+
+    with pytest.raises(ValueError, match="Empty docstring"):
+        get_module_description_line("   \n   \n")
+
+
+def test_build_application(mocker, tmp_test_directory):
+    """Test build_application wraps Configurator and startup_application."""
+    startup_mock = mocker.patch(
+        "simtools.application_control.startup_application",
+        return_value="app_context",
+    )
+    configurator_class = mocker.patch("simtools.application_control.configurator.Configurator")
+    configurator_instance = configurator_class.return_value
+    configurator_instance.initialize.return_value = ({"log_level": "info"}, {})
+    add_arguments = MagicMock()
+
+    result = build_application(
+        str(tmp_test_directory / "test_application.py"),
+        description="Test description",
+        add_arguments_function=add_arguments,
+        initialization_kwargs={"output": True},
+        startup_kwargs={"setup_io_handler": False},
+    )
+
+    assert result == "app_context"
+    startup_mock.assert_called_once()
+
+    parse_function = startup_mock.call_args.args[0]
+    startup_kwargs = startup_mock.call_args.kwargs
+
+    assert startup_kwargs == {"setup_io_handler": False}
+    assert parse_function() == ({"log_level": "info"}, {})
+    configurator_class.assert_called_once_with(
+        label="test_application",
+        usage=None,
+        description="Test description",
+        epilog=None,
+    )
+    add_arguments.assert_called_once_with(configurator_instance.parser)
+    configurator_instance.initialize.assert_called_once_with(output=True)
+
+
+def test_build_application_infers_caller_metadata(mocker):
+    """Test build_application infers file/doc/add_arguments from caller module."""
+    startup_mock = mocker.patch(
+        "simtools.application_control.startup_application",
+        return_value="app_context",
+    )
+    configurator_class = mocker.patch("simtools.application_control.configurator.Configurator")
+    configurator_instance = configurator_class.return_value
+    configurator_instance.initialize.return_value = ({"log_level": "info"}, {})
+    add_arguments = MagicMock()
+
+    globals()["_add_arguments"] = add_arguments
+    try:
+        result = build_application(
+            initialization_kwargs={"output": True},
+            startup_kwargs={"setup_io_handler": False},
+        )
+    finally:
+        del globals()["_add_arguments"]
+
+    assert result == "app_context"
+    startup_mock.assert_called_once()
+    parse_function = startup_mock.call_args.args[0]
+    startup_kwargs = startup_mock.call_args.kwargs
+
+    assert startup_kwargs == {"setup_io_handler": False}
+    assert parse_function() == ({"log_level": "info"}, {})
+    configurator_class.assert_called_once_with(
+        label="test_application_control",
+        usage=None,
+        description="Unit tests for application_control module.",
+        epilog=None,
+    )
+    add_arguments.assert_called_once_with(configurator_instance.parser)
+    configurator_instance.initialize.assert_called_once_with(output=True)
+
+
+def test_build_application_missing_metadata_raises(mocker, tmp_test_directory):
+    """Test build_application raises if inference and explicit metadata are unavailable."""
+    startup_mock = mocker.patch("simtools.application_control.startup_application")
+
+    with patch("simtools.application_control.inspect.currentframe") as frame_mock:
+        frame_mock.return_value.f_back.f_globals = {}
+
+        with pytest.raises(ValueError, match="Missing application path"):
+            build_application(description="test")
+
+        with pytest.raises(ValueError, match="Missing description"):
+            build_application(application_path=tmp_test_directory / "test.py")
+
+    startup_mock.assert_not_called()
 
 
 def test_startup_application_basic():

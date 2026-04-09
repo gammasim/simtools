@@ -71,74 +71,53 @@ Example of a secondary mirror incident angle plot for a SST:
     :width: 49 %
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
-from simtools.configuration.commandline_parser import CommandLineParser
+import astropy.units as u
+
+from simtools.application_control import build_application
 from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
 from simtools.visualization.plot_incident_angles import plot_incident_angles
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=("Derive photon incident angles on focal plane and primary/secondary mirrors."),
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.initialize_application_arguments(
+        ["off_axis_angles", "source_distance", "number_of_photons"]
     )
-    config.parser.add_argument(
-        "--off_axis_angles",
-        help="One or more off-axis angles in degrees (space-separated)",
-        type=float,
-        nargs="+",
-        required=False,
-    )
-    config.parser.add_argument(
-        "--source_distance",
-        help="Source distance in kilometers",
-        type=float,
-        default=10.0,
-        required=False,
-    )
-    config.parser.add_argument(
-        "--number_of_photons",
-        help="Number of star photons to trace (per run)",
-        type=CommandLineParser.scientific_int,
-        default=10000,
-        required=False,
-    )
-    config.parser.add_argument(
+    parser.add_argument(
         "--perfect_mirror",
         help="Assume perfect mirror shape/alignment/reflection",
         action="store_true",
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--debug_plots",
         dest="debug_plots",
         help="Generate additional debug plots (radius histograms, XY heatmaps, radius vs angle)",
         action="store_true",
         required=False,
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--calculate_primary_secondary_angles",
         dest="calculate_primary_secondary_angles",
         help="Compute angles of incidence on primary and secondary mirrors",
         required=False,
         action="store_true",
     )
-    return config.initialize(
-        db_config=True,
-        simulation_model=["telescope", "site", "model_version"],
-    )
 
 
 def main():
-    """Derive photon incident angles on focal plane and primary/secondary mirrors."""
-    app_context = startup_application(_parse)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["telescope", "site", "model_version"],
+        },
+    )
 
     app_context.logger.info("Starting derivation of incident angles")
 
     output_dir = app_context.io_handler.get_output_directory()
-    base_label = app_context.args.get("label", get_application_label(__file__))
+    base_label = app_context.args.get("label") or app_context.args["application_label"]
     telescope_name = app_context.args["telescope"]
     label_with_telescope = f"{base_label}_{telescope_name}"
 
@@ -147,7 +126,9 @@ def main():
         output_dir=output_dir,
         label=base_label,
     )
-    offsets = [float(v) for v in app_context.args.get("off_axis_angles", [0.0])]
+    offsets = [
+        value.to_value(u.deg) for value in app_context.args.get("off_axis_angles", [0.0 * u.deg])
+    ]
 
     results_by_offset = calculator.run_for_offsets(offsets)
     plot_incident_angles(

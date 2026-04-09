@@ -17,33 +17,25 @@ Example
 
 """
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.model import model_repository
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description=(
-            "Verify simulation model production tables and model parameters for completeness. "
-            "This application checks that all model parameters defined in the production tables "
-            "exist in the simulation models repository."
-        ),
-    )
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--simulation_models_path",
         help="Path to the simulation models repository.",
         type=str,
         required=True,
     )
-    return config.initialize(db_config=False, output=False, paths=False)
 
 
 def main():
-    """Verify simulation model production tables."""
-    app_context = startup_application(_parse)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={"db_config": False, "output": False, "paths": False},
+    )
 
     if not model_repository.verify_simulation_model_production_tables(
         simulation_models_path=app_context.args["simulation_models_path"]

@@ -74,27 +74,21 @@ from pathlib import Path
 from astropy.coordinates import EarthLocation
 from astropy.time import Time
 
-from simtools.application_control import get_application_label, startup_application
-from simtools.configuration import configurator
+from simtools.application_control import build_application
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.model.site_model import SiteModel
 from simtools.production_configuration.generate_production_grid import GridGeneration
 
 
-def _parse():
-    """Parse command line configuration."""
-    config = configurator.Configurator(
-        label=get_application_label(__file__),
-        description="Generate a grid of simulation points using flexible axes definitions.",
-    )
-
-    config.parser.add_argument(
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
         "--axes",
         type=str,
         required=True,
         help="Path to a file defining the grid axes.",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--coordinate_system",
         type=str,
         default="zenith_azimuth",
@@ -104,7 +98,7 @@ def _parse():
             " location/time and converted to zenith/azimuth for interpolation."
         ),
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--observing_time",
         type=str,
         required=False,
@@ -112,13 +106,13 @@ def _parse():
             "Observation time in UTC (format: 'YYYY-MM-DD HH:MM:SS'). Used only in 'ra_dec' mode."
         ),
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--output_file",
         type=str,
         default="grid_output.ecsv",
         help="Output file for the generated grid points (default: 'grid_output.ecsv').",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--telescope_ids",
         type=str,
         nargs="*",
@@ -128,14 +122,14 @@ def _parse():
             "(e.g. MSTN-15)."
         ),
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--lookup_table",
         type=str,
         required=True,
         help="Path to the lookup table for simulation limits. "
         "Table required with varying azimuth and or zenith angle. ",
     )
-    config.parser.add_argument(
+    parser.add_argument(
         "--simtel_file",
         type=str,
         required=False,
@@ -144,8 +138,6 @@ def _parse():
             "to telescope names when lookup-table selections are numeric IDs."
         ),
     )
-
-    return config.initialize(db_config=True, simulation_model=["version", "site", "model_version"])
 
 
 def load_axes(file_path: str):
@@ -169,8 +161,13 @@ def load_axes(file_path: str):
 
 
 def main():
-    """Run the Grid Generation application."""
-    app_context = startup_application(_parse)
+    """See CLI description."""
+    app_context = build_application(
+        initialization_kwargs={
+            "db_config": True,
+            "simulation_model": ["version", "site", "model_version"],
+        },
+    )
 
     output_filepath = app_context.io_handler.get_output_file(app_context.args["output_file"])
 
