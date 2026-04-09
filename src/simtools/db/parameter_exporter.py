@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from simtools.data_model import row_table_utils
 from simtools.simtel import simtel_table_reader
 
 ECSV_SUFFIX = ".ecsv"
@@ -9,7 +10,9 @@ ECSV_SUFFIX = ".ecsv"
 
 def _is_dict_table_value(parameter_info):
     """Return True if a parameter stores embedded row-oriented table data."""
-    return parameter_info.get("type") == "dict" and isinstance(parameter_info.get("value"), dict)
+    return parameter_info.get("type") == "dict" and row_table_utils.is_row_table_dict(
+        parameter_info.get("value")
+    )
 
 
 def _get_parameter_info(
@@ -39,7 +42,7 @@ def _normalize_file_names(file_names=None, parameters=None):
         return [
             info["value"]
             for info in parameters.values()
-            if info and info.get("file") and info["value"] is not None
+            if isinstance(info, dict) and info.get("file") and info.get("value") is not None
         ]
     return []
 

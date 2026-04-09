@@ -1189,6 +1189,7 @@ def test_export_model_file_dict_type_returns_table(db, mocker):
     """Test export_model_file returns an astropy Table for dict-typed parameters."""
     row_data = {
         "columns": ["time", "amplitude"],
+        "column_units": ["ns", "dimensionless"],
         "rows": [[0.0, 0.0], [0.5, 0.12]],
     }
     mock_parameters = {"fadc_pulse_shape": {"type": "dict", "value": row_data}}
@@ -1210,7 +1211,7 @@ def test_export_model_file_dict_type_returns_table(db, mocker):
 
 def test_export_model_file_dict_type_without_table_flag_returns_none(db, mocker):
     """Test export_model_file returns None for dict-typed parameters when flag is False."""
-    row_data = {"columns": ["time"], "rows": [[0.0]]}
+    row_data = {"columns": ["time"], "column_units": ["ns"], "rows": [[0.0]]}
     mock_parameters = {"fadc_pulse_shape": {"type": "dict", "value": row_data}}
     mocker.patch.object(db, "get_model_parameter", return_value=mock_parameters)
 

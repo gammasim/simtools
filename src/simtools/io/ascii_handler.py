@@ -346,7 +346,7 @@ class JsonNumpyEncoder(json.JSONEncoder):
 
 def _is_numeric_list(obj):
     """Return True if obj is a list whose elements are all int or float."""
-    return isinstance(obj, list) and bool(obj) and all(isinstance(v, (int, float)) for v in obj)
+    return isinstance(obj, list) and obj and all(isinstance(v, (int, float)) for v in obj)
 
 
 def _encode_compact_rows(obj, indent, level):

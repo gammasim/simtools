@@ -22,7 +22,11 @@ def test_export_parameter_data_writes_ecsv_for_dict_parameter(mocker, db_handler
     db_handler_mock.get_model_parameter.return_value = {
         "fadc_pulse_shape": {
             "type": "dict",
-            "value": {"columns": ["time", "amplitude"], "rows": [[1.0, 2.0]]},
+            "value": {
+                "columns": ["time", "amplitude"],
+                "column_units": ["ns", "dimensionless"],
+                "rows": [[1.0, 2.0]],
+            },
         }
     }
     table = mocker.Mock()
@@ -67,7 +71,11 @@ def test_export_parameter_data_requires_output_file_for_dict_parameter(db_handle
     db_handler_mock.get_model_parameter.return_value = {
         "fadc_pulse_shape": {
             "type": "dict",
-            "value": {"columns": ["time", "amplitude"], "rows": [[1.0, 2.0]]},
+            "value": {
+                "columns": ["time", "amplitude"],
+                "column_units": ["ns", "dimensionless"],
+                "rows": [[1.0, 2.0]],
+            },
         }
     }
 

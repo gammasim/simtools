@@ -135,6 +135,36 @@ class TestValidateRowTableStructure:
         with pytest.raises(ValueError, match="column_units length"):
             row_table_utils.validate_row_table_structure("test_param", payload)
 
+    def test_validate_row_table_structure_invalid_columns_type(self):
+        """Reject columns when not list or tuple."""
+        payload = {
+            "columns": "time,amplitude",
+            "column_units": ["ns", "dimensionless"],
+            "rows": [[0.0, 0.1]],
+        }
+        with pytest.raises(ValueError, match="'columns' must be a list or tuple"):
+            row_table_utils.validate_row_table_structure("test_param", payload)
+
+    def test_validate_row_table_structure_invalid_rows_type(self):
+        """Reject rows when not list or tuple."""
+        payload = {
+            "columns": ["time", "amplitude"],
+            "column_units": ["ns", "dimensionless"],
+            "rows": {"time": 0.0, "amplitude": 0.1},
+        }
+        with pytest.raises(ValueError, match="'rows' must be a list or tuple"):
+            row_table_utils.validate_row_table_structure("test_param", payload)
+
+    def test_validate_row_table_structure_non_string_column_name(self):
+        """Reject non-string column names."""
+        payload = {
+            "columns": ["time", 1],
+            "column_units": ["ns", "dimensionless"],
+            "rows": [[0.0, 0.1]],
+        }
+        with pytest.raises(ValueError, match="all column names"):
+            row_table_utils.validate_row_table_structure("test_param", payload)
+
     @pytest.mark.parametrize(
         "invalid_rows",
         [
@@ -232,6 +262,30 @@ class TestValidateRowTableStructureParametrized:
                     "columns": ["time", "amplitude"],
                     "column_units": ["ns", "dimensionless"],
                     "rows": [[0.0]],
+                },
+            ),
+            (
+                "invalid_columns_type",
+                {
+                    "columns": "time,amplitude",
+                    "column_units": ["ns", "dimensionless"],
+                    "rows": [[0.0, 0.0]],
+                },
+            ),
+            (
+                "invalid_rows_type",
+                {
+                    "columns": ["time", "amplitude"],
+                    "column_units": ["ns", "dimensionless"],
+                    "rows": {"time": 0.0, "amplitude": 0.0},
+                },
+            ),
+            (
+                "non_string_column_name",
+                {
+                    "columns": ["time", 1],
+                    "column_units": ["ns", "dimensionless"],
+                    "rows": [[0.0, 0.0]],
                 },
             ),
             (

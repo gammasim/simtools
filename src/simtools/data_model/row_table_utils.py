@@ -60,6 +60,8 @@ def validate_row_table_structure(
 
     Checks:
     - Dict contains 'columns' and 'rows' keys
+    - 'columns' and 'rows' are sequences (list or tuple)
+    - All column names are strings
     - Each row is a sequence with correct length and numeric values
     - If require_column_units is True (default), validates 'column_units' presence and length
 
@@ -84,6 +86,23 @@ def validate_row_table_structure(
 
     columns = value["columns"]
     rows = value["rows"]
+
+    if not isinstance(columns, (list, tuple)):
+        raise ValueError(
+            f"Row-table for '{parameter_name}': 'columns' must be a list or tuple, "
+            f"got {type(columns).__name__}."
+        )
+
+    if not isinstance(rows, (list, tuple)):
+        raise ValueError(
+            f"Row-table for '{parameter_name}': 'rows' must be a list or tuple, "
+            f"got {type(rows).__name__}."
+        )
+
+    if not all(isinstance(column_name, str) for column_name in columns):
+        raise ValueError(
+            f"Row-table for '{parameter_name}': all column names in 'columns' must be strings."
+        )
 
     if require_column_units:
         if "column_units" not in value:
