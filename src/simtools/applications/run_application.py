@@ -91,11 +91,14 @@ def _add_arguments(parser):
 
 
 def main():
-    """See CLI description."""
+    """Run several simtools applications using a configuration file."""
     app_context = build_application(
         usage="simtools-run-application --config_file config_file_name",
         initialization_kwargs={"db_config": True},
-        startup_kwargs={"setup_io_handler": False},
+        startup_kwargs={
+            "setup_io_handler": False,
+            "resolve_sim_software_executables": False,
+        },
     )
 
     simtools_runner.run_applications(app_context.args, app_context.logger)
