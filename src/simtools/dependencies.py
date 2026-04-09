@@ -23,7 +23,7 @@ from simtools.version import __version__
 _logger = logging.getLogger(__name__)
 
 
-def get_version_string(run_time=None):
+def get_version_string(run_time=None, include_software_versions=True):
     """
     Print the versions of the dependencies.
 
@@ -31,6 +31,9 @@ def get_version_string(run_time=None):
     ----------
     run_time : list, optional
         Runtime environment command (e.g., Docker).
+    include_software_versions : bool, optional
+        If True, query sim_telarray/CORSIKA executables and include their runtime versions.
+        If False, skip executable checks and report these values as ``None``.
 
     Returns
     -------
@@ -38,15 +41,36 @@ def get_version_string(run_time=None):
         String containing the versions of the dependencies.
 
     """
+    simtel_version = None
+    corsika_version = None
+    simtel_exe = None
+    corsika_exe = None
+
+    def _safe_get_executable(path_getter):
+        """Return executable path string, or None if environment is not configured."""
+        try:
+            return path_getter()
+        except (FileNotFoundError, TypeError):
+            return None
+
+    if include_software_versions:
+        simtel_version = get_sim_telarray_version(run_time)
+        corsika_version = get_corsika_version(run_time)
+        simtel_exe = _safe_get_executable(lambda: settings.config.sim_telarray_exe)
+        corsika_exe = _safe_get_executable(lambda: settings.config.corsika_exe)
+
+    build_options = None
+    if include_software_versions:
+        build_options = get_build_options(run_time)
+
     return (
         f"Database name: {get_database_version_or_name(version=False)}\n"
         f"Database version: {get_database_version_or_name(version=True)}\n"
-        f"sim_telarray version: {get_sim_telarray_version(run_time)}\n"
-        "sim_telarray exe: "
-        f"{settings.config.sim_telarray_exe if settings.config.sim_telarray_exe else 'None'}\n"
-        f"CORSIKA version: {get_corsika_version(run_time)}\n"
-        f"CORSIKA exe: {settings.config.corsika_exe if settings.config.corsika_exe else 'None'}\n"
-        f"Build options: {get_build_options(run_time)}\n"
+        f"sim_telarray version: {simtel_version}\n"
+        f"sim_telarray exe: {simtel_exe if simtel_exe else 'None'}\n"
+        f"CORSIKA version: {corsika_version}\n"
+        f"CORSIKA exe: {corsika_exe if corsika_exe else 'None'}\n"
+        f"Build options: {build_options}\n"
         f"Runtime environment: {run_time if run_time else 'None'}\n"
     )
 

@@ -219,7 +219,12 @@ def build_application(
     return startup_application(_parse, **startup_kwargs)
 
 
-def startup_application(parse_function, setup_io_handler=True, logger_name=None):
+def startup_application(
+    parse_function,
+    setup_io_handler=True,
+    logger_name=None,
+    resolve_sim_software_executables=True,
+):
     """
     Initialize common application startup tasks.
 
@@ -238,6 +243,9 @@ def startup_application(parse_function, setup_io_handler=True, logger_name=None)
         Whether to initialize and return an IOHandler instance. Default is True.
     logger_name : str, optional
         Name for the logger. If None, uses the root logger. Default is None.
+    resolve_sim_software_executables : bool, optional
+        Resolve simulation software executable paths during settings load.
+        Set to False for applications that only orchestrate other applications.
 
     Returns
     -------
@@ -275,7 +283,11 @@ def startup_application(parse_function, setup_io_handler=True, logger_name=None)
             # ... rest of application logic
     """
     args_dict, db_config = parse_function()
-    config.load(args_dict, db_config)
+    config.load(
+        args_dict,
+        db_config,
+        resolve_sim_software_executables=resolve_sim_software_executables,
+    )
 
     logger = setup_logging(logger_name, args_dict["log_level"], log_file=get_log_file(args_dict))
 

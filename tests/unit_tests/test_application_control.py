@@ -350,6 +350,26 @@ def test_startup_application_with_custom_logger_name():
     assert app_context.logger.level == logging.WARNING
 
 
+def test_startup_application_without_resolving_sim_software_executables():
+    """Test startup_application forwards executable-resolution flag to settings load."""
+    mock_args_dict = {"log_level": "info"}
+    mock_db_config = {}
+    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
+
+    with patch("simtools.application_control.config.load") as mock_load:
+        startup_application(
+            mock_parse_function,
+            setup_io_handler=False,
+            resolve_sim_software_executables=False,
+        )
+
+    mock_load.assert_called_once_with(
+        mock_args_dict,
+        mock_db_config,
+        resolve_sim_software_executables=False,
+    )
+
+
 def test_resolve_model_version_to_latest_patch_no_model_version():
     """Test _resolve_model_version_to_latest_patch when model_version is not in args."""
 
