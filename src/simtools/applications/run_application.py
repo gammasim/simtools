@@ -99,7 +99,11 @@ def _parse():
 
 def main():
     """Run several simtools applications using a configuration file."""
-    app_context = startup_application(_parse, setup_io_handler=False)
+    app_context = startup_application(
+        _parse,
+        setup_io_handler=False,
+        resolve_sim_software_executables=False,
+    )
 
     simtools_runner.run_applications(app_context.args, app_context.logger)
 
