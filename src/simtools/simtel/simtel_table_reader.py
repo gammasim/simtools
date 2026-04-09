@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Read tabular data in sim_telarray format and return as astropy table."""
 
+import json
 import logging
 import re
 from pathlib import Path
@@ -9,6 +10,7 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
+from simtools.data_model import row_table_utils
 from simtools.io import ascii_handler
 
 logger = logging.getLogger(__name__)
@@ -292,6 +294,125 @@ def read_simtel_table(parameter_name, file_path):
     table.meta.update(metadata)
 
     return table
+
+
+def read_simtel_table_as_row_data(parameter_name, file_path):
+    """Read sim_telarray table file and serialize it as row-oriented data."""
+    table = read_simtel_table(parameter_name, file_path)
+
+    columns = list(table.colnames)
+    column_units = [row_table_utils.normalize_column_unit(table[col].unit) for col in columns]
+    rows = [list(row) for row in table.as_array().tolist()]
+
+    return {
+        "columns": columns,
+        "column_units": column_units,
+        "rows": rows,
+    }
+
+
+def row_data_to_astropy_table(row_data):
+    """
+    Convert a row-oriented parameter value dict to an astropy Table.
+
+    Accepts dicts in the ``{columns, rows}`` format produced by
+    :func:`read_simtel_table_as_row_data` and stored as embedded ``dict``-typed
+    model parameter values in the database.
+
+    Parameters
+    ----------
+    row_data : dict
+        Dictionary with keys ``"columns"`` (list of str) and ``"rows"``
+        (list of lists of numbers).
+
+    Returns
+    -------
+    astropy.table.Table
+        Table with one column per entry in ``row_data["columns"]``.
+
+    Raises
+    ------
+    ValueError
+        If ``row_data`` does not contain the expected ``"columns"`` and
+        ``"rows"`` keys.
+    """
+    try:
+        columns = row_data["columns"]
+        rows = row_data["rows"]
+    except (KeyError, TypeError) as exc:
+        raise ValueError("row_data must be a dict with 'columns' and 'rows' keys.") from exc
+
+    table = Table(rows=rows, names=columns)
+    column_units = row_data.get("column_units")
+    if column_units is not None:
+        if len(column_units) != len(columns):
+            raise ValueError("row_data 'column_units' length must match the number of 'columns'.")
+        for col_name, unit_name in zip(columns, column_units):
+            table[col_name].unit = (
+                u.dimensionless_unscaled if unit_name == "dimensionless" else unit_name
+            )
+    return table
+
+
+def _resolve_input_file_path(file_name, data_path=None):
+    """Resolve an input file using data_path for relative paths."""
+    file_name = Path(file_name)
+    if file_name.is_absolute():
+        return file_name
+
+    return Path(data_path) / file_name if data_path else file_name
+
+
+def _parse_inline_json_dict(value, parameter_name):
+    """Parse inline JSON string value and return dict when valid."""
+    stripped_value = value.strip()
+    if not stripped_value.startswith("{"):
+        return None
+
+    try:
+        parsed_value = json.loads(stripped_value)
+    except json.JSONDecodeError:
+        logger.debug(
+            f"Value for '{parameter_name}' starts with '{{' but is not valid JSON; "
+            "falling back to file-path reading."
+        )
+        return None
+
+    return parsed_value if isinstance(parsed_value, dict) else None
+
+
+def _resolve_dict_parameter_from_string(value, parameter_name, data_path=None):
+    """Resolve dict-typed value from inline JSON or from table file path string."""
+    parsed_value = _parse_inline_json_dict(value, parameter_name)
+    if parsed_value is not None:
+        # Validate that row-table-like dicts (with columns and rows) also have column_units
+        if "columns" in parsed_value and "rows" in parsed_value:
+            if "column_units" not in parsed_value:
+                raise ValueError(
+                    "row_data must contain 'column_units' when using 'columns' and 'rows'."
+                )
+        return parsed_value
+    return read_simtel_table_as_row_data(
+        parameter_name,
+        _resolve_input_file_path(value, data_path),
+    )
+
+
+def resolve_dict_parameter_value(value, parameter_name, data_path=None):
+    """Resolve dict-typed value from inline JSON or from a table file path."""
+    if isinstance(value, dict):
+        # Validate that row-table-like dicts (with columns and rows) also have column_units
+        if "columns" in value and "rows" in value:
+            if "column_units" not in value:
+                raise ValueError(
+                    "row_data must contain 'column_units' when using 'columns' and 'rows'."
+                )
+        return value
+
+    if isinstance(value, str):
+        return _resolve_dict_parameter_from_string(value, parameter_name, data_path=data_path)
+
+    return read_simtel_table_as_row_data(parameter_name, _resolve_input_file_path(value, data_path))
 
 
 def _adjust_columns_length(rows, n_columns):

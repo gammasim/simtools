@@ -8,6 +8,7 @@ from eventio.simtel.simtelfile import SimTelFile
 
 from simtools.sim_events import file_info
 from simtools.sim_events.file_info import get_corsika_run_number
+from simtools.simtel import simtel_table_reader
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id,
@@ -260,6 +261,9 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
         parameter_type = model.parameters[param]["type"]
         value = _extract_parameter_value(metadata, sim_telarray_name, parameter_type)
         model_value = model.parameters[param]["value"]
+        value = _resolve_dict_parameter_metadata_value(
+            value, model_value, parameter_type, param, model
+        )
 
         error = _check_parameter_validity(
             param, value, model_value, parameter_type, allow_for_changes
@@ -268,6 +272,25 @@ def _assert_model_parameters(metadata, model, allow_for_changes=None):
             invalid_parameter_list.append(error)
 
     return invalid_parameter_list
+
+
+def _resolve_dict_parameter_metadata_value(value, model_value, parameter_type, param, model):
+    """Resolve table-file metadata for dict parameters before comparison."""
+    if parameter_type != "dict":
+        return value
+
+    if not isinstance(value, str) or not isinstance(model_value, dict):
+        return value
+
+    try:
+        return simtel_table_reader.resolve_dict_parameter_value(
+            value,
+            param,
+            data_path=model.config_file_directory,
+        )
+    except (FileNotFoundError, ValueError, TypeError) as exc:
+        _logger.debug(f"Unable to resolve dict-valued sim_telarray metadata for {param}: {exc}")
+        return value
 
 
 def _assert_sim_telarray_seed(metadata, sim_telarray_seed, file=None):
