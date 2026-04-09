@@ -53,7 +53,7 @@ def mock_get_collection_name(mocker):
 @pytest.fixture
 def mock_read_simtel_table(mocker):
     return mocker.patch(
-        "simtools.db.db_handler.simtel_table_reader.read_simtel_table",
+        "simtools.db.parameter_exporter.simtel_table_reader.read_simtel_table",
         return_value="test_table",
     )
 
@@ -77,7 +77,7 @@ def export_files_setup(db, mocker):
     mock_get_file_mongo_db = mocker.patch.object(
         db.mongo_db_handler, "get_file_from_db", return_value=mocker.Mock(_id="file_id")
     )
-    mock_write_file = mocker.patch.object(db, "_write_file_from_db_to_disk")
+    mock_write_file = mocker.patch.object(db, "write_file_from_db_to_disk")
     return {"get_file_mongo_db": mock_get_file_mongo_db, "write_file": mock_write_file}
 
 
@@ -505,7 +505,7 @@ def test_export_model_files_with_parameters(
 def test_export_model_files_file_exists(db, mocker, tmp_test_directory, test_db, test_file):
     """Test export_model_files method when file already exists."""
     mock_get_file_mongo_db = mocker.patch.object(db.mongo_db_handler, "get_file_from_db")
-    mock_write_file = mocker.patch.object(db, "_write_file_from_db_to_disk")
+    mock_write_file = mocker.patch.object(db, "write_file_from_db_to_disk")
     mock_path_exists = mocker.patch("pathlib.Path.exists", return_value=True)
 
     file_names = [test_file]
@@ -522,7 +522,7 @@ def test_export_model_files_file_not_found(db, mocker, tmp_test_directory, test_
     mock_get_file_mongo_db = mocker.patch.object(
         db.mongo_db_handler, "get_file_from_db", side_effect=FileNotFoundError
     )
-    mock_write_file = mocker.patch.object(db, "_write_file_from_db_to_disk")
+    mock_write_file = mocker.patch.object(db, "write_file_from_db_to_disk")
 
     parameters = {"param1": {"file": True, "value": test_file}}
 
@@ -531,6 +531,39 @@ def test_export_model_files_file_not_found(db, mocker, tmp_test_directory, test_
 
     mock_get_file_mongo_db.assert_called_once_with(test_db, test_file)
     mock_write_file.assert_not_called()
+
+
+def test_export_parameter_data_delegates_to_parameter_exporter(db, mocker):
+    """Delegate parameter payload export to parameter_exporter helper."""
+    expected = ["output.dat"]
+    export_mock = mocker.patch(
+        "simtools.db.db_handler.parameter_exporter.export_parameter_data",
+        return_value=expected,
+    )
+
+    result = db.export_parameter_data(
+        parameter="mirror_reflectivity",
+        site="North",
+        array_element_name="LSTN-01",
+        parameter_version="1.0.0",
+        model_version="6.0.2",
+        output_file=None,
+        export_model_file=True,
+        export_model_file_as_table=False,
+    )
+
+    assert result == expected
+    export_mock.assert_called_once_with(
+        db=db,
+        parameter="mirror_reflectivity",
+        site="North",
+        array_element_name="LSTN-01",
+        parameter_version="1.0.0",
+        model_version="6.0.2",
+        output_file=None,
+        export_model_file=True,
+        export_model_file_as_table=False,
+    )
 
 
 def test_get_query_from_parameter_version_table(db):
@@ -1152,6 +1185,47 @@ def test_export_model_file_variants(
     assert result == test_case["expected_result"]
 
 
+def test_export_model_file_dict_type_returns_table(db, mocker):
+    """Test export_model_file returns an astropy Table for dict-typed parameters."""
+    row_data = {
+        "columns": ["time", "amplitude"],
+        "column_units": ["ns", "dimensionless"],
+        "rows": [[0.0, 0.0], [0.5, 0.12]],
+    }
+    mock_parameters = {"fadc_pulse_shape": {"type": "dict", "value": row_data}}
+    mocker.patch.object(db, "get_model_parameter", return_value=mock_parameters)
+    export_files_mock = mocker.patch.object(db, "export_model_files")
+
+    table = db.export_model_file(
+        parameter="fadc_pulse_shape",
+        site="North",
+        array_element_name="LSTN-01",
+        model_version="1.0.0",
+        export_file_as_table=True,
+    )
+
+    export_files_mock.assert_not_called()
+    assert list(table.colnames) == ["time", "amplitude"]
+    assert len(table) == 2
+
+
+def test_export_model_file_dict_type_without_table_flag_returns_none(db, mocker):
+    """Test export_model_file returns None for dict-typed parameters when flag is False."""
+    row_data = {"columns": ["time"], "column_units": ["ns"], "rows": [[0.0]]}
+    mock_parameters = {"fadc_pulse_shape": {"type": "dict", "value": row_data}}
+    mocker.patch.object(db, "get_model_parameter", return_value=mock_parameters)
+
+    result = db.export_model_file(
+        parameter="fadc_pulse_shape",
+        site="North",
+        array_element_name="LSTN-01",
+        model_version="1.0.0",
+        export_file_as_table=False,
+    )
+
+    assert result is None
+
+
 def test_get_array_element_list_configuration_sim_telarray(db, mocker):
     """Test _get_array_element_list method for configuration_sim_telarray collection."""
     array_element_name = "LSTN-01"
@@ -1237,7 +1311,7 @@ def test_write_file_from_db_to_disk_delegation(db, mocker, tmp_test_directory):
     """Test _write_file_from_db_to_disk delegates to mongo_db_handler."""
     mock_write = mocker.patch.object(db.mongo_db_handler, "write_file_from_db_to_disk")
     mock_file = mocker.Mock()
-    db._write_file_from_db_to_disk("test_db", tmp_test_directory, mock_file)
+    db.write_file_from_db_to_disk("test_db", tmp_test_directory, mock_file)
     mock_write.assert_called_once_with("test_db", tmp_test_directory, mock_file)
 
 

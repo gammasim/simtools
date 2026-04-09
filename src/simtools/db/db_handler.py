@@ -6,9 +6,9 @@ from pathlib import Path
 
 from simtools import settings
 from simtools.data_model import validate_data
+from simtools.db import parameter_exporter
 from simtools.db.mongo_db import MongoDBHandler
 from simtools.io import io_handler
-from simtools.simtel import simtel_table_reader
 from simtools.utils import names, value_conversion
 from simtools.version import resolve_version_to_latest_patch
 
@@ -326,7 +326,9 @@ class DatabaseHandler:
         Export single model file from the DB identified by the parameter name.
 
         The parameter can be identified by model or parameter version.
-        Files can be exported as astropy tables (ecsv format).
+        File-backed parameters can be exported as astropy tables (ecsv format).
+        Embedded dict-typed parameters are converted to an astropy table directly
+        from the stored row data.
 
         Parameters
         ----------
@@ -341,27 +343,23 @@ class DatabaseHandler:
         model_version: str
             Version of the model.
         export_file_as_table: bool
-            If True, export the file as an astropy table (ecsv format).
+            If True, export the parameter value as an astropy table.
 
         Returns
         -------
         astropy.table.Table or None
-            If export_file_as_table is True
+            Astropy table when export_file_as_table is True and the parameter
+            value is a table (file-backed or embedded dict), otherwise None.
         """
-        parameters = self.get_model_parameter(
-            parameter,
-            site,
-            array_element_name,
+        return parameter_exporter.export_single_model_file(
+            db=self,
+            parameter=parameter,
+            site=site,
+            array_element_name=array_element_name,
             parameter_version=parameter_version,
             model_version=model_version,
+            export_file_as_table=export_file_as_table,
         )
-        self.export_model_files(parameters=parameters, dest=self.io_handler.get_output_directory())
-        if export_file_as_table:
-            return simtel_table_reader.read_simtel_table(
-                parameter,
-                self.io_handler.get_output_directory().joinpath(parameters[parameter]["value"]),
-            )
-        return None
 
     def export_model_files(self, parameters=None, file_names=None, dest=None, db_name=None):
         """
@@ -384,26 +382,37 @@ class DatabaseHandler:
         file_id: dict of GridOut._id
             Dict of database IDs of files.
         """
-        db_name = db_name or self.db_name
+        return parameter_exporter.export_model_files(
+            db=self,
+            parameters=parameters,
+            file_names=file_names,
+            dest=dest,
+            db_name=db_name,
+        )
 
-        if file_names:
-            file_names = [file_names] if not isinstance(file_names, list) else file_names
-        elif parameters:
-            file_names = [
-                info["value"]
-                for info in parameters.values()
-                if info and info.get("file") and info["value"] is not None
-            ]
-
-        instance_ids = {}
-        for file_name in file_names:
-            if Path(dest).joinpath(file_name).exists():
-                instance_ids[file_name] = "file exists"
-            else:
-                file_path_instance = self.mongo_db_handler.get_file_from_db(db_name, file_name)
-                self._write_file_from_db_to_disk(db_name, dest, file_path_instance)
-                instance_ids[file_name] = file_path_instance._id  # pylint: disable=protected-access
-        return instance_ids
+    def export_parameter_data(
+        self,
+        parameter,
+        site,
+        array_element_name,
+        parameter_version=None,
+        model_version=None,
+        output_file=None,
+        export_model_file=False,
+        export_model_file_as_table=False,
+    ):
+        """Export parameter payload based on parameter type and export options."""
+        return parameter_exporter.export_parameter_data(
+            db=self,
+            parameter=parameter,
+            site=site,
+            array_element_name=array_element_name,
+            parameter_version=parameter_version,
+            model_version=model_version,
+            output_file=output_file,
+            export_model_file=export_model_file,
+            export_model_file_as_table=export_model_file_as_table,
+        )
 
     def _get_query_from_parameter_version_table(
         self, parameter_version_table, array_element_name, site
@@ -644,7 +653,7 @@ class DatabaseHandler:
             )
         raise ValueError(f"Unknown simulation software: {simulation_software}")
 
-    def _write_file_from_db_to_disk(self, db_name, path, file):
+    def write_file_from_db_to_disk(self, db_name, path, file):
         """
         Extract a file from MongoDB and write it to disk.
 
@@ -657,7 +666,11 @@ class DatabaseHandler:
         file: GridOut
             A file instance returned by GridFS find_one
         """
-        self.mongo_db_handler.write_file_from_db_to_disk(db_name, path, file)
+        parameter_exporter.write_file_from_db_to_disk(self, db_name, path, file)
+
+    def _write_file_from_db_to_disk(self, db_name, path, file):
+        """Backward-compatible alias for write_file_from_db_to_disk."""
+        self.write_file_from_db_to_disk(db_name, path, file)
 
     def get_ecsv_file_as_astropy_table(self, file_name, db_name=None):
         """
