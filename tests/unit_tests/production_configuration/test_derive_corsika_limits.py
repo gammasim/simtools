@@ -4,6 +4,7 @@ import pytest
 from astropy.table import Table
 
 import simtools.production_configuration.derive_corsika_limits as derive_corsika_limits
+from simtools.utils.names import get_array_element_name_from_common_identifier
 
 # Constants
 SIM_EVENTS_HISTOGRAMS_PATH = (
@@ -78,6 +79,27 @@ def test_generate_corsika_limits_grid(mocker, mock_args_dict):
     assert mock_collect.call_count == 1
     assert mock_process.call_count == 2  # 2 configs
     assert mock_write.call_count == 1
+
+
+def test_generate_corsika_limits_grid_normalizes_telescope_ids(mocker, mock_args_dict):
+    """Ensure numeric IDs are normalized to array-element names before processing."""
+    mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
+    mock_collect.return_value = {"telescope_configs": {"LST": [1, 2]}}
+
+    mock_process = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._process_file"
+    )
+    mock_process.return_value = {}
+    mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
+
+    derive_corsika_limits.generate_corsika_limits_grid(mock_args_dict)
+
+    expected_telescopes = [
+        get_array_element_name_from_common_identifier(1),
+        get_array_element_name_from_common_identifier(2),
+    ]
+    call_args = mock_process.call_args[0]
+    assert call_args[2] == expected_telescopes
 
 
 def test_process_file(mocker):

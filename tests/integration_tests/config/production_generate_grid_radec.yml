@@ -2,17 +2,17 @@
 applications:
 - application: simtools-production-generate-grid
   configuration:
-    axes: tests/resources/production_grid_generation_axes_definition.yml
-    coordinate_system: zenith_azimuth
+    axes: tests/resources/production_grid_generation_axes_definition_radec.yml
+    coordinate_system: ra_dec
     lookup_table: tests/resources/corsika_simulation_limits/merged_corsika_limits_for_test.ecsv
     model_version: 6.0.2
     observing_time: '2017-09-16 00:00:00'
-    output_file: grid_output.ecsv
+    output_file: grid_output_radec.ecsv
     output_path: simtools-output
     site: North
     telescope_ids: [LSTN-01]
   integration_tests:
-  - output_file: grid_output.ecsv
-  test_name: production_generate_grid
+  - output_file: grid_output_radec.ecsv
+  test_name: production_generate_grid_radec
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

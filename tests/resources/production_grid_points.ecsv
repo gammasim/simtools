@@ -1,0 +1,21 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: azimuth, unit: deg, datatype: float64}
+# - {name: zenith_angle, unit: deg, datatype: float64}
+# - {name: nsb_level, unit: MHz, datatype: float64}
+# - {name: offset, unit: deg, datatype: float64}
+# - {name: lower_energy_threshold, unit: TeV, datatype: float64}
+# - {name: scatter_radius, unit: m, datatype: float64}
+# - {name: viewcone_radius, unit: deg, datatype: float64}
+# meta: !!omap
+# - {coordinate_system: zenith_azimuth}
+# - {reference_frame: ICRS (J2000)}
+# - {observing_time_utc: '2017-09-16T00:00:00.000'}
+# - {observing_time_scale: utc}
+# - telescope_ids: [LSTN-01]
+# - {lookup_table: tests/resources/corsika_simulation_limits/corsika_simulation_limits_lookup_grid_test.ecsv}
+# schema: astropy-2.0
+azimuth zenith_angle nsb_level offset lower_energy_threshold scatter_radius viewcone_radius
+310.0 30.0 4.0 0.0 0.004588 2047.848197 9.986606
+310.0 30.0 4.0 10.0 0.004588 2047.848197 9.986606
