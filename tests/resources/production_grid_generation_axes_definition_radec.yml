@@ -1,18 +1,18 @@
 ---
 axes:
-  azimuth:
-    range: [310, 20]
-    binning: 3
+  ra:
+    range: [0, 360]
+    binning: 36
     scaling: linear
     units: deg
-  zenith_angle:
-    range: [30, 40]
-    binning: 2
+  dec:
+    range: [-90, 90]
+    binning: 18
     scaling: linear
     units: deg
   nsb_level:
-    range: [4, 5]
-    binning: 2
+    range: [4, 4]
+    binning: 1
     scaling: linear
     units: MHz
   offset:
