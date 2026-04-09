@@ -40,13 +40,13 @@ class GridGeneration:
 
     def __init__(
         self,
-        axes: dict,
-        coordinate_system: str = "zenith_azimuth",
+        axes,
+        coordinate_system="zenith_azimuth",
         observing_location=None,
         observing_time=None,
-        lookup_table: str | None = None,
-        telescope_ids: list | None = None,
-        simtel_file: str | None = None,
+        lookup_table=None,
+        telescope_ids=None,
+        simtel_file=None,
     ):
         """
         Initialize the grid with the given axes and coordinate system.
@@ -520,7 +520,7 @@ class GridGeneration:
 
         return bin_centers
 
-    def generate_grid(self) -> list[dict]:
+    def generate_grid(self):
         """
         Generate the grid based on the required axes and include interpolated limits.
 
@@ -616,7 +616,7 @@ class GridGeneration:
         skycoord = SkyCoord(aa)
         return skycoord.icrs  # Return RA/Dec in ICRS frame
 
-    def convert_coordinates(self, grid_points: list[dict]) -> list[dict]:
+    def convert_coordinates(self, grid_points):
         """
         Convert the grid points to RA/Dec coordinates if necessary.
 
