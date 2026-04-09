@@ -67,12 +67,44 @@ def test_submit_with_pipes(mock_successful_run):
     assert call_args[1]["stderr"] == subprocess.PIPE
 
 
+def test_submit_without_capture_output_uses_inherited_streams(mock_successful_run):
+    result = jm.submit("echo test", None, None, capture_output=False)
+
+    assert result is not None
+    call_args = mock_successful_run.call_args
+    assert call_args[1]["stdout"] is None
+    assert call_args[1]["stderr"] is None
+
+
 def test_submit_test_mode(mocker, tmp_path):
     mock_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
     result = jm.submit("echo test", tmp_path / "out.log", tmp_path / "err.log", test=True)
 
     assert result is None
     mock_run.assert_not_called()
+
+
+def test_submit_check_false_returns_result_on_nonzero(mocker):
+    mock_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
+    mock_result = MagicMock()
+    mock_result.returncode = 125
+    mock_result.stdout = ""
+    mock_result.stderr = "image not known"
+    mock_run.return_value = mock_result
+
+    result = jm.submit("podman image inspect some/image:tag", check=False)
+
+    assert result.returncode == 125
+    call_kwargs = mock_run.call_args[1]
+    assert call_kwargs["check"] is False
+
+
+def test_submit_check_true_raises_on_nonzero(mocker):
+    mock_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
+    mock_run.side_effect = subprocess.CalledProcessError(125, "inspect")
+
+    with pytest.raises(jm.JobExecutionError):
+        jm.submit("podman image inspect some/image:tag", check=True)
 
 
 @pytest.mark.parametrize(
