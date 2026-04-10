@@ -5,7 +5,7 @@ import socket
 from pathlib import Path
 from types import MappingProxyType
 
-from simtools.utils.general import find_executable_in_dir
+from simtools.utils.general import find_executable_in_dir, uuid
 
 
 class _Config:
@@ -22,6 +22,7 @@ class _Config:
         self._corsika_exe = None
         self.user = os.getenv("USER", "unknown")
         self.hostname = socket.gethostname()
+        self.application_id = uuid()
 
     def load(self, args=None, db_config=None, resolve_sim_software_executables=True):
         """
