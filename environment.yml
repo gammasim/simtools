@@ -35,6 +35,7 @@ dependencies:
   - scipy
   - sphinx
   - sphinx-design
+  - uuid6   # temporary dependency; not needed for python >= 3.14
   - towncrier
   - toml
   - pip:
@@ -46,4 +47,4 @@ dependencies:
 # create: conda env create -f environment.yml
 # activate: conda activate simtools-dev
 # update (conda/mamba): conda env update -f environment.yml --prune
-# update (micromamba): micromamba update -f environment.yml
+# update (micromamba): micromamba env update -f environment.yml -n simtools-dev
