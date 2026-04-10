@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 
 import dotenv
 import numpy as np
+import uuid6
 
 _logger = logging.getLogger(__name__)
 
@@ -969,3 +970,15 @@ def load_environment_variables(env_file=".env", env_list=None):
         cleaned_value = env_value.split("#")[0].strip().replace('"', "").replace("'", "")
         env_values[key.removeprefix("SIMTOOLS_").lower()] = cleaned_value
     return env_values
+
+
+def uuid():
+    """
+    Generate a UUID (7) string.
+
+    Returns
+    -------
+    str
+        A UUID string.
+    """
+    return str(uuid6.uuid7())
