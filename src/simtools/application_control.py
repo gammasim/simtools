@@ -5,7 +5,6 @@ import logging
 import os
 import re
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -59,7 +58,9 @@ def setup_logging(logger_name=None, log_level="INFO", log_file=None):
         log_file_path = Path(log_file)
         if log_file_path.parent:
             log_file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        file_format = logging.Formatter(
+            f"{config.application_id} - %(name)s - %(levelname)s - %(message)s"
+        )
         file_handler = logging.FileHandler(log_file_path)
         file_handler.setFormatter(file_format)
         file_handler.addFilter(redact_filter)
@@ -73,7 +74,7 @@ def get_log_file(args_dict):
     """
     Get log file path.
 
-    Generate log file path if needed from application name and startup time.
+    Generate log file path if needed from application name and application ID.
 
     Returns
     -------
@@ -85,8 +86,7 @@ def get_log_file(args_dict):
     if args_dict.get("application_label") is None or args_dict.get("output_path") is None:
         return None
 
-    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    log_file = f"{args_dict['application_label']}_{timestamp}.log"
+    log_file = f"{args_dict['application_label']}_{config.application_id}.log"
     Path(args_dict["output_path"]).mkdir(parents=True, exist_ok=True)
     return Path(args_dict["output_path"]) / log_file
 
@@ -290,6 +290,10 @@ def startup_application(
     )
 
     logger = setup_logging(logger_name, args_dict["log_level"], log_file=get_log_file(args_dict))
+    logger.info(
+        f"simtools application {args_dict.get('application_label')}"
+        f" started with application ID {config.application_id}"
+    )
 
     io_handler_instance = io_handler.IOHandler() if setup_io_handler else None
 

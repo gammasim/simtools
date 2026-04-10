@@ -18,6 +18,7 @@ from simtools.application_control import (
     setup_logging,
     startup_application,
 )
+from simtools.settings import config
 
 
 def _reset_stream(handler):
@@ -690,7 +691,9 @@ def test_setup_logging_with_file_handler(tmp_path):
         assert len(file_handlers) > 0
         assert file_handlers[0].baseFilename == str(log_file)
         assert log_file.exists()
-        assert "Test message" in log_file.read_text()
+        content = log_file.read_text()
+        assert "Test message" in content
+        assert config.application_id in content
     finally:
         for handler in list(logger.handlers):
             handler.close()
