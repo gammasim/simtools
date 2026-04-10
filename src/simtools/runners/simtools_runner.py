@@ -1,10 +1,13 @@
 """Tools for running applications in the simtools framework."""
 
 import shutil
+from copy import deepcopy
+from datetime import UTC, datetime
 from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools import dependencies
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler
 from simtools.job_execution import job_manager
 
@@ -20,9 +23,25 @@ def run_applications(args_dict, logger):
     logger : logging.Logger
         Logger for logging application output.
     """
-    configurations, runtime_environment, log_file = _read_application_configuration(
-        args_dict["config_file"], args_dict.get("steps"), logger
+    (
+        configurations,
+        runtime_environment,
+        log_file,
+        workflow_activity_id,
+    ) = _read_application_configuration(
+        args_dict["config_file"],
+        args_dict.get("steps"),
+        logger,
+        args_dict.get("activity_id"),
     )
+    workflow_start = datetime.now(UTC)
+    associated_activities = []
+    runtime_environment_snapshot = deepcopy(runtime_environment)
+    workflow_site = _get_workflow_configuration_value(configurations, "site")
+    workflow_instrument = _get_workflow_configuration_value(configurations, "instrument")
+    if workflow_instrument is None:
+        workflow_instrument = _get_workflow_configuration_value(configurations, "telescope")
+
     run_time = (
         read_runtime_environment(runtime_environment)
         if not args_dict["ignore_runtime_environment"]
@@ -32,25 +51,48 @@ def run_applications(args_dict, logger):
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
         file.write(dependencies.get_version_string(run_time, include_software_versions=False))
+        try:
+            for config in configurations:
+                app = config.get("application")
+                if not config.get("run_application"):
+                    logger.info(f"Skipping application: {app}")
+                    continue
 
-        for config in configurations:
-            app = config.get("application")
-            if not config.get("run_application"):
-                logger.info(f"Skipping application: {app}")
-                continue
-            logger.info(f"Running application: {app}")
-            result = job_manager.submit(
-                app,
-                out_file=None,
-                err_file=None,
-                configuration=config.get("configuration"),
-                runtime_environment=run_time,
+                app_configuration = config.get("configuration", {})
+                app_activity_id = app_configuration.get("activity_id") or workflow_activity_id
+                app_configuration["activity_id"] = app_activity_id
+                associated_activities.append({"name": app, "activity_id": app_activity_id})
+
+                logger.info(f"Running application: {app}")
+                result = job_manager.submit(
+                    app,
+                    out_file=None,
+                    err_file=None,
+                    configuration=app_configuration,
+                    runtime_environment=run_time,
+                )
+                file.write("=" * 80 + "\n")
+                file.write(
+                    f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
+                )
+        finally:
+            workflow_end = datetime.now(UTC)
+            workflow_end = max(workflow_end, workflow_start)
+            _write_workflow_metadata(
+                args_dict=args_dict,
+                output_path=Path(log_file).parent,
+                workflow_activity_id=workflow_activity_id,
+                workflow_start=workflow_start,
+                workflow_end=workflow_end,
+                runtime_environment=runtime_environment_snapshot,
+                associated_activities=associated_activities,
+                workflow_site=workflow_site,
+                workflow_instrument=workflow_instrument,
+                logger=logger,
             )
-            file.write("=" * 80 + "\n")
-            file.write(f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n")
 
 
-def _read_application_configuration(configuration_file, steps, logger):
+def _read_application_configuration(configuration_file, steps, logger, workflow_activity_id=None):
     """
     Read application configuration from file and modify for setting workflows.
 
@@ -78,10 +120,15 @@ def _read_application_configuration(configuration_file, steps, logger):
         Runtime environment configuration.
     Path
         Path to the log file.
+    str
+        Workflow activity id.
 
     """
     job_configuration = ascii_handler.collect_data_from_file(configuration_file)
     configurations = job_configuration.get("applications")
+    workflow_activity_id = (
+        job_configuration.get("activity_id") or workflow_activity_id or gen.uuid()
+    )
     output_path, setting_workflow = _set_input_output_directories(configuration_file)
     logger.info(f"Setting workflow output path to {output_path}")
     for step_count, config in enumerate(configurations, start=1):
@@ -92,13 +139,54 @@ def _read_application_configuration(configuration_file, steps, logger):
             output_path,
             setting_workflow,
         )
+        if config["configuration"].get("activity_id") is None:
+            config["configuration"]["activity_id"] = workflow_activity_id
         configurations[step_count - 1] = config
 
     return (
         configurations,
         job_configuration.get("runtime_environment"),
         output_path / "simtools.log",
+        workflow_activity_id,
     )
+
+
+def _write_workflow_metadata(
+    args_dict,
+    output_path,
+    workflow_activity_id,
+    workflow_start,
+    workflow_end,
+    runtime_environment,
+    associated_activities,
+    workflow_site,
+    workflow_instrument,
+    logger,
+):
+    """Write workflow-level metadata with authoritative lifecycle timestamps."""
+    metadata_args = dict(args_dict)
+    metadata_args["label"] = "setting_workflow"
+    metadata_args["activity_id"] = workflow_activity_id
+    metadata_args["activity_start"] = workflow_start.isoformat(timespec="seconds")
+    metadata_args["activity_end"] = workflow_end.isoformat(timespec="seconds")
+    metadata_args["runtime_environment"] = deepcopy(runtime_environment)
+    metadata_args["associated_activities"] = deepcopy(associated_activities)
+    metadata_args["site"] = workflow_site
+    metadata_args["instrument"] = workflow_instrument
+    metadata_args["output_file"] = str(Path(output_path) / "workflow_metadata.yml")
+
+    collector = MetadataCollector(metadata_args, clean_meta=False)
+    metadata_file = collector.write(metadata_args["output_file"], add_activity_name=True)
+    logger.info(f"Writing workflow metadata to {metadata_file}")
+
+
+def _get_workflow_configuration_value(configurations, key):
+    """Return first non-empty configuration value for a given key."""
+    for config in configurations:
+        value = config.get("configuration", {}).get(key)
+        if value is not None:
+            return value
+    return None
 
 
 def _replace_placeholders_in_configuration(

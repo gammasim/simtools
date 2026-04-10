@@ -8,6 +8,7 @@ implementation of the observatory metadata model.
 
 import getpass
 import logging
+from copy import deepcopy
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -93,8 +94,8 @@ class MetadataCollector:
 
         """
         try:
-            self.top_level_meta[self.observatory]["activity"]["end"] = (
-                gen.now_date_time_in_isoformat()
+            self.top_level_meta[self.observatory]["activity"]["end"] = self.args_dict.get(
+                "activity_end", gen.now_date_time_in_isoformat()
             )
         except KeyError:
             pass
@@ -309,6 +310,10 @@ class MetadataCollector:
             except (KeyError, TypeError):
                 self._logger.debug("No input product metadata appended to associated data.")
 
+        associated_activities = self.args_dict.get("associated_activities")
+        if associated_activities is not None and "associated_activities" in context_dict:
+            context_dict["associated_activities"] = deepcopy(associated_activities)
+
     def _read_input_metadata_from_file(self, metadata_file_name_expression=None):
         """
         Read and validate input metadata from file.
@@ -501,10 +506,16 @@ class MetadataCollector:
         activity_dict["name"] = self.args_dict.get("label", None)
         activity_dict["type"] = "software"
         activity_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
-        activity_dict["start"] = gen.now_date_time_in_isoformat()
-        activity_dict["end"] = activity_dict["start"]
+        activity_dict["start"] = self.args_dict.get(
+            "activity_start", gen.now_date_time_in_isoformat()
+        )
+        activity_dict["end"] = self.args_dict.get("activity_end", activity_dict["start"])
         activity_dict["software"]["name"] = "simtools"
         activity_dict["software"]["version"] = simtools.version.__version__
+        if "runtime_environment" in activity_dict:
+            activity_dict["runtime_environment"] = deepcopy(
+                self.args_dict.get("runtime_environment")
+            )
 
     def _merge_config_dicts(self, dict_high, dict_low, add_new_fields=False):
         """
