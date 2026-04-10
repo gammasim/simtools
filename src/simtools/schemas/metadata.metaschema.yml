@@ -454,6 +454,14 @@ definitions:
                 format: date-time
               - type: "null"
             default: null
+          runtime_environment:
+            description: |-
+              Runtime environment configuration used to execute this activity.
+            anyOf:
+              - type: "null"
+              - type: object
+                additionalProperties: true
+            default: null
       ###############
       context:
         title: Context
@@ -571,6 +579,33 @@ definitions:
             type: array
             items:
               $ref: '#/definitions/cta/properties/product'
+          associated_activities:
+            title: Associated activities.
+            description: |-
+              Activities associated with this data product.
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              properties:
+                name:
+                  description: |-
+                    Name of the associated activity.
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                  default: null
+                activity_id:
+                  description: |-
+                    Identifier of the associated activity.
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                    - type: number
+                  default: null
+              required:
+                - name
+                - activity_id
 ...
 ---
 $schema: http://json-schema.org/draft-06/schema#
@@ -1028,6 +1063,14 @@ definitions:
                 format: date-time
               - type: "null"
             default: null
+          RUNTIME_ENVIRONMENT:
+            description: |-
+              Runtime environment configuration used to execute this activity.
+            anyOf:
+              - type: "null"
+              - type: object
+                additionalProperties: true
+            default: null
       ###############
       CONTEXT:
         title: Context
@@ -1145,3 +1188,30 @@ definitions:
             type: array
             items:
               $ref: '#/definitions/CTA/properties/PRODUCT'
+          ASSOCIATED_ACTIVITIES:
+            title: Associated activities.
+            description: |-
+              Activities associated with this data product.
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              properties:
+                NAME:
+                  description: |-
+                    Name of the associated activity.
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                  default: null
+                ACTIVITY_ID:
+                  description: |-
+                    Identifier of the associated activity.
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                    - type: number
+                  default: null
+              required:
+                - NAME
+                - ACTIVITY_ID

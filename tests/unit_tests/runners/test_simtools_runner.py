@@ -134,12 +134,16 @@ def test_read_application_configuration_selected_steps(
         lambda config, output_path, setting_workflow: {**config, "output_path": str(output_path)},
     )
 
-    configs, _, _ = simtools_runner._read_application_configuration(
+    configs, _, _, workflow_activity_id = simtools_runner._read_application_configuration(
         DUMMY_CONFIG_FILE, [2], mock_logger
     )
     assert configs[0]["run_application"] is False
     assert configs[1]["run_application"] is True
     assert configs[2]["run_application"] is False
+    assert workflow_activity_id is not None
+    assert configs[0]["configuration"]["activity_id"] == workflow_activity_id
+    assert configs[1]["configuration"]["activity_id"] == workflow_activity_id
+    assert configs[2]["configuration"]["activity_id"] == workflow_activity_id
 
 
 def test_read_application_configuration_empty_applications(
@@ -164,11 +168,12 @@ def test_read_application_configuration_empty_applications(
         lambda config, output_path, setting_workflow: config,
     )
 
-    configs, _, log_file = simtools_runner._read_application_configuration(
+    configs, _, log_file, workflow_activity_id = simtools_runner._read_application_configuration(
         DUMMY_CONFIG_FILE, None, mock_logger
     )
     assert configs == []
     assert isinstance(log_file, Path)
+    assert workflow_activity_id is not None
 
 
 def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
@@ -191,7 +196,11 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     # Patch _read_application_configuration
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._read_application_configuration",
-        mock.Mock(return_value=(mock_configurations, None, log_file_path)),
+        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id")),
+    )
+    workflow_meta_mock = mock.Mock()
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._write_workflow_metadata", workflow_meta_mock
     )
 
     # Patch dependencies.get_version_string
@@ -227,6 +236,54 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     mock_logger.info.assert_any_call("Skipping application: app2")
     mock_logger.info.assert_any_call("Running application: app3")
     version_string_mock.assert_called_once_with([], include_software_versions=False)
+    workflow_meta_mock.assert_called_once()
+
+    associated = workflow_meta_mock.call_args.kwargs["associated_activities"]
+    assert associated == [
+        {"name": "app1", "activity_id": "wf-activity-id"},
+        {"name": "app3", "activity_id": "wf-activity-id"},
+    ]
+    assert workflow_meta_mock.call_args.kwargs["workflow_site"] is None
+    assert workflow_meta_mock.call_args.kwargs["workflow_instrument"] is None
+
+
+def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_test_directory):
+    mock_logger = mock.Mock()
+    mock_args_dict = {
+        "config_file": "dummy_config.yml",
+        "steps": None,
+        "ignore_runtime_environment": False,
+    }
+    mock_configurations = [
+        {
+            "application": "app1",
+            "run_application": True,
+            "configuration": {"site": "North", "telescope": "LSTN-design"},
+        },
+    ]
+    log_file_path = tmp_test_directory / "simtools.log"
+
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._read_application_configuration",
+        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id")),
+    )
+    monkeypatch.setattr(
+        "simtools.dependencies.get_version_string",
+        mock.Mock(return_value="simtools version: 1.2.3\n"),
+    )
+    monkeypatch.setattr(
+        "simtools.job_execution.job_manager.submit",
+        mock.Mock(return_value=mock.Mock(stdout="ok", stderr="")),
+    )
+    workflow_meta_mock = mock.Mock()
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._write_workflow_metadata", workflow_meta_mock
+    )
+
+    simtools_runner.run_applications(mock_args_dict, mock_logger)
+
+    assert workflow_meta_mock.call_args.kwargs["workflow_site"] == "North"
+    assert workflow_meta_mock.call_args.kwargs["workflow_instrument"] == "LSTN-design"
 
 
 def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_directory):
@@ -244,7 +301,7 @@ def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_
 
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._read_application_configuration",
-        mock.Mock(return_value=(mock_configurations, None, log_file_path)),
+        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id")),
     )
     monkeypatch.setattr(
         "simtools.dependencies.get_version_string",
@@ -255,6 +312,7 @@ def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_
         raise JobExecutionError("Job failed")
 
     monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit_failure)
+    monkeypatch.setattr("simtools.runners.simtools_runner._write_workflow_metadata", mock.Mock())
 
     with pytest.raises(JobExecutionError):
         simtools_runner.run_applications(mock_args_dict, mock_logger)
@@ -383,7 +441,9 @@ def test_run_applications_with_runtime_environment_ignored(monkeypatch, tmp_test
 
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._read_application_configuration",
-        mock.Mock(return_value=(mock_configurations, runtime_environment, log_file_path)),
+        mock.Mock(
+            return_value=(mock_configurations, runtime_environment, log_file_path, "wf-activity-id")
+        ),
     )
     monkeypatch.setattr(
         "simtools.dependencies.get_version_string",
@@ -399,6 +459,7 @@ def test_run_applications_with_runtime_environment_ignored(monkeypatch, tmp_test
         return result_mock
 
     monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit)
+    monkeypatch.setattr("simtools.runners.simtools_runner._write_workflow_metadata", mock.Mock())
 
     simtools_runner.run_applications(mock_args_dict, mock_logger)
 
@@ -460,7 +521,7 @@ def test_run_applications_with_empty_configuration_list(monkeypatch, tmp_test_di
 
     monkeypatch.setattr(
         "simtools.runners.simtools_runner._read_application_configuration",
-        mock.Mock(return_value=([], None, log_file_path)),
+        mock.Mock(return_value=([], None, log_file_path, "wf-activity-id")),
     )
     monkeypatch.setattr(
         "simtools.dependencies.get_version_string",
@@ -470,6 +531,7 @@ def test_run_applications_with_empty_configuration_list(monkeypatch, tmp_test_di
     # Should not call job_manager.submit at all
     mock_submit = mock.Mock()
     monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit)
+    monkeypatch.setattr("simtools.runners.simtools_runner._write_workflow_metadata", mock.Mock())
 
     simtools_runner.run_applications(mock_args_dict, mock_logger)
 
@@ -516,3 +578,42 @@ def test_pull_image_raises_if_pull_fails(monkeypatch):
 
     with pytest.raises(RuntimeError, match="Failed to pull image"):
         simtools_runner._pull_image("podman", image)
+
+
+def test_write_workflow_metadata_uses_uncleaned_metadata(monkeypatch):
+    mock_logger = mock.Mock()
+    mock_collector = mock.Mock()
+    mock_collector.write.return_value = "output/workflow_metadata.setting_workflow.meta.yml"
+    metadata_collector_cls = mock.Mock(return_value=mock_collector)
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.MetadataCollector", metadata_collector_cls
+    )
+
+    simtools_runner._write_workflow_metadata(
+        args_dict={"config_file": "dummy.yml"},
+        output_path=Path("output/test_workflow"),
+        workflow_activity_id="wf-id",
+        workflow_start=mock.Mock(isoformat=mock.Mock(return_value="2026-01-01T00:00:00+00:00")),
+        workflow_end=mock.Mock(isoformat=mock.Mock(return_value="2026-01-01T00:00:01+00:00")),
+        runtime_environment={"image": "test-image"},
+        associated_activities=[{"name": "app", "activity_id": "wf-id"}],
+        workflow_site="North",
+        workflow_instrument="LSTN-design",
+        logger=mock_logger,
+    )
+
+    metadata_collector_cls.assert_called_once()
+    assert metadata_collector_cls.call_args.args[0]["activity_id"] == "wf-id"
+    assert metadata_collector_cls.call_args.args[0]["site"] == "North"
+    assert metadata_collector_cls.call_args.args[0]["instrument"] == "LSTN-design"
+    assert metadata_collector_cls.call_args.kwargs["clean_meta"] is False
+    mock_collector.write.assert_called_once()
+
+
+def test_get_workflow_configuration_value():
+    configurations = [
+        {"configuration": {"site": None}},
+        {"configuration": {"site": "North"}},
+    ]
+    assert simtools_runner._get_workflow_configuration_value(configurations, "site") == "North"
+    assert simtools_runner._get_workflow_configuration_value(configurations, "instrument") is None
