@@ -50,6 +50,13 @@ Data products ingested or produced by simtools generally follows the CTAO data m
    :members:
 ```
 
+## workflow_metadata
+
+```{eval-rst}
+.. automodule:: data_model.workflow_metadata
+   :members:
+```
+
 (datamodelschema)=
 
 ## schema
