@@ -100,7 +100,7 @@ def main():
         },
     )
 
-    simtools_runner.run_applications(app_context.args, app_context.logger)
+    simtools_runner.run_applications(app_context.args)
 
 
 if __name__ == "__main__":

@@ -179,7 +179,6 @@ def test_read_application_configuration_empty_applications(
 
 def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     # Prepare mocks
-    mock_logger = mock.Mock()
     mock_args_dict = {
         "config_file": "dummy_config.yml",
         "steps": None,
@@ -235,7 +234,7 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
 
     monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit)
 
-    simtools_runner.run_applications(mock_args_dict, mock_logger)
+    simtools_runner.run_applications(mock_args_dict)
 
     # Check log file contents
     with log_file_path.open("r", encoding="utf-8") as f:
@@ -250,17 +249,12 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     assert "STDERR:\napp3_stderr" in content
     assert "Application: app2" not in content  # skipped
 
-    # Check logger calls
-    mock_logger.info.assert_any_call("Running application: app1")
-    mock_logger.info.assert_any_call("Skipping application: app2")
-    mock_logger.info.assert_any_call("Running application: app3")
     version_string_mock.assert_called_once_with([], include_software_versions=False)
     workflow_build_mock.assert_not_called()
     workflow_update_mock.assert_not_called()
 
 
 def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_test_directory):
-    mock_logger = mock.Mock()
     mock_args_dict = {
         "config_file": "dummy_config.yml",
         "steps": None,
@@ -305,15 +299,14 @@ def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_te
         workflow_update_mock,
     )
 
-    simtools_runner.run_applications(mock_args_dict, mock_logger)
+    simtools_runner.run_applications(mock_args_dict)
 
-    assert workflow_build_mock.call_args.kwargs["workflow_site"] == "North"
-    assert workflow_build_mock.call_args.kwargs["workflow_instrument"] == "LSTN-design"
+    assert workflow_build_mock.call_args.kwargs["workflow_context"]["site"] == "North"
+    assert workflow_build_mock.call_args.kwargs["workflow_context"]["instrument"] == "LSTN-design"
     workflow_update_mock.assert_called_once()
 
 
 def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_directory):
-    mock_logger = mock.Mock()
     mock_args_dict = {
         "config_file": "dummy_config.yml",
         "steps": None,
@@ -348,7 +341,7 @@ def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_
     )
 
     with pytest.raises(JobExecutionError):
-        simtools_runner.run_applications(mock_args_dict, mock_logger)
+        simtools_runner.run_applications(mock_args_dict)
 
 
 # Note: _convert_dict_to_args is now handled by job_manager module
@@ -459,7 +452,6 @@ def test_read_runtime_environment_with_missing_options(monkeypatch):
 
 def test_run_applications_with_runtime_environment_ignored(monkeypatch, tmp_test_directory):
     """Test that runtime environment is ignored when ignore_runtime_environment is True."""
-    mock_logger = mock.Mock()
     mock_args_dict = {
         "config_file": "dummy_config.yml",
         "steps": [1],
@@ -501,7 +493,7 @@ def test_run_applications_with_runtime_environment_ignored(monkeypatch, tmp_test
         mock.Mock(),
     )
 
-    simtools_runner.run_applications(mock_args_dict, mock_logger)
+    simtools_runner.run_applications(mock_args_dict)
 
 
 def test_read_runtime_environment_error_handling(monkeypatch):
@@ -550,7 +542,6 @@ def test_read_runtime_environment_with_env_file_and_options(monkeypatch):
 
 def test_run_applications_with_empty_configuration_list(monkeypatch, tmp_test_directory):
     """Test run_applications with empty configuration list."""
-    mock_logger = mock.Mock()
     mock_args_dict = {
         "config_file": "empty_config.yml",
         "steps": None,
@@ -580,7 +571,7 @@ def test_run_applications_with_empty_configuration_list(monkeypatch, tmp_test_di
         mock.Mock(),
     )
 
-    simtools_runner.run_applications(mock_args_dict, mock_logger)
+    simtools_runner.run_applications(mock_args_dict)
 
     # Check log file was created with version info
     with log_file_path.open("r", encoding="utf-8") as f:
@@ -685,7 +676,42 @@ def test_read_application_configuration_prefers_path_uuid7(
     _, _, _, workflow_activity_id = simtools_runner._read_application_configuration(
         configuration_file,
         steps=None,
-        logger=mock_logger,
+        workflow_activity_id="generated-by-run-application",
+    )
+
+    assert workflow_activity_id == path_uuid
+
+
+def test_read_application_configuration_ignores_top_level_activity_id(
+    monkeypatch,
+    mock_set_input_output_directories,
+    mock_change_dict_keys_case,
+):
+    path_uuid = "019d776b-e24c-741d-bc05-e3f6f7ec77c7"
+    configuration_file = f"input/test/workflow/{path_uuid}/config.yml"
+
+    monkeypatch.setattr(
+        "simtools.io.ascii_handler.collect_data_from_file",
+        mock.Mock(
+            return_value={
+                "activity_id": "workflow-yaml-activity-id",
+                "applications": [{"application": "app1", "configuration": {}}],
+            }
+        ),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._set_input_output_directories",
+        mock_set_input_output_directories,
+    )
+    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
+        lambda config, output_path, setting_workflow: config,
+    )
+
+    _, _, _, workflow_activity_id = simtools_runner._read_application_configuration(
+        configuration_file,
+        steps=None,
         workflow_activity_id="generated-by-run-application",
     )
 

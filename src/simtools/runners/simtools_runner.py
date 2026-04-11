@@ -1,5 +1,6 @@
 """Tools for running applications in the simtools framework."""
 
+import logging
 import shutil
 from copy import deepcopy
 from datetime import UTC, datetime
@@ -11,8 +12,10 @@ from simtools.data_model import workflow_metadata
 from simtools.io import ascii_handler
 from simtools.job_execution import job_manager
 
+logger = logging.getLogger(__name__)
 
-def run_applications(args_dict, logger):
+
+def run_applications(args_dict):
     """
     Run simtools applications step-by-step as defined in a configuration file.
 
@@ -20,8 +23,6 @@ def run_applications(args_dict, logger):
     ----------
     args_dict : dict
         Dictionary containing command line arguments.
-    logger : logging.Logger
-        Logger for logging application output.
     """
     (
         configurations,
@@ -31,16 +32,11 @@ def run_applications(args_dict, logger):
     ) = _read_application_configuration(
         args_dict["config_file"],
         args_dict.get("steps"),
-        logger,
         args_dict.get("activity_id"),
     )
     workflow_start = datetime.now(UTC)
     associated_activities = []
     runtime_environment_snapshot = deepcopy(runtime_environment)
-    workflow_site = _get_workflow_configuration_value(configurations, "site")
-    workflow_instrument = _get_workflow_configuration_value(configurations, "instrument")
-    if workflow_instrument is None:
-        workflow_instrument = _get_workflow_configuration_value(configurations, "telescope")
     model_parameter_metadata_files = []
 
     run_time = (
@@ -80,28 +76,24 @@ def run_applications(args_dict, logger):
                     f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
                 )
         finally:
-            workflow_end = datetime.now(UTC)
-            workflow_end = max(workflow_end, workflow_start)
             if model_parameter_metadata_files:
                 workflow_activity = workflow_metadata.build_workflow_activity_metadata(
                     args_dict=args_dict,
                     workflow_activity_id=workflow_activity_id,
                     workflow_start=workflow_start,
-                    workflow_end=workflow_end,
+                    workflow_end=max(datetime.now(UTC), workflow_start),
                     runtime_environment=runtime_environment_snapshot,
-                    workflow_site=workflow_site,
-                    workflow_instrument=workflow_instrument,
+                    workflow_context=_get_workflow_context(configurations),
                 )
                 for metadata_file in model_parameter_metadata_files:
                     workflow_metadata.update_model_parameter_metadata_file(
                         metadata_file=metadata_file,
                         workflow_activity=workflow_activity,
                         associated_activities=associated_activities,
-                        logger=logger,
                     )
 
 
-def _read_application_configuration(configuration_file, steps, logger, workflow_activity_id=None):
+def _read_application_configuration(configuration_file, steps, workflow_activity_id=None):
     """
     Read application configuration from file and modify for setting workflows.
 
@@ -118,8 +110,8 @@ def _read_application_configuration(configuration_file, steps, logger, workflow_
         Configuration file name.
     steps : list
         List of steps to be executed (None: all steps).
-    logger : Logger
-        Logger object.
+    workflow_activity_id : str
+        Workflow activity id fallback from command-line context.
 
     Returns
     -------
@@ -134,15 +126,11 @@ def _read_application_configuration(configuration_file, steps, logger, workflow_
 
     """
     job_configuration = ascii_handler.collect_data_from_file(configuration_file)
-    configurations = job_configuration.get("applications")
-    path_activity_id = gen.extract_uuid7_from_path(configuration_file)
     workflow_activity_id = (
-        job_configuration.get("activity_id")
-        or path_activity_id
-        or workflow_activity_id
-        or gen.uuid()
+        gen.extract_uuid7_from_path(configuration_file) or workflow_activity_id or gen.uuid()
     )
     output_path, setting_workflow = _set_input_output_directories(configuration_file)
+    configurations = job_configuration.get("applications")
     logger.info(f"Setting workflow output path to {output_path}")
     for step_count, config in enumerate(configurations, start=1):
         config["run_application"] = step_count in steps if steps else True
@@ -185,6 +173,26 @@ def _get_workflow_configuration_value(configurations, key):
         if value is not None:
             return value
     return None
+
+
+def _get_workflow_context(configurations):
+    """Extract workflow context (site, instrument) from configurations.
+
+    Parameters
+    ----------
+    configurations : list
+        List of application configurations.
+
+    Returns
+    -------
+    dict
+        Context dict with 'site' and 'instrument' keys.
+    """
+    return {
+        "site": _get_workflow_configuration_value(configurations, "site"),
+        "instrument": _get_workflow_configuration_value(configurations, "instrument")
+        or _get_workflow_configuration_value(configurations, "telescope"),
+    }
 
 
 def _replace_placeholders_in_configuration(
