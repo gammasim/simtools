@@ -693,7 +693,7 @@ def test_setup_logging_with_file_handler(tmp_path):
         assert log_file.exists()
         content = log_file.read_text()
         assert "Test message" in content
-        assert config.application_id in content
+        assert config.activity_id in content
     finally:
         for handler in list(logger.handlers):
             handler.close()
