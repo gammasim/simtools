@@ -7,6 +7,7 @@ from unittest import mock
 import pytest
 import yaml
 
+import simtools.utils.general as gen
 from simtools.job_execution.job_manager import JobExecutionError
 from simtools.runners import simtools_runner
 
@@ -706,3 +707,45 @@ def test_get_workflow_configuration_value():
     ]
     assert simtools_runner._get_workflow_configuration_value(configurations, "site") == "North"
     assert simtools_runner._get_workflow_configuration_value(configurations, "instrument") is None
+
+
+def test_extract_uuid7_from_configuration_path():
+    config_file = (
+        "input/LSTN-design/pm_photoelectron_spectrum/"
+        "019d776b-e24c-741d-bc05-e3f6f7ec77c7/config.yml"
+    )
+    extracted = gen.extract_uuid7_from_path(config_file)
+    assert extracted == "019d776b-e24c-741d-bc05-e3f6f7ec77c7"
+
+
+def test_read_application_configuration_prefers_path_uuid7(
+    monkeypatch,
+    mock_logger,
+    mock_set_input_output_directories,
+    mock_change_dict_keys_case,
+):
+    path_uuid = "019d776b-e24c-741d-bc05-e3f6f7ec77c7"
+    configuration_file = f"input/test/workflow/{path_uuid}/config.yml"
+
+    monkeypatch.setattr(
+        "simtools.io.ascii_handler.collect_data_from_file",
+        mock.Mock(return_value={"applications": [{"application": "app1", "configuration": {}}]}),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._set_input_output_directories",
+        mock_set_input_output_directories,
+    )
+    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
+        lambda config, output_path, setting_workflow: config,
+    )
+
+    _, _, _, workflow_activity_id = simtools_runner._read_application_configuration(
+        configuration_file,
+        steps=None,
+        logger=mock_logger,
+        workflow_activity_id="generated-by-run-application",
+    )
+
+    assert workflow_activity_id == path_uuid

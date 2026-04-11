@@ -43,6 +43,9 @@ class _Config:
         """
         self._args = MappingProxyType(args) if args is not None else {}
         self._db_config = MappingProxyType(db_config) if db_config is not None else {}
+        self.activity_id = args.get("activity_id") if args is not None else None
+        if self.activity_id is None:
+            self.activity_id = uuid()
         self._sim_telarray_path = (
             args.get("sim_telarray_path")
             if args is not None and "sim_telarray_path" in args
