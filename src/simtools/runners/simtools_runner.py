@@ -82,7 +82,11 @@ def run_applications(args_dict):
                     workflow_activity_id=workflow_activity_id,
                     workflow_start=workflow_start,
                     workflow_end=max(datetime.now(UTC), workflow_start),
-                    runtime_environment=runtime_environment_snapshot,
+                    runtime_environment=(
+                        runtime_environment_snapshot
+                        if not args_dict["ignore_runtime_environment"]
+                        else None
+                    ),
                     workflow_context=_get_workflow_context(configurations),
                 )
                 for metadata_file in model_parameter_metadata_files:
