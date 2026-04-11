@@ -59,7 +59,7 @@ def setup_logging(logger_name=None, log_level="INFO", log_file=None):
         if log_file_path.parent:
             log_file_path.parent.mkdir(parents=True, exist_ok=True)
         file_format = logging.Formatter(
-            f"{config.application_id} - %(name)s - %(levelname)s - %(message)s"
+            f"{config.activity_id} - %(name)s - %(levelname)s - %(message)s"
         )
         file_handler = logging.FileHandler(log_file_path)
         file_handler.setFormatter(file_format)
@@ -86,7 +86,7 @@ def get_log_file(args_dict):
     if args_dict.get("application_label") is None or args_dict.get("output_path") is None:
         return None
 
-    log_file = f"{args_dict['application_label']}_{config.application_id}.log"
+    log_file = f"{args_dict['application_label']}_{config.activity_id}.log"
     Path(args_dict["output_path"]).mkdir(parents=True, exist_ok=True)
     return Path(args_dict["output_path"]) / log_file
 
@@ -292,7 +292,7 @@ def startup_application(
     logger = setup_logging(logger_name, args_dict["log_level"], log_file=get_log_file(args_dict))
     logger.info(
         f"simtools application {args_dict.get('application_label')}"
-        f" started with application ID {config.application_id}"
+        f" started with application ID {config.activity_id}"
     )
 
     io_handler_instance = io_handler.IOHandler() if setup_io_handler else None

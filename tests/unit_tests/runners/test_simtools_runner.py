@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
+import yaml
 
 from simtools.job_execution.job_manager import JobExecutionError
 from simtools.runners import simtools_runner
@@ -141,9 +142,9 @@ def test_read_application_configuration_selected_steps(
     assert configs[1]["run_application"] is True
     assert configs[2]["run_application"] is False
     assert workflow_activity_id is not None
-    assert configs[0]["configuration"]["activity_id"] == workflow_activity_id
-    assert configs[1]["configuration"]["activity_id"] == workflow_activity_id
-    assert configs[2]["configuration"]["activity_id"] == workflow_activity_id
+    assert configs[0]["configuration"]["activity_id"] is not None
+    assert configs[1]["configuration"]["activity_id"] is not None
+    assert configs[2]["configuration"]["activity_id"] is not None
 
 
 def test_read_application_configuration_empty_applications(
@@ -187,9 +188,21 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
 
     # Prepare configurations returned by _read_application_configuration
     mock_configurations = [
-        {"application": "app1", "run_application": True, "configuration": {"key": "value1"}},
-        {"application": "app2", "run_application": False, "configuration": {"key": "value2"}},
-        {"application": "app3", "run_application": True, "configuration": {"key": "value3"}},
+        {
+            "application": "app1",
+            "run_application": True,
+            "configuration": {"key": "value1", "activity_id": "cfg-id-1"},
+        },
+        {
+            "application": "app2",
+            "run_application": False,
+            "configuration": {"key": "value2", "activity_id": "cfg-id-2"},
+        },
+        {
+            "application": "app3",
+            "run_application": True,
+            "configuration": {"key": "value3", "activity_id": "cfg-id-3"},
+        },
     ]
     log_file_path = tmp_test_directory / "simtools.log"
 
@@ -198,9 +211,14 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
         "simtools.runners.simtools_runner._read_application_configuration",
         mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id")),
     )
-    workflow_meta_mock = mock.Mock()
+    workflow_build_mock = mock.Mock(return_value={"activity": {"id": "wf-activity-id"}})
+    workflow_update_mock = mock.Mock()
     monkeypatch.setattr(
-        "simtools.runners.simtools_runner._write_workflow_metadata", workflow_meta_mock
+        "simtools.runners.simtools_runner._build_workflow_metadata", workflow_build_mock
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._update_model_parameter_metadata_files",
+        workflow_update_mock,
     )
 
     # Patch dependencies.get_version_string
@@ -236,15 +254,15 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     mock_logger.info.assert_any_call("Skipping application: app2")
     mock_logger.info.assert_any_call("Running application: app3")
     version_string_mock.assert_called_once_with([], include_software_versions=False)
-    workflow_meta_mock.assert_called_once()
+    workflow_build_mock.assert_called_once()
+    workflow_update_mock.assert_called_once()
 
-    associated = workflow_meta_mock.call_args.kwargs["associated_activities"]
+    associated = workflow_update_mock.call_args.kwargs["associated_activities"]
     assert associated == [
-        {"name": "app1", "activity_id": "wf-activity-id"},
-        {"name": "app3", "activity_id": "wf-activity-id"},
+        {"name": "app1", "activity_id": "cfg-id-1"},
+        {"name": "app3", "activity_id": "cfg-id-3"},
     ]
-    assert workflow_meta_mock.call_args.kwargs["workflow_site"] is None
-    assert workflow_meta_mock.call_args.kwargs["workflow_instrument"] is None
+    assert workflow_update_mock.call_args.kwargs["model_parameter_metadata_files"] == []
 
 
 def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_test_directory):
@@ -258,7 +276,11 @@ def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_te
         {
             "application": "app1",
             "run_application": True,
-            "configuration": {"site": "North", "telescope": "LSTN-design"},
+            "configuration": {
+                "site": "North",
+                "telescope": "LSTN-design",
+                "activity_id": "cfg-id-1",
+            },
         },
     ]
     log_file_path = tmp_test_directory / "simtools.log"
@@ -275,15 +297,20 @@ def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_te
         "simtools.job_execution.job_manager.submit",
         mock.Mock(return_value=mock.Mock(stdout="ok", stderr="")),
     )
-    workflow_meta_mock = mock.Mock()
+    workflow_build_mock = mock.Mock(return_value={"activity": {"id": "wf-activity-id"}})
+    workflow_update_mock = mock.Mock()
     monkeypatch.setattr(
-        "simtools.runners.simtools_runner._write_workflow_metadata", workflow_meta_mock
+        "simtools.runners.simtools_runner._build_workflow_metadata", workflow_build_mock
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._update_model_parameter_metadata_files",
+        workflow_update_mock,
     )
 
     simtools_runner.run_applications(mock_args_dict, mock_logger)
 
-    assert workflow_meta_mock.call_args.kwargs["workflow_site"] == "North"
-    assert workflow_meta_mock.call_args.kwargs["workflow_instrument"] == "LSTN-design"
+    assert workflow_build_mock.call_args.kwargs["workflow_site"] == "North"
+    assert workflow_build_mock.call_args.kwargs["workflow_instrument"] == "LSTN-design"
 
 
 def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_directory):
@@ -312,7 +339,13 @@ def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_
         raise JobExecutionError("Job failed")
 
     monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit_failure)
-    monkeypatch.setattr("simtools.runners.simtools_runner._write_workflow_metadata", mock.Mock())
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._build_workflow_metadata",
+        mock.Mock(return_value={"activity": {"id": "wf-activity-id"}}),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._update_model_parameter_metadata_files", mock.Mock()
+    )
 
     with pytest.raises(JobExecutionError):
         simtools_runner.run_applications(mock_args_dict, mock_logger)
@@ -459,7 +492,13 @@ def test_run_applications_with_runtime_environment_ignored(monkeypatch, tmp_test
         return result_mock
 
     monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit)
-    monkeypatch.setattr("simtools.runners.simtools_runner._write_workflow_metadata", mock.Mock())
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._build_workflow_metadata",
+        mock.Mock(return_value={"activity": {"id": "wf-activity-id"}}),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._update_model_parameter_metadata_files", mock.Mock()
+    )
 
     simtools_runner.run_applications(mock_args_dict, mock_logger)
 
@@ -531,7 +570,13 @@ def test_run_applications_with_empty_configuration_list(monkeypatch, tmp_test_di
     # Should not call job_manager.submit at all
     mock_submit = mock.Mock()
     monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit)
-    monkeypatch.setattr("simtools.runners.simtools_runner._write_workflow_metadata", mock.Mock())
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._build_workflow_metadata",
+        mock.Mock(return_value={"activity": {"id": "wf-activity-id"}}),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._update_model_parameter_metadata_files", mock.Mock()
+    )
 
     simtools_runner.run_applications(mock_args_dict, mock_logger)
 
@@ -580,26 +625,22 @@ def test_pull_image_raises_if_pull_fails(monkeypatch):
         simtools_runner._pull_image("podman", image)
 
 
-def test_write_workflow_metadata_uses_uncleaned_metadata(monkeypatch):
-    mock_logger = mock.Mock()
+def test_build_workflow_metadata_uses_uncleaned_metadata(monkeypatch):
     mock_collector = mock.Mock()
-    mock_collector.write.return_value = "output/workflow_metadata.setting_workflow.meta.yml"
+    mock_collector.get_top_level_metadata.return_value = {"cta": {"activity": {"id": "wf-id"}}}
     metadata_collector_cls = mock.Mock(return_value=mock_collector)
     monkeypatch.setattr(
         "simtools.runners.simtools_runner.MetadataCollector", metadata_collector_cls
     )
 
-    simtools_runner._write_workflow_metadata(
+    metadata = simtools_runner._build_workflow_metadata(
         args_dict={"config_file": "dummy.yml"},
-        output_path=Path("output/test_workflow"),
         workflow_activity_id="wf-id",
         workflow_start=mock.Mock(isoformat=mock.Mock(return_value="2026-01-01T00:00:00+00:00")),
         workflow_end=mock.Mock(isoformat=mock.Mock(return_value="2026-01-01T00:00:01+00:00")),
         runtime_environment={"image": "test-image"},
-        associated_activities=[{"name": "app", "activity_id": "wf-id"}],
         workflow_site="North",
         workflow_instrument="LSTN-design",
-        logger=mock_logger,
     )
 
     metadata_collector_cls.assert_called_once()
@@ -607,7 +648,55 @@ def test_write_workflow_metadata_uses_uncleaned_metadata(monkeypatch):
     assert metadata_collector_cls.call_args.args[0]["site"] == "North"
     assert metadata_collector_cls.call_args.args[0]["instrument"] == "LSTN-design"
     assert metadata_collector_cls.call_args.kwargs["clean_meta"] is False
-    mock_collector.write.assert_called_once()
+    assert metadata == {"activity": {"id": "wf-id"}}
+
+
+def test_get_model_parameter_metadata_file():
+    config = {
+        "output_path": "output/test",
+        "parameter": "pm_photoelectron_spectrum",
+        "parameter_version": "2.0.1",
+    }
+    metadata_file = simtools_runner._get_model_parameter_metadata_file(
+        "simtools-submit-model-parameter-from-external", config
+    )
+    assert metadata_file == Path(
+        "output/test/pm_photoelectron_spectrum/pm_photoelectron_spectrum-2.0.1.meta.yml"
+    )
+
+
+def test_update_model_parameter_metadata_files(tmp_test_directory):
+    metadata_file = tmp_test_directory / "pm.meta.yml"
+    metadata_dict = {
+        "cta": {
+            "product": {"id": "prod-id"},
+            "activity": {"id": "old-id"},
+            "context": {"associated_activities": [{"name": "old", "activity_id": "old-id"}]},
+        }
+    }
+
+    metadata_file.write_text(yaml.safe_dump(metadata_dict), encoding="utf-8")
+    workflow_metadata = {"activity": {"id": "workflow-id", "name": "setting_workflow"}}
+    associated_activities = [
+        {"name": "app1", "activity_id": "a1"},
+        {"name": "app2", "activity_id": "a2"},
+    ]
+
+    simtools_runner._update_model_parameter_metadata_files(
+        model_parameter_metadata_files=[metadata_file],
+        workflow_metadata=workflow_metadata,
+        associated_activities=associated_activities,
+        logger=mock.Mock(),
+    )
+
+    updated = yaml.safe_load(metadata_file.read_text(encoding="utf-8"))
+    assert updated["cta"]["product"]["id"] == "prod-id"
+    assert updated["cta"]["activity"]["id"] == "workflow-id"
+    assert updated["cta"]["context"]["associated_activities"] == [
+        {"name": "old", "activity_id": "old-id"},
+        {"name": "app1", "activity_id": "a1"},
+        {"name": "app2", "activity_id": "a2"},
+    ]
 
 
 def test_get_workflow_configuration_value():

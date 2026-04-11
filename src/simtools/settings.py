@@ -22,7 +22,7 @@ class _Config:
         self._corsika_exe = None
         self.user = os.getenv("USER", "unknown")
         self.hostname = socket.gethostname()
-        self.application_id = uuid()
+        self.activity_id = uuid()
 
     def load(self, args=None, db_config=None, resolve_sim_software_executables=True):
         """
