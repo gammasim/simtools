@@ -22,8 +22,7 @@ def test_build_workflow_activity_metadata_uses_uncleaned_metadata(monkeypatch):
         workflow_start=mock.Mock(isoformat=mock.Mock(return_value="2026-01-01T00:00:00+00:00")),
         workflow_end=mock.Mock(isoformat=mock.Mock(return_value="2026-01-01T00:00:01+00:00")),
         runtime_environment={"image": "test-image"},
-        workflow_site="North",
-        workflow_instrument="LSTN-design",
+        workflow_context={"site": "North", "instrument": "LSTN-design"},
     )
 
     metadata_collector_cls.assert_called_once()
@@ -55,7 +54,6 @@ def test_update_model_parameter_metadata_file(tmp_test_directory):
         metadata_file=metadata_file,
         workflow_activity=workflow_activity,
         associated_activities=associated_activities,
-        logger=mock.Mock(),
     )
 
     updated = yaml.safe_load(metadata_file.read_text(encoding="utf-8"))
@@ -69,11 +67,8 @@ def test_update_model_parameter_metadata_file(tmp_test_directory):
 
 
 def test_update_model_parameter_metadata_file_missing_file():
-    logger = mock.Mock()
     workflow_metadata.update_model_parameter_metadata_file(
         metadata_file=Path("missing.meta.yml"),
         workflow_activity={"id": "workflow-id"},
         associated_activities=[],
-        logger=logger,
     )
-    logger.debug.assert_called_once()

@@ -1,11 +1,14 @@
 """Utilities for workflow-level metadata propagation into model-parameter metadata files."""
 
+import logging
 from copy import deepcopy
 from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler
+
+logger = logging.getLogger(__name__)
 
 
 def build_workflow_activity_metadata(
@@ -14,8 +17,7 @@ def build_workflow_activity_metadata(
     workflow_start,
     workflow_end,
     runtime_environment,
-    workflow_site,
-    workflow_instrument,
+    workflow_context,
 ):
     """Build workflow activity metadata from workflow execution context.
 
@@ -31,10 +33,8 @@ def build_workflow_activity_metadata(
         End time of the workflow.
     runtime_environment : dict or None
         Runtime environment definition used for the workflow.
-    workflow_site : str or None
-        Site associated with the workflow.
-    workflow_instrument : str or None
-        Instrument associated with the workflow.
+    workflow_context : dict
+        Context with keys 'site' and 'instrument' for the workflow.
 
     Returns
     -------
@@ -47,8 +47,8 @@ def build_workflow_activity_metadata(
     metadata_args["activity_start"] = workflow_start.isoformat(timespec="seconds")
     metadata_args["activity_end"] = workflow_end.isoformat(timespec="seconds")
     metadata_args["runtime_environment"] = deepcopy(runtime_environment)
-    metadata_args["site"] = workflow_site
-    metadata_args["instrument"] = workflow_instrument
+    metadata_args["site"] = workflow_context.get("site")
+    metadata_args["instrument"] = workflow_context.get("instrument")
 
     collector = MetadataCollector(metadata_args, clean_meta=False)
     return collector.get_top_level_metadata().get("cta", {}).get("activity", {})
@@ -58,7 +58,6 @@ def update_model_parameter_metadata_file(
     metadata_file,
     workflow_activity,
     associated_activities,
-    logger,
 ):
     """Inject workflow metadata into a model-parameter metadata file.
 
@@ -70,8 +69,6 @@ def update_model_parameter_metadata_file(
         Workflow activity metadata block to set as top-level activity metadata.
     associated_activities : list
         Ordered activities associated with workflow execution.
-    logger : logging.Logger
-        Logger for progress and debug messages.
 
     Returns
     -------
