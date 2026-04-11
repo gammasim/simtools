@@ -292,7 +292,7 @@ def startup_application(
     logger = setup_logging(logger_name, args_dict["log_level"], log_file=get_log_file(args_dict))
     logger.info(
         f"simtools application {args_dict.get('application_label')}"
-        f" started with application ID {config.activity_id}"
+        f" started with activity ID {config.activity_id}"
     )
 
     io_handler_instance = io_handler.IOHandler() if setup_io_handler else None
