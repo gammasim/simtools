@@ -982,3 +982,26 @@ def uuid():
         A UUID string.
     """
     return str(uuid6.uuid7())
+
+
+def extract_uuid7_from_path(path):
+    """Extract UUID7 from path components if present.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path potentially containing a UUID7 component.
+
+    Returns
+    -------
+    str or None
+        UUID7 string if found, otherwise None.
+    """
+    for path_part in reversed(Path(path).parts):
+        try:
+            candidate = uuid6.UUID(path_part)
+        except (ValueError, TypeError):
+            continue
+        if candidate.version == 7:
+            return str(candidate)
+    return None

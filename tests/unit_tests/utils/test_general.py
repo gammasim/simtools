@@ -568,6 +568,19 @@ def test_now_date_time_in_isoformat():
     assert datetime.datetime.fromisoformat(now) is not None
 
 
+def test_extract_uuid7_from_path():
+    path = (
+        "input/LSTN-design/pm_photoelectron_spectrum/"
+        "019d776b-e24c-741d-bc05-e3f6f7ec77c7/config.yml"
+    )
+    assert gen.extract_uuid7_from_path(path) == "019d776b-e24c-741d-bc05-e3f6f7ec77c7"
+
+
+def test_extract_uuid7_from_path_with_no_uuid7():
+    path = "input/LSTN-design/pm_photoelectron_spectrum/not-a-uuid/config.yml"
+    assert gen.extract_uuid7_from_path(path) is None
+
+
 def test_is_valid_numeric_type():
     """Test _is_valid_numeric_type function."""
     # Test integer dtypes

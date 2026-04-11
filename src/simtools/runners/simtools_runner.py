@@ -133,8 +133,12 @@ def _read_application_configuration(configuration_file, steps, logger, workflow_
     """
     job_configuration = ascii_handler.collect_data_from_file(configuration_file)
     configurations = job_configuration.get("applications")
+    path_activity_id = gen.extract_uuid7_from_path(configuration_file)
     workflow_activity_id = (
-        job_configuration.get("activity_id") or workflow_activity_id or gen.uuid()
+        job_configuration.get("activity_id")
+        or path_activity_id
+        or workflow_activity_id
+        or gen.uuid()
     )
     output_path, setting_workflow = _set_input_output_directories(configuration_file)
     logger.info(f"Setting workflow output path to {output_path}")
