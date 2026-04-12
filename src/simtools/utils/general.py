@@ -1005,3 +1005,64 @@ def extract_uuid7_from_path(path):
         if candidate.version == 7:
             return str(candidate)
     return None
+
+
+def replace_placeholders_recursively(data, replacements):
+    """Replace placeholders recursively in strings nested in dicts/lists.
+
+    Parameters
+    ----------
+    data : dict, list, str, or object
+        Input structure to process.
+    replacements : dict
+        Mapping of placeholder strings to replacement strings.
+
+    Returns
+    -------
+    dict, list, str, or object
+        Processed copy with placeholders replaced in string values.
+    """
+    if isinstance(data, dict):
+        return {
+            key: replace_placeholders_recursively(value, replacements)
+            for key, value in data.items()
+        }
+    if isinstance(data, list):
+        return [replace_placeholders_recursively(item, replacements) for item in data]
+    if isinstance(data, str):
+        for placeholder, replacement in replacements.items():
+            data = data.replace(placeholder, replacement)
+    return data
+
+
+def extract_subdirectories_from_path(path, anchor="input"):
+    """Extract subdirectories in a path after an anchor directory.
+
+    Parameters
+    ----------
+    path : str or Path
+        Path containing an anchor directory and a filename.
+    anchor : str
+        Directory name used as extraction anchor.
+
+    Returns
+    -------
+    str
+        Subdirectory path between anchor and file name, joined with '/'.
+
+    Raises
+    ------
+    ValueError
+        If anchor is not present or no subdirectories are found after the anchor.
+    """
+    path = Path(path).resolve()
+    try:
+        anchor_index = path.parts.index(anchor)
+        subdirs = path.parts[anchor_index + 1 : -1]
+    except (ValueError, IndexError) as exc:
+        raise ValueError(f"Could not find subdirectory under '{anchor}': {exc}") from exc
+
+    if len(subdirs) == 0:
+        raise ValueError(f"Could not find subdirectory under '{anchor}'")
+
+    return "/".join(subdirs)

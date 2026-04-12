@@ -69,6 +69,15 @@ def main():
             PLOT_CONFIG_SCHEMA,
         )
     )
+    if "__SETTING_WORKFLOW__" in str(plot_config):
+        setting_workflow = gen.extract_subdirectories_from_path(
+            app_context.args["plot_config"],
+            anchor="input",
+        )
+        plot_config = gen.replace_placeholders_recursively(
+            plot_config,
+            {"__SETTING_WORKFLOW__": setting_workflow},
+        )
 
     plot_tables.plot(
         config=plot_config["plot"],
