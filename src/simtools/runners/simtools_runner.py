@@ -38,6 +38,7 @@ def run_applications(args_dict):
     associated_activities = []
     runtime_environment_snapshot = deepcopy(runtime_environment)
     model_parameter_metadata_files = []
+    application_counter = 0
 
     run_time = (
         read_runtime_environment(runtime_environment)
@@ -55,9 +56,16 @@ def run_applications(args_dict):
                     logger.info(f"Skipping application: {app}")
                     continue
 
+                application_counter += 1
+
                 app_configuration = config.get("configuration", {})
                 app_activity_id = app_configuration.get("activity_id") or gen.uuid()
                 app_configuration["activity_id"] = app_activity_id
+
+                app_configuration["log_file"] = _get_application_log_file(
+                    app, app_configuration, application_counter
+                )
+
                 associated_activities.append({"name": app, "activity_id": app_activity_id})
 
                 logger.info(f"Running application: {app}")
@@ -154,6 +162,16 @@ def _read_application_configuration(configuration_file, steps, workflow_activity
         output_path / "simtools.log",
         workflow_activity_id,
     )
+
+
+def _get_application_log_file(application, app_configuration, counter):
+    """Return log file path for an application executed via run_applications."""
+    if app_configuration.get("log_file") is not None:
+        return app_configuration["log_file"]
+    output_path = app_configuration.get("output_path")
+    if output_path is None:
+        return None
+    return Path(output_path) / f"{application}-{counter:02d}.log"
 
 
 def _get_model_parameter_metadata_file(application, app_configuration):

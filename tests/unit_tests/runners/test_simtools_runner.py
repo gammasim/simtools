@@ -190,17 +190,29 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
         {
             "application": "app1",
             "run_application": True,
-            "configuration": {"key": "value1", "activity_id": "cfg-id-1"},
+            "configuration": {
+                "key": "value1",
+                "activity_id": "cfg-id-1",
+                "output_path": str(tmp_test_directory),
+            },
         },
         {
             "application": "app2",
             "run_application": False,
-            "configuration": {"key": "value2", "activity_id": "cfg-id-2"},
+            "configuration": {
+                "key": "value2",
+                "activity_id": "cfg-id-2",
+                "output_path": str(tmp_test_directory),
+            },
         },
         {
             "application": "app3",
             "run_application": True,
-            "configuration": {"key": "value3", "activity_id": "cfg-id-3"},
+            "configuration": {
+                "key": "value3",
+                "activity_id": "cfg-id-3",
+                "output_path": str(tmp_test_directory),
+            },
         },
     ]
     log_file_path = tmp_test_directory / "simtools.log"
@@ -226,7 +238,10 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     monkeypatch.setattr("simtools.dependencies.get_version_string", version_string_mock)
 
     # Patch job_manager.submit
+    submit_calls = []
+
     def mock_submit(app, out_file, err_file, configuration=None, runtime_environment=None):
+        submit_calls.append({"app": app, "configuration": configuration})
         result_mock = mock.Mock()
         result_mock.stdout = f"{app}_stdout"
         result_mock.stderr = f"{app}_stderr"
@@ -248,6 +263,12 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     assert "STDOUT:\napp3_stdout" in content
     assert "STDERR:\napp3_stderr" in content
     assert "Application: app2" not in content  # skipped
+
+    assert len(submit_calls) == 2
+    assert submit_calls[0]["configuration"]["activity_id"] == "cfg-id-1"
+    assert submit_calls[1]["configuration"]["activity_id"] == "cfg-id-3"
+    assert submit_calls[0]["configuration"]["log_file"].name == "app1-01.log"
+    assert submit_calls[1]["configuration"]["log_file"].name == "app3-02.log"
 
     version_string_mock.assert_called_once_with([], include_software_versions=False)
     workflow_build_mock.assert_not_called()
@@ -616,6 +637,24 @@ def test_pull_image_raises_if_pull_fails(monkeypatch):
 
     with pytest.raises(RuntimeError, match="Failed to pull image"):
         simtools_runner._pull_image("podman", image)
+
+
+def test_get_application_log_file_no_existing_log_file(tmp_test_directory):
+    app_configuration = {"output_path": str(tmp_test_directory)}
+    result = simtools_runner._get_application_log_file("simtools-derive-psf", app_configuration, 3)
+    assert result == tmp_test_directory / "simtools-derive-psf-03.log"
+
+
+def test_get_application_log_file_returns_existing_log_file(tmp_test_directory):
+    existing = tmp_test_directory / "my_custom.log"
+    app_configuration = {"output_path": str(tmp_test_directory), "log_file": existing}
+    result = simtools_runner._get_application_log_file("simtools-derive-psf", app_configuration, 1)
+    assert result == existing
+
+
+def test_get_application_log_file_returns_none_without_output_path():
+    result = simtools_runner._get_application_log_file("simtools-derive-psf", {}, 1)
+    assert result is None
 
 
 def test_get_model_parameter_metadata_file():
