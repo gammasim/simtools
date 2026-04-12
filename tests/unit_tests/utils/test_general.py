@@ -581,6 +581,36 @@ def test_extract_uuid7_from_path_with_no_uuid7():
     assert gen.extract_uuid7_from_path(path) is None
 
 
+def test_replace_placeholders_recursively():
+    input_data = {
+        "file_name": "__SETTING_WORKFLOW__/table.ecsv",
+        "nested": {"path": "prefix/__SETTING_WORKFLOW__/suffix"},
+        "items": ["__SETTING_WORKFLOW__/a", 1, {"name": "__SETTING_WORKFLOW__/b"}],
+    }
+    expected_output = {
+        "file_name": "LSTN-design/workflow/table.ecsv",
+        "nested": {"path": "prefix/LSTN-design/workflow/suffix"},
+        "items": ["LSTN-design/workflow/a", 1, {"name": "LSTN-design/workflow/b"}],
+    }
+    result = gen.replace_placeholders_recursively(
+        input_data,
+        {"__SETTING_WORKFLOW__": "LSTN-design/workflow"},
+    )
+    assert result == expected_output
+
+
+def test_extract_subdirectories_from_path():
+    path = "input/LSTN-design/pm_photoelectron_spectrum/019d7abc/config.yml"
+    result = gen.extract_subdirectories_from_path(path, anchor="input")
+    assert result == "LSTN-design/pm_photoelectron_spectrum/019d7abc"
+
+
+def test_extract_subdirectories_from_path_missing_anchor_raises():
+    path = "output/LSTN-design/pm_photoelectron_spectrum/019d7abc/config.yml"
+    with pytest.raises(ValueError, match=r"^Could not find subdirectory under 'input'"):
+        gen.extract_subdirectories_from_path(path, anchor="input")
+
+
 def test_is_valid_numeric_type():
     """Test _is_valid_numeric_type function."""
     # Test integer dtypes

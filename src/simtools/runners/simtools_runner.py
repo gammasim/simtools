@@ -239,14 +239,10 @@ def _replace_placeholders_in_configuration(
     dict
         Configuration dictionary with placeholders replaced.
     """
-    for key, value in configuration.items():
-        if isinstance(value, str):
-            configuration[key] = value.replace(place_holder, setting_workflow)
-        if isinstance(value, list):
-            configuration[key] = [
-                item.replace(place_holder, setting_workflow) if isinstance(item, str) else item
-                for item in value
-            ]
+    configuration = gen.replace_placeholders_recursively(
+        configuration,
+        {place_holder: setting_workflow},
+    )
     if output_path:
         configuration["output_path"] = str(output_path)
 
@@ -269,19 +265,10 @@ def _set_input_output_directories(path):
     tuple
         The first part is the 'input' directory, the second part is the subdirectory name
     """
-    path = Path(path).resolve()
-    try:
-        input_index = path.parts.index("input")
-        # Get all parts after 'input', excluding the filename
-        subdirs = path.parts[input_index + 1 : -1]
-        setting_workflow = "/".join(subdirs)
-        workflow_dir = path.parts[input_index]
-    except (ValueError, IndexError) as exc:
-        raise ValueError(f"Could not find subdirectory under 'input': {exc}") from exc
-
-    output_path = Path(str(workflow_dir).replace("input", "output")) / Path(setting_workflow)
+    setting_workflow = gen.extract_subdirectories_from_path(path, anchor="input")
+    output_path = Path("output") / Path(setting_workflow)
     output_path.mkdir(parents=True, exist_ok=True)
-    return output_path, "/".join(subdirs)
+    return output_path, setting_workflow
 
 
 def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
