@@ -95,7 +95,7 @@ def main():
     """Run several simtools applications using a configuration file."""
     app_context = build_application(
         usage="simtools-run-application --config_file config_file_name",
-        initialization_kwargs={"db_config": True},
+        initialization_kwargs={"db_config": True, "paths": False},
         startup_kwargs={
             "setup_io_handler": False,
             "resolve_sim_software_executables": False,
