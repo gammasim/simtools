@@ -89,6 +89,29 @@ def test_write_dict_to_model_parameter_json(tmp_test_directory):
     assert Path(data_file).is_file()
 
 
+def test_write_dict_to_model_parameter_json_compact_numeric_lists_switch(tmp_test_directory):
+    w1 = writer.ModelDataWriter(output_path=tmp_test_directory)
+    data_file = tmp_test_directory.join("test_file.json")
+
+    with patch(
+        "simtools.data_model.model_data_writer.ascii_handler.write_data_to_file"
+    ) as mock_write:
+        w1.write_dict_to_model_parameter_json(
+            file_name=data_file,
+            data_dict={"value": {"a": [1, 2, 3]}},
+        )
+        assert mock_write.call_args.kwargs["compact_numeric_lists"] is True
+
+    with patch(
+        "simtools.data_model.model_data_writer.ascii_handler.write_data_to_file"
+    ) as mock_write:
+        w1.write_dict_to_model_parameter_json(
+            file_name=data_file,
+            data_dict={"value": [1, 2, 3]},
+        )
+        assert mock_write.call_args.kwargs["compact_numeric_lists"] is False
+
+
 def test_dump(args_dict):
     settings.config.load(args=args_dict)
     empty_table = Table()
