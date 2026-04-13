@@ -257,6 +257,13 @@ definitions:
               - type: string
               - type: "null"
             default: null
+          activity_name:
+            description: |-
+              Name of the activity that produced this data product.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
       ###############
       instrument:
         title: Instrument
@@ -588,7 +595,7 @@ definitions:
               type: object
               additionalProperties: false
               properties:
-                name:
+                activity_name:
                   description: |-
                     Name of the associated activity.
                   anyOf:
@@ -604,7 +611,7 @@ definitions:
                     - type: number
                   default: null
               required:
-                - name
+                - activity_name
                 - activity_id
 ...
 ---
@@ -862,6 +869,13 @@ definitions:
           FILENAME:
             description: |-
               Name of the file containing the data product.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
+          ACTIVITY_NAME:
+            description: |-
+              Name of the activity that produced this data product.
             anyOf:
               - type: string
               - type: "null"
@@ -1197,7 +1211,7 @@ definitions:
               type: object
               additionalProperties: false
               properties:
-                NAME:
+                ACTIVITY_NAME:
                   description: |-
                     Name of the associated activity.
                   anyOf:
@@ -1213,5 +1227,5 @@ definitions:
                     - type: number
                   default: null
               required:
-                - NAME
+                - ACTIVITY_NAME
                 - ACTIVITY_ID
