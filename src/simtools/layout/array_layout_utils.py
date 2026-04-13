@@ -39,11 +39,15 @@ def retrieve_ctao_array_layouts(site, repository_url, branch_name="main"):
     _logger.info(f"Retrieving array layouts from {repository_url} on branch {branch_name}.")
 
     if gen.is_url(repository_url):
-        array_element_ids = ascii_handler.collect_data_from_http(
-            url=f"{repository_url}/{branch_name}/array-element-ids.json"
+        array_element_ids = ascii_handler.collect_data_from_git(
+            file_name="array-element-ids.json",
+            git_repository=repository_url,
+            git_branch=branch_name,
         )
-        sub_arrays = ascii_handler.collect_data_from_http(
-            url=f"{repository_url}/{branch_name}/subarray-ids.json"
+        sub_arrays = ascii_handler.collect_data_from_git(
+            file_name="subarray-ids.json",
+            git_repository=repository_url,
+            git_branch=branch_name,
         )
     else:
         array_element_ids = ascii_handler.collect_data_from_file(

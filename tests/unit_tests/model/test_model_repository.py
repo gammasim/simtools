@@ -684,6 +684,7 @@ def test_generate_new_production_empty_version_history(
     mock_collect_data.return_value = {
         "model_version": "6.5.0",
         "model_version_history": [],
+        "setting_workflows_git_tag": "v0.3.0",
         "changes": {},
     }
 
@@ -692,7 +693,7 @@ def test_generate_new_production_empty_version_history(
     mock_apply_table_changes.assert_called_once_with(
         {}, "6.5.0", "6.5.0", "full_update", str(tmp_path)
     )
-    mock_apply_model_changes.assert_called_once()
+    mock_apply_model_changes.assert_called_once_with({}, str(tmp_path), "v0.3.0")
 
 
 def test_apply_changes_to_production_table_patch_update():
@@ -775,6 +776,103 @@ def test_apply_changes_to_model_parameters_simple(mock_create_entry, tmp_path):
         "discriminator_threshold",
         {"version": "4.0.0", "value": 31.9},
         model_parameters_dir,
+    )
+
+
+@patch("simtools.model.model_repository._download_model_parameter_from_workflow")
+@patch("simtools.model.model_repository._create_new_model_parameter_entry")
+def test_apply_changes_to_model_parameters_with_activity_id(
+    mock_create_entry, mock_download_workflow, tmp_path
+):
+    """Test applying changes to model parameters using activity_id workflow source."""
+    model_parameters_dir = tmp_path / "model_parameters"
+    changes = {
+        "LSTN-design": {
+            "pm_photoelectron_spectrum": {
+                "version": "3.0.0",
+                "activity_id": "019d85b6-1f98-715b-b92b-bfbcd06d7cd8",
+            },
+            "param_with_both": {
+                "version": "1.0.0",
+                "activity_id": "workflow-123",
+                "value": 10,
+            },
+            "value_only_param": {"version": "2.0.0", "value": 42},
+        }
+    }
+
+    model_repository._apply_changes_to_model_parameters(
+        changes, model_parameters_dir, setting_workflows_git_tag="release-v1"
+    )
+
+    assert mock_download_workflow.call_count == 2
+    mock_download_workflow.assert_any_call(
+        "LSTN-design",
+        "pm_photoelectron_spectrum",
+        {
+            "version": "3.0.0",
+            "activity_id": "019d85b6-1f98-715b-b92b-bfbcd06d7cd8",
+        },
+        model_parameters_dir,
+        "release-v1",
+    )
+    mock_download_workflow.assert_any_call(
+        "LSTN-design",
+        "param_with_both",
+        {
+            "version": "1.0.0",
+            "activity_id": "workflow-123",
+            "value": 10,
+        },
+        model_parameters_dir,
+        "release-v1",
+    )
+    mock_create_entry.assert_called_once_with(
+        "LSTN-design", "value_only_param", {"version": "2.0.0", "value": 42}, model_parameters_dir
+    )
+
+
+@patch("simtools.model.model_repository.ascii_handler.write_data_to_file")
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
+def test_download_model_parameter_from_workflow(mock_collect_data, mock_write_data, tmp_path):
+    """Test downloading and writing model parameter from workflow repository."""
+    telescope = "LSTN-design"
+    param = "pm_photoelectron_spectrum"
+    param_data = {
+        "version": "3.0.0",
+        "activity_id": "019d85b6-1f98-715b-b92b-bfbcd06d7cd8",
+    }
+    mock_collect_data.return_value = {"parameter_version": "3.0.0", "value": [1, 2, 3]}
+
+    model_repository._download_model_parameter_from_workflow(
+        telescope=telescope,
+        param=param,
+        param_data=param_data,
+        simulation_models_path=tmp_path,
+        setting_workflows_git_tag="v2.1.0",
+    )
+
+    mock_collect_data.assert_called_once_with(
+        file_name=(
+            "output/LSTN-design/pm_photoelectron_spectrum/"
+            "019d85b6-1f98-715b-b92b-bfbcd06d7cd8/pm_photoelectron_spectrum/"
+            "pm_photoelectron_spectrum-3.0.0.json"
+        ),
+        git_repository=(
+            "https://gitlab.cta-observatory.org/cta-science/simulations/"
+            "simulation-model/simulation-model-parameter-setting.git"
+        ),
+        git_branch="v2.1.0",
+    )
+    mock_write_data.assert_called_once_with(
+        {"parameter_version": "3.0.0", "value": [1, 2, 3]},
+        tmp_path
+        / "simulation-models"
+        / "model_parameters"
+        / "LSTN-design"
+        / "pm_photoelectron_spectrum"
+        / "pm_photoelectron_spectrum-3.0.0.json",
+        sort_keys=True,
     )
 
 

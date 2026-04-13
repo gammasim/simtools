@@ -25,6 +25,9 @@ definitions:
         description: A list of previous model versions.
         items:
           $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
+      setting_workflows_git_tag:
+        type: string
+        description: Branch or release tag used when downloading workflow outputs.
       description:
         type: string
         description: A detailed description of the model changes.
@@ -65,6 +68,8 @@ $defs:
     properties:
       version:
         $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
+      activity_id:
+        type: string
       value:
         oneOf:
           - type: string
