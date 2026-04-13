@@ -23,6 +23,7 @@ class _Config:
         self.user = os.getenv("USER", "unknown")
         self.hostname = socket.gethostname()
         self.activity_id = uuid()
+        self.activity_name = None
 
     def load(self, args=None, db_config=None, resolve_sim_software_executables=True):
         """
@@ -46,6 +47,7 @@ class _Config:
         self.activity_id = args.get("activity_id") if args is not None else None
         if self.activity_id is None:
             self.activity_id = uuid()
+        self.activity_name = args.get("application_label") if args is not None else None
         self._sim_telarray_path = (
             args.get("sim_telarray_path")
             if args is not None and "sim_telarray_path" in args

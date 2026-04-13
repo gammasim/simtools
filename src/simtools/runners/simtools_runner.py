@@ -61,12 +61,13 @@ def run_applications(args_dict):
                 app_configuration = config.get("configuration", {})
                 app_activity_id = app_configuration.get("activity_id") or gen.uuid()
                 app_configuration["activity_id"] = app_activity_id
+                app_configuration.setdefault("label", app)
 
                 app_configuration["log_file"] = _get_application_log_file(
                     app, app_configuration, application_counter
                 )
 
-                associated_activities.append({"name": app, "activity_id": app_activity_id})
+                associated_activities.append({"activity_name": app, "activity_id": app_activity_id})
 
                 logger.info(f"Running application: {app}")
                 result = job_manager.submit(

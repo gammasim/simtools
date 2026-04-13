@@ -39,15 +39,17 @@ def test_update_model_parameter_metadata_file(tmp_test_directory):
         "cta": {
             "product": {"id": "prod-id"},
             "activity": {"id": "old-id"},
-            "context": {"associated_activities": [{"name": "old", "activity_id": "old-id"}]},
+            "context": {
+                "associated_activities": [{"activity_name": "old", "activity_id": "old-id"}]
+            },
         }
     }
     metadata_file.write_text(yaml.safe_dump(metadata_dict), encoding="utf-8")
 
     workflow_activity = {"id": "workflow-id", "name": "setting_workflow"}
     associated_activities = [
-        {"name": "app1", "activity_id": "a1"},
-        {"name": "app2", "activity_id": "a2"},
+        {"activity_name": "app1", "activity_id": "a1"},
+        {"activity_name": "app2", "activity_id": "a2"},
     ]
 
     workflow_metadata.update_model_parameter_metadata_file(
@@ -60,9 +62,9 @@ def test_update_model_parameter_metadata_file(tmp_test_directory):
     assert updated["cta"]["product"]["id"] == "prod-id"
     assert updated["cta"]["activity"]["id"] == "workflow-id"
     assert updated["cta"]["context"]["associated_activities"] == [
-        {"name": "old", "activity_id": "old-id"},
-        {"name": "app1", "activity_id": "a1"},
-        {"name": "app2", "activity_id": "a2"},
+        {"activity_name": "old", "activity_id": "old-id"},
+        {"activity_name": "app1", "activity_id": "a1"},
+        {"activity_name": "app2", "activity_id": "a2"},
     ]
 
 
