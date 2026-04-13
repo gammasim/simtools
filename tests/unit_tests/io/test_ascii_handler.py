@@ -244,6 +244,13 @@ def test_json_numpy_encoder():
         encoder.default("abc")
 
 
+def test_json_numpy_encoder_compact_numeric_lists_enabled():
+    encoder = ascii_handler.JsonNumpyEncoder(compact_numeric_lists=True)
+    encoded = encoder.encode({"rows": [[1, 2, 3], [4.0, 5.0, 6.0]]})
+    assert "[1, 2, 3]" in encoded
+    assert "[4.0, 5.0, 6.0]" in encoded
+
+
 def test_write_to_yaml(tmp_test_directory):
     """Test the _write_to_yaml function."""
     test_data = {"key1": "value1", "key2": [1, 2, 3], "key3": {"nested_key": "nested_value"}}
@@ -307,6 +314,36 @@ def test_write_to_json(tmp_test_directory):
         "float": 3.14,
         "int": 42,
     }
+
+
+def test_write_to_json_compact_numeric_lists_toggle(tmp_test_directory):
+    data = {"value": {"rows": [[1, 2, 3], [4, 5, 6]]}}
+
+    non_compact_file = tmp_test_directory / "test_non_compact.json"
+    ascii_handler._write_to_json(
+        data,
+        non_compact_file,
+        sort_keys=False,
+        numpy_types=True,
+        compact_numeric_lists=False,
+    )
+    non_compact_text = non_compact_file.read_text(encoding="utf-8")
+    assert "[1, 2, 3]" not in non_compact_text
+    expected_multiline_list = (
+        "[\n                1,\n                2,\n                3\n            ]"
+    )
+    assert expected_multiline_list in non_compact_text
+
+    compact_file = tmp_test_directory / "test_compact.json"
+    ascii_handler._write_to_json(
+        data,
+        compact_file,
+        sort_keys=False,
+        numpy_types=True,
+        compact_numeric_lists=True,
+    )
+    compact_text = compact_file.read_text(encoding="utf-8")
+    assert "[1, 2, 3]" in compact_text
 
 
 def test_write_data_to_file_json(tmp_test_directory):
