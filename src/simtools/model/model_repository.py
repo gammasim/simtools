@@ -457,9 +457,20 @@ def _apply_changes_to_model_parameters(
         Path to the simulation models directory.
     setting_workflows_git_tag: str
         Branch or tag used to download parameters from simulation workflow repository.
+
+    Raises
+    ------
+    ValueError
+        If both ``activity_id`` and ``value`` are provided for the same parameter.
     """
     for telescope, parameters in changes.items():
         for param, param_data in parameters.items():
+            if param_data.get("activity_id") is not None and param_data.get("value") is not None:
+                raise ValueError(
+                    f"Both activity_id and value are set for '{telescope} - {param}'. "
+                    "Provide only one source for model parameter content."
+                )
+
             if param_data.get("activity_id") is not None:
                 _download_model_parameter_from_workflow(
                     telescope,
@@ -501,6 +512,8 @@ def _download_model_parameter_from_workflow(
     ------
     TypeError
         If downloaded content is not a dictionary.
+    ValueError
+        If downloaded parameter_version does not match requested version.
     """
     source_file = (
         f"output/{telescope}/{param}/{param_data['activity_id']}/"
@@ -517,6 +530,13 @@ def _download_model_parameter_from_workflow(
         raise TypeError(
             f"Downloaded model parameter is of type {type(downloaded_data)} "
             f"for '{telescope} - {param}'."
+        )
+
+    downloaded_version = downloaded_data.get("parameter_version")
+    if downloaded_version != param_data["version"]:
+        raise ValueError(
+            f"Version mismatch for '{telescope} - {param}': requested "
+            f"'{param_data['version']}', downloaded '{downloaded_version}'."
         )
 
     target_dir = get_model_parameter_directory(simulation_models_path) / telescope / param
