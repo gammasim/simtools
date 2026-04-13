@@ -190,7 +190,14 @@ def is_utf8_file(file_name):
         return False
 
 
-def write_data_to_file(data, output_file, sort_keys=False, numpy_types=False, unique_lines=False):
+def write_data_to_file(
+    data,
+    output_file,
+    sort_keys=False,
+    numpy_types=False,
+    unique_lines=False,
+    compact_numeric_lists=False,
+):
     """
     Write structured data to JSON, YAML, or text file.
 
@@ -206,10 +213,18 @@ def write_data_to_file(data, output_file, sort_keys=False, numpy_types=False, un
         If True, sort the keys.
     numpy_types: bool, optional
         If True, convert numpy types to native Python types.
+    compact_numeric_lists: bool, optional
+        If True, serialize numeric lists on a single line for JSON output.
     """
     output_file = Path(output_file)
     if output_file.suffix.lower() == ".json":
-        _write_to_json(data, output_file, sort_keys, numpy_types)
+        _write_to_json(
+            data,
+            output_file,
+            sort_keys,
+            numpy_types,
+            compact_numeric_lists=compact_numeric_lists,
+        )
         return
     if output_file.suffix.lower() in [".yml", ".yaml"]:
         _write_to_yaml(data, output_file, sort_keys)
@@ -251,7 +266,7 @@ def _write_to_text_file(data, output_file, unique_lines):
             file.write(f"{line}\n")
 
 
-def _write_to_json(data, output_file, sort_keys, numpy_types):
+def _write_to_json(data, output_file, sort_keys, numpy_types, compact_numeric_lists=False):
     """
     Write data to a JSON file.
 
@@ -265,16 +280,28 @@ def _write_to_json(data, output_file, sort_keys, numpy_types):
         If True, sort the keys.
     numpy_types: bool
         If True, convert numpy types to native Python types.
+    compact_numeric_lists: bool
+        If True, serialize numeric lists on a single line.
     """
     with open(output_file, "w", encoding="utf-8") as file:
-        file.write(
-            json.dumps(
-                data,
-                indent=4,
-                sort_keys=sort_keys,
-                cls=JsonNumpyEncoder if numpy_types else None,
+        if numpy_types:
+            file.write(
+                json.dumps(
+                    data,
+                    indent=4,
+                    sort_keys=sort_keys,
+                    cls=JsonNumpyEncoder,
+                    compact_numeric_lists=compact_numeric_lists,
+                )
             )
-        )
+        else:
+            file.write(
+                json.dumps(
+                    data,
+                    indent=4,
+                    sort_keys=sort_keys,
+                )
+            )
         file.write("\n")
 
 
@@ -316,11 +343,20 @@ def _to_builtin(data):
 class JsonNumpyEncoder(json.JSONEncoder):
     """Convert numpy to python types as accepted by json.dump.
 
-    Lists whose elements are all numbers (int or float) are serialized on a
-    single line regardless of the surrounding indentation level. This keeps
-    row-oriented table data human-readable without expanding every number onto
-    its own line.
+    Lists whose elements are all numbers (int or float) can be serialized on a
+    single line when ``compact_numeric_lists`` is enabled.
     """
+
+    def __init__(self, *args, compact_numeric_lists=False, **kwargs):
+        """Initialize JSON encoder.
+
+        Parameters
+        ----------
+        compact_numeric_lists : bool
+            If True, serialize numeric lists on a single line.
+        """
+        super().__init__(*args, **kwargs)
+        self.compact_numeric_lists = compact_numeric_lists
 
     def default(self, o):
         """Return default encoder."""
@@ -338,10 +374,14 @@ class JsonNumpyEncoder(json.JSONEncoder):
 
     def encode(self, o):
         """Encode with compact inner numeric lists."""
+        if not self.compact_numeric_lists:
+            return super().encode(o)
+
         # Convert numpy (and other custom) types to pure-Python types first so
         # that _encode_compact_rows only needs to handle builtins.
         native = json.loads(super().encode(o))
-        return _encode_compact_rows(native, indent=4, level=0)
+        indent = self.indent if isinstance(self.indent, int) else 4
+        return _encode_compact_rows(native, indent=indent, level=0)
 
 
 def _is_numeric_list(obj):
