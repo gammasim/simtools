@@ -535,6 +535,7 @@ class ModelDataWriter:
             output_file=output_file,
             sort_keys=True,
             numpy_types=True,
+            compact_numeric_lists=isinstance(data_dict.get("value"), dict),
         )
 
     @staticmethod
