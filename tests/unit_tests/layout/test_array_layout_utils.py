@@ -204,7 +204,7 @@ def test_retrieve_ctao_array_layouts_from_url():
     with (
         patch("simtools.layout.array_layout_utils.gen") as mock_gen,
         patch(
-            "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_http"
+            "simtools.layout.array_layout_utils.ascii_handler.collect_data_from_git"
         ) as mock_ascii_handler,
     ):
         mock_gen.is_url.return_value = True
@@ -215,7 +215,17 @@ def test_retrieve_ctao_array_layouts_from_url():
         )
 
         mock_gen.is_url.assert_called_once_with("https://test.com")
-        mock_ascii_handler.assert_called_with(url="https://test.com/test-branch/subarray-ids.json")
+        assert mock_ascii_handler.call_count == 2
+        mock_ascii_handler.assert_any_call(
+            file_name="array-element-ids.json",
+            git_repository="https://test.com",
+            git_branch="test-branch",
+        )
+        mock_ascii_handler.assert_any_call(
+            file_name="subarray-ids.json",
+            git_repository="https://test.com",
+            git_branch="test-branch",
+        )
 
 
 def test_retrieve_ctao_array_layouts_from_file(test_path):

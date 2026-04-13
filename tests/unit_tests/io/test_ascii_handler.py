@@ -145,6 +145,40 @@ def test_collect_data_from_http():
         ascii_handler.collect_data_from_http(url + _file)
 
 
+@patch("simtools.io.ascii_handler.collect_data_from_http")
+def test_collect_data_from_git_builds_url_from_repository(mock_collect_http):
+    """Test git raw URL construction from repository URL."""
+    mock_collect_http.return_value = {"key": "value"}
+
+    result = ascii_handler.collect_data_from_git(
+        file_name="folder/file.json",
+        git_repository="https://gitlab.cta-observatory.org/group/project.git",
+        git_branch="v1.2.3",
+    )
+
+    assert result == {"key": "value"}
+    mock_collect_http.assert_called_once_with(
+        "https://gitlab.cta-observatory.org/group/project/-/raw/v1.2.3/folder/file.json"
+    )
+
+
+@patch("simtools.io.ascii_handler.collect_data_from_http")
+def test_collect_data_from_git_builds_url_from_raw_base(mock_collect_http):
+    """Test git raw URL construction from a raw-base URL."""
+    mock_collect_http.return_value = {"subarrays": []}
+
+    result = ascii_handler.collect_data_from_git(
+        file_name="subarray-ids.json",
+        git_repository="https://gitlab.cta-observatory.org/group/project/-/raw",
+        git_branch="main",
+    )
+
+    assert result == {"subarrays": []}
+    mock_collect_http.assert_called_once_with(
+        "https://gitlab.cta-observatory.org/group/project/-/raw/main/subarray-ids.json"
+    )
+
+
 def test_read_file_encoded_in_utf_or_latin(tmp_test_directory, caplog) -> None:
     """
     Test the read_file_encoded_in_utf_or_latin function.
