@@ -213,6 +213,8 @@ def write_data_to_file(
         If True, sort the keys.
     numpy_types: bool, optional
         If True, convert numpy types to native Python types.
+    unique_lines: bool, optional
+        If True, write only unique lines (applicable for text files).
     compact_numeric_lists: bool, optional
         If True, serialize numeric lists on a single line for JSON output.
     """
