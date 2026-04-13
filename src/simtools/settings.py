@@ -44,38 +44,38 @@ class _Config:
         """
         self._args = MappingProxyType(args) if args is not None else {}
         self._db_config = MappingProxyType(db_config) if db_config is not None else {}
-        self.activity_id = args.get("activity_id") if args is not None else None
-        if self.activity_id is None:
-            self.activity_id = uuid()
+        self.activity_id = self._get_activity_id(args)
         self.activity_name = args.get("application_label") if args is not None else None
-        self._sim_telarray_path = (
-            args.get("sim_telarray_path")
-            if args is not None and "sim_telarray_path" in args
-            else os.getenv("SIMTOOLS_SIM_TELARRAY_PATH")
+        self._sim_telarray_path = self._get_config_value(
+            args, "sim_telarray_path", "SIMTOOLS_SIM_TELARRAY_PATH"
         )
-
-        self._sim_telarray_exe = (
-            args.get("sim_telarray_executable")
-            if args is not None and "sim_telarray_executable" in args
-            else os.getenv("SIMTOOLS_SIM_TELARRAY_EXECUTABLE", "sim_telarray")
+        self._sim_telarray_exe = self._get_config_value(
+            args,
+            "sim_telarray_executable",
+            "SIMTOOLS_SIM_TELARRAY_EXECUTABLE",
+            default="sim_telarray",
         )
-
-        self._corsika_path = (
-            args.get("corsika_path")
-            if args is not None and "corsika_path" in args
-            else os.getenv("SIMTOOLS_CORSIKA_PATH")
+        self._corsika_path = self._get_config_value(args, "corsika_path", "SIMTOOLS_CORSIKA_PATH")
+        self._corsika_interaction_table_path = self._get_config_value(
+            args, "corsika_interaction_table_path", "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
         )
-
-        self._corsika_interaction_table_path = (
-            args.get("corsika_interaction_table_path")
-            if args is not None and "corsika_interaction_table_path" in args
-            else os.getenv("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
-        )
-
         if resolve_sim_software_executables and self._corsika_path is not None:
             self._corsika_exe = self._get_corsika_exec()
         else:
             self._corsika_exe = None
+
+    @staticmethod
+    def _get_config_value(args, arg_key, env_key, default=None):
+        """Get configuration value from arguments or environment variable."""
+        if args is not None and arg_key in args:
+            return args.get(arg_key)
+        return os.getenv(env_key, default)
+
+    @staticmethod
+    def _get_activity_id(args):
+        """Get activity ID from arguments or generate a new one."""
+        activity_id = args.get("activity_id") if args is not None else None
+        return activity_id if activity_id is not None else uuid()
 
     def _get_corsika_exec(self):
         """
