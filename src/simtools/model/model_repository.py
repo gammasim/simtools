@@ -204,6 +204,9 @@ def generate_new_production(model_version, simulation_models_path):
     modification_dict = _get_changes_dict(model_version, simulation_models_path)
     update_type = modification_dict.get("model_update", "full_update")
     setting_workflows_git_tag = modification_dict.get("setting_workflows_git_tag", "main")
+    setting_workflows_git_repository = modification_dict.get(
+        "setting_workflows_git_repository", DEFAULT_SIMULATION_WORKFLOWS
+    )
     changes, base_model_version = _get_changes_to_production(
         modification_dict, simulation_models_path, update_type
     )
@@ -216,7 +219,12 @@ def generate_new_production(model_version, simulation_models_path):
         simulation_models_path,
     )
 
-    _apply_changes_to_model_parameters(changes, simulation_models_path, setting_workflows_git_tag)
+    _apply_changes_to_model_parameters(
+        changes,
+        simulation_models_path,
+        setting_workflows_git_tag,
+        setting_workflows_git_repository,
+    )
 
 
 def _get_production_table_key(table_name):
@@ -444,7 +452,10 @@ def _update_parameters_dict(table_parameters, changes, table_name):
 
 
 def _apply_changes_to_model_parameters(
-    changes, simulation_models_path, setting_workflows_git_tag="main"
+    changes,
+    simulation_models_path,
+    setting_workflows_git_tag="main",
+    setting_workflows_git_repository=DEFAULT_SIMULATION_WORKFLOWS,
 ):
     """
     Apply changes to model parameters by creating new parameter entries.
@@ -457,6 +468,8 @@ def _apply_changes_to_model_parameters(
         Path to the simulation models directory.
     setting_workflows_git_tag: str
         Branch or tag used to download parameters from simulation workflow repository.
+    setting_workflows_git_repository: str
+        Repository URL used to download parameters from simulation workflow repository.
 
     Raises
     ------
@@ -478,6 +491,7 @@ def _apply_changes_to_model_parameters(
                     param_data,
                     simulation_models_path,
                     setting_workflows_git_tag,
+                    setting_workflows_git_repository,
                 )
             elif param_data.get("value") is not None:
                 _create_new_model_parameter_entry(
@@ -491,6 +505,7 @@ def _download_model_parameter_from_workflow(
     param_data,
     simulation_models_path,
     setting_workflows_git_tag="main",
+    setting_workflows_git_repository=DEFAULT_SIMULATION_WORKFLOWS,
 ):
     """
     Download model parameter entry from simulation workflow repository.
@@ -507,6 +522,8 @@ def _download_model_parameter_from_workflow(
         Path to the simulation models directory.
     setting_workflows_git_tag: str
         Branch or tag used to download parameters from simulation workflow repository.
+    setting_workflows_git_repository: str
+        Repository URL used to download parameters from simulation workflow repository.
 
     Raises
     ------
@@ -523,7 +540,7 @@ def _download_model_parameter_from_workflow(
 
     downloaded_data = ascii_handler.collect_data_from_git(
         file_name=source_file,
-        git_repository=DEFAULT_SIMULATION_WORKFLOWS,
+        git_repository=setting_workflows_git_repository,
         git_branch=setting_workflows_git_tag,
     )
     if not isinstance(downloaded_data, dict):

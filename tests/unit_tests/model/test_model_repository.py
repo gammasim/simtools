@@ -685,6 +685,7 @@ def test_generate_new_production_empty_version_history(
         "model_version": "6.5.0",
         "model_version_history": [],
         "setting_workflows_git_tag": "v0.3.0",
+        "setting_workflows_git_repository": "https://example.org/workflows.git",
         "changes": {},
     }
 
@@ -693,7 +694,9 @@ def test_generate_new_production_empty_version_history(
     mock_apply_table_changes.assert_called_once_with(
         {}, "6.5.0", "6.5.0", "full_update", str(tmp_path)
     )
-    mock_apply_model_changes.assert_called_once_with({}, str(tmp_path), "v0.3.0")
+    mock_apply_model_changes.assert_called_once_with(
+        {}, str(tmp_path), "v0.3.0", "https://example.org/workflows.git"
+    )
 
 
 def test_apply_changes_to_production_table_patch_update():
@@ -810,6 +813,8 @@ def test_apply_changes_to_model_parameters_with_activity_id(
         },
         model_parameters_dir,
         "release-v1",
+        "https://gitlab.cta-observatory.org/cta-science/simulations/"
+        "simulation-model/simulation-model-parameter-setting.git",
     )
     mock_create_entry.assert_called_once_with(
         "LSTN-design", "value_only_param", {"version": "2.0.0", "value": 42}, model_parameters_dir
@@ -859,6 +864,7 @@ def test_download_model_parameter_from_workflow(
         param_data=param_data,
         simulation_models_path=tmp_test_directory,
         setting_workflows_git_tag="v2.1.0",
+        setting_workflows_git_repository="https://example.org/workflows.git",
     )
 
     mock_collect_data.assert_called_once_with(
@@ -867,10 +873,7 @@ def test_download_model_parameter_from_workflow(
             "019d85b6-1f98-715b-b92b-bfbcd06d7cd8/pm_photoelectron_spectrum/"
             "pm_photoelectron_spectrum-3.0.0.json"
         ),
-        git_repository=(
-            "https://gitlab.cta-observatory.org/cta-science/simulations/"
-            "simulation-model/simulation-model-parameter-setting.git"
-        ),
+        git_repository="https://example.org/workflows.git",
         git_branch="v2.1.0",
     )
     mock_write_data.assert_called_once_with(

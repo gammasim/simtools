@@ -28,6 +28,9 @@ definitions:
       setting_workflows_git_tag:
         type: string
         description: Branch or release tag used when downloading workflow outputs.
+      setting_workflows_git_repository:
+        type: string
+        description: Repository URL used when downloading workflow outputs.
       description:
         type: string
         description: A detailed description of the model changes.
@@ -84,6 +87,17 @@ $defs:
           - type: "null"
       model_parameter_schema_version:
         $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
+    oneOf:
+      - required:
+          - value
+        not:
+          required:
+            - activity_id
+      - required:
+          - activity_id
+        not:
+          required:
+            - value
     required:
       - version
     additionalProperties: false
