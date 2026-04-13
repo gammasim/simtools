@@ -80,6 +80,19 @@ def test_load_generates_activity_id_when_missing(config_instance):
     assert config_instance.activity_id is not None
 
 
+@patch.dict(os.environ, {}, clear=True)
+def test_load_sets_activity_name(config_instance):
+    args = {"application_label": "simtools-my-app"}
+    config_instance.load(args=args)
+    assert config_instance.activity_name == "simtools-my-app"
+
+
+@patch.dict(os.environ, {}, clear=True)
+def test_load_activity_name_none_when_missing(config_instance):
+    config_instance.load(args={})
+    assert config_instance.activity_name is None
+
+
 @patch.dict(os.environ, {"SIMTOOLS_SIM_TELARRAY_PATH": "/env/simtel"})
 def test_load_with_env_vars(config_instance):
     config_instance.load()

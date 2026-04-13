@@ -102,7 +102,7 @@ def _merge_associated_activities(existing_activities, new_activities):
     merged_activities = []
     seen = set()
     for activity in [*existing_activities, *new_activities]:
-        key = (activity.get("name"), activity.get("activity_id"))
+        key = (activity.get("activity_name"), activity.get("activity_id"))
         if key in seen:
             continue
         seen.add(key)

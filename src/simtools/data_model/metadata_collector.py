@@ -16,6 +16,7 @@ import simtools.version
 from simtools.constants import METADATA_JSON_SCHEMA
 from simtools.data_model import metadata_model, schema
 from simtools.io import ascii_handler, io_handler
+from simtools.settings import config
 from simtools.utils import names
 
 
@@ -503,7 +504,7 @@ class MetadataCollector:
             Dictionary for top-level activity metadata.
 
         """
-        activity_dict["name"] = self.args_dict.get("label", None)
+        activity_dict["name"] = self.args_dict.get("label") or config.activity_name
         activity_dict["type"] = "software"
         activity_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
         activity_dict["start"] = self.args_dict.get(
