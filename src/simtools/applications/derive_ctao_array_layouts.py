@@ -43,6 +43,7 @@ r"""
 """
 
 from simtools.application_control import build_application
+from simtools.constants import DEFAULT_COMPUTING_REPO
 from simtools.db import db_handler
 from simtools.layout.array_layout_utils import (
     merge_array_layouts,
@@ -57,7 +58,7 @@ def _add_arguments(parser):
         "--repository_url",
         help="URL or path of the CTAO common identifiers repository.",
         type=str,
-        default="https://gitlab.cta-observatory.org/cta-computing/common/identifiers/-/raw/",
+        default=f"{DEFAULT_COMPUTING_REPO}/common/identifiers/-/raw/",
     )
     parser.add_argument(
         "--repository_branch",
