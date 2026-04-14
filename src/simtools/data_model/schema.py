@@ -231,13 +231,22 @@ def load_schema(schema_file=None, schema_version="latest"):
     """
     schema_file = schema_file or METADATA_JSON_SCHEMA
 
-    for path in (schema_file, SCHEMA_PATH / schema_file):
+    schema = None
+    for path in _get_local_schema_candidates(schema_file):
         try:
             schema = ascii_handler.collect_data_from_file(file_name=path)
             break
         except FileNotFoundError:
             continue
-    else:
+
+    # Fall back to remote retrieval only if local resolution fails.
+    if schema is None and gen.is_url(str(schema_file)):
+        try:
+            schema = ascii_handler.collect_data_from_file(file_name=schema_file)
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Schema file not found: {schema_file}") from exc
+
+    if schema is None:
         raise FileNotFoundError(f"Schema file not found: {schema_file}")
 
     _logger.debug(f"Loading schema from {schema_file} for schema version {schema_version}")
@@ -245,6 +254,20 @@ def load_schema(schema_file=None, schema_version="latest"):
     _add_array_elements("InstrumentTypeElement", schema)
 
     return schema
+
+
+def _get_local_schema_candidates(schema_file):
+    """Build local candidate paths for a schema file reference."""
+    schema_path = Path(str(schema_file))
+    candidates = [schema_path, SCHEMA_PATH / schema_path]
+
+    if gen.is_url(str(schema_file)):
+        schema_name = Path(str(schema_file)).name
+        if schema_name:
+            candidates.extend([Path(schema_name), SCHEMA_PATH / schema_name])
+
+    # Keep order stable while removing duplicates.
+    return list(dict.fromkeys(candidates))
 
 
 def _get_schema_for_version(schema, schema_file, schema_version):
@@ -439,8 +462,12 @@ def _get_schema_file_name(schema_file=None, file_name=None, data_dict=None):
     if schema_file is not None:
         return schema_file
 
-    if data_dict and (url := data_dict.get("meta_schema_url")):
-        return url
+    if data_dict:
+        # Check for meta_schema_url (metadata) or schema_url (data with embedded schema info)
+        if url := data_dict.get("meta_schema_url"):
+            return url
+        if url := data_dict.get("schema_url"):
+            return url
 
     if file_name:
         return _extract_schema_from_file(file_name)

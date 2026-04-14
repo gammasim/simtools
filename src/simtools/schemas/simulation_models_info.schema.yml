@@ -13,6 +13,12 @@ definitions:
     properties:
       model_version:
         $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
+      schema_version:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_version_field'
+      schema_url:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_url_field'
+      schema_name:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_name_field'
       model_update:
         type: [string, 'null']
         description: The type of update for the model version.
@@ -124,6 +130,12 @@ definitions:
     properties:
       model_version:
         $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
+      schema_version:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_version_field'
+      schema_url:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_url_field'
+      schema_name:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_name_field'
       model_update:
         type: [string, 'null']
         description: The type of update for the model version.
