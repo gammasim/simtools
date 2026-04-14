@@ -269,15 +269,15 @@ def _apply_changes_to_production_tables(
             raise TypeError(f"Unsupported data type {type(data)} in {file_path}")
         tables[data["production_table_name"]] = data
 
+    table_changes = _group_changes_by_production_table(changes)
+
     # placeholder for new tables
-    for table_name in changes:
+    for table_name in table_changes:
         tables.setdefault(table_name, {})
-    if _get_configuration_sim_telarray_changes(changes):
-        tables.setdefault("configuration_sim_telarray", {})
 
     for table_name, data in tables.items():
         if _apply_changes_to_production_table(
-            table_name, data, changes, model_version, update_type == "patch_update"
+            table_name, data, table_changes, model_version, update_type == "patch_update"
         ):
             target_file = target / f"{table_name}.json"
             _logger.info(f"Writing updated production table '{target_file}'")
@@ -285,7 +285,9 @@ def _apply_changes_to_production_tables(
             ascii_handler.write_data_to_file(data, target_file, sort_keys=True)
 
 
-def _apply_changes_to_production_table(table_name, data, changes, model_version, patch_update):
+def _apply_changes_to_production_table(
+    table_name, data, table_changes, model_version, patch_update
+):
     """
     Apply changes to a single production table.
 
@@ -295,8 +297,8 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
         Name of the production table.
     data: dict
         Data to be updated.
-    changes: dict
-        Changes to be applied.
+    table_changes: dict
+        Changes grouped by production table.
     model_version: str
         Model version of the new production tables.
     patch_update: bool
@@ -309,68 +311,52 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
         always True for full updates.
     """
     data["model_version"] = model_version
+
+    if table_name not in table_changes:
+        return not patch_update
+
     if table_name == "configuration_sim_telarray":
-        relevant_changes = _get_configuration_sim_telarray_changes(changes)
-        if relevant_changes:
-            parameters, deprecated = _update_configuration_sim_telarray_parameters(
-                {} if patch_update else data.get("parameters", {}), relevant_changes
-            )
-            data["parameters"] = parameters
-            if deprecated and patch_update:
-                data["deprecated_parameters"] = deprecated
-        elif patch_update:
-            return False
+        parameters, deprecated = _update_configuration_sim_telarray_parameters(
+            {} if patch_update else data.get("parameters", {}), table_changes[table_name]
+        )
+        data["parameters"] = parameters
+        if deprecated and patch_update:
+            data["deprecated_parameters"] = deprecated
         return True
 
-    if table_name in changes:
-        relevant_changes = _get_table_changes(changes, table_name)
-        if not relevant_changes:
-            return not patch_update
+    if table_name in table_changes:
         production_key = _get_production_table_key(table_name)
         table_parameters = (
             {} if patch_update else data.get("parameters", {}).get(production_key, {})
         )
         parameters, deprecated = _update_parameters_dict(
-            table_parameters, {table_name: relevant_changes}, table_name
+            table_parameters, {table_name: table_changes[table_name]}, table_name
         )
         data["parameters"] = parameters
         if deprecated and patch_update:
             data["deprecated_parameters"] = deprecated
-    elif patch_update:
-        return False
 
     return True
 
 
-def _get_configuration_sim_telarray_changes(changes):
-    """Extract sim_telarray configuration changes from telescope-scoped change entries."""
-    relevant_changes = {}
-    for telescope, parameters in changes.items():
+def _group_changes_by_production_table(changes):
+    """Route per-telescope changes to the production table they affect."""
+    grouped_changes = {}
+    for table_name, parameters in changes.items():
         if not isinstance(parameters, dict):
             continue
 
-        table_changes = {}
+        grouped_changes.setdefault(table_name, {})
         for param, data in parameters.items():
-            if names.get_collection_name_from_parameter_name(param) == "configuration_sim_telarray":
-                table_changes[param] = data
+            collection = names.get_collection_name_from_parameter_name(param)
+            if collection == "configuration_sim_telarray":
+                grouped_changes.setdefault("configuration_sim_telarray", {})
+                grouped_changes["configuration_sim_telarray"].setdefault(table_name, {})
+                grouped_changes["configuration_sim_telarray"][table_name][param] = data
+            else:
+                grouped_changes[table_name][param] = data
 
-        if table_changes:
-            relevant_changes[telescope] = table_changes
-
-    return relevant_changes
-
-
-def _get_table_changes(changes, table_name):
-    """Extract changes relevant for a single production table."""
-    table_changes = changes.get(table_name, {})
-    if table_name == "configuration_corsika":
-        return table_changes
-
-    return {
-        param: data
-        for param, data in table_changes.items()
-        if names.get_collection_name_from_parameter_name(param) != "configuration_sim_telarray"
-    }
+    return {table: table_data for table, table_data in grouped_changes.items() if table_data}
 
 
 def _update_configuration_sim_telarray_parameters(table_parameters, changes):
