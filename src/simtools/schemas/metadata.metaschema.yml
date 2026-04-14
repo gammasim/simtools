@@ -608,7 +608,6 @@ definitions:
                   anyOf:
                     - type: string
                     - type: "null"
-                    - type: number
                   default: null
               required:
                 - activity_name
