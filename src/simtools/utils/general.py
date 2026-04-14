@@ -972,7 +972,7 @@ def load_environment_variables(env_file=".env", env_list=None):
     return env_values
 
 
-def uuid():
+def get_uuid():
     """
     Generate a UUID (7) string.
 
@@ -1055,7 +1055,7 @@ def extract_subdirectories_from_path(path, anchor="input"):
     ValueError
         If anchor is not present or no subdirectories are found after the anchor.
     """
-    path = Path(path).resolve()
+    path = Path(path)
     try:
         anchor_index = path.parts.index(anchor)
         subdirs = path.parts[anchor_index + 1 : -1]
@@ -1065,4 +1065,4 @@ def extract_subdirectories_from_path(path, anchor="input"):
     if len(subdirs) == 0:
         raise ValueError(f"Could not find subdirectory under '{anchor}'")
 
-    return "/".join(subdirs)
+    return str(Path(*subdirs))

@@ -59,7 +59,7 @@ def run_applications(args_dict):
                 application_counter += 1
 
                 app_configuration = config.get("configuration", {})
-                app_activity_id = app_configuration.get("activity_id") or gen.uuid()
+                app_activity_id = app_configuration.get("activity_id") or gen.get_uuid()
                 app_configuration["activity_id"] = app_activity_id
                 app_configuration.setdefault("label", app)
 
@@ -77,7 +77,7 @@ def run_applications(args_dict):
                     configuration=app_configuration,
                     runtime_environment=run_time,
                 )
-                metadata_file = _get_model_parameter_metadata_file(app, app_configuration)
+                metadata_file = _get_model_parameter_metadata_file(app_configuration)
                 if metadata_file is not None:
                     model_parameter_metadata_files.append(metadata_file)
                 file.write("=" * 80 + "\n")
@@ -140,7 +140,7 @@ def _read_application_configuration(configuration_file, steps, workflow_activity
     """
     job_configuration = ascii_handler.collect_data_from_file(configuration_file)
     workflow_activity_id = (
-        gen.extract_uuid7_from_path(configuration_file) or workflow_activity_id or gen.uuid()
+        gen.extract_uuid7_from_path(configuration_file) or workflow_activity_id or gen.get_uuid()
     )
     output_path, setting_workflow = _set_input_output_directories(configuration_file)
     configurations = job_configuration.get("applications")
@@ -154,7 +154,7 @@ def _read_application_configuration(configuration_file, steps, workflow_activity
             setting_workflow,
         )
         if config["configuration"].get("activity_id") is None:
-            config["configuration"]["activity_id"] = gen.uuid()
+            config["configuration"]["activity_id"] = gen.get_uuid()
         configurations[step_count - 1] = config
 
     return (
@@ -175,11 +175,8 @@ def _get_application_log_file(application, app_configuration, counter):
     return Path(output_path) / f"{application}-{counter:02d}.log"
 
 
-def _get_model_parameter_metadata_file(application, app_configuration):
+def _get_model_parameter_metadata_file(app_configuration):
     """Return expected metadata file for model-parameter submission applications."""
-    if application != "simtools-submit-model-parameter-from-external":
-        return None
-
     parameter = app_configuration.get("parameter")
     parameter_version = app_configuration.get("parameter_version")
     output_path = app_configuration.get("output_path")

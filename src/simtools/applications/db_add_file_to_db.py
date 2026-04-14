@@ -133,7 +133,7 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
     plural = "" if len(files_to_insert) == 1 else "s"
 
     if args_dict.get("test_db", False):
-        args_dict["db"] = args_dict["db"] + gen.uuid()
+        args_dict["db"] = args_dict["db"] + gen.get_uuid()
         logger.info(f"Using test database: {args_dict['db']}")
 
     print(f"Should the following file{plural} be inserted to the {args_dict['db']} DB?:\n")

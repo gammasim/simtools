@@ -425,7 +425,7 @@ class MetadataCollector:
         self.schema_file = self.get_data_model_schema_file_name()
         self.schema_dict = self.get_data_model_schema_dict()
 
-        product_dict["id"] = gen.uuid()
+        product_dict["id"] = gen.get_uuid()
         product_dict["creation_time"] = gen.now_date_time_in_isoformat()
         product_dict["description"] = self.schema_dict.get("description", None)
 

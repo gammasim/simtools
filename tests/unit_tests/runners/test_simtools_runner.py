@@ -663,9 +663,7 @@ def test_get_model_parameter_metadata_file():
         "parameter": "pm_photoelectron_spectrum",
         "parameter_version": "2.0.1",
     }
-    metadata_file = simtools_runner._get_model_parameter_metadata_file(
-        "simtools-submit-model-parameter-from-external", config
-    )
+    metadata_file = simtools_runner._get_model_parameter_metadata_file(config)
     assert metadata_file == Path(
         "output/test/pm_photoelectron_spectrum/pm_photoelectron_spectrum-2.0.1.meta.yml"
     )
