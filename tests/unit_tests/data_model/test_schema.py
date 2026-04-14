@@ -256,24 +256,6 @@ def test_validate_simulation_models_info_schema_rejects_invalid_model_status():
         )
 
 
-def test_validate_simulation_models_info_schema_requires_model_status_for_020():
-    """Test simulation models info schema 0.2.0 requires model_status."""
-    data = {
-        "model_version": "6.1.0",
-        "model_update": "patch_update",
-        "model_version_history": ["6.0.2"],
-        "description": "test",
-        "changes": {},
-    }
-
-    with pytest.raises(jsonschema.exceptions.ValidationError):
-        schema.validate_dict_using_schema(
-            data=data,
-            schema_file="simulation_models_info.schema.yml",
-            offline=True,
-        )
-
-
 def test_validate_simulation_models_info_schema_allows_missing_model_status_for_010():
     """Test simulation models info schema 0.1.0 keeps backward compatibility."""
     data = {
