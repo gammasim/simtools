@@ -770,9 +770,9 @@ def test_apply_changes_to_production_table_patch_update():
     data = {
         "model_version": "6.0.0",
         "production_table_name": "test_table",
-        "parameters": {"test_table": {"param1": "1.0.0"}},
+        "parameters": {"test_table": {"dsum_threshold": "1.0.0"}},
     }
-    changes = {"test_table": {"param1": {"version": "2.0.0", "value": 42}}}
+    changes = {"test_table": {"dsum_threshold": {"version": "2.0.0", "value": 42}}}
     model_version = "6.5.0"
 
     result = model_repository._apply_changes_to_production_table(
@@ -786,7 +786,7 @@ def test_apply_changes_to_production_table_patch_update():
     data_no_changes = {
         "model_version": "6.0.0",
         "production_table_name": "other_table",
-        "parameters": {"other_table": {"param1": "1.0.0"}},
+        "parameters": {"other_table": {"dsum_threshold": "1.0.0"}},
     }
 
     result_no_changes = model_repository._apply_changes_to_production_table(
@@ -801,12 +801,12 @@ def test_apply_changes_to_production_table_with_deprecated_parameters():
     data = {
         "model_version": "6.0.0",
         "production_table_name": "test_table",
-        "parameters": {"test_table": {"param1": "1.0.0"}},
+        "parameters": {"test_table": {"dsum_threshold": "1.0.0"}},
     }
     changes = {
         "test_table": {
-            "param1": {"version": "2.0.0", "value": 42},
-            "param_to_remove": {"version": "1.0.0", "deprecated": True},
+            "dsum_threshold": {"version": "2.0.0", "value": 42},
+            "discriminator_threshold": {"version": "1.0.0", "deprecated": True},
         }
     }
     model_version = "6.5.0"
@@ -818,7 +818,7 @@ def test_apply_changes_to_production_table_with_deprecated_parameters():
     assert result is True
     assert data["model_version"] == "6.5.0"
     assert "deprecated_parameters" in data
-    assert "param_to_remove" in data["deprecated_parameters"]
+    assert "discriminator_threshold" in data["deprecated_parameters"]
 
 
 @patch("simtools.model.model_repository._create_new_model_parameter_entry")
