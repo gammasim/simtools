@@ -57,7 +57,7 @@ def main():
     app_context = build_application(initialization_kwargs={"db_config": True})
 
     if app_context.args.get("test_db", False):
-        app_context.db_config["db_simulation_model_version"] = gen.uuid()
+        app_context.db_config["db_simulation_model_version"] = gen.get_uuid()
         app_context.logger.info(
             f"Using test database version {app_context.db_config['db_simulation_model_version']}"
         )

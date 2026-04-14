@@ -148,7 +148,7 @@ class Configurator:
         self._fill_from_environmental_variables()
 
         if self.config.get("activity_id", None) is None:
-            self.config["activity_id"] = gen.uuid()
+            self.config["activity_id"] = gen.get_uuid()
         if self.config["label"] is None:
             self.config["label"] = self.label
         self._initialize_model_versions()

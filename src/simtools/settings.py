@@ -5,7 +5,7 @@ import socket
 from pathlib import Path
 from types import MappingProxyType
 
-from simtools.utils.general import find_executable_in_dir, uuid
+from simtools.utils.general import find_executable_in_dir, get_uuid
 
 
 class _Config:
@@ -22,7 +22,7 @@ class _Config:
         self._corsika_exe = None
         self.user = os.getenv("USER", "unknown")
         self.hostname = socket.gethostname()
-        self.activity_id = uuid()
+        self.activity_id = get_uuid()
         self.activity_name = None
 
     def load(self, args=None, db_config=None, resolve_sim_software_executables=True):
@@ -75,7 +75,7 @@ class _Config:
     def _get_activity_id(args):
         """Get activity ID from arguments or generate a new one."""
         activity_id = args.get("activity_id") if args is not None else None
-        return activity_id if activity_id is not None else uuid()
+        return activity_id if activity_id is not None else get_uuid()
 
     def _get_corsika_exec(self):
         """
