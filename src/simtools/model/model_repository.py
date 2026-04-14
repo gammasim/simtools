@@ -272,6 +272,8 @@ def _apply_changes_to_production_tables(
     # placeholder for new tables
     for table_name in changes:
         tables.setdefault(table_name, {})
+    if _get_configuration_sim_telarray_changes(changes):
+        tables.setdefault("configuration_sim_telarray", {})
 
     for table_name, data in tables.items():
         if _apply_changes_to_production_table(
@@ -307,12 +309,30 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
         always True for full updates.
     """
     data["model_version"] = model_version
+    if table_name == "configuration_sim_telarray":
+        relevant_changes = _get_configuration_sim_telarray_changes(changes)
+        if relevant_changes:
+            parameters, deprecated = _update_configuration_sim_telarray_parameters(
+                {} if patch_update else data.get("parameters", {}), relevant_changes
+            )
+            data["parameters"] = parameters
+            if deprecated and patch_update:
+                data["deprecated_parameters"] = deprecated
+        elif patch_update:
+            return False
+        return True
+
     if table_name in changes:
+        relevant_changes = _get_table_changes(changes, table_name)
+        if not relevant_changes:
+            return not patch_update
         production_key = _get_production_table_key(table_name)
         table_parameters = (
             {} if patch_update else data.get("parameters", {}).get(production_key, {})
         )
-        parameters, deprecated = _update_parameters_dict(table_parameters, changes, table_name)
+        parameters, deprecated = _update_parameters_dict(
+            table_parameters, {table_name: relevant_changes}, table_name
+        )
         data["parameters"] = parameters
         if deprecated and patch_update:
             data["deprecated_parameters"] = deprecated
@@ -320,6 +340,56 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
         return False
 
     return True
+
+
+def _get_configuration_sim_telarray_changes(changes):
+    """Extract sim_telarray configuration changes from telescope-scoped change entries."""
+    relevant_changes = {}
+    for telescope, parameters in changes.items():
+        if not isinstance(parameters, dict):
+            continue
+
+        table_changes = {}
+        for param, data in parameters.items():
+            if names.get_collection_name_from_parameter_name(param) == "configuration_sim_telarray":
+                table_changes[param] = data
+
+        if table_changes:
+            relevant_changes[telescope] = table_changes
+
+    return relevant_changes
+
+
+def _get_table_changes(changes, table_name):
+    """Extract changes relevant for a single production table."""
+    table_changes = changes.get(table_name, {})
+    if table_name == "configuration_corsika":
+        return table_changes
+
+    return {
+        param: data
+        for param, data in table_changes.items()
+        if names.get_collection_name_from_parameter_name(param) != "configuration_sim_telarray"
+    }
+
+
+def _update_configuration_sim_telarray_parameters(table_parameters, changes):
+    """Update nested telescope entries in configuration_sim_telarray production tables."""
+    deprecated_params = []
+
+    for telescope, parameters in changes.items():
+        table_parameters.setdefault(telescope, {})
+        for param, data in parameters.items():
+            if data.get("deprecated", False):
+                _logger.info(f"Removing model parameter '{telescope} - {param}'")
+                deprecated_params.append(param)
+                table_parameters[telescope].pop(param, None)
+            else:
+                version = data["version"]
+                _logger.info(f"Setting '{telescope} - {param}' to version {version}")
+                table_parameters[telescope][param] = version
+
+    return table_parameters, deprecated_params
 
 
 def _get_changes_dict(model_version, simulation_models_path):

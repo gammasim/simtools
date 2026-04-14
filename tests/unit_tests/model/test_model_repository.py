@@ -542,6 +542,76 @@ def test_apply_changes_to_production_tables(tmp_path):
     assert config_data["parameters"]["MSTx-NectarCam"]["discriminator_threshold"] == "3.0.0"
 
 
+def test_apply_changes_to_production_tables_configuration_sim_telarray_parameter(tmp_path):
+    """Test telescope-scoped sim_telarray parameters update configuration_sim_telarray."""
+    source_prod_table_path = tmp_path / "simulation-models/productions" / "7.0.0"
+    source_prod_table_path.mkdir(parents=True)
+    target_prod_table_path = tmp_path / "simulation-models/productions" / "7.1.0"
+
+    telescope_table_data = {
+        "production_table_name": "LSTN-design",
+        "model_version": "7.0.0",
+        "parameters": {
+            "LSTN-design": {
+                "transit_time_random": "0.9.0",
+            }
+        },
+    }
+
+    config_table_data = {
+        "production_table_name": "configuration_sim_telarray",
+        "model_version": "7.0.0",
+        "parameters": {
+            "LSTN-design": {
+                "min_photons": "1.0.0",
+                "tailcut_scale": "1.0.0",
+            },
+            "LSTS-design": {
+                "min_photons": "1.0.0",
+            },
+        },
+    }
+
+    telescope_file = source_prod_table_path / "LSTN-design.json"
+    telescope_file.write_text(json.dumps(telescope_table_data))
+    config_file = source_prod_table_path / "configuration_sim_telarray.json"
+    config_file.write_text(json.dumps(config_table_data))
+
+    changes = {
+        "LSTN-design": {
+            "transit_time_random": {"version": "1.0.0", "value": 0.36, "unit": "ns"},
+            "calibration_devices": {
+                "version": "1.0.0",
+                "value": {"flat_fielding": "LSFN-design"},
+            },
+            "min_photons": {"version": "2.0.0", "value": 0},
+        }
+    }
+
+    model_repository._apply_changes_to_production_tables(
+        changes, "7.0.0", "7.1.0", "full_update", tmp_path
+    )
+
+    config_target_file = target_prod_table_path / "configuration_sim_telarray.json"
+    assert config_target_file.exists()
+
+    config_data = json.loads(config_target_file.read_text())
+    assert config_data["model_version"] == "7.1.0"
+    assert config_data["parameters"]["LSTN-design"]["min_photons"] == "2.0.0"
+    assert config_data["parameters"]["LSTN-design"]["tailcut_scale"] == "1.0.0"
+    assert "transit_time_random" not in config_data["parameters"]["LSTN-design"]
+    assert "calibration_devices" not in config_data["parameters"]["LSTN-design"]
+    assert config_data["parameters"]["LSTS-design"]["min_photons"] == "1.0.0"
+
+    telescope_target_file = target_prod_table_path / "LSTN-design.json"
+    assert telescope_target_file.exists()
+
+    telescope_data = json.loads(telescope_target_file.read_text())
+    assert telescope_data["model_version"] == "7.1.0"
+    assert telescope_data["parameters"]["LSTN-design"]["transit_time_random"] == "1.0.0"
+    assert "min_photons" not in telescope_data["parameters"]["LSTN-design"]
+
+
 def test_apply_changes_to_production_tables_no_parameters(tmp_path):
     """Test applying changes to production tables with no parameters."""
     # Create source directory with sample files
