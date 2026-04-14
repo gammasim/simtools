@@ -6,10 +6,10 @@ description: Schema for validating 'info.yml' files used to update CTAO simulati
 schema_version: 0.2.0
 schema_name: simulation_models_info.metaschema
 type: object
-additionalProperties: false
 
 definitions:
   SimulationModelsInfo:
+    additionalProperties: false
     properties:
       model_version:
         $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
@@ -59,7 +59,6 @@ definitions:
       - model_version
       - model_update
       - model_version_history
-      - model_status
       - description
       - changes
 
@@ -118,10 +117,10 @@ description: Schema for validating 'info.yml' files used to update CTAO simulati
 schema_version: 0.1.0
 schema_name: simulation_models_info.metaschema
 type: object
-additionalProperties: false
 
 definitions:
   SimulationModelsInfo:
+    additionalProperties: false
     properties:
       model_version:
         $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
