@@ -101,18 +101,18 @@ $defs:
       model_parameter_schema_version:
         $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
     oneOf:
-      - required:
-          - value
+      - required: [value]
         not:
-          required:
-            - activity_id
-      - required:
-          - activity_id
+          required: [activity_id]
+      - required: [activity_id]
         not:
-          required:
-            - value
-    required:
-      - version
+          required: [value]
+      - not:
+          anyOf:
+            - required: [value]
+            - required: [activity_id]
+        required:
+          - version
     additionalProperties: false
 ...
 ---
