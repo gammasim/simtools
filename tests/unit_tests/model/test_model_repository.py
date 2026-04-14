@@ -810,17 +810,37 @@ def test_create_new_model_parameter_entry_simple(mock_dump, mock_get_latest, tmp
     )
 
 
-def test_create_new_model_parameter_entry_telescope_dir_not_exists(tmp_test_directory):
-    """Test that FileNotFoundError is raised when telescope directory doesn't exist."""
-    telescope = "NonExistentTelescope"
-    param = "some_param"
-    param_data = {"version": "1.0.0", "value": 42.5}
+@patch("simtools.model.model_repository._get_latest_model_parameter_file")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.dump_model_parameter")
+def test_create_new_model_parameter_entry_telescope_dir_not_exists(
+    mock_dump, mock_get_latest, tmp_test_directory
+):
+    """Test that missing telescope directory is created for valid parameter input."""
+    telescope = "MSTx-FlashCam"
+    param = "num_gains"
+    param_data = {"version": "1.0.0", "value": 2}
+    model_parameters_dir = Path(tmp_test_directory) / "simulation-models" / "model_parameters"
 
-    # Don't create the telescope directory - the function will create it but fail on schema
-    with pytest.raises(FileNotFoundError, match="Schema file not found"):
-        model_repository._create_new_model_parameter_entry(
-            telescope, param, param_data, Path(tmp_test_directory)
-        )
+    # No prior parameter file exists.
+    mock_get_latest.side_effect = FileNotFoundError("No files found")
+
+    model_repository._create_new_model_parameter_entry(
+        telescope, param, param_data, Path(tmp_test_directory)
+    )
+
+    expected_output_path = model_parameters_dir / telescope / param
+    assert expected_output_path.is_dir()
+    mock_dump.assert_called_once_with(
+        parameter_name=param,
+        value=param_data["value"],
+        instrument=telescope,
+        parameter_version=param_data["version"],
+        output_file=f"{param}-{param_data['version']}.json",
+        output_path=expected_output_path,
+        unit=None,
+        meta_parameter=False,
+        model_parameter_schema_version=None,
+    )
 
 
 @patch("simtools.model.model_repository._check_for_major_version_jump")
@@ -1015,7 +1035,7 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_path):
         "model_version": "6.0.1",
         "model_update": "patch_update",
         "model_version_history": ["6.0.0"],
-        "changes": {"LSTN-design": {"some_parameter": {"version": "1.0.0", "value": 100}}},
+        "changes": {"LSTN-design": {"fadc_sum_bins": {"version": "1.0.0", "value": 100}}},
     }
 
     # Mock data for version 6.0.0 (base version with no history, marked as full_update)
@@ -1061,7 +1081,7 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_path):
     assert "calibration_devices" in changes["MSTx-FlashCam"]
 
     # Verify that 6.0.1 changes are NOT included because the loop breaks at 6.0.0 (full_update)
-    assert "some_parameter" not in changes["LSTN-design"]
+    assert "fadc_sum_bins" not in changes["LSTN-design"]
 
     # Verify mock was called for versions up to the full_update
     # Should call 6.0.2 and 6.0.0, but NOT 6.0.1 due to the break
@@ -1111,3 +1131,84 @@ def test_get_changes_to_production_empty_history(tmp_test_directory):
     # When history is empty, should return empty changes and the model_version
     assert changes == {}
     assert base_version == "6.0.0"
+
+    @patch("simtools.utils.names.get_collection_name_from_parameter_name")
+    def test_get_parameter_file_path_regular_collection(mock_get_collection, tmp_path):
+        """Test getting file path for regular collection."""
+        mock_get_collection.return_value = "camera"
+
+        result = model_repository._get_parameter_file_path(
+            str(tmp_path), "LSTN-01", "camera_config"
+        )
+
+        expected = tmp_path / "simulation-models" / "model_parameters" / "LSTN-01" / "camera_config"
+        assert result == expected
+        assert result.exists()
+
+    @patch("simtools.utils.names.get_collection_name_from_parameter_name")
+    def test_get_parameter_file_path_configuration_sim_telarray(mock_get_collection, tmp_path):
+        """Test getting file path for configuration_sim_telarray collection."""
+        mock_get_collection.return_value = "configuration_sim_telarray"
+
+        result = model_repository._get_parameter_file_path(
+            str(tmp_path), "LSTN-01", "sim_telarray_config"
+        )
+
+        expected = (
+            tmp_path
+            / "simulation-models"
+            / "model_parameters"
+            / "configuration_sim_telarray"
+            / "LSTN-01"
+            / "sim_telarray_config"
+        )
+        assert result == expected
+        assert result.exists()
+
+    @patch("simtools.utils.names.get_collection_name_from_parameter_name")
+    def test_get_parameter_file_path_configuration_corsika(mock_get_collection, tmp_path):
+        """Test getting file path for configuration_corsika collection."""
+        mock_get_collection.return_value = "configuration_corsika"
+
+        result = model_repository._get_parameter_file_path(
+            str(tmp_path), "MSTx-FlashCam", "corsika_config"
+        )
+
+        expected = (
+            tmp_path
+            / "simulation-models"
+            / "model_parameters"
+            / "configuration_corsika"
+            / "corsika_config"
+        )
+        assert result == expected
+        assert result.exists()
+
+    @patch("simtools.utils.names.get_collection_name_from_parameter_name")
+    def test_get_parameter_file_path_creates_nested_directories(mock_get_collection, tmp_path):
+        """Test that nested directories are created."""
+        mock_get_collection.return_value = "camera"
+
+        result = model_repository._get_parameter_file_path(
+            str(tmp_path), "SSTS-39", "pixel_efficiency"
+        )
+
+        assert result.exists()
+        assert result.is_dir()
+        assert "simulation-models" in str(result)
+        assert "model_parameters" in str(result)
+
+    @patch("simtools.utils.names.get_collection_name_from_parameter_name")
+    def test_get_parameter_file_path_multiple_calls_same_path(mock_get_collection, tmp_path):
+        """Test that multiple calls to same path return consistent results."""
+        mock_get_collection.return_value = "optics"
+
+        result1 = model_repository._get_parameter_file_path(
+            str(tmp_path), "LSTN-01", "mirror_panel"
+        )
+        result2 = model_repository._get_parameter_file_path(
+            str(tmp_path), "LSTN-01", "mirror_panel"
+        )
+
+        assert result1 == result2
+        assert result1.exists()

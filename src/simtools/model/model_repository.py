@@ -478,12 +478,7 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
     simulation_models_path: Path
         Path to the simulation models directory.
     """
-    telescope_dir = get_model_parameter_directory(simulation_models_path) / telescope
-    if not telescope_dir.exists():
-        _logger.info(f"Create directory for array element '{telescope}': '{telescope_dir}'.")
-        telescope_dir.mkdir(parents=True, exist_ok=True)
-
-    param_dir = telescope_dir / param
+    param_dir = _get_parameter_file_path(simulation_models_path, telescope, param)
     try:
         latest_file = _get_latest_model_parameter_file(param_dir, param, param_data["version"])
     except FileNotFoundError:
@@ -510,6 +505,41 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
         meta_parameter=param_data.get("meta_parameter", False),
         model_parameter_schema_version=param_data.get("model_parameter_schema_version", None),
     )
+
+
+def _get_parameter_file_path(simulation_models_path, telescope, param):
+    """
+    Get the file path for a model parameter.
+
+    Takes into account the path structure based on collections and array elements.
+
+    Parameters
+    ----------
+    simulation_models_path: Path
+        Path to the simulation models directory.
+    telescope: str
+        Name of the telescope.
+    param: str
+        Name of the parameter.
+
+    Returns
+    -------
+    Path
+        The file path to the model parameter JSON file.
+    """
+    param_dir = get_model_parameter_directory(simulation_models_path)
+    collection = names.get_collection_name_from_parameter_name(param)
+    if collection == "configuration_sim_telarray":
+        param_dir /= Path(collection) / telescope
+    elif collection == "configuration_corsika":
+        param_dir /= collection
+    else:
+        param_dir /= telescope
+
+    param_dir /= param
+    param_dir.mkdir(parents=True, exist_ok=True)
+
+    return param_dir
 
 
 def _get_latest_model_parameter_file(directory, parameter, max_version):
