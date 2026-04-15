@@ -264,7 +264,7 @@ def _get_local_schema_candidates(schema_file):
     if gen.is_url(str(schema_file)):
         schema_name = Path(str(schema_file)).name
         if schema_name:
-            candidates.extend([Path(schema_name), SCHEMA_PATH / schema_name])
+            candidates.extend([SCHEMA_PATH / schema_name, Path(schema_name)])
 
     # Keep order stable while removing duplicates.
     return list(dict.fromkeys(candidates))
