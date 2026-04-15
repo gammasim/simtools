@@ -218,6 +218,64 @@ def test_validate_schema_astropy_units(caplog):
         )
 
 
+@pytest.mark.parametrize("model_status", ["development", "production", "superseded"])
+def test_validate_simulation_models_info_schema_accepts_model_status(model_status):
+    """Test simulation models info schema accepts all supported model_status values."""
+    data = {
+        "schema_version": "0.2.0",
+        "model_version": "6.1.0",
+        "model_update": "patch_update",
+        "model_version_history": ["6.0.2"],
+        "model_status": model_status,
+        "description": "test",
+        "changes": {},
+    }
+
+    schema.validate_dict_using_schema(
+        data=data,
+        schema_file="simulation_models_info.schema.yml",
+        offline=True,
+    )
+
+
+def test_validate_simulation_models_info_schema_rejects_invalid_model_status():
+    """Test simulation models info schema rejects unsupported model_status values."""
+    data = {
+        "schema_version": "0.2.0",
+        "model_version": "6.1.0",
+        "model_update": "patch_update",
+        "model_version_history": ["6.0.2"],
+        "model_status": "ready-for-production",
+        "description": "test",
+        "changes": {},
+    }
+
+    with pytest.raises(jsonschema.exceptions.ValidationError):
+        schema.validate_dict_using_schema(
+            data=data,
+            schema_file="simulation_models_info.schema.yml",
+            offline=True,
+        )
+
+
+def test_validate_simulation_models_info_schema_allows_missing_model_status_for_010():
+    """Test simulation models info schema 0.1.0 keeps backward compatibility."""
+    data = {
+        "schema_version": "0.1.0",
+        "model_version": "6.1.0",
+        "model_update": "patch_update",
+        "model_version_history": ["6.0.2"],
+        "description": "test",
+        "changes": {},
+    }
+
+    schema.validate_dict_using_schema(
+        data=data,
+        schema_file="simulation_models_info.schema.yml",
+        offline=True,
+    )
+
+
 def test_load_schema(caplog, tmp_test_directory):
     _metadata_schema = schema.load_schema()
     assert isinstance(_metadata_schema, dict)
@@ -239,6 +297,56 @@ def test_load_schema(caplog, tmp_test_directory):
     with caplog.at_level(logging.WARNING):
         schema.load_schema(tmp_schema_file, "0.3.0")
     assert "Schema version 0.3.0 does not match 0.2.0" in caplog.text
+
+
+def test_load_schema_prefers_local_before_remote(monkeypatch, tmp_path):
+    """Test URL-based schema loading checks local schema files before remote access."""
+    monkeypatch.setattr(schema, "SCHEMA_PATH", tmp_path)
+    schema._retrieve_yaml_schema_from_uri.cache_clear()
+
+    remote_url = "https://example.com/schemas/simulation_models_info.schema.yml"
+    local_schema_path = tmp_path / "simulation_models_info.schema.yml"
+    expected_schema = {"schema_version": "0.2.0", "definitions": {}}
+
+    calls = []
+
+    def _mock_collect_data_from_file(file_name, yaml_document=None):
+        calls.append(str(file_name))
+        if Path(str(file_name)) == local_schema_path:
+            return expected_schema
+        raise FileNotFoundError(f"Missing schema: {file_name}")
+
+    monkeypatch.setattr(ascii_handler, "collect_data_from_file", _mock_collect_data_from_file)
+
+    result = schema.load_schema(schema_file=remote_url, schema_version="0.2.0")
+
+    assert result == expected_schema
+    assert str(local_schema_path) in calls
+    assert remote_url not in calls
+
+
+def test_load_schema_falls_back_to_remote_when_local_missing(monkeypatch, tmp_path):
+    """Test URL-based schema loading falls back to remote retrieval if local lookup fails."""
+    monkeypatch.setattr(schema, "SCHEMA_PATH", tmp_path)
+    schema._retrieve_yaml_schema_from_uri.cache_clear()
+
+    remote_url = "https://example.com/schemas/simulation_models_info.schema.yml"
+    expected_schema = {"schema_version": "0.2.0", "definitions": {}}
+
+    calls = []
+
+    def _mock_collect_data_from_file(file_name, yaml_document=None):
+        calls.append(str(file_name))
+        if str(file_name) == remote_url:
+            return expected_schema
+        raise FileNotFoundError(f"Missing schema: {file_name}")
+
+    monkeypatch.setattr(ascii_handler, "collect_data_from_file", _mock_collect_data_from_file)
+
+    result = schema.load_schema(schema_file=remote_url, schema_version="0.2.0")
+
+    assert result == expected_schema
+    assert str(remote_url) in calls
 
 
 def test_add_array_elements():
@@ -544,6 +652,19 @@ def test_get_schema_file_name(tmp_test_directory):
     data_dict = {"meta_schema_url": "https://schema.example.com"}
     result = schema._get_schema_file_name(data_dict=data_dict)
     assert result == "https://schema.example.com"
+
+    # Test with schema_url in data_dict (e.g. info.yml files)
+    data_dict = {"schema_url": "https://info-schema.example.com"}
+    result = schema._get_schema_file_name(data_dict=data_dict)
+    assert result == "https://info-schema.example.com"
+
+    # Test that meta_schema_url takes precedence over schema_url
+    data_dict = {
+        "meta_schema_url": "https://meta-schema.example.com",
+        "schema_url": "https://schema.example.com",
+    }
+    result = schema._get_schema_file_name(data_dict=data_dict)
+    assert result == "https://meta-schema.example.com"
 
     # Test with file_name (lowercase cta)
     test_file = Path(tmp_test_directory) / "test_file.yml"
