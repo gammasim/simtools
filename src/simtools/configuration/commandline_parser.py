@@ -131,6 +131,12 @@ class CommandLineParser(argparse.ArgumentParser):
         """Initialize application execution arguments."""
         _job_group = self.add_argument_group("execution")
         _job_group.add_argument(
+            "--activity_id",
+            help="activity identifier",
+            type=str,
+            default=None,
+        )
+        _job_group.add_argument(
             "--test",
             help="test option for faster execution during development",
             action="store_true",
