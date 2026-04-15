@@ -15,15 +15,11 @@ definitions:
       plot:
         "$ref": "#/definitions/plot"
       schema_version:
-        type: string
-        description: "Version of the schema."
+        $ref: 'common_definitions.schema.yml#/$defs/schema_version_field'
       schema_url:
-        type: string
-        format: uri
-        description: "URL of the schema."
+        $ref: 'common_definitions.schema.yml#/$defs/schema_url_field'
       schema_name:
-        type: string
-        description: "Name of the schema."
+        $ref: 'common_definitions.schema.yml#/$defs/schema_name_field'
     required:
       - plot
     title: "SimtoolsPlotConfiguration"
