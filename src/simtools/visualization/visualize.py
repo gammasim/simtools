@@ -114,7 +114,7 @@ def _add_unit(title, array):
 
     The unit is extracted from the unit field of the array, in case array is an astropy quantity.
     If a unit is found, it is added to title in the form [unit]. If a unit already is present in
-    title (in the same form), a warning is printed and no unit is added. The function assumes
+    title (in the same form), no unit is added. The function assumes
     array not to be empty and returns the modified title.
 
     Parameters
@@ -128,7 +128,7 @@ def _add_unit(title, array):
         Title with units.
     """
     if title and "[" in title and "]" in title:
-        _logger.warning(
+        _logger.debug(
             "Tried to add a unit from astropy.unit, "
             "but axis already has an explicit unit. Left axis title as is."
         )
