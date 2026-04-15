@@ -1340,11 +1340,11 @@ def test_get_changes_to_production_empty_history(tmp_test_directory):
 
 
 @patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_parameter_file_path_regular_collection(mock_get_collection, tmp_path):
+def test_get_parameter_file_directory_regular_collection(mock_get_collection, tmp_path):
     """Test getting file path for regular collection."""
     mock_get_collection.return_value = "camera"
 
-    result = model_repository._get_parameter_file_path(
+    result = model_repository._get_parameter_file_directory(
         str(tmp_path), "LSTN-01", "camera_config"
     )
 
@@ -1354,11 +1354,11 @@ def test_get_parameter_file_path_regular_collection(mock_get_collection, tmp_pat
 
 
 @patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_parameter_file_path_configuration_sim_telarray(mock_get_collection, tmp_path):
+def test_get_parameter_file_directory_configuration_sim_telarray(mock_get_collection, tmp_path):
     """Test getting file path for configuration_sim_telarray collection."""
     mock_get_collection.return_value = "configuration_sim_telarray"
 
-    result = model_repository._get_parameter_file_path(
+    result = model_repository._get_parameter_file_directory(
         str(tmp_path), "LSTN-01", "sim_telarray_config"
     )
 
@@ -1375,49 +1375,51 @@ def test_get_parameter_file_path_configuration_sim_telarray(mock_get_collection,
 
 
 @patch("simtools.utils.names.get_collection_name_from_parameter_name")
-    def test_get_parameter_file_path_configuration_corsika(mock_get_collection, tmp_path):
-        """Test getting file path for configuration_corsika collection."""
-        mock_get_collection.return_value = "configuration_corsika"
+def test_get_parameter_file_directory_configuration_corsika(mock_get_collection, tmp_path):
+    """Test getting file path for configuration_corsika collection."""
+    mock_get_collection.return_value = "configuration_corsika"
 
-        result = model_repository._get_parameter_file_path(
-            str(tmp_path), "MSTx-FlashCam", "corsika_config"
-        )
+    result = model_repository._get_parameter_file_directory(
+        str(tmp_path), "MSTx-FlashCam", "corsika_config"
+    )
 
-        expected = (
-            tmp_path
-            / "simulation-models"
-            / "model_parameters"
-            / "configuration_corsika"
-            / "corsika_config"
-        )
-        assert result == expected
-        assert result.exists()
+    expected = (
+        tmp_path
+        / "simulation-models"
+        / "model_parameters"
+        / "configuration_corsika"
+        / "corsika_config"
+    )
+    assert result == expected
+    assert result.exists()
 
-    @patch("simtools.utils.names.get_collection_name_from_parameter_name")
-    def test_get_parameter_file_path_creates_nested_directories(mock_get_collection, tmp_path):
-        """Test that nested directories are created."""
-        mock_get_collection.return_value = "camera"
 
-        result = model_repository._get_parameter_file_path(
-            str(tmp_path), "SSTS-39", "pixel_efficiency"
-        )
+@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+def test_get_parameter_file_directory_creates_nested_directories(mock_get_collection, tmp_path):
+    """Test that nested directories are created."""
+    mock_get_collection.return_value = "camera"
 
-        assert result.exists()
-        assert result.is_dir()
-        assert "simulation-models" in str(result)
-        assert "model_parameters" in str(result)
+    result = model_repository._get_parameter_file_directory(
+        str(tmp_path), "SSTS-39", "pixel_efficiency"
+    )
 
-    @patch("simtools.utils.names.get_collection_name_from_parameter_name")
-    def test_get_parameter_file_path_multiple_calls_same_path(mock_get_collection, tmp_path):
-        """Test that multiple calls to same path return consistent results."""
-        mock_get_collection.return_value = "optics"
+    assert result.exists()
+    assert result.is_dir()
+    assert "simulation-models" in str(result)
+    assert "model_parameters" in str(result)
 
-        result1 = model_repository._get_parameter_file_path(
-            str(tmp_path), "LSTN-01", "mirror_panel"
-        )
-        result2 = model_repository._get_parameter_file_path(
-            str(tmp_path), "LSTN-01", "mirror_panel"
-        )
 
-        assert result1 == result2
-        assert result1.exists()
+@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+def test_get_parameter_file_directory_multiple_calls_same_path(mock_get_collection, tmp_path):
+    """Test that multiple calls to same path return consistent results."""
+    mock_get_collection.return_value = "optics"
+
+    result1 = model_repository._get_parameter_file_directory(
+        str(tmp_path), "LSTN-01", "mirror_panel"
+    )
+    result2 = model_repository._get_parameter_file_directory(
+        str(tmp_path), "LSTN-01", "mirror_panel"
+    )
+
+    assert result1 == result2
+    assert result1.exists()

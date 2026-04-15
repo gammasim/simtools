@@ -636,7 +636,7 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
     simulation_models_path: Path
         Path to the simulation models directory.
     """
-    param_dir = _get_parameter_file_path(simulation_models_path, telescope, param)
+    param_dir = _get_parameter_file_directory(simulation_models_path, telescope, param)
     try:
         latest_file = _get_latest_model_parameter_file(param_dir, param, param_data["version"])
     except FileNotFoundError:
@@ -665,7 +665,7 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
     )
 
 
-def _get_parameter_file_path(simulation_models_path, telescope, param):
+def _get_parameter_file_directory(simulation_models_path, telescope, param):
     """
     Get the file path for a model parameter.
 
