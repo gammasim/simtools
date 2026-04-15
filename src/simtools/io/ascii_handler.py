@@ -134,6 +134,38 @@ def collect_data_from_http(url):
     return data
 
 
+def collect_data_from_git(file_name, git_repository, git_branch="main"):
+    """
+    Download yaml/json/list data from a git repository via its raw URL interface.
+
+    Supports both repository URLs (with or without ``.git`` suffix) and raw URL bases
+    containing ``/-/raw/``.
+
+    Parameters
+    ----------
+    file_name: str or Path
+        File path inside repository (e.g. ``path/to/file.json``).
+    git_repository: str
+        Git repository URL or raw URL base.
+    git_branch: str
+        Branch or tag to use when reading from raw endpoint.
+
+    Returns
+    -------
+    dict or list
+        Parsed file content.
+    """
+    file_path = Path(file_name).as_posix().lstrip("/")
+    repository_url = str(git_repository).rstrip("/")
+
+    if "/-/raw" in repository_url:
+        url = f"{repository_url}/{git_branch}/{file_path}"
+    else:
+        url = f"{repository_url.removesuffix('.git')}/-/raw/{git_branch}/{file_path}"
+
+    return collect_data_from_http(url)
+
+
 def read_file_encoded_in_utf_or_latin(file_name):
     """
     Read a file encoded in UTF-8 or Latin-1.
