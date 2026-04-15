@@ -84,6 +84,23 @@ def test_plot_table(io_handler):
     plt.close(fig)
 
 
+def test_plot_1d_legend_fontsize_setting():
+    """Test that plot_1d applies the requested legend font size."""
+    dtype = [("x", float), ("y", float)]
+    data_ref = np.array([(1.0, 1.0), (2.0, 2.0)], dtype=dtype)
+    data_cmp = np.array([(1.0, 1.2), (2.0, 2.3)], dtype=dtype)
+
+    fig = visualize.plot_1d(
+        {"ref": data_ref, "cmp": data_cmp},
+        legend_fontsize=8,
+    )
+
+    legend = fig.axes[0].get_legend()
+    assert legend is not None
+    assert all(text.get_fontsize() == 8 for text in legend.get_texts())
+    plt.close(fig)
+
+
 def test_add_unit(caplog, wavelength):
     value_with_unit = [30, 40] << u.nm
     assert visualize._add_unit("Wavelength", value_with_unit) == wavelength
