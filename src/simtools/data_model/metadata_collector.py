@@ -8,7 +8,7 @@ implementation of the observatory metadata model.
 
 import getpass
 import logging
-import uuid
+from copy import deepcopy
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -16,6 +16,7 @@ import simtools.version
 from simtools.constants import METADATA_JSON_SCHEMA
 from simtools.data_model import metadata_model, schema
 from simtools.io import ascii_handler, io_handler
+from simtools.settings import config
 from simtools.utils import names
 
 
@@ -94,8 +95,8 @@ class MetadataCollector:
 
         """
         try:
-            self.top_level_meta[self.observatory]["activity"]["end"] = (
-                gen.now_date_time_in_isoformat()
+            self.top_level_meta[self.observatory]["activity"]["end"] = self.args_dict.get(
+                "activity_end", gen.now_date_time_in_isoformat()
             )
         except KeyError:
             pass
@@ -310,6 +311,10 @@ class MetadataCollector:
             except (KeyError, TypeError):
                 self._logger.debug("No input product metadata appended to associated data.")
 
+        associated_activities = self.args_dict.get("associated_activities")
+        if associated_activities is not None and "associated_activities" in context_dict:
+            context_dict["associated_activities"] = deepcopy(associated_activities)
+
     def _read_input_metadata_from_file(self, metadata_file_name_expression=None):
         """
         Read and validate input metadata from file.
@@ -420,7 +425,7 @@ class MetadataCollector:
         self.schema_file = self.get_data_model_schema_file_name()
         self.schema_dict = self.get_data_model_schema_dict()
 
-        product_dict["id"] = str(uuid.uuid4())
+        product_dict["id"] = gen.get_uuid()
         product_dict["creation_time"] = gen.now_date_time_in_isoformat()
         product_dict["description"] = self.schema_dict.get("description", None)
 
@@ -499,13 +504,19 @@ class MetadataCollector:
             Dictionary for top-level activity metadata.
 
         """
-        activity_dict["name"] = self.args_dict.get("label", None)
+        activity_dict["name"] = self.args_dict.get("label") or config.activity_name
         activity_dict["type"] = "software"
         activity_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
-        activity_dict["start"] = gen.now_date_time_in_isoformat()
-        activity_dict["end"] = activity_dict["start"]
+        activity_dict["start"] = self.args_dict.get(
+            "activity_start", gen.now_date_time_in_isoformat()
+        )
+        activity_dict["end"] = self.args_dict.get("activity_end", activity_dict["start"])
         activity_dict["software"]["name"] = "simtools"
         activity_dict["software"]["version"] = simtools.version.__version__
+        if "runtime_environment" in activity_dict:
+            activity_dict["runtime_environment"] = deepcopy(
+                self.args_dict.get("runtime_environment")
+            )
 
     def _merge_config_dicts(self, dict_high, dict_low, add_new_fields=False):
         """

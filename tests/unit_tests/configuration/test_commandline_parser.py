@@ -250,6 +250,15 @@ def test_initialize_default_arguments():
     assert "output" in [str(group.title) for group in job_groups]
 
 
+def test_initialize_default_arguments_accepts_activity_id():
+    parser_with_defaults = parser.CommandLineParser()
+    parser_with_defaults.initialize_default_arguments()
+
+    args = parser_with_defaults.parse_args(["--activity_id", "my-test-activity-id"])
+
+    assert args.activity_id == "my-test-activity-id"
+
+
 def test_initialize_application_arguments():
     app_parser = parser.CommandLineParser()
     app_parser.initialize_application_arguments(

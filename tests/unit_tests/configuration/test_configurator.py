@@ -242,6 +242,7 @@ def test_initialize_output(configurator):
     # output is not configured (and not activity_id)
     configurator.config["test"] = False
     configurator.config["output_file"] = None
+    configurator.config.pop("activity_id", None)
     with pytest.raises(KeyError):
         configurator._initialize_output()
 

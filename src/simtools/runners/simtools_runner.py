@@ -1,15 +1,21 @@
 """Tools for running applications in the simtools framework."""
 
+import logging
 import shutil
+from copy import deepcopy
+from datetime import UTC, datetime
 from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools import dependencies
+from simtools.data_model import workflow_metadata
 from simtools.io import ascii_handler
 from simtools.job_execution import job_manager
 
+logger = logging.getLogger(__name__)
 
-def run_applications(args_dict, logger):
+
+def run_applications(args_dict):
     """
     Run simtools applications step-by-step as defined in a configuration file.
 
@@ -17,12 +23,23 @@ def run_applications(args_dict, logger):
     ----------
     args_dict : dict
         Dictionary containing command line arguments.
-    logger : logging.Logger
-        Logger for logging application output.
     """
-    configurations, runtime_environment, log_file = _read_application_configuration(
-        args_dict["configuration_file"], args_dict.get("steps"), logger
+    (
+        configurations,
+        runtime_environment,
+        log_file,
+        workflow_activity_id,
+    ) = _read_application_configuration(
+        args_dict["config_file"],
+        args_dict.get("steps"),
+        args_dict.get("activity_id"),
     )
+    workflow_start = datetime.now(UTC)
+    associated_activities = []
+    runtime_environment_snapshot = deepcopy(runtime_environment)
+    model_parameter_metadata_files = []
+    application_counter = 0
+
     run_time = (
         read_runtime_environment(runtime_environment)
         if not args_dict["ignore_runtime_environment"]
@@ -32,25 +49,64 @@ def run_applications(args_dict, logger):
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
         file.write(dependencies.get_version_string(run_time, include_software_versions=False))
+        try:
+            for config in configurations:
+                app = config.get("application")
+                if not config.get("run_application"):
+                    logger.info(f"Skipping application: {app}")
+                    continue
 
-        for config in configurations:
-            app = config.get("application")
-            if not config.get("run_application"):
-                logger.info(f"Skipping application: {app}")
-                continue
-            logger.info(f"Running application: {app}")
-            result = job_manager.submit(
-                app,
-                out_file=None,
-                err_file=None,
-                configuration=config.get("configuration"),
-                runtime_environment=run_time,
-            )
-            file.write("=" * 80 + "\n")
-            file.write(f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n")
+                application_counter += 1
+
+                app_configuration = config.get("configuration", {})
+                app_activity_id = app_configuration.get("activity_id") or gen.get_uuid()
+                app_configuration["activity_id"] = app_activity_id
+                app_configuration.setdefault("label", app)
+
+                app_configuration["log_file"] = _get_application_log_file(
+                    app, app_configuration, application_counter
+                )
+
+                associated_activities.append({"activity_name": app, "activity_id": app_activity_id})
+
+                logger.info(f"Running application: {app}")
+                result = job_manager.submit(
+                    app,
+                    out_file=None,
+                    err_file=None,
+                    configuration=app_configuration,
+                    runtime_environment=run_time,
+                )
+                metadata_file = _get_model_parameter_metadata_file(app_configuration)
+                if metadata_file is not None:
+                    model_parameter_metadata_files.append(metadata_file)
+                file.write("=" * 80 + "\n")
+                file.write(
+                    f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
+                )
+        finally:
+            if model_parameter_metadata_files:
+                workflow_activity = workflow_metadata.build_workflow_activity_metadata(
+                    args_dict=args_dict,
+                    workflow_activity_id=workflow_activity_id,
+                    workflow_start=workflow_start,
+                    workflow_end=max(datetime.now(UTC), workflow_start),
+                    runtime_environment=(
+                        runtime_environment_snapshot
+                        if not args_dict["ignore_runtime_environment"]
+                        else None
+                    ),
+                    workflow_context=_get_workflow_context(configurations),
+                )
+                for metadata_file in model_parameter_metadata_files:
+                    workflow_metadata.update_model_parameter_metadata_file(
+                        metadata_file=metadata_file,
+                        workflow_activity=workflow_activity,
+                        associated_activities=associated_activities,
+                    )
 
 
-def _read_application_configuration(configuration_file, steps, logger):
+def _read_application_configuration(configuration_file, steps, workflow_activity_id=None):
     """
     Read application configuration from file and modify for setting workflows.
 
@@ -67,8 +123,8 @@ def _read_application_configuration(configuration_file, steps, logger):
         Configuration file name.
     steps : list
         List of steps to be executed (None: all steps).
-    logger : Logger
-        Logger object.
+    workflow_activity_id : str
+        Workflow activity id fallback from command-line context.
 
     Returns
     -------
@@ -78,11 +134,16 @@ def _read_application_configuration(configuration_file, steps, logger):
         Runtime environment configuration.
     Path
         Path to the log file.
+    str
+        Workflow activity id.
 
     """
     job_configuration = ascii_handler.collect_data_from_file(configuration_file)
-    configurations = job_configuration.get("applications")
+    workflow_activity_id = (
+        gen.extract_uuid7_from_path(configuration_file) or workflow_activity_id or gen.get_uuid()
+    )
     output_path, setting_workflow = _set_input_output_directories(configuration_file)
+    configurations = job_configuration.get("applications")
     logger.info(f"Setting workflow output path to {output_path}")
     for step_count, config in enumerate(configurations, start=1):
         config["run_application"] = step_count in steps if steps else True
@@ -92,13 +153,66 @@ def _read_application_configuration(configuration_file, steps, logger):
             output_path,
             setting_workflow,
         )
+        if config["configuration"].get("activity_id") is None:
+            config["configuration"]["activity_id"] = gen.get_uuid()
         configurations[step_count - 1] = config
 
     return (
         configurations,
         job_configuration.get("runtime_environment"),
         output_path / "simtools.log",
+        workflow_activity_id,
     )
+
+
+def _get_application_log_file(application, app_configuration, counter):
+    """Return log file path for an application executed via run_applications."""
+    if app_configuration.get("log_file") is not None:
+        return app_configuration["log_file"]
+    output_path = app_configuration.get("output_path")
+    if output_path is None:
+        return None
+    return Path(output_path) / f"{application}-{counter:02d}.log"
+
+
+def _get_model_parameter_metadata_file(app_configuration):
+    """Return expected metadata file for model-parameter submission applications."""
+    parameter = app_configuration.get("parameter")
+    parameter_version = app_configuration.get("parameter_version")
+    output_path = app_configuration.get("output_path")
+    if not parameter or not parameter_version or not output_path:
+        return None
+
+    return Path(output_path) / parameter / f"{parameter}-{parameter_version}.meta.yml"
+
+
+def _get_workflow_configuration_value(configurations, key):
+    """Return first non-empty configuration value for a given key."""
+    for config in configurations:
+        value = config.get("configuration", {}).get(key)
+        if value is not None:
+            return value
+    return None
+
+
+def _get_workflow_context(configurations):
+    """Extract workflow context (site, instrument) from configurations.
+
+    Parameters
+    ----------
+    configurations : list
+        List of application configurations.
+
+    Returns
+    -------
+    dict
+        Context dict with 'site' and 'instrument' keys.
+    """
+    return {
+        "site": _get_workflow_configuration_value(configurations, "site"),
+        "instrument": _get_workflow_configuration_value(configurations, "instrument")
+        or _get_workflow_configuration_value(configurations, "telescope"),
+    }
 
 
 def _replace_placeholders_in_configuration(
@@ -123,14 +237,10 @@ def _replace_placeholders_in_configuration(
     dict
         Configuration dictionary with placeholders replaced.
     """
-    for key, value in configuration.items():
-        if isinstance(value, str):
-            configuration[key] = value.replace(place_holder, setting_workflow)
-        if isinstance(value, list):
-            configuration[key] = [
-                item.replace(place_holder, setting_workflow) if isinstance(item, str) else item
-                for item in value
-            ]
+    configuration = gen.replace_placeholders_recursively(
+        configuration,
+        {place_holder: setting_workflow},
+    )
     if output_path:
         configuration["output_path"] = str(output_path)
 
@@ -153,19 +263,10 @@ def _set_input_output_directories(path):
     tuple
         The first part is the 'input' directory, the second part is the subdirectory name
     """
-    path = Path(path).resolve()
-    try:
-        input_index = path.parts.index("input")
-        # Get all parts after 'input', excluding the filename
-        subdirs = path.parts[input_index + 1 : -1]
-        setting_workflow = "/".join(subdirs)
-        workflow_dir = path.parts[input_index]
-    except (ValueError, IndexError) as exc:
-        raise ValueError(f"Could not find subdirectory under 'input': {exc}") from exc
-
-    output_path = Path(str(workflow_dir).replace("input", "output")) / Path(setting_workflow)
+    setting_workflow = gen.extract_subdirectories_from_path(path, anchor="input")
+    output_path = Path("output") / Path(setting_workflow)
     output_path.mkdir(parents=True, exist_ok=True)
-    return output_path, "/".join(subdirs)
+    return output_path, setting_workflow
 
 
 def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
