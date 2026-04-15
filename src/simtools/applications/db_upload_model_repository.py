@@ -41,13 +41,9 @@ used to name the database, but no tag checkout is done):
 """
 
 from simtools.application_control import build_application
+from simtools.constants import DEFAULT_SIMULATION_MODELS
 from simtools.db import db_handler, db_model_upload
 from simtools.settings import config
-
-DEFAULT_REPOSITORY_URL = (
-    "https://gitlab.cta-observatory.org/cta-science/simulations/"
-    "simulation-model/simulation-models.git"
-)
 
 
 def _add_arguments(parser):
@@ -96,7 +92,7 @@ def main():
         db=db,
         db_simulation_model=app_context.args.get("db_simulation_model"),
         db_simulation_model_version=app_context.args.get("db_simulation_model_version"),
-        repository_url=DEFAULT_REPOSITORY_URL,
+        repository_url=DEFAULT_SIMULATION_MODELS,
         repository_branch=app_context.args.get("branch"),
     )
 

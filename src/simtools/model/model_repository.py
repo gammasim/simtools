@@ -19,6 +19,7 @@ from packaging.version import Version
 from packaging.version import parse as parse_version
 
 import simtools.data_model.model_data_writer as writer
+from simtools.constants import DEFAULT_SIMULATION_WORKFLOWS
 from simtools.io import ascii_handler
 from simtools.utils import names
 
@@ -202,6 +203,10 @@ def generate_new_production(model_version, simulation_models_path):
     """
     modification_dict = _get_changes_dict(model_version, simulation_models_path)
     update_type = modification_dict.get("model_update", "full_update")
+    setting_workflows_git_tag = modification_dict.get("setting_workflows_git_tag", "main")
+    setting_workflows_git_repository = modification_dict.get(
+        "setting_workflows_git_repository", DEFAULT_SIMULATION_WORKFLOWS
+    )
     changes, base_model_version = _get_changes_to_production(
         modification_dict, simulation_models_path, update_type
     )
@@ -214,7 +219,12 @@ def generate_new_production(model_version, simulation_models_path):
         simulation_models_path,
     )
 
-    _apply_changes_to_model_parameters(changes, simulation_models_path)
+    _apply_changes_to_model_parameters(
+        changes,
+        simulation_models_path,
+        setting_workflows_git_tag,
+        setting_workflows_git_repository,
+    )
 
 
 def _get_production_table_key(table_name):
@@ -441,7 +451,12 @@ def _update_parameters_dict(table_parameters, changes, table_name):
     return new_params, deprecated_params
 
 
-def _apply_changes_to_model_parameters(changes, simulation_models_path):
+def _apply_changes_to_model_parameters(
+    changes,
+    simulation_models_path,
+    setting_workflows_git_tag="main",
+    setting_workflows_git_repository=DEFAULT_SIMULATION_WORKFLOWS,
+):
     """
     Apply changes to model parameters by creating new parameter entries.
 
@@ -451,13 +466,100 @@ def _apply_changes_to_model_parameters(changes, simulation_models_path):
         The changes to be applied.
     simulation_models_path: Path
         Path to the simulation models directory.
+    setting_workflows_git_tag: str
+        Branch or tag used to download parameters from simulation workflow repository.
+    setting_workflows_git_repository: str
+        Repository URL used to download parameters from simulation workflow repository.
+
+    Raises
+    ------
+    ValueError
+        If both ``activity_id`` and ``value`` are provided for the same parameter.
     """
     for telescope, parameters in changes.items():
         for param, param_data in parameters.items():
-            if param_data.get("value") is not None:
+            if param_data.get("activity_id") is not None and param_data.get("value") is not None:
+                raise ValueError(
+                    f"Both activity_id and value are set for '{telescope} - {param}'. "
+                    "Provide only one source for model parameter content."
+                )
+
+            if param_data.get("activity_id") is not None:
+                _download_model_parameter_from_workflow(
+                    telescope,
+                    param,
+                    param_data,
+                    simulation_models_path,
+                    setting_workflows_git_tag,
+                    setting_workflows_git_repository,
+                )
+            elif param_data.get("value") is not None:
                 _create_new_model_parameter_entry(
                     telescope, param, param_data, simulation_models_path
                 )
+
+
+def _download_model_parameter_from_workflow(
+    telescope,
+    param,
+    param_data,
+    simulation_models_path,
+    setting_workflows_git_tag="main",
+    setting_workflows_git_repository=DEFAULT_SIMULATION_WORKFLOWS,
+):
+    """
+    Download model parameter entry from simulation workflow repository.
+
+    Parameters
+    ----------
+    telescope: str
+        Name of the telescope.
+    param: str
+        Name of the parameter.
+    param_data: dict
+        Dictionary containing the parameter data including version and activity_id.
+    simulation_models_path: Path
+        Path to the simulation models directory.
+    setting_workflows_git_tag: str
+        Branch or tag used to download parameters from simulation workflow repository.
+    setting_workflows_git_repository: str
+        Repository URL used to download parameters from simulation workflow repository.
+
+    Raises
+    ------
+    TypeError
+        If downloaded content is not a dictionary.
+    ValueError
+        If downloaded parameter_version does not match requested version.
+    """
+    source_file = (
+        f"output/{telescope}/{param}/{param_data['activity_id']}/"
+        f"{param}/{param}-{param_data['version']}.json"
+    )
+    _logger.info(f"Downloading model parameter '{telescope} - {param}' from '{source_file}'.")
+
+    downloaded_data = ascii_handler.collect_data_from_git(
+        file_name=source_file,
+        git_repository=setting_workflows_git_repository,
+        git_branch=setting_workflows_git_tag,
+    )
+    if not isinstance(downloaded_data, dict):
+        raise TypeError(
+            f"Downloaded model parameter is of type {type(downloaded_data)} "
+            f"for '{telescope} - {param}'."
+        )
+
+    downloaded_version = downloaded_data.get("parameter_version")
+    if downloaded_version != param_data["version"]:
+        raise ValueError(
+            f"Version mismatch for '{telescope} - {param}': requested "
+            f"'{param_data['version']}', downloaded '{downloaded_version}'."
+        )
+
+    target_dir = get_model_parameter_directory(simulation_models_path) / telescope / param
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target_file = target_dir / f"{param}-{param_data['version']}.json"
+    ascii_handler.write_data_to_file(downloaded_data, target_file, sort_keys=True)
 
 
 def _create_new_model_parameter_entry(telescope, param, param_data, simulation_models_path):
