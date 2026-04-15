@@ -1338,40 +1338,43 @@ def test_get_changes_to_production_empty_history(tmp_test_directory):
     assert changes == {}
     assert base_version == "6.0.0"
 
-    @patch("simtools.utils.names.get_collection_name_from_parameter_name")
-    def test_get_parameter_file_path_regular_collection(mock_get_collection, tmp_path):
-        """Test getting file path for regular collection."""
-        mock_get_collection.return_value = "camera"
 
-        result = model_repository._get_parameter_file_path(
-            str(tmp_path), "LSTN-01", "camera_config"
-        )
+@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+def test_get_parameter_file_path_regular_collection(mock_get_collection, tmp_path):
+    """Test getting file path for regular collection."""
+    mock_get_collection.return_value = "camera"
 
-        expected = tmp_path / "simulation-models" / "model_parameters" / "LSTN-01" / "camera_config"
-        assert result == expected
-        assert result.exists()
+    result = model_repository._get_parameter_file_path(
+        str(tmp_path), "LSTN-01", "camera_config"
+    )
 
-    @patch("simtools.utils.names.get_collection_name_from_parameter_name")
-    def test_get_parameter_file_path_configuration_sim_telarray(mock_get_collection, tmp_path):
-        """Test getting file path for configuration_sim_telarray collection."""
-        mock_get_collection.return_value = "configuration_sim_telarray"
+    expected = tmp_path / "simulation-models" / "model_parameters" / "LSTN-01" / "camera_config"
+    assert result == expected
+    assert result.exists()
 
-        result = model_repository._get_parameter_file_path(
-            str(tmp_path), "LSTN-01", "sim_telarray_config"
-        )
 
-        expected = (
-            tmp_path
-            / "simulation-models"
-            / "model_parameters"
-            / "configuration_sim_telarray"
-            / "LSTN-01"
-            / "sim_telarray_config"
-        )
-        assert result == expected
-        assert result.exists()
+@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+def test_get_parameter_file_path_configuration_sim_telarray(mock_get_collection, tmp_path):
+    """Test getting file path for configuration_sim_telarray collection."""
+    mock_get_collection.return_value = "configuration_sim_telarray"
 
-    @patch("simtools.utils.names.get_collection_name_from_parameter_name")
+    result = model_repository._get_parameter_file_path(
+        str(tmp_path), "LSTN-01", "sim_telarray_config"
+    )
+
+    expected = (
+        tmp_path
+        / "simulation-models"
+        / "model_parameters"
+        / "configuration_sim_telarray"
+        / "LSTN-01"
+        / "sim_telarray_config"
+    )
+    assert result == expected
+    assert result.exists()
+
+
+@patch("simtools.utils.names.get_collection_name_from_parameter_name")
     def test_get_parameter_file_path_configuration_corsika(mock_get_collection, tmp_path):
         """Test getting file path for configuration_corsika collection."""
         mock_get_collection.return_value = "configuration_corsika"
