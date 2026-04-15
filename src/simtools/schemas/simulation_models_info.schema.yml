@@ -9,6 +9,7 @@ type: object
 
 definitions:
   SimulationModelsInfo:
+    type: object
     additionalProperties: false
     properties:
       model_version:
@@ -126,6 +127,7 @@ type: object
 
 definitions:
   SimulationModelsInfo:
+    type: object
     additionalProperties: false
     properties:
       model_version:
