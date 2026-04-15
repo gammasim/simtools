@@ -754,6 +754,8 @@ def test_generate_new_production_empty_version_history(
     mock_collect_data.return_value = {
         "model_version": "6.5.0",
         "model_version_history": [],
+        "setting_workflows_git_tag": "v0.3.0",
+        "setting_workflows_git_repository": "https://example.org/workflows.git",
         "changes": {},
     }
 
@@ -762,7 +764,9 @@ def test_generate_new_production_empty_version_history(
     mock_apply_table_changes.assert_called_once_with(
         {}, "6.5.0", "6.5.0", "full_update", str(tmp_path)
     )
-    mock_apply_model_changes.assert_called_once()
+    mock_apply_model_changes.assert_called_once_with(
+        {}, str(tmp_path), "v0.3.0", "https://example.org/workflows.git"
+    )
 
 
 def test_apply_changes_to_production_table_patch_update():
@@ -846,6 +850,138 @@ def test_apply_changes_to_model_parameters_simple(mock_create_entry, tmp_path):
         {"version": "4.0.0", "value": 31.9},
         model_parameters_dir,
     )
+
+
+@patch("simtools.model.model_repository._download_model_parameter_from_workflow")
+@patch("simtools.model.model_repository._create_new_model_parameter_entry")
+def test_apply_changes_to_model_parameters_with_activity_id(
+    mock_create_entry, mock_download_workflow, tmp_test_directory
+):
+    """Test applying changes to model parameters using activity_id workflow source."""
+    model_parameters_dir = tmp_test_directory / "model_parameters"
+    changes = {
+        "LSTN-design": {
+            "pm_photoelectron_spectrum": {
+                "version": "3.0.0",
+                "activity_id": "019d85b6-1f98-715b-b92b-bfbcd06d7cd8",
+            },
+            "value_only_param": {"version": "2.0.0", "value": 42},
+        }
+    }
+
+    model_repository._apply_changes_to_model_parameters(
+        changes, model_parameters_dir, setting_workflows_git_tag="release-v1"
+    )
+
+    assert mock_download_workflow.call_count == 1
+    mock_download_workflow.assert_any_call(
+        "LSTN-design",
+        "pm_photoelectron_spectrum",
+        {
+            "version": "3.0.0",
+            "activity_id": "019d85b6-1f98-715b-b92b-bfbcd06d7cd8",
+        },
+        model_parameters_dir,
+        "release-v1",
+        "https://gitlab.cta-observatory.org/cta-science/simulations/"
+        "simulation-model/simulation-model-parameter-setting.git",
+    )
+    mock_create_entry.assert_called_once_with(
+        "LSTN-design", "value_only_param", {"version": "2.0.0", "value": 42}, model_parameters_dir
+    )
+
+
+@patch("simtools.model.model_repository._download_model_parameter_from_workflow")
+@patch("simtools.model.model_repository._create_new_model_parameter_entry")
+def test_apply_changes_to_model_parameters_with_both_value_and_activity_id_raises(
+    mock_create_entry, mock_download_workflow, tmp_test_directory
+):
+    """Test that setting both value and activity_id raises an error."""
+    changes = {
+        "LSTN-design": {
+            "param_with_both": {
+                "version": "1.0.0",
+                "activity_id": "workflow-123",
+                "value": 10,
+            }
+        }
+    }
+
+    with pytest.raises(ValueError, match="Both activity_id and value are set"):
+        model_repository._apply_changes_to_model_parameters(changes, tmp_test_directory)
+
+    mock_download_workflow.assert_not_called()
+    mock_create_entry.assert_not_called()
+
+
+@patch("simtools.model.model_repository.ascii_handler.write_data_to_file")
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
+def test_download_model_parameter_from_workflow(
+    mock_collect_data, mock_write_data, tmp_test_directory
+):
+    """Test downloading and writing model parameter from workflow repository."""
+    telescope = "LSTN-design"
+    param = "pm_photoelectron_spectrum"
+    param_data = {
+        "version": "3.0.0",
+        "activity_id": "019d85b6-1f98-715b-b92b-bfbcd06d7cd8",
+    }
+    mock_collect_data.return_value = {"parameter_version": "3.0.0", "value": [1, 2, 3]}
+
+    model_repository._download_model_parameter_from_workflow(
+        telescope=telescope,
+        param=param,
+        param_data=param_data,
+        simulation_models_path=tmp_test_directory,
+        setting_workflows_git_tag="v2.1.0",
+        setting_workflows_git_repository="https://example.org/workflows.git",
+    )
+
+    mock_collect_data.assert_called_once_with(
+        file_name=(
+            "output/LSTN-design/pm_photoelectron_spectrum/"
+            "019d85b6-1f98-715b-b92b-bfbcd06d7cd8/pm_photoelectron_spectrum/"
+            "pm_photoelectron_spectrum-3.0.0.json"
+        ),
+        git_repository="https://example.org/workflows.git",
+        git_branch="v2.1.0",
+    )
+    mock_write_data.assert_called_once_with(
+        {"parameter_version": "3.0.0", "value": [1, 2, 3]},
+        tmp_test_directory
+        / "simulation-models"
+        / "model_parameters"
+        / "LSTN-design"
+        / "pm_photoelectron_spectrum"
+        / "pm_photoelectron_spectrum-3.0.0.json",
+        sort_keys=True,
+    )
+
+
+@patch("simtools.model.model_repository.ascii_handler.write_data_to_file")
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
+def test_download_model_parameter_from_workflow_raises_on_version_mismatch(
+    mock_collect_data, mock_write_data, tmp_test_directory
+):
+    """Test that mismatched requested/downloaded versions raise a ValueError."""
+    telescope = "LSTN-design"
+    param = "pm_photoelectron_spectrum"
+    param_data = {
+        "version": "3.0.0",
+        "activity_id": "019d85b6-1f98-715b-b92b-bfbcd06d7cd8",
+    }
+    mock_collect_data.return_value = {"parameter_version": "2.9.9", "value": [1, 2, 3]}
+
+    with pytest.raises(ValueError, match="Version mismatch"):
+        model_repository._download_model_parameter_from_workflow(
+            telescope=telescope,
+            param=param,
+            param_data=param_data,
+            simulation_models_path=tmp_test_directory,
+            setting_workflows_git_tag="v2.1.0",
+        )
+
+    mock_write_data.assert_not_called()
 
 
 @patch("simtools.model.model_repository._get_latest_model_parameter_file")

@@ -13,6 +13,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
+from simtools.constants import DEFAULT_SIMULATIONS_REPO
 from simtools.db import db_handler
 from simtools.io import ascii_handler, io_handler
 from simtools.model.telescope_model import TelescopeModel
@@ -467,10 +468,9 @@ class ReadParameters:
                     outfile.write(f"![Parameter plot.]({outpath}/{plot_name}.png)\n\n")
 
                 outfile.write(
-                    "\n\nThe full file can be found in the Simulation Model repository [here]"
-                    "(https://gitlab.cta-observatory.org/cta-science/simulations/"
-                    "simulation-model/simulation-models/-/blob/main/simulation-models/"
-                    f"model_parameters/Files/{input_file.name}).\n\n"
+                    f"\n\nThe full file can be found in the Simulation Model repository [here]"
+                    f"({DEFAULT_SIMULATIONS_REPO}/simulation-model/simulation-models/-/blob/main/"
+                    f"simulation-models/model_parameters/Files/{input_file.name}).\n\n"
                 )
                 outfile.write("\n\n")
                 outfile.write("The first 30 lines of the file are:\n")
@@ -489,8 +489,8 @@ class ReadParameters:
             input_file_name = f"{self.output_path}/model/{value_data}"
             if parameter_version is None:
                 return (
-                    f"[{Path(value_data).name}](https://gitlab.cta-observatory.org/"
-                    "cta-science/simulations/simulation-model/simulation-models/-/blob/main/"
+                    f"[{Path(value_data).name}]({DEFAULT_SIMULATIONS_REPO}"
+                    f"/simulation-model/simulation-models/-/blob/main/"
                     f"simulation-models/model_parameters/Files/{value_data})"
                 ).strip()
             output_file_name = self._convert_to_md(parameter, parameter_version, input_file_name)

@@ -25,6 +25,9 @@ definitions:
       schema_name:
         type: string
         description: "Name of the schema."
+      activity_id:
+        type: string
+        description: "Workflow activity UUID. If omitted, generated automatically."
       runtime_environment:
         "$ref": "#/definitions/runtime_environment"
     required:
