@@ -9,6 +9,19 @@ schema_name: common_definitions
 type: object
 
 $defs:
+  schema_url_field:
+    type: string
+    format: uri
+    description: URL of the schema.
+
+  schema_version_field:
+    type: string
+    description: Version of the schema.
+
+  schema_name_field:
+    type: string
+    description: Name of the schema.
+
   telescope_name_pattern:
     type: string
     description: |

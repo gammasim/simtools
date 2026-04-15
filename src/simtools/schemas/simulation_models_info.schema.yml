@@ -3,16 +3,141 @@ $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimulationModelsInfo'
 title: Production and simulation model information schema
 description: Schema for validating 'info.yml' files used to update CTAO simulation models.
-schema_version: 0.1.0
+schema_version: 0.2.0
 schema_name: simulation_models_info.metaschema
 type: object
-additionalProperties: false
 
 definitions:
   SimulationModelsInfo:
+    type: object
+    additionalProperties: false
     properties:
       model_version:
         $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
+      schema_version:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_version_field'
+      schema_url:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_url_field'
+      schema_name:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_name_field'
+      model_update:
+        type: [string, 'null']
+        description: The type of update for the model version.
+        enum:
+          - patch_update
+          - full_update
+          - null
+      model_version_history:
+        type: array
+        description: A list of previous model versions.
+        items:
+          $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
+      model_status:
+        type: string
+        description: Status of the production model version.
+        enum:
+          - development
+          - production
+          - superseded
+      setting_workflows_git_tag:
+        type: string
+        description: Branch or release tag used when downloading workflow outputs.
+      setting_workflows_git_repository:
+        type: string
+        description: Repository URL used when downloading workflow outputs.
+      description:
+        type: string
+        description: A detailed description of the model changes.
+      changes:
+        type: object
+        description: A map of design names to their parameter changes.
+        propertyNames:
+          anyOf:
+            - $ref: 'common_definitions.schema.yml#/$defs/telescope_name_pattern'
+            - enum:
+                - "configuration_corsika"
+        additionalProperties:
+          type: object
+          additionalProperties:
+            anyOf:
+              - $ref: '#/$defs/ParameterValue'
+              - $ref: '#/$defs/DeprecatedParameter'
+    required:
+      - model_version
+      - model_update
+      - model_version_history
+      - description
+      - changes
+
+$defs:
+  DeprecatedParameter:
+    type: object
+    properties:
+      deprecated:
+        type: boolean
+        const: true
+    required:
+      - deprecated
+    additionalProperties: false
+
+  ParameterValue:
+    type: object
+    properties:
+      version:
+        $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
+      activity_id:
+        type: string
+      value:
+        oneOf:
+          - type: string
+          - type: number
+          - type: boolean
+          - type: array
+          - type: object
+      unit:
+        oneOf:
+          - type: string
+          - type: array
+          - type: "null"
+      model_parameter_schema_version:
+        $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
+    oneOf:
+      - required: [value]
+        not:
+          required: [activity_id]
+      - required: [activity_id]
+        not:
+          required: [value]
+      - not:
+          anyOf:
+            - required: [value]
+            - required: [activity_id]
+        required:
+          - version
+    additionalProperties: false
+...
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/SimulationModelsInfo'
+title: Production and simulation model information schema
+description: Schema for validating 'info.yml' files used to update CTAO simulation models.
+schema_version: 0.1.0
+schema_name: simulation_models_info.metaschema
+type: object
+
+definitions:
+  SimulationModelsInfo:
+    type: object
+    additionalProperties: false
+    properties:
+      model_version:
+        $ref: 'common_definitions.schema.yml#/$defs/semantic_version_pattern'
+      schema_version:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_version_field'
+      schema_url:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_url_field'
+      schema_name:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_name_field'
       model_update:
         type: [string, 'null']
         description: The type of update for the model version.
