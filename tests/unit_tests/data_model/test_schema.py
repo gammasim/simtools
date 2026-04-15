@@ -222,6 +222,7 @@ def test_validate_schema_astropy_units(caplog):
 def test_validate_simulation_models_info_schema_accepts_model_status(model_status):
     """Test simulation models info schema accepts all supported model_status values."""
     data = {
+        "schema_version": "0.2.0",
         "model_version": "6.1.0",
         "model_update": "patch_update",
         "model_version_history": ["6.0.2"],
@@ -240,6 +241,7 @@ def test_validate_simulation_models_info_schema_accepts_model_status(model_statu
 def test_validate_simulation_models_info_schema_rejects_invalid_model_status():
     """Test simulation models info schema rejects unsupported model_status values."""
     data = {
+        "schema_version": "0.2.0",
         "model_version": "6.1.0",
         "model_update": "patch_update",
         "model_version_history": ["6.0.2"],
