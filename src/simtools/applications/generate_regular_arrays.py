@@ -116,7 +116,8 @@ def main():
             array_table,
             app_context.args["site"],
             app_context.args["model_version"],
-            Path(output_file).with_suffix(".info.yml"),
+            app_context.io_handler.get_output_directory()
+            / Path(output_file).with_suffix(".info.yml"),
         )
 
 
