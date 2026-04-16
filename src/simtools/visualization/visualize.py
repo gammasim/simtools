@@ -114,7 +114,7 @@ def _add_unit(title, array):
 
     The unit is extracted from the unit field of the array, in case array is an astropy quantity.
     If a unit is found, it is added to title in the form [unit]. If a unit already is present in
-    title (in the same form), a warning is printed and no unit is added. The function assumes
+    title (in the same form), no unit is added. The function assumes
     array not to be empty and returns the modified title.
 
     Parameters
@@ -128,7 +128,7 @@ def _add_unit(title, array):
         Title with units.
     """
     if title and "[" in title and "]" in title:
-        _logger.warning(
+        _logger.debug(
             "Tried to add a unit from astropy.unit, "
             "but axis already has an explicit unit. Left axis title as is."
         )
@@ -300,6 +300,8 @@ def plot_1d(data, **kwargs):
           Set a plot title.
         * no_legend: bool
           Do not print a legend for the plot.
+        * legend_fontsize: str or float
+            Legend font size (e.g. "small", "medium", or a numeric point size).
         * big_plot: bool
           Increase marker and font sizes (like in a wide light curve).
         * no_markers: bool
@@ -352,6 +354,7 @@ def handle_kwargs(kwargs):
         "empty_markers": False,
         "plot_ratio": False,
         "plot_difference": False,
+        "legend_fontsize": "xx-small",
         "xscale": "linear",
         "yscale": "linear",
         "xlim": (None, None),
@@ -470,7 +473,7 @@ def plot_main_data(data_dict, kwargs, plot_args):
         plt.title(kwargs["title"], y=1.02)
 
     if "_default" not in data_dict and not kwargs["no_legend"]:
-        plt.legend()
+        plt.legend(fontsize=kwargs["legend_fontsize"])
 
 
 def plot_ratio_difference(ax1, data_dict, plot_ratio, gs, plot_args):
