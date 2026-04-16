@@ -40,6 +40,19 @@ from simtools.application_control import build_application
 from simtools.model import model_repository
 
 
+def _add_arguments(parser):
+    """Register application-specific command line arguments."""
+    parser.add_argument(
+        "--setting_workflows_git_tag",
+        help=(
+            "Branch or tag used to download model parameters from the simulation workflow "
+            "repository. This overrides setting_workflows_git_tag from info.yml."
+        ),
+        type=str,
+        default=None,
+    )
+
+
 def main():
     """See CLI description."""
     app_context = build_application(
@@ -53,6 +66,7 @@ def main():
     model_repository.generate_new_production(
         model_version=app_context.args["model_version"],
         simulation_models_path=Path(app_context.args["model_path"]),
+        setting_workflows_git_tag=app_context.args["setting_workflows_git_tag"],
     )
 
 
