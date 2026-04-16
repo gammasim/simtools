@@ -107,7 +107,7 @@ def test_add_unit(caplog, wavelength):
     value_without_unit = [30, 40]
     assert visualize._add_unit("Wavelength", value_without_unit) == "Wavelength"
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.DEBUG):
         assert visualize._add_unit(wavelength, value_with_unit)
     assert "Tried to add a unit from astropy.unit" in caplog.text
 
