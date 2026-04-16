@@ -38,20 +38,20 @@ def num_gains_schema(num_gains_schema_file):
 def test_write(tmp_test_directory, args_dict_site):
     # both none (no exception expected)
     w_1 = writer.ModelDataWriter(output_path=tmp_test_directory)
-    result = w_1.write(metadata=None, product_data=None)
+    result = w_1.write_data(metadata=None, product_data=None)
     assert result is None
 
     # metadata not none; no data and metadata file
     _metadata = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     w_1.output_file = tmp_test_directory.join("test_file.ecsv")
     metadata_file = tmp_test_directory.join("test_file.meta.yml")
-    w_1.write(metadata=_metadata, product_data=None)
+    w_1.write_data(metadata=_metadata, product_data=None)
     assert not metadata_file.exists()
     assert not Path(w_1.output_file).exists()
 
     # product_data not none - expect data file to be written; no metadata file
     empty_table = Table()
-    w_1.write(metadata=None, product_data=empty_table)
+    w_1.write_data(metadata=None, product_data=empty_table)
     assert Path(w_1.output_file).exists()
     assert not metadata_file.exists()
 
@@ -59,7 +59,7 @@ def test_write(tmp_test_directory, args_dict_site):
     data = {"pixel": [25, 30, 28]}
     small_table = Table(data)
     w_1.output_file = tmp_test_directory.join(test_file_2)
-    w_1.write(metadata=_metadata, product_data=small_table)
+    w_1.write_data(metadata=_metadata, product_data=small_table)
     assert Path(w_1.output_file).exists()
     assert (
         (Path(tmp_test_directory) / test_file_2).with_suffix(".integration_test.meta.yml").exists()
@@ -72,31 +72,31 @@ def test_write(tmp_test_directory, args_dict_site):
 
     w_1.output_file_format = "not_an_astropy_format"
     with pytest.raises(IORegistryError):
-        w_1.write(metadata=None, product_data=empty_table)
+        w_1.write_data(metadata=None, product_data=empty_table)
 
     # test json format
     dict_data = {"value": 5.5}
     w_1.output_file = tmp_test_directory.join("test_file.json")
-    w_1.write(metadata=None, product_data=dict_data)
+    w_1.write_data(metadata=None, product_data=dict_data)
     assert Path(w_1.output_file).is_file()
 
 
-def test_write_dict_to_model_parameter_json(tmp_test_directory):
+def test__write_model_parameter_dict_json(tmp_test_directory):
     w1 = writer.ModelDataWriter(output_path=tmp_test_directory)
     data_dict = {"value": 5.5}
     data_file = tmp_test_directory.join("test_file.json")
-    w1.write_dict_to_model_parameter_json(file_name=data_file, data_dict=data_dict)
+    w1.write_model_parameter_dict_json(file_name=data_file, data_dict=data_dict)
     assert Path(data_file).is_file()
 
 
-def test_write_dict_to_model_parameter_json_compact_numeric_lists_switch(tmp_test_directory):
+def test__write_model_parameter_dict_json_compact_numeric_lists_switch(tmp_test_directory):
     w1 = writer.ModelDataWriter(output_path=tmp_test_directory)
     data_file = tmp_test_directory.join("test_file.json")
 
     with patch(
         "simtools.data_model.model_data_writer.ascii_handler.write_data_to_file"
     ) as mock_write:
-        w1.write_dict_to_model_parameter_json(
+        w1.write_model_parameter_dict_json(
             file_name=data_file,
             data_dict={"value": {"a": [1, 2, 3]}},
         )
@@ -105,7 +105,7 @@ def test_write_dict_to_model_parameter_json_compact_numeric_lists_switch(tmp_tes
     with patch(
         "simtools.data_model.model_data_writer.ascii_handler.write_data_to_file"
     ) as mock_write:
-        w1.write_dict_to_model_parameter_json(
+        w1.write_model_parameter_dict_json(
             file_name=data_file,
             data_dict={"value": [1, 2, 3]},
         )
@@ -117,7 +117,7 @@ def test_dump(args_dict):
     empty_table = Table()
 
     output_file = "test_file.ecsv"
-    writer.ModelDataWriter().dump(
+    writer.ModelDataWriter().write_product_data(
         output_file=output_file,
         metadata=None,
         product_data=empty_table,
@@ -131,7 +131,7 @@ def test_dump(args_dict):
     args_dict["skip_output_validation"] = False
     settings.config.load(args=args_dict)
     with pytest.raises(KeyError):
-        writer.ModelDataWriter().dump(
+        writer.ModelDataWriter().write_product_data(
             output_file=output_file,
             metadata=None,
             product_data=empty_table,
@@ -186,12 +186,12 @@ def test_derive_data_format():
     assert writer.ModelDataWriter._derive_data_format(None, output_file="file.hdf5") == "hdf5"
 
 
-def test_dump_model_parameter(tmp_test_directory):
+def test_write_model_parameter(tmp_test_directory):
     parameter_version = "1.1.0"
     instrument = "LSTN-01"
     num_gains_name = "num_gains"
     # single value, no unit
-    num_gains_dict = writer.ModelDataWriter.dump_model_parameter(
+    num_gains_dict = writer.ModelDataWriter.write_model_parameter(
         parameter_name=num_gains_name,
         value=2,
         instrument=instrument,
@@ -205,7 +205,7 @@ def test_dump_model_parameter(tmp_test_directory):
     assert num_gains_dict["unit"] is None
 
     # list of value, with unit
-    position_dict = writer.ModelDataWriter.dump_model_parameter(
+    position_dict = writer.ModelDataWriter.write_model_parameter(
         parameter_name="array_element_position_utm",
         value=[217.6596 * u.km, 3184.9951 * u.km, 218500.0 * u.cm],
         instrument=instrument,
@@ -221,7 +221,7 @@ def test_dump_model_parameter(tmp_test_directory):
     assert position_dict["value"][2] == pytest.approx(2185.0)
     assert Path(tmp_test_directory / "array_element_position_utm.meta.yml").is_file()
 
-    position_dict = writer.ModelDataWriter.dump_model_parameter(
+    position_dict = writer.ModelDataWriter.write_model_parameter(
         parameter_name="focus_offset",
         value=[6.55 * u.cm, 0.0 * u.deg, 0.0, 0.0],
         instrument="LSTN-01",
@@ -237,7 +237,7 @@ def test_dump_model_parameter(tmp_test_directory):
     with patch(
         "simtools.data_model.model_data_writer.ModelDataWriter.check_db_for_existing_parameter"
     ) as mock_db_check:
-        writer.ModelDataWriter.dump_model_parameter(
+        writer.ModelDataWriter.write_model_parameter(
             parameter_name=num_gains_name,
             value=2,
             instrument=instrument,
@@ -248,11 +248,11 @@ def test_dump_model_parameter(tmp_test_directory):
         mock_db_check.assert_called_once_with(num_gains_name, instrument, parameter_version)
 
 
-def test_dump_model_parameter_does_not_write_metadata_on_validation_failure(tmp_test_directory):
+def test_write_model_parameter_does_not_write_metadata_on_validation_failure(tmp_test_directory):
     output_file = "num_gains.json"
 
     with pytest.raises(ValueError, match=r"^Value for column '0' out of range."):
-        writer.ModelDataWriter.dump_model_parameter(
+        writer.ModelDataWriter.write_model_parameter(
             parameter_name="num_gains",
             value=25,
             instrument="LSTN-01",

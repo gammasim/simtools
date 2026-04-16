@@ -389,7 +389,7 @@ class MirrorPanelPSF:
         # Export averaged RNDA
         if telescope and parameter_version and self.rnda_opt is not None:
             try:
-                model_data_writer.ModelDataWriter.dump_model_parameter(
+                model_data_writer.ModelDataWriter.write_model_parameter(
                     parameter_name=parameter_name,
                     value=[float(f"{v:.4f}") for v in self.rnda_opt],
                     instrument=str(telescope),
