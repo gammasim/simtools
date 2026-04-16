@@ -13,59 +13,61 @@ TEST_MODIFICATIONS_FILE = "modifications.json"
 PATH_PATCH = "simtools.model.model_repository._get_model_parameter_file_path"
 
 
-def test_verify_simulation_model_production_tables_success(tmp_path):
+def test_verify_simulation_model_production_tables_success(tmp_test_directory):
     """Test successful verification of production tables."""
-    productions_path = tmp_path / "simulation-models" / "productions"
-    productions_path.mkdir(parents=True)
+    productions_path = tmp_test_directory / "simulation-models" / "productions"
+    productions_path.ensure(dir=True)
 
     production_data = {
         "parameters": {"telescope": {"camera_config": "1.0.0", "optics_config": "2.1.0"}}
     }
     production_file = productions_path / TEST_PRODUCTION_FILE
 
-    production_file.write_text(json.dumps(production_data))
+    production_file.write_text(json.dumps(production_data), encoding="utf-8")
 
     with patch(
         "simtools.model.model_repository._verify_model_parameters_for_production"
     ) as mock_verify:
         mock_verify.return_value = ([], 2)
 
-        result = model_repository.verify_simulation_model_production_tables(str(tmp_path))
+        result = model_repository.verify_simulation_model_production_tables(str(tmp_test_directory))
 
         assert result is True
         mock_verify.assert_called_once()
 
 
-def test_verify_simulation_model_production_tables_missing_files(tmp_path):
+def test_verify_simulation_model_production_tables_missing_files(tmp_test_directory):
     """Test verification with missing parameter files."""
-    productions_path = tmp_path / "simulation-models" / "productions"
-    productions_path.mkdir(parents=True)
+    productions_path = tmp_test_directory / "simulation-models" / "productions"
+    productions_path.ensure(dir=True)
 
     production_file = productions_path / TEST_PRODUCTION_FILE
-    production_file.write_text('{"parameters": {}}')
+    production_file.write_text('{"parameters": {}}', encoding="utf-8")
 
     with patch(
         "simtools.model.model_repository._verify_model_parameters_for_production"
     ) as mock_verify:
         mock_verify.return_value = (["/missing/file.json"], 1)
 
-        result = model_repository.verify_simulation_model_production_tables(str(tmp_path))
+        result = model_repository.verify_simulation_model_production_tables(str(tmp_test_directory))
 
         assert result is False
 
 
-def test_verify_simulation_model_production_tables_no_production_files(tmp_path):
+def test_verify_simulation_model_production_tables_no_production_files(tmp_test_directory):
     """Test verification with no production files."""
-    productions_path = tmp_path / "simulation-models" / "productions"
-    productions_path.mkdir(parents=True)
+    productions_path = tmp_test_directory / "simulation-models" / "productions"
+    productions_path.ensure(dir=True)
 
-    result = model_repository.verify_simulation_model_production_tables(str(tmp_path))
+    result = model_repository.verify_simulation_model_production_tables(str(tmp_test_directory))
 
     assert result is True
 
 
 @patch("simtools.io.ascii_handler.collect_data_from_file")
-def test_verify_model_parameters_for_production_with_missing_files(mock_collect_data, tmp_path):
+def test_verify_model_parameters_for_production_with_missing_files(
+    mock_collect_data, tmp_test_directory
+):
     """Test verification of model parameters with missing files."""
 
     production_data = {
@@ -81,7 +83,7 @@ def test_verify_model_parameters_for_production_with_missing_files(mock_collect_
         mock_get_path.return_value = mock_file
 
         missing_files, total_checked = model_repository._verify_model_parameters_for_production(
-            str(tmp_path), production_file
+            str(tmp_test_directory), production_file
         )
 
         assert total_checked == 2
@@ -89,7 +91,9 @@ def test_verify_model_parameters_for_production_with_missing_files(mock_collect_
 
 
 @patch("simtools.io.ascii_handler.collect_data_from_file")
-def test_verify_model_parameters_for_production_all_files_exist(mock_collect_data, tmp_path):
+def test_verify_model_parameters_for_production_all_files_exist(
+    mock_collect_data, tmp_test_directory
+):
     """Test verification when all parameter files exist."""
     production_data = {"parameters": {"telescope": {"camera_config": "1.0.0"}}}
     mock_collect_data.return_value = production_data
@@ -102,7 +106,7 @@ def test_verify_model_parameters_for_production_all_files_exist(mock_collect_dat
         mock_get_path.return_value = mock_file
 
         missing_files, total_checked = model_repository._verify_model_parameters_for_production(
-            str(tmp_path), production_file
+            str(tmp_test_directory), production_file
         )
 
         assert total_checked == 1
@@ -110,7 +114,9 @@ def test_verify_model_parameters_for_production_all_files_exist(mock_collect_dat
 
 
 @patch("simtools.io.ascii_handler.collect_data_from_file")
-def test_verify_model_parameters_for_production_no_parameters(mock_collect_data, tmp_path):
+def test_verify_model_parameters_for_production_no_parameters(
+    mock_collect_data, tmp_test_directory
+):
     """Test verification with no parameters in production file."""
     production_data = {}
     mock_collect_data.return_value = production_data
@@ -118,7 +124,7 @@ def test_verify_model_parameters_for_production_no_parameters(mock_collect_data,
     production_file = Path(TEST_PRODUCTION_FILE)
 
     missing_files, total_checked = model_repository._verify_model_parameters_for_production(
-        str(tmp_path), production_file
+        str(tmp_test_directory), production_file
     )
 
     assert total_checked == 0
@@ -126,7 +132,9 @@ def test_verify_model_parameters_for_production_no_parameters(mock_collect_data,
 
 
 @patch("simtools.io.ascii_handler.collect_data_from_file")
-def test_verify_model_parameters_for_production_non_dict_parameters(mock_collect_data, tmp_path):
+def test_verify_model_parameters_for_production_non_dict_parameters(
+    mock_collect_data, tmp_test_directory
+):
     """Test verification with non-dict parameter values."""
     production_data = {"parameters": {"telescope": "not_a_dict", "array": {"valid_param": "1.0.0"}}}
     mock_collect_data.return_value = production_data
@@ -139,23 +147,23 @@ def test_verify_model_parameters_for_production_non_dict_parameters(mock_collect
         mock_get_path.return_value = mock_file
 
         _, total_checked = model_repository._verify_model_parameters_for_production(
-            str(tmp_path), production_file
+            str(tmp_test_directory), production_file
         )
 
         assert total_checked == 1
 
 
 @patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_model_parameter_file_path_regular_collection(mock_get_collection, tmp_path):
+def test_get_model_parameter_file_path_regular_collection(mock_get_collection, tmp_test_directory):
     """Test getting file path for regular collection."""
     mock_get_collection.return_value = "camera"
 
     result = model_repository._get_model_parameter_file_path(
-        str(tmp_path), "telescope", "camera_config", "1.0.0"
+        str(tmp_test_directory), "telescope", "camera_config", "1.0.0"
     )
 
     expected = (
-        tmp_path
+        tmp_test_directory
         / "simulation-models"
         / "model_parameters"
         / "telescope"
@@ -166,16 +174,18 @@ def test_get_model_parameter_file_path_regular_collection(mock_get_collection, t
 
 
 @patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_model_parameter_file_path_configuration_sim_telarray(mock_get_collection, tmp_path):
+def test_get_model_parameter_file_path_configuration_sim_telarray(
+    mock_get_collection, tmp_test_directory
+):
     """Test getting file path for configuration_sim_telarray collection."""
     mock_get_collection.return_value = "configuration_sim_telarray"
 
     result = model_repository._get_model_parameter_file_path(
-        str(tmp_path), "telescope", "sim_telarray_config", "1.0.0"
+        str(tmp_test_directory), "telescope", "sim_telarray_config", "1.0.0"
     )
 
     expected = (
-        tmp_path
+        tmp_test_directory
         / "simulation-models"
         / "model_parameters"
         / "configuration_sim_telarray"
@@ -187,16 +197,18 @@ def test_get_model_parameter_file_path_configuration_sim_telarray(mock_get_colle
 
 
 @patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_model_parameter_file_path_configuration_corsika(mock_get_collection, tmp_path):
+def test_get_model_parameter_file_path_configuration_corsika(
+    mock_get_collection, tmp_test_directory
+):
     """Test getting file path for configuration_corsika collection."""
     mock_get_collection.return_value = "configuration_corsika"
 
     result = model_repository._get_model_parameter_file_path(
-        str(tmp_path), "telescope", "corsika_config", "1.0.0"
+        str(tmp_test_directory), "telescope", "corsika_config", "1.0.0"
     )
 
     expected = (
-        tmp_path
+        tmp_test_directory
         / "simulation-models"
         / "model_parameters"
         / "configuration_corsika"
@@ -486,12 +498,12 @@ def test_apply_changes_to_production_table_with_list_data():
         )
 
 
-def test_apply_changes_to_production_tables(tmp_path):
+def test_apply_changes_to_production_tables(tmp_test_directory):
     """Test applying changes to production tables."""
     # Create source directory with sample files
-    source_prod_table_path = tmp_path / "simulation-models/productions" / "6.0.0"
-    source_prod_table_path.mkdir(parents=True)
-    target_prod_table_path = tmp_path / "simulation-models/productions" / "6.5.0"
+    source_prod_table_path = tmp_test_directory / "simulation-models/productions" / "6.0.0"
+    source_prod_table_path.ensure(dir=True)
+    target_prod_table_path = tmp_test_directory / "simulation-models/productions" / "6.5.0"
 
     # Create sample production table files in source
     prod_table_data = {
@@ -511,9 +523,9 @@ def test_apply_changes_to_production_tables(tmp_path):
     }
 
     prod_table_file = source_prod_table_path / "MSTx-FlashCam.json"
-    prod_table_file.write_text(json.dumps(prod_table_data))
+    prod_table_file.write_text(json.dumps(prod_table_data), encoding="utf-8")
     config_file = source_prod_table_path / "configuration_sim_telarray.json"
-    config_file.write_text(json.dumps(config_table_data))
+    config_file.write_text(json.dumps(config_table_data), encoding="utf-8")
 
     # Mock changes to be applied
     changes = {
@@ -522,31 +534,33 @@ def test_apply_changes_to_production_tables(tmp_path):
 
     # Apply changes from source to target
     model_repository._apply_changes_to_production_tables(
-        changes, "6.0.0", "6.5.0", "full_update", tmp_path
+        changes, "6.0.0", "6.5.0", "full_update", tmp_test_directory
     )
 
     # Verify the production table file is updated with changes
     updated_prod_file = target_prod_table_path / "MSTx-FlashCam.json"
     assert updated_prod_file.exists()
-    updated_data = json.loads(updated_prod_file.read_text())
+    updated_data = json.loads(updated_prod_file.read_text(encoding="utf-8"))
     assert updated_data["model_version"] == "6.5.0"
     assert updated_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
 
     # Verify configuration table file model_version is updated but parameters unchanged
     config_target_file = target_prod_table_path / "configuration_sim_telarray.json"
     assert config_target_file.exists()
-    config_data = json.loads(config_target_file.read_text())
+    config_data = json.loads(config_target_file.read_text(encoding="utf-8"))
     assert config_data["model_version"] == "6.5.0"
     # Parameters unchanged since production_table_name doesn't match changes
     assert config_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "3.0.0"
     assert config_data["parameters"]["MSTx-NectarCam"]["discriminator_threshold"] == "3.0.0"
 
 
-def test_apply_changes_to_production_tables_configuration_sim_telarray_parameter(tmp_path):
+def test_apply_changes_to_production_tables_configuration_sim_telarray_parameter(
+    tmp_test_directory,
+):
     """Test telescope-scoped sim_telarray parameters update configuration_sim_telarray."""
-    source_prod_table_path = tmp_path / "simulation-models/productions" / "7.0.0"
-    source_prod_table_path.mkdir(parents=True)
-    target_prod_table_path = tmp_path / "simulation-models/productions" / "7.1.0"
+    source_prod_table_path = tmp_test_directory / "simulation-models/productions" / "7.0.0"
+    source_prod_table_path.ensure(dir=True)
+    target_prod_table_path = tmp_test_directory / "simulation-models/productions" / "7.1.0"
 
     telescope_table_data = {
         "production_table_name": "LSTN-design",
@@ -573,9 +587,9 @@ def test_apply_changes_to_production_tables_configuration_sim_telarray_parameter
     }
 
     telescope_file = source_prod_table_path / "LSTN-design.json"
-    telescope_file.write_text(json.dumps(telescope_table_data))
+    telescope_file.write_text(json.dumps(telescope_table_data), encoding="utf-8")
     config_file = source_prod_table_path / "configuration_sim_telarray.json"
-    config_file.write_text(json.dumps(config_table_data))
+    config_file.write_text(json.dumps(config_table_data), encoding="utf-8")
 
     changes = {
         "LSTN-design": {
@@ -589,13 +603,13 @@ def test_apply_changes_to_production_tables_configuration_sim_telarray_parameter
     }
 
     model_repository._apply_changes_to_production_tables(
-        changes, "7.0.0", "7.1.0", "full_update", tmp_path
+        changes, "7.0.0", "7.1.0", "full_update", tmp_test_directory
     )
 
     config_target_file = target_prod_table_path / "configuration_sim_telarray.json"
     assert config_target_file.exists()
 
-    config_data = json.loads(config_target_file.read_text())
+    config_data = json.loads(config_target_file.read_text(encoding="utf-8"))
     assert config_data["model_version"] == "7.1.0"
     assert config_data["parameters"]["LSTN-design"]["min_photons"] == "2.0.0"
     assert config_data["parameters"]["LSTN-design"]["tailcut_scale"] == "1.0.0"
@@ -606,18 +620,18 @@ def test_apply_changes_to_production_tables_configuration_sim_telarray_parameter
     telescope_target_file = target_prod_table_path / "LSTN-design.json"
     assert telescope_target_file.exists()
 
-    telescope_data = json.loads(telescope_target_file.read_text())
+    telescope_data = json.loads(telescope_target_file.read_text(encoding="utf-8"))
     assert telescope_data["model_version"] == "7.1.0"
     assert telescope_data["parameters"]["LSTN-design"]["transit_time_random"] == "1.0.0"
     assert "min_photons" not in telescope_data["parameters"]["LSTN-design"]
 
 
-def test_apply_changes_to_production_tables_no_parameters(tmp_path):
+def test_apply_changes_to_production_tables_no_parameters(tmp_test_directory):
     """Test applying changes to production tables with no parameters."""
     # Create source directory with sample files
-    source_prod_table_path = tmp_path / "simulation-models/productions" / "6.0.0"
-    source_prod_table_path.mkdir(parents=True)
-    target_prod_table_path = tmp_path / "simulation-models/productions" / "6.5.0"
+    source_prod_table_path = tmp_test_directory / "simulation-models/productions" / "6.0.0"
+    source_prod_table_path.ensure(dir=True)
+    target_prod_table_path = tmp_test_directory / "simulation-models/productions" / "6.5.0"
 
     # Create a sample production table file in source
     prod_table_data = {
@@ -626,7 +640,7 @@ def test_apply_changes_to_production_tables_no_parameters(tmp_path):
         "parameters": {},
     }
     prod_table_file = source_prod_table_path / "MSTx-FlashCam.json"
-    prod_table_file.write_text(json.dumps(prod_table_data))
+    prod_table_file.write_text(json.dumps(prod_table_data), encoding="utf-8")
 
     # Mock changes to be applied
     changes = {
@@ -635,24 +649,24 @@ def test_apply_changes_to_production_tables_no_parameters(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        changes, "6.0.0", "6.5.0", "full_update", tmp_path
+        changes, "6.0.0", "6.5.0", "full_update", tmp_test_directory
     )
 
     # Verify the production table file is updated in target
     target_file = target_prod_table_path / "MSTx-FlashCam.json"
     assert target_file.exists()
-    updated_data = json.loads(target_file.read_text())
+    updated_data = json.loads(target_file.read_text(encoding="utf-8"))
     assert updated_data["model_version"] == "6.5.0"
     # Parameters should be created with the matching telescope parameters
     assert updated_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
 
 
-def test_apply_changes_to_production_tables_simple(tmp_path):
+def test_apply_changes_to_production_tables_simple(tmp_test_directory):
     """Test applying changes to production tables."""
     # Create source directory with sample files
-    source_prod_table_path = tmp_path / "simulation-models/productions" / "6.0.0"
-    source_prod_table_path.mkdir(parents=True)
-    target_prod_table_path = tmp_path / "simulation-models/productions" / "6.5.0"
+    source_prod_table_path = tmp_test_directory / "simulation-models/productions" / "6.0.0"
+    source_prod_table_path.ensure(dir=True)
+    target_prod_table_path = tmp_test_directory / "simulation-models/productions" / "6.5.0"
 
     # Create a sample production table file in source
     prod_table_data = {
@@ -661,30 +675,30 @@ def test_apply_changes_to_production_tables_simple(tmp_path):
         "parameters": {"MSTx-FlashCam": {"dsum_threshold": "3.0.0"}},
     }
     prod_table_file = source_prod_table_path / "MSTx-FlashCam.json"
-    prod_table_file.write_text(json.dumps(prod_table_data))
+    prod_table_file.write_text(json.dumps(prod_table_data), encoding="utf-8")
 
     # Changes to be applied
     changes = {"MSTx-FlashCam": {"dsum_threshold": {"version": "4.0.0", "value": 62.5}}}
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        changes, "6.0.0", "6.5.0", "full_update", tmp_path
+        changes, "6.0.0", "6.5.0", "full_update", tmp_test_directory
     )
 
     # Verify the production table file is updated in target
     target_file = target_prod_table_path / "MSTx-FlashCam.json"
     assert target_file.exists()
-    updated_data = json.loads(target_file.read_text())
+    updated_data = json.loads(target_file.read_text(encoding="utf-8"))
     assert updated_data["model_version"] == "6.5.0"
     assert updated_data["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
 
 
-def test_apply_changes_to_production_tables_multiple_files(tmp_path):
+def test_apply_changes_to_production_tables_multiple_files(tmp_test_directory):
     """Test applying changes to multiple production table files."""
     # Create source directory with sample files
-    source_prod_table_path = tmp_path / "simulation-models/productions" / "6.0.0"
-    source_prod_table_path.mkdir(parents=True)
-    target_prod_table_path = tmp_path / "simulation-models/productions" / "6.5.0"
+    source_prod_table_path = tmp_test_directory / "simulation-models/productions" / "6.0.0"
+    source_prod_table_path.ensure(dir=True)
+    target_prod_table_path = tmp_test_directory / "simulation-models/productions" / "6.5.0"
 
     # Create multiple sample production table files in source
     prod_table_data_1 = {
@@ -699,8 +713,8 @@ def test_apply_changes_to_production_tables_multiple_files(tmp_path):
     }
     prod_table_file_1 = source_prod_table_path / "MSTx-FlashCam.json"
     prod_table_file_2 = source_prod_table_path / "MSTx-NectarCam.json"
-    prod_table_file_1.write_text(json.dumps(prod_table_data_1))
-    prod_table_file_2.write_text(json.dumps(prod_table_data_2))
+    prod_table_file_1.write_text(json.dumps(prod_table_data_1), encoding="utf-8")
+    prod_table_file_2.write_text(json.dumps(prod_table_data_2), encoding="utf-8")
 
     # Mock changes to be applied
     changes = {
@@ -710,7 +724,7 @@ def test_apply_changes_to_production_tables_multiple_files(tmp_path):
 
     # Call the function
     model_repository._apply_changes_to_production_tables(
-        changes, "6.0.0", "6.5.0", "full_update", tmp_path
+        changes, "6.0.0", "6.5.0", "full_update", tmp_test_directory
     )
 
     # Verify the production table files are updated in target
@@ -718,29 +732,29 @@ def test_apply_changes_to_production_tables_multiple_files(tmp_path):
     target_file_2 = target_prod_table_path / "MSTx-NectarCam.json"
     assert target_file_1.exists()
     assert target_file_2.exists()
-    updated_data_1 = json.loads(target_file_1.read_text())
-    updated_data_2 = json.loads(target_file_2.read_text())
+    updated_data_1 = json.loads(target_file_1.read_text(encoding="utf-8"))
+    updated_data_2 = json.loads(target_file_2.read_text(encoding="utf-8"))
     assert updated_data_1["model_version"] == "6.5.0"
     assert updated_data_1["parameters"]["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
     assert updated_data_2["model_version"] == "6.5.0"
     assert updated_data_2["parameters"]["MSTx-NectarCam"]["discriminator_threshold"] == "4.0.0"
 
 
-def test_apply_changes_to_production_tables_invalid_data_type(tmp_path):
+def test_apply_changes_to_production_tables_invalid_data_type(tmp_test_directory):
     """Test error handling when JSON file contains non-dict data."""
     # Create source directory with a malformed JSON file
-    source_prod_table_path = tmp_path / "simulation-models/productions" / "6.0.0"
-    source_prod_table_path.mkdir(parents=True)
+    source_prod_table_path = tmp_test_directory / "simulation-models/productions" / "6.0.0"
+    source_prod_table_path.ensure(dir=True)
 
     # Create a JSON file with list data instead of dict
     malformed_file = source_prod_table_path / "malformed.json"
-    malformed_file.write_text('["not", "a", "dict"]')
+    malformed_file.write_text('["not", "a", "dict"]', encoding="utf-8")
 
     changes = {"test_table": {"param1": {"version": "4.0.0", "value": 42}}}
 
     with pytest.raises(TypeError, match=r"Unsupported data type .* in .*malformed.json"):
         model_repository._apply_changes_to_production_tables(
-            changes, "6.0.0", "6.5.0", "full_update", tmp_path
+            changes, "6.0.0", "6.5.0", "full_update", tmp_test_directory
         )
 
 
@@ -748,7 +762,7 @@ def test_apply_changes_to_production_tables_invalid_data_type(tmp_path):
 @patch("simtools.model.model_repository._apply_changes_to_production_tables")
 @patch("simtools.model.model_repository._apply_changes_to_model_parameters")
 def test_generate_new_production_empty_version_history(
-    mock_apply_model_changes, mock_apply_table_changes, mock_collect_data, tmp_path
+    mock_apply_model_changes, mock_apply_table_changes, mock_collect_data, tmp_test_directory
 ):
     """Test handling when model_version_history is empty."""
     mock_collect_data.return_value = {
@@ -759,13 +773,42 @@ def test_generate_new_production_empty_version_history(
         "changes": {},
     }
 
-    model_repository.generate_new_production("fake_modifications.yml", str(tmp_path))
+    model_repository.generate_new_production("fake_modifications.yml", str(tmp_test_directory))
 
     mock_apply_table_changes.assert_called_once_with(
-        {}, "6.5.0", "6.5.0", "full_update", str(tmp_path)
+        {}, "6.5.0", "6.5.0", "full_update", str(tmp_test_directory)
     )
     mock_apply_model_changes.assert_called_once_with(
-        {}, str(tmp_path), "v0.3.0", "https://example.org/workflows.git"
+        {}, str(tmp_test_directory), "v0.3.0", "https://example.org/workflows.git"
+    )
+
+
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
+@patch("simtools.model.model_repository._apply_changes_to_production_tables")
+@patch("simtools.model.model_repository._apply_changes_to_model_parameters")
+def test_generate_new_production_setting_workflows_git_tag_override(
+    mock_apply_model_changes, mock_apply_table_changes, mock_collect_data, tmp_test_directory
+):
+    """Test that CLI setting_workflows_git_tag overrides info.yml setting."""
+    mock_collect_data.return_value = {
+        "model_version": "6.5.0",
+        "model_version_history": [],
+        "setting_workflows_git_tag": "from-info-file",
+        "setting_workflows_git_repository": "https://example.org/workflows.git",
+        "changes": {},
+    }
+
+    model_repository.generate_new_production(
+        "fake_modifications.yml",
+        str(tmp_test_directory),
+        setting_workflows_git_tag="from-cli",
+    )
+
+    mock_apply_table_changes.assert_called_once_with(
+        {}, "6.5.0", "6.5.0", "full_update", str(tmp_test_directory)
+    )
+    mock_apply_model_changes.assert_called_once_with(
+        {}, str(tmp_test_directory), "from-cli", "https://example.org/workflows.git"
     )
 
 
@@ -826,9 +869,9 @@ def test_apply_changes_to_production_table_with_deprecated_parameters():
 
 
 @patch("simtools.model.model_repository._create_new_model_parameter_entry")
-def test_apply_changes_to_model_parameters_simple(mock_create_entry, tmp_path):
+def test_apply_changes_to_model_parameters_simple(mock_create_entry, tmp_test_directory):
     """Test applying changes to model parameters."""
-    model_parameters_dir = tmp_path / "model_parameters"
+    model_parameters_dir = tmp_test_directory / "model_parameters"
     changes = {
         "MSTx-FlashCam": {
             "dsum_threshold": {"version": "4.0.0", "value": 62.5},
@@ -1085,27 +1128,27 @@ def test_create_new_model_parameter_entry_with_existing_file(
     assert param_data["value"] == [42.5, 42.5, 42.5]  # Single value converted to list
 
 
-def test_get_production_directory(tmp_path):
+def test_get_production_directory(tmp_test_directory):
     """Test getting production directory with and without model version."""
-    simulation_models_path = str(tmp_path)
+    simulation_models_path = str(tmp_test_directory)
 
     # Test without model version
     result = model_repository.get_production_directory(simulation_models_path)
-    expected = tmp_path / "simulation-models" / "productions"
+    expected = tmp_test_directory / "simulation-models" / "productions"
     assert result == expected
 
     # Test with model version
     result = model_repository.get_production_directory(simulation_models_path, "6.0.0")
-    expected = tmp_path / "simulation-models" / "productions" / "6.0.0"
+    expected = tmp_test_directory / "simulation-models" / "productions" / "6.0.0"
     assert result == expected
 
 
-def test_get_model_parameter_directory(tmp_path):
+def test_get_model_parameter_directory(tmp_test_directory):
     """Test getting the model parameter directory."""
-    simulation_models_path = str(tmp_path)
+    simulation_models_path = str(tmp_test_directory)
 
     result = model_repository.get_model_parameter_directory(simulation_models_path)
-    expected = tmp_path / "simulation-models" / "model_parameters"
+    expected = tmp_test_directory / "simulation-models" / "model_parameters"
 
     assert result == expected
 
@@ -1194,7 +1237,7 @@ def test_update_two_levels_in_changes_dict_empty_dicts():
 
 
 @patch("simtools.model.model_repository._get_changes_dict")
-def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_path):
+def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_test_directory):
     """Test full_update mode aggregates changes from version history.
 
     This test simulates the scenario where version 7.0.0 is created as a full_update
@@ -1264,7 +1307,7 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_path):
     mock_get_changes_dict.side_effect = get_changes_side_effect
 
     changes, base_version = model_repository._get_changes_to_production(
-        modification_dict_7_0_0, tmp_path, update_type="full_update"
+        modification_dict_7_0_0, tmp_test_directory, update_type="full_update"
     )
 
     # Verify the base version is correctly identified as the oldest
@@ -1291,12 +1334,12 @@ def test_get_changes_to_production_full_update(mock_get_changes_dict, tmp_path):
 
     # Verify mock was called for versions up to the full_update
     # Should call 6.0.2 and 6.0.0, but NOT 6.0.1 due to the break
-    mock_get_changes_dict.assert_any_call("6.0.2", tmp_path)
-    mock_get_changes_dict.assert_any_call("6.0.0", tmp_path)
+    mock_get_changes_dict.assert_any_call("6.0.2", tmp_test_directory)
+    mock_get_changes_dict.assert_any_call("6.0.0", tmp_test_directory)
 
 
 @patch("simtools.model.model_repository._get_changes_dict")
-def test_get_changes_to_production_patch_update(mock_get_changes_dict, tmp_path):
+def test_get_changes_to_production_patch_update(mock_get_changes_dict, tmp_test_directory):
     """Test patch_update mode returns only direct changes without recursion."""
     modification_dict = {
         "model_version": "6.0.2",
@@ -1306,7 +1349,7 @@ def test_get_changes_to_production_patch_update(mock_get_changes_dict, tmp_path)
     }
 
     changes, base_version = model_repository._get_changes_to_production(
-        modification_dict, tmp_path, update_type="patch_update"
+        modification_dict, tmp_test_directory, update_type="patch_update"
     )
 
     # Verify base version is the oldest in history
