@@ -699,6 +699,35 @@ def test_generate_new_production_empty_version_history(
     )
 
 
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
+@patch("simtools.model.model_repository._apply_changes_to_production_tables")
+@patch("simtools.model.model_repository._apply_changes_to_model_parameters")
+def test_generate_new_production_setting_workflows_git_tag_override(
+    mock_apply_model_changes, mock_apply_table_changes, mock_collect_data, tmp_path
+):
+    """Test that CLI setting_workflows_git_tag overrides info.yml setting."""
+    mock_collect_data.return_value = {
+        "model_version": "6.5.0",
+        "model_version_history": [],
+        "setting_workflows_git_tag": "from-info-file",
+        "setting_workflows_git_repository": "https://example.org/workflows.git",
+        "changes": {},
+    }
+
+    model_repository.generate_new_production(
+        "fake_modifications.yml",
+        str(tmp_path),
+        setting_workflows_git_tag="from-cli",
+    )
+
+    mock_apply_table_changes.assert_called_once_with(
+        {}, "6.5.0", "6.5.0", "full_update", str(tmp_path)
+    )
+    mock_apply_model_changes.assert_called_once_with(
+        {}, str(tmp_path), "from-cli", "https://example.org/workflows.git"
+    )
+
+
 def test_apply_changes_to_production_table_patch_update():
     """Test patch update behavior with matching changes."""
     data = {
