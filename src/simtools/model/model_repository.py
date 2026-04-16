@@ -200,9 +200,10 @@ def generate_new_production(model_version, simulation_models_path, setting_workf
         Model version to be created or updated.
     simulation_models_path: str
         Path to the simulation models repository.
-    setting_workflows_git_tag: str
-        Branch or tag used to download parameters from simulation workflow repository.
-        If None, value from info.yml is used (fallback: "main").
+    setting_workflows_git_tag: str, optional
+        Branch or tag used to download parameters from the simulation workflow repository.
+        If provided, this value overrides ``setting_workflows_git_tag`` from ``info.yml``.
+        If None, the value from ``info.yml`` is used, with ``"main"`` as fallback.
     """
     modification_dict = _get_changes_dict(model_version, simulation_models_path)
     update_type = modification_dict.get("model_update", "full_update")
