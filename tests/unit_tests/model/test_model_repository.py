@@ -885,10 +885,10 @@ def test_apply_changes_to_model_parameters_with_both_value_and_activity_id_raise
     mock_create_entry.assert_not_called()
 
 
-@patch("simtools.model.model_repository.ascii_handler.write_data_to_file")
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
 def test_download_model_parameter_from_workflow(
-    mock_collect_data, mock_write_data, tmp_test_directory
+    mock_write_json, mock_collect_data, tmp_test_directory
 ):
     """Test downloading and writing model parameter from workflow repository."""
     telescope = "LSTN-design"
@@ -917,7 +917,7 @@ def test_download_model_parameter_from_workflow(
         git_repository="https://example.org/workflows.git",
         git_branch="v2.1.0",
     )
-    mock_write_data.assert_called_once_with(
+    mock_write_json.assert_called_once_with(
         {"parameter_version": "3.0.0", "value": [1, 2, 3]},
         tmp_test_directory
         / "simulation-models"
@@ -925,14 +925,13 @@ def test_download_model_parameter_from_workflow(
         / "LSTN-design"
         / "pm_photoelectron_spectrum"
         / "pm_photoelectron_spectrum-3.0.0.json",
-        sort_keys=True,
     )
 
 
-@patch("simtools.model.model_repository.ascii_handler.write_data_to_file")
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
 def test_download_model_parameter_from_workflow_raises_on_version_mismatch(
-    mock_collect_data, mock_write_data, tmp_test_directory
+    mock_write_json, mock_collect_data, tmp_test_directory
 ):
     """Test that mismatched requested/downloaded versions raise a ValueError."""
     telescope = "LSTN-design"
@@ -952,11 +951,11 @@ def test_download_model_parameter_from_workflow_raises_on_version_mismatch(
             setting_workflows_git_tag="v2.1.0",
         )
 
-    mock_write_data.assert_not_called()
+    mock_write_json.assert_not_called()
 
 
 @patch("simtools.model.model_repository._get_latest_model_parameter_file")
-@patch("simtools.model.model_repository.writer.ModelDataWriter.dump_model_parameter")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter")
 def test_create_new_model_parameter_entry_simple(mock_dump, mock_get_latest, tmp_test_directory):
     """Test creating a new model parameter entry."""
     telescope = "MSTx-FlashCam"
@@ -973,7 +972,7 @@ def test_create_new_model_parameter_entry_simple(mock_dump, mock_get_latest, tmp
         telescope, param, param_data, Path(tmp_test_directory)
     )
 
-    # Verify dump_model_parameter was called with correct arguments
+    # Verify write_model_parameter was called with correct arguments
     mock_dump.assert_called_once_with(
         parameter_name=param,
         value=param_data["value"],
@@ -1003,7 +1002,7 @@ def test_create_new_model_parameter_entry_telescope_dir_not_exists(tmp_test_dire
 @patch("simtools.model.model_repository._check_for_major_version_jump")
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
 @patch("simtools.model.model_repository._get_latest_model_parameter_file")
-@patch("simtools.model.model_repository.writer.ModelDataWriter.dump_model_parameter")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter")
 def test_create_new_model_parameter_entry_with_existing_file(
     mock_dump, mock_get_latest, mock_collect_data, mock_check_version, tmp_test_directory
 ):
