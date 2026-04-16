@@ -284,13 +284,15 @@ def _apply_changes_to_production_tables(
             raise TypeError(f"Unsupported data type {type(data)} in {file_path}")
         tables[data["production_table_name"]] = data
 
+    table_changes = _group_changes_by_production_table(changes)
+
     # placeholder for new tables
-    for table_name in changes:
+    for table_name in table_changes:
         tables.setdefault(table_name, {})
 
     for table_name, data in tables.items():
         if _apply_changes_to_production_table(
-            table_name, data, changes, model_version, update_type == "patch_update"
+            table_name, data, table_changes, model_version, update_type == "patch_update"
         ):
             target_file = target / f"{table_name}.json"
             _logger.info(f"Writing updated production table '{target_file}'")
@@ -298,7 +300,9 @@ def _apply_changes_to_production_tables(
             ascii_handler.write_data_to_file(data, target_file, sort_keys=True)
 
 
-def _apply_changes_to_production_table(table_name, data, changes, model_version, patch_update):
+def _apply_changes_to_production_table(
+    table_name, data, table_changes, model_version, patch_update
+):
     """
     Apply changes to a single production table.
 
@@ -308,8 +312,8 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
         Name of the production table.
     data: dict
         Data to be updated.
-    changes: dict
-        Changes to be applied.
+    table_changes: dict
+        Changes grouped by production table.
     model_version: str
         Model version of the new production tables.
     patch_update: bool
@@ -322,19 +326,71 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
         always True for full updates.
     """
     data["model_version"] = model_version
-    if table_name in changes:
+
+    if table_name not in table_changes:
+        return not patch_update
+
+    if table_name == "configuration_sim_telarray":
+        parameters, deprecated = _update_configuration_sim_telarray_parameters(
+            {} if patch_update else data.get("parameters", {}), table_changes[table_name]
+        )
+        data["parameters"] = parameters
+        if deprecated and patch_update:
+            data["deprecated_parameters"] = deprecated
+        return True
+
+    if table_name in table_changes:
         production_key = _get_production_table_key(table_name)
         table_parameters = (
             {} if patch_update else data.get("parameters", {}).get(production_key, {})
         )
-        parameters, deprecated = _update_parameters_dict(table_parameters, changes, table_name)
+        parameters, deprecated = _update_parameters_dict(
+            table_parameters, {table_name: table_changes[table_name]}, table_name
+        )
         data["parameters"] = parameters
         if deprecated and patch_update:
             data["deprecated_parameters"] = deprecated
-    elif patch_update:
-        return False
 
     return True
+
+
+def _group_changes_by_production_table(changes):
+    """Route per-telescope changes to the production table they affect."""
+    grouped_changes = {}
+    for table_name, parameters in changes.items():
+        if not isinstance(parameters, dict):
+            continue
+
+        grouped_changes.setdefault(table_name, {})
+        for param, data in parameters.items():
+            collection = names.get_collection_name_from_parameter_name(param)
+            if collection == "configuration_sim_telarray":
+                grouped_changes.setdefault("configuration_sim_telarray", {})
+                grouped_changes["configuration_sim_telarray"].setdefault(table_name, {})
+                grouped_changes["configuration_sim_telarray"][table_name][param] = data
+            else:
+                grouped_changes[table_name][param] = data
+
+    return {table: table_data for table, table_data in grouped_changes.items() if table_data}
+
+
+def _update_configuration_sim_telarray_parameters(table_parameters, changes):
+    """Update nested telescope entries in configuration_sim_telarray production tables."""
+    deprecated_params = []
+
+    for telescope, parameters in changes.items():
+        table_parameters.setdefault(telescope, {})
+        for param, data in parameters.items():
+            if data.get("deprecated", False):
+                _logger.info(f"Removing model parameter '{telescope} - {param}'")
+                deprecated_params.append(param)
+                table_parameters[telescope].pop(param, None)
+            else:
+                version = data["version"]
+                _logger.info(f"Setting '{telescope} - {param}' to version {version}")
+                table_parameters[telescope][param] = version
+
+    return table_parameters, deprecated_params
 
 
 def _get_changes_dict(model_version, simulation_models_path):
@@ -585,12 +641,7 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
     simulation_models_path: Path
         Path to the simulation models directory.
     """
-    telescope_dir = get_model_parameter_directory(simulation_models_path) / telescope
-    if not telescope_dir.exists():
-        _logger.info(f"Create directory for array element '{telescope}': '{telescope_dir}'.")
-        telescope_dir.mkdir(parents=True, exist_ok=True)
-
-    param_dir = telescope_dir / param
+    param_dir = _get_parameter_file_directory(simulation_models_path, telescope, param)
     try:
         latest_file = _get_latest_model_parameter_file(param_dir, param, param_data["version"])
     except FileNotFoundError:
@@ -617,6 +668,41 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
         meta_parameter=param_data.get("meta_parameter", False),
         model_parameter_schema_version=param_data.get("model_parameter_schema_version", None),
     )
+
+
+def _get_parameter_file_directory(simulation_models_path, telescope, param):
+    """
+    Get the file path for a model parameter.
+
+    Takes into account the path structure based on collections and array elements.
+
+    Parameters
+    ----------
+    simulation_models_path: Path
+        Path to the simulation models directory.
+    telescope: str
+        Name of the telescope.
+    param: str
+        Name of the parameter.
+
+    Returns
+    -------
+    Path
+        The file path to the model parameter JSON file.
+    """
+    param_dir = get_model_parameter_directory(simulation_models_path)
+    collection = names.get_collection_name_from_parameter_name(param)
+    if collection == "configuration_sim_telarray":
+        param_dir /= Path(collection) / telescope
+    elif collection == "configuration_corsika":
+        param_dir /= collection
+    else:
+        param_dir /= telescope
+
+    param_dir /= param
+    param_dir.mkdir(parents=True, exist_ok=True)
+
+    return param_dir
 
 
 def _get_latest_model_parameter_file(directory, parameter, max_version):
