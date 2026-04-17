@@ -446,7 +446,7 @@ class ModelParameter:
         InvalidModelParameterError
             If the parameter to be changed does not exist in this model.
         """
-        target_store = parameter_store or self.parameters
+        target_store = self.parameters if parameter_store is None else parameter_store
 
         if par_name not in target_store:
             raise InvalidModelParameterError(f"Parameter {par_name} not in the model")
@@ -463,7 +463,8 @@ class ModelParameter:
             )
 
         # In case parameter is a file, the model files will be outdated
-        if target_store.get("par_name").get("file", False):
+        par_dict = target_store.get(par_name)
+        if isinstance(par_dict, dict) and par_dict.get("file", False):
             self._is_exported_model_files_up_to_date = False
 
     def _overwrite_model_parameter_from_value(
