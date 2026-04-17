@@ -451,7 +451,9 @@ class ModelParameter:
         if self.get_parameter_file_flag(par_name):
             self._is_exported_model_files_up_to_date = False
 
-    def _overwrite_model_parameter_from_value(self, par_name, value, parameter_version, metadata):
+    def _overwrite_model_parameter_from_value(
+        self, par_name, value, parameter_version, metadata, parameter_store=None
+    ):
         """Overwrite model parameter from provided value only."""
         try:
             DataValidator.validate_model_parameter(
@@ -460,6 +462,7 @@ class ModelParameter:
                     gen.convert_string_to_list(value) if isinstance(value, str) else value,
                     parameter_version,
                     metadata,
+                    parameter_store=parameter_store,
                 ),
                 par_name=par_name,
             )
@@ -560,19 +563,9 @@ class ModelParameter:
                 f"Parameter {par_name} overwrite requires a value for simulation configuration."
             )
 
-        try:
-            DataValidator.validate_model_parameter(
-                self._update_parameter_dict(
-                    par_name,
-                    gen.convert_string_to_list(value) if isinstance(value, str) else value,
-                    parameter_version,
-                    metadata,
-                    parameter_store=parameter_store,
-                ),
-                par_name=par_name,
-            )
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(f"Schema file for parameter {par_name} not found.") from exc
+        self._overwrite_model_parameter_from_value(
+            par_name, value, parameter_version, metadata, parameter_store
+        )
 
         return True
 
