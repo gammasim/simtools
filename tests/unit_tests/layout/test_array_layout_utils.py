@@ -71,7 +71,7 @@ def test_write_array_layouts(
     mock_io_handler.return_value.set_paths.assert_called_once_with(output_path=test_path)
     mock_io_handler.return_value.get_output_file.assert_called_once_with("array-layouts-v1.json")
 
-    mock_model_data_writer.dump_model_parameter.assert_called_once_with(
+    mock_model_data_writer.write_model_parameter.assert_called_once_with(
         parameter_name="array_layouts",
         value=array_layouts["value"],
         instrument="OBS-North",

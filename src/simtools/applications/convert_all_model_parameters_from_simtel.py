@@ -204,7 +204,7 @@ def read_and_export_parameters(args_dict, logger, io_handler):
 
         logger.info(f"sim_telarray parameter: {config_reader.parameter_dict}")
 
-        _json_dict = writer.ModelDataWriter.dump_model_parameter(
+        _json_dict = writer.ModelDataWriter.write_model_parameter(
             parameter_name=_parameter,
             value=config_reader.parameter_dict.get(args_dict["simtel_telescope_name"]),
             instrument=args_dict["telescope"],

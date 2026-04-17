@@ -265,7 +265,7 @@ def test_dump_nsb_pixel_rate(camera_efficiency_lst, mocker, caplog):
         return_value=u.Quantity(np.full(10, 5.0), u.GHz),
     )
     mock_dump = mocker.patch(
-        "simtools.data_model.model_data_writer.ModelDataWriter.dump_model_parameter"
+        "simtools.data_model.model_data_writer.ModelDataWriter.write_model_parameter"
     )
     mock_config = mocker.MagicMock()
     mock_config.args = {"telescope": "LSTN-01", "parameter_version": "1.0.0"}
@@ -288,7 +288,7 @@ def test_dump_nsb_pixel_rate_reference_conditions(camera_efficiency_lst, mocker)
         return_value=u.Quantity(np.full(20, 7.0), u.GHz),
     )
     mock_dump = mocker.patch(
-        "simtools.data_model.model_data_writer.ModelDataWriter.dump_model_parameter"
+        "simtools.data_model.model_data_writer.ModelDataWriter.write_model_parameter"
     )
     mock_config = mocker.MagicMock()
     mock_config.args = {

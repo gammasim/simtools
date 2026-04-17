@@ -81,7 +81,7 @@ def main():
 
     simtel_config_reader.compare_simtel_config_with_schema()
 
-    _json_dict = writer.ModelDataWriter.dump_model_parameter(
+    _json_dict = writer.ModelDataWriter.write_model_parameter(
         parameter_name=simtel_config_reader.parameter_name,
         value=simtel_config_reader.parameter_dict.get(app_context.args["simtel_telescope_name"]),
         instrument=app_context.args["telescope"],

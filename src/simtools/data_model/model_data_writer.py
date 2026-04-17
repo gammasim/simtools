@@ -48,7 +48,7 @@ class ModelDataWriter:
         self.output_file_format = self._derive_data_format(output_file_format, self.output_file)
 
     @staticmethod
-    def dump(
+    def write_product_data(
         output_file=None,
         metadata=None,
         product_data=None,
@@ -81,10 +81,10 @@ class ModelDataWriter:
                 product_data_table=product_data,
                 validate_schema_file=validate_schema_file,
             )
-        writer.write(metadata=metadata, product_data=product_data)
+        writer.write_data(metadata=metadata, product_data=product_data)
 
     @staticmethod
-    def dump_model_parameter(
+    def write_model_parameter(
         parameter_name,
         value,
         instrument,
@@ -158,7 +158,7 @@ class ModelDataWriter:
             unit=unit,
             meta_parameter=meta_parameter,
         )
-        writer.write_dict_to_model_parameter_json(output_file, _json_dict)
+        writer.write_model_parameter_dict_json(output_file, _json_dict)
         if metadata is not None:
             metadata.write(output_path / Path(output_file))
         return _json_dict
@@ -472,7 +472,7 @@ class ModelDataWriter:
 
         return validated
 
-    def write(self, product_data=None, metadata=None):
+    def write_data(self, product_data=None, metadata=None):
         """
         Write model data and metadata.
 
@@ -499,7 +499,7 @@ class ModelDataWriter:
 
         self._logger.info(f"Writing data to {self.output_file}")
         if isinstance(product_data, dict) and Path(self.output_file).suffix == ".json":
-            self.write_dict_to_model_parameter_json(self.output_file, product_data)
+            self.write_model_parameter_dict_json(self.output_file, product_data)
             return
         try:
             product_data.write(self.output_file, format=self.output_file_format, overwrite=True)
@@ -509,7 +509,7 @@ class ModelDataWriter:
         if metadata is not None:
             metadata.write(self.output_file, add_activity_name=True)
 
-    def write_dict_to_model_parameter_json(self, file_name, data_dict):
+    def write_model_parameter_dict_json(self, file_name, data_dict):
         """
         Write dictionary to model-parameter-style json file.
 
@@ -530,6 +530,23 @@ class ModelDataWriter:
             file_name, output_path_label=self.output_label
         )
         self._logger.info(f"Writing data to {output_file}")
+        ModelDataWriter.write_model_parameter_json(data_dict, output_file)
+
+    @staticmethod
+    def write_model_parameter_json(data_dict, output_file):
+        """
+        Write model parameter dictionary to JSON file.
+
+        Centralizes the JSON serialization options (sort_keys, numpy_types,
+        compact_numeric_lists) so all callers use consistent settings.
+
+        Parameters
+        ----------
+        data_dict : dict
+            Data dictionary to write.
+        output_file : str or Path
+            Path of the output JSON file.
+        """
         ascii_handler.write_data_to_file(
             data=data_dict,
             output_file=output_file,
