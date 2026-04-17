@@ -648,44 +648,62 @@ class ModelParameter:
         changes: dict
             Parameters to be changed.
         """
-        if not changes:
+        key_for_changes, selected_changes = self._select_changes_for_overwrite(changes, flat_dict)
+        if not selected_changes:
             return
-        if not flat_dict:
-            key_for_changes = self._get_key_for_parameter_changes(self.site, self.name, changes)
-            changes = changes.get(key_for_changes, {})
+
+        self._log_overwrite_changes(flat_dict, key_for_changes, selected_changes)
+
+        for par_name, par_value in selected_changes.items():
+            self._overwrite_single_parameter(par_name, par_value)
+
+    def _select_changes_for_overwrite(self, changes, flat_dict):
+        """Select model-relevant changes and return (key, selected_changes)."""
         if not changes:
-            return
+            return None, {}
 
         if flat_dict:
-            self._logger.debug(f"Overwriting parameters with changes: {changes}")
-        else:
-            self._logger.debug(
-                f"Overwriting parameters for {key_for_changes} with changes: {changes}"
+            return None, changes
+
+        key_for_changes = self._get_key_for_parameter_changes(self.site, self.name, changes)
+        return key_for_changes, changes.get(key_for_changes, {})
+
+    def _log_overwrite_changes(self, flat_dict, key_for_changes, selected_changes):
+        """Log selected changes for overwrite_parameters."""
+        if flat_dict:
+            self._logger.debug(f"Overwriting parameters with changes: {selected_changes}")
+            return
+
+        self._logger.debug(
+            f"Overwriting parameters for {key_for_changes} with changes: {selected_changes}"
+        )
+
+    def _overwrite_single_parameter(self, par_name, par_value):
+        """Overwrite a single parameter in base model or simulation configuration."""
+        if par_name not in self.parameters:
+            if self._overwrite_simulation_parameter(par_name, par_value):
+                return
+            raise ValueError(
+                f"Parameter {par_name} not found in model {self.name}, cannot overwrite it."
             )
 
-        for par_name, par_value in changes.items():
-            if par_name not in self.parameters and not self._overwrite_simulation_parameter(
-                par_name, par_value
-            ):
-                raise ValueError(
-                    f"Parameter {par_name} not found in model {self.name}, cannot overwrite it."
-                )
-            if par_name not in self.parameters:
-                continue
+        if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
+            # Extract metadata fields that should be applied
+            # Note: 'type' is derived from schema, not from overwrite file
+            metadata = {
+                k: v
+                for k, v in par_value.items()
+                if k in ("unit", "model_parameter_schema_version")
+            }
+            self.overwrite_model_parameter(
+                par_name,
+                par_value.get("value"),
+                par_value.get("version"),
+                metadata or None,
+            )
+            return
 
-            if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
-                # Extract metadata fields that should be applied
-                # Note: 'type' is derived from schema, not from overwrite file
-                metadata = {
-                    k: v
-                    for k, v in par_value.items()
-                    if k in ("unit", "model_parameter_schema_version")
-                }
-                self.overwrite_model_parameter(
-                    par_name, par_value.get("value"), par_value.get("version"), metadata or None
-                )
-            else:
-                self.overwrite_model_parameter(par_name, par_value)
+        self.overwrite_model_parameter(par_name, par_value)
 
     def overwrite_model_file(self, par_name, file_path):
         """
