@@ -580,7 +580,7 @@ class CameraEfficiency:
         """Write NSB pixel rate parameter file."""
         cfg = settings.config.args
 
-        writer.ModelDataWriter.dump_model_parameter(
+        writer.ModelDataWriter.write_model_parameter(
             parameter_name="nsb_pixel_rate",
             value=self.get_nsb_pixel_rate(
                 reference_conditions=settings.config.args.get(

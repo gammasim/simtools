@@ -76,7 +76,7 @@ def test_derive_single_pe_spectrum(mock_derive_spectrum_norm_spe, spe_spectrum):
 
 
 @patch("simtools.camera.single_photon_electron_spectrum.io_handler.IOHandler.get_output_directory")
-@patch("simtools.camera.single_photon_electron_spectrum.writer.ModelDataWriter.dump")
+@patch("simtools.camera.single_photon_electron_spectrum.writer.ModelDataWriter.write_product_data")
 @patch("builtins.open", new_callable=MagicMock)
 def test_write_single_pe_spectrum(
     mock_open, mock_dump, mock_get_output_directory, spe_spectrum, tmp_test_directory

@@ -158,7 +158,7 @@ def main():
     instrument = app_context.args.get("telescope")
     parameter_version = app_context.args.get("parameter_version")
 
-    writer.ModelDataWriter.dump_model_parameter(
+    writer.ModelDataWriter.write_model_parameter(
         parameter_name="flasher_pulse_width",
         value=sigma_ns,
         instrument=instrument,
@@ -167,7 +167,7 @@ def main():
         output_path=output_path,
         unit="ns",
     )
-    writer.ModelDataWriter.dump_model_parameter(
+    writer.ModelDataWriter.write_model_parameter(
         parameter_name="flasher_pulse_exp_decay",
         value=tau_ns,
         instrument=instrument,

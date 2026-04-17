@@ -164,7 +164,7 @@ def write_array_layouts(array_layouts, args_dict):
         f"array-layouts-{args_dict['updated_parameter_version']}.json"
     )
 
-    ModelDataWriter.dump_model_parameter(
+    ModelDataWriter.write_model_parameter(
         parameter_name="array_layouts",
         value=array_layouts["value"],
         instrument=f"OBS-{site}",
@@ -646,7 +646,7 @@ def write_array_elements_from_file_to_repository(
         output_path.mkdir(parents=True, exist_ok=True)
         _logger.info(f"Writing array element positions ({coordinate_system}) to {output_path}")
 
-        ModelDataWriter.dump_model_parameter(
+        ModelDataWriter.write_model_parameter(
             parameter_name=parameter_name,
             instrument=instrument,
             value=f"{x[i]} {y[i]} {alt[i]}",

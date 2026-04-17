@@ -125,7 +125,7 @@ def main():
         layout.pprint()
 
         if not app_context.args.get("output_file_from_default", False):
-            writer.ModelDataWriter.dump(
+            writer.ModelDataWriter.write_product_data(
                 output_file=app_context.args["output_file"],
                 output_file_format=app_context.args.get("output_file_format"),
                 metadata=None,

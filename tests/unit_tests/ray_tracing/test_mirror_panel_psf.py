@@ -391,7 +391,7 @@ def test_write_optimization_data_warns_when_parameter_export_fails(tmp_path, moc
     inst.per_mirror_results = []
 
     dump = mocker.patch(
-        "simtools.data_model.model_data_writer.ModelDataWriter.dump_model_parameter",
+        "simtools.data_model.model_data_writer.ModelDataWriter.write_model_parameter",
         side_effect=OSError("boom"),
     )
 
@@ -425,7 +425,7 @@ def test_write_optimization_data_also_exports_model_parameter_json(tmp_path, moc
     ]
 
     dump = mocker.patch(
-        "simtools.data_model.model_data_writer.ModelDataWriter.dump_model_parameter"
+        "simtools.data_model.model_data_writer.ModelDataWriter.write_model_parameter"
     )
     inst.write_optimization_data()
 
