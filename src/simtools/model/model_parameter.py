@@ -320,6 +320,8 @@ class ModelParameter:
         if self.db is None:
             return
 
+        self._load_simulation_software_parameter()
+
         if self.name or self.site:
             # copy parameters dict, is it may be modified later on
             self.parameters = deepcopy(
@@ -334,7 +336,6 @@ class ModelParameter:
                 value_resolver=self._resolve_legacy_table_parameter_value,
             )
 
-        self._load_simulation_software_parameter()
         for software_name, parameters in self._simulation_config_parameters.items():
             self._check_model_parameter_versions(
                 parameters,
@@ -412,7 +413,14 @@ class ModelParameter:
 
         legacy_model_parameter.apply_legacy_updates_to_parameters(parameters, _legacy_updates)
 
-    def overwrite_model_parameter(self, par_name, value, parameter_version=None, metadata=None):
+    def overwrite_model_parameter(
+        self,
+        par_name,
+        value,
+        parameter_version=None,
+        metadata=None,
+        parameter_store=None,
+    ):
         """
         Overwrite the parameter dictionary for a specific parameter in the model.
 
@@ -438,19 +446,30 @@ class ModelParameter:
         InvalidModelParameterError
             If the parameter to be changed does not exist in this model.
         """
-        if par_name not in self.parameters:
+        target_store = self.parameters if parameter_store is None else parameter_store
+
+        if par_name not in target_store:
             raise InvalidModelParameterError(f"Parameter {par_name} not in the model")
 
-        if value is None and parameter_version:
+        if parameter_store is None and value is None and parameter_version:
             self._overwrite_model_parameter_from_db(par_name, parameter_version)
         else:
-            self._overwrite_model_parameter_from_value(par_name, value, parameter_version, metadata)
+            self._overwrite_model_parameter_from_value(
+                par_name,
+                value,
+                parameter_version,
+                metadata,
+                parameter_store=parameter_store,
+            )
 
         # In case parameter is a file, the model files will be outdated
-        if self.get_parameter_file_flag(par_name):
+        par_dict = target_store.get(par_name)
+        if isinstance(par_dict, dict) and par_dict.get("file", False):
             self._is_exported_model_files_up_to_date = False
 
-    def _overwrite_model_parameter_from_value(self, par_name, value, parameter_version, metadata):
+    def _overwrite_model_parameter_from_value(
+        self, par_name, value, parameter_version, metadata, parameter_store=None
+    ):
         """Overwrite model parameter from provided value only."""
         try:
             DataValidator.validate_model_parameter(
@@ -459,15 +478,17 @@ class ModelParameter:
                     gen.convert_string_to_list(value) if isinstance(value, str) else value,
                     parameter_version,
                     metadata,
+                    parameter_store=parameter_store,
                 ),
                 par_name=par_name,
             )
         except FileNotFoundError as exc:
             raise FileNotFoundError(f"Schema file for parameter {par_name} not found.") from exc
 
-    def _resolve_schema_version(self, par_name, metadata):
+    def _resolve_schema_version(self, par_name, metadata, parameter_store=None):
         """Resolve to an available schema version for a model parameter."""
-        par_dict = self.parameters.get(par_name, {})
+        parameter_store = parameter_store or self.parameters
+        par_dict = parameter_store.get(par_name, {})
         schema_version = (
             metadata.get("model_parameter_schema_version")
             if metadata and "model_parameter_schema_version" in metadata
@@ -485,23 +506,32 @@ class ModelParameter:
                 f"Schema version '{requested_version}' not available for parameter '{par_name}'"
             ) from exc
 
-    def _update_parameter_dict(self, par_name, value, parameter_version, metadata):
+    def _update_parameter_dict(
+        self,
+        par_name,
+        value,
+        parameter_version,
+        metadata,
+        parameter_store=None,
+    ):
         """
         Update parameter dictionary with value/metadata and fill schema-derived defaults.
 
         This keeps overwrite behavior robust when metadata dictionaries are incomplete
         (e.g. missing type or unit).
         """
+        parameter_store = parameter_store or self.parameters
         self._logger.debug(
-            f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} to {value}"
+            f"Changing parameter {par_name} from "
+            f"{parameter_store.get(par_name, {}).get('value')} to {value}"
         )
-        par_dict = self.parameters[par_name]
+        par_dict = parameter_store[par_name]
         par_dict["value"] = value
 
         if parameter_version:
             par_dict["parameter_version"] = parameter_version
 
-        schema_version = self._resolve_schema_version(par_name, metadata)
+        schema_version = self._resolve_schema_version(par_name, metadata, parameter_store)
         par_type = schema.get_parameter_attribute_from_schema(par_name, schema_version, "type")
         schema_unit = schema.get_parameter_attribute_from_schema(par_name, schema_version, "unit")
 
@@ -517,6 +547,13 @@ class ModelParameter:
             par_dict.setdefault("type", par_type)
         par_dict.setdefault("unit", schema_unit)
         return par_dict
+
+    def _get_simulation_parameter_store(self, par_name):
+        """Return the simulation software parameter dictionary containing ``par_name``."""
+        for parameter_store in self._simulation_config_parameters.values():
+            if par_name in parameter_store:
+                return parameter_store
+        return None
 
     def _overwrite_model_parameter_from_db(self, par_name, parameter_version):
         """Overwrite model parameter from DB for a specific version."""
@@ -590,40 +627,73 @@ class ModelParameter:
         changes: dict
             Parameters to be changed.
         """
-        if not changes:
+        key_for_changes, selected_changes = self._select_changes_for_overwrite(changes, flat_dict)
+        if not selected_changes:
             return
-        if not flat_dict:
-            key_for_changes = self._get_key_for_parameter_changes(self.site, self.name, changes)
-            changes = changes.get(key_for_changes, {})
+
+        self._log_overwrite_changes(flat_dict, key_for_changes, selected_changes)
+
+        for par_name, par_value in selected_changes.items():
+            self._overwrite_single_parameter(par_name, par_value)
+
+    def _select_changes_for_overwrite(self, changes, flat_dict):
+        """Select model-relevant changes and return (key, selected_changes)."""
         if not changes:
-            return
+            return None, {}
 
         if flat_dict:
-            self._logger.debug(f"Overwriting parameters with changes: {changes}")
-        else:
-            self._logger.debug(
-                f"Overwriting parameters for {key_for_changes} with changes: {changes}"
-            )
+            return None, changes
 
-        for par_name, par_value in changes.items():
-            if par_name not in self.parameters:
+        key_for_changes = self._get_key_for_parameter_changes(self.site, self.name, changes)
+        return key_for_changes, changes.get(key_for_changes, {})
+
+    def _log_overwrite_changes(self, flat_dict, key_for_changes, selected_changes):
+        """Log selected changes for overwrite_parameters."""
+        if flat_dict:
+            self._logger.debug(f"Overwriting parameters with changes: {selected_changes}")
+            return
+
+        self._logger.debug(
+            f"Overwriting parameters for {key_for_changes} with changes: {selected_changes}"
+        )
+
+    def _overwrite_single_parameter(self, par_name, par_value):
+        """Overwrite a single parameter in base model or simulation configuration."""
+        is_base_model_parameter = par_name in self.parameters
+        parameter_store = None
+        if not is_base_model_parameter:
+            parameter_store = self._get_simulation_parameter_store(par_name)
+            if parameter_store is None:
                 raise ValueError(
                     f"Parameter {par_name} not found in model {self.name}, cannot overwrite it."
                 )
 
-            if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
-                # Extract metadata fields that should be applied
-                # Note: 'type' is derived from schema, not from overwrite file
-                metadata = {
-                    k: v
-                    for k, v in par_value.items()
-                    if k in ("unit", "model_parameter_schema_version")
-                }
-                self.overwrite_model_parameter(
-                    par_name, par_value.get("value"), par_value.get("version"), metadata or None
-                )
-            else:
-                self.overwrite_model_parameter(par_name, par_value)
+        self._apply_parameter_overwrite(par_name, par_value, parameter_store=parameter_store)
+
+    def _parse_parameter_overwrite_input(self, par_value):
+        """Parse overwrite input into value, version, and metadata."""
+        if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
+            metadata = {
+                key: value
+                for key, value in par_value.items()
+                if key in ("unit", "model_parameter_schema_version")
+            }
+            return par_value.get("value"), par_value.get("version"), metadata or None
+
+        return par_value, None, None
+
+    def _apply_parameter_overwrite(
+        self,
+        par_name,
+        par_value,
+        parameter_store=None,
+    ):
+        """Apply overwrite to base model parameters or a provided parameter store."""
+        value, parameter_version, metadata = self._parse_parameter_overwrite_input(par_value)
+
+        self.overwrite_model_parameter(
+            par_name, value, parameter_version, metadata, parameter_store
+        )
 
     def overwrite_model_file(self, par_name, file_path):
         """
