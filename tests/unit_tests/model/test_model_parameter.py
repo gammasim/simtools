@@ -230,8 +230,8 @@ def test_overwrite_parameters(telescope_model_lst, mocker):
     telescope_copy.overwrite_parameters(
         {"camera_pixels": {"value": 9999}, "mirror_focal_length": {"value": 55}}, flat_dict=True
     )
-    mock_change.assert_any_call("camera_pixels", 9999, None, None)
-    mock_change.assert_any_call("mirror_focal_length", 55, None, None)
+    mock_change.assert_any_call("camera_pixels", 9999, None, None, None)
+    mock_change.assert_any_call("mirror_focal_length", 55, None, None, None)
 
 
 def test_overwrite_parameter_with_schema_metadata(telescope_model_lst, tmp_test_directory, mocker):
@@ -656,32 +656,17 @@ def test_get_simulation_parameter_store_returns_matching_store(telescope_model_l
     assert tel_model._get_simulation_parameter_store("not_a_parameter") is None
 
 
-def test_overwrite_simulation_parameter_raises_without_value(telescope_model_lst):
-    """Test simulation parameter overwrite fails when only version is provided."""
+def test_overwrite_single_parameter_raises_for_missing_simulation_parameter(
+    telescope_model_lst,
+):
+    """Test unknown simulation parameter raises ValueError."""
     tel_model = copy.deepcopy(telescope_model_lst)
-    tel_model._simulation_config_parameters = {
-        "sim_telarray": {
-            "simtel_only_parameter": {
-                "value": 1,
-                "parameter_version": "1.0.0",
-                "model_parameter_schema_version": "1.0.0",
-            }
-        },
-        "corsika": {},
-    }
 
     with pytest.raises(
-        InvalidModelParameterError,
-        match=r"overwrite requires a value for simulation configuration",
+        ValueError,
+        match=r"Parameter not_a_parameter not found in model .* cannot overwrite it.",
     ):
-        tel_model._overwrite_simulation_parameter("simtel_only_parameter", {"version": "2.0.0"})
-
-
-def test_overwrite_simulation_parameter_returns_false_for_missing_parameter(telescope_model_lst):
-    """Test simulation parameter overwrite returns False when parameter does not exist."""
-    tel_model = copy.deepcopy(telescope_model_lst)
-
-    assert tel_model._overwrite_simulation_parameter("not_a_parameter", 1) is False
+        tel_model._overwrite_single_parameter("not_a_parameter", 1)
 
 
 def test_overwrite_parameters_raises_for_unknown_parameter(telescope_model_lst):
