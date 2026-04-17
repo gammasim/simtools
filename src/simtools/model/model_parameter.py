@@ -320,6 +320,8 @@ class ModelParameter:
         if self.db is None:
             return
 
+        self._load_simulation_software_parameter()
+
         if self.name or self.site:
             # copy parameters dict, is it may be modified later on
             self.parameters = deepcopy(
@@ -334,7 +336,6 @@ class ModelParameter:
                 value_resolver=self._resolve_legacy_table_parameter_value,
             )
 
-        self._load_simulation_software_parameter()
         for software_name, parameters in self._simulation_config_parameters.items():
             self._check_model_parameter_versions(
                 parameters,
@@ -465,9 +466,10 @@ class ModelParameter:
         except FileNotFoundError as exc:
             raise FileNotFoundError(f"Schema file for parameter {par_name} not found.") from exc
 
-    def _resolve_schema_version(self, par_name, metadata):
+    def _resolve_schema_version(self, par_name, metadata, parameter_store=None):
         """Resolve to an available schema version for a model parameter."""
-        par_dict = self.parameters.get(par_name, {})
+        parameter_store = parameter_store or self.parameters
+        par_dict = parameter_store.get(par_name, {})
         schema_version = (
             metadata.get("model_parameter_schema_version")
             if metadata and "model_parameter_schema_version" in metadata
@@ -485,23 +487,32 @@ class ModelParameter:
                 f"Schema version '{requested_version}' not available for parameter '{par_name}'"
             ) from exc
 
-    def _update_parameter_dict(self, par_name, value, parameter_version, metadata):
+    def _update_parameter_dict(
+        self,
+        par_name,
+        value,
+        parameter_version,
+        metadata,
+        parameter_store=None,
+    ):
         """
         Update parameter dictionary with value/metadata and fill schema-derived defaults.
 
         This keeps overwrite behavior robust when metadata dictionaries are incomplete
         (e.g. missing type or unit).
         """
+        parameter_store = parameter_store or self.parameters
         self._logger.debug(
-            f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} to {value}"
+            f"Changing parameter {par_name} from "
+            f"{parameter_store.get(par_name, {}).get('value')} to {value}"
         )
-        par_dict = self.parameters[par_name]
+        par_dict = parameter_store[par_name]
         par_dict["value"] = value
 
         if parameter_version:
             par_dict["parameter_version"] = parameter_version
 
-        schema_version = self._resolve_schema_version(par_name, metadata)
+        schema_version = self._resolve_schema_version(par_name, metadata, parameter_store)
         par_type = schema.get_parameter_attribute_from_schema(par_name, schema_version, "type")
         schema_unit = schema.get_parameter_attribute_from_schema(par_name, schema_version, "unit")
 
@@ -517,6 +528,53 @@ class ModelParameter:
             par_dict.setdefault("type", par_type)
         par_dict.setdefault("unit", schema_unit)
         return par_dict
+
+    def _get_simulation_parameter_store(self, par_name):
+        """Return the simulation software parameter dictionary containing ``par_name``."""
+        for parameter_store in self._simulation_config_parameters.values():
+            if par_name in parameter_store:
+                return parameter_store
+        return None
+
+    def _overwrite_simulation_parameter(self, par_name, par_value):
+        """Overwrite a simulation software configuration parameter."""
+        parameter_store = self._get_simulation_parameter_store(par_name)
+        if parameter_store is None:
+            return False
+
+        if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
+            metadata = {
+                k: v
+                for k, v in par_value.items()
+                if k in ("unit", "model_parameter_schema_version")
+            }
+            value = par_value.get("value")
+            parameter_version = par_value.get("version")
+        else:
+            metadata = None
+            value = par_value
+            parameter_version = None
+
+        if value is None and parameter_version:
+            raise InvalidModelParameterError(
+                f"Parameter {par_name} overwrite requires a value for simulation configuration."
+            )
+
+        try:
+            DataValidator.validate_model_parameter(
+                self._update_parameter_dict(
+                    par_name,
+                    gen.convert_string_to_list(value) if isinstance(value, str) else value,
+                    parameter_version,
+                    metadata,
+                    parameter_store=parameter_store,
+                ),
+                par_name=par_name,
+            )
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Schema file for parameter {par_name} not found.") from exc
+
+        return True
 
     def _overwrite_model_parameter_from_db(self, par_name, parameter_version):
         """Overwrite model parameter from DB for a specific version."""
@@ -606,10 +664,14 @@ class ModelParameter:
             )
 
         for par_name, par_value in changes.items():
-            if par_name not in self.parameters:
+            if par_name not in self.parameters and not self._overwrite_simulation_parameter(
+                par_name, par_value
+            ):
                 raise ValueError(
                     f"Parameter {par_name} not found in model {self.name}, cannot overwrite it."
                 )
+            if par_name not in self.parameters:
+                continue
 
             if isinstance(par_value, dict) and ("value" in par_value or "version" in par_value):
                 # Extract metadata fields that should be applied

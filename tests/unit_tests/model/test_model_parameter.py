@@ -609,6 +609,81 @@ def test_overwrite_parameters_with_simple_value(telescope_model_lst):
     assert tel_model.parameters["num_gains"]["value"] == changes["num_gains"]
 
 
+def test_overwrite_parameters_allows_sim_telarray_parameter_without_collection_name(
+    telescope_model_lst,
+):
+    """Test overwriting a sim_telarray parameter from telescope-scoped changes."""
+    tel_model = copy.deepcopy(telescope_model_lst)
+
+    simtel_parameters = tel_model.get_simulation_software_parameters("sim_telarray")
+    simtel_only_parameters = [
+        par_name for par_name in simtel_parameters if par_name not in tel_model.parameters
+    ]
+    if not simtel_only_parameters:
+        pytest.skip("No sim_telarray-only parameter available for this telescope model")
+
+    par_name = simtel_only_parameters[0]
+    current_value = simtel_parameters[par_name]["value"]
+
+    tel_model.overwrite_parameters(
+        {
+            par_name: {
+                "value": current_value,
+            }
+        },
+        flat_dict=True,
+    )
+
+    assert simtel_parameters[par_name]["value"] == current_value
+
+
+def test_get_simulation_parameter_store_returns_matching_store(telescope_model_lst):
+    """Test simulation parameter store lookup returns the matching software dictionary."""
+    tel_model = copy.deepcopy(telescope_model_lst)
+    tel_model._simulation_config_parameters = {
+        "sim_telarray": {"simtel_only_parameter": {"value": 1}},
+        "corsika": {"corsika_only_parameter": {"value": 2}},
+    }
+
+    assert (
+        tel_model._get_simulation_parameter_store("simtel_only_parameter")
+        == (tel_model._simulation_config_parameters["sim_telarray"])
+    )
+    assert (
+        tel_model._get_simulation_parameter_store("corsika_only_parameter")
+        == (tel_model._simulation_config_parameters["corsika"])
+    )
+    assert tel_model._get_simulation_parameter_store("not_a_parameter") is None
+
+
+def test_overwrite_simulation_parameter_raises_without_value(telescope_model_lst):
+    """Test simulation parameter overwrite fails when only version is provided."""
+    tel_model = copy.deepcopy(telescope_model_lst)
+    tel_model._simulation_config_parameters = {
+        "sim_telarray": {
+            "simtel_only_parameter": {
+                "value": 1,
+                "parameter_version": "1.0.0",
+                "model_parameter_schema_version": "1.0.0",
+            }
+        },
+        "corsika": {},
+    }
+
+    with pytest.raises(
+        InvalidModelParameterError,
+        match=r"overwrite requires a value for simulation configuration",
+    ):
+        tel_model._overwrite_simulation_parameter("simtel_only_parameter", {"version": "2.0.0"})
+
+
+def test_overwrite_simulation_parameter_returns_false_for_missing_parameter(telescope_model_lst):
+    """Test simulation parameter overwrite returns False when parameter does not exist."""
+    tel_model = copy.deepcopy(telescope_model_lst)
+
+    assert tel_model._overwrite_simulation_parameter("not_a_parameter", 1) is False
+
+
 def test_overwrite_parameters_raises_for_unknown_parameter(telescope_model_lst):
     """Test overwrite_parameters raises when attempting to overwrite unknown parameter."""
     tel_model = copy.deepcopy(telescope_model_lst)
