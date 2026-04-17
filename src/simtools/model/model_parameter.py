@@ -463,7 +463,7 @@ class ModelParameter:
             )
 
         # In case parameter is a file, the model files will be outdated
-        if target_store[par_name].get("file", False):
+        if target_store.get("par_name").get("file", False):
             self._is_exported_model_files_up_to_date = False
 
     def _overwrite_model_parameter_from_value(
