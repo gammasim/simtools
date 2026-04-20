@@ -308,6 +308,56 @@ class ModelParameter:
                         simulation_software=simulation_software,
                     )
                 )
+                software_collection = {
+                    "sim_telarray": "configuration_sim_telarray",
+                    "corsika": "configuration_corsika",
+                }.get(simulation_software)
+
+                if software_collection and self.overwrite_model_parameter_dict:
+                    configuration_changes = {
+                        key: {
+                            par_name: par_value
+                            for par_name, par_value in parameter_changes.items()
+                            if names.get_collection_name_from_parameter_name(par_name)
+                            == software_collection
+                        }
+                        for key, parameter_changes in self.overwrite_model_parameter_dict.items()
+                        if isinstance(parameter_changes, dict)
+                    }
+                    configuration_changes = {
+                        key: parameter_changes
+                        for key, parameter_changes in configuration_changes.items()
+                        if parameter_changes
+                    }
+                    if simulation_software == "corsika":
+                        print(
+                            "AAAAA",
+                            self._simulation_config_parameters[simulation_software][
+                                "corsika_cherenkov_photon_bunch_size"
+                            ],
+                        )
+
+                    if configuration_changes:
+                        flat_configuration_changes = {
+                            par_name: par_value
+                            for parameter_changes in configuration_changes.values()
+                            for par_name, par_value in parameter_changes.items()
+                        }
+
+                        print("BBB OVERWRITE", configuration_changes)
+                        self.overwrite_parameters(
+                            flat_configuration_changes,
+                            flat_dict=True,
+                            ignore_collection=None,
+                            parameter_store=self._simulation_config_parameters[simulation_software],
+                        )
+                    if simulation_software == "corsika":
+                        print(
+                            "DDDDD",
+                            self._simulation_config_parameters[simulation_software][
+                                "corsika_cherenkov_photon_bunch_size"
+                            ],
+                        )
             except ValueError:
                 pass
 
@@ -412,7 +462,14 @@ class ModelParameter:
 
         legacy_model_parameter.apply_legacy_updates_to_parameters(parameters, _legacy_updates)
 
-    def overwrite_model_parameter(self, par_name, value, parameter_version=None, metadata=None):
+    def overwrite_model_parameter(
+        self,
+        par_name,
+        value,
+        parameter_version=None,
+        metadata=None,
+        parameter_store=None,
+    ):
         """
         Overwrite the parameter dictionary for a specific parameter in the model.
 
@@ -438,19 +495,38 @@ class ModelParameter:
         InvalidModelParameterError
             If the parameter to be changed does not exist in this model.
         """
-        if par_name not in self.parameters:
+        target_parameters = self.parameters if parameter_store is None else parameter_store
+
+        if par_name not in target_parameters:
             raise InvalidModelParameterError(f"Parameter {par_name} not in the model")
 
         if value is None and parameter_version:
-            self._overwrite_model_parameter_from_db(par_name, parameter_version)
+            self._overwrite_model_parameter_from_db(
+                par_name,
+                parameter_version,
+                parameter_store=target_parameters,
+            )
         else:
-            self._overwrite_model_parameter_from_value(par_name, value, parameter_version, metadata)
+            self._overwrite_model_parameter_from_value(
+                par_name,
+                value,
+                parameter_version,
+                metadata,
+                parameter_store=target_parameters,
+            )
 
         # In case parameter is a file, the model files will be outdated
-        if self.get_parameter_file_flag(par_name):
+        if target_parameters.get(par_name, {}).get("file", False):
             self._is_exported_model_files_up_to_date = False
 
-    def _overwrite_model_parameter_from_value(self, par_name, value, parameter_version, metadata):
+    def _overwrite_model_parameter_from_value(
+        self,
+        par_name,
+        value,
+        parameter_version,
+        metadata,
+        parameter_store=None,
+    ):
         """Overwrite model parameter from provided value only."""
         try:
             DataValidator.validate_model_parameter(
@@ -459,15 +535,17 @@ class ModelParameter:
                     gen.convert_string_to_list(value) if isinstance(value, str) else value,
                     parameter_version,
                     metadata,
+                    parameter_store=parameter_store,
                 ),
                 par_name=par_name,
             )
         except FileNotFoundError as exc:
             raise FileNotFoundError(f"Schema file for parameter {par_name} not found.") from exc
 
-    def _resolve_schema_version(self, par_name, metadata):
+    def _resolve_schema_version(self, par_name, metadata, parameter_store=None):
         """Resolve to an available schema version for a model parameter."""
-        par_dict = self.parameters.get(par_name, {})
+        target_parameters = self.parameters if parameter_store is None else parameter_store
+        par_dict = target_parameters.get(par_name, {})
         schema_version = (
             metadata.get("model_parameter_schema_version")
             if metadata and "model_parameter_schema_version" in metadata
@@ -485,23 +563,35 @@ class ModelParameter:
                 f"Schema version '{requested_version}' not available for parameter '{par_name}'"
             ) from exc
 
-    def _update_parameter_dict(self, par_name, value, parameter_version, metadata):
+    def _update_parameter_dict(
+        self,
+        par_name,
+        value,
+        parameter_version,
+        metadata,
+        parameter_store=None,
+    ):
         """
         Update parameter dictionary with value/metadata and fill schema-derived defaults.
 
         This keeps overwrite behavior robust when metadata dictionaries are incomplete
         (e.g. missing type or unit).
         """
+        target_parameters = self.parameters if parameter_store is None else parameter_store
         self._logger.debug(
-            f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} to {value}"
+            f"Changing parameter {par_name} from {target_parameters[par_name]['value']} to {value}"
         )
-        par_dict = self.parameters[par_name]
+        par_dict = target_parameters[par_name]
         par_dict["value"] = value
 
         if parameter_version:
             par_dict["parameter_version"] = parameter_version
 
-        schema_version = self._resolve_schema_version(par_name, metadata)
+        schema_version = self._resolve_schema_version(
+            par_name,
+            metadata,
+            parameter_store=target_parameters,
+        )
         par_type = schema.get_parameter_attribute_from_schema(par_name, schema_version, "type")
         schema_unit = schema.get_parameter_attribute_from_schema(par_name, schema_version, "unit")
 
@@ -518,8 +608,9 @@ class ModelParameter:
         par_dict.setdefault("unit", schema_unit)
         return par_dict
 
-    def _overwrite_model_parameter_from_db(self, par_name, parameter_version):
+    def _overwrite_model_parameter_from_db(self, par_name, parameter_version, parameter_store=None):
         """Overwrite model parameter from DB for a specific version."""
+        target_parameters = self.parameters if parameter_store is None else parameter_store
         _para_dict = self.db.get_model_parameter(
             parameter=par_name,
             site=self.site,
@@ -527,10 +618,10 @@ class ModelParameter:
             parameter_version=parameter_version,
         )
         if _para_dict:
-            self.parameters[par_name] = _para_dict.get(par_name)
+            target_parameters[par_name] = _para_dict.get(par_name)
         self._logger.debug(
             f"Changing parameter {par_name} to version {parameter_version} with value "
-            f"{self.parameters[par_name]['value']}"
+            f"{target_parameters[par_name]['value']}"
         )
 
     def _get_key_for_parameter_changes(self, site, array_element_name, changes_data):
@@ -573,7 +664,13 @@ class ModelParameter:
 
         return None
 
-    def overwrite_parameters(self, changes, flat_dict=False):
+    def overwrite_parameters(
+        self,
+        changes,
+        flat_dict=False,
+        ignore_collection=("configuration_sim_telarray", "configuration_corsika"),
+        parameter_store=None,
+    ):
         """
         Change the value of multiple existing parameters in the model.
 
@@ -587,8 +684,12 @@ class ModelParameter:
 
         Parameters
         ----------
+        parameters: dict
+            Current model parameters.
         changes: dict
             Parameters to be changed.
+        configuration_sim_telarray: bool
+            If True, the changes are for sim_telarray configuration.
         """
         if not changes:
             return
@@ -605,8 +706,14 @@ class ModelParameter:
                 f"Overwriting parameters for {key_for_changes} with changes: {changes}"
             )
 
+        target_parameters = self.parameters if parameter_store is None else parameter_store
         for par_name, par_value in changes.items():
-            if par_name not in self.parameters:
+            if (
+                ignore_collection
+                and names.get_collection_name_from_parameter_name(par_name) in ignore_collection
+            ):
+                continue
+            if par_name not in target_parameters:
                 raise ValueError(
                     f"Parameter {par_name} not found in model {self.name}, cannot overwrite it."
                 )
@@ -619,11 +726,30 @@ class ModelParameter:
                     for k, v in par_value.items()
                     if k in ("unit", "model_parameter_schema_version")
                 }
-                self.overwrite_model_parameter(
-                    par_name, par_value.get("value"), par_value.get("version"), metadata or None
-                )
+                if parameter_store is None:
+                    self.overwrite_model_parameter(
+                        par_name,
+                        par_value.get("value"),
+                        par_value.get("version"),
+                        metadata or None,
+                    )
+                else:
+                    self.overwrite_model_parameter(
+                        par_name,
+                        par_value.get("value"),
+                        par_value.get("version"),
+                        metadata or None,
+                        parameter_store=target_parameters,
+                    )
             else:
-                self.overwrite_model_parameter(par_name, par_value)
+                if parameter_store is None:
+                    self.overwrite_model_parameter(par_name, par_value)
+                else:
+                    self.overwrite_model_parameter(
+                        par_name,
+                        par_value,
+                        parameter_store=target_parameters,
+                    )
 
     def overwrite_model_file(self, par_name, file_path):
         """
