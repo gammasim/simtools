@@ -212,7 +212,9 @@ def validate_array_layouts_with_db(production_table, array_layouts):
     return array_layouts
 
 
-def get_array_layouts_from_parameter_file(file_path, model_version, coordinate_system="ground"):
+def get_array_layouts_from_parameter_file(
+    file_path, model_version, coordinate_system="ground", array_layout_name=None
+):
     """
     Retrieve array layouts from parameter file.
 
@@ -224,6 +226,8 @@ def get_array_layouts_from_parameter_file(file_path, model_version, coordinate_s
         Model version to retrieve.
     coordinate_system : str
         Coordinate system to use for the array elements (default is "ground").
+    array_layout_name : list
+        List of array layouts to plot (if None: plot all)
 
     Returns
     -------
@@ -246,6 +250,7 @@ def get_array_layouts_from_parameter_file(file_path, model_version, coordinate_s
             coordinate_system,
         )
         for layout in value
+        if array_layout_name is None or layout.get("name") in array_layout_name
     ]
 
 
@@ -428,6 +433,15 @@ def read_layouts(args_dict):
             args_dict["coordinate_system"],
         )["array_elements"]
 
+    if args_dict["array_layout_parameter_file"] is not None:
+        _logger.info("Plotting array from parameter file(s).")
+        return get_array_layouts_from_parameter_file(
+            args_dict["array_layout_parameter_file"],
+            args_dict["model_version"],
+            args_dict["coordinate_system"],
+            args_dict["array_layout_name"],
+        ), background_layout
+
     if args_dict["array_layout_name"] is not None or args_dict["plot_all_layouts"]:
         _logger.info("Plotting array from DB using layout array name(s).")
         layouts = get_array_layouts_from_db(
@@ -439,14 +453,6 @@ def read_layouts(args_dict):
         if isinstance(layouts, list):
             return layouts, background_layout
         return [layouts], background_layout
-
-    if args_dict["array_layout_parameter_file"] is not None:
-        _logger.info("Plotting array from parameter file(s).")
-        return get_array_layouts_from_parameter_file(
-            args_dict["array_layout_parameter_file"],
-            args_dict["model_version"],
-            args_dict["coordinate_system"],
-        ), background_layout
 
     if args_dict["array_layout_file"] is not None:
         _logger.info("Plotting array from telescope table file(s).")
