@@ -313,44 +313,66 @@ class ModelParameter:
                     "corsika": "configuration_corsika",
                 }.get(simulation_software)
 
-                if software_collection and self.overwrite_model_parameter_dict:
-                    configuration_changes = {}
-                    for key, parameter_changes in self.overwrite_model_parameter_dict.items():
-                        if not isinstance(parameter_changes, dict):
-                            continue
+                if not software_collection or not self.overwrite_model_parameter_dict:
+                    continue
 
-                        filtered_parameter_changes = {}
-                        for par_name, par_value in parameter_changes.items():
-                            try:
-                                parameter_collection = names.get_collection_name_from_parameter_name(
-                                    par_name
-                                )
-                            except KeyError:
-                                logging.warning(
-                                    f"Skipping unknown overwrite parameter '{par_name}' while "
-                                    f"loading {simulation_software} configuration parameters."
-                                )
-                                continue
-
-                            if parameter_collection == software_collection:
-                                filtered_parameter_changes[par_name] = par_value
-
-                        if filtered_parameter_changes:
-                            configuration_changes[key] = filtered_parameter_changes
-                    if configuration_changes:
-                        flat_configuration_changes = {
-                            par_name: par_value
-                            for parameter_changes in configuration_changes.values()
-                            for par_name, par_value in parameter_changes.items()
-                        }
-                        self.overwrite_parameters(
-                            flat_configuration_changes,
-                            flat_dict=True,
-                            ignore_collection=None,
-                            parameter_store=self._simulation_config_parameters[simulation_software],
-                        )
+                flat_configuration_changes = self._collect_flat_simulation_overwrites(
+                    simulation_software,
+                    software_collection,
+                )
+                if flat_configuration_changes:
+                    self.overwrite_parameters(
+                        flat_configuration_changes,
+                        flat_dict=True,
+                        ignore_collection=None,
+                        parameter_store=self._simulation_config_parameters[simulation_software],
+                    )
             except ValueError:
                 pass
+
+    def _collect_flat_simulation_overwrites(self, simulation_software, software_collection):
+        """Collect and flatten overwrite changes for a simulation software collection."""
+        configuration_changes = {}
+        for key, parameter_changes in self.overwrite_model_parameter_dict.items():
+            if not isinstance(parameter_changes, dict):
+                continue
+
+            filtered_parameter_changes = self._filter_changes_for_collection(
+                parameter_changes,
+                software_collection,
+                simulation_software,
+            )
+            if filtered_parameter_changes:
+                configuration_changes[key] = filtered_parameter_changes
+
+        return {
+            par_name: par_value
+            for parameter_changes in configuration_changes.values()
+            for par_name, par_value in parameter_changes.items()
+        }
+
+    def _filter_changes_for_collection(
+        self,
+        parameter_changes,
+        software_collection,
+        simulation_software,
+    ):
+        """Filter overwrite entries to one software collection."""
+        filtered_parameter_changes = {}
+        for par_name, par_value in parameter_changes.items():
+            try:
+                parameter_collection = names.get_collection_name_from_parameter_name(par_name)
+            except KeyError:
+                self._logger.warning(
+                    f"Skipping unknown overwrite parameter '{par_name}' while "
+                    f"loading {simulation_software} configuration parameters."
+                )
+                continue
+
+            if parameter_collection == software_collection:
+                filtered_parameter_changes[par_name] = par_value
+
+        return filtered_parameter_changes
 
     def _load_parameters_from_db(self):
         """
@@ -480,6 +502,8 @@ class ModelParameter:
             New version for the parameter.
         metadata: dict, optional
             Additional metadata (type, unit, model_parameter_schema_version).
+        parameter_store: dict, optional
+            Target parameter dictionary to update instead of ``self.parameters``.
 
         Raises
         ------
@@ -663,24 +687,18 @@ class ModelParameter:
         parameter_store=None,
     ):
         """
-        Change the value of multiple existing parameters in the model.
-
-        This function does not modify the DB, it affects only the current instance.
-
-        Allows for two types of 'changes' dictionary:
-
-        - simple (flat_dict=True): '{parameter_name: new_value, ...}'
-        - model repository style (flat_dict=False):
-          '{array_element: {parameter_name: {"value": new_value, "version": new_version}, ...}}'
+        Overwrite multiple parameters in memory (no DB update).
 
         Parameters
         ----------
-        parameters: dict
-            Current model parameters.
         changes: dict
-            Parameters to be changed.
-        configuration_sim_telarray: bool
-            If True, the changes are for sim_telarray configuration.
+            Parameter updates as either a flat mapping or model-repository mapping.
+        flat_dict: bool
+            If True, interpret ``changes`` as ``{parameter_name: value_or_dict}``.
+        ignore_collection: tuple[str] or None
+            Collection names to skip during overwrite.
+        parameter_store: dict, optional
+            Alternative parameter store to update instead of ``self.parameters``.
         """
         if not changes:
             return
