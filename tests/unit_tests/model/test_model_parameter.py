@@ -224,14 +224,60 @@ def test_resolve_schema_version_raises_for_invalid_version(telescope_model_lst, 
         )
 
 
-def test_overwrite_parameters(telescope_model_lst, mocker):
+def test_overwrite_parameters_flat_dict_forwards_to_parameter_store(telescope_model_lst, mocker):
+    """Test overwrite_parameters forwards flat changes to overwrite_model_parameter."""
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_change = mocker.patch.object(TelescopeModel, "overwrite_model_parameter")
+
     telescope_copy.overwrite_parameters(
-        {"camera_pixels": {"value": 9999}, "mirror_focal_length": {"value": 55}}, flat_dict=True
+        {"camera_pixels": {"value": 9999}, "mirror_focal_length": {"value": 55}},
+        flat_dict=True,
     )
-    mock_change.assert_any_call("camera_pixels", 9999, None, None)
-    mock_change.assert_any_call("mirror_focal_length", 55, None, None)
+
+    target_parameters = telescope_copy.parameters
+    mock_change.assert_any_call(
+        "camera_pixels",
+        9999,
+        None,
+        None,
+        parameter_store=target_parameters,
+    )
+    mock_change.assert_any_call(
+        "mirror_focal_length",
+        55,
+        None,
+        None,
+        parameter_store=target_parameters,
+    )
+
+
+def test_overwrite_parameters_skips_ignored_collections(telescope_model_lst, mocker):
+    """Test overwrite_parameters ignores simulation software collections by default."""
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    mock_change = mocker.patch.object(TelescopeModel, "overwrite_model_parameter")
+
+    telescope_copy.overwrite_parameters(
+        {"correct_nsb_spectrum_to_telescope_altitude": {"value": "overwrite.dat"}},
+        flat_dict=True,
+    )
+
+    mock_change.assert_not_called()
+
+
+def test_overwrite_parameters_selects_changes_by_model_key(telescope_model_lst):
+    """Test overwrite_parameters applies only changes selected for current model key."""
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    original_num_gains = telescope_copy.parameters["num_gains"]["value"]
+    new_num_gains = 1 if original_num_gains != 1 else 2
+
+    telescope_copy.overwrite_parameters(
+        {
+            "MSTN-01": {"num_gains": {"value": 999}},
+            telescope_copy.name: {"num_gains": {"value": new_num_gains}},
+        }
+    )
+
+    assert telescope_copy.parameters["num_gains"]["value"] == new_num_gains
 
 
 def test_overwrite_parameter_with_schema_metadata(telescope_model_lst, tmp_test_directory, mocker):
@@ -628,6 +674,66 @@ def test_overwrite_parameters_with_changes(telescope_model_lst):
     assert (
         tel_model.parameters["num_gains"]["value"] == changes[tel_model.name]["num_gains"]["value"]
     )
+
+
+def test_overwrite_parameters_raises_for_unknown_parameter(telescope_model_lst):
+    """Test overwrite_parameters raises when attempting to overwrite unknown parameter."""
+    tel_model = copy.deepcopy(telescope_model_lst)
+
+    with pytest.raises(
+        ValueError,
+        match=r"Parameter unknown_parameter not found in model .* cannot overwrite it.",
+    ):
+        tel_model.overwrite_parameters({"unknown_parameter": 1}, flat_dict=True)
+
+
+def test_skip_parameter_by_collection_handles_unknown_parameter_name():
+    """Test collection skip helper returns False for unknown parameter names."""
+    assert (
+        ModelParameter._skip_parameter_by_collection(
+            "unknown_parameter",
+            ("configuration_sim_telarray", "configuration_corsika"),
+        )
+        is False
+    )
+
+
+def test_validate_parameter_exists_raises_for_missing_parameter(telescope_model_lst):
+    """Test helper raises ValueError for missing parameters in target store."""
+    tel_model = copy.deepcopy(telescope_model_lst)
+
+    with pytest.raises(
+        ValueError,
+        match=r"Parameter unknown_parameter not found in model .* cannot overwrite it.",
+    ):
+        tel_model._validate_parameter_exists("unknown_parameter", tel_model.parameters)
+
+
+def test_apply_parameter_overwrite_simple_value_uses_target_store(telescope_model_lst):
+    """Test simple-value overwrite updates target store without mutating self.parameters."""
+    tel_model = copy.deepcopy(telescope_model_lst)
+    target_store = copy.deepcopy(tel_model.parameters)
+
+    original_main_value = tel_model.parameters["num_gains"]["value"]
+    target_store["num_gains"]["value"] = 0
+    new_value = 1 if original_main_value != 1 else 2
+
+    tel_model._apply_parameter_overwrite("num_gains", new_value, target_store)
+
+    assert target_store["num_gains"]["value"] == new_value
+    assert tel_model.parameters["num_gains"]["value"] == original_main_value
+
+
+def test_export_model_files_removes_added_parameter_files_from_export(telescope_model_lst, mocker):
+    """Test export_model_files excludes manually added parameter files from export payload."""
+    tel_model = copy.deepcopy(telescope_model_lst)
+    export_spy = mocker.patch.object(tel_model.db, "export_model_files")
+    tel_model._added_parameter_files = ["num_gains"]
+
+    tel_model.export_model_files(destination_path=Path("/tmp"), update_if_necessary=False)
+
+    exported_parameters = export_spy.call_args.kwargs["parameters"]
+    assert "num_gains" not in exported_parameters
 
 
 def test_check_model_parameter_with_overwrite(model_version):
