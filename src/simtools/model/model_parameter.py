@@ -314,21 +314,29 @@ class ModelParameter:
                 }.get(simulation_software)
 
                 if software_collection and self.overwrite_model_parameter_dict:
-                    configuration_changes = {
-                        key: {
-                            par_name: par_value
-                            for par_name, par_value in parameter_changes.items()
-                            if names.get_collection_name_from_parameter_name(par_name)
-                            == software_collection
-                        }
-                        for key, parameter_changes in self.overwrite_model_parameter_dict.items()
-                        if isinstance(parameter_changes, dict)
-                    }
-                    configuration_changes = {
-                        key: parameter_changes
-                        for key, parameter_changes in configuration_changes.items()
-                        if parameter_changes
-                    }
+                    configuration_changes = {}
+                    for key, parameter_changes in self.overwrite_model_parameter_dict.items():
+                        if not isinstance(parameter_changes, dict):
+                            continue
+
+                        filtered_parameter_changes = {}
+                        for par_name, par_value in parameter_changes.items():
+                            try:
+                                parameter_collection = names.get_collection_name_from_parameter_name(
+                                    par_name
+                                )
+                            except KeyError:
+                                logging.warning(
+                                    f"Skipping unknown overwrite parameter '{par_name}' while "
+                                    f"loading {simulation_software} configuration parameters."
+                                )
+                                continue
+
+                            if parameter_collection == software_collection:
+                                filtered_parameter_changes[par_name] = par_value
+
+                        if filtered_parameter_changes:
+                            configuration_changes[key] = filtered_parameter_changes
                     if configuration_changes:
                         flat_configuration_changes = {
                             par_name: par_value
