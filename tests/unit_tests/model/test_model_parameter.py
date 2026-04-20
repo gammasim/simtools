@@ -679,6 +679,133 @@ def test_check_model_parameter_with_overwrite(model_version):
     )
 
 
+def test_check_simulation_software_parameter_with_overwrite(model_version):
+    """Test sim_telarray configuration parameter overwrite during initialization."""
+
+    site = "North"
+    telescope_name = "LSTN-01"
+    changes = {
+        telescope_name: {
+            "correct_nsb_spectrum_to_telescope_altitude": {"value": "nsb_spectrum_overwritten.dat"}
+        }
+    }
+
+    tel_model = TelescopeModel(
+        site=site,
+        telescope_name=telescope_name,
+        model_version=model_version,
+        label="test-telescope-model",
+        overwrite_model_parameter_dict=changes,
+    )
+
+    assert (
+        tel_model.get_simulation_software_parameters("sim_telarray")[
+            "correct_nsb_spectrum_to_telescope_altitude"
+        ]["value"]
+        == "nsb_spectrum_overwritten.dat"
+    )
+
+
+def test_check_corsika_simulation_software_parameter_with_overwrite(model_version, mock_db_handler):
+    """Test corsika configuration parameter overwrite during initialization."""
+
+    site = "North"
+    telescope_name = "LSTN-01"
+    corsika_parameter = "corsika_particle_kinetic_energy_cutoff"
+    mock_db_handler.get_simulation_configuration_parameters.side_effect = lambda **kwargs: (
+        {corsika_parameter: {"value": 1.0, "type": "float64", "file": False}}
+        if kwargs.get("simulation_software") == "corsika"
+        else {
+            "correct_nsb_spectrum_to_telescope_altitude": {
+                "value": "nsb.dat",
+                "type": "str",
+                "file": True,
+            }
+        }
+    )
+
+    changes = {
+        telescope_name: {
+            corsika_parameter: {
+                "value": 2.5,
+            }
+        }
+    }
+
+    tel_model = TelescopeModel(
+        site=site,
+        telescope_name=telescope_name,
+        model_version=model_version,
+        label="test-telescope-model",
+        overwrite_model_parameter_dict=changes,
+    )
+
+    assert tel_model.get_simulation_software_parameters("corsika")[corsika_parameter][
+        "value"
+    ] == pytest.approx(2.5)
+
+
+def test_load_simulation_software_parameter_uses_parameter_store(telescope_model_lst, mocker):
+    """Test software overwrite path uses parameter_store argument."""
+
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    telescope_copy.overwrite_model_parameter_dict = {
+        telescope_copy.name: {
+            "correct_nsb_spectrum_to_telescope_altitude": {"value": "nsb_overwrite.dat"}
+        }
+    }
+    overwrite_spy = mocker.spy(TelescopeModel, "overwrite_parameters")
+
+    telescope_copy._load_simulation_software_parameter()
+
+    assert any(
+        call.kwargs.get("parameter_store")
+        is telescope_copy.get_simulation_software_parameters("sim_telarray")
+        for call in overwrite_spy.call_args_list
+        if call.kwargs.get("ignore_collection") is None
+    )
+
+
+def test_check_corsika_overwrite_with_configuration_key(model_version, mock_db_handler):
+    """Test corsika overwrite works when top-level key is configuration_corsika."""
+
+    site = "North"
+    telescope_name = "LSTN-01"
+    corsika_parameter = "corsika_cherenkov_photon_bunch_size"
+    mock_db_handler.get_simulation_configuration_parameters.side_effect = lambda **kwargs: (
+        {corsika_parameter: {"value": 5.0, "type": "float64", "file": False}}
+        if kwargs.get("simulation_software") == "corsika"
+        else {
+            "correct_nsb_spectrum_to_telescope_altitude": {
+                "value": "nsb.dat",
+                "type": "str",
+                "file": True,
+            }
+        }
+    )
+
+    changes = {
+        "configuration_corsika": {
+            corsika_parameter: {
+                "version": "2.0.0",
+                "value": 50.0,
+            }
+        }
+    }
+
+    tel_model = TelescopeModel(
+        site=site,
+        telescope_name=telescope_name,
+        model_version=model_version,
+        label="test-telescope-model",
+        overwrite_model_parameter_dict=changes,
+    )
+
+    assert tel_model.get_simulation_software_parameters("corsika")[corsika_parameter][
+        "value"
+    ] == pytest.approx(50.0)
+
+
 def test__get_key_for_parameter_changes(telescope_model_lst):
     assert telescope_model_lst._get_key_for_parameter_changes("North", None, {}) == "OBS-North"
 
