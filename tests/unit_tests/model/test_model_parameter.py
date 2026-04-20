@@ -604,76 +604,54 @@ def test_overwrite_model_parameter_updates_exported_files_flag(telescope_model_l
         assert tel_model._is_exported_model_files_up_to_date is False
 
 
-def test_overwrite_parameters_no_changes(telescope_model_lst):
-    """Test overwrite_parameters_from_file when no changes for this model."""
+@pytest.mark.parametrize(
+    ("changes", "expected_version"),
+    [
+        ({"num_gains": 2}, None),
+        ({"num_gains": {"value": 2, "version": "2.0.0"}}, "2.0.0"),
+    ],
+)
+def test_overwrite_parameters_flat_dict_updates_value_and_optional_version(
+    telescope_model_lst,
+    changes,
+    expected_version,
+):
+    """Test flat-dict overwrite for both simple and dict-with-version payloads."""
     tel_model = copy.deepcopy(telescope_model_lst)
+    tel_model.overwrite_parameters(changes, flat_dict=True)
 
-    changes = {
-        "MSTN-01": {
-            "num_gains": {
-                "version": "1.0.0",
-                "value": 123,
-            }
-        }
-    }
+    assert tel_model.parameters["num_gains"]["value"] == 2
+    if expected_version is not None:
+        assert tel_model.parameters["num_gains"]["parameter_version"] == expected_version
 
-    # Should not raise error, just not apply any changes since MSTN-01 != tel_model.name
+
+def test_overwrite_parameters_no_matching_model_key_keeps_parameters_unchanged(telescope_model_lst):
+    """Test overwrite_parameters returns without changes when no model key matches."""
+    tel_model = copy.deepcopy(telescope_model_lst)
     original_params = copy.deepcopy(tel_model.parameters)
-    tel_model.overwrite_parameters(changes)
 
-    # Parameters should be unchanged (unless tel_model.name happens to be MSTN-01)
+    tel_model.overwrite_parameters({"MSTN-01": {"num_gains": {"value": 123}}})
+
     if tel_model.name != "MSTN-01":
         assert tel_model.parameters == original_params
 
 
-def test_overwrite_parameters_with_version_dict(telescope_model_lst):
-    """Test overwrite_parameters with dict containing version key."""
+def test_select_changes_for_overwrite_variants(telescope_model_lst):
+    """Test helper branch selection for empty, flat, and keyed overwrite payloads."""
     tel_model = copy.deepcopy(telescope_model_lst)
 
-    changes = {
-        "num_gains": {
-            "value": 1 if tel_model.parameters["num_gains"]["value"] != 1 else 2,
-            "version": "2.0.0",
-        }
-    }
-
-    tel_model.overwrite_parameters(changes, flat_dict=True)
-
-    assert tel_model.parameters["num_gains"]["value"] == changes["num_gains"]["value"]
-    assert tel_model.parameters["num_gains"]["parameter_version"] == "2.0.0"
-
-
-def test_overwrite_parameters_with_simple_value(telescope_model_lst):
-    """Test overwrite_parameters with simple value (not a dict)."""
-    tel_model = copy.deepcopy(telescope_model_lst)
-
-    # Simple value (not a dict with 'value' or 'version' keys)
-    changes = {"num_gains": 1 if tel_model.parameters["num_gains"]["value"] != 1 else 2}
-
-    tel_model.overwrite_parameters(changes, flat_dict=True)
-
-    assert tel_model.parameters["num_gains"]["value"] == changes["num_gains"]
-
-
-def test_overwrite_parameters_with_changes(telescope_model_lst):
-    """Test overwrite_parameters when changes exist."""
-    tel_model = copy.deepcopy(telescope_model_lst)
-
-    changes = {
-        tel_model.name: {
-            "num_gains": {
-                "version": "1.0.0",
-                "value": 1 if tel_model.parameters["num_gains"]["value"] != 1 else 2,
-            }
-        }
-    }
-
-    tel_model.overwrite_parameters(changes)
-
-    # Parameter should be changed
-    assert (
-        tel_model.parameters["num_gains"]["value"] == changes[tel_model.name]["num_gains"]["value"]
+    assert tel_model._select_changes_for_overwrite({}, True) == (None, {})
+    assert tel_model._select_changes_for_overwrite({"num_gains": 1}, True) == (
+        None,
+        {"num_gains": 1},
     )
+
+    key, selected = tel_model._select_changes_for_overwrite(
+        {tel_model.name: {"num_gains": {"value": 2}}},
+        False,
+    )
+    assert key == tel_model.name
+    assert selected == {"num_gains": {"value": 2}}
 
 
 def test_overwrite_parameters_raises_for_unknown_parameter(telescope_model_lst):
