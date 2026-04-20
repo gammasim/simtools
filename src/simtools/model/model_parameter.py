@@ -329,34 +329,17 @@ class ModelParameter:
                         for key, parameter_changes in configuration_changes.items()
                         if parameter_changes
                     }
-                    if simulation_software == "corsika":
-                        print(
-                            "AAAAA",
-                            self._simulation_config_parameters[simulation_software][
-                                "corsika_cherenkov_photon_bunch_size"
-                            ],
-                        )
-
                     if configuration_changes:
                         flat_configuration_changes = {
                             par_name: par_value
                             for parameter_changes in configuration_changes.values()
                             for par_name, par_value in parameter_changes.items()
                         }
-
-                        print("BBB OVERWRITE", configuration_changes)
                         self.overwrite_parameters(
                             flat_configuration_changes,
                             flat_dict=True,
                             ignore_collection=None,
                             parameter_store=self._simulation_config_parameters[simulation_software],
-                        )
-                    if simulation_software == "corsika":
-                        print(
-                            "DDDDD",
-                            self._simulation_config_parameters[simulation_software][
-                                "corsika_cherenkov_photon_bunch_size"
-                            ],
                         )
             except ValueError:
                 pass

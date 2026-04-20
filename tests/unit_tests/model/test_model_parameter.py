@@ -745,8 +745,11 @@ def test_check_corsika_simulation_software_parameter_with_overwrite(model_versio
     ] == pytest.approx(2.5)
 
 
-def test_load_simulation_software_parameter_uses_parameter_store(telescope_model_lst, mocker):
-    """Test software overwrite path uses parameter_store argument."""
+def test_load_simulation_software_parameter_overwrites_without_main_parameter_changes(
+    telescope_model_lst,
+    mocker,
+):
+    """Test software overwrite path reuses generic overwrite with simulation parameter store."""
 
     telescope_copy = copy.deepcopy(telescope_model_lst)
     telescope_copy.overwrite_model_parameter_dict = {
@@ -755,9 +758,17 @@ def test_load_simulation_software_parameter_uses_parameter_store(telescope_model
         }
     }
     overwrite_spy = mocker.spy(TelescopeModel, "overwrite_parameters")
+    original_num_gains = telescope_copy.get_parameter_value("num_gains")
 
     telescope_copy._load_simulation_software_parameter()
 
+    assert (
+        telescope_copy.get_simulation_software_parameters("sim_telarray")[
+            "correct_nsb_spectrum_to_telescope_altitude"
+        ]["value"]
+        == "nsb_overwrite.dat"
+    )
+    assert telescope_copy.get_parameter_value("num_gains") == original_num_gains
     assert any(
         call.kwargs.get("parameter_store")
         is telescope_copy.get_simulation_software_parameters("sim_telarray")
