@@ -691,11 +691,13 @@ class ModelParameter:
 
         target_parameters = self.parameters if parameter_store is None else parameter_store
         for par_name, par_value in changes.items():
-            if (
-                ignore_collection
-                and names.get_collection_name_from_parameter_name(par_name) in ignore_collection
-            ):
-                continue
+            if ignore_collection:
+                try:
+                    collection_name = names.get_collection_name_from_parameter_name(par_name)
+                except KeyError:
+                    collection_name = None
+                if collection_name in ignore_collection:
+                    continue
             if par_name not in target_parameters:
                 raise ValueError(
                     f"Parameter {par_name} not found in model {self.name}, cannot overwrite it."
