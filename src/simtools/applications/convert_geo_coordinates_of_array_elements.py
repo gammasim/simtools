@@ -151,7 +151,7 @@ def main():
             if app_context.args.get("input", "").endswith(".json")
             else layout.export_telescope_list_table(crs_name=app_context.args["export"])
         )
-        writer.ModelDataWriter.write_product_data(
+        writer.ModelDataWriter.dump(
             output_file=app_context.args.get("output_file"),
             output_file_format=app_context.args.get("output_file_format", "ascii.ecsv"),
             metadata=metadata,

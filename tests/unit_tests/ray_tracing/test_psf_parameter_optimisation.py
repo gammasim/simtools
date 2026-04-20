@@ -408,11 +408,9 @@ def test_export_psf_parameters(mock_telescope_model, temp_dir, sample_parameters
         )
 
         mock_units.assert_called_once_with(sample_parameters)
-        assert mock_writer.ModelDataWriter.write_model_parameter.call_count == len(
-            sample_parameters
-        )
+        assert mock_writer.ModelDataWriter.dump_model_parameter.call_count == len(sample_parameters)
 
-        for call_args in mock_writer.ModelDataWriter.write_model_parameter.call_args_list:
+        for call_args in mock_writer.ModelDataWriter.dump_model_parameter.call_args_list:
             _, kwargs = call_args
             assert kwargs["instrument"] == mock_telescope_model.name
             assert kwargs["parameter_version"] == "1.0.0"
@@ -425,7 +423,7 @@ def test_export_psf_parameters(mock_telescope_model, temp_dir, sample_parameters
         patch("simtools.ray_tracing.psf_parameter_optimisation.logger") as mock_logger,
     ):
         mock_units.return_value = sample_parameters
-        mock_writer.ModelDataWriter.write_model_parameter.side_effect = ValueError("Test error")
+        mock_writer.ModelDataWriter.dump_model_parameter.side_effect = ValueError("Test error")
 
         psf_opt.export_psf_parameters(
             sample_parameters, mock_telescope_model.name, "1.0.0", temp_dir

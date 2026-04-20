@@ -87,7 +87,7 @@ def main():
         data_file=app_context.args["input"],
     )
 
-    writer.ModelDataWriter.write_product_data(
+    writer.ModelDataWriter.dump(
         output_file=app_context.args["output_file"],
         output_file_format=app_context.args.get("output_file_format"),
         metadata=_metadata,

@@ -115,7 +115,7 @@ def main():
     else:
         output_path = None
 
-    writer.ModelDataWriter.write_model_parameter(
+    writer.ModelDataWriter.dump_model_parameter(
         parameter_name=app_context.args["parameter"],
         value=value,
         instrument=app_context.args["instrument"],

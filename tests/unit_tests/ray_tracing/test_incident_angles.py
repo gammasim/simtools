@@ -805,9 +805,14 @@ def test_save_model_parameters(calculator, tmp_test_directory, monkeypatch):
 
     calculator.save_model_parameters(results_by_offset)
 
-    # write_product_data and write_model_parameter are static methods called directly
-    assert mock_writer.write_product_data.call_count > 0
-    assert mock_writer.write_model_parameter.call_count > 0
+    # ModelDataWriter should be instantiated for each written parameter
+    assert mock_writer.call_count > 0
+
+    writer_instance = mock_writer.return_value
+    assert writer_instance.write.call_count > 0
+
+    # dump_model_parameter is a class/static method and should be called as well
+    assert mock_writer.dump_model_parameter.call_count > 0
 
 
 def test_save_model_parameters_no_results_logs_warning(

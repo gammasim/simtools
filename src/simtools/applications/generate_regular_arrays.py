@@ -106,18 +106,17 @@ def main():
             f"{output_path.stem}-{app_context.args['site']}-{array_name}{output_path.suffix}"
         )
 
-        writer.ModelDataWriter.write_product_data(
+        data_writer = writer.ModelDataWriter(
             output_file=output_file,
             output_file_format=app_context.args.get("output_file_format", "ascii.ecsv"),
-            product_data=array_table,
         )
+        data_writer.write(metadata=None, product_data=array_table)
 
         write_array_elements_info_yaml(
             array_table,
             app_context.args["site"],
             app_context.args["model_version"],
-            app_context.io_handler.get_output_directory()
-            / Path(output_file).with_suffix(".info.yml"),
+            Path(data_writer.output_file).with_suffix(".info.yml"),
         )
 
 

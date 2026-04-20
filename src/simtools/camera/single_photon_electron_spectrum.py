@@ -96,7 +96,7 @@ class SinglePhotonElectronSpectrum:
             ["amplitude", self.prompt_column, self.prompt_plus_afterpulse_column],
         )
 
-        writer.ModelDataWriter.write_product_data(
+        writer.ModelDataWriter.dump(
             output_file=self.args_dict["output_file"],
             output_file_format=self.args_dict.get("output_file_format"),
             metadata=self.metadata,

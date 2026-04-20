@@ -620,7 +620,7 @@ def _download_model_parameter_from_workflow(
     target_dir = get_model_parameter_directory(simulation_models_path) / telescope / param
     target_dir.mkdir(parents=True, exist_ok=True)
     target_file = target_dir / f"{param}-{param_data['version']}.json"
-    writer.ModelDataWriter.write_model_parameter_json(downloaded_data, target_file)
+    ascii_handler.write_data_to_file(downloaded_data, target_file, sort_keys=True)
 
 
 def _create_new_model_parameter_entry(telescope, param, param_data, simulation_models_path):
@@ -657,7 +657,7 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
             param_data["value"] = [param_data["value"]] * len(json_data["value"])
         param_data["meta_parameter"] = json_data.get("meta_parameter", False)
 
-    writer.ModelDataWriter.write_model_parameter(
+    writer.ModelDataWriter.dump_model_parameter(
         parameter_name=param,
         value=param_data["value"],
         instrument=telescope,
