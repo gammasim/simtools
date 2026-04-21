@@ -2,6 +2,7 @@ import logging
 from unittest.mock import patch
 
 import astropy.units as u
+import numpy as np
 import pytest
 from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
@@ -183,6 +184,29 @@ def test_get_reduced_simulation_info_with_string_encoded_numeric_values(mock_fit
 
     assert info["primary_particle"] == "gamma"
     assert info["nsb_level"] == pytest.approx(0.24)
+
+
+def test_convert_numeric_column_decodes_object_bytes(mock_fits_file):
+    """Test object arrays with byte entries are decoded and converted."""
+    reader = EventDataReader(mock_fits_file)
+
+    values = np.array([b" 1.5 ", b"2.0"], dtype=object)
+    result = reader._convert_numeric_column(values, key="nsb_level", dtype=np.float64)
+
+    np.testing.assert_allclose(result, np.array([1.5, 2.0]))
+
+
+def test_convert_numeric_column_raises_on_invalid_values(mock_fits_file):
+    """Test conversion helper raises clear error message for invalid numeric data."""
+    reader = EventDataReader(mock_fits_file)
+
+    values = np.array(["not-a-number"], dtype=np.str_)
+
+    with pytest.raises(
+        ValueError,
+        match=r"Unable to convert FILE_INFO column 'nsb_level' to numeric values\.",
+    ):
+        reader._convert_numeric_column(values, key="nsb_level", dtype=np.float64)
 
 
 def test_get_triggered_shower_data_single_match(mock_fits_file):
