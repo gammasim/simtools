@@ -160,6 +160,31 @@ def test_get_reduced_simulation_info_with_warning(mock_primary_particle, mock_fi
     assert info["zenith"] == pytest.approx(20.0)  # Should use first value
 
 
+def test_get_reduced_simulation_info_with_string_encoded_numeric_values(mock_fits_file):
+    """Test conversion of numeric FILE_INFO columns stored as byte strings."""
+    reader = EventDataReader(mock_fits_file)
+
+    file_info = Table()
+    file_info.meta["EXTNAME"] = "FILE_INFO"
+    file_info["file_name"] = ["test.fits"]
+    file_info["file_id"] = [0]
+    file_info["particle_id"] = [b"1"]
+    file_info["zenith"] = [20.0] * u.deg
+    file_info["azimuth"] = [0.0] * u.deg
+    file_info["nsb_level"] = [b"0.24053832149999996"]
+    file_info["energy_min"] = [0.003] * u.TeV
+    file_info["energy_max"] = [330.0] * u.TeV
+    file_info["viewcone_min"] = [0.0] * u.deg
+    file_info["viewcone_max"] = [10.0] * u.deg
+    file_info["core_scatter_min"] = [0.0] * u.m
+    file_info["core_scatter_max"] = [1900.0] * u.m
+
+    info = reader.get_reduced_simulation_file_info(file_info)
+
+    assert info["primary_particle"] == "gamma"
+    assert info["nsb_level"] == pytest.approx(0.24)
+
+
 def test_get_triggered_shower_data_single_match(mock_fits_file):
     """Test _get_triggered_shower_data with single matches."""
     reader = EventDataReader(mock_fits_file)

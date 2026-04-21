@@ -303,6 +303,18 @@ def test_get_nsb_level_from_file_name_invalid_input(lookup_table_generator):
         lookup_table_generator._get_nsb_level_from_file_name(None)
 
 
+def test_get_nsb_level_from_metadata_casts_string_value(mocker, lookup_table_generator):
+    """Test NSB metadata string values are converted to float."""
+    mocker.patch(
+        "simtools.sim_events.writer.read_sim_telarray_metadata",
+        return_value=({"nsb_integrated_flux": "0.24053832149999996"}, {}),
+    )
+
+    nsb = lookup_table_generator.get_nsb_level_from_sim_telarray_metadata("dummy.simtel.zst")
+
+    assert nsb == pytest.approx(0.24053832149999996)
+
+
 def test_process_mc_event(lookup_table_generator):
     """Test processing of MC events."""
     lookup_table_generator.n_use = 2
