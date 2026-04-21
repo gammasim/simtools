@@ -206,6 +206,61 @@ def test_fill(mock_reader, hdf5_file_name, mocker):
     )
 
 
+def test_fill_accumulates_histograms_across_data_sets(mock_reader, hdf5_file_name, mocker):
+    """Test fill accumulates histogram counts across all indexed datasets."""
+    histograms = EventDataHistograms(hdf5_file_name)
+
+    mock_reader.return_value.data_sets = ["dataset_0", "dataset_1"]
+    mock_reader.return_value.read_event_data.return_value = (
+        mocker.Mock(),
+        mocker.Mock(),
+        mocker.Mock(),
+        mocker.Mock(),
+    )
+    mock_reader.return_value.get_reduced_simulation_file_info.return_value = {
+        "energy_min": 0.1 * u.TeV,
+        "core_scatter_max": 100.0 * u.m,
+        "viewcone_max": 2.0 * u.deg,
+        "solid_angle": 1.0 * u.sr,
+        "scatter_area": 1.0 * u.cm**2,
+    }
+
+    dataset_0 = mocker.Mock()
+    dataset_0.simulated_energy = np.array([0.2, 0.4])
+    dataset_1 = mocker.Mock()
+    dataset_1.simulated_energy = np.array([1.4])
+
+    mocker.patch.object(
+        histograms,
+        "_define_histograms",
+        side_effect=[
+            {
+                "energy": {
+                    "1d": True,
+                    "event_data": dataset_0,
+                    "event_data_column": "simulated_energy",
+                    "bin_edges": np.array([0.0, 1.0, 2.0]),
+                    "histogram": None,
+                }
+            },
+            {
+                "energy": {
+                    "1d": True,
+                    "event_data": dataset_1,
+                    "event_data_column": "simulated_energy",
+                    "bin_edges": np.array([0.0, 1.0, 2.0]),
+                    "histogram": None,
+                }
+            },
+        ],
+    )
+
+    histograms.fill()
+
+    np.testing.assert_array_equal(histograms.histograms["energy"]["histogram"], np.array([2, 1]))
+    assert mock_reader.return_value.read_event_data.call_count == 2
+
+
 def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
     """Test calculation of cumulative histogram."""
     histograms = EventDataHistograms(hdf5_file_name)
