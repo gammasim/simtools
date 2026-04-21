@@ -49,6 +49,8 @@ event_data_file (str, required)
     Path to reduced event data file.
 telescope_ids (str, optional)
     Custom array layout file containing telescope IDs.
+array_element_list (list[str], optional)
+    Inline list of telescope IDs to define a custom array layout.
 loss_fraction (float, required)
     Maximum event-loss fraction for limit computation.
 plot_histograms (bool, optional)
@@ -77,6 +79,17 @@ Derive limits for a given file for custom defined array layouts:
     simtools-production-derive-corsika-limits \\
         --event_data_file event_dat_file.hdf5 \\
         --telescope_ids path/to/telescope_configs.yaml \\
+        --loss_fraction 1e-6 \\
+        --plot_histograms \\
+        --output_file corsika_simulation_limits.ecsv
+
+Derive limits for an inline list of array elements:
+
+.. code-block:: console
+
+    simtools-production-derive-corsika-limits \\
+        --event_data_file event_dat_file.hdf5 \\
+        --array_element_list LSTN-01 LSTN-02 MSTN-03 \\
         --loss_fraction 1e-6 \\
         --plot_histograms \\
         --output_file corsika_simulation_limits.ecsv
