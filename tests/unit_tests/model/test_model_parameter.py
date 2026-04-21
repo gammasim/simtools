@@ -702,13 +702,15 @@ def test_apply_parameter_overwrite_simple_value_uses_target_store(telescope_mode
     assert tel_model.parameters["num_gains"]["value"] == original_main_value
 
 
-def test_export_model_files_removes_added_parameter_files_from_export(telescope_model_lst, mocker):
+def test_export_model_files_removes_added_parameter_files_from_export(
+    telescope_model_lst, mocker, tmp_test_directory
+):
     """Test export_model_files excludes manually added parameter files from export payload."""
     tel_model = copy.deepcopy(telescope_model_lst)
     export_spy = mocker.patch.object(tel_model.db, "export_model_files")
     tel_model._added_parameter_files = ["num_gains"]
 
-    tel_model.export_model_files(destination_path=Path("/tmp"), update_if_necessary=False)
+    tel_model.export_model_files(destination_path=tmp_test_directory, update_if_necessary=False)
 
     exported_parameters = export_spy.call_args.kwargs["parameters"]
     assert "num_gains" not in exported_parameters
