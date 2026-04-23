@@ -49,8 +49,6 @@ event_data_file (str, required)
     Path to reduced event data file.
 telescope_ids (str, optional)
     Custom array layout file containing telescope IDs.
-array_element_list (list[str], optional)
-    Inline list of telescope IDs to define a custom array layout.
 loss_fraction (float, required)
     Maximum event-loss fraction for limit computation.
 plot_histograms (bool, optional)
