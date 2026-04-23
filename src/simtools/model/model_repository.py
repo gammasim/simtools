@@ -458,9 +458,7 @@ def _apply_changes_to_sim_telarray_production_table(data, changes, model_version
     has_changes = False
     parameters = data.get("parameters", {})
     for telescope, params in changes.items():
-        if telescope in ("configuration_corsika", "configuration_sim_telarray"):
-            continue
-        telescope_params = parameters.setdefault(telescope, {})
+        telescope_params = parameters.get(telescope)
         deprecated = []
         for param_name, param_data in params.items():
             if (
@@ -471,9 +469,12 @@ def _apply_changes_to_sim_telarray_production_table(data, changes, model_version
 
             has_changes = True
             if param_data.get("deprecated", False):
-                telescope_params.pop(param_name, None)
+                if telescope_params is not None:
+                    telescope_params.pop(param_name, None)
                 deprecated.append(param_name)
             else:
+                if telescope_params is None:
+                    telescope_params = parameters.setdefault(telescope, {})
                 telescope_params[param_name] = param_data["version"]
         if deprecated and patch_update:
             data.setdefault("deprecated_parameters", []).extend(deprecated)
