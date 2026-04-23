@@ -637,3 +637,35 @@ def test_missing_observing_time(grid_gen):
 
     with pytest.raises(ValueError, match="Observing time is not set"):
         grid_gen.convert_altaz_to_radec(45 * u.deg, 30 * u.deg)
+
+
+def test_iers_not_modified_without_env(monkeypatch):
+    from astropy.utils import iers
+
+    iers.conf.auto_download = True
+    iers.conf.auto_max_age = 30
+
+    monkeypatch.delenv("SIMTOOLS_OFFLINE_IERS", raising=False)
+
+    from simtools.production_configuration.generate_production_grid import GridGeneration
+
+    GridGeneration(axes={"axes": {}})
+
+    assert iers.conf.auto_download is True
+    assert iers.conf.auto_max_age == 30
+
+
+def test_iers_disabled_with_env(monkeypatch):
+    from astropy.utils import iers
+
+    iers.conf.auto_download = True
+    iers.conf.auto_max_age = 30
+
+    monkeypatch.setenv("SIMTOOLS_OFFLINE_IERS", "1")
+
+    from simtools.production_configuration.generate_production_grid import GridGeneration
+
+    GridGeneration(axes={"axes": {}})
+
+    assert iers.conf.auto_download is False
+    assert iers.conf.auto_max_age is None
