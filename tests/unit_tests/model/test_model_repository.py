@@ -1290,151 +1290,98 @@ def test_get_changes_to_production_empty_history(tmp_test_directory):
 
 
 @patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_collect_sim_telarray_changes_from_telescopes(mock_get_collection):
-    """Test extracting configuration_sim_telarray parameters from telescope changes."""
+def test_apply_cst_changes_to_production_table_new_params(mock_get_collection):
+    """Test updating CST production table with new telescope parameters."""
 
     def collection_side_effect(param):
         return "configuration_sim_telarray" if param == "min_photons" else "telescopes"
 
     mock_get_collection.side_effect = collection_side_effect
 
-    changes = {
-        "LSTN-design": {
-            "transit_time_random": {"version": "1.0.0", "value": 0.36},
-            "min_photons": {"version": "2.0.0", "value": 0},
-        },
-        "configuration_corsika": {"corsika_param": {"version": "1.0.2"}},
-    }
-
-    cst_changes = model_repository._collect_sim_telarray_changes_from_telescopes(changes)
-
-    assert "LSTN-design" in cst_changes
-    assert "min_photons" in cst_changes["LSTN-design"]
-    assert cst_changes["LSTN-design"]["min_photons"]["version"] == "2.0.0"
-    assert "transit_time_random" not in cst_changes.get("LSTN-design", {})
-    assert "configuration_corsika" not in cst_changes
-
-
-@patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_collect_sim_telarray_changes_from_telescopes_unknown_param(mock_get_collection):
-    """Test that KeyError for unknown params is silently ignored."""
-    mock_get_collection.side_effect = KeyError("unknown")
-
-    changes = {"LSTN-design": {"unknown_param": {"version": "1.0.0", "value": 5}}}
-
-    cst_changes = model_repository._collect_sim_telarray_changes_from_telescopes(changes)
-
-    assert cst_changes == {}
-
-
-def test_collect_sim_telarray_changes_skips_configuration_keys():
-    """Test that configuration_corsika and configuration_sim_telarray keys are not scanned."""
-    changes = {
-        "configuration_sim_telarray": {"some_param": {"version": "1.0.0"}},
-        "configuration_corsika": {"corsika_param": {"version": "1.0.2"}},
-    }
-
-    cst_changes = model_repository._collect_sim_telarray_changes_from_telescopes(changes)
-
-    assert cst_changes == {}
-
-
-def test_apply_cst_changes_to_production_table_new_params():
-    """Test updating CST production table with new telescope parameters."""
     data = {
         "model_version": "6.0.0",
         "parameters": {"MSTN-design": {"other_param": "1.0.0"}},
     }
-    cst_changes = {"LSTN-design": {"min_photons": {"version": "2.0.0", "value": 0}}}
+    changes = {
+        "LSTN-design": {
+            "min_photons": {"version": "2.0.0", "value": 0},
+            "transit_time_random": {"version": "1.0.0", "value": 0.36},
+        },
+        "configuration_corsika": {"corsika_param": {"version": "1.0.2"}},
+    }
 
-    model_repository._apply_cst_changes_to_production_table(data, cst_changes, "7.0.0", False)
+    has_cst_changes = model_repository._apply_cst_changes_to_production_table(
+        data, changes, "7.0.0", False
+    )
 
+    assert has_cst_changes is True
     assert data["model_version"] == "7.0.0"
     assert data["parameters"]["LSTN-design"]["min_photons"] == "2.0.0"
     assert data["parameters"]["MSTN-design"]["other_param"] == "1.0.0"
+    assert "transit_time_random" not in data["parameters"]["LSTN-design"]
 
 
-def test_apply_cst_changes_to_production_table_existing_telescope():
+@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+def test_apply_cst_changes_to_production_table_existing_telescope(mock_get_collection):
     """Test updating CST table updates existing telescope entry without overwriting others."""
+    mock_get_collection.side_effect = lambda param: "configuration_sim_telarray"
+
     data = {
         "model_version": "6.0.0",
         "parameters": {"LSTN-design": {"min_photons": "1.0.0", "other_cst_param": "1.5.0"}},
     }
-    cst_changes = {"LSTN-design": {"min_photons": {"version": "2.0.0", "value": 0}}}
+    changes = {"LSTN-design": {"min_photons": {"version": "2.0.0", "value": 0}}}
 
-    model_repository._apply_cst_changes_to_production_table(data, cst_changes, "7.0.0", False)
+    has_cst_changes = model_repository._apply_cst_changes_to_production_table(
+        data, changes, "7.0.0", False
+    )
 
+    assert has_cst_changes is True
     assert data["parameters"]["LSTN-design"]["min_photons"] == "2.0.0"
     assert data["parameters"]["LSTN-design"]["other_cst_param"] == "1.5.0"
 
 
-def test_apply_cst_changes_to_production_table_deprecated_patch_update():
+@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+def test_apply_cst_changes_to_production_table_deprecated_patch_update(mock_get_collection):
     """Test deprecated CST parameters are recorded in patch update."""
+    mock_get_collection.side_effect = lambda param: "configuration_sim_telarray"
+
     data = {
         "model_version": "6.0.0",
         "parameters": {"LSTN-design": {"min_photons": "1.0.0"}},
     }
-    cst_changes = {"LSTN-design": {"min_photons": {"version": "1.0.0", "deprecated": True}}}
+    changes = {"LSTN-design": {"min_photons": {"version": "1.0.0", "deprecated": True}}}
 
-    model_repository._apply_cst_changes_to_production_table(data, cst_changes, "7.0.0", True)
+    has_cst_changes = model_repository._apply_cst_changes_to_production_table(
+        data, changes, "7.0.0", True
+    )
 
+    assert has_cst_changes is True
     assert "min_photons" not in data["parameters"]["LSTN-design"]
     assert "min_photons" in data["deprecated_parameters"]
 
 
-def test_apply_cst_changes_to_production_table_no_changes_only_version():
-    """Test that empty cst_changes still updates model_version."""
-    data = {"model_version": "6.0.0", "parameters": {"LSTN-design": {"param": "1.0.0"}}}
-
-    model_repository._apply_cst_changes_to_production_table(data, {}, "7.0.0", False)
-
-    assert data["model_version"] == "7.0.0"
-    assert data["parameters"]["LSTN-design"]["param"] == "1.0.0"
-
-
 @patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_model_parameter_telescope_dir_regular(mock_get_collection, tmp_test_directory):
-    """Test telescope dir for a regular (non-CST) parameter."""
-    mock_get_collection.return_value = "telescopes"
-
-    result = model_repository._get_model_parameter_telescope_dir(
-        tmp_test_directory, "LSTN-design", "transit_time_random"
-    )
-
-    expected = tmp_test_directory / "simulation-models" / "model_parameters" / "LSTN-design"
-    assert result == expected
-
-
-@patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_model_parameter_telescope_dir_cst(mock_get_collection, tmp_test_directory):
-    """Test telescope dir for a configuration_sim_telarray parameter."""
-    mock_get_collection.return_value = "configuration_sim_telarray"
-
-    result = model_repository._get_model_parameter_telescope_dir(
-        tmp_test_directory, "LSTN-design", "min_photons"
-    )
-
-    expected = (
-        tmp_test_directory
-        / "simulation-models"
-        / "model_parameters"
-        / "configuration_sim_telarray"
-        / "LSTN-design"
-    )
-    assert result == expected
-
-
-@patch("simtools.utils.names.get_collection_name_from_parameter_name")
-def test_get_model_parameter_telescope_dir_unknown_param(mock_get_collection, tmp_test_directory):
-    """Test that unknown parameter falls back to regular telescope directory."""
+def test_apply_cst_changes_to_production_table_no_changes_only_version(mock_get_collection):
+    """Test that no CST changes only updates model_version."""
     mock_get_collection.side_effect = KeyError("unknown")
 
-    result = model_repository._get_model_parameter_telescope_dir(
-        tmp_test_directory, "LSTN-design", "unknown_param"
+    data = {"model_version": "6.0.0", "parameters": {"LSTN-design": {"param": "1.0.0"}}}
+
+    has_cst_changes = model_repository._apply_cst_changes_to_production_table(
+        data,
+        {
+            "LSTN-design": {"unknown_param": {"version": "1.0.0", "value": 1}},
+            "configuration_corsika": {"corsika_param": {"version": "1.0.2"}},
+            "configuration_sim_telarray": {"should_not_be_scanned": {"version": "1.0.0"}},
+        },
+        "7.0.0",
+        False,
     )
 
-    expected = tmp_test_directory / "simulation-models" / "model_parameters" / "LSTN-design"
-    assert result == expected
+    assert has_cst_changes is False
+    assert data["model_version"] == "7.0.0"
+    assert data["parameters"]["LSTN-design"]["param"] == "1.0.0"
 
 
 @patch("simtools.utils.names.get_collection_name_from_parameter_name")
