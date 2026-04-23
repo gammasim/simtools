@@ -182,37 +182,6 @@ def _get_model_parameter_file_path(
     )
 
 
-def _get_model_parameter_telescope_dir(simulation_models_path, telescope, parameter_name):
-    """
-    Get the telescope directory for a model parameter file.
-
-    Returns the directory path taking into account whether the parameter belongs
-    to the configuration_sim_telarray collection, which uses a subdirectory prefix.
-
-    Parameters
-    ----------
-    simulation_models_path : Path
-        Path to the simulation models repository.
-    telescope : str
-        Name of the telescope or array element design.
-    parameter_name : str
-        Name of the parameter.
-
-    Returns
-    -------
-    Path
-        Directory path for the given telescope and parameter.
-    """
-    try:
-        collection = names.get_collection_name_from_parameter_name(parameter_name)
-    except KeyError:
-        collection = None
-    base_dir = get_model_parameter_directory(simulation_models_path)
-    if collection == "configuration_sim_telarray":
-        return base_dir / "configuration_sim_telarray" / telescope
-    return base_dir / telescope
-
-
 def generate_new_production(model_version, simulation_models_path, setting_workflows_git_tag=None):
     """
     Generate a new production definition (production tables and model parameters).
@@ -319,16 +288,17 @@ def _apply_changes_to_production_tables(
     for table_name in changes:
         tables.setdefault(table_name, {})
 
-    cst_changes = _collect_sim_telarray_changes_from_telescopes(changes)
-    if cst_changes:
-        tables.setdefault("configuration_sim_telarray", {})
+    tables.setdefault("configuration_sim_telarray", {})
 
     for table_name, data in tables.items():
         if table_name == "configuration_sim_telarray":
-            _apply_cst_changes_to_production_table(
-                data, cst_changes, model_version, update_type == "patch_update"
+            has_changes = _apply_changes_to_sim_telarray_production_table(
+                data,
+                changes,
+                model_version,
+                update_type == "patch_update",
             )
-            should_write = update_type != "patch_update" or bool(cst_changes)
+            should_write = update_type != "patch_update" or has_changes
         else:
             should_write = _apply_changes_to_production_table(
                 table_name, data, changes, model_version, update_type == "patch_update"
@@ -459,40 +429,9 @@ def _update_two_levels_in_changes_dict(d, u):
     return d
 
 
-def _collect_sim_telarray_changes_from_telescopes(changes):
+def _apply_changes_to_sim_telarray_production_table(data, changes, model_version, patch_update):
     """
-    Collect configuration_sim_telarray parameters from telescope-keyed changes.
-
-    Scans all non-configuration telescope entries in changes and extracts
-    parameters belonging to the configuration_sim_telarray collection.
-
-    Parameters
-    ----------
-    changes : dict
-        Changes dict with telescope entries.
-
-    Returns
-    -------
-    dict
-        CST changes: {telescope: {param: data}} for configuration_sim_telarray params.
-    """
-    cst_changes = {}
-    for telescope, params in changes.items():
-        if telescope in ("configuration_corsika", "configuration_sim_telarray"):
-            continue
-        for param_name, param_data in params.items():
-            try:
-                collection = names.get_collection_name_from_parameter_name(param_name)
-            except KeyError:
-                continue
-            if collection == "configuration_sim_telarray":
-                cst_changes.setdefault(telescope, {})[param_name] = param_data
-    return cst_changes
-
-
-def _apply_cst_changes_to_production_table(data, cst_changes, model_version, patch_update):
-    """
-    Apply configuration_sim_telarray parameter changes to the CST production table.
+    Apply configuration_sim_telarray parameter changes to the production table.
 
     The configuration_sim_telarray production table groups parameters by telescope
     design, so changes are applied per-telescope within the shared table.
@@ -501,33 +440,45 @@ def _apply_cst_changes_to_production_table(data, cst_changes, model_version, pat
     ----------
     data : dict
         Production table data to update in place.
-    cst_changes : dict
-        CST changes: {telescope: {param: {version: ..., ...}}}.
+    changes : dict
+        Full changes dictionary. Only parameters in the configuration_sim_telarray
+        collection are applied.
     model_version : str
         Model version of the new production tables.
     patch_update : bool
         True if patch update (only changed parameters), False for full update.
+
+    Returns
+    -------
+    bool
+        True if at least one configuration_sim_telarray parameter was found.
     """
     data["model_version"] = model_version
-    if not cst_changes:
-        return
+
+    has_changes = False
     parameters = data.get("parameters", {})
-    for telescope, params in cst_changes.items():
+    for telescope, params in changes.items():
+        if telescope in ("configuration_corsika", "configuration_sim_telarray"):
+            continue
         telescope_params = parameters.setdefault(telescope, {})
         deprecated = []
-        for param, param_data in params.items():
+        for param_name, param_data in params.items():
+            if (
+                names.get_collection_name_from_parameter_name(param_name)
+                != "configuration_sim_telarray"
+            ):
+                continue
+
+            has_changes = True
             if param_data.get("deprecated", False):
-                _logger.info(f"Removing CST parameter '{telescope} - {param}'")
-                telescope_params.pop(param, None)
-                deprecated.append(param)
+                telescope_params.pop(param_name, None)
+                deprecated.append(param_name)
             else:
-                _logger.info(
-                    f"Setting CST '{telescope} - {param}' to version {param_data['version']}"
-                )
-                telescope_params[param] = param_data["version"]
+                telescope_params[param_name] = param_data["version"]
         if deprecated and patch_update:
             data.setdefault("deprecated_parameters", []).extend(deprecated)
     data["parameters"] = parameters
+    return has_changes
 
 
 def _update_parameters_dict(table_parameters, changes, table_name):
@@ -682,9 +633,15 @@ def _download_model_parameter_from_workflow(
             f"'{param_data['version']}', downloaded '{downloaded_version}'."
         )
 
-    target_dir = (
-        _get_model_parameter_telescope_dir(simulation_models_path, telescope, param) / param
-    )
+    try:
+        target_dir = _get_model_parameter_file_path(
+            simulation_models_path,
+            telescope,
+            param,
+            param_data["version"],
+        ).parent
+    except KeyError:
+        target_dir = get_model_parameter_directory(simulation_models_path) / telescope / param
     target_dir.mkdir(parents=True, exist_ok=True)
     target_file = target_dir / f"{param}-{param_data['version']}.json"
     writer.ModelDataWriter.write_model_parameter_json(downloaded_data, target_file)
@@ -708,12 +665,20 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
     simulation_models_path: Path
         Path to the simulation models directory.
     """
-    telescope_dir = _get_model_parameter_telescope_dir(simulation_models_path, telescope, param)
-    if not telescope_dir.exists():
-        _logger.info(f"Create directory for array element '{telescope}': '{telescope_dir}'.")
-        telescope_dir.mkdir(parents=True, exist_ok=True)
-
-    param_dir = telescope_dir / param
+    try:
+        param_dir = _get_model_parameter_file_path(
+            simulation_models_path,
+            telescope,
+            param,
+            param_data["version"],
+        ).parent
+    except KeyError:
+        param_dir = get_model_parameter_directory(simulation_models_path) / telescope / param
+    if not param_dir.exists():
+        _logger.info(
+            f"Create directory for model parameter '{telescope} - {param}': '{param_dir}'."
+        )
+        param_dir.mkdir(parents=True, exist_ok=True)
     try:
         latest_file = _get_latest_model_parameter_file(param_dir, param, param_data["version"])
     except FileNotFoundError:
