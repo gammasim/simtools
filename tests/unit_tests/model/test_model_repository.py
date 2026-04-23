@@ -315,7 +315,7 @@ def test_update_parameters_dict_new_function():
     changes = {
         "MSTx-FlashCam": {
             "dsum_threshold": {"version": "4.0.0", "value": 62.5},
-            "param_to_deprecate": {"version": "1.0.0", "deprecated": True},
+            "dsum_clipping": {"version": "1.0.0", "deprecated": True},
         },
         "MSTx-NectarCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31.9}},
     }
@@ -327,8 +327,8 @@ def test_update_parameters_dict_new_function():
 
     assert "MSTx-FlashCam" in parameters
     assert parameters["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
-    assert "param_to_deprecate" not in parameters["MSTx-FlashCam"]  # Should be removed
-    assert "param_to_deprecate" in deprecated  # Should be in deprecated list
+    assert "dsum_clipping" not in parameters["MSTx-FlashCam"]  # Should be removed
+    assert "dsum_clipping" in deprecated  # Should be in deprecated list
 
 
 def test_get_production_table_key_configuration_corsika():
@@ -343,11 +343,14 @@ def test_get_production_table_key_passthrough():
 
 def test_update_parameters_dict_configuration_corsika_key_mapping():
     """Test _update_parameters_dict uses xSTx-design for configuration_corsika."""
-    existing_params = {"corsika_param": "1.0.0", "obsolete": "1.0.0"}
+    existing_params = {
+        "corsika_starting_grammage": "1.0.0",
+        "corsika_first_interaction_height": "1.0.0",
+    }
     changes = {
         "configuration_corsika": {
-            "corsika_param": {"version": "2.0.0", "value": 12.0},
-            "obsolete": {"version": "1.0.0", "deprecated": True},
+            "corsika_starting_grammage": {"version": "2.0.0", "value": 12.0},
+            "corsika_first_interaction_height": {"version": "1.0.0", "deprecated": True},
         }
     }
 
@@ -356,9 +359,9 @@ def test_update_parameters_dict_configuration_corsika_key_mapping():
     )
 
     assert "configuration_corsika" not in parameters
-    assert parameters["xSTx-design"]["corsika_param"] == "2.0.0"
-    assert "obsolete" not in parameters["xSTx-design"]
-    assert "obsolete" in deprecated
+    assert parameters["xSTx-design"]["corsika_starting_grammage"] == "2.0.0"
+    assert "corsika_first_interaction_height" not in parameters["xSTx-design"]
+    assert "corsika_first_interaction_height" in deprecated
 
 
 def test_apply_changes_to_production_table_update_model_version():
@@ -417,13 +420,16 @@ def test_apply_changes_to_production_table_configuration_corsika_full_update():
     data = {
         "production_table_name": "configuration_corsika",
         "parameters": {
-            "xSTx-design": {"corsika_param": "1.0.0", "obsolete": "1.0.0"},
+            "xSTx-design": {
+                "corsika_starting_grammage": "1.0.0",
+                "corsika_first_interaction_height": "1.0.0",
+            },
         },
     }
     changes = {
         "configuration_corsika": {
-            "corsika_param": {"version": "2.0.0", "value": 12.0},
-            "obsolete": {"version": "1.0.0", "deprecated": True},
+            "corsika_starting_grammage": {"version": "2.0.0", "value": 12.0},
+            "corsika_first_interaction_height": {"version": "1.0.0", "deprecated": True},
         }
     }
     model_version = "6.5.0"
@@ -434,8 +440,8 @@ def test_apply_changes_to_production_table_configuration_corsika_full_update():
 
     assert data["model_version"] == "6.5.0"
     assert "configuration_corsika" not in data["parameters"]
-    assert data["parameters"]["xSTx-design"]["corsika_param"] == "2.0.0"
-    assert "obsolete" not in data["parameters"]["xSTx-design"]
+    assert data["parameters"]["xSTx-design"]["corsika_starting_grammage"] == "2.0.0"
+    assert "corsika_first_interaction_height" not in data["parameters"]["xSTx-design"]
 
 
 def test_apply_changes_to_production_table_configuration_corsika_patch_update():
@@ -443,13 +449,16 @@ def test_apply_changes_to_production_table_configuration_corsika_patch_update():
     data = {
         "production_table_name": "configuration_corsika",
         "parameters": {
-            "xSTx-design": {"corsika_param": "1.0.0", "extra_param": "1.2.0"},
+            "xSTx-design": {
+                "corsika_starting_grammage": "1.0.0",
+                "corsika_first_interaction_height": "1.2.0",
+            },
         },
     }
     changes = {
         "configuration_corsika": {
-            "corsika_param": {"version": "2.0.0", "value": 12.0},
-            "extra_param": {"version": "1.2.0", "deprecated": True},
+            "corsika_starting_grammage": {"version": "2.0.0", "value": 12.0},
+            "corsika_first_interaction_height": {"version": "1.2.0", "deprecated": True},
         }
     }
     model_version = "6.5.0"
@@ -460,9 +469,9 @@ def test_apply_changes_to_production_table_configuration_corsika_patch_update():
 
     assert data["model_version"] == "6.5.0"
     assert "configuration_corsika" not in data["parameters"]
-    assert data["parameters"]["xSTx-design"]["corsika_param"] == "2.0.0"
-    assert "extra_param" not in data["parameters"]["xSTx-design"]
-    assert data["deprecated_parameters"] == ["extra_param"]
+    assert data["parameters"]["xSTx-design"]["corsika_starting_grammage"] == "2.0.0"
+    assert "corsika_first_interaction_height" not in data["parameters"]["xSTx-design"]
+    assert data["deprecated_parameters"] == ["corsika_first_interaction_height"]
 
 
 def test_apply_changes_to_production_table_no_parameters():
@@ -745,9 +754,9 @@ def test_apply_changes_to_production_table_patch_update():
     data = {
         "model_version": "6.0.0",
         "production_table_name": "test_table",
-        "parameters": {"test_table": {"param1": "1.0.0"}},
+        "parameters": {"test_table": {"dsum_threshold": "1.0.0"}},
     }
-    changes = {"test_table": {"param1": {"version": "2.0.0", "value": 42}}}
+    changes = {"test_table": {"dsum_threshold": {"version": "2.0.0", "value": 42}}}
     model_version = "6.5.0"
 
     result = model_repository._apply_changes_to_production_table(
@@ -761,7 +770,7 @@ def test_apply_changes_to_production_table_patch_update():
     data_no_changes = {
         "model_version": "6.0.0",
         "production_table_name": "other_table",
-        "parameters": {"other_table": {"param1": "1.0.0"}},
+        "parameters": {"other_table": {"dsum_threshold": "1.0.0"}},
     }
 
     result_no_changes = model_repository._apply_changes_to_production_table(
@@ -776,12 +785,12 @@ def test_apply_changes_to_production_table_with_deprecated_parameters():
     data = {
         "model_version": "6.0.0",
         "production_table_name": "test_table",
-        "parameters": {"test_table": {"param1": "1.0.0"}},
+        "parameters": {"test_table": {"dsum_threshold": "1.0.0"}},
     }
     changes = {
         "test_table": {
-            "param1": {"version": "2.0.0", "value": 42},
-            "param_to_remove": {"version": "1.0.0", "deprecated": True},
+            "dsum_threshold": {"version": "2.0.0", "value": 42},
+            "dsum_clipping": {"version": "1.0.0", "deprecated": True},
         }
     }
     model_version = "6.5.0"
@@ -793,7 +802,7 @@ def test_apply_changes_to_production_table_with_deprecated_parameters():
     assert result is True
     assert data["model_version"] == "6.5.0"
     assert "deprecated_parameters" in data
-    assert "param_to_remove" in data["deprecated_parameters"]
+    assert "dsum_clipping" in data["deprecated_parameters"]
 
 
 @patch("simtools.model.model_repository._create_new_model_parameter_entry")

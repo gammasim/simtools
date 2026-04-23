@@ -429,6 +429,32 @@ def _update_two_levels_in_changes_dict(d, u):
     return d
 
 
+def _apply_sim_telarray_changes_for_telescope(telescope_params, params):
+    """Apply configuration_sim_telarray changes for one telescope."""
+    has_changes = False
+    deprecated = []
+
+    for param_name, param_data in params.items():
+        if (
+            names.get_collection_name_from_parameter_name(param_name)
+            != "configuration_sim_telarray"
+        ):
+            continue
+
+        has_changes = True
+        if param_data.get("deprecated", False):
+            if telescope_params is not None:
+                telescope_params.pop(param_name, None)
+            deprecated.append(param_name)
+            continue
+
+        if telescope_params is None:
+            telescope_params = {}
+        telescope_params[param_name] = param_data["version"]
+
+    return telescope_params, deprecated, has_changes
+
+
 def _apply_changes_to_sim_telarray_production_table(data, changes, model_version, patch_update):
     """
     Apply configuration_sim_telarray parameter changes to the production table.
@@ -459,23 +485,15 @@ def _apply_changes_to_sim_telarray_production_table(data, changes, model_version
     parameters = data.get("parameters", {})
     for telescope, params in changes.items():
         telescope_params = parameters.get(telescope)
-        deprecated = []
-        for param_name, param_data in params.items():
-            if (
-                names.get_collection_name_from_parameter_name(param_name)
-                != "configuration_sim_telarray"
-            ):
-                continue
-
-            has_changes = True
-            if param_data.get("deprecated", False):
-                if telescope_params is not None:
-                    telescope_params.pop(param_name, None)
-                deprecated.append(param_name)
-            else:
-                if telescope_params is None:
-                    telescope_params = parameters.setdefault(telescope, {})
-                telescope_params[param_name] = param_data["version"]
+        telescope_params, deprecated, telescope_has_changes = (
+            _apply_sim_telarray_changes_for_telescope(
+                telescope_params,
+                params,
+            )
+        )
+        has_changes = has_changes or telescope_has_changes
+        if telescope_params is not None:
+            parameters[telescope] = telescope_params
         if deprecated and patch_update:
             data.setdefault("deprecated_parameters", []).extend(deprecated)
     data["parameters"] = parameters
