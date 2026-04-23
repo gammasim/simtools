@@ -11,6 +11,7 @@ Declination coordinates. The resulting grid points are saved to a file.
 
 import json
 import logging
+import os
 from pathlib import Path
 
 import numpy as np
@@ -18,6 +19,7 @@ from astropy import units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.table import Table
 from astropy.units import Quantity
+from astropy.utils import iers
 from scipy.interpolate import LinearNDInterpolator, griddata
 from scipy.spatial import QhullError  # pylint: disable=no-name-in-module
 
@@ -71,6 +73,9 @@ class GridGeneration:
             telescope names when matching lookup-table telescope selections.
         """
         self._logger = logging.getLogger(__name__)
+        if os.getenv("SIMTOOLS_OFFLINE_IERS", "0") == "1":
+            iers.conf.auto_download = False
+            iers.conf.auto_max_age = None
 
         self.axes = axes["axes"] if "axes" in axes else axes
         self.coordinate_system = coordinate_system

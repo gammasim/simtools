@@ -3,6 +3,7 @@
 
 import copy
 import logging
+import os
 import subprocess
 from pathlib import Path
 
@@ -69,7 +70,16 @@ def test_applications_from_config(tmp_test_directory, config, request):
         pytest.skip(str(exc))
 
     logger.info(f"Running application: {cmd}")
-    result = subprocess.run(cmd, shell=True, input="y\n", capture_output=True, text=True)
+    env = os.environ.copy()
+    env["SIMTOOLS_OFFLINE_IERS"] = "1"
+    result = subprocess.run(
+        cmd,
+        shell=True,
+        input="y\n",
+        capture_output=True,
+        text=True,
+        env=env,
+    )
     msg = f"Command {cmd!r} failed. stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     assert result.returncode == 0, msg
 
