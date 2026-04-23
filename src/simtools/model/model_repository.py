@@ -511,11 +511,7 @@ def _update_parameters_dict(table_parameters, changes, table_name):
     deprecated_params = []
 
     for param, data in changes[table_name].items():
-        try:
-            collection = names.get_collection_name_from_parameter_name(param)
-        except KeyError:
-            collection = None
-        if collection == "configuration_sim_telarray":
+        if names.get_collection_name_from_parameter_name(param) == "configuration_sim_telarray":
             continue
         if data.get("deprecated", False):
             _logger.info(f"Removing model parameter '{table_name} - {param}'")
