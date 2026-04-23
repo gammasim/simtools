@@ -340,6 +340,8 @@ def _apply_changes_to_production_table(table_name, data, changes, model_version,
             {} if patch_update else data.get("parameters", {}).get(production_key, {})
         )
         parameters, deprecated = _update_parameters_dict(table_parameters, changes, table_name)
+        if patch_update and not parameters.get(production_key) and not deprecated:
+            return False
         data["parameters"] = parameters
         if deprecated and patch_update:
             data["deprecated_parameters"] = deprecated
