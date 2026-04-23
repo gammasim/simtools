@@ -1,6 +1,7 @@
 """Plot production-grid points on sky coordinate projections."""
 
 import logging
+import os
 from pathlib import Path
 
 import astropy.units as u
@@ -9,6 +10,7 @@ import numpy as np
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.table import Table
 from astropy.time import Time
+from astropy.utils import iers
 
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
@@ -51,6 +53,10 @@ class ProductionGridPlotter:
         output_path,
     ):
         """Initialize the ProductionGridPlotter."""
+        if os.getenv("SIMTOOLS_OFFLINE_IERS", "0") == "1":
+            iers.conf.auto_download = False
+            iers.conf.auto_max_age = None
+
         self.grid_points_file = Path(grid_points_file)
         self.output_path = Path(output_path)
         self.output_path.mkdir(parents=True, exist_ok=True)
