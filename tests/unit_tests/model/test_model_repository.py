@@ -780,6 +780,24 @@ def test_apply_changes_to_production_table_patch_update():
     assert result_no_changes is False  # Should return False when no changes apply
 
 
+def test_apply_changes_to_production_table_patch_update_only_sim_telarray_changes():
+    """Test patch update skips telescope table when changes are CST-only."""
+    data = {
+        "model_version": "6.0.0",
+        "production_table_name": "LSTN-design",
+        "parameters": {"LSTN-design": {"transit_time_random": "1.0.0"}},
+    }
+    changes = {"LSTN-design": {"min_photons": {"version": "2.0.0", "value": 0}}}
+
+    result = model_repository._apply_changes_to_production_table(
+        data["production_table_name"], data, changes, "6.5.0", True
+    )
+
+    assert result is False
+    assert "parameters" in data
+    assert data["parameters"]["LSTN-design"]["transit_time_random"] == "1.0.0"
+
+
 def test_apply_changes_to_production_table_with_deprecated_parameters():
     """Test that deprecated_parameters are set when there are deprecated changes."""
     data = {
