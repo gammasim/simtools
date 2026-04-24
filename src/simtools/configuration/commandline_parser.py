@@ -446,7 +446,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 default=None,
             )
         if "layout_parameter_file" in model_options:
-            _layout_group.add_argument(
+            job_group.add_argument(
                 "--array_layout_parameter_file",
                 help="Array layout model parameter file (typically in JSON format).",
                 type=str,

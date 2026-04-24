@@ -404,6 +404,51 @@ def test_get_array_layouts_from_parameter_file_missing_value_key(mocker):
         array_layout_utils.get_array_layouts_from_parameter_file("test_file.json", "6.0.0")
 
 
+def test_get_array_layouts_from_parameter_file_filtered_by_name(mocker, mock_array_model):
+    """Test that only layouts matching array_layout_name are returned."""
+    model_version = "6.0.0"
+    fake_data = {
+        "value": [
+            {"name": "array1"},
+            {"name": "array2"},
+            {"name": "array3"},
+        ],
+        "site": "north",
+    }
+    mocker.patch(PATCH_ASCII_COLLECT_FILE, return_value=fake_data)
+    fake_table = ["tel1", "tel2"]
+    instance = mock_array_model.return_value
+    instance.export_array_elements_as_table.return_value = fake_table
+
+    results = array_layout_utils.get_array_layouts_from_parameter_file(
+        "test_file.json", model_version, array_layout_name=["array1", "array3"]
+    )
+
+    assert len(results) == 2
+    returned_names = {layout["name"] for layout in results}
+    assert returned_names == {"array1", "array3"}
+    assert "array2" not in returned_names
+
+
+def test_get_array_layouts_from_parameter_file_no_matches(mocker, mock_array_model):
+    """Test that an empty list is returned when no layouts match array_layout_name."""
+    model_version = "6.0.0"
+    fake_data = {
+        "value": [
+            {"name": "array1"},
+            {"name": "array2"},
+        ],
+        "site": "north",
+    }
+    mocker.patch(PATCH_ASCII_COLLECT_FILE, return_value=fake_data)
+
+    results = array_layout_utils.get_array_layouts_from_parameter_file(
+        "test_file.json", model_version, array_layout_name=["nonexistent"]
+    )
+
+    assert results == []
+
+
 def test_get_array_layouts_from_db_with_layout_name(mock_array_model):
     # Test when a specific layout_name is provided.
     layout_name = "layout_test"
