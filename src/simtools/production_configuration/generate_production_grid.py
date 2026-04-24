@@ -71,7 +71,6 @@ class GridGeneration:
             telescope names when matching lookup-table telescope selections.
         """
         self._logger = logging.getLogger(__name__)
-
         self.axes = axes["axes"] if "axes" in axes else axes
         self.coordinate_system = coordinate_system
         self.observing_location = (

@@ -407,3 +407,53 @@ def test_plot_inferred_radec_grid_logs_no_tracks(tmp_test_directory, caplog):
         assert "No inferred RA/Dec grid tracks available for plotting" in caplog.text
     finally:
         plt.close(figure)
+
+
+def test_iers_disabled_with_env_plotter(monkeypatch, tmp_test_directory):
+    from simtools.application_control import _configure_iers_from_env
+
+    iers.conf.auto_download = True
+    iers.conf.auto_max_age = 30
+
+    monkeypatch.setenv("SIMTOOLS_OFFLINE_IERS", "1")
+
+    _configure_iers_from_env()
+
+    grid_file = _write_grid_file(
+        tmp_test_directory,
+        "grid.ecsv",
+        [{"azimuth": 0.0, "zenith_angle": 0.0}],
+    )
+
+    _create_plotter(
+        grid_file=grid_file,
+        observation_time="2025-01-01 00:00:00",
+        output_path=Path(tmp_test_directory) / "output",
+    )
+
+    assert iers.conf.auto_download is False
+
+
+def test_iers_not_modified_without_env_plotter(monkeypatch, tmp_test_directory):
+    from simtools.application_control import _configure_iers_from_env
+
+    iers.conf.auto_download = True
+    iers.conf.auto_max_age = 30
+
+    monkeypatch.delenv("SIMTOOLS_OFFLINE_IERS", raising=False)
+
+    _configure_iers_from_env()
+
+    grid_file = _write_grid_file(
+        tmp_test_directory,
+        "grid.ecsv",
+        [{"azimuth": 0.0, "zenith_angle": 0.0}],
+    )
+
+    _create_plotter(
+        grid_file=grid_file,
+        observation_time="2025-01-01 00:00:00",
+        output_path=Path(tmp_test_directory) / "output",
+    )
+
+    assert iers.conf.auto_download is True
