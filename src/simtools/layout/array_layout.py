@@ -9,8 +9,7 @@ import numpy as np
 from astropy.table import QTable
 
 import simtools.utils.general as gen
-from simtools.data_model import data_reader
-from simtools.data_model.model_data_writer import ModelDataWriter
+from simtools.data_model import data_reader, schema
 from simtools.io import io_handler
 from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
@@ -620,15 +619,20 @@ class ArrayLayout:
                 table["altitude"][0].value,
             ]
 
-        model_data_writer = ModelDataWriter()
-        return model_data_writer.get_validated_parameter_dict(
-            parameter_name=parameter_name,
-            value=value,
-            instrument=table["telescope_name"][0],
-            parameter_version=parameter_version,
-            schema_version=schema_version,
-            unit="m",
-        )
+        return {
+            "schema_version": schema.get_model_parameter_schema_version(schema_version),
+            "parameter": parameter_name,
+            "instrument": table["telescope_name"][0],
+            "site": self.site,
+            "parameter_version": parameter_version,
+            "unique_id": None,
+            "value": value,
+            "unit": "m",
+            "type": "float64",
+            "file": False,
+            "meta_parameter": False,
+            "model_parameter_schema_version": "0.1.0",
+        }
 
     def get_number_of_telescopes(self):
         """
