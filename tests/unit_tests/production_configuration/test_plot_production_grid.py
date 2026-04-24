@@ -414,15 +414,13 @@ def test_iers_disabled_with_env_plotter(monkeypatch, tmp_test_directory):
 
     from simtools.application_control import _configure_iers_from_env
 
-    # Known starting state
     iers.conf.auto_download = True
     iers.conf.auto_max_age = 30
 
     monkeypatch.setenv("SIMTOOLS_OFFLINE_IERS", "1")
 
-    _configure_iers_from_env()  # ← ADD THIS
+    _configure_iers_from_env()
 
-    # Minimal valid grid file
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid.ecsv",
@@ -443,13 +441,12 @@ def test_iers_not_modified_without_env_plotter(monkeypatch, tmp_test_directory):
 
     from simtools.application_control import _configure_iers_from_env
 
-    # Known starting state
     iers.conf.auto_download = True
     iers.conf.auto_max_age = 30
 
     monkeypatch.delenv("SIMTOOLS_OFFLINE_IERS", raising=False)
 
-    _configure_iers_from_env()  # ← ADD THIS
+    _configure_iers_from_env()
 
     grid_file = _write_grid_file(
         tmp_test_directory,
