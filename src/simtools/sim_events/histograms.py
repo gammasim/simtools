@@ -61,7 +61,13 @@ class EventDataHistograms:
                 "scatter_area": _file_info_table["scatter_area"].to("cm2"),
             }
 
-            self.histograms = self._define_histograms(event_data, triggered_data, shower_data)
+            current_histograms = self._define_histograms(event_data, triggered_data, shower_data)
+            for name, hist in current_histograms.items():
+                previous = self.histograms.get(name)
+                if previous is not None:
+                    hist["histogram"] = previous["histogram"]
+
+            self.histograms = current_histograms
 
             for data in self.histograms.values():
                 self._fill_histogram_and_bin_edges(data)
