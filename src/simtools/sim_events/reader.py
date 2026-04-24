@@ -345,7 +345,13 @@ class EventDataReader:
         dict
             Dictionary containing the reduced simulation file info.
         """
-        particle_id = np.unique(simulation_file_info["particle_id"].data)
+        particle_id = np.unique(
+            self._convert_numeric_column(
+                simulation_file_info["particle_id"].data,
+                key="particle_id",
+                dtype=np.int64,
+            )
+        )
         keys = [
             "zenith",
             "azimuth",
@@ -359,10 +365,15 @@ class EventDataReader:
         ]
         float_arrays = {}
         for key in keys:
+            column_values = self._convert_numeric_column(
+                simulation_file_info[key].data,
+                key=key,
+                dtype=np.float64,
+            )
             if key == "energy_min":
-                float_arrays[key] = np.unique(np.round(simulation_file_info[key].data, decimals=3))
+                float_arrays[key] = np.unique(np.round(column_values, decimals=3))
             else:
-                float_arrays[key] = np.unique(np.round(simulation_file_info[key].data, decimals=2))
+                float_arrays[key] = np.unique(np.round(column_values, decimals=2))
 
         if any(len(arr) > 1 for arr in (particle_id, *(float_arrays[key] for key in keys))):
             self._logger.warning("Simulation file info has non-unique values.")
@@ -390,6 +401,27 @@ class EventDataReader:
         )
 
         return reduced_info
+
+    def _convert_numeric_column(self, values, key, dtype):
+        """Convert table column values to a numeric numpy array."""
+        array_values = np.asarray(values)
+
+        if array_values.dtype.kind == "O":
+            array_values = np.array(
+                [
+                    value.decode("utf-8") if isinstance(value, bytes | bytearray) else value
+                    for value in array_values
+                ]
+            )
+
+        try:
+            if array_values.dtype.kind in ("S", "U"):
+                return np.char.strip(array_values.astype("U")).astype(dtype)
+            return array_values.astype(dtype)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Unable to convert FILE_INFO column '{key}' to numeric values."
+            ) from exc
 
     def scatter_area(self, core_scatter_min, core_scatter_max):
         """

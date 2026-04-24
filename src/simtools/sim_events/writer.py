@@ -378,7 +378,15 @@ class EventDataWriter:
         """
         metadata, _ = read_sim_telarray_metadata(file)
         nsb_integrated_flux = metadata.get("nsb_integrated_flux")
-        return nsb_integrated_flux or self._get_nsb_level_from_file_name(str(file))
+        if nsb_integrated_flux is not None:
+            try:
+                return float(nsb_integrated_flux)
+            except (TypeError, ValueError):
+                self._logger.warning(
+                    f"Invalid nsb_integrated_flux value '{nsb_integrated_flux}' for {file}"
+                )
+
+        return self._get_nsb_level_from_file_name(str(file))
 
     def _get_nsb_level_from_file_name(self, file):
         """
