@@ -228,6 +228,41 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
     assert mock_write.call_count == 1
 
 
+def test_generate_corsika_limits_grid_with_array_element_list(mocker, mock_args_dict):
+    """Test generate_corsika_limits_grid using inline array_element_list."""
+    args = mock_args_dict.copy()
+    args["array_element_list"] = ["LSTN-01", "LSTN-02", "MSTN-03"]
+    args["telescope_ids"] = None
+
+    mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
+    mock_process = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._process_file"
+    )
+    mock_write = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.write_results"
+    )
+
+    derive_corsika_limits.generate_corsika_limits_grid(args)
+
+    mock_collect.assert_not_called()
+    mock_process.assert_called_once()
+    call_args = mock_process.call_args[0]
+    assert call_args[1] == "array_element_list"
+    assert call_args[2] == ["LSTN-01", "LSTN-02", "MSTN-03"]
+    assert mock_write.call_count == 1
+
+
+def test_generate_corsika_limits_grid_without_telescope_configuration(mock_args_dict):
+    """Test generate_corsika_limits_grid raises if no telescope input is provided."""
+    args = mock_args_dict.copy()
+    args["array_layout_name"] = None
+    args["array_element_list"] = None
+    args["telescope_ids"] = None
+
+    with pytest.raises(ValueError, match="No telescope configuration provided"):
+        derive_corsika_limits.generate_corsika_limits_grid(args)
+
+
 def test_compute_limits_lower():
     hist = np.array([1, 2, 3, 4, 5])
     bin_edges = np.array([0, 1, 2, 3, 4, 5])
