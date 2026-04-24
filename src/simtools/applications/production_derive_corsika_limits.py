@@ -80,6 +80,17 @@ Derive limits for a given file for custom defined array layouts:
         --loss_fraction 1e-6 \\
         --plot_histograms \\
         --output_file corsika_simulation_limits.ecsv
+
+Derive limits for an inline list of array elements:
+
+.. code-block:: console
+
+    simtools-production-derive-corsika-limits \\
+        --event_data_file event_dat_file.hdf5 \\
+        --array_element_list LSTN-01 LSTN-02 MSTN-03 \\
+        --loss_fraction 1e-6 \\
+        --plot_histograms \\
+        --output_file corsika_simulation_limits.ecsv
 """
 
 from simtools.application_control import build_application

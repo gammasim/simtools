@@ -32,10 +32,17 @@ def generate_corsika_limits_grid(args_dict):
             args_dict.get("site"),
             args_dict.get("model_version"),
         )
-    else:
+    elif args_dict.get("array_element_list"):
+        telescope_configs = {"array_element_list": args_dict["array_element_list"]}
+    elif args_dict.get("telescope_ids"):
         telescope_configs = ascii_handler.collect_data_from_file(args_dict["telescope_ids"])[
             "telescope_configs"
         ]
+    else:
+        raise ValueError(
+            "No telescope configuration provided. Use one of --array_layout_name, "
+            "--array_element_list, or --telescope_ids."
+        )
 
     results = []
     for array_name, telescope_ids in telescope_configs.items():
