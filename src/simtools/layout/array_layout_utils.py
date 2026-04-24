@@ -8,7 +8,6 @@ from astropy.table import QTable, Table
 
 import simtools.utils.general as gen
 from simtools.data_model import data_reader
-from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.io import ascii_handler, io_handler
 from simtools.model.array_model import ArrayModel
@@ -171,11 +170,7 @@ def write_array_layouts(array_layouts, args_dict):
         instrument=f"OBS-{site}",
         parameter_version=args_dict.get("updated_parameter_version"),
         output_file=output_file,
-    )
-    MetadataCollector.dump(
-        args_dict,
-        output_file,
-        add_activity_name=True,
+        metadata_input_dict=args_dict,
     )
 
 

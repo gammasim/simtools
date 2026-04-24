@@ -41,12 +41,6 @@ def mock_model_data_writer():
 
 
 @pytest.fixture
-def mock_metadata_collector():
-    with patch("simtools.layout.array_layout_utils.MetadataCollector") as mock:
-        yield mock
-
-
-@pytest.fixture
 def mock_array_model():
     with patch("simtools.layout.array_layout_utils.ArrayModel") as mock:
         yield mock
@@ -57,9 +51,7 @@ def test_path():
     return "/test/path"
 
 
-def test_write_array_layouts(
-    mock_io_handler, mock_model_data_writer, mock_metadata_collector, test_path, test_output
-):
+def test_write_array_layouts(mock_io_handler, mock_model_data_writer, test_path, test_output):
     array_layouts = {"value": [{"name": "test_array", "elements": ["tel1", "tel2"]}]}
     args_dict = {
         "site": "North",
@@ -77,10 +69,7 @@ def test_write_array_layouts(
         instrument="OBS-North",
         parameter_version="v1",
         output_file=test_output,
-    )
-
-    mock_metadata_collector.dump.assert_called_once_with(
-        args_dict, test_output, add_activity_name=True
+        metadata_input_dict=args_dict,
     )
 
 

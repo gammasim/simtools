@@ -6,7 +6,8 @@ from pathlib import Path
 import astropy.units as u
 from astropy.table import QTable
 
-from simtools.data_model import data_reader, schema
+from simtools.data_model import data_reader
+from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.io import io_handler
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.model_utils import read_overwrite_model_parameter_dict
@@ -106,9 +107,7 @@ class ArrayModel:
 
         # Case 1: array_elements is a file name
         if isinstance(array_elements_config, str | Path):
-            array_elements = self._load_array_element_positions_from_file(
-                array_elements_config, site
-            )
+            array_elements = self._load_array_element_positions_from_file(array_elements_config)
         # Case 2: array elements is a list of elements
         elif isinstance(array_elements_config, list) and len(array_elements_config) > 0:
             array_elements = self._get_array_elements_from_list(array_elements_config, site_model)
@@ -331,7 +330,7 @@ class ArrayModel:
         self._logger.info(f"Packed model files into {archive_name}")
         return archive_name
 
-    def _load_array_element_positions_from_file(self, array_elements_file, site):
+    def _load_array_element_positions_from_file(self, array_elements_file):
         """
         Load array element (e.g. telescope) positions from a file into a dict.
 
@@ -341,8 +340,6 @@ class ArrayModel:
         ----------
         array_elements_file: Union[str, Path]
             Path to the file with the array element positions.
-        site: str
-            Site name.
 
         Returns
         -------
@@ -353,14 +350,12 @@ class ArrayModel:
 
         return {
             row["telescope_name"]: self._get_telescope_position_parameter(
-                row["telescope_name"], site, row["position_x"], row["position_y"], row["position_z"]
+                row["telescope_name"], row["position_x"], row["position_y"], row["position_z"]
             )
             for row in table
         }
 
-    def _get_telescope_position_parameter(
-        self, telescope_name, site, x, y, z, parameter_version=None
-    ):
+    def _get_telescope_position_parameter(self, telescope_name, x, y, z, parameter_version=None):
         """
         Return dictionary with telescope position parameters (following DB model database format).
 
@@ -368,8 +363,6 @@ class ArrayModel:
         ----------
         telescope_name: str
             Name of the telescope.
-        site: str
-            Site name.
         x: astropy.Quantity
             X ground position.
         y: astropy.Quantity
@@ -382,20 +375,14 @@ class ArrayModel:
         dict
             Dict with telescope position parameters.
         """
-        return {
-            "schema_version": schema.get_model_parameter_schema_version(),
-            "parameter": "array_element_position_ground",
-            "instrument": telescope_name,
-            "site": site,
-            "parameter_version": parameter_version,
-            "unique_id": None,
-            "value": [x.to("m").value, y.to("m").value, z.to("m").value],
-            "unit": "m",
-            "type": "float64",
-            "file": False,
-            "meta_parameter": False,
-            "model_parameter_schema_version": "0.1.0",
-        }
+        model_data_writer = ModelDataWriter()
+        return model_data_writer.get_validated_parameter_dict(
+            parameter_name="array_element_position_ground",
+            value=[x.to("m").value, y.to("m").value, z.to("m").value],
+            instrument=telescope_name,
+            parameter_version=parameter_version,
+            unit="m",
+        )
 
     def _get_array_elements_from_list(self, array_elements_list, site_model=None):
         """

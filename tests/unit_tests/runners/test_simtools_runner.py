@@ -669,6 +669,37 @@ def test_get_model_parameter_metadata_file():
     )
 
 
+def test_get_model_parameter_metadata_file_autodetects_single_metadata_file(tmp_test_directory):
+    metadata_file = tmp_test_directory / "array_layouts" / "array_layouts-3.0.0.meta.yml"
+    metadata_file.parent.mkdir(parents=True, exist_ok=True)
+    metadata_file.write_text("dummy: value\n", encoding="utf-8")
+
+    config = {
+        "output_path": str(tmp_test_directory),
+        "updated_parameter_version": "3.0.0",
+    }
+    resolved_file = simtools_runner._get_model_parameter_metadata_file(config)
+    assert resolved_file == metadata_file
+
+
+def test_get_model_parameter_metadata_file_returns_none_for_ambiguous_metadata_files(
+    tmp_test_directory,
+):
+    file_a = tmp_test_directory / "p1" / "p1-3.0.0.meta.yml"
+    file_b = tmp_test_directory / "p2" / "p2-3.0.0.meta.yml"
+    file_a.parent.mkdir(parents=True, exist_ok=True)
+    file_b.parent.mkdir(parents=True, exist_ok=True)
+    file_a.write_text("a: 1\n", encoding="utf-8")
+    file_b.write_text("b: 2\n", encoding="utf-8")
+
+    config = {
+        "output_path": str(tmp_test_directory),
+        "updated_parameter_version": "3.0.0",
+    }
+    resolved_file = simtools_runner._get_model_parameter_metadata_file(config)
+    assert resolved_file is None
+
+
 def test_get_workflow_configuration_value():
     configurations = [
         {"configuration": {"site": None}},
