@@ -138,11 +138,20 @@ class ModelDataWriter:
         if check_db_for_existing_parameter:
             writer.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
 
+        output_file = writer.io_handler.get_output_file(
+            output_file, output_path_label=writer.output_label
+        )
+
         unique_id = None
         metadata = None
         if metadata_input_dict is not None:
-            metadata_input_dict["output_file"] = output_file
+            metadata_input_dict = dict(metadata_input_dict)
+            metadata_input_dict["output_file"] = Path(output_file).name
             metadata_input_dict["output_file_format"] = Path(output_file).suffix.lstrip(".")
+            if metadata_input_dict.get("activity_id") is None:
+                activity_id = gen.extract_uuid7_from_path(output_file)
+                if activity_id is not None:
+                    metadata_input_dict["activity_id"] = activity_id
             metadata = MetadataCollector(args_dict=metadata_input_dict)
             unique_id = (
                 metadata.get_top_level_metadata().get("cta", {}).get("product", {}).get("id")
@@ -158,9 +167,8 @@ class ModelDataWriter:
             unit=unit,
             meta_parameter=meta_parameter,
         )
-        writer.write_model_parameter_dict_json(output_file, _json_dict)
         if metadata is not None:
-            metadata.write(output_path / Path(output_file))
+            metadata.write(writer.write_model_parameter_dict_json(output_file, _json_dict))
         return _json_dict
 
     def check_db_for_existing_parameter(self, parameter_name, instrument, parameter_version):
@@ -524,6 +532,11 @@ class ModelDataWriter:
         ------
         FileNotFoundError
             if data writing was not successful.
+
+        Returns
+        -------
+        Path
+            Resolved output file path.
         """
         data_dict = ModelDataWriter.prepare_data_dict_for_writing(data_dict)
         output_file = self.io_handler.get_output_file(
@@ -531,6 +544,7 @@ class ModelDataWriter:
         )
         self._logger.info(f"Writing data to {output_file}")
         ModelDataWriter.write_model_parameter_json(data_dict, output_file)
+        return output_file
 
     @staticmethod
     def write_model_parameter_json(data_dict, output_file):
