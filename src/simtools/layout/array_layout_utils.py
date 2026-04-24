@@ -160,8 +160,7 @@ def write_array_layouts(array_layouts, args_dict):
     io_handler_instance = io_handler.IOHandler()
     io_handler_instance.set_paths(output_path=args_dict["output_path"])
     output_file = io_handler_instance.get_output_file(
-        f"array_layouts-{args_dict['updated_parameter_version']}.json",
-        sub_dir="array_layouts",
+        f"array-layouts-{args_dict['updated_parameter_version']}.json"
     )
 
     ModelDataWriter.write_model_parameter(

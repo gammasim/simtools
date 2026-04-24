@@ -167,8 +167,9 @@ class ModelDataWriter:
             unit=unit,
             meta_parameter=meta_parameter,
         )
+        output_file = writer.write_model_parameter_dict_json(output_file, _json_dict)
         if metadata is not None:
-            metadata.write(writer.write_model_parameter_dict_json(output_file, _json_dict))
+            metadata.write(output_file)
         return _json_dict
 
     def check_db_for_existing_parameter(self, parameter_name, instrument, parameter_version):
