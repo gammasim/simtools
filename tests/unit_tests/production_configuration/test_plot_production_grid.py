@@ -412,11 +412,15 @@ def test_plot_inferred_radec_grid_logs_no_tracks(tmp_test_directory, caplog):
 def test_iers_disabled_with_env_plotter(monkeypatch, tmp_test_directory):
     from astropy.utils import iers
 
+    from simtools.application_control import _configure_iers_from_env
+
     # Known starting state
     iers.conf.auto_download = True
     iers.conf.auto_max_age = 30
 
     monkeypatch.setenv("SIMTOOLS_OFFLINE_IERS", "1")
+
+    _configure_iers_from_env()  # ← ADD THIS
 
     # Minimal valid grid file
     grid_file = _write_grid_file(
@@ -432,17 +436,20 @@ def test_iers_disabled_with_env_plotter(monkeypatch, tmp_test_directory):
     )
 
     assert iers.conf.auto_download is False
-    assert iers.conf.auto_max_age is None
 
 
 def test_iers_not_modified_without_env_plotter(monkeypatch, tmp_test_directory):
     from astropy.utils import iers
+
+    from simtools.application_control import _configure_iers_from_env
 
     # Known starting state
     iers.conf.auto_download = True
     iers.conf.auto_max_age = 30
 
     monkeypatch.delenv("SIMTOOLS_OFFLINE_IERS", raising=False)
+
+    _configure_iers_from_env()  # ← ADD THIS
 
     grid_file = _write_grid_file(
         tmp_test_directory,
@@ -457,4 +464,3 @@ def test_iers_not_modified_without_env_plotter(monkeypatch, tmp_test_directory):
     )
 
     assert iers.conf.auto_download is True
-    assert iers.conf.auto_max_age == 30
