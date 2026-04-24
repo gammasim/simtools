@@ -315,7 +315,7 @@ def test_update_parameters_dict_new_function():
     changes = {
         "MSTx-FlashCam": {
             "dsum_threshold": {"version": "4.0.0", "value": 62.5},
-            "param_to_deprecate": {"version": "1.0.0", "deprecated": True},
+            "dsum_clipping": {"version": "1.0.0", "deprecated": True},
         },
         "MSTx-NectarCam": {"discriminator_threshold": {"version": "4.0.0", "value": 31.9}},
     }
@@ -327,8 +327,8 @@ def test_update_parameters_dict_new_function():
 
     assert "MSTx-FlashCam" in parameters
     assert parameters["MSTx-FlashCam"]["dsum_threshold"] == "4.0.0"
-    assert "param_to_deprecate" not in parameters["MSTx-FlashCam"]  # Should be removed
-    assert "param_to_deprecate" in deprecated  # Should be in deprecated list
+    assert "dsum_clipping" not in parameters["MSTx-FlashCam"]  # Should be removed
+    assert "dsum_clipping" in deprecated  # Should be in deprecated list
 
 
 def test_get_production_table_key_configuration_corsika():
@@ -343,11 +343,14 @@ def test_get_production_table_key_passthrough():
 
 def test_update_parameters_dict_configuration_corsika_key_mapping():
     """Test _update_parameters_dict uses xSTx-design for configuration_corsika."""
-    existing_params = {"corsika_param": "1.0.0", "obsolete": "1.0.0"}
+    existing_params = {
+        "corsika_starting_grammage": "1.0.0",
+        "corsika_first_interaction_height": "1.0.0",
+    }
     changes = {
         "configuration_corsika": {
-            "corsika_param": {"version": "2.0.0", "value": 12.0},
-            "obsolete": {"version": "1.0.0", "deprecated": True},
+            "corsika_starting_grammage": {"version": "2.0.0", "value": 12.0},
+            "corsika_first_interaction_height": {"version": "1.0.0", "deprecated": True},
         }
     }
 
@@ -356,9 +359,9 @@ def test_update_parameters_dict_configuration_corsika_key_mapping():
     )
 
     assert "configuration_corsika" not in parameters
-    assert parameters["xSTx-design"]["corsika_param"] == "2.0.0"
-    assert "obsolete" not in parameters["xSTx-design"]
-    assert "obsolete" in deprecated
+    assert parameters["xSTx-design"]["corsika_starting_grammage"] == "2.0.0"
+    assert "corsika_first_interaction_height" not in parameters["xSTx-design"]
+    assert "corsika_first_interaction_height" in deprecated
 
 
 def test_apply_changes_to_production_table_update_model_version():
@@ -417,13 +420,16 @@ def test_apply_changes_to_production_table_configuration_corsika_full_update():
     data = {
         "production_table_name": "configuration_corsika",
         "parameters": {
-            "xSTx-design": {"corsika_param": "1.0.0", "obsolete": "1.0.0"},
+            "xSTx-design": {
+                "corsika_starting_grammage": "1.0.0",
+                "corsika_first_interaction_height": "1.0.0",
+            },
         },
     }
     changes = {
         "configuration_corsika": {
-            "corsika_param": {"version": "2.0.0", "value": 12.0},
-            "obsolete": {"version": "1.0.0", "deprecated": True},
+            "corsika_starting_grammage": {"version": "2.0.0", "value": 12.0},
+            "corsika_first_interaction_height": {"version": "1.0.0", "deprecated": True},
         }
     }
     model_version = "6.5.0"
@@ -434,8 +440,8 @@ def test_apply_changes_to_production_table_configuration_corsika_full_update():
 
     assert data["model_version"] == "6.5.0"
     assert "configuration_corsika" not in data["parameters"]
-    assert data["parameters"]["xSTx-design"]["corsika_param"] == "2.0.0"
-    assert "obsolete" not in data["parameters"]["xSTx-design"]
+    assert data["parameters"]["xSTx-design"]["corsika_starting_grammage"] == "2.0.0"
+    assert "corsika_first_interaction_height" not in data["parameters"]["xSTx-design"]
 
 
 def test_apply_changes_to_production_table_configuration_corsika_patch_update():
@@ -443,13 +449,16 @@ def test_apply_changes_to_production_table_configuration_corsika_patch_update():
     data = {
         "production_table_name": "configuration_corsika",
         "parameters": {
-            "xSTx-design": {"corsika_param": "1.0.0", "extra_param": "1.2.0"},
+            "xSTx-design": {
+                "corsika_starting_grammage": "1.0.0",
+                "corsika_first_interaction_height": "1.2.0",
+            },
         },
     }
     changes = {
         "configuration_corsika": {
-            "corsika_param": {"version": "2.0.0", "value": 12.0},
-            "extra_param": {"version": "1.2.0", "deprecated": True},
+            "corsika_starting_grammage": {"version": "2.0.0", "value": 12.0},
+            "corsika_first_interaction_height": {"version": "1.2.0", "deprecated": True},
         }
     }
     model_version = "6.5.0"
@@ -460,9 +469,9 @@ def test_apply_changes_to_production_table_configuration_corsika_patch_update():
 
     assert data["model_version"] == "6.5.0"
     assert "configuration_corsika" not in data["parameters"]
-    assert data["parameters"]["xSTx-design"]["corsika_param"] == "2.0.0"
-    assert "extra_param" not in data["parameters"]["xSTx-design"]
-    assert data["deprecated_parameters"] == ["extra_param"]
+    assert data["parameters"]["xSTx-design"]["corsika_starting_grammage"] == "2.0.0"
+    assert "corsika_first_interaction_height" not in data["parameters"]["xSTx-design"]
+    assert data["deprecated_parameters"] == ["corsika_first_interaction_height"]
 
 
 def test_apply_changes_to_production_table_no_parameters():
@@ -745,9 +754,9 @@ def test_apply_changes_to_production_table_patch_update():
     data = {
         "model_version": "6.0.0",
         "production_table_name": "test_table",
-        "parameters": {"test_table": {"param1": "1.0.0"}},
+        "parameters": {"test_table": {"dsum_threshold": "1.0.0"}},
     }
-    changes = {"test_table": {"param1": {"version": "2.0.0", "value": 42}}}
+    changes = {"test_table": {"dsum_threshold": {"version": "2.0.0", "value": 42}}}
     model_version = "6.5.0"
 
     result = model_repository._apply_changes_to_production_table(
@@ -761,7 +770,7 @@ def test_apply_changes_to_production_table_patch_update():
     data_no_changes = {
         "model_version": "6.0.0",
         "production_table_name": "other_table",
-        "parameters": {"other_table": {"param1": "1.0.0"}},
+        "parameters": {"other_table": {"dsum_threshold": "1.0.0"}},
     }
 
     result_no_changes = model_repository._apply_changes_to_production_table(
@@ -771,17 +780,35 @@ def test_apply_changes_to_production_table_patch_update():
     assert result_no_changes is False  # Should return False when no changes apply
 
 
+def test_apply_changes_to_production_table_patch_update_only_sim_telarray_changes():
+    """Test patch update skips telescope table when changes are CST-only."""
+    data = {
+        "model_version": "6.0.0",
+        "production_table_name": "LSTN-design",
+        "parameters": {"LSTN-design": {"transit_time_random": "1.0.0"}},
+    }
+    changes = {"LSTN-design": {"min_photons": {"version": "2.0.0", "value": 0}}}
+
+    result = model_repository._apply_changes_to_production_table(
+        data["production_table_name"], data, changes, "6.5.0", True
+    )
+
+    assert result is False
+    assert "parameters" in data
+    assert data["parameters"]["LSTN-design"]["transit_time_random"] == "1.0.0"
+
+
 def test_apply_changes_to_production_table_with_deprecated_parameters():
     """Test that deprecated_parameters are set when there are deprecated changes."""
     data = {
         "model_version": "6.0.0",
         "production_table_name": "test_table",
-        "parameters": {"test_table": {"param1": "1.0.0"}},
+        "parameters": {"test_table": {"dsum_threshold": "1.0.0"}},
     }
     changes = {
         "test_table": {
-            "param1": {"version": "2.0.0", "value": 42},
-            "param_to_remove": {"version": "1.0.0", "deprecated": True},
+            "dsum_threshold": {"version": "2.0.0", "value": 42},
+            "dsum_clipping": {"version": "1.0.0", "deprecated": True},
         }
     }
     model_version = "6.5.0"
@@ -793,7 +820,7 @@ def test_apply_changes_to_production_table_with_deprecated_parameters():
     assert result is True
     assert data["model_version"] == "6.5.0"
     assert "deprecated_parameters" in data
-    assert "param_to_remove" in data["deprecated_parameters"]
+    assert "dsum_clipping" in data["deprecated_parameters"]
 
 
 @patch("simtools.model.model_repository._create_new_model_parameter_entry")
@@ -1287,3 +1314,184 @@ def test_get_changes_to_production_empty_history(tmp_test_directory):
     # When history is empty, should return empty changes and the model_version
     assert changes == {}
     assert base_version == "6.0.0"
+
+
+@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+def test_apply_changes_to_sim_telarray_production_table_new_params(mock_get_collection):
+    """Test updating CST production table with new telescope parameters."""
+
+    def collection_side_effect(param):
+        return "configuration_sim_telarray" if param == "min_photons" else "telescopes"
+
+    mock_get_collection.side_effect = collection_side_effect
+
+    data = {
+        "model_version": "6.0.0",
+        "parameters": {"MSTN-design": {"other_param": "1.0.0"}},
+    }
+    changes = {
+        "LSTN-design": {
+            "min_photons": {"version": "2.0.0", "value": 0},
+            "transit_time_random": {"version": "1.0.0", "value": 0.36},
+        },
+        "configuration_corsika": {"corsika_param": {"version": "1.0.2"}},
+    }
+
+    has_cst_changes = model_repository._apply_changes_to_sim_telarray_production_table(
+        data, changes, "7.0.0", False
+    )
+
+    assert has_cst_changes is True
+    assert data["model_version"] == "7.0.0"
+    assert data["parameters"]["LSTN-design"]["min_photons"] == "2.0.0"
+    assert data["parameters"]["MSTN-design"]["other_param"] == "1.0.0"
+    assert "transit_time_random" not in data["parameters"]["LSTN-design"]
+
+
+@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+def test_apply_changes_to_sim_telarray_production_table_existing_telescope(mock_get_collection):
+    """Test updating CST table updates existing telescope entry without overwriting others."""
+    mock_get_collection.side_effect = lambda param: "configuration_sim_telarray"
+
+    data = {
+        "model_version": "6.0.0",
+        "parameters": {"LSTN-design": {"min_photons": "1.0.0", "other_cst_param": "1.5.0"}},
+    }
+    changes = {"LSTN-design": {"min_photons": {"version": "2.0.0", "value": 0}}}
+
+    has_cst_changes = model_repository._apply_changes_to_sim_telarray_production_table(
+        data, changes, "7.0.0", False
+    )
+
+    assert has_cst_changes is True
+    assert data["parameters"]["LSTN-design"]["min_photons"] == "2.0.0"
+    assert data["parameters"]["LSTN-design"]["other_cst_param"] == "1.5.0"
+
+
+@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+def test_apply_changes_to_sim_telarray_production_table_deprecated_patch_update(
+    mock_get_collection,
+):
+    """Test deprecated CST parameters are recorded in patch update."""
+    mock_get_collection.side_effect = lambda param: "configuration_sim_telarray"
+
+    data = {
+        "model_version": "6.0.0",
+        "parameters": {"LSTN-design": {"min_photons": "1.0.0"}},
+    }
+    changes = {"LSTN-design": {"min_photons": {"version": "1.0.0", "deprecated": True}}}
+
+    has_cst_changes = model_repository._apply_changes_to_sim_telarray_production_table(
+        data, changes, "7.0.0", True
+    )
+
+    assert has_cst_changes is True
+    assert "min_photons" not in data["parameters"]["LSTN-design"]
+    assert "min_photons" in data["deprecated_parameters"]
+
+
+@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+def test_apply_changes_to_sim_telarray_production_table_no_changes_only_version(
+    mock_get_collection,
+):
+    """Test that no CST changes only updates model_version."""
+    mock_get_collection.side_effect = lambda param: {
+        "transit_time_random": "telescopes",
+        "corsika_starting_grammage": "configuration_corsika",
+    }[param]
+
+    data = {
+        "model_version": "6.0.0",
+        "parameters": {"LSTN-design": {"transit_time_random": "1.0.0"}},
+    }
+
+    has_cst_changes = model_repository._apply_changes_to_sim_telarray_production_table(
+        data,
+        {
+            "LSTN-design": {"transit_time_random": {"version": "1.0.0", "value": 1}},
+            "configuration_corsika": {"corsika_starting_grammage": {"version": "1.0.2"}},
+            "configuration_sim_telarray": {"transit_time_random": {"version": "1.0.0"}},
+        },
+        "7.0.0",
+        False,
+    )
+
+    assert has_cst_changes is False
+    assert data["model_version"] == "7.0.0"
+    assert data["parameters"]["LSTN-design"]["transit_time_random"] == "1.0.0"
+
+
+@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+def test_update_parameters_dict_skips_cst_params(mock_get_collection):
+    """Test that configuration_sim_telarray parameters are not added to telescope table."""
+    mock_get_collection.side_effect = lambda p: (
+        "configuration_sim_telarray" if p == "min_photons" else "telescopes"
+    )
+
+    existing_params = {"transit_time_random": "1.0.0"}
+    changes = {
+        "LSTN-design": {
+            "transit_time_random": {"version": "1.1.0", "value": 0.5},
+            "min_photons": {"version": "2.0.0", "value": 0},
+        }
+    }
+
+    parameters, deprecated = model_repository._update_parameters_dict(
+        existing_params, changes, "LSTN-design"
+    )
+
+    assert parameters["LSTN-design"]["transit_time_random"] == "1.1.0"
+    assert "min_photons" not in parameters["LSTN-design"]
+    assert deprecated == []
+
+
+@patch("simtools.utils.names.get_collection_name_from_parameter_name")
+def test_apply_changes_to_production_tables_routes_cst_to_correct_table(
+    mock_get_collection, tmp_test_directory
+):
+    """Test that CST parameters from telescope changes go to configuration_sim_telarray table."""
+
+    def collection_side_effect(param):
+        return "configuration_sim_telarray" if param == "min_photons" else "telescopes"
+
+    mock_get_collection.side_effect = collection_side_effect
+
+    source_path = tmp_test_directory / "simulation-models/productions" / "6.0.0"
+    source_path.ensure(dir=True)
+
+    telescope_table = {
+        "production_table_name": "LSTN-design",
+        "model_version": "6.0.0",
+        "parameters": {"LSTN-design": {"transit_time_random": "0.9.0"}},
+    }
+    cst_table = {
+        "production_table_name": "configuration_sim_telarray",
+        "model_version": "6.0.0",
+        "parameters": {"LSTN-design": {"min_photons": "1.0.0"}},
+    }
+    (source_path / "LSTN-design.json").write_text(json.dumps(telescope_table), encoding="utf-8")
+    (source_path / "configuration_sim_telarray.json").write_text(
+        json.dumps(cst_table), encoding="utf-8"
+    )
+
+    changes = {
+        "LSTN-design": {
+            "transit_time_random": {"version": "1.0.0", "value": 0.36},
+            "min_photons": {"version": "2.0.0", "value": 0},
+        }
+    }
+
+    model_repository._apply_changes_to_production_tables(
+        changes, "6.0.0", "7.0.0", "patch_update", tmp_test_directory
+    )
+
+    target_path = tmp_test_directory / "simulation-models/productions" / "7.0.0"
+
+    telescope_result = json.loads((target_path / "LSTN-design.json").read_text(encoding="utf-8"))
+    assert telescope_result["parameters"]["LSTN-design"]["transit_time_random"] == "1.0.0"
+    assert "min_photons" not in telescope_result["parameters"]["LSTN-design"]
+
+    cst_result = json.loads(
+        (target_path / "configuration_sim_telarray.json").read_text(encoding="utf-8")
+    )
+    assert cst_result["parameters"]["LSTN-design"]["min_photons"] == "2.0.0"

@@ -17,6 +17,9 @@ changes:
     effective_focal_length:
       version: '3.0.0'
       value: [2923.7, 0., 0., 2, 0.]
+    min_photoelectrons:
+      version: '2.0.0'
+      value: 20
   # unchanged parameter for other LSTSs (test that no changes are applied)
   LSTS-design:
     effective_focal_length:
