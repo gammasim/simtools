@@ -637,3 +637,31 @@ def test_missing_observing_time(grid_gen):
 
     with pytest.raises(ValueError, match="Observing time is not set"):
         grid_gen.convert_altaz_to_radec(45 * u.deg, 30 * u.deg)
+
+
+def test_iers_not_modified_without_env(monkeypatch):
+    from simtools.application_control import _configure_iers_from_env
+
+    iers.conf.auto_download = True
+
+    monkeypatch.delenv("SIMTOOLS_OFFLINE_IERS", raising=False)
+
+    _configure_iers_from_env()
+
+    GridGeneration(axes={"axes": {}})
+
+    assert iers.conf.auto_download is True
+
+
+def test_iers_disabled_with_env(monkeypatch):
+    from simtools.application_control import _configure_iers_from_env
+
+    iers.conf.auto_download = True
+
+    monkeypatch.setenv("SIMTOOLS_OFFLINE_IERS", "1")
+
+    _configure_iers_from_env()
+
+    GridGeneration(axes={"axes": {}})
+
+    assert iers.conf.auto_download is False

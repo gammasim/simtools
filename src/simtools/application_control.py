@@ -7,6 +7,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from astropy.utils import iers
+
 import simtools.utils.general as gen
 from simtools import dependencies, version
 from simtools.configuration import configurator
@@ -18,6 +20,26 @@ SECRET_ENV_VAR_NAMES = ["SIMTOOLS_DB_API_PW"]
 SECRET_KEY_PATTERNS = [
     r"(?:password|passwd|pwd|secret|token|api[_-]?key|auth)",
 ]
+
+
+def _configure_iers_from_env():
+    """
+    Configure Astropy IERS behavior based on environment variables.
+
+    This disables network access for IERS tables when running in offline mode.
+
+    Controlled via:
+        SIMTOOLS_OFFLINE_IERS=1
+    """
+    if os.getenv("SIMTOOLS_OFFLINE_IERS") != "1":
+        return
+
+    if iers is None:
+        return  # nothing to configure
+
+    iers.conf.auto_download = False
+    iers.conf.use_network = False
+    iers.conf.iers_degraded_accuracy = "warn"
 
 
 def setup_logging(logger_name=None, log_level="INFO", log_file=None):
@@ -282,6 +304,8 @@ def startup_application(
             app_context.logger.info("Starting application")
             # ... rest of application logic
     """
+    _configure_iers_from_env()
+
     args_dict, db_config = parse_function()
     config.load(
         args_dict,
