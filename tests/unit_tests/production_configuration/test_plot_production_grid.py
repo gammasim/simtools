@@ -410,8 +410,6 @@ def test_plot_inferred_radec_grid_logs_no_tracks(tmp_test_directory, caplog):
 
 
 def test_iers_disabled_with_env_plotter(monkeypatch, tmp_test_directory):
-    from astropy.utils import iers
-
     from simtools.application_control import _configure_iers_from_env
 
     iers.conf.auto_download = True
@@ -437,8 +435,6 @@ def test_iers_disabled_with_env_plotter(monkeypatch, tmp_test_directory):
 
 
 def test_iers_not_modified_without_env_plotter(monkeypatch, tmp_test_directory):
-    from astropy.utils import iers
-
     from simtools.application_control import _configure_iers_from_env
 
     iers.conf.auto_download = True
