@@ -5,6 +5,7 @@ import socket
 from pathlib import Path
 from types import MappingProxyType
 
+from simtools.configuration import defaults
 from simtools.utils.general import find_executable_in_dir, get_uuid
 
 
@@ -55,11 +56,23 @@ class _Config:
             "SIMTOOLS_SIM_TELARRAY_EXECUTABLE",
             default="sim_telarray",
         )
-        self._corsika_path = self._get_config_value(args, "corsika_path", "SIMTOOLS_CORSIKA_PATH")
-        self._corsika_interaction_table_path = self._get_config_value(
-            args, "corsika_interaction_table_path", "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
+        self._corsika_path = self._get_config_value(
+            args,
+            "corsika_path",
+            "SIMTOOLS_CORSIKA_PATH",
+            default=defaults.CORSIKA_PATH,
         )
-        if resolve_sim_software_executables and self._corsika_path is not None:
+        self._corsika_interaction_table_path = self._get_config_value(
+            args,
+            "corsika_interaction_table_path",
+            "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH",
+            default=defaults.CORSIKA_INTERACTION_TABLE_PATH,
+        )
+        if (
+            resolve_sim_software_executables
+            and self._corsika_path is not None
+            and Path(self._corsika_path).is_dir()
+        ):
             self._corsika_exe = self._get_corsika_exec()
         else:
             self._corsika_exe = None
@@ -84,16 +97,18 @@ class _Config:
         Build the executable name based on configured interaction models. Fall back to
         legacy naming (simply "corsika") if models are not specified.
         """
-        he_model = (
-            self._args.get("corsika_he_interaction")
-            if self._args is not None and "corsika_he_interaction" in self._args
-            else os.getenv("SIMTOOLS_CORSIKA_HE_INTERACTION")
+        he_model = self._get_config_value(
+            self._args,
+            "corsika_he_interaction",
+            "SIMTOOLS_CORSIKA_HE_INTERACTION",
+            default=defaults.CORSIKA_HE_INTERACTION,
         )
 
-        le_model = (
-            self._args.get("corsika_le_interaction")
-            if self._args is not None and "corsika_le_interaction" in self._args
-            else os.getenv("SIMTOOLS_CORSIKA_LE_INTERACTION")
+        le_model = self._get_config_value(
+            self._args,
+            "corsika_le_interaction",
+            "SIMTOOLS_CORSIKA_LE_INTERACTION",
+            default=defaults.CORSIKA_LE_INTERACTION,
         )
 
         if he_model and le_model:

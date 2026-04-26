@@ -9,6 +9,7 @@ import astropy.units as u
 
 import simtools.version
 from simtools import constants
+from simtools.configuration import defaults
 from simtools.utils import general, names
 
 
@@ -110,16 +111,13 @@ class CommandLineParser(argparse.ArgumentParser):
             "--corsika_path",
             help="path pointing to CORSIKA installation",
             type=Path,
-            default="/workdir/simulation_software/corsika7",
+            default=defaults.CORSIKA_PATH,
         )
         _job_group.add_argument(
             "--corsika_interaction_table_path",
             help="path pointing to CORSIKA interaction tables",
             type=Path,
-            default=(
-                "/workdir/external/simpipe/simulation_software/"
-                "corsika7-interaction-tables/interaction-tables/"
-            ),
+            default=defaults.CORSIKA_INTERACTION_TABLE_PATH,
         )
 
     def initialize_output_arguments(self):
@@ -866,12 +864,12 @@ _CORSIKA_ARGS = {
     "corsika_he_interaction": {
         "help": "High-energy interaction model for CORSIKA.",
         "type": str,
-        "default": "epos",
+        "default": defaults.CORSIKA_HE_INTERACTION,
     },
     "corsika_le_interaction": {
         "help": "Low-energy interaction model for CORSIKA.",
         "type": str,
-        "default": "urqmd",
+        "default": defaults.CORSIKA_LE_INTERACTION,
     },
 }
 
