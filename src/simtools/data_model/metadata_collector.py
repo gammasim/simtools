@@ -315,6 +315,17 @@ class MetadataCollector:
         if associated_activities is not None and "associated_activities" in context_dict:
             context_dict["associated_activities"] = deepcopy(associated_activities)
 
+        repository_url = self.args_dict.get("repository_url")
+        if repository_url is not None and "associated_repositories" in context_dict:
+            context_dict["associated_repositories"] = self._fill_context_sim_list(
+                context_dict["associated_repositories"],
+                {
+                    "url": repository_url,
+                    "branch": self.args_dict.get("repository_branch"),
+                    "label": self.args_dict.get("repository_label"),
+                },
+            )
+
     def _read_input_metadata_from_file(self, metadata_file_name_expression=None):
         """
         Read and validate input metadata from file.

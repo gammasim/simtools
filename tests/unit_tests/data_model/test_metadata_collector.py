@@ -589,6 +589,33 @@ def test_fill_context_meta(args_dict_site, caplog):
     assert context_dict["associated_data"] == []
 
 
+def test_fill_context_meta_associated_repositories(args_dict_site):
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    collector.input_metadata = None
+
+    # repository_url present: entry added
+    collector.args_dict = dict(args_dict_site)
+    collector.args_dict["repository_url"] = "https://gitlab.example.org/repo/-/raw/"
+    collector.args_dict["repository_branch"] = "main"
+    context_dict = {"associated_data": [], "associated_repositories": []}
+    collector._fill_context_meta(context_dict)
+    assert context_dict["associated_repositories"] == [
+        {"url": "https://gitlab.example.org/repo/-/raw/", "branch": "main", "label": None}
+    ]
+
+    # repository_url absent: list stays empty
+    collector.args_dict = dict(args_dict_site)
+    context_dict = {"associated_data": [], "associated_repositories": []}
+    collector._fill_context_meta(context_dict)
+    assert context_dict["associated_repositories"] == []
+
+    # associated_repositories key absent in context_dict: no error raised
+    collector.args_dict["repository_url"] = "https://gitlab.example.org/repo/-/raw/"
+    context_dict = {"associated_data": []}
+    collector._fill_context_meta(context_dict)
+    assert "associated_repositories" not in context_dict
+
+
 def test_write_metadata_to_yml(args_dict_site, tmp_test_directory, caplog):
     collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
 

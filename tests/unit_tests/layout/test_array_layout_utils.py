@@ -61,7 +61,9 @@ def test_write_array_layouts(mock_io_handler, mock_model_data_writer, test_path,
     array_layout_utils.write_array_layouts(array_layouts, args_dict)
 
     mock_io_handler.return_value.set_paths.assert_called_once_with(output_path=test_path)
-    mock_io_handler.return_value.get_output_file.assert_called_once_with("array-layouts-v1.json")
+    mock_io_handler.return_value.get_output_file.assert_called_once_with(
+        "array_layouts-v1.json", sub_dir="array_layouts"
+    )
 
     mock_model_data_writer.write_model_parameter.assert_called_once_with(
         parameter_name="array_layouts",
