@@ -238,7 +238,10 @@ make linkcheck              # Check links
 
 **Version:** Managed by `setuptools-scm` (git-based). DO NOT edit `src/simtools/_version.py`.
 
-**Changelog:** Add fragments to `docs/changes/<issue>.<type>.md` (types: feature, bugfix, api, doc, maintenance, model). Changelogs should not exceed 1 line.
+**Changelog:**
+- Add fragments to `docs/changes/<issue>.<type>.md` (types: feature, bugfix, api, doc, maintenance, model).
+- Changelogs should not exceed 1 line.
+- Changelogs are used pull request IDs (and not issue IDs).
 
 
 
