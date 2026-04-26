@@ -431,6 +431,24 @@ def test_simulation_configuration():
     )
 
 
+def test_simulation_configuration_uses_defaults_for_optional_arguments():
+    test_parser = parser.CommandLineParser()
+    test_parser.initialize_default_arguments(
+        simulation_configuration={
+            "software": None,
+            "corsika_configuration": ["primary", "azimuth_angle", "zenith_angle", "run_number"],
+        }
+    )
+
+    args = test_parser.parse_args(["--primary", "gamma"])
+
+    assert args.primary == "gamma"
+    assert args.simulation_software == "corsika_sim_telarray"
+    assert_quantity_allclose(args.azimuth_angle, 0 * u.deg)
+    assert_quantity_allclose(args.zenith_angle, 20 * u.deg)
+    assert args.run_number == 1
+
+
 def test_initialize_db_config_arguments_strip_string():
     parser_10 = parser.CommandLineParser()
     parser_10.initialize_db_config_arguments()
