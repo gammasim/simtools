@@ -53,6 +53,7 @@ class Configurator:
         self.config_class_init = config
         self.label = label
         self.config = {}
+        self._command_line_args = None
         self.parser = argparser.CommandLineParser(
             prog=self.label,
             usage=usage,
@@ -144,6 +145,7 @@ class Configurator:
 
         self._fill_from_command_line(require_command_line=require_command_line)
         self._fill_from_config_file(self.config.get("config"))
+        self._reapply_command_line_args()
         self._fill_from_config_dict(self.config_class_init)
         self._fill_from_environmental_variables()
 
@@ -186,6 +188,7 @@ class Configurator:
         if "--config" in arg_list:
             self._reset_required_arguments()
 
+        self._command_line_args = arg_list
         self._fill_config(arg_list)
 
     def _reset_required_arguments(self):
@@ -200,6 +203,19 @@ class Configurator:
             group.required = False
         for action in self.parser._actions:  # pylint: disable=protected-access
             action.required = False
+
+    def _reapply_command_line_args(self):
+        """
+        Re-apply command line arguments to ensure they take precedence over config file.
+
+        This method re-applies the original command-line arguments after the configuration
+        file has been loaded, ensuring that command-line values override any conflicting
+        values from the configuration file.
+        """
+        if self._command_line_args is None:
+            return
+
+        self._fill_config(self._command_line_args)
 
     def _fill_from_config_dict(self, input_dict, overwrite=False):
         """
