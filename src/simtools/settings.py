@@ -30,7 +30,7 @@ class _Config:
         """
         Load configuration from command line arguments and environment variables.
 
-        For paths, first check for environment variables, then command line arguments.
+        Priority order: command line argument > environment variable > built-in default.
 
         Parameters
         ----------
@@ -79,9 +79,10 @@ class _Config:
 
     @staticmethod
     def _get_config_value(args, arg_key, env_key, default=None):
-        """Get configuration value from arguments or environment variable."""
-        if args is not None and arg_key in args:
-            return args.get(arg_key)
+        """Get configuration value from arguments, environment variable, or built-in default."""
+        val = args.get(arg_key) if args is not None else None
+        if val is not None:
+            return val
         return os.getenv(env_key, default)
 
     @staticmethod
