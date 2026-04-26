@@ -109,15 +109,16 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         _job_group.add_argument(
             "--corsika_path",
-            help="path pointing to CORSIKA installation",
+            help=f"path pointing to CORSIKA installation (default: {defaults.CORSIKA_PATH})",
             type=Path,
-            default=defaults.CORSIKA_PATH,
         )
         _job_group.add_argument(
             "--corsika_interaction_table_path",
-            help="path pointing to CORSIKA interaction tables",
+            help=(
+                "path pointing to CORSIKA interaction tables "
+                f"(default: {defaults.CORSIKA_INTERACTION_TABLE_PATH})"
+            ),
             type=Path,
-            default=defaults.CORSIKA_INTERACTION_TABLE_PATH,
         )
 
     def initialize_output_arguments(self):
@@ -297,9 +298,9 @@ class CommandLineParser(argparse.ArgumentParser):
                 "--simulation_software",
                 help="Simulation software steps.",
                 type=str,
-                choices=["corsika", "sim_telarray", "corsika_sim_telarray"],
+                choices=list(defaults.SIMULATION_SOFTWARE_CHOICES),
                 required=True,
-                default="corsika_sim_telarray",
+                default=defaults.SIMULATION_SOFTWARE_DEFAULT,
             )
         if "corsika_configuration" in simulation_configuration:
             self._initialize_argument_group(
@@ -408,7 +409,7 @@ class CommandLineParser(argparse.ArgumentParser):
                     "Minimum zenith angle (deg) for using curved-atmosphere CORSIKA binaries. "
                 ),
                 "type": CommandLineParser.zenith_angle,
-                "default": 65 * u.deg,
+                "default": defaults.CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG * u.deg,
             },
         }
 
