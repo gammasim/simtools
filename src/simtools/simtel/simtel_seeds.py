@@ -53,7 +53,15 @@ class SimtelSeeds:
     def initialize_seeds(self, site, model_version, zenith_angle, azimuth_angle):
         """Initialize seeds based on provided parameters."""
         if isinstance(self.simulation_seed, list):
-            return self._set_fixed_seeds()
+            if len(self.simulation_seed) == 1:
+                self.simulation_seed = self.simulation_seed[0]
+            elif len(self.simulation_seed) == 2:
+                return self._set_fixed_seeds()
+            else:
+                raise ValueError(
+                    "sim_telarray_seed must contain one value (simulation seed) or two values "
+                    "(instrument seed, simulation seed)."
+                )
 
         if not self.simulation_seed:
             self.simulation_seed = random.seeds(max_seed=SIMTEL_MAX_SEED)
