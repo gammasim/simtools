@@ -206,6 +206,17 @@ git commit -m "Description"
 git push origin feature/my-feature
 ```
 
+## Opening a Pull Request
+
+1. **Open a draft PR first** to get the PR number before adding the changelog fragment.
+2. **Add the changelog fragment** using the PR number as the file name:
+   `docs/changes/<pr-number>.<type>.md` (one line, concise description).
+3. **Commit and push** the changelog fragment to the same branch.
+4. **PR title and body** should be short and clear:
+   - Title: imperative mood, under 72 characters (e.g. `Fix mirror PSF calculation`).
+   - Body: bullet list of what changed and why; no filler text.
+5. **Mark ready for review** only when tests pass and pre-commit is clean.
+
 ## Troubleshooting
 
 **CORSIKA/sim_telarray not found:**
