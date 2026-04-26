@@ -633,14 +633,10 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
     figure_format: list
         List of formats to save the figure. If None, use configured figure formats
         or fall back to ["png"].
-    title: str
+    log_title: str
         Title of the figure to be added to the log message.
     """
-    configured_formats = None
-    try:
-        configured_formats = config.args.get("figure_format")
-    except AttributeError:
-        configured_formats = None
+    configured_formats = config.args.get("figure_format")
 
     figure_format = figure_format or configured_formats or ["png"]
 
