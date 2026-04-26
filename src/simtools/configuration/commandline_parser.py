@@ -157,6 +157,13 @@ class CommandLineParser(argparse.ArgumentParser):
             type=Path,
         )
         _job_group.add_argument(
+            "--figure_format",
+            help="output figure format(s)",
+            type=str,
+            nargs="+",
+            default=["png"],
+        )
+        _job_group.add_argument(
             "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
         )
         _job_group.add_argument(

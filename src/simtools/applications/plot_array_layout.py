@@ -25,7 +25,7 @@ For this option, array element positions are retrieved from the input file:
 * from a file containing an astropy table with a list of array elements and their positions
   (e.g., ``-array_layout_file tests/resources/telescope_positions-North-ground.ecsv``)
 
-Plots are saved as pdf and png files in the output directory.
+Plots are saved as png files in the output directory by default.
 
 Example of a layout plot:
 
@@ -150,7 +150,7 @@ def _add_arguments(parser):
     """Register application-specific command line arguments."""
     parser.add_argument(
         "--figure_name",
-        help="Name of the output figure to be saved into as a pdf.",
+        help="Name of the output figure to be saved.",
         type=str,
         required=False,
         default=None,
