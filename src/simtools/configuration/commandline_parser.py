@@ -106,6 +106,21 @@ class CommandLineParser(argparse.ArgumentParser):
             help="path pointing to sim_telarray installation",
             type=Path,
         )
+        _job_group.add_argument(
+            "--corsika_path",
+            help="path pointing to CORSIKA installation",
+            type=Path,
+            default="/workdir/simulation_software/corsika7",
+        )
+        _job_group.add_argument(
+            "--corsika_interaction_table_path",
+            help="path pointing to CORSIKA interaction tables",
+            type=Path,
+            default=(
+                "/workdir/external/simpipe/simulation_software/"
+                "corsika7-interaction-tables/interaction-tables/"
+            ),
+        )
 
     def initialize_output_arguments(self):
         """Initialize application output files(s)."""
@@ -298,6 +313,11 @@ class CommandLineParser(argparse.ArgumentParser):
                 "shower parameters",
                 simulation_configuration["corsika_configuration"],
                 _SHOWER_ARGS,
+            )
+            self._initialize_argument_group(
+                "corsika configuration",
+                simulation_configuration["corsika_configuration"],
+                _CORSIKA_ARGS,
             )
         if "sim_telarray_configuration" in simulation_configuration:
             self._initialize_argument_group(
@@ -839,6 +859,19 @@ _SIMTEL_ARGS = {
         "help": argparse.SUPPRESS,
         "type": str,
         "default": "sim_telarray_instrument_seeds.txt",
+    },
+}
+
+_CORSIKA_ARGS = {
+    "corsika_he_interaction": {
+        "help": "High-energy interaction model for CORSIKA.",
+        "type": str,
+        "default": "epos",
+    },
+    "corsika_le_interaction": {
+        "help": "Low-energy interaction model for CORSIKA.",
+        "type": str,
+        "default": "urqmd",
     },
 }
 
