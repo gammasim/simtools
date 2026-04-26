@@ -138,6 +138,56 @@ def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_direct
     assert _tmp_config == configurator.config
 
 
+def test_command_line_precedence_over_config_file(configurator, tmp_test_directory):
+    """Test that command-line arguments override config file settings (issue #2123)."""
+    # Create a config file with label='config_label' and log_level='debug'
+    _config_dict = {
+        "label": "config_label",
+        "log_level": "debug",
+    }
+    _config_file = tmp_test_directory / "configuration-precedence-test.yml"
+    with open(_config_file, "w") as output:
+        yaml.safe_dump(_config_dict, output, sort_keys=False)
+
+    # Initialize configurator with command-line args that differ from config file
+    configurator.parser.initialize_output_arguments()
+    configurator._fill_from_command_line(
+        arg_list=["--config", str(_config_file), "--label", "cli_label", "--log_level", "info"],
+        require_command_line=False,
+    )
+    configurator._fill_from_config_file(configurator.config.get("config"))
+    configurator._reapply_command_line_args()
+
+    # Command-line values should take precedence
+    assert configurator.config["label"] == "cli_label"
+    assert configurator.config["log_level"] == "info"
+
+
+def test_config_file_applies_when_no_command_line(configurator, tmp_test_directory):
+    """Test that config file values apply when no command-line override is provided."""
+    # Create a config file with label='config_label' and log_level='debug'
+    _config_dict = {
+        "label": "config_label",
+        "log_level": "debug",
+    }
+    _config_file = tmp_test_directory / "configuration-no-cli-test.yml"
+    with open(_config_file, "w") as output:
+        yaml.safe_dump(_config_dict, output, sort_keys=False)
+
+    # Initialize configurator with only config file (no CLI overrides for these keys)
+    configurator.parser.initialize_output_arguments()
+    configurator._fill_from_command_line(
+        arg_list=["--config", str(_config_file)],
+        require_command_line=False,
+    )
+    configurator._fill_from_config_file(configurator.config.get("config"))
+    configurator._reapply_command_line_args()
+
+    # Config file values should be used
+    assert configurator.config["label"] == "config_label"
+    assert configurator.config["log_level"] == "debug"
+
+
 def test_initialize_io_handler(configurator, tmp_test_directory):
     # io_handler is a Singleton, so configurator changes should
     # be reflected in the io_handler
