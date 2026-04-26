@@ -59,6 +59,21 @@ def test_initialize_seeds_raises_for_too_many_fixed_seeds(mock_config):
         seeds.initialize_seeds("north", "1.0.0", 20.0, 180.0)
 
 
+def test_initialize_seeds_single_value_uses_configured_instrument_seed(mocker, mock_config):
+    """Test single-value simulation seed uses configured instrument seed without random generation."""
+    mock_config.args = {"sim_telarray_instrument_seed": 1745, "sim_telarray_seed": [290]}
+    random_seed_mock = mocker.patch("simtools.simtel.simtel_seeds.random.seeds", return_value=999)
+
+    seeds = SimtelSeeds()
+
+    result = seeds.seed_string
+
+    assert result == "1745,290"
+    assert seeds.instrument_seed == 1745
+    assert seeds.simulation_seed == 290
+    random_seed_mock.assert_not_called()
+
+
 def test_set_fixed_seeds(mocker, mock_config):
     """Test _set_fixed_seeds with valid and invalid inputs."""
     mocker.patch.object(SimtelSeeds, "initialize_seeds", return_value="mock")
