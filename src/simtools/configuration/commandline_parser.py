@@ -863,14 +863,20 @@ _SIMTEL_ARGS = {
 
 _CORSIKA_ARGS = {
     "corsika_he_interaction": {
-        "help": "High-energy interaction model for CORSIKA.",
+        "help": (
+            "High-energy interaction model for CORSIKA "
+            f"(default fallback: {defaults.CORSIKA_HE_INTERACTION})."
+        ),
         "type": str,
-        "default": defaults.CORSIKA_HE_INTERACTION,
+        "default": None,
     },
     "corsika_le_interaction": {
-        "help": "Low-energy interaction model for CORSIKA.",
+        "help": (
+            "Low-energy interaction model for CORSIKA "
+            f"(default fallback: {defaults.CORSIKA_LE_INTERACTION})."
+        ),
         "type": str,
-        "default": defaults.CORSIKA_LE_INTERACTION,
+        "default": None,
     },
 }
 
