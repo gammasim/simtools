@@ -259,6 +259,15 @@ def test_initialize_default_arguments_accepts_activity_id():
     assert args.activity_id == "my-test-activity-id"
 
 
+def test_initialize_default_arguments_accepts_figure_format():
+    parser_with_defaults = parser.CommandLineParser()
+    parser_with_defaults.initialize_default_arguments()
+
+    args = parser_with_defaults.parse_args(["--figure_format", "png", "pdf"])
+
+    assert args.figure_format == ["png", "pdf"]
+
+
 def test_initialize_application_arguments():
     app_parser = parser.CommandLineParser()
     app_parser.initialize_application_arguments(

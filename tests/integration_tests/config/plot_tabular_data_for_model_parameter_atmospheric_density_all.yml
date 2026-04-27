@@ -2,6 +2,9 @@
 applications:
 - application: simtools-plot-tabular-data-for-model-parameter
   configuration:
+    figure_format:
+    - pdf
+    - png
     output_path: simtools-output
     parameter: atmospheric_profile
     parameter_version: 1.0.0

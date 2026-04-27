@@ -2,6 +2,9 @@
 applications:
 - application: simtools-validate-camera-fov
   configuration:
+    figure_format:
+    - pdf
+    - png
     model_version: 6.0.2
     output_path: simtools-output
     site: North
