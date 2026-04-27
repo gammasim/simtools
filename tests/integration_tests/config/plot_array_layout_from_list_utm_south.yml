@@ -7,6 +7,9 @@ applications:
     - MSTS
     - SSTS
     coordinate_system: utm
+    figure_format:
+    - pdf
+    - png
     model_version: 6.0.2
     output_path: simtools-output
   integration_tests:
