@@ -107,7 +107,7 @@ class ArrayModel:
         # Case 1: array_elements is a file name
         if isinstance(array_elements_config, str | Path):
             array_elements = self._load_array_element_positions_from_file(
-                array_elements_config, site
+                array_elements_config, site_model.site
             )
         # Case 2: array elements is a list of elements
         elif isinstance(array_elements_config, list) and len(array_elements_config) > 0:
@@ -342,7 +342,7 @@ class ArrayModel:
         array_elements_file: Union[str, Path]
             Path to the file with the array element positions.
         site: str
-            Site name.
+            Site name used when building the returned parameter dictionaries.
 
         Returns
         -------

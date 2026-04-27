@@ -176,14 +176,37 @@ def _get_application_log_file(application, app_configuration, counter):
 
 
 def _get_model_parameter_metadata_file(app_configuration):
-    """Return expected metadata file for model-parameter submission applications."""
-    parameter = app_configuration.get("parameter")
-    parameter_version = app_configuration.get("parameter_version")
+    """
+    Return expected metadata file for model-parameter submission applications.
+
+    Takes into account differences in how applications generate metadata files
+    (e.g., submit-model-parameter style apps vs. more generic applications).
+    """
     output_path = app_configuration.get("output_path")
-    if not parameter or not parameter_version or not output_path:
+    if not output_path:
         return None
 
-    return Path(output_path) / parameter / f"{parameter}-{parameter_version}.meta.yml"
+    output_path = Path(output_path)
+    parameter = app_configuration.get("parameter")
+    parameter_version = app_configuration.get("parameter_version")
+
+    if parameter and parameter_version:
+        return output_path / parameter / f"{parameter}-{parameter_version}.meta.yml"
+
+    metadata_candidates = sorted(output_path.rglob("*.meta.yml"))
+    if len(metadata_candidates) == 1:
+        return metadata_candidates[0]
+
+    if parameter_version:
+        matching = [
+            file_path
+            for file_path in metadata_candidates
+            if file_path.name.endswith(f"-{parameter_version}.meta.yml")
+        ]
+        if len(matching) == 1:
+            return matching[0]
+
+    return None
 
 
 def _get_workflow_configuration_value(configurations, key):

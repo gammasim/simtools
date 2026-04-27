@@ -589,6 +589,34 @@ def test_fill_context_meta(args_dict_site, caplog):
     assert context_dict["associated_data"] == []
 
 
+def test_fill_context_meta_associated_data_from_args(args_dict_site):
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    collector.input_metadata = None
+
+    # associated_data present in args_dict: entries appended
+    entry = {
+        "id": "C25EE35E-8F9B-42C4-BFE4-96D9E1DB8256",
+        "description": "CTAO subarray identifiers",
+    }
+    collector.args_dict = dict(args_dict_site)
+    collector.args_dict["associated_data"] = [entry]
+    context_dict = {"associated_data": []}
+    collector._fill_context_meta(context_dict)
+    assert context_dict["associated_data"] == [entry]
+
+    # associated_data absent in args_dict: list stays empty
+    collector.args_dict = dict(args_dict_site)
+    context_dict = {"associated_data": []}
+    collector._fill_context_meta(context_dict)
+    assert context_dict["associated_data"] == []
+
+    # associated_data key absent in context_dict: no error raised
+    collector.args_dict["associated_data"] = [entry]
+    context_dict = {}
+    collector._fill_context_meta(context_dict)
+    assert "associated_data" not in context_dict
+
+
 def test_write_metadata_to_yml(args_dict_site, tmp_test_directory, caplog):
     collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
 
