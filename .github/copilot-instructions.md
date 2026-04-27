@@ -36,6 +36,8 @@ simtools/
 │   ├── data_model/        # Schema validation and metadata
 │   ├── configuration/     # Argument parsing and configuration management
 │   ├── job_execution/     # Job scheduling (HTCondor, process pools)
+│   ├── reporting/         # Auto-report generation tools
+│   ├── schemas/           # JSON/YAML schema files for validation
 │   ├── testing/           # Test utilities and helpers
 │   └── utils/             # Common utilities (geometry, value conversion, naming)
 ├── tests/
@@ -47,7 +49,9 @@ simtools/
 │   ├── source/
 │   │   ├── developer-guide/  # Development documentation
 │   │   ├── user-guide/       # User documentation
-│   │   └── api-reference/    # Auto-generated API docs
+│   │   ├── api-reference/    # Auto-generated API docs
+│   │   ├── components/       # Component-level documentation
+│   │   └── data-model/       # Data model documentation
 │   └── Makefile           # Documentation build commands
 ├── database_scripts/      # Database management scripts
 ├── docker/                # Docker/Podman container definitions
@@ -85,8 +89,8 @@ podman run --rm -it -v "$(pwd)/external:/workdir/external" \
 **MANDATORY:** Unit tests for all library code (target ≥90% coverage, aim for 100%).
 
 ```bash
-pytest tests/unit_tests/                    # Run all
-pytest -n 4 tests/unit_tests/               # Parallel
+pytest                                      # Run all unit tests (default testpath)
+pytest -n 4                                 # Parallel
 pytest --cov=simtools --cov-report=html    # With coverage
 pytest --durations=10 tests/unit_tests/     # Find slow tests
 pytest -vv tests/unit_tests/model/test_foo.py::test_bar  # Single test
@@ -126,7 +130,7 @@ Runs: ruff, pylint, docstring coverage (70%+), spell-check, markdown/yaml lint, 
 **Key Style Rules:**
 - Line length: 100 characters
 - Quotes: double (`"""` for docstrings)
-- Imports: sorted with `isort`
+- Imports: sorted via ruff (isort rules, `I` ruleset)
 - Linting: ruff (fast) + pylint (thorough)
 
 ```bash
@@ -202,6 +206,17 @@ git commit -m "Description"
 git push origin feature/my-feature
 ```
 
+## Opening a Pull Request
+
+1. **Open a draft PR first** to get the PR number before adding the changelog fragment.
+2. **Add the changelog fragment** using the PR number as the file name:
+   `docs/changes/<pr-number>.<type>.md` (one line, concise description).
+3. **Commit and push** the changelog fragment to the same branch.
+4. **PR title and body** should be short and clear:
+   - Title: imperative mood, under 72 characters (e.g. `Fix mirror PSF calculation`).
+   - Body: bullet list of what changed and why; no filler text.
+5. **Mark ready for review** only when tests pass and pre-commit is clean.
+
 ## Troubleshooting
 
 **CORSIKA/sim_telarray not found:**
@@ -238,7 +253,10 @@ make linkcheck              # Check links
 
 **Version:** Managed by `setuptools-scm` (git-based). DO NOT edit `src/simtools/_version.py`.
 
-**Changelog:** Add fragments to `docs/changes/<issue>.<type>.md` (types: feature, bugfix, api, doc, maintenance, model).
+**Changelog:**
+- Add fragments to `docs/changes/<pr-number>.<type>.md` (types: feature, bugfix, api, doc, maintenance, model).
+- Changelogs should not exceed 1 line.
+- Use pull request IDs (not issue IDs) as the fragment number.
 
 
 
