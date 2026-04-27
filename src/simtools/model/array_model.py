@@ -341,6 +341,8 @@ class ArrayModel:
         ----------
         array_elements_file: Union[str, Path]
             Path to the file with the array element positions.
+        site: str
+            Site name used when building the returned parameter dictionaries.
 
         Returns
         -------
@@ -366,6 +368,8 @@ class ArrayModel:
         ----------
         telescope_name: str
             Name of the telescope.
+        site: str
+            Site name.
         x: astropy.Quantity
             X ground position.
         y: astropy.Quantity
