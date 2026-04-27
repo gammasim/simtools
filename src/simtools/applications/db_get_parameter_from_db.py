@@ -9,10 +9,11 @@ r"""
     2. Write the database entry to a JSON or YAML file using output_file.
     3. Export table-type model parameters using export_model_file.
 
-    The export_model_file mode is type-dependent:
+        The export_model_file mode is type-dependent:
 
-    - File-backed parameters are exported with their original file name from the database.
-    - Dict-backed table parameters are exported as ECSV, using output_file as the base name.
+        - File-backed parameters are exported as model files.
+            Use output_file to override the exported file name.
+        - Dict-backed table parameters are exported as ECSV, using output_file as the base name.
 
     For file-backed parameters, export_model_file_as_table can be added to also write an
     ECSV representation next to the exported file.
@@ -35,12 +36,13 @@ r"""
         Telescope model name (e.g. LST-1, SST-D, ...)
 
     output_file (str, optional)
-        Output file name for writing the database entry, or base file name for
-        exporting dict-backed tables as ECSV.
+        Output file name for writing the database entry, overriding the exported
+        file name for file-backed parameters, or base file name for exporting
+        dict-backed tables as ECSV.
 
     export_model_file (bool, optional)
-        Export parameter data. File-backed parameters are written as model files.
-        Embedded dict-typed table parameters are written as ECSV using output_file.
+        Export parameter data (model files for file-backed parameters, ECSV for
+        dict-backed table parameters).
 
     export_model_file_as_table (bool, optional)
         Export file-backed parameters as astropy tables in addition to the
@@ -78,6 +80,15 @@ r"""
                 --parameter_version 1.0.0 \\
                 --export_model_file
 
+    Export a file-backed parameter and override the output file name.
+
+    .. code-block:: console
+
+        simtools-db-get-parameter-from-db --parameter mirror_list \
+                --site North --telescope LSTN-01 \
+                --parameter_version 1.0.0 \
+                --export_model_file --output_file my_mirror_list.dat
+
     Export a file-backed parameter and also write an ECSV table representation.
 
     .. code-block:: console
@@ -111,8 +122,8 @@ def _add_arguments(parser):
     parser.add_argument(
         "--output_file",
         help=(
-            "Output file name for writing the DB entry, or base name for ECSV export of "
-            "dict-backed tables."
+            "Output file name for writing the DB entry, overriding file-backed export "
+            "name, or base name for ECSV export of dict-backed tables."
         ),
         type=str,
         required=False,
@@ -120,8 +131,8 @@ def _add_arguments(parser):
     parser.add_argument(
         "--export_model_file",
         help=(
-            "Export parameter data. File-backed parameters are written as files; "
-            "embedded dict-typed table parameters are written as ECSV using --output_file."
+            "Export parameter data (model files for file-backed parameters; ECSV for "
+            "dict-backed table parameters)."
         ),
         action="store_true",
         required=False,
