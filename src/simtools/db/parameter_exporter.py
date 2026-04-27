@@ -153,6 +153,7 @@ def _export_file_backed_parameter(
     parameter,
     site,
     array_element_name,
+    output_file,
     par_info,
     parameters,
     export_model_file_as_table,
@@ -175,8 +176,12 @@ def _export_file_backed_parameter(
         parameters=parameters,
         par_info=par_info,
     )
-    param_value = par_info["value"]
-    table_file = db.io_handler.get_output_file(param_value)
+    source_file = db.io_handler.get_output_file(par_info["value"])
+    table_file = source_file
+    if output_file is not None:
+        table_file = db.io_handler.get_output_file(output_file)
+        if table_file != source_file:
+            source_file.rename(table_file)
     output_files = [table_file]
 
     if table and table_file.suffix != ECSV_SUFFIX:
@@ -280,7 +285,8 @@ def export_parameter_data(
     model_version : str, optional
         Version of the model.
     output_file : str, optional
-        Output file name for dict-backed table exports.
+        Output file name for dict-backed table exports and optional override
+        for file-backed exports.
     export_model_file : bool, optional
         Export payload to files.
     export_model_file_as_table : bool, optional
@@ -325,18 +331,12 @@ def export_parameter_data(
             model_version=model_version,
         )
 
-    # File-backed parameter
-    if output_file is not None:
-        raise ValueError(
-            "Do not use --output_file when exporting file-backed parameters with "
-            "--export_model_file. The original database file name is used."
-        )
-
     return _export_file_backed_parameter(
         db=db,
         parameter=parameter,
         site=site,
         array_element_name=array_element_name,
+        output_file=output_file,
         par_info=par_info,
         parameters=parameters,
         export_model_file_as_table=export_model_file_as_table,
