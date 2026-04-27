@@ -15,6 +15,7 @@ from simtools.model.site_model import SiteModel
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
+SUBARRAY_IDS_FILE_NAME = "subarray-ids.json"
 
 
 def retrieve_ctao_array_layouts(site, repository_url, branch_name="main"):
@@ -46,7 +47,7 @@ def retrieve_ctao_array_layouts(site, repository_url, branch_name="main"):
             git_branch=branch_name,
         )
         sub_arrays = ascii_handler.collect_data_from_git(
-            file_name="subarray-ids.json",
+            file_name=SUBARRAY_IDS_FILE_NAME,
             git_repository=repository_url,
             git_branch=branch_name,
         )
@@ -55,7 +56,7 @@ def retrieve_ctao_array_layouts(site, repository_url, branch_name="main"):
             Path(repository_url) / "array-element-ids.json"
         )
         sub_arrays = ascii_handler.collect_data_from_file(
-            Path(repository_url) / "subarray-ids.json"
+            Path(repository_url) / SUBARRAY_IDS_FILE_NAME
         )
 
     layouts = _get_ctao_layouts_per_site(site, sub_arrays, array_element_ids)
@@ -75,7 +76,7 @@ def _build_associated_data_from_metadata(metadata, url=None, branch=None):
             {
                 "id": product_id,
                 "description": "CTAO subarray identifiers",
-                "filename": "subarray-ids.json",
+                "filename": SUBARRAY_IDS_FILE_NAME,
                 "url": url,
                 "branch": branch,
             }
