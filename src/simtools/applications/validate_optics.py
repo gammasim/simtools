@@ -181,7 +181,7 @@ def main():
         ray.plot(key, marker="o", linestyle="none", color="k")
         plot_file_name = "_".join((app_context.args.get("label"), tel_model.name, key))
         plot_file = app_context.io_handler.get_output_file(plot_file_name)
-        visualize.save_figure(plt, plot_file, figure_format="png")
+        visualize.save_figure(plt, plot_file)
         plt.close()
 
     # Plotting images

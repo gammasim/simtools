@@ -14,6 +14,7 @@ from matplotlib import gridspec
 from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.utils.general as gen
+from simtools.settings import config
 
 COLORS = {}
 COLORS["classic"] = [
@@ -619,7 +620,7 @@ def plot_hist_2d(data, **kwargs):
     return fig
 
 
-def save_figure(fig, output_file, figure_format=("pdf", "png"), log_title="", dpi="figure"):
+def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"):
     """
     Save figure to output file(s).
 
@@ -630,10 +631,15 @@ def save_figure(fig, output_file, figure_format=("pdf", "png"), log_title="", dp
     output_file: Path, str
         Path to save the figure (without suffix).
     figure_format: list
-        List of formats to save the figure.
-    title: str
+        List of formats to save the figure. If None, use configured figure formats
+        or fall back to ["png"].
+    log_title: str
         Title of the figure to be added to the log message.
     """
+    configured_formats = config.args.get("figure_format")
+
+    figure_format = figure_format or configured_formats or ["png"]
+
     for fmt in gen.ensure_iterable(figure_format):
         _file = Path(output_file).with_suffix(f".{fmt}")
         fig.savefig(_file, format=fmt, bbox_inches="tight", dpi=dpi)

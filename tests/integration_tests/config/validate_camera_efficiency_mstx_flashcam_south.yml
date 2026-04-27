@@ -2,6 +2,9 @@
 applications:
 - application: simtools-validate-camera-efficiency
   configuration:
+    figure_format:
+    - pdf
+    - png
     log_level: debug
     model_version: 6.0.2
     nsb_spectrum: tests/resources/benn_ellison_spectrum_for_testing.txt

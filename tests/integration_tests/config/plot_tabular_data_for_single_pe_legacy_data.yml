@@ -2,6 +2,9 @@
 applications:
 - application: simtools-plot-tabular-data
   configuration:
+    figure_format:
+    - pdf
+    - png
     output_file: single_pe_data
     output_path: simtools-output
     plot_config: tests/resources/plot_single_pe_config_data.yml

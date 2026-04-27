@@ -8,7 +8,6 @@ from astropy.table import QTable, Table
 
 import simtools.utils.general as gen
 from simtools.data_model import data_reader
-from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.io import ascii_handler, io_handler
 from simtools.model.array_model import ArrayModel
@@ -16,6 +15,7 @@ from simtools.model.site_model import SiteModel
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
+SUBARRAY_IDS_FILE_NAME = "subarray-ids.json"
 
 
 def retrieve_ctao_array_layouts(site, repository_url, branch_name="main"):
@@ -33,19 +33,21 @@ def retrieve_ctao_array_layouts(site, repository_url, branch_name="main"):
 
     Returns
     -------
-    dict
-        Array layouts for all CTAO sites.
+    tuple
+        Array layouts for the requested site (list of dicts) and metadata from
+        ``subarray-ids.json`` (dict).
     """
     _logger.info(f"Retrieving array layouts from {repository_url} on branch {branch_name}.")
 
-    if gen.is_url(repository_url):
+    is_url = gen.is_url(repository_url)
+    if is_url:
         array_element_ids = ascii_handler.collect_data_from_git(
             file_name="array-element-ids.json",
             git_repository=repository_url,
             git_branch=branch_name,
         )
         sub_arrays = ascii_handler.collect_data_from_git(
-            file_name="subarray-ids.json",
+            file_name=SUBARRAY_IDS_FILE_NAME,
             git_repository=repository_url,
             git_branch=branch_name,
         )
@@ -54,10 +56,32 @@ def retrieve_ctao_array_layouts(site, repository_url, branch_name="main"):
             Path(repository_url) / "array-element-ids.json"
         )
         sub_arrays = ascii_handler.collect_data_from_file(
-            Path(repository_url) / "subarray-ids.json"
+            Path(repository_url) / SUBARRAY_IDS_FILE_NAME
         )
 
-    return _get_ctao_layouts_per_site(site, sub_arrays, array_element_ids)
+    layouts = _get_ctao_layouts_per_site(site, sub_arrays, array_element_ids)
+    associated_data = _build_associated_data_from_metadata(
+        sub_arrays.get("metadata", {}),
+        url=repository_url if is_url else None,
+        branch=branch_name,
+    )
+    return layouts, associated_data
+
+
+def _build_associated_data_from_metadata(metadata, url=None, branch=None):
+    """Return associated_data entries derived from subarray-ids.json metadata."""
+    entries = []
+    if product_id := metadata.get("CTA PRODUCT ID"):
+        entries.append(
+            {
+                "id": product_id,
+                "description": "CTAO subarray identifiers",
+                "filename": SUBARRAY_IDS_FILE_NAME,
+                "url": url,
+                "branch": branch,
+            }
+        )
+    return entries
 
 
 def _get_ctao_layouts_per_site(site, sub_arrays, array_element_ids):
@@ -124,36 +148,70 @@ def merge_array_layouts(layouts_1, layouts_2):
     """
     merged_layout = layouts_1
     for layout_2 in layouts_2:
+        normalized_name = _normalize_array_layout_name(layout_2["name"])
         layout_found = False
         for layout_1 in layouts_1.get("value", {}):
             if sorted(layout_1["elements"]) == sorted(layout_2["elements"]):
-                print(
+                _logger.info(
                     f"Equal telescope list: simtools '{layout_1['name']}' "
                     f"and CTAO '{layout_2['name']}'"
                 )
-                layout_1["name"] = layout_2["name"]
+                layout_1["name"] = normalized_name
                 layout_found = True
         if not layout_found:
             merged_layout["value"].append(
                 {
-                    "name": layout_2["name"],
+                    "name": normalized_name,
                     "elements": layout_2["elements"],
                 }
             )
-            _logger.info(f"Adding {layout_2['name']} with {layout_2['elements']}")
+            _logger.info(f"Adding {normalized_name} with {layout_2['elements']}")
+
+    merged_layout["value"] = _deduplicate_and_normalize_layouts(merged_layout.get("value", []))
     return merged_layout
 
 
-def write_array_layouts(array_layouts, args_dict):
+def _normalize_array_layout_name(name):
+    """Normalize layout name by replacing blanks with dashes."""
+    return str(name).replace(" ", "-")
+
+
+def _deduplicate_and_normalize_layouts(layouts):
+    """Deduplicate layouts by telescope set and normalize all layout names."""
+    deduplicated_layouts = []
+    seen_element_sets = set()
+
+    for layout in layouts:
+        element_key = tuple(sorted(layout.get("elements", [])))
+        if element_key in seen_element_sets:
+            _logger.info(
+                f"Skipping duplicate layout {layout.get('name')} with elements {element_key}"
+            )
+            continue
+
+        deduplicated_layouts.append(
+            {
+                "name": _normalize_array_layout_name(layout.get("name")),
+                "elements": layout.get("elements", []),
+            }
+        )
+        seen_element_sets.add(element_key)
+
+    return deduplicated_layouts
+
+
+def write_array_layouts(array_layouts, args_dict, associated_data=None):
     """
     Write array layouts as model parameter.
 
     Parameters
     ----------
-    args_dict : dict
-        Command line arguments.
     array_layouts : dict
         Array layouts to be written.
+    args_dict : dict
+        Command line arguments.
+    associated_data : list, optional
+        List of associated data entries to include in the metadata.
     """
     site = args_dict.get("site") or array_layouts.get("site")
     _logger.info(f"Writing updated array layouts to the database for site {site}.")
@@ -161,8 +219,13 @@ def write_array_layouts(array_layouts, args_dict):
     io_handler_instance = io_handler.IOHandler()
     io_handler_instance.set_paths(output_path=args_dict["output_path"])
     output_file = io_handler_instance.get_output_file(
-        f"array-layouts-{args_dict['updated_parameter_version']}.json"
+        f"array_layouts-{args_dict['updated_parameter_version']}.json",
+        sub_dir="array_layouts",
     )
+
+    metadata_input_dict = dict(args_dict)
+    for entry in associated_data or []:
+        metadata_input_dict.setdefault("associated_data", []).append(entry)
 
     ModelDataWriter.write_model_parameter(
         parameter_name="array_layouts",
@@ -170,11 +233,7 @@ def write_array_layouts(array_layouts, args_dict):
         instrument=f"OBS-{site}",
         parameter_version=args_dict.get("updated_parameter_version"),
         output_file=output_file,
-    )
-    MetadataCollector.dump(
-        args_dict,
-        output_file,
-        add_activity_name=True,
+        metadata_input_dict=metadata_input_dict,
     )
 
 

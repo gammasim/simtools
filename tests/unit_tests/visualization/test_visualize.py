@@ -133,6 +133,20 @@ def test_save_figure(io_handler):
     plt.close(fig)
 
 
+def test_save_figure_defaults_to_png(io_handler):
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1])
+
+    output_file = io_handler.get_output_file(file_name="test_save_figure_default", sub_dir="plots")
+
+    visualize.save_figure(fig, output_file)
+
+    assert Path(output_file).with_suffix(".png").exists()
+    assert not Path(output_file).with_suffix(".pdf").exists()
+
+    plt.close(fig)
+
+
 def test_plot_error_plots():
     """Test the _plot_error_plots function for both error types."""
     x = np.array([1, 2, 3])

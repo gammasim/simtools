@@ -264,6 +264,20 @@ definitions:
               - type: string
               - type: "null"
             default: null
+          url:
+            description: |-
+              URL of the repository or source the data product was retrieved from.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
+          branch:
+            description: |-
+              Branch or tag of the repository the data product was retrieved from.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
       ###############
       instrument:
         title: Instrument
@@ -875,6 +889,20 @@ definitions:
           ACTIVITY_NAME:
             description: |-
               Name of the activity that produced this data product.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
+          URL:
+            description: |-
+              URL of the repository or source the data product was retrieved from.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
+          BRANCH:
+            description: |-
+              Branch or tag of the repository the data product was retrieved from.
             anyOf:
               - type: string
               - type: "null"

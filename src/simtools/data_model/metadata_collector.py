@@ -315,6 +315,12 @@ class MetadataCollector:
         if associated_activities is not None and "associated_activities" in context_dict:
             context_dict["associated_activities"] = deepcopy(associated_activities)
 
+        for entry in self.args_dict.get("associated_data") or []:
+            if "associated_data" in context_dict:
+                context_dict["associated_data"] = self._fill_context_sim_list(
+                    context_dict["associated_data"], entry
+                )
+
     def _read_input_metadata_from_file(self, metadata_file_name_expression=None):
         """
         Read and validate input metadata from file.
