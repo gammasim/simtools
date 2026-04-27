@@ -25,6 +25,18 @@ def test_collect_production_descriptions_reads_info_files(tmp_test_directory):
     assert descriptions == [("6.0.0", "Prod6 dark"), ("6.1.0", "Prod6 half-moon")]
 
 
+def test_collect_production_descriptions_semantic_version_ordering(tmp_test_directory):
+    data_path = Path(tmp_test_directory)
+    _write_info_file(data_path, "10.0.0", "Prod10")
+    _write_info_file(data_path, "6.0.0", "Prod6")
+    _write_info_file(data_path, "9.2.0", "Prod9")
+
+    descriptions = collect_production_descriptions(data_path)
+
+    versions = [v for v, _ in descriptions]
+    assert versions == ["6.0.0", "9.2.0", "10.0.0"]
+
+
 def test_write_production_summary_markdown_writes_table(tmp_test_directory):
     data_path = Path(tmp_test_directory)
     _write_info_file(data_path, "5.0.0", "Prod5 | dark")

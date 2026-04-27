@@ -41,10 +41,10 @@ def main():
     if output_file is None:
         raise ValueError("Missing required argument output_file.")
 
-    output_path = app_context.io_handler.get_output_file(output_file)
-    write_production_summary_markdown(app_context.args["data_path"], output_path)
+    output_file_path = app_context.io_handler.get_output_file(output_file)
+    write_production_summary_markdown(app_context.args["data_path"], output_file_path)
 
-    app_context.logger.info(f"Production summary written to {output_path}")
+    app_context.logger.info(f"Production summary written to {output_file_path}")
 
 
 if __name__ == "__main__":

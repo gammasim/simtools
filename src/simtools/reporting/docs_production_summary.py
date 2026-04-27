@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from packaging.version import InvalidVersion, Version
+
 from simtools.io import ascii_handler
 
 
@@ -20,9 +22,15 @@ def collect_production_descriptions(data_path):
     """
     productions_path = Path(data_path) / "simulation-models" / "productions"
 
+    def _version_sort_key(path):
+        try:
+            return (0, Version(path.parent.name))
+        except InvalidVersion:
+            return (1, path.parent.name)
+
     info_files = sorted(
         set(productions_path.glob("*/info.yaml")) | set(productions_path.glob("*/info.yml")),
-        key=lambda path: path.parent.name,
+        key=_version_sort_key,
     )
 
     descriptions = []
