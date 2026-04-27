@@ -82,12 +82,13 @@ def test_merge_array_layouts():
         "value": [
             {"name": "array1", "elements": ["tel1", "tel2"]},
             {"name": "array2", "elements": ["tel3", "tel4"]},
+            {"name": "array duplicate", "elements": ["tel1", "tel2"]},
         ]
     }
 
     layouts_2 = [
-        {"name": "array3", "elements": ["tel1", "tel2"]},  # Same elements as array1
-        {"name": "array4", "elements": ["tel5", "tel6"]},  # New elements
+        {"name": "array 3", "elements": ["tel1", "tel2"]},  # Same elements as array1
+        {"name": "array 4", "elements": ["tel5", "tel6"]},  # New elements
     ]
 
     # Call function
@@ -96,9 +97,9 @@ def test_merge_array_layouts():
     # Assert results
     assert len(merged["value"]) == 3
 
-    # Check renamed layout (array1 -> array3)
+    # Check renamed layout (array1 -> array-3) and no spaces in name
     assert any(
-        layout["name"] == "array3" and sorted(layout["elements"]) == ["tel1", "tel2"]
+        layout["name"] == "array-3" and sorted(layout["elements"]) == ["tel1", "tel2"]
         for layout in merged["value"]
     )
 
@@ -108,11 +109,18 @@ def test_merge_array_layouts():
         for layout in merged["value"]
     )
 
-    # Check newly added layout
+    # Check newly added layout with normalized name
     assert any(
-        layout["name"] == "array4" and sorted(layout["elements"]) == ["tel5", "tel6"]
+        layout["name"] == "array-4" and sorted(layout["elements"]) == ["tel5", "tel6"]
         for layout in merged["value"]
     )
+
+    # Check uniqueness by element list (no duplicates)
+    element_keys = [tuple(sorted(layout["elements"])) for layout in merged["value"]]
+    assert len(element_keys) == len(set(element_keys))
+
+    # Ensure all names are normalized
+    assert all(" " not in layout["name"] for layout in merged["value"])
 
 
 def test_get_ctao_array_element_name():
@@ -192,6 +200,7 @@ def test_get_ctao_layouts_per_site(mock_names):
 
 def test_retrieve_ctao_array_layouts_from_url():
     """Test retrieving array layouts from URL."""
+    subarray_metadata = {"CTA PRODUCT ID": "test-uuid-1234", "CTA DATA MODEL VERSION": 2}
     with (
         patch("simtools.layout.array_layout_utils.gen") as mock_gen,
         patch(
@@ -199,9 +208,12 @@ def test_retrieve_ctao_array_layouts_from_url():
         ) as mock_ascii_handler,
     ):
         mock_gen.is_url.return_value = True
-        mock_ascii_handler.return_value = {"subarrays": [], "array_elements": []}
+        mock_ascii_handler.side_effect = [
+            {"array_elements": []},
+            {"subarrays": [], "metadata": subarray_metadata},
+        ]
 
-        array_layout_utils.retrieve_ctao_array_layouts(
+        layouts, associated_data = array_layout_utils.retrieve_ctao_array_layouts(
             site="north", repository_url="https://test.com", branch_name="test-branch"
         )
 
@@ -217,23 +229,68 @@ def test_retrieve_ctao_array_layouts_from_url():
             git_repository="https://test.com",
             git_branch="test-branch",
         )
+        assert layouts == []
+        assert associated_data == [
+            {
+                "id": "test-uuid-1234",
+                "description": "CTAO subarray identifiers",
+                "filename": "subarray-ids.json",
+                "url": "https://test.com",
+                "branch": "test-branch",
+            }
+        ]
 
 
 def test_retrieve_ctao_array_layouts_from_file(test_path):
     """Test retrieving array layouts from local file."""
+    subarray_metadata = {"CTA PRODUCT ID": "file-uuid-5678"}
     with (
         patch("simtools.layout.array_layout_utils.gen") as mock_gen,
         patch(PATCH_ASCII_COLLECT_FILE) as mock_ascii_handler,
     ):
         mock_gen.is_url.return_value = False
-        mock_ascii_handler.return_value = {"subarrays": [], "array_elements": []}
+        mock_ascii_handler.side_effect = [
+            {"array_elements": []},
+            {"subarrays": [], "metadata": subarray_metadata},
+        ]
 
-        array_layout_utils.retrieve_ctao_array_layouts(
+        _, associated_data = array_layout_utils.retrieve_ctao_array_layouts(
             site="north", repository_url=test_path, branch_name="test-branch"
         )
 
         mock_gen.is_url.assert_called_once_with(test_path)
         assert mock_ascii_handler.call_count == 2
+        assert associated_data == [
+            {
+                "id": "file-uuid-5678",
+                "description": "CTAO subarray identifiers",
+                "filename": "subarray-ids.json",
+                "url": None,
+                "branch": "test-branch",
+            }
+        ]
+
+
+def test_build_associated_data_from_metadata():
+    """Test building associated data entries from subarray-ids.json metadata."""
+    metadata = {"CTA PRODUCT ID": "abc-123", "CTA DATA MODEL VERSION": 2}
+    result = array_layout_utils._build_associated_data_from_metadata(
+        metadata, url="https://example.org/repo/-/raw/", branch="main"
+    )
+    assert result == [
+        {
+            "id": "abc-123",
+            "description": "CTAO subarray identifiers",
+            "filename": "subarray-ids.json",
+            "url": "https://example.org/repo/-/raw/",
+            "branch": "main",
+        }
+    ]
+
+    assert array_layout_utils._build_associated_data_from_metadata({}) == []
+    assert (
+        array_layout_utils._build_associated_data_from_metadata({"CTA DATA MODEL VERSION": 2}) == []
+    )
 
 
 def test_validate_array_layouts_with_db_valid():

@@ -264,6 +264,20 @@ definitions:
               - type: string
               - type: "null"
             default: null
+          url:
+            description: |-
+              URL of the repository or source the data product was retrieved from.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
+          branch:
+            description: |-
+              Branch or tag of the repository the data product was retrieved from.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
       ###############
       instrument:
         title: Instrument
@@ -612,40 +626,6 @@ definitions:
               required:
                 - activity_name
                 - activity_id
-          associated_repositories:
-            title: Associated repositories.
-            description: |-
-              Version-controlled repositories used as input data sources
-              for this data product (e.g., a git repository providing
-              reference layouts or identifier lists).
-            type: array
-            items:
-              type: object
-              additionalProperties: false
-              properties:
-                url:
-                  description: |-
-                    Base URL of the repository.
-                  anyOf:
-                    - type: string
-                    - type: "null"
-                  default: null
-                branch:
-                  description: |-
-                    Branch or tag name used to retrieve the data.
-                  anyOf:
-                    - type: string
-                    - type: "null"
-                  default: null
-                label:
-                  description: |-
-                    Human-readable label for the repository.
-                  anyOf:
-                    - type: string
-                    - type: "null"
-                  default: null
-              required:
-                - url
 ...
 ---
 $schema: http://json-schema.org/draft-06/schema#
@@ -909,6 +889,20 @@ definitions:
           ACTIVITY_NAME:
             description: |-
               Name of the activity that produced this data product.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
+          URL:
+            description: |-
+              URL of the repository or source the data product was retrieved from.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
+          BRANCH:
+            description: |-
+              Branch or tag of the repository the data product was retrieved from.
             anyOf:
               - type: string
               - type: "null"
@@ -1262,37 +1256,3 @@ definitions:
               required:
                 - ACTIVITY_NAME
                 - ACTIVITY_ID
-          ASSOCIATED_REPOSITORIES:
-            title: Associated repositories.
-            description: |-
-              Version-controlled repositories used as input data sources
-              for this data product (e.g., a git repository providing
-              reference layouts or identifier lists).
-            type: array
-            items:
-              type: object
-              additionalProperties: false
-              properties:
-                URL:
-                  description: |-
-                    Base URL of the repository.
-                  anyOf:
-                    - type: string
-                    - type: "null"
-                  default: null
-                BRANCH:
-                  description: |-
-                    Branch or tag name used to retrieve the data.
-                  anyOf:
-                    - type: string
-                    - type: "null"
-                  default: null
-                LABEL:
-                  description: |-
-                    Human-readable label for the repository.
-                  anyOf:
-                    - type: string
-                    - type: "null"
-                  default: null
-              required:
-                - URL
