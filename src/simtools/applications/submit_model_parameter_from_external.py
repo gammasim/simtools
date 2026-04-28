@@ -92,6 +92,7 @@ def main():
     )
     model_parameter_schema_version = app_context.args.get("model_parameter_schema_version")
     value = app_context.args["value"]
+
     data_writer = writer.ModelDataWriter()
     parameter_type = data_writer.get_parameter_type_for_schema(
         app_context.args["parameter"],
