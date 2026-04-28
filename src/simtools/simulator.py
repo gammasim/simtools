@@ -346,8 +346,7 @@ class Simulator:
         """
         Save reduced event lists with event data on simulated and triggered events.
 
-        The files are saved with the same name as the sim_telarray output file
-        but with a 'hdf5' extension.
+        The files are saved using the configured simulation file list entries.
         """
         if "sim_telarray" not in self.simulation_software:
             self.logger.warning(
@@ -355,8 +354,41 @@ class Simulator:
             )
             return
 
-        input_files = self.get_files(file_type="sim_telarray_output")
-        output_files = self.get_files(file_type="sim_telarray_event_data")
+        Simulator.write_reduced_event_lists(
+            input_files=self.get_files(file_type="sim_telarray_output"),
+            output_files=self.get_files(file_type="sim_telarray_event_data"),
+        )
+
+    @staticmethod
+    def write_reduced_event_lists(input_files, output_path=None, output_files=None):
+        """
+        Write reduced event lists for given sim_telarray output files.
+
+        One output file is written per input file, named after the input file
+        with the sim_telarray suffix replaced by '.reduced_event_data.hdf5'.
+
+        Parameters
+        ----------
+        input_files : list
+            List of sim_telarray output files (e.g., ``*.simtel.zst``).
+        output_path : str or Path, optional
+            Directory for the output files. Defaults to the same directory as
+            each input file.
+        output_files : list, optional
+            Explicit output files. When provided, these are used directly and
+            zipped with input_files.
+        """
+        if output_files is None:
+            output_files = []
+            for input_file in input_files:
+                stem = Path(input_file).name
+                for suffix in (".simtel.zst", ".simtel.gz", ".simtel"):
+                    if stem.endswith(suffix):
+                        stem = stem[: -len(suffix)]
+                        break
+                output_dir = Path(output_path) if output_path else Path(input_file).parent
+                output_files.append(output_dir / f"{stem}.reduced_event_data.hdf5")
+
         for input_file, output_file in zip(input_files, output_files):
             generator = writer.EventDataWriter([input_file])
             table_handler.write_tables(
