@@ -157,6 +157,11 @@ class CommandLineParser(argparse.ArgumentParser):
             type=Path,
         )
         _job_group.add_argument(
+            "--disable_log_file",
+            action="store_true",
+            help=argparse.SUPPRESS,
+        )
+        _job_group.add_argument(
             "--figure_format",
             help="output figure format(s)",
             type=str,

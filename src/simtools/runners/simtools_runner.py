@@ -62,10 +62,11 @@ def run_applications(args_dict):
                 app_activity_id = app_configuration.get("activity_id") or gen.get_uuid()
                 app_configuration["activity_id"] = app_activity_id
                 app_configuration.setdefault("label", app)
+                app_configuration["disable_log_file"] = True
 
-                app_configuration["log_file"] = _get_application_log_file(
-                    app, app_configuration, application_counter
-                )
+                metadata_file = _get_model_parameter_metadata_file(app_configuration)
+                if metadata_file is not None:
+                    model_parameter_metadata_files.append(metadata_file)
 
                 associated_activities.append({"activity_name": app, "activity_id": app_activity_id})
 
@@ -77,9 +78,6 @@ def run_applications(args_dict):
                     configuration=app_configuration,
                     runtime_environment=run_time,
                 )
-                metadata_file = _get_model_parameter_metadata_file(app_configuration)
-                if metadata_file is not None:
-                    model_parameter_metadata_files.append(metadata_file)
                 file.write("=" * 80 + "\n")
                 file.write(
                     f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
