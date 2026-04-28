@@ -341,8 +341,8 @@ class MetadataCollector:
             return
 
         try:
-            table_meta = Table.read(value_path).meta
-        except (OSError, KeyError, AttributeError):
+            table_meta = Table.read(value_path, format="ascii.ecsv").meta
+        except (OSError, KeyError, AttributeError, ValueError):
             return
 
         context_from_simtel = table_meta.get("context_from_sim_telarray")
