@@ -11,6 +11,8 @@ import logging
 from copy import deepcopy
 from pathlib import Path
 
+from astropy.table import Table
+
 import simtools.utils.general as gen
 import simtools.version
 from simtools.constants import METADATA_JSON_SCHEMA
@@ -321,6 +323,39 @@ class MetadataCollector:
                     context_dict["associated_data"], entry
                 )
 
+        self._append_context_note_from_value_table(context_dict)
+
+    def _append_context_note_from_value_table(self, context_dict):
+        """Append context note from table metadata in value file, if available."""
+        if "notes" not in context_dict:
+            return
+
+        value = self.args_dict.get("value")
+        if not isinstance(value, str) or not value.lower().endswith(".ecsv"):
+            return
+
+        value_path = Path(value)
+        if not value_path.exists() and self.args_dict.get("data_path"):
+            value_path = Path(self.args_dict.get("data_path")) / value
+        if not value_path.exists():
+            return
+
+        try:
+            table_meta = Table.read(value_path).meta
+        except (FileNotFoundError, OSError, KeyError, AttributeError):
+            return
+
+        context_from_simtel = table_meta.get("Context_from_sim_telarray")
+        if context_from_simtel in (None, "", [], {}):
+            return
+
+        note = {
+            "title": "Context_from_sim_telarray",
+            "text": str(context_from_simtel),
+            "creation_time": gen.now_date_time_in_isoformat(),
+        }
+        context_dict["notes"] = self._fill_context_sim_list(context_dict.get("notes"), note)
+
     def _read_input_metadata_from_file(self, metadata_file_name_expression=None):
         """
         Read and validate input metadata from file.
@@ -383,8 +418,6 @@ class MetadataCollector:
 
     def _read_input_metadata_from_ecsv(self, metadata_file_name):
         """Read input metadata from ecsv file."""
-        from astropy.table import Table  # pylint: disable=C0415
-
         try:
             return {
                 self.observatory.upper(): Table.read(metadata_file_name).meta[

@@ -10,6 +10,7 @@ import uuid
 from pathlib import Path
 
 import pytest
+from astropy.table import Table
 
 import simtools.data_model.metadata_collector as metadata_collector
 from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
@@ -615,6 +616,62 @@ def test_fill_context_meta_associated_data_from_args(args_dict_site):
     context_dict = {}
     collector._fill_context_meta(context_dict)
     assert "associated_data" not in context_dict
+
+
+def test_fill_context_meta_notes_from_value_table(args_dict_site, tmp_test_directory):
+    table_file = tmp_test_directory / "test_input.ecsv"
+    table = Table({"x": [1.0, 2.0]})
+    table.meta["Context_from_sim_telarray"] = "simtel context"
+    table.write(table_file, format="ascii.ecsv")
+
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    collector.input_metadata = None
+    collector.args_dict = dict(args_dict_site)
+    collector.args_dict["value"] = str(table_file)
+
+    context_dict = {"notes": []}
+    collector._fill_context_meta(context_dict)
+
+    assert len(context_dict["notes"]) == 1
+    assert context_dict["notes"][0]["title"] == "Context_from_sim_telarray"
+    assert context_dict["notes"][0]["text"] == "simtel context"
+
+
+def test_fill_context_meta_notes_from_value_table_without_meta(args_dict_site, tmp_test_directory):
+    table_file = tmp_test_directory / "test_input.ecsv"
+    table = Table({"x": [1.0, 2.0]})
+    table.write(table_file, format="ascii.ecsv")
+
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    collector.input_metadata = None
+    collector.args_dict = dict(args_dict_site)
+    collector.args_dict["value"] = str(table_file)
+
+    context_dict = {"notes": []}
+    collector._fill_context_meta(context_dict)
+    assert context_dict["notes"] == []
+
+
+def test_fill_context_meta_notes_from_value_table_with_data_path(
+    args_dict_site, tmp_test_directory
+):
+    table_file = tmp_test_directory / "test_input.ecsv"
+    table = Table({"x": [1.0, 2.0]})
+    table.meta["Context_from_sim_telarray"] = "simtel context"
+    table.write(table_file, format="ascii.ecsv")
+
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    collector.input_metadata = None
+    collector.args_dict = dict(args_dict_site)
+    collector.args_dict["value"] = "test_input.ecsv"
+    collector.args_dict["data_path"] = str(tmp_test_directory)
+
+    context_dict = {"notes": []}
+    collector._fill_context_meta(context_dict)
+
+    assert len(context_dict["notes"]) == 1
+    assert context_dict["notes"][0]["title"] == "Context_from_sim_telarray"
+    assert context_dict["notes"][0]["text"] == "simtel context"
 
 
 def test_write_metadata_to_yml(args_dict_site, tmp_test_directory, caplog):
