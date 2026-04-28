@@ -109,6 +109,20 @@ def test_replace_placeholders_in_configuration_empty_config():
     assert result["output_path"] == str(output_path)
 
 
+def test_replace_placeholders_in_configuration_keeps_existing_output_path():
+    config = {
+        "output_path": "/tmp/WF",
+        "input_file": "__SETTING_WORKFLOW__/data.txt",
+    }
+    output_path = TEST_OUTPUT_PATH
+    setting_workflow = "LSTN-01/workflow"
+    result = simtools_runner._replace_placeholders_in_configuration(
+        config.copy(), output_path, setting_workflow
+    )
+    assert result["output_path"] == "/tmp/WF"
+    assert result["input_file"] == "LSTN-01/workflow/data.txt"
+
+
 def test_read_application_configuration_selected_steps(
     monkeypatch,
     mock_logger,

@@ -130,14 +130,24 @@ def _read_table_from_model_database(table_config):
         Astropy table
     """
     db = db_handler.DatabaseHandler()
-    return db.export_model_file(
-        parameter=table_config["parameter"],
-        site=table_config["site"],
-        array_element_name=table_config.get("telescope"),
-        parameter_version=table_config.get("parameter_version"),
-        model_version=table_config.get("model_version"),
-        export_file_as_table=True,
-    )
+    db_export_path = table_config.get("db_export_path")
+    original_output_path = db.io_handler.output_path.get("default")
+
+    if db_export_path:
+        db.io_handler.set_paths(output_path=db_export_path)
+
+    try:
+        return db.export_model_file(
+            parameter=table_config["parameter"],
+            site=table_config["site"],
+            array_element_name=table_config.get("telescope"),
+            parameter_version=table_config.get("parameter_version"),
+            model_version=table_config.get("model_version"),
+            export_file_as_table=True,
+        )
+    finally:
+        if db_export_path:
+            db.io_handler.set_paths(output_path=original_output_path)
 
 
 def _read_parameter_dict_from_model_database(table_config):
